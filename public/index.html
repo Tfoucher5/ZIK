@@ -1,129 +1,151 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BT Project | Blind Test</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZIK — Blind Test Multijoueur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
 </head>
 <body>
-    <div id="app">
+  <div class="noise"></div>
 
-        <!-- Barre de timer globale -->
-        <div id="timer-bar-container">
-            <div id="timer-bar"></div>
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">ZIK<span>.</span></div>
+    <div class="nav-right">
+      <div id="nav-user" style="display:none">
+        <img id="nav-avatar" src="" alt="">
+        <span id="nav-username"></span>
+        <button class="btn-ghost" id="logoutBtn">Déconnexion</button>
+      </div>
+      <div id="nav-auth" style="display:none">
+        <button class="btn-ghost" id="openLoginBtn">Connexion</button>
+        <button class="btn-accent" id="openRegisterBtn">Créer un compte</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">🎵 ZIK — Blind Test Multijoueur</div>
+      <h1 class="hero-title">Prouve que tu<br><em>connais la musique.</em></h1>
+      <p class="hero-sub">Choisis une room, reconnais les titres avant tout le monde, grimpe dans le classement.</p>
+    </div>
+  </section>
+
+  <!-- ROOMS -->
+  <section class="rooms-section">
+    <div class="section-header">
+      <h2>Choisir une room</h2>
+      <span id="total-online" class="online-badge">— en ligne</span>
+    </div>
+    <div class="rooms-grid" id="rooms-grid">
+      <!-- Généré par JS -->
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section class="leaderboard-section">
+    <div class="leaderboard-grid">
+      <div class="lb-card">
+        <div class="lb-header">
+          <h3>🏆 Classement de la semaine</h3>
+          <span class="lb-sub">Points totaux sur 7 jours</span>
         </div>
-
-        <!-- ══════════════ LOGIN ══════════════ -->
-        <div id="login-screen">
-            <div class="login-card">
-                <div class="logo-wrap">
-                    <div class="logo-icon">🎵</div>
-                    <h1 class="logo-title">BT PROJECT</h1>
-                    <p class="logo-sub">Blind Test Multijoueur</p>
-                </div>
-                <div class="login-form">
-                    <input type="text" id="usernameInput" placeholder="Ton pseudo..." maxlength="20" autocomplete="off">
-                    <button id="joinBtn" class="btn-primary">REJOINDRE LA PARTIE</button>
-                </div>
-            </div>
+        <div id="weekly-list" class="lb-list">
+          <div class="lb-loading">Chargement...</div>
         </div>
-
-        <!-- ══════════════ GAME ══════════════ -->
-        <div id="game-screen" style="display: none;">
-
-            <!-- Header -->
-            <header class="game-header">
-                <div id="round-info" class="round-badge">Manche 0 / 10</div>
-                <div class="vol-ctrl">
-                    <span>🔊</span>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
-                </div>
-            </header>
-
-            <!-- Sidebar gauche : joueurs -->
-            <aside id="sidebar-left">
-                <h3 class="sidebar-title">👥 JOUEURS</h3>
-                <div id="player-list"></div>
-            </aside>
-
-            <!-- Centre -->
-            <main id="center-stage">
-
-                <!-- Pochette -->
-                <div id="reveal-container">
-                    <div id="album-placeholder">
-                        <div class="vinyl-record"></div>
-                        <span class="placeholder-label">?</span>
-                    </div>
-                    <img id="reveal-cover" src="" style="display:none;" alt="Album cover">
-                </div>
-
-                <!-- Slots Artiste / Titre -->
-                <div class="info-placeholders">
-                    <div id="slot-artist" class="slot">
-                        <span>Artiste</span>
-                        <div class="val">???</div>
-                    </div>
-                    <div id="slot-title" class="slot">
-                        <span>Titre</span>
-                        <div class="val">???</div>
-                    </div>
-                </div>
-
-                <!-- Feedback (chaud/froid/trouvé) -->
-                <div id="game-feedback"></div>
-
-                <!-- Résumé de manche -->
-                <div id="round-summary" style="display:none;">
-                    <p id="round-reason" class="round-reason"></p>
-                    <p id="first-finder-msg" class="first-finder"></p>
-                </div>
-
-                <!-- Erreur serveur -->
-                <div id="error-msg" class="error-msg" style="display:none;"></div>
-
-                <!-- Bouton lancer partie -->
-                <button id="startBtn" class="btn-primary btn-launch">🎮 LANCER UNE PARTIE</button>
-            </main>
-
-            <!-- Sidebar droite : historique -->
-            <aside id="sidebar-right">
-                <h3 class="sidebar-title">📜 HISTORIQUE</h3>
-                <div id="history-list"></div>
-            </aside>
-
-            <!-- Footer : input guess -->
-            <footer class="game-footer">
-                <input
-                    type="text"
-                    id="guessInput"
-                    placeholder="Tape l'artiste ou le titre..."
-                    disabled
-                    autocomplete="off"
-                    maxlength="100"
-                >
-            </footer>
-
-        </div><!-- /game-screen -->
-
-        <!-- ══════════════ GAME OVER OVERLAY ══════════════ -->
-        <div id="game-over-screen" style="display:none;">
-            <div class="game-over-card">
-                <div class="game-over-title">🏁 PARTIE TERMINÉE</div>
-                <div id="final-scores"></div>
-            </div>
+      </div>
+      <div class="lb-card">
+        <div class="lb-header">
+          <h3>⚡ Classement ELO</h3>
+          <span class="lb-sub">Meilleurs joueurs all-time</span>
         </div>
+        <div id="elo-list" class="lb-list">
+          <div class="lb-loading">Chargement...</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    </div><!-- /app -->
+  <!-- MODAL AUTH -->
+  <div id="auth-modal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <button class="modal-close" id="closeModal">✕</button>
 
-    <!-- YouTube player caché -->
-    <div id="youtube-player" style="position:absolute;opacity:0;pointer-events:none;"></div>
+      <!-- Login -->
+      <div id="view-login">
+        <h2 class="modal-title">Connexion</h2>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="ton@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="login-error" class="form-error" style="display:none"></div>
+        <button class="btn-accent btn-full" id="loginSubmit">Se connecter</button>
+        <p class="modal-switch">Pas de compte ? <a href="#" id="switchToRegister">Créer un compte</a></p>
+      </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="script.js"></script>
+      <!-- Register -->
+      <div id="view-register" style="display:none">
+        <h2 class="modal-title">Créer un compte</h2>
+        <div class="form-group">
+          <label>Pseudo</label>
+          <input type="text" id="regUsername" placeholder="MonPseudo" maxlength="20" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="ton@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="regPassword" placeholder="Min. 6 caractères" autocomplete="new-password">
+        </div>
+        <div id="register-error" class="form-error" style="display:none"></div>
+        <button class="btn-accent btn-full" id="registerSubmit">Créer mon compte</button>
+        <p class="modal-switch">Déjà un compte ? <a href="#" id="switchToLogin">Se connecter</a></p>
+      </div>
+
+      <!-- Confirmation email -->
+      <div id="view-confirm" style="display:none">
+        <div class="confirm-icon">📬</div>
+        <h2 class="modal-title">Vérifie tes mails</h2>
+        <p class="confirm-text">Un lien de confirmation t'a été envoyé. Clique dessus pour activer ton compte, puis reviens jouer !</p>
+        <button class="btn-ghost btn-full" id="closeConfirm">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PSEUDO GUEST -->
+  <div id="guest-modal" class="modal-overlay" style="display:none">
+    <div class="modal modal-sm">
+      <h2 class="modal-title">Rejoindre la room</h2>
+      <p class="modal-desc">Tu joues en tant qu'invité. Ton score ne sera pas sauvegardé.</p>
+      <div class="form-group">
+        <label>Pseudo</label>
+        <input type="text" id="guestUsername" placeholder="MonPseudo" maxlength="20" autocomplete="off">
+      </div>
+      <div class="guest-btns">
+        <button class="btn-ghost" id="cancelGuest">Annuler</button>
+        <button class="btn-accent" id="confirmGuest">Jouer →</button>
+      </div>
+      <p class="modal-switch"><a href="#" id="guestToLogin">J'ai un compte, me connecter</a></p>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="home.js"></script>
 </body>
 </html>

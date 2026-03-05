@@ -1,18 +1,21 @@
 {
+  "name": "bt-project",
+  "version": "0.2.0",
+  "description": "Blind Test Multijoueur",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
   "dependencies": {
-    "express": "^5.2.1",
-    "socket.io": "^4.8.3",
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
     "string-similarity": "^4.0.4",
-    "yt-search": "^2.13.1"
+    "yt-search": "^2.10.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
-  },
-  "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
-  },
-  "overrides": {
-    "minimatch": "^9.0.0"
-}
+    "nodemon": "^3.0.2"
+  }
 }

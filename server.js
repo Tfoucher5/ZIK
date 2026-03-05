@@ -1,301 +1,451 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { createClient } = require('@supabase/supabase-js');
 const yts = require('yt-search');
 const stringSimilarity = require('string-similarity');
+const ROOMS = require('./rooms');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static('public'));
+app.use(express.json());
 
-const CONFIG = { maxRounds: 10, roundDuration: 30, breakDuration: 7 };
+// ─── Supabase ─────────────────────────────────────────────────────────────────
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
-// players[username] = { name, score, foundArtist, foundTitle }
-let players = {};
-// double mapping pour cibler les sockets
-let socketToName = {};  // socketId -> username
-let nameToSocket = {};  // username -> socketId
+// ─── Playlists cache ──────────────────────────────────────────────────────────
+const playlistCache = {}; // roomId -> tracks[]
 
-let game = {
-    isActive: false,
-    currentRound: 0,
-    timer: 0,
-    interval: null,
-    currentTrack: null,
-    startTime: 0,
-    sessionPlaylist: [],
-    history: [],
-    firstFullFinder: null,
-    totalFullFound: 0,
-    lastRoundData: null
-};
+async function loadPlaylist(roomId) {
+  if (playlistCache[roomId]?.length > 0) return playlistCache[roomId];
+  const room = ROOMS[roomId];
+  if (!room) return [];
+  try {
+    const res = await fetch(`https://api.deezer.com/playlist/${room.playlist_id}`);
+    const data = await res.json();
+    playlistCache[roomId] = data.tracks.data.map(t => ({
+      artist:      t.artist.name,
+      title:       t.title,
+      cleanTitle:  cleanString(t.title),
+      cleanArtist: cleanString(t.artist.name),
+      cover:       t.album.cover_xl,
+    }));
+    console.log(`✅ Room "${roomId}": ${playlistCache[roomId].length} titres`);
+    return playlistCache[roomId];
+  } catch (err) {
+    console.error(`❌ Deezer error for room ${roomId}:`, err.message);
+    return [];
+  }
+}
 
-let masterPlaylist = [];
+// Précharger toutes les playlists au démarrage
+Object.keys(ROOMS).forEach(id => loadPlaylist(id));
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function cleanString(str) {
-    if (!str) return "";
-    return str
-        .replace(/ *\([^)]*\) */g, "")
-        .replace(/ *\[[^\]]*\] */g, "")
-        .trim()
-        .toLowerCase();
+  if (!str) return '';
+  return str.replace(/ *\([^)]*\) */g, '').replace(/ *\[[^\]]*\] */g, '').trim().toLowerCase();
 }
 
-async function refreshPlaylistFromDeezer() {
-    try {
-        const response = await fetch('https://api.deezer.com/playlist/3155776842');
-        const data = await response.json();
-        masterPlaylist = data.tracks.data.map(t => ({
-            artist: t.artist.name,
-            title: t.title,
-            cleanTitle: cleanString(t.title),
-            cleanArtist: cleanString(t.artist.name),
-            album: t.album.title,
-            cover: t.album.cover_xl
-        }));
-        console.log(`✅ Deezer : ${masterPlaylist.length} titres chargés.`);
-    } catch (err) {
-        console.error("❌ Deezer inaccessible :", err.message);
-    }
+function calcSpeedBonus(timeTaken) {
+  if (timeTaken < 10) return 2;
+  if (timeTaken < 20) return 1;
+  return 0;
 }
-refreshPlaylistFromDeezer();
 
-io.on('connection', (socket) => {
-    console.log(`🔌 Connexion : ${socket.id}`);
+// ─── REST API ─────────────────────────────────────────────────────────────────
 
-    socket.on('join_game', (username) => {
-        if (!username || username.trim() === '') return;
-        username = username.trim();
-
-        // Reconnecter un joueur existant
-        if (players[username]) {
-            // Mettre à jour le socket si reconnexion
-            const oldSocketId = nameToSocket[username];
-            if (oldSocketId && oldSocketId !== socket.id) {
-                delete socketToName[oldSocketId];
-            }
-        } else {
-            players[username] = { name: username, score: 0, foundArtist: false, foundTitle: false };
-        }
-
-        socketToName[socket.id] = username;
-        nameToSocket[username] = socket.id;
-
-        console.log(`👤 ${username} a rejoint (socket: ${socket.id})`);
-
-        io.emit('update_players', Object.values(players));
-        socket.emit('init_history', game.history);
-
-        if (game.isActive && game.lastRoundData) {
-            socket.emit('start_round', game.lastRoundData);
-        }
-    });
-
-    socket.on('request_new_game', () => {
-        if (game.isActive) return;
-        if (masterPlaylist.length === 0) {
-            socket.emit('server_error', "La playlist Deezer n'est pas encore chargée, réessaie dans quelques secondes.");
-            return;
-        }
-
-        game.history = [];
-        game.currentRound = 0;
-        game.sessionPlaylist = [...masterPlaylist]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, CONFIG.maxRounds);
-
-        resetScores();
-        io.emit('init_history', []);
-        io.emit('game_starting');
-        startNextRound();
-    });
-
-    socket.on('submit_guess', (guess) => {
-        const name = socketToName[socket.id];
-        if (!game.isActive || !game.currentTrack || !players[name]) return;
-        if (!guess || guess.trim() === '') return;
-
-        let user = players[name];
-        let input = cleanString(guess);
-        let timeTaken = (Date.now() - game.startTime) / 1000;
-        let speedBonus = timeTaken < 10 ? 2 : timeTaken < 20 ? 1 : 0;
-
-        const simArtist = stringSimilarity.compareTwoStrings(input, game.currentTrack.cleanArtist);
-        const simTitle = stringSimilarity.compareTwoStrings(input, game.currentTrack.cleanTitle);
-
-        let hit = false;
-
-        // Vérification Artiste
-        if (!user.foundArtist) {
-            const artistMatch = simArtist > 0.72 || game.currentTrack.cleanArtist.includes(input) || input.includes(game.currentTrack.cleanArtist);
-            const artistClose = simArtist > 0.45;
-
-            if (artistMatch && input.length > 1) {
-                user.foundArtist = true;
-                user.score += 1 + speedBonus;
-                socket.emit('feedback', {
-                    type: 'success_artist',
-                    msg: `✅ Artiste trouvé ! (+${1 + speedBonus} pts)`,
-                    val: game.currentTrack.artist
-                });
-                hit = true;
-            } else if (artistClose) {
-                socket.emit('feedback', { type: 'close', msg: "🔥 Tu chauffes sur l'artiste !" });
-                hit = true;
-            }
-        }
-
-        // Vérification Titre
-        if (!user.foundTitle) {
-            const titleMatch = simTitle > 0.72 || game.currentTrack.cleanTitle.includes(input) || input.includes(game.currentTrack.cleanTitle);
-            const titleClose = simTitle > 0.45;
-
-            if (titleMatch && input.length > 1) {
-                user.foundTitle = true;
-                user.score += 1 + speedBonus;
-                socket.emit('feedback', {
-                    type: 'success_title',
-                    msg: `✅ Titre trouvé ! (+${1 + speedBonus} pts)`,
-                    val: game.currentTrack.title
-                });
-                hit = true;
-            } else if (titleClose && !hit) {
-                socket.emit('feedback', { type: 'close', msg: "🔥 Tu chauffes sur le titre !" });
-                hit = true;
-            }
-        }
-
-        if (!hit) {
-            socket.emit('feedback', { type: 'miss', msg: "❄️ Pas du tout..." });
-        }
-
-        // Mise à jour du classement pour tout le monde
-        io.emit('update_players', Object.values(players));
-
-        // Si ce joueur a tout trouvé
-        if (user.foundArtist && user.foundTitle) {
-            game.totalFullFound++;
-            if (!game.firstFullFinder) game.firstFullFinder = user.name;
-        }
-
-        checkEveryoneFound();
-    });
-
-    socket.on('disconnect', () => {
-        const name = socketToName[socket.id];
-        if (name) {
-            delete nameToSocket[name];
-            delete socketToName[socket.id];
-            // On garde le joueur dans players pour conserver son score
-            // mais on pourrait vouloir le retirer si on préfère
-            console.log(`🔴 ${name} déconnecté`);
-        }
-    });
+// Liste des rooms avec nb de joueurs en ligne
+app.get('/api/rooms', (req, res) => {
+  const result = Object.values(ROOMS).map(r => ({
+    ...r,
+    online: Object.values(roomGames).filter(g => g.roomId === r.id)
+      .reduce((acc, g) => acc + Object.keys(g.players).length, 0),
+  }));
+  res.json(result);
 });
 
-async function startNextRound() {
-    if (game.currentRound >= CONFIG.maxRounds || game.sessionPlaylist.length === 0) {
-        game.isActive = false;
-        const finalScores = Object.values(players).sort((a, b) => b.score - a.score);
-        io.emit('game_over', finalScores);
-        return;
+// Profil utilisateur
+app.get('/api/profile/:username', async (req, res) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('username', req.params.username)
+    .single();
+  if (error) return res.status(404).json({ error: 'Profil introuvable' });
+  res.json(data);
+});
+
+// Classement hebdomadaire
+app.get('/api/leaderboard/weekly', async (req, res) => {
+  const { data, error } = await supabase.rpc('weekly_leaderboard');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// Classement ELO global
+app.get('/api/leaderboard/elo', async (req, res) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('username, avatar_url, elo, level, games_played')
+    .order('elo', { ascending: false })
+    .limit(20);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ─── Game State per Room ──────────────────────────────────────────────────────
+// roomGames[roomId] = { players, socketToName, nameToSocket, game }
+const roomGames = {};
+
+const CONFIG = { roundDuration: 30, breakDuration: 7 };
+
+function getOrCreateRoom(roomId) {
+  if (!roomGames[roomId]) {
+    roomGames[roomId] = {
+      roomId,
+      players: {},
+      socketToName: {},
+      nameToSocket: {},
+      game: {
+        isActive: false,
+        currentRound: 0,
+        maxRounds: ROOMS[roomId]?.maxRounds || 10,
+        timer: 0,
+        interval: null,
+        currentTrack: null,
+        startTime: 0,
+        sessionPlaylist: [],
+        history: [],
+        firstFullFinder: null,
+        totalFullFound: 0,
+        lastRoundData: null,
+        dbGameId: null,
+      }
+    };
+  }
+  return roomGames[roomId];
+}
+
+function getRoomIO(roomId) {
+  return io.to(`room:${roomId}`);
+}
+
+// ─── Socket.IO ────────────────────────────────────────────────────────────────
+io.on('connection', (socket) => {
+
+  socket.on('join_room', async ({ roomId, username, userId, isGuest }) => {
+    if (!ROOMS[roomId]) return socket.emit('error', 'Room inconnue');
+    if (!username?.trim()) return socket.emit('error', 'Pseudo requis');
+
+    username = username.trim();
+    const room = getOrCreateRoom(roomId);
+
+    // Quitter l'ancienne room si besoin
+    if (socket.currentRoom) {
+      leaveRoom(socket, socket.currentRoom);
     }
 
-    game.currentRound++;
-    game.firstFullFinder = null;
-    game.totalFullFound = 0;
-    resetRoundFlags();
-    game.currentTrack = game.sessionPlaylist.pop();
+    socket.join(`room:${roomId}`);
+    socket.currentRoom = roomId;
+    socket.currentUser = { username, userId, isGuest };
 
-    console.log(`🎵 Manche ${game.currentRound}: ${game.currentTrack.artist} - ${game.currentTrack.title}`);
+    // Enregistrer le joueur
+    if (!room.players[username]) {
+      room.players[username] = {
+        name: username,
+        userId: userId || null,
+        isGuest: isGuest !== false,
+        score: 0,
+        foundArtist: false,
+        foundTitle: false,
+      };
+    } else {
+      // Reconnexion - update socket
+      const oldSocketId = room.nameToSocket[username];
+      if (oldSocketId) delete room.socketToName[oldSocketId];
+    }
 
+    room.socketToName[socket.id] = username;
+    room.nameToSocket[username] = socket.id;
+
+    getRoomIO(roomId).emit('update_players', Object.values(room.players));
+    socket.emit('room_joined', { roomId, roomConfig: ROOMS[roomId] });
+    socket.emit('init_history', room.game.history);
+
+    if (room.game.isActive && room.game.lastRoundData) {
+      socket.emit('start_round', room.game.lastRoundData);
+    }
+
+    console.log(`👤 ${username} → room "${roomId}"`);
+  });
+
+  socket.on('request_new_game', async () => {
+    const roomId = socket.currentRoom;
+    if (!roomId) return;
+    const room = getOrCreateRoom(roomId);
+    if (room.game.isActive) return;
+
+    const playlist = await loadPlaylist(roomId);
+    if (playlist.length === 0) {
+      return socket.emit('server_error', 'Playlist indisponible, réessaie.');
+    }
+
+    room.game.history = [];
+    room.game.currentRound = 0;
+    room.game.sessionPlaylist = [...playlist]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, room.game.maxRounds);
+
+    resetScores(room);
+    getRoomIO(roomId).emit('init_history', []);
+    getRoomIO(roomId).emit('game_starting');
+
+    // Créer la game en BDD
     try {
-        const r = await yts(`${game.currentTrack.artist} ${game.currentTrack.title} topic`);
-        if (!r.videos || r.videos.length === 0) throw new Error("Aucune vidéo trouvée");
+      const { data } = await supabase.from('games').insert({
+        room_id: roomId,
+        rounds: room.game.maxRounds,
+      }).select().single();
+      if (data) room.game.dbGameId = data.id;
+    } catch (e) { /* non-bloquant */ }
 
-        const video = r.videos[0];
-        const safeStart = Math.max(0, Math.floor(Math.random() * Math.max(1, video.seconds - CONFIG.roundDuration - 10)));
+    startNextRound(roomId);
+  });
 
-        game.isActive = true;
-        game.startTime = Date.now();
-        game.timer = CONFIG.roundDuration;
+  socket.on('submit_guess', async (guess) => {
+    const roomId = socket.currentRoom;
+    if (!roomId) return;
+    const room = getOrCreateRoom(roomId);
+    const name = room.socketToName[socket.id];
 
-        game.lastRoundData = {
-            videoId: video.videoId,
-            startSeconds: safeStart,
-            round: game.currentRound,
-            total: CONFIG.maxRounds
-        };
+    if (!room.game.isActive || !room.game.currentTrack || !room.players[name]) return;
+    if (!guess?.trim()) return;
 
-        io.emit('start_round', game.lastRoundData);
-        startTimer();
+    const user = room.players[name];
+    const input = cleanString(guess);
+    const timeTaken = (Date.now() - room.game.startTime) / 1000;
+    const speedBonus = calcSpeedBonus(timeTaken);
+    const track = room.game.currentTrack;
 
-    } catch (err) {
-        console.error(`⚠️ Erreur vidéo pour "${game.currentTrack.title}":`, err.message);
-        // Skip ce titre et passer au suivant
-        startNextRound();
+    const simArtist = stringSimilarity.compareTwoStrings(input, track.cleanArtist);
+    const simTitle  = stringSimilarity.compareTwoStrings(input, track.cleanTitle);
+    let hit = false;
+
+    // Check artiste
+    if (!user.foundArtist) {
+      const match = (simArtist > 0.72 || track.cleanArtist.includes(input) || input.includes(track.cleanArtist)) && input.length > 1;
+      if (match) {
+        user.foundArtist = true;
+        user.score += 1 + speedBonus;
+        socket.emit('feedback', { type: 'success_artist', msg: `✅ Artiste ! (+${1 + speedBonus} pts)`, val: track.artist });
+        hit = true;
+      } else if (simArtist > 0.45) {
+        socket.emit('feedback', { type: 'close', msg: "🔥 Tu chauffes sur l'artiste !" });
+        hit = true;
+      }
     }
-}
 
-function startTimer() {
-    clearInterval(game.interval);
-    game.interval = setInterval(() => {
-        game.timer--;
-        io.emit('timer_update', { current: game.timer, max: CONFIG.roundDuration });
-        if (game.timer <= 0) endRound("⏱️ Temps écoulé !");
-    }, 1000);
-}
-
-function checkEveryoneFound() {
-    const activePlayers = Object.values(players);
-    if (activePlayers.length === 0) return;
-    if (activePlayers.every(u => u.foundArtist && u.foundTitle) && game.isActive) {
-        endRound("🎉 Tout le monde a trouvé !");
+    // Check titre
+    if (!user.foundTitle) {
+      const match = (simTitle > 0.72 || track.cleanTitle.includes(input) || input.includes(track.cleanTitle)) && input.length > 1;
+      if (match) {
+        user.foundTitle = true;
+        user.score += 1 + speedBonus;
+        socket.emit('feedback', { type: 'success_title', msg: `✅ Titre ! (+${1 + speedBonus} pts)`, val: track.title });
+        hit = true;
+      } else if (simTitle > 0.45 && !hit) {
+        socket.emit('feedback', { type: 'close', msg: '🔥 Tu chauffes sur le titre !' });
+        hit = true;
+      }
     }
+
+    if (!hit) socket.emit('feedback', { type: 'miss', msg: '❄️ Pas du tout...' });
+
+    getRoomIO(roomId).emit('update_players', Object.values(room.players));
+
+    if (user.foundArtist && user.foundTitle) {
+      room.game.totalFullFound++;
+      if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
+    }
+
+    checkEveryoneFound(roomId);
+  });
+
+  socket.on('disconnect', () => {
+    if (socket.currentRoom) leaveRoom(socket, socket.currentRoom);
+  });
+});
+
+function leaveRoom(socket, roomId) {
+  const room = roomGames[roomId];
+  if (!room) return;
+  const name = room.socketToName[socket.id];
+  if (name) {
+    delete room.nameToSocket[name];
+    delete room.socketToName[socket.id];
+    // Optionnel : retirer le joueur de la liste
+    // delete room.players[name];
+    // getRoomIO(roomId).emit('update_players', Object.values(room.players));
+  }
+  socket.leave(`room:${roomId}`);
 }
 
-function endRound(reason) {
-    clearInterval(game.interval);
+// ─── Game Logic ───────────────────────────────────────────────────────────────
+async function startNextRound(roomId) {
+  const room = getOrCreateRoom(roomId);
+  const game = room.game;
+
+  if (game.currentRound >= game.maxRounds || game.sessionPlaylist.length === 0) {
     game.isActive = false;
+    const finalScores = Object.values(room.players).sort((a, b) => b.score - a.score);
+    getRoomIO(roomId).emit('game_over', finalScores);
 
-    const summary = {
-        answer: `${game.currentTrack.artist} - ${game.currentTrack.title}`,
-        cover: game.currentTrack.cover,
-        reason,
-        firstFinder: game.firstFullFinder,
-        totalFound: game.totalFullFound
+    // Sauvegarder en BDD
+    await saveGameResults(roomId, finalScores);
+    return;
+  }
+
+  game.currentRound++;
+  game.firstFullFinder = null;
+  game.totalFullFound = 0;
+  resetRoundFlags(room);
+  game.currentTrack = game.sessionPlaylist.pop();
+
+  try {
+    const r = await yts(`${game.currentTrack.artist} ${game.currentTrack.title} topic`);
+    if (!r.videos?.length) throw new Error('No video');
+
+    const video = r.videos[0];
+    const safeStart = Math.max(0, Math.floor(Math.random() * Math.max(1, video.seconds - CONFIG.roundDuration - 10)));
+
+    game.isActive = true;
+    game.startTime = Date.now();
+    game.timer = CONFIG.roundDuration;
+    game.lastRoundData = {
+      videoId: video.videoId,
+      startSeconds: safeStart,
+      round: game.currentRound,
+      total: game.maxRounds,
     };
 
-    game.history.push(summary);
-
-    // Envoyer à chaque joueur avec ses propres résultats
-    Object.keys(players).forEach(username => {
-        const p = players[username];
-        const socketId = nameToSocket[username];
-        if (socketId) {
-            io.to(socketId).emit('round_end', {
-                ...summary,
-                foundArtist: p.foundArtist,
-                foundTitle: p.foundTitle
-            });
-        }
-    });
-
-    setTimeout(startNextRound, CONFIG.breakDuration * 1000);
+    getRoomIO(roomId).emit('start_round', game.lastRoundData);
+    startTimer(roomId);
+  } catch (err) {
+    console.error(`⚠️ Skip "${game.currentTrack.title}":`, err.message);
+    startNextRound(roomId);
+  }
 }
 
-function resetRoundFlags() {
-    Object.keys(players).forEach(n => {
-        players[n].foundArtist = false;
-        players[n].foundTitle = false;
-    });
+function startTimer(roomId) {
+  const room = getOrCreateRoom(roomId);
+  const game = room.game;
+  clearInterval(game.interval);
+  game.interval = setInterval(() => {
+    game.timer--;
+    getRoomIO(roomId).emit('timer_update', { current: game.timer, max: CONFIG.roundDuration });
+    if (game.timer <= 0) endRound(roomId, '⏱️ Temps écoulé !');
+  }, 1000);
 }
 
-function resetScores() {
-    Object.keys(players).forEach(n => players[n].score = 0);
-    io.emit('update_players', Object.values(players));
+function checkEveryoneFound(roomId) {
+  const room = getOrCreateRoom(roomId);
+  const activePlayers = Object.values(room.players);
+  if (activePlayers.length > 0 && activePlayers.every(u => u.foundArtist && u.foundTitle) && room.game.isActive) {
+    endRound(roomId, '🎉 Tout le monde a trouvé !');
+  }
 }
 
-server.listen(3000, () => console.log('🚀 BT Project lancé sur http://localhost:3000'));
+function endRound(roomId, reason) {
+  const room = getOrCreateRoom(roomId);
+  const game = room.game;
+  clearInterval(game.interval);
+  game.isActive = false;
+
+  const summary = {
+    answer:      `${game.currentTrack.artist} - ${game.currentTrack.title}`,
+    cover:       game.currentTrack.cover,
+    reason,
+    firstFinder: game.firstFullFinder,
+    totalFound:  game.totalFullFound,
+  };
+  game.history.push(summary);
+
+  // Envoyer résultats personnalisés à chaque joueur
+  Object.keys(room.players).forEach(username => {
+    const p = room.players[username];
+    const socketId = room.nameToSocket[username];
+    if (socketId) {
+      io.to(socketId).emit('round_end', {
+        ...summary,
+        foundArtist: p.foundArtist,
+        foundTitle:  p.foundTitle,
+      });
+    }
+  });
+
+  setTimeout(() => startNextRound(roomId), CONFIG.breakDuration * 1000);
+}
+
+// ─── Supabase : sauvegarder résultats ────────────────────────────────────────
+async function saveGameResults(roomId, finalScores) {
+  const room = getOrCreateRoom(roomId);
+  const dbGameId = room.game.dbGameId;
+  if (!dbGameId) return;
+
+  try {
+    // Clôturer la game
+    await supabase.from('games').update({ ended_at: new Date().toISOString() }).eq('id', dbGameId);
+
+    // Insérer scores des joueurs
+    const players = finalScores.map((p, i) => ({
+      game_id:  dbGameId,
+      user_id:  p.userId || null,
+      username: p.name,
+      score:    p.score,
+      rank:     i + 1,
+      is_guest: p.isGuest || !p.userId,
+    }));
+    await supabase.from('game_players').insert(players);
+
+    // Mettre à jour stats des joueurs connectés
+    for (let i = 0; i < finalScores.length; i++) {
+      const p = finalScores[i];
+      if (p.userId && !p.isGuest) {
+        await supabase.rpc('update_player_stats', {
+          p_user_id:       p.userId,
+          p_score:         p.score,
+          p_rank:          i + 1,
+          p_total_players: finalScores.length,
+        });
+      }
+    }
+    console.log(`💾 Game ${dbGameId} saved.`);
+  } catch (err) {
+    console.error('❌ Save error:', err.message);
+  }
+}
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+function resetRoundFlags(room) {
+  Object.keys(room.players).forEach(n => {
+    room.players[n].foundArtist = false;
+    room.players[n].foundTitle  = false;
+  });
+}
+
+function resetScores(room) {
+  Object.keys(room.players).forEach(n => room.players[n].score = 0);
+  getRoomIO(room.roomId).emit('update_players', Object.values(room.players));
+}
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`🚀 BT Project v2 → http://localhost:${PORT}`));

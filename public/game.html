@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZIK | En jeu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="game.css">
+</head>
+<body>
+  <div id="app">
+    <div id="timer-bar-container"><div id="timer-bar"></div></div>
+
+    <div id="game-screen">
+
+      <!-- Header -->
+      <header class="game-header">
+        <a href="/" class="back-btn">← Rooms</a>
+        <div class="header-center">
+          <div id="room-name" class="room-label"></div>
+          <div id="round-info" class="round-info">En attente...</div>
+        </div>
+        <div class="vol-ctrl">
+          <span>🔊</span>
+          <input type="range" id="volumeSlider" min="0" max="100" value="50">
+        </div>
+      </header>
+
+      <!-- Sidebar gauche : joueurs -->
+      <aside id="sidebar-left">
+        <div class="sidebar-title">👥 JOUEURS</div>
+        <div id="player-list"></div>
+      </aside>
+
+      <!-- Centre -->
+      <main id="center-stage">
+        <div id="reveal-container">
+          <div id="album-placeholder">
+            <div class="vinyl-record"></div>
+            <span class="placeholder-q">?</span>
+          </div>
+          <img id="reveal-cover" src="" style="display:none;" alt="">
+        </div>
+
+        <div class="info-placeholders">
+          <div id="slot-artist" class="slot">
+            <span>Artiste</span>
+            <div class="val">???</div>
+          </div>
+          <div id="slot-title" class="slot">
+            <span>Titre</span>
+            <div class="val">???</div>
+          </div>
+        </div>
+
+        <div id="game-feedback"></div>
+
+        <div id="round-summary" style="display:none;">
+          <p id="round-reason"></p>
+          <p id="first-finder-msg"></p>
+        </div>
+
+        <div id="error-msg" class="error-msg" style="display:none;"></div>
+
+        <button id="startBtn" class="btn-launch">🎮 LANCER LA PARTIE</button>
+      </main>
+
+      <!-- Sidebar droite : historique -->
+      <aside id="sidebar-right">
+        <div class="sidebar-title">📜 HISTORIQUE</div>
+        <div id="history-list"></div>
+      </aside>
+
+      <!-- Footer input -->
+      <footer class="game-footer">
+        <input type="text" id="guessInput" placeholder="Artiste ou titre..." disabled autocomplete="off" maxlength="100">
+      </footer>
+
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="game-over-screen" style="display:none;">
+      <div class="game-over-card">
+        <div class="game-over-title">🏁 PARTIE TERMINÉE</div>
+        <div id="final-scores"></div>
+        <div class="game-over-btns">
+          <button id="replayBtn" class="btn-launch">🔄 Rejouer</button>
+          <a href="/" class="btn-secondary">← Changer de room</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="youtube-player" style="position:absolute;opacity:0;pointer-events:none;"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="game.js"></script>
+</body>
+</html>
