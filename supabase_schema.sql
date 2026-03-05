@@ -62,9 +62,9 @@ CREATE INDEX idx_profiles_elo ON public.profiles(elo DESC);
 -- ============================================================
 --  ROW LEVEL SECURITY (RLS)
 -- ============================================================
-ALTER TABLE public.profiles     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.games        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.game_players ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.games         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.game_players  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.round_results ENABLE ROW LEVEL SECURITY;
 
 -- Profiles : lecture publique, écriture seulement sur son propre profil
@@ -188,3 +188,44 @@ BEGIN
   WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
+--  CUSTOM_PLAYLISTS (playlists personnalisées par les utilisateurs)
+-- ============================================================
+CREATE TABLE public.custom_playlists (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id    UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  emoji       TEXT NOT NULL DEFAULT '🎵',
+  is_public   BOOLEAN NOT NULL DEFAULT FALSE,
+  track_count INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.custom_playlists ENABLE ROW LEVEL SECURITY;
+
+-- SELECT : propriétaire + playlists publiques visibles par tous
+CREATE POLICY "custom_playlists_select"
+  ON public.custom_playlists
+  FOR SELECT
+  USING (auth.uid() = owner_id OR is_public = true);
+
+-- INSERT : owner_id doit être l'utilisateur connecté (WITH CHECK explicite)
+CREATE POLICY "custom_playlists_insert"
+  ON public.custom_playlists
+  FOR INSERT
+  WITH CHECK (auth.uid() = owner_id);
+
+-- UPDATE : seul le propriétaire
+CREATE POLICY "custom_playlists_update"
+  ON public.custom_playlists
+  FOR UPDATE
+  USING (auth.uid() = owner_id)
+  WITH CHECK (auth.uid() = owner_id);
+
+-- DELETE : seul le propriétaire
+CREATE POLICY "custom_playlists_delete"
+  ON public.custom_playlists
+  FOR DELETE
+  USING (auth.uid() = owner_id);
