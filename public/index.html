@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>PoC BlindTest</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #player { display: none; } /* On cache la vidéo pour le blind test */
+        .status { margin-top: 20px; font-size: 1.2rem; color: #38bdf8; }
+        button { padding: 10px 20px; background: #38bdf8; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Test Sync Audio YouTube</h1>
+    <button onclick="requestNext()">Lancer une musique</button>
+    <div class="status" id="status">En attente...</div>
+    
+    <div id="player"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const socket = io();
+        let player;
+
+        // Initialisation de l'API YouTube
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '0', width: '0',
+                playerVars: { 'autoplay': 1, 'controls': 0 },
+                events: { 'onReady': () => console.log("Player Prêt") }
+            });
+        }
+
+        function requestNext() {
+            socket.emit('request_new_round');
+        }
+
+        socket.on('start_round', (data) => {
+            document.getElementById('status').innerText = "Lecture en cours (Segment aléatoire)...";
+            
+            // On charge la vidéo et on saute au moment voulu
+            player.loadVideoById({
+                videoId: data.videoId,
+                startSeconds: data.startTime
+            });
+            player.playVideo();
+        });
+    </script>
+</body>
+</html>
