@@ -351,7 +351,7 @@ app.get('/api/spotify/playlist-user/:id', async (req, res) => {
 
     while (allItems.length < Math.min(loopTotal, 1000)) {
       const tRes = await fetchFn(
-        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}&market=from_token`,
+        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}`,
         { headers: { Authorization: `Bearer ${userToken}` }, signal: AbortSignal.timeout(12000) }
       );
       if (!tRes.ok) {
