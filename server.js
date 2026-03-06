@@ -251,15 +251,16 @@ app.get('/api/leaderboard/elo', async (req, res) => {
   res.json(data);
 });
 
-// ─── Spotify : token client credentials (mis en cache 50 min) ────────────────
+// ─── Spotify : Token Management ───────────────────────────────────────────────
 let _spotifyToken = null;
 let _spotifyTokenExpiry = 0;
 
 async function getSpotifyToken() {
   if (_spotifyToken && Date.now() < _spotifyTokenExpiry) return _spotifyToken;
-  const clientId     = process.env.SPOTIFY_CLIENT_ID;
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('Spotify non configuré — ajoute SPOTIFY_CLIENT_ID et SPOTIFY_CLIENT_SECRET dans .env');
+  if (!clientId || !clientSecret) throw new Error('Spotify non configuré');
+
   const fetchFn = await getFetch();
   const res = await fetchFn('https://accounts.spotify.com/api/token', {
     method: 'POST',
@@ -268,253 +269,153 @@ async function getSpotifyToken() {
       Authorization: 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
     },
     body: 'grant_type=client_credentials',
-    signal: AbortSignal.timeout(8000),
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error(`Spotify token error ${res.status}:`, body);
-    throw new Error(`Identifiants Spotify invalides (HTTP ${res.status}). Vérifie SPOTIFY_CLIENT_ID et SPOTIFY_CLIENT_SECRET.`);
-  }
+  
+  if (!res.ok) throw new Error(`Spotify Auth Error ${res.status}`);
   const json = await res.json();
   _spotifyToken = json.access_token;
   _spotifyTokenExpiry = Date.now() + (json.expires_in - 60) * 1000;
   return _spotifyToken;
 }
 
-// ─── Spotify : recherche de titres ───────────────────────────────────────────
+// ─── Spotify : Search ─────────────────────────────────────────────────────────
 app.get('/api/spotify/search', async (req, res) => {
   const q = req.query.q?.trim();
   if (!q) return res.status(400).json({ error: 'Paramètre q requis' });
   try {
-    const token   = await getSpotifyToken();
+    const token = await getSpotifyToken();
     const fetchFn = await getFetch();
-    // Utiliser URLSearchParams pour éviter tout problème d'encodage
-    const params  = new URLSearchParams({ q, type: 'track', limit: '10' });
+    const params = new URLSearchParams({ q, type: 'track', limit: '10', market: 'FR' });
     const r = await fetchFn(`https://api.spotify.com/v1/search?${params}`, {
-      headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000),
+      headers: { Authorization: `Bearer ${token}` }
     });
-    if (!r.ok) {
-      const body = await r.text().catch(() => '');
-      console.error(`Spotify search error ${r.status}:`, body);
-      throw new Error(`Spotify API HTTP ${r.status} — ${body.slice(0, 200)}`);
-    }
     const data = await r.json();
     res.json((data.tracks?.items || []).map(t => ({
       external_id: t.id,
-      source:      'spotify',
-      artist:      t.artists.map(a => a.name).join(', '),
-      title:       t.name,
+      source: 'spotify',
+      artist: t.artists.map(a => a.name).join(', '),
+      title: t.name,
       preview_url: t.preview_url || null,
-      cover_url:   t.album.images[1]?.url || t.album.images[0]?.url || null,
+      cover_url: t.album.images[1]?.url || t.album.images[0]?.url || null,
     })));
   } catch (e) {
     res.status(502).json({ error: e.message });
   }
 });
 
-// ─── Spotify : import via token utilisateur PKCE (proxy serveur) ──────────────
-// Le client fait l'auth PKCE et passe son access_token dans X-Spotify-Token.
-// Le serveur appelle l'API Spotify côté Node (pas de CORS, logs disponibles).
-// Fallback automatique sur Client Credentials si le token user est refusé (403)
-// sur l'endpoint /tracks (limitation des apps en mode Development).
+// ─── Spotify : Import USER (Login PKCE) ────────────────────────────────────────
 app.get('/api/spotify/playlist-user/:id', async (req, res) => {
   const userToken = req.headers['x-spotify-token'];
+  const plId = req.params.id;
   if (!userToken) return res.status(400).json({ error: 'X-Spotify-Token manquant' });
 
   const fetchFn = await getFetch();
-  const plId    = req.params.id;
 
   try {
-    // 1. Métadonnées via token user (avec market=FR pour que Spotify retourne les tracks embedded)
-    const plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?market=FR`, {
-      headers: { Authorization: `Bearer ${userToken}` },
-      signal: AbortSignal.timeout(12000),
+    // 1. Métadonnées (Tentative Token User)
+    let plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?market=FR&fields=name,images,tracks(total)`, {
+      headers: { Authorization: `Bearer ${userToken}` }
     });
-    if (!plRes.ok) {
-      const body = await plRes.text().catch(() => '');
-      console.error(`Spotify metadata ${plId} → HTTP ${plRes.status}:`, body.slice(0, 300));
-      if (plRes.status === 401) return res.status(401).json({ error: 'Token Spotify expiré — reconnecte-toi.' });
-      if (plRes.status === 403) return res.status(403).json({ error: 'Accès refusé par Spotify.' });
-      if (plRes.status === 404) return res.status(404).json({ error: 'Playlist introuvable.' });
-      return res.status(plRes.status).json({ error: `Spotify HTTP ${plRes.status}` });
+
+    let currentToken = userToken;
+    let usingCC = false;
+
+    // Fallback si 403 ou 0 tracks (Restriction Sandbox)
+    if (!plRes.ok || plRes.status === 403) {
+      console.warn(`[Spotify] Fallback CC pour playlist ${plId}`);
+      currentToken = await getSpotifyToken();
+      plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?market=FR&fields=name,images,tracks(total)`, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      usingCC = true;
     }
+
+    if (!plRes.ok) return res.status(plRes.status).json({ error: "Playlist inaccessible" });
+
     const pl = await plRes.json();
-    let total = pl.tracks?.total || 0;
-    console.log(`Spotify metadata "${pl.name}": total=${total}, embedded=${pl.tracks?.items?.length || 0}`);
+    const total = pl.tracks?.total || 0;
 
-    // 2. Pagination via /tracks — token user en premier, Client Credentials en fallback si 403
-    let allItems  = [];
-    let offset    = 0;
-    let loopTotal = total || 9999;
-    let usingCC   = false; // true si on utilise le token Client Credentials
+    // 2. Pagination (Max 1000)
+    let allItems = [];
+    let offset = 0;
 
-    while (allItems.length < Math.min(loopTotal, 1000)) {
-      const tok  = usingCC ? await getSpotifyToken() : userToken;
+    while (offset < Math.min(total, 1000)) {
       const tRes = await fetchFn(
-        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}&market=FR`,
-        { headers: { Authorization: `Bearer ${tok}` }, signal: AbortSignal.timeout(12000) }
+        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}&market=FR&fields=items(track(id,name,artists(name),album(images),preview_url))`,
+        { headers: { Authorization: `Bearer ${currentToken}` } }
       );
 
-      // 403 avec token user → fallback Client Credentials (playlists publiques)
-      if (tRes.status === 403 && !usingCC) {
-        console.warn(`Spotify /tracks 403 avec token user → fallback Client Credentials`);
-        usingCC = true;
-        continue; // relancer l'itération avec CC token
+      if (tRes.status === 429) {
+        await delay(2000); continue;
       }
+      if (!tRes.ok) break;
 
-      if (!tRes.ok) {
-        const errBody = await tRes.text().catch(() => '');
-        console.warn(`Spotify /tracks offset=${offset} → HTTP ${tRes.status}:`, errBody.slice(0, 200));
-        break;
-      }
       const tData = await tRes.json();
-      if (typeof tData.total === 'number') { loopTotal = tData.total; total = tData.total; }
       if (!tData.items?.length) break;
-      allItems = allItems.concat(tData.items);
-      offset += 100;
-      if (tData.items.length < 100) break;
-    }
 
-    console.log(`Spotify /tracks: ${allItems.length} items (CC=${usingCC})`);
+      allItems = allItems.concat(tData.items);
+      if (tData.items.length < 100) break;
+      offset += 100;
+    }
 
     const tracks = allItems
       .filter(i => i?.track?.id && i.track.type !== 'episode')
       .map(i => ({
         external_id: i.track.id,
-        source:      'spotify',
-        artist:      i.track.artists?.map(a => a.name).join(', ') || '?',
-        title:       i.track.name,
+        source: 'spotify',
+        artist: i.track.artists?.map(a => a.name).join(', ') || '?',
+        title: i.track.name,
         preview_url: i.track.preview_url || null,
-        cover_url:   i.track.album?.images?.[1]?.url || i.track.album?.images?.[0]?.url || null,
+        cover_url: i.track.album?.images?.[1]?.url || i.track.album?.images?.[0]?.url || null,
       }));
 
-    console.log(`Spotify import "${pl.name}": ${tracks.length}/${total} pistes valides`);
-
-    if (!tracks.length) {
-      const msg = allItems.length > 0
-        ? `${allItems.length} éléments reçus mais aucun n'est une piste valide.`
-        : `Aucune piste récupérée (total=${total}). La playlist est peut-être privée ou vide.`;
-      return res.status(422).json({ error: msg });
-    }
-
-    res.json({
-      name:      pl.name,
-      cover:     pl.images?.[0]?.url || null,
-      tracks,
-      total,
-      truncated: total > tracks.length,
-    });
+    res.json({ name: pl.name, cover: pl.images?.[0]?.url, tracks, total, usingCC });
   } catch (e) {
-    console.error('Spotify user-import error:', e.message);
     res.status(502).json({ error: e.message });
   }
 });
 
 
-// 1. GET /playlists/{id}/tracks avec pagination (fonctionne avec CC pour playlists publiques)
-// 2. Si 403, fallback sur les tracks embedded dans GET /playlists/{id} (100 premiers)
-// Petit utilitaire pour gérer les pauses (Rate Limit ou sécurité)
-const delay = ms => new Promise(res => setTimeout(res, ms));
-
+// ─── Spotify : Import PUBLIC (Lien direct) ────────────────────────────────────
 app.get('/api/spotify/playlist/:id', async (req, res) => {
   try {
     const token = await getSpotifyToken();
     const fetchFn = await getFetch();
     const plId = req.params.id;
 
-    // 1. Récupération des métadonnées de base
-    // On demande uniquement ce dont on a besoin : nom, image et le total de tracks
     const plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?market=FR&fields=name,images,tracks(total)`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(12000),
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    if (!plRes.ok) {
-      const body = await plRes.text().catch(() => '');
-      console.error(`Spotify playlist ${plId} error ${plRes.status}:`, body.slice(0, 200));
-      if (plRes.status === 404) throw new Error('Playlist introuvable — vérifie le lien.');
-      if (plRes.status === 403) throw new Error('Accès refusé — la playlist est peut-être privée.');
-      throw new Error(`Erreur Spotify (HTTP ${plRes.status})`);
-    }
-
+    if (!plRes.ok) throw new Error('Playlist introuvable ou privée');
     const pl = await plRes.json();
     const total = pl.tracks?.total || 0;
-    console.log(`Début import Spotify "${pl.name}": ${total} titres annoncés.`);
 
-    // 2. Pagination pour récupérer tous les titres (par paquets de 100)
     let allItems = [];
     let offset = 0;
-    const limit = 100;
-    const maxTracks = 1000; // Limite de sécurité pour éviter les timeouts serveur
-
-    while (offset < Math.min(total, maxTracks)) {
+    while (offset < Math.min(total, 1000)) {
       const tRes = await fetchFn(
-        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=${limit}&offset=${offset}&market=FR&fields=items(track(id,name,artists(name),album(images),preview_url)),next`,
-        { 
-          headers: { Authorization: `Bearer ${token}` }, 
-          signal: AbortSignal.timeout(12000) 
-        }
+        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}&market=FR&fields=items(track(id,name,artists(name),album(images),preview_url))`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // Gestion du Rate Limit (Erreur 429)
-      if (tRes.status === 429) {
-        const retryAfter = parseInt(tRes.headers.get('Retry-After')) || 2;
-        console.warn(`Spotify Rate Limit ! Pause de ${retryAfter}s...`);
-        await delay(retryAfter * 1000);
-        continue; // On recommence l'itération actuelle
-      }
-
-      if (!tRes.ok) {
-        console.warn(`Erreur lors de la pagination à l'offset ${offset} (HTTP ${tRes.status})`);
-        break;
-      }
-
+      if (!tRes.ok) break;
       const tData = await tRes.json();
-      if (!tData.items || tData.items.length === 0) break;
-
-      allItems = allItems.concat(tData.items);
-      console.log(`Pagination : ${allItems.length}/${total} récupérés...`);
-
-      // Si on reçoit moins que la limite, on est à la fin
-      if (tData.items.length < limit) break;
-
-      offset += limit;
-      
-      // Petite pause de 100ms pour être "gentil" avec l'API entre deux pages
-      await delay(100);
+      allItems = allItems.concat(tData.items || []);
+      if (tData.items?.length < 100) break;
+      offset += 100;
     }
 
-    // 3. Nettoyage et formatage des données
-    const tracks = allItems
-      .filter(i => i?.track?.id) // On ignore les podcasts ou items corrompus
-      .map(i => ({
-        external_id: i.track.id,
-        source: 'spotify',
-        artist: i.track.artists.map(a => a.name).join(', '),
-        title: i.track.name,
-        preview_url: i.track.preview_url || null,
-        cover_url: i.track.album?.images?.[1]?.url || i.track.album?.images?.[0]?.url || null,
-      }));
+    const tracks = allItems.filter(i => i?.track?.id).map(i => ({
+      external_id: i.track.id,
+      source: 'spotify',
+      artist: i.track.artists.map(a => a.name).join(', '),
+      title: i.track.name,
+      preview_url: i.track.preview_url || null,
+      cover_url: i.track.album?.images?.[1]?.url || null,
+    }));
 
-    console.log(`Fin import "${pl.name}": ${tracks.length} tracks valides extraits.`);
-
-    // 4. Réponse au client
-    if (!tracks.length) {
-      throw new Error(total > 0 
-        ? "Impossible d'extraire les titres. La playlist est peut-être protégée." 
-        : "La playlist est vide.");
-    }
-
-    res.json({
-      name: pl.name,
-      cover: pl.images?.[0]?.url || null,
-      tracks,
-      total,
-      truncated: total > tracks.length, // Indique si on a dû couper à 1000
-    });
-
+    res.json({ name: pl.name, cover: pl.images?.[0]?.url, tracks, total });
   } catch (e) {
-    console.error('Erreur /api/spotify/playlist/:id :', e.message);
     res.status(502).json({ error: e.message });
   }
 });
