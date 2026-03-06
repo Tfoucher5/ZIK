@@ -483,7 +483,7 @@ async function connectSpotify() {
   sessionStorage.setItem('sp_verifier', verifier);
   const params = new URLSearchParams({
     response_type: 'code', client_id: clientId,
-    scope: 'playlist-read-private playlist-read-collaborative',
+    scope: 'playlist-read-private playlist-read-collaborative user-read-private',
     redirect_uri: SP_REDIRECT, code_challenge_method: 'S256',
     code_challenge: challenge, state: 'sp_import',
   });
