@@ -95,46 +95,32 @@ async function loadStats(userId) {
   try {
     const r = await fetch(`/api/stats/${userId}`);
     if (!r.ok) return;
-    const { bestByRoom } = await r.json();
-    renderBestScores(bestByRoom || {});
+    const { bestByRoom, roomInfo } = await r.json();
+    renderBestScores(bestByRoom || {}, roomInfo || {});
   } catch {
     document.getElementById('best-scores-list').innerHTML =
       '<p class="profile-empty">Impossible de charger les stats.</p>';
   }
 }
 
-function renderBestScores(bestByRoom) {
+function renderBestScores(bestByRoom, roomInfo) {
   const el = document.getElementById('best-scores-list');
   const entries = Object.entries(bestByRoom).sort((a, b) => b[1] - a[1]);
   if (!entries.length) {
     el.innerHTML = '<p class="profile-empty">Aucune partie jouée sur les rooms officielles.</p>';
     return;
   }
-  // Get room info for display
-  fetch('/api/rooms/official').then(r => r.json()).then(rooms => {
-    const roomMap = {};
-    rooms.forEach(r => { roomMap[r.id] = r; });
-    el.innerHTML = entries.map(([roomId, score]) => {
-      const room = roomMap[roomId];
-      if (!room) return '';
-      return `<div class="best-score-row">
-        <span class="best-score-emoji">${room.emoji || '🎵'}</span>
-        <div class="best-score-info">
-          <div class="best-score-room">${esc(room.name)}</div>
-          <div style="font-size:.75rem;color:var(--dim)">${room.description || ''}</div>
-        </div>
-        <span class="best-score-pts">${score} pts</span>
-      </div>`;
-    }).filter(Boolean).join('') || '<p class="profile-empty">Aucune partie sur les rooms officielles.</p>';
-  }).catch(() => {
-    el.innerHTML = entries.map(([roomId, score]) =>
-      `<div class="best-score-row">
-        <span class="best-score-emoji">🎵</span>
-        <div class="best-score-info"><div class="best-score-room">${esc(roomId)}</div></div>
-        <span class="best-score-pts">${score} pts</span>
-      </div>`
-    ).join('');
-  });
+  el.innerHTML = entries.map(([roomId, score]) => {
+    const room = roomInfo[roomId];
+    if (!room) return '';
+    return `<div class="best-score-row">
+      <span class="best-score-emoji">${room.emoji || '🎵'}</span>
+      <div class="best-score-info">
+        <div class="best-score-room">${esc(room.name)}</div>
+      </div>
+      <span class="best-score-pts">${score} pts</span>
+    </div>`;
+  }).filter(Boolean).join('') || '<p class="profile-empty">Aucune partie sur les rooms officielles.</p>';
 }
 
 // ─── Edit profile modal ───────────────────────────────────────────────────────
