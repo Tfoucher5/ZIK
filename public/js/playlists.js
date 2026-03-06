@@ -563,76 +563,30 @@ async function importSpotify() {
   prev.innerHTML = '<p style="color:var(--dim);font-size:.83rem">Chargement...</p>';
 
   try {
-    // Métadonnées de la playlist
-    const plRes = await fetch(`https://api.spotify.com/v1/playlists/${id}?market=FR`, {
-      headers: { Authorization: `Bearer ${token}` },
+    // Appel via le proxy serveur (évite CORS, logs disponibles côté Node)
+    const r = await fetch(`/api/spotify/playlist-user/${id}`, {
+      headers: { 'X-Spotify-Token': token },
     });
-    if (!plRes.ok) {
-      if (plRes.status === 401) {
-        sessionStorage.removeItem('sp_token'); updateSpotifyUI();
-        throw new Error('Session Spotify expirée — reconnecte-toi.');
-      }
-      if (plRes.status === 404) throw new Error('Playlist introuvable ou privée.');
-      throw new Error(`Erreur Spotify HTTP ${plRes.status}`);
-    }
-    const pl    = await plRes.json();
-    let   total = pl.tracks?.total || 0;
+    const data = await r.json();
 
-    // Pagination complète (sans 'fields' pour éviter les problèmes de format de réponse)
-    let allItems = [];
-    let offset   = 0;
-    const limit  = 100;
-    while (offset < Math.min(total || 9999, 1000)) {
-      const tRes = await fetch(
-        `https://api.spotify.com/v1/playlists/${id}/tracks?limit=${limit}&offset=${offset}&market=FR`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!tRes.ok) {
-        if (tRes.status === 401) {
-          sessionStorage.removeItem('sp_token'); updateSpotifyUI();
-          throw new Error('Session Spotify expirée — reconnecte-toi.');
-        }
-        break;
-      }
-      const tData = await tRes.json();
-      if (!tData.items?.length) break;
-      if (!total && tData.total) total = tData.total;
-      allItems = allItems.concat(tData.items);
-      offset += limit;
-      if (tData.items.length < limit) break;
+    if (!r.ok) {
+      // Token expiré → déconnecter pour forcer une reconnexion
+      if (r.status === 401) { sessionStorage.removeItem('sp_token'); updateSpotifyUI(); }
+      throw new Error(data.error || `Erreur serveur HTTP ${r.status}`);
     }
 
-    const tracks = allItems
-      .filter(i => i?.track?.id && i.track.type === 'track')
-      .map(i => ({
-        external_id: i.track.id,
-        source:      'spotify',
-        artist:      i.track.artists?.map(a => a.name).join(', ') || '?',
-        title:       i.track.name,
-        preview_url: i.track.preview_url || null,
-        cover_url:   i.track.album?.images?.[1]?.url || i.track.album?.images?.[0]?.url || null,
-      }));
-
-    if (!tracks.length) {
-      const raw = allItems.length;
-      throw new Error(raw > 0
-        ? `${raw} élément(s) reçus mais aucun n'est une piste audio valide (podcasts / fichiers locaux exclus).`
-        : 'Playlist vide ou inaccessible. Vérifie que la playlist est publique.');
-    }
-
-    importPreviewTracks = tracks;
-    const truncated = total > tracks.length;
+    importPreviewTracks = data.tracks;
     prev.innerHTML = `
       <div class="import-preview-header">
-        ${pl.images?.[0]?.url ? `<img class="import-preview-cover" src="${pl.images[0].url}" alt="">` : ''}
+        ${data.cover ? `<img class="import-preview-cover" src="${data.cover}" alt="">` : ''}
         <div>
-          <div class="import-preview-name">${esc(pl.name)}</div>
-          <div class="import-preview-count">${tracks.length} titres${truncated ? ` / ${total}` : ''}</div>
+          <div class="import-preview-name">${esc(data.name)}</div>
+          <div class="import-preview-count">${data.tracks.length} titres${data.truncated ? ` / ${data.total}` : ''}</div>
         </div>
       </div>
-      ${truncated ? `<p style="color:#fbbf24;font-size:.75rem;margin-top:6px">⚠️ Limité aux ${tracks.length} premiers titres (total: ${total})</p>` : ''}
+      ${data.truncated ? `<p style="color:#fbbf24;font-size:.75rem;margin-top:6px">⚠️ Limité aux ${data.tracks.length} premiers titres (total: ${data.total})</p>` : ''}
       <div class="import-actions">
-        <button class="btn-accent sm" onclick="confirmImport('spotify')">Tout importer (${tracks.length} titres)</button>
+        <button class="btn-accent sm" onclick="confirmImport('spotify')">Tout importer (${data.tracks.length} titres)</button>
         <button class="btn-ghost sm" onclick="document.getElementById('import-spotify-preview').innerHTML=''">Annuler</button>
       </div>`;
   } catch (e) {
