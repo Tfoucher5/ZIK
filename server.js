@@ -16,7 +16,12 @@ const io     = new Server(server);
 app.get('/config.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Cache-Control', 'no-cache');
-  res.send(`window.ZIK_SUPABASE_URL=${JSON.stringify(process.env.SUPABASE_URL||'')};window.ZIK_SUPABASE_ANON_KEY=${JSON.stringify(process.env.SUPABASE_ANON_KEY||'')};`);
+  res.send(
+    `window.ZIK_SUPABASE_URL=${JSON.stringify(process.env.SUPABASE_URL||'')};` +
+    `window.ZIK_SUPABASE_ANON_KEY=${JSON.stringify(process.env.SUPABASE_ANON_KEY||'')};` +
+    `window.ZIK_SPOTIFY_CLIENT_ID=${JSON.stringify(process.env.SPOTIFY_CLIENT_ID||'')};` +
+    `window.ZIK_ADMIN_USER_ID=${JSON.stringify(process.env.ADMIN_USER_ID||'')};`
+  );
 });
 
 // ─── Static assets (CSS, JS, images) ─────────────────────────────────────────
@@ -418,30 +423,35 @@ app.get('/api/deezer/playlist/:id', async (req, res) => {
   try {
     const fetchFn = await getFetch();
     const headers = { 'User-Agent': 'ZIK-BlindTest/1.0' };
+    const plId    = req.params.id;
 
-    // Première page : récup métadonnées + premiers titres
-    const r = await fetchFn(`https://api.deezer.com/playlist/${req.params.id}?limit=100`, {
+    // Métadonnées uniquement (le paramètre ?limit est ignoré par Deezer sur ce endpoint)
+    const r = await fetchFn(`https://api.deezer.com/playlist/${plId}`, {
       headers, signal: AbortSignal.timeout(10000),
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     if (data.error) throw new Error(data.error.message || 'Playlist introuvable');
-    if (!data.tracks?.data?.length) throw new Error('Playlist vide ou privée');
 
-    let allTracks = [...data.tracks.data];
-    const total   = data.tracks.total || allTracks.length;
+    // nb_tracks = total réel, tracks.total = total des tracks paginées
+    const total = data.nb_tracks || data.tracks?.total || 0;
+    if (!total) throw new Error('Playlist vide ou privée');
 
-    // Pagination par index (plus fiable que suivre `next`)
+    // Pagination complète via /tracks depuis le début (plus fiable que les embedded)
+    let allTracks = [];
     while (allTracks.length < Math.min(total, 1000)) {
       const index = allTracks.length;
-      const nextR = await fetchFn(`https://api.deezer.com/playlist/${req.params.id}/tracks?index=${index}&limit=100`, {
+      const nextR = await fetchFn(`https://api.deezer.com/playlist/${plId}/tracks?index=${index}&limit=100`, {
         headers, signal: AbortSignal.timeout(10000),
       });
       if (!nextR.ok) break;
       const nextData = await nextR.json();
       if (nextData.error || !nextData.data?.length) break;
       allTracks = allTracks.concat(nextData.data);
+      if (nextData.data.length < 100) break; // dernière page
     }
+
+    if (!allTracks.length) throw new Error('Impossible de récupérer les titres (playlist vide ou privée)');
 
     const tracks = allTracks
       .filter(t => t.readable !== false)
@@ -529,6 +539,27 @@ app.get('/api/stats/:userId', async (req, res) => {
 // ─── Spotify config status ────────────────────────────────────────────────────
 app.get('/api/spotify/status', (req, res) => {
   res.json({ configured: !!(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) });
+});
+
+// ─── Admin : marquer une playlist comme officielle ────────────────────────────
+app.post('/api/playlists/:id/official', async (req, res) => {
+  if (!process.env.ADMIN_USER_ID) return res.status(403).json({ error: 'Admin non configuré' });
+  const token = req.headers.authorization?.slice(7);
+  if (!token) return res.status(401).json({ error: 'Non authentifié' });
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !user) return res.status(401).json({ error: 'Session invalide' });
+  if (user.id !== process.env.ADMIN_USER_ID) return res.status(403).json({ error: 'Admin uniquement' });
+
+  const { is_official, linked_room_id } = req.body || {};
+  const { error } = await supabase.from('custom_playlists')
+    .update({ is_official: !!is_official, linked_room_id: linked_room_id || null })
+    .eq('id', req.params.id);
+  if (error) return res.status(400).json({ error: error.message });
+
+  // Vider le cache de la room liée pour forcer un rechargement
+  if (linked_room_id && is_official) delete playlistCache[linked_room_id];
+  console.log(`⭐ Playlist ${req.params.id} marquée officielle → room "${linked_room_id}" par ${user.email}`);
+  res.json({ ok: true });
 });
 
 // ─── Custom rooms (éphémères, TTL 4h) ────────────────────────────────────────
@@ -666,6 +697,11 @@ io.on('connection', (socket) => {
     room.nameToSocket[username] = socket.id;
 
     getRoomIO(roomId).emit('update_players', Object.values(room.players));
+
+    // Charger/pré-charger la playlist pour avoir le nb de titres disponible
+    if (ROOMS[roomId] && !playlistCache[roomId]) {
+      loadPlaylist(roomId).catch(() => {}); // fire-and-forget, pas bloquant
+    }
     const cust        = customRooms[roomId];
     const officialRoom = ROOMS[roomId];
     socket.emit('room_joined', {
