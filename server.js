@@ -290,14 +290,31 @@ function calcSpeedBonus(timeTaken) {
 
 // ─── REST API ─────────────────────────────────────────────────────────────────
 
-// Liste des rooms officielles (hardcodées) avec nb de joueurs en ligne
-app.get('/api/rooms/official', (req, res) => {
-  const result = Object.values(ROOMS).map(r => ({
-    ...r,
-    online: Object.values(roomGames).filter(g => g.roomId === r.id)
-      .reduce((acc, g) => acc + Object.keys(g.players).length, 0),
-  }));
-  res.json(result);
+// Liste des rooms officielles depuis la BDD (+ compte joueurs en ligne)
+app.get('/api/rooms/official', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('code, name, emoji, description, is_official')
+      .eq('is_official', true)
+      .order('created_at');
+    if (error) throw error;
+
+    const result = (data || []).map(r => ({
+      id:          r.code,
+      name:        r.name,
+      emoji:       r.emoji,
+      description: r.description || '',
+      color:       'var(--accent)',
+      gradient:    'linear-gradient(135deg,rgba(62,207,255,.12),transparent)',
+      online:      Object.values(roomGames)
+        .filter(g => g.roomId === r.code)
+        .reduce((acc, g) => acc + Object.values(g.players).filter(p => !p._dcTimer).length, 0),
+    }));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Profil utilisateur
@@ -316,6 +333,13 @@ app.get('/api/leaderboard/weekly', async (req, res) => {
   const { data, error } = await supabase.rpc('weekly_leaderboard');
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
+});
+
+// Classement hebdomadaire par room
+app.get('/api/leaderboard/weekly/room/:code', async (req, res) => {
+  const { data, error } = await supabase.rpc('weekly_leaderboard_by_room', { p_room_code: req.params.code });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data || []);
 });
 
 // Classement ELO global
@@ -646,28 +670,35 @@ app.post('/api/profile/update', async (req, res) => {
   res.json({ ok: true });
 });
 
-// ─── Stats : meilleurs scores par room ───────────────────────────────────────
+// ─── Stats : meilleurs scores par room officielle ─────────────────────────────
 app.get('/api/stats/:userId', async (req, res) => {
   try {
+    // Récupérer les rooms officielles pour filtrer
+    const { data: officialRooms } = await supabase
+      .from('rooms').select('code, name, emoji').eq('is_official', true);
+    const officialCodes = new Set((officialRooms || []).map(r => r.code));
+    const roomInfo = {};
+    (officialRooms || []).forEach(r => { roomInfo[r.code] = r; });
+
     const { data, error } = await supabase
       .from('game_players')
-      .select('score, games(room_id, ended_at)')
+      .select('score, games!inner(room_id, ended_at)')
       .eq('user_id', req.params.userId)
       .eq('is_guest', false)
-      .not('games', 'is', null)
+      .not('games.ended_at', 'is', null)
       .order('score', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
 
-    // Meilleur score par room
+    // Meilleur score par room officielle uniquement
     const bestByRoom = {};
     (data || []).forEach(row => {
       const roomId = row.games?.room_id;
-      if (!roomId) return;
+      if (!roomId || !officialCodes.has(roomId)) return;
       if (!bestByRoom[roomId] || row.score > bestByRoom[roomId]) {
         bestByRoom[roomId] = row.score;
       }
     });
-    res.json({ bestByRoom });
+    res.json({ bestByRoom, roomInfo });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -906,7 +937,15 @@ const roomGames = {};
 const CONFIG = { roundDuration: 30, breakDuration: 7 };
 
 function getOrCreateRoom(roomId) {
-  if (!roomGames[roomId]) {
+  if (roomGames[roomId]) {
+    // Annuler le timer de cleanup si quelqu'un rejoint alors que la room etait vide
+    if (roomGames[roomId]._emptyTimer) {
+      clearTimeout(roomGames[roomId]._emptyTimer);
+      roomGames[roomId]._emptyTimer = null;
+    }
+    return roomGames[roomId];
+  }
+  {
     const cust = customRooms[roomId] || dbRooms[roomId];
     roomGames[roomId] = {
       roomId,
@@ -916,9 +955,9 @@ function getOrCreateRoom(roomId) {
       game: {
         isActive: false,
         currentRound: 0,
-        maxRounds:     cust?.maxRounds     || ROOMS[roomId]?.maxRounds || 10,
-        roundDuration: cust?.roundDuration || CONFIG.roundDuration,
-        breakDuration: cust?.breakDuration || CONFIG.breakDuration,
+        maxRounds:     cust?.max_rounds || cust?.maxRounds || ROOMS[roomId]?.maxRounds || 10,
+        roundDuration: cust?.round_duration || cust?.roundDuration || CONFIG.roundDuration,
+        breakDuration: cust?.break_duration || cust?.breakDuration || CONFIG.breakDuration,
         timer: 0,
         interval: null,
         breakTimer: null,
@@ -1171,8 +1210,25 @@ function leaveRoom(socket, roomId) {
         delete room.players[name];
         const active = Object.values(room.players).filter(p => !p._dcTimer);
         getRoomIO(roomId).emit('update_players', active);
-        // Plus personne et partie terminée → libérer la mémoire
-        if (active.length === 0 && !room.game.isActive) cleanupRoom(roomId);
+
+        if (active.length === 0) {
+          // Stopper la partie si personne ne reste
+          if (room.game.isActive) {
+            clearInterval(room.game.interval);
+            clearTimeout(room.game.breakTimer);
+            room.game.interval    = null;
+            room.game.breakTimer  = null;
+            room.game.isActive    = false;
+            console.log(`Room "${roomId}" vide — partie stoppee`);
+          }
+          // Rooms ephemeres : cleanup apres 15 min
+          // Rooms DB/officielles : liberer maintenant (elles se rechargent au besoin)
+          if (customRooms[roomId]) {
+            room._emptyTimer = setTimeout(() => cleanupRoom(roomId), 15 * 60 * 1000);
+          } else {
+            cleanupRoom(roomId);
+          }
+        }
       }, 30_000);
     }
   }

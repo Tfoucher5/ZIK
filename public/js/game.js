@@ -7,8 +7,43 @@ const USERNAME = P.get('username') || 'Joueur';
 const USER_ID  = P.get('userId')   || null;
 const IS_GUEST = P.get('isGuest') === '1';
 
+// ─── Socket.IO ────────────────────────────────────────────────────────────────
+const socket = io({
+  reconnectionAttempts: Infinity,
+  reconnectionDelay:    1000,
+  reconnectionDelayMax: 5000,
+  timeout:              10000,
+});
+
+let _hasJoined   = false;   // first join already sent
+let _roundActive = false;   // a round is currently in progress
+let _lastVideo   = null;    // { videoId, startSeconds, startedAt } for restart after reconnect
+
+// Reconnect banner (injected once)
+const _dcBanner = document.createElement('div');
+_dcBanner.id = 'dc-banner';
+_dcBanner.textContent = 'Reconnexion en cours…';
+Object.assign(_dcBanner.style, {
+  display: 'none', position: 'fixed', top: '0', left: '0', right: '0',
+  zIndex: '9999', background: '#b45309', color: '#fff',
+  textAlign: 'center', padding: '8px', fontSize: '.875rem', fontWeight: '600',
+});
+document.body.prepend(_dcBanner);
+
+socket.on('connect', () => {
+  _dcBanner.style.display = 'none';
+  if (_hasJoined) {
+    // Rejoin after reconnect — server will resync state
+    socket.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST });
+  }
+});
+
+socket.on('disconnect', () => {
+  _dcBanner.style.display = 'block';
+  if (_roundActive) stopVideo();
+});
+
 // ─── YouTube ──────────────────────────────────────────────────────────────────
-const socket = io();
 let ytPlayer, ytReady = false, pendingLoad = null;
 
 window.onYouTubeIframeAPIReady = () => {
@@ -25,6 +60,12 @@ window.onYouTubeIframeAPIReady = () => {
       },
       onStateChange(e) {
         if (e.data === YT.PlayerState.PLAYING) { ytPlayer.setVolume(savedVol()); ytPlayer.unMute(); }
+        // Restart video if it stops/ends unexpectedly mid-round
+        if (_roundActive && _lastVideo &&
+            (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED)) {
+          const elapsed = (Date.now() - _lastVideo.startedAt) / 1000;
+          loadVideo(_lastVideo.videoId, _lastVideo.startSeconds + elapsed);
+        }
       }
     }
   });
@@ -65,6 +106,7 @@ const ui = {
 
 let personalFound = { artist: false, title: false };
 let feedTimer;
+let _prevScores = {}; // name → score, to detect score changes for flash
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -92,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ui.replayBtn.onclick = requestGame;
 
   // Join room
+  _hasJoined = true;
   socket.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST });
 });
 
@@ -119,20 +162,21 @@ socket.on('track_count_update', count => {
 });
 
 socket.on('update_players', players => {
-  ui.playerList.innerHTML = players
-    .sort((a, b) => b.score - a.score)
-    .map((p, i) => {
-      const medals = ['🥇','🥈','🥉'];
-      const rank   = medals[i] || `#${i+1}`;
-      return `<div class="p-card rank-${i+1}">
-        <span class="p-name">${rank} ${esc(p.name)}</span>
-        <div class="p-right">
-          <div class="p-badge ${p.foundArtist ? 'f' : ''}">A</div>
-          <div class="p-badge ${p.foundTitle  ? 'f' : ''}">T</div>
-          <span class="p-score">${p.score}pt</span>
-        </div>
-      </div>`;
-    }).join('');
+  const sorted = [...players].sort((a, b) => b.score - a.score);
+  ui.playerList.innerHTML = sorted.map((p, i) => {
+    const medals = ['🥇','🥈','🥉'];
+    const rank   = medals[i] || `#${i+1}`;
+    const scored = _prevScores[p.name] !== undefined && p.score > _prevScores[p.name];
+    return `<div class="p-card rank-${i+1}">
+      <span class="p-name">${rank} ${esc(p.name)}</span>
+      <div class="p-right">
+        <div class="p-badge ${p.foundArtist ? 'f' : ''}">A</div>
+        <div class="p-badge ${p.foundTitle  ? 'f' : ''}">T</div>
+        <span class="p-score${scored ? ' flash' : ''}">${p.score}pt</span>
+      </div>
+    </div>`;
+  }).join('');
+  players.forEach(p => { _prevScores[p.name] = p.score; });
 });
 
 socket.on('init_history', history => {
@@ -182,6 +226,8 @@ socket.on('start_round', data => {
   ui.startBtn.disabled       = false;
   ui.startBtn.textContent    = '🎮 Lancer la partie';
 
+  _roundActive = true;
+  _lastVideo   = { videoId: data.videoId, startSeconds: data.startSeconds, startedAt: Date.now() };
   loadVideo(data.videoId, data.startSeconds);
 });
 
@@ -235,6 +281,7 @@ socket.on('round_end', data => {
     ? `🏆 1er : ${data.firstFinder} — ${data.totalFound} joueur(s) ont tout trouvé`
     : "❌ Personne n'a trouvé";
 
+  _roundActive = false;
   ui.guessInput.disabled = true;
   ui.timerBar.style.transition = 'none';
   ui.timerBar.style.width = '0%';
@@ -247,6 +294,7 @@ socket.on('round_end', data => {
 });
 
 socket.on('game_over', scores => {
+  _roundActive = false;
   stopVideo();
   ui.guessInput.disabled = true;
   ui.timerBar.style.width = '0%';

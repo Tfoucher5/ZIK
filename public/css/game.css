@@ -284,3 +284,33 @@ a{text-decoration:none;color:inherit}
   #cover-wrap{width:min(160px,28vh);height:min(160px,28vh)}
   .start-btn{padding:12px 26px}
 }
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+
+/* Score flash when a player earns points */
+@keyframes scoreFlash{
+  0%   { color:var(--accent); transform:scale(1.25); }
+  60%  { color:var(--success); transform:scale(1.1); }
+  100% { color:var(--accent); transform:none; }
+}
+.p-score.flash{ animation:scoreFlash .5s ease; }
+
+/* Slot found pulse */
+@keyframes slotFound{
+  0%,100%{ box-shadow:none; }
+  50%    { box-shadow:0 0 16px rgba(74,222,128,.4); }
+}
+.slot.found{ animation:slotFound .6s ease; }
+
+/* Round summary slide-in */
+@keyframes summaryIn{
+  from{ opacity:0; transform:translateY(-8px); }
+  to  { opacity:1; transform:none; }
+}
+#round-summary[style*="block"]{ animation:summaryIn .3s ease; }
+
+/* Respect user motion preferences */
+@media(prefers-reduced-motion:reduce){
+  .p-score.flash, .slot.found, #round-summary[style*="block"],
+  .h-item, .go-card, #gameover, #cover-img, .vinyl{ animation:none !important; }
+}
