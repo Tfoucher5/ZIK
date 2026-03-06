@@ -110,6 +110,7 @@ async function loadPlaylists() {
 function buildPlCard(pl) {
   const card = document.createElement('div');
   card.className = 'pl-card';
+  card.dataset.plId = pl.id; // pour retrait immédiat lors de la suppression
   card.innerHTML = `
     <span class="pl-card-emoji">${esc(pl.emoji)}</span>
     <div class="pl-card-name">${esc(pl.name)}</div>
@@ -187,6 +188,7 @@ async function openEditor(pl) {
   document.getElementById('editor-pl-name').textContent = pl.name;
   document.getElementById('editor-emoji').textContent   = pl.emoji;
   document.getElementById('modal-editor').style.display = 'flex';
+  openAdminSection(pl);
 
   // Reset tabs
   switchTab('search');
@@ -284,21 +286,82 @@ async function deletePlaylist() {
 
   try {
     // Endpoint serveur avec auth token explicite (plus fiable que client-side Supabase)
+    const deletedId = editingPl.id;
+    // Fermer le modal + retirer la carte AVANT la requête pour feedback immédiat
+    closeEditorModal();
+    editingPl = null;
+    document.querySelector(`[data-pl-id="${deletedId}"]`)?.remove();
+
     const { data: { session } } = await sb.auth.getSession();
-    const r = await fetch(`/api/playlists/${editingPl.id}`, {
+    const r = await fetch(`/api/playlists/${deletedId}`, {
       method:  'DELETE',
       headers: { Authorization: `Bearer ${session?.access_token}` },
     });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
 
-    closeEditorModal();
-    editingPl = null;
     toast('Playlist supprimée.', 'success');
-    await loadPlaylists();
+    loadPlaylists(); // refresh silencieux (pas de await pour ne pas bloquer)
   } catch (e) {
     toast('Erreur suppression : ' + e.message, 'error');
     btn.disabled = false; btn.textContent = 'Supprimer';
+  }
+}
+
+// ─── Admin : section officielle ───────────────────────────────────────────────
+function isAdmin() {
+  return !!(window.ZIK_ADMIN_USER_ID && currentUser?.id === window.ZIK_ADMIN_USER_ID);
+}
+
+async function openAdminSection(pl) {
+  const section = document.getElementById('admin-section');
+  if (!section) return;
+  section.style.display = isAdmin() ? 'block' : 'none';
+  if (!isAdmin()) return;
+
+  document.getElementById('admin-is-official').checked = !!pl.is_official;
+  document.getElementById('admin-linked-room').value   = pl.linked_room_id || '';
+
+  // Peupler le select des rooms si pas encore fait
+  const sel = document.getElementById('admin-linked-room');
+  if (sel.options.length <= 1) {
+    try {
+      const r = await fetch('/api/rooms');
+      const rooms = await r.json();
+      rooms.forEach(room => {
+        const opt = document.createElement('option');
+        opt.value = room.id;
+        opt.textContent = `${room.emoji || ''} ${room.name}`;
+        sel.appendChild(opt);
+      });
+    } catch { /* ignore */ }
+  }
+  sel.value = pl.linked_room_id || '';
+}
+
+async function saveOfficialStatus() {
+  if (!isAdmin() || !editingPl) return;
+  const is_official   = document.getElementById('admin-is-official').checked;
+  const linked_room_id = document.getElementById('admin-linked-room').value || null;
+
+  const { data: { session } } = await sb.auth.getSession();
+  const btn = document.getElementById('saveOfficialBtn');
+  btn.disabled = true; btn.textContent = '...';
+
+  try {
+    const r = await fetch(`/api/playlists/${editingPl.id}/official`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ is_official, linked_room_id }),
+    });
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+    editingPl = { ...editingPl, is_official, linked_room_id };
+    toast('Statut officiel mis à jour.', 'success');
+  } catch (e) {
+    toast('Erreur : ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enregistrer';
   }
 }
 
@@ -356,53 +419,185 @@ async function addFromSearch(idx, btn) {
   else { btn.disabled = false; btn.textContent = '+ Ajouter'; }
 }
 
+// ─── Spotify PKCE ─────────────────────────────────────────────────────────────
+const SP_REDIRECT = window.location.origin + '/playlists';
+
+function spB64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+function genVerifier(len = 64) {
+  return spB64url(crypto.getRandomValues(new Uint8Array(len)));
+}
+async function genChallenge(v) {
+  return spB64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)));
+}
+
+function getSpotifyUserToken() {
+  const token = sessionStorage.getItem('sp_token');
+  const exp   = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
+  return (token && Date.now() < exp) ? token : null;
+}
+
+function updateSpotifyUI() {
+  const connected  = !!getSpotifyUserToken();
+  const clientId   = window.ZIK_SPOTIFY_CLIENT_ID;
+  const configured = !!clientId;
+  document.getElementById('spotify-unconfigured').style.display = configured ? 'none'  : 'block';
+  document.getElementById('spotify-configured').style.display   = configured ? 'block' : 'none';
+  if (configured) {
+    document.getElementById('spotify-connect-wrap').style.display   = connected ? 'none'  : 'block';
+    document.getElementById('spotify-import-section').style.display = connected ? 'block' : 'none';
+  }
+}
+
+async function connectSpotify() {
+  const clientId = window.ZIK_SPOTIFY_CLIENT_ID;
+  if (!clientId) { toast('SPOTIFY_CLIENT_ID non configuré.', 'error'); return; }
+  const verifier  = genVerifier();
+  const challenge = await genChallenge(verifier);
+  sessionStorage.setItem('sp_verifier', verifier);
+  const params = new URLSearchParams({
+    response_type: 'code', client_id: clientId,
+    scope: 'playlist-read-private playlist-read-collaborative',
+    redirect_uri: SP_REDIRECT, code_challenge_method: 'S256',
+    code_challenge: challenge, state: 'sp_import',
+  });
+  window.location.href = 'https://accounts.spotify.com/authorize?' + params;
+}
+
+async function handleSpotifyCallback() {
+  const params   = new URLSearchParams(window.location.search);
+  const code     = params.get('code');
+  const state    = params.get('state');
+  if (params.get('error') || !code || state !== 'sp_import') {
+    if (params.get('error')) window.history.replaceState({}, '', '/playlists');
+    return;
+  }
+  window.history.replaceState({}, '', '/playlists');
+
+  const verifier = sessionStorage.getItem('sp_verifier');
+  const clientId = window.ZIK_SPOTIFY_CLIENT_ID;
+  if (!verifier || !clientId) return;
+
+  try {
+    const r = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code', code,
+        redirect_uri: SP_REDIRECT, client_id: clientId, code_verifier: verifier,
+      }),
+    });
+    const json = await r.json();
+    if (!json.access_token) throw new Error(json.error_description || 'Token exchange failed');
+    sessionStorage.setItem('sp_token',     json.access_token);
+    sessionStorage.setItem('sp_token_exp', Date.now() + json.expires_in * 1000);
+    sessionStorage.removeItem('sp_verifier');
+    updateSpotifyUI();
+    toast('Spotify connecté !', 'success');
+  } catch (e) {
+    toast('Erreur Spotify : ' + e.message, 'error');
+  }
+}
+
+function disconnectSpotify() {
+  sessionStorage.removeItem('sp_token');
+  sessionStorage.removeItem('sp_token_exp');
+  updateSpotifyUI();
+  toast('Spotify déconnecté.', 'success');
+}
+
 // ─── Import Spotify ───────────────────────────────────────────────────────────
 async function checkSpotifyStatus() {
-  try {
-    const r = await fetch('/api/spotify/status');
-    const { configured } = await r.json();
-    document.getElementById('spotify-unconfigured').style.display = configured ? 'none' : 'block';
-    document.getElementById('spotify-configured').style.display   = configured ? 'block' : 'none';
-  } catch { /* ignore */ }
+  updateSpotifyUI();
+  await handleSpotifyCallback();
 }
 
 function extractSpotifyId(input) {
   input = input.trim();
-  // URL : https://open.spotify.com/playlist/XXXX?...
   const m = input.match(/playlist\/([a-zA-Z0-9]+)/);
   if (m) return m[1];
-  // ID direct
   if (/^[a-zA-Z0-9]{22}$/.test(input)) return input;
   return null;
 }
 
 async function importSpotify() {
-  const raw = document.getElementById('spotify-pl-url').value.trim();
-  const id  = extractSpotifyId(raw);
+  const raw  = document.getElementById('spotify-pl-url').value.trim();
+  const id   = extractSpotifyId(raw);
   const prev = document.getElementById('import-spotify-preview');
   if (!id) { prev.innerHTML = '<p style="color:#f87171;font-size:.83rem">URL ou ID Spotify invalide.</p>'; return; }
+
+  const token = getSpotifyUserToken();
+  if (!token) {
+    prev.innerHTML = '<p style="color:#f87171;font-size:.83rem">Connecte ton compte Spotify d\'abord.</p>';
+    updateSpotifyUI(); return;
+  }
 
   const btn = document.getElementById('importSpotifyBtn');
   btn.disabled = true; btn.textContent = '...';
   prev.innerHTML = '<p style="color:var(--dim);font-size:.83rem">Chargement...</p>';
 
   try {
-    const r    = await fetch(`/api/spotify/playlist/${id}`);
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
-    importPreviewTracks = data.tracks;
-    const truncNote = data.truncated ? `<p style="color:#fbbf24;font-size:.75rem;margin-top:6px">⚠️ Limité aux ${data.tracks.length} premiers titres (Spotify API — total : ${data.total})</p>` : '';
+    // Métadonnées de la playlist
+    const plRes = await fetch(`https://api.spotify.com/v1/playlists/${id}?market=FR`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!plRes.ok) {
+      if (plRes.status === 401) {
+        sessionStorage.removeItem('sp_token'); updateSpotifyUI();
+        throw new Error('Session Spotify expirée — reconnecte-toi.');
+      }
+      if (plRes.status === 404) throw new Error('Playlist introuvable ou privée.');
+      throw new Error(`Erreur Spotify HTTP ${plRes.status}`);
+    }
+    const pl    = await plRes.json();
+    const total = pl.tracks?.total || 0;
+
+    // Pagination complète des tracks
+    let allItems = [];
+    let offset   = 0;
+    const limit  = 100;
+    while (offset < Math.min(total, 1000)) {
+      const tRes = await fetch(
+        `https://api.spotify.com/v1/playlists/${id}/tracks?limit=${limit}&offset=${offset}&market=FR` +
+        `&fields=items(track(id,name,artists(name),album(images),preview_url)),total`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!tRes.ok) break;
+      const tData = await tRes.json();
+      if (!tData.items?.length) break;
+      allItems = allItems.concat(tData.items);
+      offset += limit;
+      if (tData.items.length < limit) break;
+    }
+
+    const tracks = allItems
+      .filter(i => i?.track?.id)
+      .map(i => ({
+        external_id: i.track.id,
+        source:      'spotify',
+        artist:      i.track.artists.map(a => a.name).join(', '),
+        title:       i.track.name,
+        preview_url: i.track.preview_url || null,
+        cover_url:   i.track.album?.images?.[1]?.url || i.track.album?.images?.[0]?.url || null,
+      }));
+
+    if (!tracks.length) throw new Error('Playlist vide ou impossible à lire.');
+
+    importPreviewTracks = tracks;
+    const truncated = total > tracks.length;
     prev.innerHTML = `
       <div class="import-preview-header">
-        ${data.cover ? `<img class="import-preview-cover" src="${data.cover}" alt="">` : ''}
+        ${pl.images?.[0]?.url ? `<img class="import-preview-cover" src="${pl.images[0].url}" alt="">` : ''}
         <div>
-          <div class="import-preview-name">${esc(data.name)}</div>
-          <div class="import-preview-count">${data.tracks.length} titres${data.truncated ? ` / ${data.total}` : ''}</div>
+          <div class="import-preview-name">${esc(pl.name)}</div>
+          <div class="import-preview-count">${tracks.length} titres${truncated ? ` / ${total}` : ''}</div>
         </div>
       </div>
-      ${truncNote}
+      ${truncated ? `<p style="color:#fbbf24;font-size:.75rem;margin-top:6px">⚠️ Limité aux ${tracks.length} premiers titres (total: ${total})</p>` : ''}
       <div class="import-actions">
-        <button class="btn-accent sm" onclick="confirmImport('spotify')">Tout importer (${data.tracks.length} titres)</button>
+        <button class="btn-accent sm" onclick="confirmImport('spotify')">Tout importer (${tracks.length} titres)</button>
         <button class="btn-ghost sm" onclick="document.getElementById('import-spotify-preview').innerHTML=''">Annuler</button>
       </div>`;
   } catch (e) {
@@ -606,6 +801,13 @@ function bindEditor() {
   document.getElementById('importDeezerBtn').addEventListener('click', importDeezer);
   document.getElementById('spotify-pl-url').addEventListener('keypress', e => { if (e.key === 'Enter') importSpotify(); });
   document.getElementById('deezer-pl-url').addEventListener('keypress', e => { if (e.key === 'Enter') importDeezer(); });
+
+  // Spotify PKCE
+  document.getElementById('connectSpotifyBtn')?.addEventListener('click', connectSpotify);
+  document.getElementById('disconnectSpotifyBtn')?.addEventListener('click', disconnectSpotify);
+
+  // Admin
+  document.getElementById('saveOfficialBtn')?.addEventListener('click', saveOfficialStatus);
 
   // Manual
   document.getElementById('addManualBtn').addEventListener('click', addManual);

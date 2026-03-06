@@ -112,6 +112,24 @@
         </div>
       </div>
 
+      <!-- Section admin (visible uniquement pour l'admin) -->
+      <div id="admin-section" style="display:none" class="admin-section">
+        <div class="admin-section-title">Admin — Playlist officielle</div>
+        <div class="admin-row">
+          <label class="admin-label">
+            <input type="checkbox" id="admin-is-official" style="width:auto;accent-color:var(--accent)">
+            Marquer comme playlist officielle
+          </label>
+        </div>
+        <div class="admin-row" id="admin-room-row">
+          <label class="admin-label" style="flex:1">Room liée</label>
+          <select id="admin-linked-room" class="admin-select">
+            <option value="">— Aucune —</option>
+          </select>
+        </div>
+        <button class="btn-accent sm" id="saveOfficialBtn">Enregistrer</button>
+      </div>
+
       <!-- Onglets import / ajout manuel -->
       <div class="editor-tabs">
         <button class="etab active" data-tab="search">Rechercher un titre</button>
@@ -136,15 +154,27 @@
       <!-- Tab : import Spotify -->
       <div id="tab-import-spotify" class="tab-pane" style="display:none">
         <div id="spotify-unconfigured" style="display:none" class="import-notice">
-          <p>Spotify n'est pas configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> et <code>SPOTIFY_CLIENT_SECRET</code> dans ton fichier <code>.env</code>.</p>
+          <p>Spotify n'est pas configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> dans ton fichier <code>.env</code>.</p>
         </div>
         <div id="spotify-configured">
-          <p class="import-hint">Colle l'URL ou l'ID d'une playlist Spotify publique.</p>
-          <div class="search-bar">
-            <input type="text" id="spotify-pl-url" placeholder="https://open.spotify.com/playlist/... ou ID">
-            <button class="btn-accent sm" id="importSpotifyBtn">Importer</button>
+          <!-- Connexion requise -->
+          <div id="spotify-connect-wrap" style="display:none">
+            <p class="import-hint">Connecte ton compte Spotify pour importer tes playlists (publiques et privées).</p>
+            <button class="btn-spotify" id="connectSpotifyBtn">Connecter Spotify</button>
           </div>
-          <div id="import-spotify-preview" class="import-preview"></div>
+          <!-- Import (une fois connecté) -->
+          <div id="spotify-import-section" style="display:none">
+            <div class="spotify-connected-bar">
+              <span class="spotify-connected-label">&#10003; Spotify connecté</span>
+              <button class="btn-link-sm" id="disconnectSpotifyBtn">Déconnecter</button>
+            </div>
+            <p class="import-hint">Colle l'URL ou l'ID d'une playlist Spotify.</p>
+            <div class="search-bar">
+              <input type="text" id="spotify-pl-url" placeholder="https://open.spotify.com/playlist/... ou ID">
+              <button class="btn-accent sm" id="importSpotifyBtn">Importer</button>
+            </div>
+            <div id="import-spotify-preview" class="import-preview"></div>
+          </div>
         </div>
       </div>
 
