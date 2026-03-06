@@ -1,4 +1,4 @@
-# 🎵 BT Project v0.2 — Blind Test Multijoueur
+# ZIK. 🎵
 
 ## Stack
 - **Backend** : Node.js + Express + Socket.IO
@@ -8,88 +8,150 @@
 
 ---
 
-## 🚀 Installation
+## 📑 Sommaire
 
-### 1. Créer le projet Supabase
-1. Va sur [supabase.com](https://supabase.com) → New project
-2. Dashboard → **SQL Editor** → colle le contenu de `supabase_schema.sql` → Run
-3. Dashboard → **Settings → API** → copie `Project URL` et `anon public key`
-
-### 2. Configurer l'auth Supabase
-1. Dashboard → **Authentication → Providers** → Email → Active
-2. (Optionnel) Désactive "Confirm email" pour les tests
-
-### 3. Lancer le projet
-```bash
-cp .env.example .env
-# Édite .env avec tes clés Supabase
-
-npm install
-npm run dev   # développement
-npm start     # production
-```
-
-→ **http://localhost:3000**
-
-### 4. Configurer les clés côté client
-Dans `public/home.js`, remplace :
-```js
-const SUPABASE_URL = 'REMPLACE_PAR_TON_URL_SUPABASE';
-const SUPABASE_ANON_KEY = 'REMPLACE_PAR_TA_CLE_ANON_SUPABASE';
-```
+- [Présentation](#-présentation)
+- [Fonctionnalités](#-fonctionnalités)
+- [Stack Technique](#-stack-technique)
+- [Roadmap](#-roadmap)
+- [Preview](#-preview)
+- [Contribution](#-contribution)
+- [Support](#-support)
+- [Développeur](#-développeur)
 
 ---
 
-## 🌍 Déployer sur Railway
+# 📝 Présentation
 
-1. Push sur GitHub
-2. [railway.app](https://railway.app) → New Project → Deploy from GitHub
-3. Variables d'environnement dans Railway :
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `PORT` = `3000` (ou laisser Railway gérer)
-4. Ton URL sera auto-générée (ex: `bt-project.up.railway.app`)
+**ZIK.** est une plateforme interactive dédiée à la **gestion, au partage et à la découverte musicale**.
 
-> Le `PORT` est injecté automatiquement par Railway via `process.env.PORT`.
+Le projet a pour objectif de proposer une expérience moderne permettant aux utilisateurs de :
 
----
+- découvrir de la musique
+- jouer ensemble en temps réel
+- créer et gérer leurs playlists
+- participer à des rooms musicales compétitives
 
-## 🎮 Rooms disponibles
-| Room | Playlist Deezer |
-|------|----------------|
-| 🎤 Hip-Hop / Rap FR | 1963962142 |
-| 🎧 Électro / Dance | 1313621735 |
-| 🌍 Pop Internationale | 3155776842 |
-| 📼 Années 80/90/2000 | 1109278281 |
-| 🤘 Rock / Metal | 1313621375 |
-| 🎬 Films & Séries | 1279192301 |
-
-> Pour changer une playlist, modifie `rooms.js` → `playlist_id`
+Le projet évolue progressivement vers une application complète mêlant **musique et compétition**.
 
 ---
 
-## 📁 Structure
-```
-bt-project/
-├── server.js          # Serveur principal (Express + Socket.IO + Supabase)
-├── rooms.js           # Config des rooms
-├── supabase_schema.sql # Schéma SQL à coller dans Supabase
-├── .env.example       # Variables d'env à configurer
-├── package.json
-└── public/
-    ├── index.html     # Page d'accueil (rooms + leaderboards)
-    ├── home.css
-    ├── home.js        # Auth Supabase + affichage rooms
-    ├── game.html      # Page de jeu
-    ├── game.css
-    └── game.js        # Logique client Socket.IO + YouTube
-```
+# ✨ Fonctionnalités
+
+## 🎧 Expérience musicale
+
+- Lecture de musique synchronisée en **temps réel**
+- Création et gestion de **playlists**
+- Import de playlists depuis **Spotify** et **Deezer** *(en cours de finalisation)*
+
+## 👥 Interaction sociale
+
+- Création de **rooms musicales**
+- Sessions synchronisées entre joueurs
+- Écoute collective et gameplay musical
+
+## 🏆 Compétition
+
+- **Système de points**
+- **Classement hebdomadaire**
+- **Classement ELO**
+- Progression et compétition entre utilisateurs
+
+## 🔐 Authentification
+
+- Connexion classique
+- Connexion via **Google**
+
+## 📱 Expérience utilisateur
+
+- Interface fluide et moderne
+- Design **responsive** *(en cours d'amélioration)*
+- Navigation rapide et intuitive
 
 ---
 
-## Roadmap
-- [ ] Rooms custom (import lien playlist Deezer/Spotify)
-- [ ] Page profil joueur (stats, historique, rang)
-- [ ] Classement ELO visible sur home
-- [ ] Mode solo (pratique)
-- [ ] Mobile responsive complet
+# 🛠️ Stack Technique
+
+Le projet est développé en s'appuyant sur des technologies modernes.
+
+### Backend
+
+- **Supabase**
+- **PostgreSQL**
+
+### Frontend
+
+- En évolution
+
+### Outils
+
+- Git
+
+---
+
+# 📈 Roadmap
+
+## ✅ Déjà implémenté
+
+- Initialisation du projet
+- Système d'authentification
+- Connexion via **Google**
+- Page d'accueil
+- Système de **rooms musicales**
+- Création de **playlists**
+- Lecture musicale
+- **Synchronisation en temps réel**
+- Système de **points**
+- **Classement hebdomadaire**
+- **Classement ELO**
+
+## 🚧 En cours de développement
+
+- Import de playlists depuis **Spotify**
+- Import de playlists depuis **Deezer**
+- Amélioration de l'expérience utilisateur
+- Optimisation des performances
+
+## 🔮 À venir
+
+- Amélioration des fonctionnalités
+- Statistiques utilisateur détaillées
+- Playlists pour les rooms de base les plus complètes possible
+
+---
+
+# 👀 Preview
+
+*(Screenshots à venir)*
+
+---
+
+# 🤝 Contribution
+
+Un serveur **Discord** sera mis à disposition afin de :
+
+- proposer des **suggestions**
+- signaler des **bugs**
+- suivre l'évolution du projet
+
+Lien à venir.
+
+---
+
+# ❤️ Support
+
+Si tu apprécies le projet et que tu veux soutenir son développement :
+
+Tu peux **mettre une star au projet**.
+
+---
+
+# 👨‍💻 Développeur
+
+**Théo Foucher** (oui, que moi, avec de l'IA)
+
+---
+
+# 🎓 Contexte
+
+Projet réalisé parce que je kiffe la **ZIK.**
