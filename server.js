@@ -312,10 +312,9 @@ app.get('/api/spotify/playlist-user/:id', async (req, res) => {
   const fetchFn = await getFetch();
 
   try {
-    // 1. Métadonnées — token user, fallback CC si 403
-    let plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?fields=name,images,tracks.total`, {
-      headers: { Authorization: `Bearer ${userToken}` },
-      signal: AbortSignal.timeout(12000),
+    // 1. Métadonnées (Tentative Token User)
+    let plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?fields=name,images,tracks(total)`, {
+      headers: { Authorization: `Bearer ${userToken}` }
     });
 
     let currentToken = userToken;
@@ -326,9 +325,8 @@ app.get('/api/spotify/playlist-user/:id', async (req, res) => {
       // 403 : fallback Client Credentials (playlists publiques)
       console.warn(`[Spotify] metadata ${plRes.status} — fallback CC`);
       currentToken = await getSpotifyToken();
-      plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?fields=name,images,tracks.total`, {
-        headers: { Authorization: `Bearer ${currentToken}` },
-        signal: AbortSignal.timeout(12000),
+      plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?fields=name,images,tracks(total)`, {
+        headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (!plRes.ok) return res.status(plRes.status).json({ error: 'Playlist inaccessible.' });
     }
@@ -345,8 +343,8 @@ app.get('/api/spotify/playlist-user/:id', async (req, res) => {
 
     while (allItems.length < Math.min(loopTotal, 1000)) {
       const tRes = await fetchFn(
-        `https://api.spotify.com/v1/playlists/${plId}/items?limit=50&offset=${offset}`,
-        { headers: { Authorization: `Bearer ${currentToken}` }, signal: AbortSignal.timeout(12000) }
+        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}&fields=items(track(id,name,artists(name),album(images),preview_url))`,
+        { headers: { Authorization: `Bearer ${currentToken}` } }
       );
       if (tRes.status === 429) {
         await new Promise(r => setTimeout(r, 2000)); continue;
@@ -398,9 +396,8 @@ app.get('/api/spotify/playlist/:id', async (req, res) => {
     const fetchFn = await getFetch();
     const plId    = req.params.id;
 
-    const plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?fields=name,images,tracks.total`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(12000),
+    const plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}?fields=name,images,tracks(total)`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
     if (!plRes.ok) throw new Error('Playlist introuvable ou privée');
     const pl    = await plRes.json();
@@ -412,8 +409,8 @@ app.get('/api/spotify/playlist/:id', async (req, res) => {
 
     while (allItems.length < Math.min(loopTotal, 1000)) {
       const tRes = await fetchFn(
-        `https://api.spotify.com/v1/playlists/${plId}/items?limit=50&offset=${offset}`,
-        { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(12000) }
+        `https://api.spotify.com/v1/playlists/${plId}/tracks?limit=100&offset=${offset}&fields=items(track(id,name,artists(name),album(images),preview_url))`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!tRes.ok) break;
       const page = await tRes.json();
