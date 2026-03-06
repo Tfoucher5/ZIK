@@ -1,9 +1,10 @@
 # ZIK. 🎵
 
-![Status](https://img.shields.io/badge/status-en%20développement-orange)
-![Version](https://img.shields.io/badge/version-0.5-blue)
-![License](https://img.shields.io/badge/license-private-lightgrey)
-![Database](https://img.shields.io/badge/database-Supabase-blue)
+## Stack
+- **Backend** : Node.js + Express + Socket.IO
+- **Base de données** : Supabase (PostgreSQL)
+- **Auth** : Supabase Auth (email/password)
+- **Musique** : Deezer API (playlists) + YouTube IFrame (lecture) 
 
 ---
 
