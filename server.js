@@ -51,8 +51,10 @@ app.get('/',           (req, res) => res.sendFile(path.join(views, 'index.html')
 app.get('/game',       (req, res) => res.sendFile(path.join(views, 'game.html')));
 app.get('/playlists',  (req, res) => res.sendFile(path.join(views, 'playlists.html')));
 app.get('/rooms',      (req, res) => res.sendFile(path.join(views, 'rooms.html')));
-app.get('/profile',    (req, res) => res.sendFile(path.join(views, 'profile.html')));
-app.get('/settings',   (req, res) => res.sendFile(path.join(views, 'settings.html')));
+app.get('/profile',         (req, res) => res.sendFile(path.join(views, 'profile.html')));
+app.get('/settings',        (req, res) => res.sendFile(path.join(views, 'settings.html')));
+app.get('/cgu',             (req, res) => res.sendFile(path.join(views, 'cgu.html')));
+app.get('/confidentialite', (req, res) => res.sendFile(path.join(views, 'confidentialite.html')));
 
 // Redirects pour les anciens liens en .html
 app.get('/game.html',      (req, res) => res.redirect(301, '/game'      + (Object.keys(req.query).length ? '?' + new URLSearchParams(req.query) : '')));
@@ -263,31 +265,49 @@ function cleanString(str) {
     .trim().toLowerCase();
 }
 
-// Extracts main artist and featuring artist from an artist string
-// e.g. "Drake feat. Rihanna" → { main: "Drake", feat: "Rihanna" }
+// Extracts main artist and featuring artists from an artist string.
+// Always returns { main: string, feats: string[] }.
+// Handles: "A feat. B & C", "A (feat. B, C)", "A, B, C" (Spotify), "A & B"
 function parseFeaturing(artistStr) {
-  if (!artistStr) return { main: '', feat: null };
-  // Match: "A feat. B", "A feat B", "A ft. B", "A ft B", "A (feat. B)", "A (ft. B)", "A (featuring B)"
+  if (!artistStr) return { main: '', feats: [] };
+
+  // 1. feat./ft./featuring (parenthetical or inline) — capture everything after
   const m = artistStr.match(
     /^(.+?)(?:\s*\((?:feat\.?|ft\.?|featuring)\s+([^)]+)\)|\s+(?:feat\.?|ft\.?|featuring)\s+(.+))$/i
   );
-  if (m) return { main: m[1].trim(), feat: (m[2] || m[3]).trim() };
-  return { main: artistStr, feat: null };
+  if (m) {
+    const featStr = (m[2] || m[3]).trim();
+    // Split the feat part on ", " or " & " to get individual artists
+    const feats = featStr.split(/\s*(?:,|&)\s*/).map(s => s.trim()).filter(Boolean);
+    return { main: m[1].trim(), feats };
+  }
+
+  // 2. Comma-separated (Spotify stores multi-artist as "A, B, C")
+  const commaParts = artistStr.split(', ').map(s => s.trim()).filter(Boolean);
+  if (commaParts.length > 1) {
+    return { main: commaParts[0], feats: commaParts.slice(1) };
+  }
+
+  // 3. Ampersand: "A & B"
+  const ampMatch = artistStr.match(/^(.+?)\s+&\s+(.+)$/);
+  if (ampMatch) return { main: ampMatch[1].trim(), feats: [ampMatch[2].trim()] };
+
+  return { main: artistStr, feats: [] };
 }
 
 // Build a normalized track object from raw data
 function buildTrack({ artist, title, cover, preview_url }) {
-  const { main, feat } = parseFeaturing(artist || '');
+  const { main, feats } = parseFeaturing(artist || '');
   return {
-    artist,                                // full string for display
-    mainArtist:      main,
-    featArtist:      feat || null,
-    title:           title || '',
-    cleanArtist:     cleanString(main),    // match only against main artist
-    cleanFeatArtist: feat ? cleanString(feat) : null,
-    cleanTitle:      cleanString(title),
-    cover:           cover || '',
-    preview_url:     preview_url || null,
+    artist,                                 // full string for display
+    mainArtist:       main,
+    featArtists:      feats,                // string[]
+    title:            title || '',
+    cleanArtist:      cleanString(main),    // match only against main artist
+    cleanFeatArtists: feats.map(cleanString), // string[]
+    cleanTitle:       cleanString(title),
+    cover:            cover || '',
+    preview_url:      preview_url || null,
   };
 }
 
@@ -1027,7 +1047,7 @@ io.on('connection', (socket) => {
         score: 0,
         foundArtist:       false,
         foundTitle:        false,
-        foundFeat:         false,
+        foundFeats:        [],   // boolean[] — one entry per feat artist
         _fullFoundCounted: false,
       };
     } else {
@@ -1155,18 +1175,21 @@ io.on('connection', (socket) => {
       }
     }
 
-    // Check artiste en featuring (bonus)
-    if (!user.foundFeat && track.cleanFeatArtist) {
-      const simFeat = stringSimilarity.compareTwoStrings(input, track.cleanFeatArtist);
+    // Check featuring artists (bonus, one at a time)
+    for (let fi = 0; fi < track.cleanFeatArtists.length; fi++) {
+      if (user.foundFeats[fi]) continue;
+      const cleanFeat = track.cleanFeatArtists[fi];
+      const simFeat = stringSimilarity.compareTwoStrings(input, cleanFeat);
       const matchFeat = input.length >= 3 && (
         simFeat > 0.75 ||
-        (input.length >= 5 && simFeat > 0.65 && wordMatch(input, track.cleanFeatArtist))
+        (input.length >= 5 && simFeat > 0.65 && wordMatch(input, cleanFeat))
       );
       if (matchFeat) {
-        user.foundFeat = true;
+        user.foundFeats[fi] = true;
         user.score += 1 + speedBonus;
-        socket.emit('feedback', { type: 'success_feat', msg: `✅ Feat ! (+${1 + speedBonus} pts)`, val: track.featArtist, cover });
+        socket.emit('feedback', { type: 'success_feat', featIndex: fi, msg: `✅ Feat ! (+${1 + speedBonus} pts)`, val: track.featArtists[fi], cover });
         hit = true;
+        break; // only one feat revealed per guess
       } else if (simFeat > 0.50 && !hit) {
         socket.emit('feedback', { type: 'close', msg: '🔥 Tu chauffes sur le feat !' });
         hit = true;
@@ -1194,9 +1217,9 @@ io.on('connection', (socket) => {
 
     getRoomIO(roomId).emit('update_players', Object.values(room.players));
 
-    // "Fully found" = main artist + title (feat is optional)
-    const allMainFound = user.foundArtist && user.foundTitle &&
-      (!track.cleanFeatArtist || user.foundFeat);
+    // "Fully found" = main artist + all feats + title
+    const allFeatsFound = track.cleanFeatArtists.every((_, i) => user.foundFeats[i]);
+    const allMainFound  = user.foundArtist && user.foundTitle && allFeatsFound;
     if (allMainFound && !user._fullFoundCounted) {
       user._fullFoundCounted = true;
       if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
@@ -1295,11 +1318,11 @@ async function startNextRound(roomId) {
     game.startTime = Date.now();
     game.timer = game.roundDuration;
     game.lastRoundData = {
-      videoId:     video.videoId,
+      videoId:      video.videoId,
       startSeconds: safeStart,
-      round:       game.currentRound,
-      total:       game.maxRounds,
-      hasFeat:     !!game.currentTrack.featArtist,
+      round:        game.currentRound,
+      total:        game.maxRounds,
+      featCount:    game.currentTrack.featArtists.length,
     };
 
     getRoomIO(roomId).emit('start_round', game.lastRoundData);
@@ -1325,7 +1348,10 @@ function checkEveryoneFound(roomId) {
   const room = getOrCreateRoom(roomId);
   const track = room.game.currentTrack;
   const activePlayers = Object.values(room.players);
-  const allDone = p => p.foundArtist && p.foundTitle && (!track?.cleanFeatArtist || p.foundFeat);
+  const allDone = p => {
+    const allFeats = (track?.cleanFeatArtists || []).every((_, i) => p.foundFeats[i]);
+    return p.foundArtist && p.foundTitle && allFeats;
+  };
   if (activePlayers.length > 0 && activePlayers.every(allDone) && room.game.isActive) {
     endRound(roomId, '🎉 Tout le monde a trouvé !');
   }
@@ -1341,9 +1367,9 @@ function endRound(roomId, reason) {
     answer:      `${game.currentTrack.artist} - ${game.currentTrack.title}`,
     cover:       game.currentTrack.cover,
     reason,
-    firstFinder: game.firstFullFinder,
-    totalFound:  game.totalFullFound,
-    featArtist:  game.currentTrack.featArtist || null,
+    firstFinder:  game.firstFullFinder,
+    totalFound:   game.totalFullFound,
+    featArtists:  game.currentTrack.featArtists || [],
   };
   game.history.push(summary);
 
@@ -1356,7 +1382,7 @@ function endRound(roomId, reason) {
         ...summary,
         foundArtist: p.foundArtist,
         foundTitle:  p.foundTitle,
-        foundFeat:   p.foundFeat || false,
+        foundFeats:  p.foundFeats || [],
       });
     }
   });
@@ -1409,9 +1435,9 @@ async function saveGameResults(roomId, finalScores) {
 // ─── Utils ────────────────────────────────────────────────────────────────────
 function resetRoundFlags(room) {
   Object.keys(room.players).forEach(n => {
-    room.players[n].foundArtist      = false;
-    room.players[n].foundTitle       = false;
-    room.players[n].foundFeat        = false;
+    room.players[n].foundArtist       = false;
+    room.players[n].foundTitle        = false;
+    room.players[n].foundFeats        = [];
     room.players[n]._fullFoundCounted = false;
   });
 }
