@@ -202,6 +202,25 @@ a{text-decoration:none;color:inherit}
   background:var(--surface);border:1px solid var(--border);
   padding:2px 6px;border-radius:4px;
 }
+/* Submit button — always present, visible on mobile, subtle on desktop */
+.guess-submit{
+  position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  background:var(--accent);color:#000;border:none;
+  width:38px;height:38px;border-radius:50%;
+  font-size:1.1rem;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .15s,transform .1s;flex-shrink:0;
+  /* hidden on desktop — Enter key is shown instead */
+  opacity:0;pointer-events:none;
+}
+@media(max-width:768px){
+  .guess-submit{opacity:1;pointer-events:auto}
+  .guess-hint{display:none}
+  #guessInput{padding-right:54px}
+}
+.guess-submit:hover{opacity:.85;transform:translateY(-50%) scale(1.06)}
+.guess-submit:active{transform:translateY(-50%) scale(.95)}
+.guess-submit:disabled{opacity:.25 !important;cursor:not-allowed}
 
 /* ── History ────────────────────────────────────────────────────────────────── */
 #history-list{
@@ -260,29 +279,99 @@ a{text-decoration:none;color:inherit}
 .go-back:hover{color:var(--text)}
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
+
+/* ─ Tablette (< 1024px) ─ */
+@media(max-width:1024px){
+  #game-screen{
+    grid-template-columns:260px 1fr 260px;
+  }
+}
+
+/* ─ Mobile large (< 900px) — empile les colonnes ─ */
 @media(max-width:900px){
   #game-screen{
     grid-template-columns:1fr;
-    grid-template-rows:var(--nav-h) 1fr auto auto var(--footer-h);
+    grid-template-rows:var(--nav-h) auto 1fr auto var(--footer-h);
     gap:8px;
   }
   .g-header{grid-column:1}
+
+  /* Joueurs : bande horizontale scrollable */
   #sidebar-left{
     order:-1;
-    flex-direction:row;flex-wrap:wrap;gap:6px;
-    max-height:80px;overflow:hidden;
+    flex-direction:row;flex-wrap:nowrap;gap:6px;overflow-x:auto;overflow-y:hidden;
+    padding:8px 10px;max-height:58px;
+    scrollbar-width:none;
   }
+  #sidebar-left::-webkit-scrollbar{display:none}
   #sidebar-left .side-title{display:none}
-  #sidebar-right{order:3;max-height:120px}
+  #sidebar-left .p-card{flex-shrink:0;padding:6px 10px;font-size:.75rem;min-width:auto}
+
+  /* Historique compact */
+  #sidebar-right{order:3;max-height:110px;overflow-y:auto}
+
   #center{order:1}
   .g-footer{grid-column:1;order:4}
   .slots .slot{min-width:100px}
 }
 
-@media(max-width:480px){
-  .go-card{padding:28px 20px}
-  #cover-wrap{width:min(160px,28vh);height:min(160px,28vh)}
-  .start-btn{padding:12px 26px}
+/* ─ Mobile (< 640px) — layout optimisé touch ─ */
+@media(max-width:640px){
+  :root{--nav-h:48px;--footer-h:68px}
+
+  #game-screen{
+    gap:6px;padding:6px 6px 6px;
+    grid-template-rows:var(--nav-h) auto 1fr auto var(--footer-h);
+  }
+
+  /* Header compact */
+  .g-header{padding:0 10px;border-radius:10px}
+  .back{font-size:.7rem}
+  .room-label{font-size:.62rem;letter-spacing:1.5px}
+  .round-info{font-size:.68rem}
+  .vol-ctrl input[type=range]{width:56px}
+
+  /* Joueurs encore plus compacts */
+  #sidebar-left{max-height:48px;gap:4px;padding:5px 8px}
+  #sidebar-left .p-card{padding:4px 8px;font-size:.7rem;border-radius:6px}
+  #sidebar-left .p-badge{width:13px;height:13px;font-size:.5rem}
+
+  /* Pochette */
+  #cover-wrap{width:min(150px,24vw);height:min(150px,24vw)}
+
+  /* Slots plus lisibles sur petit écran */
+  .slots{gap:6px;flex-wrap:wrap}
+  .slot{min-width:0;flex:1;padding:9px 8px;border-radius:10px}
+  .slot-val{font-size:.88rem}
+  .slot-label{font-size:.56rem}
+
+  /* Feedback / summary */
+  #feedback{font-size:.82rem}
+  #round-summary{padding:8px 12px}
+  #summary-reason,#summary-finder{font-size:.74rem}
+
+  /* Bouton start */
+  .start-btn{padding:12px 24px;font-size:.82rem}
+
+  /* Input zone */
+  .g-footer{border-radius:0 0 0 0}
+  .guess-wrap{max-width:100%}
+  #guessInput{
+    padding:15px 54px 15px 18px;
+    font-size:.95rem;border-radius:14px;
+  }
+  .guess-submit{width:40px;height:40px;right:8px;font-size:1rem}
+
+  /* Historique très compact */
+  #sidebar-right{max-height:88px;padding:8px 8px}
+  .h-item{padding:4px 6px;gap:6px}
+  .h-item img,.h-no-img{width:28px;height:28px;border-radius:4px}
+  .h-name{font-size:.6rem}
+
+  /* Game over */
+  .go-card{padding:24px 18px}
+  .go-title{font-size:1.2rem;margin-bottom:16px}
+  .go-row{padding:8px 10px;font-size:.82rem}
 }
 
 /* ── Animations ─────────────────────────────────────────────────────────────── */

@@ -98,6 +98,7 @@ const ui = {
   errorMsg:    $('error-msg'),
   startBtn:    $('startBtn'),
   guessInput:  $('guessInput'),
+  submitBtn:   $('submitBtn'),
   histList:    $('history-list'),
   gameover:    $('gameover'),
   goScores:    $('go-scores'),
@@ -141,14 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setVol(savedVol());
   ui.volSlider.oninput = e => setVol(parseInt(e.target.value));
 
-  // Guess input
-  ui.guessInput.onkeydown = e => {
-    if (e.key === 'Enter') {
-      const val = ui.guessInput.value.trim();
-      if (val) socket.emit('submit_guess', val);
+  // Guess input — keyboard + submit button
+  function submitGuess() {
+    const val = ui.guessInput.value.trim();
+    if (val && !ui.guessInput.disabled) {
+      socket.emit('submit_guess', val);
       ui.guessInput.value = '';
     }
-  };
+  }
+  ui.guessInput.onkeydown = e => { if (e.key === 'Enter') submitGuess(); };
+  if (ui.submitBtn) ui.submitBtn.onclick = submitGuess;
 
   // Buttons
   ui.startBtn.onclick  = requestGame;
@@ -243,6 +246,7 @@ socket.on('start_round', data => {
 
   // Input
   ui.guessInput.disabled = false;
+  if (ui.submitBtn) ui.submitBtn.disabled = false;
   ui.guessInput.value = '';
   ui.guessInput.focus();
   ui.startBtn.style.display  = 'none';
@@ -323,6 +327,7 @@ socket.on('round_end', data => {
 
   _roundActive = false;
   ui.guessInput.disabled = true;
+  if (ui.submitBtn) ui.submitBtn.disabled = true;
   ui.timerBar.style.transition = 'none';
   ui.timerBar.style.width = '0%';
   stopVideo();
@@ -337,6 +342,7 @@ socket.on('game_over', scores => {
   _roundActive = false;
   stopVideo();
   ui.guessInput.disabled = true;
+  if (ui.submitBtn) ui.submitBtn.disabled = true;
   ui.timerBar.style.width = '0%';
   ui.summary.style.display = 'none';
 

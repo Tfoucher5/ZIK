@@ -93,9 +93,12 @@
           placeholder="Artiste ou titre…"
           disabled
           autocomplete="off"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
           maxlength="100"
         >
-        <span class="guess-hint">↵</span>
+        <button id="submitBtn" class="guess-submit" disabled aria-label="Valider">→</button>
       </div>
     </footer>
 

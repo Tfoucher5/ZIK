@@ -1,8 +1,7 @@
 .settings-page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 32px 24px 80px;
-  min-height: calc(100vh - 52px - 72px); /* fills between nav and footer */
+  padding: calc(var(--nav-h) + 32px) 24px 80px;
 }
 .settings-back {
   display: inline-block; font-size: .82rem; color: var(--mid);
