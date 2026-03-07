@@ -1,10 +1,6 @@
 # ZIK. 🎵
 
-## Stack
-- **Backend** : Node.js + Express + Socket.IO
-- **Base de données** : Supabase (PostgreSQL)
-- **Auth** : Supabase Auth (email/password)
-- **Musique** : Deezer API (playlists) + YouTube IFrame (lecture) 
+> Blind test multijoueur en temps réel — trouve les titres avant tout le monde.
 
 ---
 
@@ -13,145 +9,184 @@
 - [Présentation](#-présentation)
 - [Fonctionnalités](#-fonctionnalités)
 - [Stack Technique](#-stack-technique)
+- [Architecture](#-architecture)
+- [Installation](#-installation)
 - [Roadmap](#-roadmap)
-- [Preview](#-preview)
 - [Contribution](#-contribution)
-- [Support](#-support)
 - [Développeur](#-développeur)
 
 ---
 
-# 📝 Présentation
+## 📝 Présentation
 
-**ZIK.** est une plateforme interactive dédiée à la **gestion, au partage et à la découverte musicale**.
+**ZIK.** est une application web de **blind test multijoueur** en temps réel.
 
-Le projet a pour objectif de proposer une expérience moderne permettant aux utilisateurs de :
-
-- découvrir de la musique
-- jouer ensemble en temps réel
-- créer et gérer leurs playlists
-- participer à des rooms musicales compétitives
-
-Le projet évolue progressivement vers une application complète mêlant **musique et compétition**.
+Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de trouver **l'artiste** et le **titre** le plus vite possible. Plus vite tu trouves, plus tu marques de points. Un système de classement ELO et hebdomadaire suit ta progression.
 
 ---
 
-# ✨ Fonctionnalités
+## ✨ Fonctionnalités
 
-## 🎧 Expérience musicale
+### 🎮 Gameplay
+- Blind test **multijoueur synchronisé** (Socket.IO)
+- Détection intelligente des réponses : similarité phonétique, accents, fautes de frappe
+- Support des **artistes en featuring** (slots dynamiques)
+- Timer par manche avec bonus de vitesse
+- **Rooms officielles** curées + rooms personnalisées
+- Rooms éphémères (4h) et rooms persistantes en base
 
-- Lecture de musique synchronisée en **temps réel**
-- Création et gestion de **playlists**
-- Import de playlists depuis **Spotify** et **Deezer** *(en cours de finalisation)*
+### 🎵 Playlists
+- Création et gestion de playlists personnalisées
+- Import depuis **Spotify** (lien de playlist)
+- Import depuis **Deezer** (lien de playlist)
+- Playlists publiques ou privées
+- Playlists officielles curées par l'équipe
 
-## 👥 Interaction sociale
-
-- Création de **rooms musicales**
-- Sessions synchronisées entre joueurs
-- Écoute collective et gameplay musical
-
-## 🏆 Compétition
-
-- **Système de points**
+### 🏆 Compétition
+- Système de **points** avec bonus de vitesse
+- **Classement ELO** all-time
 - **Classement hebdomadaire**
-- **Classement ELO**
-- Progression et compétition entre utilisateurs
+- Meilleurs scores par room sur le profil
 
-## 🔐 Authentification
+### 👤 Profil & Auth
+- Inscription email / mot de passe
+- Connexion **Google OAuth**
+- Jeu en mode **invité** (score non sauvegardé)
+- Profil avec avatar, pseudo, stats et historique
+- Paramètres : animations, volume par défaut
 
-- Connexion classique
-- Connexion via **Google**
-
-## 📱 Expérience utilisateur
-
-- Interface fluide et moderne
-- Design **responsive** *(en cours d'amélioration)*
-- Navigation rapide et intuitive
-
----
-
-# 🛠️ Stack Technique
-
-Le projet est développé en s'appuyant sur des technologies modernes.
-
-### Backend
-
-- **Supabase**
-- **PostgreSQL**
-
-### Frontend
-
-- En évolution
-
-### Outils
-
-- Git
+### 📱 Interface
+- Design **dark mode** natif
+- **Responsive mobile** — layout optimisé touch avec bouton de validation
+- Rooms publiques browsables + rejoindre par code
+- Navigation fluide avec animations
 
 ---
 
-# 📈 Roadmap
+## 🛠️ Stack Technique
 
-## ✅ Déjà implémenté
-
-- Initialisation du projet
-- Système d'authentification
-- Connexion via **Google**
-- Page d'accueil
-- Système de **rooms musicales**
-- Création de **playlists**
-- Lecture musicale
-- **Synchronisation en temps réel**
-- Système de **points**
-- **Classement hebdomadaire**
-- **Classement ELO**
-
-## 🚧 En cours de développement
-
-- Import de playlists depuis **Spotify**
-- Import de playlists depuis **Deezer**
-- Amélioration de l'expérience utilisateur
-- Optimisation des performances
-
-## 🔮 À venir
-
-- Amélioration des fonctionnalités
-- Statistiques utilisateur détaillées
-- Playlists pour les rooms de base les plus complètes possible
+| Couche | Techno |
+|---|---|
+| **Serveur** | Node.js + Express |
+| **Temps réel** | Socket.IO |
+| **Base de données** | Supabase (PostgreSQL) |
+| **Auth** | Supabase Auth (email + Google OAuth) |
+| **Musique** | YouTube IFrame API (lecture) |
+| **Import playlists** | Spotify Web API + Deezer API |
+| **Frontend** | Vanilla JS, HTML, CSS (no framework) |
+| **Déploiement** | Vercel (frontend) + serveur Node dédié |
 
 ---
 
-# 👀 Preview
+## 🏗️ Architecture
 
-*(Screenshots à venir)*
+```
+/
+├── server.js              # Serveur Express + Socket.IO + logique de jeu
+├── public/
+│   ├── css/               # Styles par page (home, game, playlists, rooms…)
+│   └── js/                # Scripts par page + game.js (client Socket.IO)
+├── views/                 # Pages HTML
+│   ├── index.html         # Accueil
+│   ├── game.html          # Interface de jeu
+│   ├── rooms.html         # Browsing des rooms
+│   ├── playlists.html     # Gestion des playlists
+│   ├── profile.html       # Profil utilisateur
+│   └── settings.html      # Paramètres
+└── supabase_schema.sql    # Schéma de la base de données
+```
 
----
-
-# 🤝 Contribution
-
-Un serveur **Discord** sera mis à disposition afin de :
-
-- proposer des **suggestions**
-- signaler des **bugs**
-- suivre l'évolution du projet
-
-Lien à venir.
-
----
-
-# ❤️ Support
-
-Si tu apprécies le projet et que tu veux soutenir son développement :
-
-Tu peux **mettre une star au projet**.
-
----
-
-# 👨‍💻 Développeur
-
-**Théo Foucher** (oui, que moi, avec de l'IA)
+### Logique de jeu (server.js)
+- `roomGames{}` — état en mémoire de chaque partie
+- `buildTrack()` — normalise un titre (artiste, feat, titre, cleanString)
+- `parseFeaturing()` — extrait l'artiste principal et les featurings
+- `cleanString()` — normalise pour comparaison (accents, ponctuation)
+- `displayString()` — nettoie pour affichage (retire les parenthèses)
+- `submit_guess` — vérifie une réponse (similarité Dice + wordMatch)
+- `endRound()` — termine la manche, envoie les résultats, passe à la suivante
 
 ---
 
-# 🎓 Contexte
+## 🚀 Installation
 
-Projet réalisé parce que je kiffe la **ZIK.**
+### Prérequis
+- Node.js >= 18
+- Compte [Supabase](https://supabase.com)
+- Credentials Spotify API (pour l'import de playlists)
+
+### Setup
+
+```bash
+# 1. Cloner le repo
+git clone https://github.com/Tfoucher5/ZIK
+cd ZIK
+
+# 2. Installer les dépendances
+npm install
+
+# 3. Configurer les variables d'environnement
+cp .env.example .env
+# Remplir SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+# SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, ADMIN_USER_ID
+
+# 4. Appliquer le schéma Supabase
+# Importer supabase_schema.sql dans ton projet Supabase
+
+# 5. Lancer le serveur
+node server.js
+# ou en dev :
+npm run dev
+```
+
+### Variables d'environnement
+
+| Variable | Description |
+|---|---|
+| `SUPABASE_URL` | URL de ton projet Supabase |
+| `SUPABASE_ANON_KEY` | Clé publique Supabase |
+| `SPOTIFY_CLIENT_ID` | Client ID de ton app Spotify |
+| `SPOTIFY_CLIENT_SECRET` | Secret de ton app Spotify |
+| `ADMIN_USER_ID` | UUID Supabase de l'admin (accès super_admin) |
+
+---
+
+## 📈 Roadmap
+
+### ✅ V1 — Implémenté
+- [x] Auth email + Google OAuth
+- [x] Rooms officielles et personnalisées
+- [x] Gameplay temps réel (Socket.IO)
+- [x] Import Spotify / Deezer
+- [x] Featurings multiples
+- [x] Classements ELO + hebdomadaire
+- [x] Profil avec stats et meilleurs scores
+- [x] Mode invité
+- [x] Rooms éphémères et persistantes
+- [x] Responsive mobile + bouton de validation
+
+### 🚧 V1.1 — En cours
+- [ ] Notifications en jeu (son, vibration mobile)
+- [ ] Statistiques détaillées par room
+- [ ] Mode spectateur
+
+### 🔮 Idées futures
+- [ ] Application mobile native (PWA)
+- [ ] Tournois et brackets
+- [ ] Mode solo (entraînement)
+- [ ] Intégration Apple Music
+
+---
+
+## 🤝 Contribution
+
+Le projet est ouvert aux suggestions et rapports de bugs via les **Issues GitHub**.
+
+Un serveur Discord est prévu — lien à venir.
+
+---
+
+## 👨‍💻 Développeur
+
+**Théo Foucher** — parce qu'il kiffe la **ZIK.**
+
+> *"Développé avec Node.js, Supabase, et beaucoup trop de musique en fond."*

@@ -48,28 +48,40 @@
       <span class="eyebrow">🎵 Blind Test Multijoueur</span>
       <h1>Prouve que tu<br><em>connais la musique.</em></h1>
       <p class="hero-sub">Rejoins une room, trouve les titres avant tout le monde, grimpe dans le classement.</p>
-      <button class="btn-accent hero-cta" onclick="document.getElementById('rooms').scrollIntoView({behavior:'smooth'})">
-        Choisir une room <span class="arrow">→</span>
-      </button>
+
+      <div class="hero-feats">
+        <div class="hero-feat"><span>🎮</span> Multijoueur live</div>
+        <div class="hero-feat"><span>🎵</span> Tes playlists</div>
+        <div class="hero-feat"><span>🏆</span> Classements ELO</div>
+        <div class="hero-feat"><span>⚡</span> Rooms privées</div>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn-accent hero-cta" onclick="document.getElementById('rooms').scrollIntoView({behavior:'smooth'})">
+          Jouer maintenant <span class="arrow">→</span>
+        </button>
+        <a href="/rooms" class="btn-ghost hero-cta-sec">Explorer les rooms</a>
+      </div>
     </div>
   </section>
 
   <section class="section" id="rooms">
-    <div class="section-head">
-      <h2>Rooms</h2>
-      <span id="total-online" class="pill"></span>
-    </div>
-    <div id="rooms-grid" class="rooms-grid"></div>
-
-    <!-- Rejoindre une room privée -->
+    <!-- Rejoindre par code — en premier pour un accès rapide -->
     <div class="private-room-join">
-      <span class="private-room-label">Rejoindre une room privée</span>
+      <span class="private-room-label">Rejoindre avec un code</span>
       <div class="private-room-bar">
         <input type="text" id="roomCodeInput" placeholder="Code à 6 lettres" maxlength="6" autocomplete="off" spellcheck="false">
         <button class="btn-accent sm" id="joinByCodeBtn">Rejoindre →</button>
       </div>
       <p id="roomCodeError" class="private-room-err" style="display:none"></p>
     </div>
+
+    <div class="section-head" style="margin-top:40px">
+      <h2>Rooms Officielles</h2>
+      <span id="total-online" class="pill"></span>
+      <a href="/rooms" class="section-explore">Explorer toutes les rooms →</a>
+    </div>
+    <div id="rooms-grid" class="rooms-grid"></div>
   </section>
 
   <section class="section" id="leaderboards">
