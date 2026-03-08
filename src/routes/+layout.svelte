@@ -6,7 +6,8 @@
 
   let { data, children } = $props();
 
-  const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
+  const { supabaseUrl, supabaseAnonKey, spotifyClientId } = data.env;
+  const sb = createSupabaseClient(supabaseUrl, supabaseAnonKey);
 
   let currentUser = $state(null);
   let authOpen    = $state(false);
@@ -16,7 +17,7 @@
     get sb()   { return sb; },
     get user() { return currentUser; },
     openAuthModal,
-    get spotifyClientId() { return data.env.spotifyClientId; },
+    get spotifyClientId() { return spotifyClientId; },
   });
 
   const PROFILE_TTL = 5 * 60 * 1000;

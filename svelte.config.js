@@ -4,10 +4,6 @@ import adapter from '@sveltejs/adapter-node';
 const config = {
   kit: {
     adapter: adapter({ out: 'build' }),
-    // Move static dir to avoid conflict with existing public/ assets
-    files: {
-      assets: 'static',
-    },
   },
 };
 
