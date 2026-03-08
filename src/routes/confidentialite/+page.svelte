@@ -5,7 +5,7 @@
 </svelte:head>
 
 <main class="legal-page">
-  <a href="javascript:history.back()" class="settings-back" style="display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</a>
+  <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Politique de confidentialit&eacute;</h1>
   <p class="legal-date">Derni&egrave;re mise &agrave; jour : mars 2025</p>
 

@@ -236,16 +236,16 @@
 
 <!-- Guest modal -->
 {#if guestOpen}
-<div class="overlay" role="dialog" aria-modal="true"
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
+<div class="overlay" role="dialog" aria-modal="true" tabindex="-1"
   onclick={e => { if (e.target === e.currentTarget) guestOpen = false; }}>
   <div class="modal modal-sm">
     <h2>Jouer en invit&eacute;</h2>
     <p class="mdesc">Ton score ne sera pas sauvegard&eacute;.
-      <!-- svelte-ignore a11y_invalid_attribute -->
-      <a href="#" onclick={e => { e.preventDefault(); guestOpen = false; /* layout handles auth modal */ }}>Me connecter &rarr;</a>
+      <button class="btn-link" onclick={() => guestOpen = false} style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font:inherit">Me connecter &rarr;</button>
     </p>
     <div class="field">
-      <label>Pseudo</label>
+      <label for="guestUsernameInput">Pseudo</label>
       <input id="guestUsernameInput" type="text" bind:value={guestUsername} placeholder="MonPseudo" maxlength="20" autocomplete="off"
         onkeypress={e => { if (e.key === 'Enter') confirmGuest(); }}>
     </div>

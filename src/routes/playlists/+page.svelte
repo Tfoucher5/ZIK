@@ -680,7 +680,7 @@
         {#each editorTracks as t, i (t.id)}
           <div class="track-row-pl">
             <span class="track-num">{i + 1}</span>
-            {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="" onerror="this.style.display='none'">{/if}
+            {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="" onerror={e => e.currentTarget.style.display='none'}>{/if}
             <div class="track-info">
               <div class="track-title">{t.title}</div>
               <div class="track-artist">{t.artist}</div>
