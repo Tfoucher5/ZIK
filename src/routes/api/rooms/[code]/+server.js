@@ -11,7 +11,7 @@ export async function GET({ params }) {
   }
   const { data, error } = await supabase
     .from('rooms')
-    .select('id, code, name, emoji, description, is_public, max_rounds, round_duration, break_duration, playlist_id, profiles!owner_id(username)')
+    .select('id, code, name, emoji, description, is_public, auto_start, max_rounds, round_duration, break_duration, playlist_id, profiles!owner_id(username)')
     .eq('code', code)
     .single();
   if (error || !data) return json({ error: 'Room introuvable' }, { status: 404 });
@@ -21,7 +21,7 @@ export async function GET({ params }) {
 export async function PATCH({ params, request }) {
   const { user, token } = await requireAuth(request);
   const body    = await request.json();
-  const allowed = ['name', 'emoji', 'description', 'playlist_id', 'is_public', 'max_rounds', 'round_duration', 'break_duration'];
+  const allowed = ['name', 'emoji', 'description', 'playlist_id', 'is_public', 'auto_start', 'max_rounds', 'round_duration', 'break_duration'];
   const updates = {};
   for (const k of allowed) { if (body[k] !== undefined) updates[k] = body[k]; }
   if (updates.name) updates.name = String(updates.name).trim().slice(0, 60);

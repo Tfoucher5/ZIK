@@ -36,6 +36,7 @@
   let roomDuration   = $state(30);
   let roomBreak      = $state(7);
   let roomPublic     = $state(true);
+  let roomAutoStart  = $state(false);
   let roomError      = $state('');
   let roomSaving     = $state(false);
 
@@ -114,7 +115,7 @@
     await loadPlaylists();
     editingRoomId = null; editingCode = null;
     roomName = ''; roomEmoji = '🎵'; roomDesc = '';
-    roomPlaylistId = ''; roomMaxRounds = 10; roomDuration = 30; roomBreak = 7; roomPublic = true;
+    roomPlaylistId = ''; roomMaxRounds = 10; roomDuration = 30; roomBreak = 7; roomPublic = true; roomAutoStart = false;
     roomError = '';
     roomModalOpen = true;
   }
@@ -132,6 +133,7 @@
       roomPlaylistId = room.playlist_id || ''; roomMaxRounds = room.max_rounds || 10;
       roomDuration = room.round_duration || 30; roomBreak = room.break_duration || 7;
       roomPublic = room.is_public !== false;
+      roomAutoStart = room.auto_start || false;
       roomError = '';
       roomModalOpen = true;
     } catch (e) { toast('Impossible de charger la room : ' + e.message, 'error'); }
@@ -147,6 +149,7 @@
         name: roomName, emoji: roomEmoji || '🎵', description: roomDesc,
         playlist_id: roomPlaylistId || null, is_public: roomPublic,
         max_rounds: roomMaxRounds, round_duration: roomDuration, break_duration: roomBreak,
+        auto_start: roomAutoStart,
       };
       const r = editingRoomId
         ? await fetch(`/api/rooms/${editingRoomId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) })
@@ -329,9 +332,21 @@
       <div class="field" style="flex:1"><label>Pause (s)</label><input type="number" bind:value={roomBreak} min="3" max="15"></div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;font-size:.875rem">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:.875rem">
       <input type="checkbox" id="room-is-public" bind:checked={roomPublic} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
       <label for="room-is-public" style="cursor:pointer">Room publique (visible dans le browse)</label>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;font-size:.875rem">
+      <input type="checkbox" id="room-auto-start" bind:checked={roomAutoStart} style="width:16px;height:16px;margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <div>
+        <label for="room-auto-start" style="cursor:pointer;display:block">Lancement automatique</label>
+        {#if roomAutoStart}
+          <span style="font-size:.75rem;color:var(--mid)">La partie d&eacute;marre automatiquement (5&nbsp;s) d&egrave;s qu&apos;un joueur rejoint la room.</span>
+        {:else}
+          <span style="font-size:.75rem;color:var(--mid)">Lancement manuel &mdash; seul l&apos;administrateur peut d&eacute;marrer la partie. Les autres joueurs verront un message d&apos;attente.</span>
+        {/if}
+      </div>
     </div>
 
     {#if roomError}<div class="alert-err">{roomError}</div>{/if}

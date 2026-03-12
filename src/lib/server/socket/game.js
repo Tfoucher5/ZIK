@@ -9,6 +9,11 @@ import { loadPlaylist, cleanString, displayString, buildTrack, calcSpeedBonus } 
 
 const DEFAULT_ROUND_DURATION = 30;
 const DEFAULT_BREAK_DURATION = 7;
+const AUTO_START_DELAY = 5; // seconds
+
+// ─── Auto-start countdowns ────────────────────────────────────────────────────
+// Map: roomId -> { timer, startAt, seconds }
+const autoStartCountdowns = {};
 
 // ─── Room state management ────────────────────────────────────────────────────
 
@@ -257,6 +262,52 @@ function checkClose(input, target) {
 // Legacy – kept for API compat
 function wordMatch(input, target) { return false; }
 
+// ─── Auto-start helpers ───────────────────────────────────────────────────────
+
+function cancelAutoCountdown(roomId, io) {
+  if (autoStartCountdowns[roomId]) {
+    clearTimeout(autoStartCountdowns[roomId].timer);
+    delete autoStartCountdowns[roomId];
+    if (io) io.to(`room:${roomId}`).emit('game_countdown_cancelled');
+  }
+}
+
+async function startAutoCountdown(roomId, io) {
+  if (autoStartCountdowns[roomId]) return; // already running
+  const startAt = Date.now();
+  io.to(`room:${roomId}`).emit('game_countdown', { seconds: AUTO_START_DELAY });
+  autoStartCountdowns[roomId] = {
+    startAt,
+    seconds: AUTO_START_DELAY,
+    timer: setTimeout(async () => {
+      delete autoStartCountdowns[roomId];
+      const room = roomGames[roomId];
+      if (!room || room.game.isActive) return;
+
+      const playlist = await loadPlaylist(roomId);
+      if (playlist.length === 0) {
+        io.to(`room:${roomId}`).emit('server_error', 'Playlist indisponible, reessaie.');
+        return;
+      }
+      room.game.history         = [];
+      room.game.currentRound    = 0;
+      room.game.sessionPlaylist = [...playlist]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, room.game.maxRounds);
+      resetScores(room, io);
+      io.to(`room:${roomId}`).emit('init_history', []);
+      io.to(`room:${roomId}`).emit('game_starting');
+      try {
+        const { data } = await supabase.from('games').insert({
+          room_id: roomId, rounds: room.game.maxRounds,
+        }).select().single();
+        if (data) room.game.dbGameId = data.id;
+      } catch { /* non-blocking */ }
+      startNextRound(roomId, io);
+    }, AUTO_START_DELAY * 1000),
+  };
+}
+
 function leaveRoom(socket, roomId, io) {
   const room = roomGames[roomId];
   if (!room) return;
@@ -273,6 +324,7 @@ function leaveRoom(socket, roomId, io) {
         io.to(`room:${roomId}`).emit('update_players', active);
 
         if (active.length === 0) {
+          cancelAutoCountdown(roomId, null); // cancel silently — no players to notify
           if (room.game.isActive) {
             clearInterval(room.game.interval);
             clearTimeout(room.game.breakTimer);
@@ -304,7 +356,7 @@ export function register(io) {
       if (!customRooms[roomId] && !dbRooms[roomId]) {
         const { data: dbRoom } = await supabase
           .from('rooms')
-          .select('code, name, emoji, max_rounds, round_duration, break_duration, playlist_id')
+          .select('code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id')
           .eq('code', roomId)
           .single();
         if (dbRoom) {
@@ -352,7 +404,12 @@ export function register(io) {
           .catch(() => {});
       }
 
-      const cust = customRooms[roomId] || dbRooms[roomId];
+      const cust      = customRooms[roomId] || dbRooms[roomId];
+      const dbRoom    = dbRooms[roomId];
+      const autoStart = dbRoom?.auto_start || false;
+      const ownerId   = dbRoom?.owner_id   || null;
+      const isAdmin   = !!(userId && ownerId && userId === ownerId);
+
       socket.emit('room_joined', {
         roomId,
         roomConfig: {
@@ -361,12 +418,23 @@ export function register(io) {
           emoji:      cust?.emoji,
           trackCount: customRooms[roomId]?.tracks?.length || playlistCache[roomId]?.length || null,
           maxRounds:  cust?.max_rounds || cust?.maxRounds,
+          autoStart,
+          isAdmin,
         },
       });
       socket.emit('init_history', room.game.history);
 
       if (room.game.isActive && room.game.lastRoundData) {
         socket.emit('start_round', room.game.lastRoundData);
+      } else if (autoStart && !room.game.isActive) {
+        if (autoStartCountdowns[roomId]) {
+          // Countdown already running — tell this player the remaining time
+          const elapsed    = (Date.now() - autoStartCountdowns[roomId].startAt) / 1000;
+          const remaining  = Math.max(1, Math.ceil(autoStartCountdowns[roomId].seconds - elapsed));
+          socket.emit('game_countdown', { seconds: remaining });
+        } else {
+          startAutoCountdown(roomId, io);
+        }
       }
 
       console.log(`${username} -> room "${roomId}"`);
@@ -377,6 +445,19 @@ export function register(io) {
       if (!roomId) return;
       const room = getOrCreateRoom(roomId);
       if (room.game.isActive) return;
+
+      // Manual-mode DB rooms: only the owner can start
+      const dbRoom = dbRooms[roomId];
+      if (dbRoom && !dbRoom.auto_start) {
+        const name   = room.socketToName[socket.id];
+        const player = room.players[name];
+        if (!player?.userId || player.userId !== dbRoom.owner_id) {
+          return socket.emit('server_error', 'Seul l\u2019administrateur peut lancer la partie.');
+        }
+      }
+
+      // Cancel any running auto-start countdown
+      cancelAutoCountdown(roomId, io);
 
       const playlist = await loadPlaylist(roomId);
       if (playlist.length === 0) return socket.emit('server_error', 'Playlist indisponible, reessaie.');
