@@ -34,6 +34,10 @@
   let guessDisabled = $state(true);
   let showDcBanner = $state(false);
   let volValue    = $state(50);
+  let isAdmin     = $state(false);
+  let autoStart   = $state(false);
+  let countdownVal = $state(0);
+  let showCountdown = $state(false);
 
   let socket = null;
   let ytPlayer = null;
@@ -44,6 +48,7 @@
   let _lastVideo   = null;
   let _prevScores  = {};
   let feedTimer    = null;
+  let countdownInterval = null;
 
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
@@ -67,10 +72,15 @@
     if (!audio) return;
     if (ytPlayer?.stopVideo) ytPlayer.stopVideo();
     audio.pause();
+    audio.onloadedmetadata = null;
     audio.src = previewUrl;
     audio.volume = savedVol() / 100;
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    audio.onloadedmetadata = () => {
+      const maxSeek = Math.max(0, Math.min((audio.duration || 30) - 10, 20));
+      audio.currentTime = Math.random() * maxSeek;
+      audio.play().catch(() => {});
+    };
+    audio.load();
   }
 
   function stopVideo() { if (ytReady && ytPlayer) ytPlayer.stopVideo(); }
@@ -97,6 +107,27 @@
     socket.emit('request_new_game');
     startDisabled = true;
     startLabel = 'Chargement\u2026';
+  }
+
+  function startCountdownUI(seconds) {
+    clearInterval(countdownInterval);
+    countdownVal = seconds;
+    showCountdown = true;
+    countdownInterval = setInterval(() => {
+      countdownVal--;
+      if (countdownVal <= 0) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        showCountdown = false;
+      }
+    }, 1000);
+  }
+
+  function stopCountdownUI() {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+    showCountdown = false;
+    countdownVal = 0;
   }
 
   function submitGuess() {
@@ -134,8 +165,12 @@
       if (roomConfig) {
         const trackInfo = roomConfig.trackCount ? ` \u2014 ${roomConfig.trackCount} titres` : '';
         roomLabel = `${roomConfig.emoji || ''} ${roomConfig.name || ''}${trackInfo}`.trim();
+        autoStart = roomConfig.autoStart || false;
+        isAdmin   = roomConfig.isAdmin   || false;
       }
     });
+    socket.on('game_countdown', ({ seconds }) => { startCountdownUI(seconds); });
+    socket.on('game_countdown_cancelled', () => { stopCountdownUI(); });
     socket.on('track_count_update', count => {
       roomLabel = roomLabel.replace(/ \u2014 \d+ titres$/, '') + ` \u2014 ${count} titres`;
     });
@@ -150,7 +185,7 @@
       ps.forEach(p => { _prevScores[p.name] = p.score; });
     });
     socket.on('init_history', h => { history = Array.isArray(h) ? [...h].reverse() : []; });
-    socket.on('game_starting', () => { gameoverShow = false; showStart = false; });
+    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); });
     socket.on('start_round', data => {
       const featCount = data.featCount || 0;
       featSlots = Array.from({ length: featCount }, () => ({ val: '???', state: null }));
@@ -249,6 +284,7 @@
   onDestroy(() => {
     if (socket) socket.disconnect();
     clearTimeout(feedTimer);
+    clearInterval(countdownInterval);
   });
 </script>
 
@@ -356,11 +392,30 @@
         <div id="error-msg" style="display:block">{errorMsg}</div>
       {/if}
 
-      <!-- Start button -->
+      <!-- Start button / countdown / waiting info -->
       {#if showStart}
-        <button id="startBtn" class="start-btn" onclick={requestGame} disabled={startDisabled}>
-          {#if startLabel === 'Chargement\u2026'}Chargement&hellip;{:else}&#x1F3AE; Lancer la partie{/if}
-        </button>
+        {#if showCountdown}
+          <div class="auto-countdown">
+            <div class="countdown-circle">{countdownVal}</div>
+            <p class="countdown-label">La partie d&eacute;marre automatiquement&hellip;</p>
+          </div>
+        {:else if autoStart}
+          <div class="info-waiting">&#x23F3; La partie va d&eacute;marrer automatiquement d&egrave;s qu&apos;un joueur rejoint.</div>
+        {:else if isAdmin}
+          <button id="startBtn" class="start-btn" onclick={requestGame} disabled={startDisabled}>
+            {#if startLabel === 'Chargement\u2026'}Chargement&hellip;{:else}&#x1F3AE; Lancer la partie{/if}
+          </button>
+          <p class="info-admin-hint">Tu es l&apos;admin &mdash; toi seul peux lancer la partie.</p>
+        {:else if !isAdmin && !autoStart}
+          <div class="info-waiting">
+            &#x23F3; En attente de l&apos;administrateur&hellip;<br>
+            <small>Seul le cr&eacute;ateur de cette room peut d&eacute;marrer la partie.</small>
+          </div>
+        {:else}
+          <button id="startBtn" class="start-btn" onclick={requestGame} disabled={startDisabled}>
+            {#if startLabel === 'Chargement\u2026'}Chargement&hellip;{:else}&#x1F3AE; Lancer la partie{/if}
+          </button>
+        {/if}
       {/if}
 
     </main>
@@ -429,7 +484,11 @@
           {/each}
         </div>
         <div class="go-actions">
-          <button class="start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
+          {#if autoStart || isAdmin}
+            <button class="start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
+          {:else}
+            <div class="info-waiting" style="font-size:.8rem">&#x23F3; En attente de l&apos;admin pour rejouer.</div>
+          {/if}
           <a href="/" class="go-back">&larr; Changer de room</a>
         </div>
       </div>

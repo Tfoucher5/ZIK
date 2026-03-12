@@ -33,7 +33,7 @@ export async function POST({ request }) {
   const { user, token } = await requireAuth(request);
 
   const body = await request.json();
-  const { name, emoji, description, playlist_id, is_public, max_rounds, round_duration, break_duration } = body || {};
+  const { name, emoji, description, playlist_id, is_public, max_rounds, round_duration, break_duration, auto_start } = body || {};
   if (!name?.trim()) return json({ error: 'name requis' }, { status: 400 });
 
   const { data, error } = await userClient(token)
@@ -45,6 +45,7 @@ export async function POST({ request }) {
       owner_id:       user.id,
       playlist_id:    playlist_id || null,
       is_public:      is_public !== false,
+      auto_start:     auto_start === true,
       max_rounds:     Math.min(Math.max(parseInt(max_rounds)     || 10, 3), 50),
       round_duration: Math.min(Math.max(parseInt(round_duration) || 30, 10), 60),
       break_duration: Math.min(Math.max(parseInt(break_duration) || 7,  3), 15),
