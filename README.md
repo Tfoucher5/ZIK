@@ -112,55 +112,7 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 ├── static/css/                # Styles par page
 └── supabase_schema.sql        # Schéma complet de la base de données
 ```
-
 ---
-
-## 🚀 Installation
-
-### Prérequis
-- Node.js >= 18
-- Compte [Supabase](https://supabase.com)
-- Credentials Spotify API (pour l'import de playlists)
-
-### Setup
-
-```bash
-# 1. Cloner le repo
-git clone https://github.com/Tfoucher5/ZIK
-cd ZIK
-
-# 2. Installer les dépendances
-npm install
-
-# 3. Configurer les variables d'environnement
-cp .env.example .env
-# Remplir SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
-# SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, ADMIN_USER_ID
-
-# 4. Appliquer le schéma Supabase
-# Importer supabase_schema.sql dans ton projet Supabase
-# Si la table profiles existe déjà, jouer la migration :
-# ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE;
-
-# 5. Lancer le serveur
-node server.js
-# ou en développement :
-npm run dev
-```
-
-### Variables d'environnement
-
-| Variable | Description |
-|---|---|
-| `SUPABASE_URL` | URL de ton projet Supabase |
-| `SUPABASE_ANON_KEY` | Clé publique Supabase |
-| `SUPABASE_SERVICE_ROLE_KEY` | Clé service role (opérations serveur) |
-| `SPOTIFY_CLIENT_ID` | Client ID de ton app Spotify |
-| `SPOTIFY_CLIENT_SECRET` | Secret de ton app Spotify |
-| `ADMIN_USER_ID` | UUID Supabase de l'admin (accès super_admin) |
-
----
-
 ## 📋 Changelog
 
 ### v1.1.0 — Profils publics & confidentialité
@@ -169,7 +121,6 @@ npm run dev
 - **Mode privé** : nouveau paramètre de confidentialité dans les Settings (Public / Privé)
 - **Noms cliquables** : tous les pseudos dans l'appli (classements, scoreboard, fin de partie) sont désormais des liens vers le profil
 - Les joueurs invités ne sont pas liés (pas de profil persistant)
-- Ajout du champ `is_private` dans la table `profiles`
 
 ### v1.0.0 — Sortie initiale
 - Auth email + Google OAuth
@@ -205,15 +156,9 @@ npm run dev
 - [x] Noms de joueurs cliquables partout dans l'appli
 
 ### 🚧 v1.2 — En réflexion
-- [ ] Notifications en jeu (son, vibration mobile)
-- [ ] Statistiques détaillées par room
-- [ ] Mode spectateur
-
-### 🔮 Idées futures
-- [ ] Application mobile native (PWA)
-- [ ] Tournois et brackets
-- [ ] Mode solo (entraînement)
-- [ ] Intégration Apple Music
+- [ ] Imports depuis Apple Music
+- [ ] Répondre avec la voix (mobile uniquement)
+- [ ] Formulaire de contact
 
 ---
 
