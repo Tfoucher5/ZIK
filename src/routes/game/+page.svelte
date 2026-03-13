@@ -300,7 +300,8 @@
 </script>
 
 <svelte:head>
-  <title>ZIK &mdash; En jeu</title>
+  <title>ZIK — En jeu</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/css/game.css">
 </svelte:head>
 

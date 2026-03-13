@@ -86,6 +86,24 @@
 </script>
 
 <svelte:head>
+  <meta name="description" content="ZIK — Blind test musical multijoueur en ligne. Rejoins une room, trouve les titres avant tout le monde et grimpe dans le classement ELO. Gratuit, sans téléchargement.">
+  <meta name="keywords" content="blind test, quiz musical, blind test en ligne, blind test multijoueur, jeu musique, deviner chansons, blind test gratuit, musique en ligne">
+  <meta name="author" content="ZIK">
+  <meta name="theme-color" content="#7c3aed">
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="ZIK">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:image" content="https://zik.app/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="ZIK — Blind Test Multijoueur">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://zik.app/og.png">
+
   <link rel="stylesheet" href="/css/home.css">
 </svelte:head>
 

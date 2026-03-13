@@ -73,7 +73,8 @@
 </script>
 
 <svelte:head>
-  <title>ZIK &mdash; Param&egrave;tres</title>
+  <title>ZIK — Paramètres</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/css/settings.css">
 </svelte:head>
 

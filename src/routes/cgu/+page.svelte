@@ -1,5 +1,8 @@
 <svelte:head>
-  <title>ZIK &mdash; Conditions G&eacute;n&eacute;rales d&apos;Utilisation</title>
+  <title>ZIK — Conditions Générales d'Utilisation</title>
+  <meta name="description" content="Conditions Générales d'Utilisation de ZIK, le blind test musical multijoueur en ligne.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://zik.app/cgu">
   <link rel="stylesheet" href="/css/home.css">
   <link rel="stylesheet" href="/css/legal.css">
 </svelte:head>

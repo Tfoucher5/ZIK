@@ -182,7 +182,20 @@
 </script>
 
 <svelte:head>
-  <title>ZIK &mdash; Rooms</title>
+  <title>ZIK — Rooms de Blind Test | Rejoins une Partie</title>
+  <meta name="description" content="Browse les rooms de blind test publiques ou crée la tienne. Rejoins des joueurs en live, configure ta playlist et lance une partie musicale en quelques secondes.">
+  <link rel="canonical" href="https://zik.app/rooms">
+  <meta name="robots" content="noindex, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="ZIK — Rooms de Blind Test">
+  <meta property="og:description" content="Browse les rooms de blind test publiques ou crée la tienne. Rejoins des joueurs en live et lance une partie musicale en quelques secondes.">
+  <meta property="og:url" content="https://zik.app/rooms">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:title" content="ZIK — Rooms de Blind Test">
+  <meta name="twitter:description" content="Browse les rooms de blind test publiques ou crée la tienne. Rejoins des joueurs en live.">
+
   <link rel="stylesheet" href="/css/playlists.css">
   <link rel="stylesheet" href="/css/rooms.css">
 </svelte:head>
