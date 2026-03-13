@@ -13,8 +13,12 @@ CREATE TABLE public.profiles (
   elo         INTEGER NOT NULL DEFAULT 1000,
   games_played INTEGER NOT NULL DEFAULT 0,
   total_score  INTEGER NOT NULL DEFAULT 0,
+  is_private  BOOLEAN NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration (if table already exists):
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- 2. GAMES (une partie complète)
 CREATE TABLE public.games (
