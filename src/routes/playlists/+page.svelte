@@ -602,7 +602,7 @@
             <span class="track-source">{t.source}</span>
             <button class="track-add-btn" class:added={_addingIdx[i] === 'done'}
               onclick={() => addFromSearch(i)} disabled={!!_addingIdx[i]}>
-              {_addingIdx[i] === 'done' ? '&#x2713; Ajouté' : _addingIdx[i] ? '...' : '+ Ajouter'}
+              {_addingIdx[i] === 'done' ? '✅ Ajouté' : _addingIdx[i] ? '...' : '+ Ajouter'}
             </button>
           </div>
         {/each}
