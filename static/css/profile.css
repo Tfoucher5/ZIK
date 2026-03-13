@@ -66,6 +66,14 @@
 .best-score-pts{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;color:var(--accent);flex-shrink:0}
 .profile-empty{color:var(--dim);font-size:.88rem}
 
+/* Privacy badge */
+.profile-privacy-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.72rem;color:var(--dim);margin-top:6px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:99px;padding:2px 10px;
+}
+
 /* Edit profile modal extras */
 .avatar-preview-wrap{
   display:flex;align-items:center;gap:12px;

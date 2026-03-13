@@ -192,7 +192,7 @@
           {#each weeklyLb as p, i}
             <div class="lb-row">
               <div class="lb-rank">{medals[i] || `#${i+1}`}</div>
-              <div class="lb-name">{p.username}</div>
+              <a href="/user/{p.username}" class="lb-name lb-name-link">{p.username}</a>
               <div>
                 <div class="lb-score">{p.weekly_score} pts</div>
                 <div class="lb-meta">{p.games_count} parties</div>
@@ -211,7 +211,7 @@
           {#each eloLb as p, i}
             <div class="lb-row">
               <div class="lb-rank">{medals[i] || `#${i+1}`}</div>
-              <div class="lb-name">{p.username}</div>
+              <a href="/user/{p.username}" class="lb-name lb-name-link">{p.username}</a>
               <div>
                 <div class="lb-score">{p.elo}</div>
                 <div class="lb-meta">{p.games_played} parties</div>

@@ -338,7 +338,7 @@
       <div id="player-list">
         {#each players as p, i (p.name)}
           <div class="p-card rank-{i+1}">
-            <span class="p-name">{p.rank} {p.name}</span>
+            <span class="p-name">{p.rank} <a href="/user/{p.name}" class="p-name-link" onclick={e => e.stopPropagation()}>{p.name}</a></span>
             <div class="p-right">
               <div class="p-badge {p.foundArtist ? 'f' : ''}">A</div>
               <div class="p-badge {p.foundTitle  ? 'f' : ''}">T</div>
@@ -487,7 +487,7 @@
             {@const medals = ['\u{1F947}','\u{1F948}','\u{1F949}']}
             <div class="go-row rank-{i+1}">
               <span class="go-medal">{medals[i] || `#${i+1}`}</span>
-              <span class="go-name">{p.name}{#if p.isGuest}&nbsp;<span style="font-size:.7rem;opacity:.5">(invit&eacute;)</span>{/if}</span>
+              <span class="go-name">{#if p.isGuest}{p.name}&nbsp;<span style="font-size:.7rem;opacity:.5">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="go-name-link">{p.name}</a>{/if}</span>
               <span class="go-score">{p.score} pts</span>
             </div>
           {/each}
