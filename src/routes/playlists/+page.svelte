@@ -451,7 +451,10 @@
 </script>
 
 <svelte:head>
-  <title>ZIK &mdash; Mes Playlists</title>
+  <title>ZIK — Mes Playlists | Importe depuis Spotify et Deezer</title>
+  <meta name="description" content="Crée et gère tes playlists de blind test. Importe depuis Spotify ou Deezer, ajoute tes titres favoris et lance une room privée avec tes amis.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://zik.app/playlists">
   <link rel="stylesheet" href="/css/playlists.css">
 </svelte:head>
 

@@ -109,7 +109,8 @@
 </script>
 
 <svelte:head>
-  <title>ZIK &mdash; Mon profil</title>
+  <title>ZIK — Mon profil</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/css/profile.css">
 </svelte:head>
 
