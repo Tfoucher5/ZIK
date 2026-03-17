@@ -1021,8 +1021,7 @@
     .card-meta h4,
     .skill-card h4,
     .project-card h4,
-    .qualities-grid h4,
-    .dual-grid h4 {
+    .qualities-grid h4{
         margin: 0;
         font-size: 1.18rem;
         letter-spacing: -0.02em;
