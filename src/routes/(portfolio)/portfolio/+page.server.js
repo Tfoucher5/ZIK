@@ -1,8 +1,10 @@
 import { fail } from '@sveltejs/kit';
-import { RESEND_API_KEY, CONTACT_TO_EMAIL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
+const { RESEND_API_KEY, CONTACT_TO_EMAIL } = env;
 import { Resend } from 'resend';
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
 
 function escapeHtml(value = '') {
     return String(value)
