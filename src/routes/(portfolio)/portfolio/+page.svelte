@@ -38,6 +38,13 @@
             company: 'WIKLOG · La Baule',
             description:
                 "Transformation d’un Excel en application Web fluide, responsive et mobile-first avec Laravel. Travail en méthode Agile, focus sur la lisibilité, la performance et la logique métier."
+        },
+        {
+            title: 'Stage · La Poste',
+            date: '2023',
+            company: 'La Poste · Nantes',
+            description:
+                "Transformation d’un outil Excel en application Web fluide, responsive avec Angular (Front) et NodeJS (Back)."
         }
     ];
 
@@ -58,7 +65,7 @@
             title: 'Industrialisation',
             description:
                 'Développement d’outils pragmatiques pour des environnements réels : logistique, process métier, optimisation, suivi.',
-            items: ['Excel avancé', 'VBA', 'Access', 'Process', 'Automatisation', 'Analyse']
+            items: ['Excel', 'VBA', 'Access', 'Process', 'Automatisation', 'Analyse']
         }
     ];
 
@@ -77,18 +84,18 @@
         },
         {
             title: 'Vision produit',
-            text: 'Je pense usage concret, lisibilité, ergonomie, vitesse et valeur réelle — pas seulement “ça marche”.'
+            text: 'Je pense usage concret, lisibilité, ergonomie, vitesse et valeur réelle.'
         }
     ];
 
     const projects = [
         {
-            title: 'ZIK-MUSIC.FR',
+            title: 'Zik-Music.fr',
             description:
                 'Projet personnel majeur : architecture moderne avec SvelteKit, base de données Supabase, logique temps réel et expérience utilisateur travaillée.',
             tags: ['SvelteKit', 'Supabase', 'PostgreSQL', 'Temps réel'],
-            link: 'https://github.com/Tfoucher5/ZIK',
-            linkLabel: 'Voir le code'
+            link: ['https://github.com/Tfoucher5/ZIK', 'https://www.zik-music.fr'],
+            linkLabel: ['Voir le code', 'Voir le site']
         },
         {
             title: 'Moteur de Tracking Kardex',
@@ -361,14 +368,16 @@
                         <p>{project.description}</p>
 
                         {#if project.link}
-                            <a
-                                href={project.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="project-link"
-                            >
-                                {project.linkLabel} <span aria-hidden="true">→</span>
-                            </a>
+                            {#each project.link as link}
+                                    <a
+                                        href={link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="project-link"
+                                    >
+                                        {#if link == "https://www.zik-music.fr"} zik-music.fr {:else} Voir le code {/if}<span aria-hidden="true">→</span>
+                                    </a>
+                            {/each}
                         {:else if project.internal}
                             <span class="internal-badge">Projet interne · confidentiel</span>
                         {/if}
@@ -402,34 +411,19 @@
             <h3 class="section-title">Performance, systèmes & passions</h3>
         </div>
 
-        <div class="dual-grid">
-            <article class="glow-card" use:reveal>
-                <div class="card-content">
-                    <h4>Ce qui m’anime</h4>
-                    <div class="passion-list">
-                        {#each passions as passion}
-                            <div class="passion-item">
-                                <h5>{passion.title}</h5>
-                                <p>{passion.text}</p>
-                            </div>
-                        {/each}
-                    </div>
+        <article class="glow-card" use:reveal>
+            <div class="card-content">
+                <h4>Ce qui m’anime</h4>
+                <div class="passion-list">
+                    {#each passions as passion}
+                        <div class="passion-item">
+                            <h5>{passion.title}</h5>
+                            <p>{passion.text}</p>
+                        </div>
+                    {/each}
                 </div>
-            </article>
-
-            <article class="glow-card setup-card" use:reveal style="--delay:120ms;">
-                <div class="card-content">
-                    <div class="panel-topline">Mon setup</div>
-                    <h4>Machine orientée création & fluidité</h4>
-                    <ul class="specs-list">
-                        <li>Intel Core i5-14600KF</li>
-                        <li>RTX 4070 Asus ProArt</li>
-                        <li>32 Go DDR4 Corsair</li>
-                        <li>Boîtier Corsair 3000D</li>
-                    </ul>
-                </div>
-            </article>
-        </div>
+            </div>
+        </article>
     </section>
 
     <section id="contact" class="section">
@@ -1084,6 +1078,7 @@
         flex-wrap: wrap;
         gap: 0.55rem;
         margin-top: 1.15rem;
+        margin-bottom: 1rem;
     }
 
     .tag {
@@ -1097,6 +1092,7 @@
         align-items: center;
         gap: 0.35rem;
         margin-top: 1.35rem;
+        margin-right: 1rem;
         text-decoration: none;
         color: #bfdbfe;
         font-weight: 700;
@@ -1132,6 +1128,7 @@
     .passion-list {
         display: grid;
         gap: 1rem;
+        margin-top: 1rem;
     }
 
     .passion-item {
@@ -1148,19 +1145,6 @@
         margin: 0 0 0.45rem;
         font-size: 1rem;
         color: var(--text-main);
-    }
-
-    .setup-card {
-        background:
-            radial-gradient(circle at top right, rgba(96, 165, 250, 0.08), transparent 42%),
-            var(--surface-2);
-    }
-
-    .specs-list {
-        margin: 1rem 0 0;
-        padding-left: 1.1rem;
-        color: var(--text-soft);
-        line-height: 1.95;
     }
 
     .contact-wrap {
