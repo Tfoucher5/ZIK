@@ -238,9 +238,9 @@ export const passions = [
         text: "Passionné d'endurance, de F1 et de Voitures en général. L'optimisation, la trajectoire et la précision me parlent autant sur piste qu'en développement."
     },
     {
-        title: 'Gaming & Univers sandbox',
+        title: 'Musique : Une Vie au Rythme des Sons',
         icon: '⬡',
-        text: "J'apprécie les systèmes complexes, l'expérimentation et les environnements où performance et créativité cohabitent naturellement."
+        text: "Impossible de vivre sans musique : j'écoute de tous les genres. Très présent sur les événements de musique électronique, cette passion est pour moi une source constante de dynamisme et de partage."
     }
 ];
 
