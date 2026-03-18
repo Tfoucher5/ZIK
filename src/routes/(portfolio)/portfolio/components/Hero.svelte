@@ -5,7 +5,7 @@
     let countersStarted = false;
     let displayValues = metrics.map(() => 0);
 
-    const words = ['Web', 'Data', 'Performance', 'Logistique', 'Automatisation'];
+    const words = ['Web', 'Application', 'Performance', 'Logistique', 'Automatisation'];
     let wordIndex = 0;
     let displayed = '';
     let isDeleting = false;
@@ -105,7 +105,7 @@
     <div class="hero-content" use:reveal>
         <div class="status-badge">
             <span class="ping"></span>
-            Alternant · Licence Pro · 2025–2026
+            Alternant · Licence Générale STS · 2025–2026
         </div>
 
         <p class="eyebrow">Portfolio · 2026</p>
@@ -175,7 +175,7 @@
             <div class="panel dispo-panel glass-card">
                 <div class="dispo-dot"></div>
                 <div>
-                    <div class="dispo-title">En alternance — Licence Pro</div>
+                    <div class="dispo-title">En alternance — Licence Générale STS</div>
                     <div class="dispo-sub">En recherche pour 2026–2027</div>
                 </div>
             </div>
