@@ -119,31 +119,33 @@
   <meta name="twitter:title" content="ZIK — Blind Test Multijoueur en Ligne">
   <meta name="twitter:description" content="Joue au blind test musical en ligne avec tes amis ! Identifie les chansons en temps réel, importe tes playlists Spotify ou Deezer, et grimpe au classement ELO.">
 
+  <script type="application/ld+json">
   <!-- JSON-LD Structured Data -->
-  {@html `<script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "ZIK",
-    "url": "https://www.zik-music.fr/",
-    "description": "Blind test musical multijoueur en ligne. Identifie les chansons avant tout le monde, importe tes playlists et grimpe au classement ELO.",
-    "applicationCategory": "GameApplication",
-    "genre": "Music",
-    "operatingSystem": "Web",
-    "inLanguage": "fr",
-    "isAccessibleForFree": true,
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "EUR"
-    },
-    "featureList": [
-      "Blind test multijoueur en temps réel",
-      "Import de playlists Spotify et Deezer",
-      "Classement ELO",
-      "Rooms privées et publiques",
-      "Mode invité sans inscription"
-    ]
-  })}</script>`}
+  {@html JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ZIK",
+      "url": "https://www.zik-music.fr/",
+      "description": "Blind test musical multijoueur en ligne. Identifie les chansons avant tout le monde, importe tes playlists et grimpe au classement ELO.",
+      "applicationCategory": "GameApplication",
+      "genre": "Music",
+      "operatingSystem": "Web",
+      "inLanguage": "fr",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Blind test multijoueur en temps réel",
+        "Import de playlists Spotify et Deezer",
+        "Classement ELO",
+        "Rooms privées et publiques",
+        "Mode invité sans inscription"
+      ]
+    })}
+  </script>
 
   <link rel="stylesheet" href="/css/home.css">
 </svelte:head>
