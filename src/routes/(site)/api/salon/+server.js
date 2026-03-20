@@ -20,7 +20,10 @@ export async function POST({ request }) {
   if (!playlistId) return json({ error: "Playlist requise" }, { status: 400 });
 
   try {
-    const code = await createSalonRoom({ playlistId, settings: settings || {} });
+    const code = await createSalonRoom({
+      playlistId,
+      settings: settings || {},
+    });
     return json({ code });
   } catch (e) {
     return json({ error: e.message }, { status: 400 });
@@ -32,5 +35,9 @@ export async function GET({ url }) {
   if (!code) return json({ error: "Code requis" }, { status: 400 });
   const salon = salonRooms[code];
   if (!salon) return json({ error: "Salon introuvable" }, { status: 404 });
-  return json({ exists: true, phase: salon.game.phase, answerMode: salon.settings.answerMode });
+  return json({
+    exists: true,
+    phase: salon.game.phase,
+    answerMode: salon.settings.answerMode,
+  });
 }

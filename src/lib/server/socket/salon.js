@@ -23,8 +23,9 @@ function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code;
   do {
-    code = Array.from({ length: 6 }, () =>
-      chars[Math.floor(Math.random() * chars.length)],
+    code = Array.from(
+      { length: 6 },
+      () => chars[Math.floor(Math.random() * chars.length)],
     ).join("");
   } while (salonRooms[code]);
   return code;
@@ -299,9 +300,7 @@ async function startNextRound(code, io) {
 export async function createSalonRoom({ playlistId, settings }) {
   const tracks = await loadSalonTracks(playlistId);
   if (tracks.length < 3) {
-    throw new Error(
-      "Playlist introuvable ou trop courte (min. 3 titres).",
-    );
+    throw new Error("Playlist introuvable ou trop courte (min. 3 titres).");
   }
 
   const code = generateCode();
@@ -352,7 +351,8 @@ export function registerSalon(io) {
     // ── Host connects to their salon ──────────────────────────────────────────
     socket.on("salon_join_host", ({ code }) => {
       const salon = salonRooms[code];
-      if (!salon) return socket.emit("salon_error", { message: "Salon introuvable." });
+      if (!salon)
+        return socket.emit("salon_error", { message: "Salon introuvable." });
 
       // Clear host disconnect grace timer
       clearTimeout(salon._hostDcTimer);
@@ -376,15 +376,23 @@ export function registerSalon(io) {
     // ── Player joins ──────────────────────────────────────────────────────────
     socket.on("salon_join_player", ({ code, username }) => {
       username = username?.trim();
-      if (!username) return socket.emit("salon_error", { message: "Pseudo requis." });
+      if (!username)
+        return socket.emit("salon_error", { message: "Pseudo requis." });
 
       const salon = salonRooms[code];
-      if (!salon) return socket.emit("salon_error", { message: "Salon introuvable ou expiré." });
+      if (!salon)
+        return socket.emit("salon_error", {
+          message: "Salon introuvable ou expiré.",
+        });
       if (salon.game.phase !== "lobby") {
-        return socket.emit("salon_error", { message: "La partie a déjà commencé." });
+        return socket.emit("salon_error", {
+          message: "La partie a déjà commencé.",
+        });
       }
       if (salon.players[username]) {
-        return socket.emit("salon_error", { message: "Ce pseudo est déjà pris." });
+        return socket.emit("salon_error", {
+          message: "Ce pseudo est déjà pris.",
+        });
       }
 
       salon.players[username] = {
