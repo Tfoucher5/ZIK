@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx eslint:*)",
       "Bash(ls \"c:/Users/Teamr/Desktop/ZIK/src/routes/\\(site\\)/\")",
-      "Bash(wc -l src/routes/\\\\\\(site\\\\\\)/docs/+page.svelte)"
+      "Bash(wc -l src/routes/\\\\\\(site\\\\\\)/docs/+page.svelte)",
+      "Read(//c/Users/Teamr/.claude/projects/c--Users-Teamr-Desktop-ZIK/memory/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Teamr\\.claude\\projects\\c--Users-Teamr-Desktop-ZIK\\memory"
     ]
   }
 }

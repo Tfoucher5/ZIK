@@ -125,7 +125,7 @@
     <div class="footer-brand">
       <span class="footer-logo">ZIK<span>.</span></span>
       <p class="footer-tagline">Blind test multijoueur en ligne.<br>Trouve les titres avant tout le monde.</p>
-      <p class="footer-copy">&copy; 2025 ZIK</p>
+      <p class="footer-copy">&copy; 2026 ZIK</p>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Jouer</div>
@@ -143,7 +143,7 @@
       <div class="footer-col-title">Légal</div>
       <a href="/cgu">CGU</a>
       <a href="/confidentialite">Confidentialité</a>
-      <span class="footer-version">v1.2.0</span>
+      <span class="footer-version">v1.2.1</span>
     </div>
   </div>
   <div class="footer-bottom">
