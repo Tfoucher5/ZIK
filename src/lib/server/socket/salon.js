@@ -98,11 +98,13 @@ function makeChoices(correct, allTracks) {
   // Split: same artist vs different artist (for deliberate decoy feature)
   const sameArtistPool = pool.filter(
     (t) =>
-      (t.mainArtist || t.artist || "").toLowerCase().trim() === correctArtistKey,
+      (t.mainArtist || t.artist || "").toLowerCase().trim() ===
+      correctArtistKey,
   );
   const diffArtistPool = pool.filter(
     (t) =>
-      (t.mainArtist || t.artist || "").toLowerCase().trim() !== correctArtistKey,
+      (t.mainArtist || t.artist || "").toLowerCase().trim() !==
+      correctArtistKey,
   );
 
   let wrongTracks;
@@ -132,7 +134,10 @@ function makeChoices(correct, allTracks) {
 function calcQcmPoints(timeTaken, roundDuration) {
   const MAX_PTS = 1000;
   const MIN_PTS = 200;
-  const ratio = Math.min(1, Math.max(0, timeTaken / Math.max(1, roundDuration)));
+  const ratio = Math.min(
+    1,
+    Math.max(0, timeTaken / Math.max(1, roundDuration)),
+  );
   return Math.round(MAX_PTS - (MAX_PTS - MIN_PTS) * ratio);
 }
 
