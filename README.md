@@ -69,11 +69,18 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 
 ### 📱 Interface
 
-- Design **dark mode** natif
+- Design **dark mode** natif avec glassmorphism et glow effects
 - **Responsive mobile** — layout optimisé touch avec bouton de validation
 - Rooms publiques browsables + rejoindre par code
 - Navigation fluide avec animations
 - Noms de joueurs **cliquables** partout (classements, scoreboard en jeu, écran de fin)
+- **Footer** complet avec navigation par catégories (Jouer / Aide / Légal)
+
+### 📖 Documentation
+
+- Page `/docs` complète avec 10 sections détaillées (gameplay, points, Mode Salon, playlists, FAQ…)
+- Sidebar sticky avec navigation et highlight de la section active
+- Indexée SEO — accessible depuis les moteurs de recherche
 
 ---
 
@@ -81,7 +88,7 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 
 | Couche               | Techno                                   |
 | -------------------- | ---------------------------------------- |
-| **Framework**        | SvelteKit 2 (Svelte 5)                   |
+| **Framework**        | SvelteKit (Svelte 5 runes)               |
 | **Serveur**          | Node.js + SvelteKit adapter-node         |
 | **Temps réel**       | Socket.IO                                |
 | **Base de données**  | Supabase (PostgreSQL + RLS)              |
@@ -113,9 +120,10 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 │       ├── +layout.svelte     # Layout global (nav, contexte auth)
 │       ├── +page.svelte       # Accueil (rooms + classements)
 │       ├── game/              # Interface de jeu temps réel
+│       ├── docs/              # Documentation en ligne (/docs)
 │       ├── salon/             # Mode Salon (setup + hôte + joueur)
-│       │   ├── host/          # Écran hôte (TV/ordi)
-│       │   └── play/          # Interface joueur (téléphone)
+│       │   ├── host/          # Écran hôte (TV/ordi) — HostCenter, PlayerSidebar
+│       │   └── play/          # Interface joueur (téléphone) — JoinForm, RoundPlay, SummaryView…
 │       ├── profile/           # Mon profil (édition)
 │       ├── user/[username]/   # Profil public d'un joueur
 │       ├── settings/          # Paramètres (visuel, jeu, confidentialité)
@@ -130,6 +138,16 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 
 ## 📋 Changelog
 
+### v1.2.1 — Documentation, footer & polish UI
+
+- **Page `/docs`** : documentation complète en ligne avec 10 sections, sidebar sticky, highlight de section active via `IntersectionObserver`, tableaux, tip/warn boxes, FAQ — indexée SEO
+- **Footer repensé** : 4 colonnes (Jouer / Aide / Légal / Brand), responsive, version affichée
+- **Redesign UI Mode Salon** : timer SVG arc animé (play), QCM style Kahoot (▲◆●■) avec gradients et glow, feedback overlay glassmorphism + `backdrop-filter: blur()`, visualizer 18 barres, glow dynamique sur le big timer hôte, noise texture, glassmorphism sur les cards, boutons avec glow au hover
+- **Reconnexion joueur** : grace period 90s, restauration de l'état complet (score, éléments trouvés, choix QCM) au retour
+- **Grace period hôte** portée à 2 minutes (était 60s)
+- **Erreurs mid-game** : auto-dismiss après 6s pour éviter les fausses alertes persistantes
+- Architecture : `checkEveryoneDone` ignore les joueurs déconnectés, `salon_join_player` gère le chemin de reconnexion
+
 ### v1.2.0 — Mode Salon
 
 - **Mode Salon** (Kahoot-like) : expérience soirée avec un écran hôte sur TV/ordi et les joueurs sur leur téléphone
@@ -139,7 +157,6 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 - Système de points identique au mode normal : artiste, titre, featurings scorés séparément avec bonus de vitesse
 - Avance automatique entre les manches ou mode manuel
 - Classement en temps réel, fin de partie avec rejouer / nouveau salon
-- **Reconnexion automatique** : un joueur qui se déconnecte en cours de partie (coupure réseau, veille mobile) retrouve son score et son état au retour, avec une grace period de 90 secondes
 - Code découpé en composants réutilisables (`HostCenter`, `PlayerSidebar`, `JoinForm`, `RoundPlay`, `SummaryView`, `FeedbackOverlay`)
 - 100% éphémère — aucune sauvegarde en base, parties privées
 
@@ -191,15 +208,18 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 
 - [x] Mode Salon Kahoot-like (hôte TV + joueurs téléphone)
 - [x] Rejoindre via QR code plein écran ou code à 6 caractères
-- [x] Texte libre et QCM 4 choix
+- [x] Texte libre et QCM 4 choix (▲◆●■ style Kahoot)
 - [x] Indicateurs de découverte en temps réel côté hôte (🎤🎸🎵)
 - [x] Avance automatique ou manuelle
 - [x] Reconnexion automatique en cours de partie (grace period 90s)
+- [x] Redesign UI : timer SVG arc, glassmorphism, glow effects, visualizer 18 barres
+- [x] Documentation en ligne complète (`/docs`)
+- [x] Footer 4 colonnes professionnel
 
 ### 🚧 v1.3 — En réflexion
 
 - [ ] Répondre avec la voix (mobile uniquement)
-- [ ] Formulaire de contact
+- [ ] Formulaire de contact intégré
 
 ---
 
