@@ -191,6 +191,7 @@
       {phase} {code} {timerVal} {timerMax}
       {currentPhrase}
       {players} {roundEnd} {finalScores}
+      {round} {total}
       onRestart={restartGame}
       onNewSalon={() => window.location.href = '/salon'}
     />

@@ -267,6 +267,7 @@
       {:else if phase === 'summary' || phase === 'gameover'}
         <SummaryView
           {phase} {roundEnd} {finalScores} {scores} {username}
+          {round} {total}
           onLeave={() => { joined = false; codeInput = ''; }}
         />
       {/if}

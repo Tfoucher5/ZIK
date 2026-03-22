@@ -230,6 +230,7 @@ function getPlayerList(salon) {
 
 function resetRoundFlags(salon) {
   for (const p of Object.values(salon.players)) {
+    p.scoreBeforeRound = p.score;
     p.foundArtist = false;
     p.foundTitle = false;
     p.foundFeats = [];
@@ -319,7 +320,11 @@ function endRound(code, reason, io) {
   }
 
   const scores = Object.values(salon.players)
-    .map((p) => ({ username: p.username, score: p.score }))
+    .map((p) => ({
+      username: p.username,
+      score: p.score,
+      delta: p.score - (p.scoreBeforeRound ?? 0),
+    }))
     .sort((a, b) => b.score - a.score);
 
   const roundSummary = {

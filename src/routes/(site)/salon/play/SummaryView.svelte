@@ -5,6 +5,8 @@
     finalScores = [],
     scores = [],
     username = '',
+    round = 0,
+    total = 10,
     onLeave,
   } = $props();
 
@@ -24,12 +26,21 @@
       <p style="font-size:.8rem;color:var(--accent2)">🏆 Premier : {roundEnd.firstFinder}</p>
     {/if}
   </div>
+
+  <div class="salon-play-scores-header">
+    <span class="salon-play-scores-round">Manche {round} <span class="salon-play-scores-round-of">/ {total}</span></span>
+    <span class="salon-play-scores-label">Classement</span>
+  </div>
+
   <div class="salon-play-scores">
     {#each (roundEnd.scores || scores) as p, i (p.username)}
       <div class="salon-play-score-row {p.username === username ? 'me' : ''}">
         <div class="salon-play-score-rank">{medals[i] || `#${i+1}`}</div>
         <div class="salon-play-score-name">{p.username}</div>
-        <div class="salon-play-score-pts">{p.score} pts</div>
+        <div class="salon-play-score-pts">
+          {p.score}
+          {#if p.delta > 0}<span class="salon-score-delta">+{p.delta}</span>{/if}
+        </div>
       </div>
     {/each}
   </div>
