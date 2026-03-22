@@ -5,6 +5,7 @@
     phase = 'lobby', code = '', timerVal = 0, timerMax = 30,
     currentPhrase = '', players = [],
     roundEnd = null, finalScores = [],
+    round = 0, total = 10,
     onRestart, onNewSalon,
   } = $props();
 
@@ -106,27 +107,42 @@
   <div class="salon-host-info">
 
     {#if phase === 'summary' && roundEnd}
-      <div class="salon-summary">
-        <div class="salon-summary-reason">{roundEnd.reason}</div>
-        <div class="salon-summary-answer">{roundEnd.answer}</div>
-        {#if roundEnd.featArtists?.length}
-          <div style="font-size:.8rem;color:var(--mid);margin-top:4px">feat. {roundEnd.featArtists.join(', ')}</div>
-        {/if}
-        {#if roundEnd.firstFinder}
-          <div class="salon-summary-first">🏆 Premier : {roundEnd.firstFinder}</div>
-        {/if}
-        {#if roundEnd.cover}
-          <img src={roundEnd.cover} alt="" class="salon-summary-cover">
-        {/if}
-      </div>
-      <div class="salon-scores-table">
-        {#each players as p, i (p.username)}
-          <div class="salon-scores-row {i < 3 ? 'top' : ''}">
-            <div class="salon-scores-medal">{medals[i] || `#${i+1}`}</div>
-            <div class="salon-scores-name">{p.username}</div>
-            <div class="salon-scores-pts">{p.score} pts</div>
+      <div class="salon-host-summary-layout">
+
+        <!-- Left: track answer -->
+        <div class="salon-summary">
+          {#if roundEnd.cover}
+            <img src={roundEnd.cover} alt="" class="salon-summary-cover">
+          {/if}
+          <div class="salon-summary-reason">{roundEnd.reason}</div>
+          <div class="salon-summary-answer">{roundEnd.answer}</div>
+          {#if roundEnd.featArtists?.length}
+            <div style="font-size:.8rem;color:var(--mid);margin-top:4px">feat. {roundEnd.featArtists.join(', ')}</div>
+          {/if}
+          {#if roundEnd.firstFinder}
+            <div class="salon-summary-first">🏆 Premier : {roundEnd.firstFinder}</div>
+          {/if}
+        </div>
+
+        <!-- Right: leaderboard -->
+        <div class="salon-host-scores-col">
+          <div class="salon-host-round-label">
+            Manche {round} <span class="salon-host-round-of">/ {total}</span>
           </div>
-        {/each}
+          <div class="salon-scores-table">
+            {#each (roundEnd.scores || players) as p, i (p.username)}
+              <div class="salon-scores-row {i < 3 ? 'top' : ''}">
+                <div class="salon-scores-medal">{medals[i] || `#${i+1}`}</div>
+                <div class="salon-scores-name">{p.username}</div>
+                <div class="salon-scores-pts">
+                  {p.score} pts
+                  {#if p.delta > 0}<span class="salon-score-delta">+{p.delta}</span>{/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+
       </div>
 
     {:else if phase === 'gameover'}

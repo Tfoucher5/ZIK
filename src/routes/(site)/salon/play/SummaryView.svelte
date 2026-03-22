@@ -5,6 +5,8 @@
     finalScores = [],
     scores = [],
     username = '',
+    round = 0,
+    total = 10,
     onLeave,
   } = $props();
 
@@ -12,26 +14,43 @@
 </script>
 
 {#if phase === 'summary' && roundEnd}
-  <div class="salon-play-roundend">
-    {#if roundEnd.cover}
-      <img src={roundEnd.cover} alt="" class="cover">
-    {/if}
-    <div class="answer">{roundEnd.answer}</div>
-    {#if roundEnd.featArtists?.length}
-      <div style="font-size:.78rem;color:var(--mid);margin-top:2px">feat. {roundEnd.featArtists.join(', ')}</div>
-    {/if}
-    {#if roundEnd.firstFinder}
-      <p style="font-size:.8rem;color:var(--accent2)">🏆 Premier : {roundEnd.firstFinder}</p>
-    {/if}
-  </div>
-  <div class="salon-play-scores">
-    {#each (roundEnd.scores || scores) as p, i (p.username)}
-      <div class="salon-play-score-row {p.username === username ? 'me' : ''}">
-        <div class="salon-play-score-rank">{medals[i] || `#${i+1}`}</div>
-        <div class="salon-play-score-name">{p.username}</div>
-        <div class="salon-play-score-pts">{p.score} pts</div>
+  <div class="salon-summary-layout">
+
+    <!-- Left: track answer -->
+    <div class="salon-summary-track">
+      {#if roundEnd.cover}
+        <img src={roundEnd.cover} alt="" class="salon-summary-track-cover">
+      {:else}
+        <div class="salon-summary-track-placeholder">🎵</div>
+      {/if}
+      <div class="salon-summary-track-answer">{roundEnd.answer}</div>
+      {#if roundEnd.featArtists?.length}
+        <div class="salon-summary-track-feats">feat. {roundEnd.featArtists.join(', ')}</div>
+      {/if}
+      {#if roundEnd.firstFinder}
+        <p class="salon-summary-track-first">🏆 {roundEnd.firstFinder}</p>
+      {/if}
+    </div>
+
+    <!-- Right: leaderboard -->
+    <div class="salon-summary-scores-col">
+      <div class="salon-summary-round-label">
+        Manche {round} <span class="salon-summary-round-of">/ {total}</span>
       </div>
-    {/each}
+      <div class="salon-play-scores">
+        {#each (roundEnd.scores || scores) as p, i (p.username)}
+          <div class="salon-play-score-row {p.username === username ? 'me' : ''}">
+            <div class="salon-play-score-rank">{medals[i] || `#${i+1}`}</div>
+            <div class="salon-play-score-name">{p.username}</div>
+            <div class="salon-play-score-pts">
+              {p.score}
+              {#if p.delta > 0}<span class="salon-score-delta">+{p.delta}</span>{/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+
   </div>
 
 {:else if phase === 'gameover'}
