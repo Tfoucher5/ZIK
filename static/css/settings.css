@@ -193,7 +193,9 @@
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .btn-danger:hover {
   background: rgba(239, 68, 68, 0.22);
@@ -219,7 +221,9 @@
   padding: 32px;
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(239, 68, 68, 0.1);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(239, 68, 68, 0.1);
 }
 .delete-modal-title {
   font-family: "Bricolage Grotesque", sans-serif;
@@ -301,7 +305,9 @@
   padding: 10px 16px;
   border-radius: 10px;
   cursor: pointer;
-  transition: opacity 0.15s, filter 0.15s;
+  transition:
+    opacity 0.15s,
+    filter 0.15s;
 }
 .btn-delete-confirm:hover:not(:disabled) {
   filter: brightness(1.12);

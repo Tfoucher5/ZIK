@@ -37,7 +37,12 @@ export async function DELETE({ request }) {
     // If admin deletion fails, the profile data is already deleted.
     // Return a specific error so the client can still sign out.
     return json(
-      { error: "Données supprimées mais l'erreur suivante s'est produite lors de la suppression du compte auth : " + e.message, partial: true },
+      {
+        error:
+          "Données supprimées mais l'erreur suivante s'est produite lors de la suppression du compte auth : " +
+          e.message,
+        partial: true,
+      },
       { status: 500 },
     );
   }

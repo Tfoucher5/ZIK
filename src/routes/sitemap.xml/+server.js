@@ -32,9 +32,7 @@ export async function GET() {
 
   const roomsPart = (rooms || [])
     .map((r) => {
-      const lastmod = r.last_active_at
-        ? r.last_active_at.split("T")[0]
-        : today;
+      const lastmod = r.last_active_at ? r.last_active_at.split("T")[0] : today;
       // Official rooms get slightly higher priority
       const priority = r.is_official ? "0.75" : "0.55";
       return `  <url>
