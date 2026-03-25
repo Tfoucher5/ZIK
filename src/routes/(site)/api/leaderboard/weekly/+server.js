@@ -30,8 +30,12 @@ export async function GET() {
       .select("username, avatar_url")
       .in("username", usernames);
     if (profiles) {
-      const avatarMap = Object.fromEntries(profiles.map((p) => [p.username, p.avatar_url]));
-      data.forEach((r) => { r.avatar_url = avatarMap[r.username] ?? null; });
+      const avatarMap = Object.fromEntries(
+        profiles.map((p) => [p.username, p.avatar_url]),
+      );
+      data.forEach((r) => {
+        r.avatar_url = avatarMap[r.username] ?? null;
+      });
     }
   }
 

@@ -3,10 +3,16 @@ import { supabase } from "$lib/server/config.js";
 import { roomGames } from "$lib/server/state.js";
 
 function makeCache(ttlMs) {
-  let _data = null, _exp = 0;
+  let _data = null,
+    _exp = 0;
   return {
-    get() { return _exp > Date.now() ? _data : null; },
-    set(v) { _data = v; _exp = Date.now() + ttlMs; },
+    get() {
+      return _exp > Date.now() ? _data : null;
+    },
+    set(v) {
+      _data = v;
+      _exp = Date.now() + ttlMs;
+    },
   };
 }
 const _cache = makeCache(15_000); // cache 15s (plus court que official pour fraîcheur)
