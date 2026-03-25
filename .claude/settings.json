@@ -5,7 +5,17 @@
       "Bash(ls \"c:/Users/Teamr/Desktop/ZIK/src/routes/\\(site\\)/\")",
       "Bash(wc -l src/routes/\\\\\\(site\\\\\\)/docs/+page.svelte)",
       "Read(//c/Users/Teamr/.claude/projects/c--Users-Teamr-Desktop-ZIK/memory/**)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(timeout 10 npx vite dev)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(taskkill /F /IM esbuild.exe)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(timeout 10 npx vite dev --port 5200)",
+      "Bash(timeout 12 npx vite dev --port 5200)",
+      "Bash(xargs grep:*)",
+      "Bash(npx prettier:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Teamr\\.claude\\projects\\c--Users-Teamr-Desktop-ZIK\\memory"

@@ -39,6 +39,8 @@
   let hasOwner    = $state(false);
   let countdownVal = $state(0);
   let showCountdown = $state(false);
+  let revealStep = $state(0);
+  let _revealTimers = [];
 
   let socket = null;
   let ytPlayer = null;
@@ -119,6 +121,21 @@
     startLabel = 'Chargement\u2026';
   }
 
+  function launchConfetti() {
+    if (!browser) return;
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    const colors = ['#fbbf24','#a855f7','#3b82f6','#10b981','#f43f5e','#06b6d4','#e879f9','#84cc16'];
+    for (let i = 0; i < 130; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*1.8}s;animation-duration:${2.5+Math.random()*2.5}s;width:${5+Math.random()*7}px;height:${6+Math.random()*9}px;transform:rotate(${Math.random()*360}deg);border-radius:${Math.random()>0.5?'50%':'2px'};`;
+      container.appendChild(el);
+    }
+    setTimeout(() => { if (container.parentNode) container.remove(); }, 7000);
+  }
+
   function startCountdownUI(seconds) {
     clearInterval(countdownInterval);
     countdownVal = seconds;
@@ -196,7 +213,7 @@
       ps.forEach(p => { _prevScores[p.name] = p.score; });
     });
     socket.on('init_history', h => { history = Array.isArray(h) ? [...h].reverse() : []; });
-    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); });
+    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; });
     socket.on('start_round', data => {
       const featCount = data.featCount || 0;
       featSlots = Array.from({ length: featCount }, () => ({ val: '???', state: null }));
@@ -250,6 +267,12 @@
       guessDisabled = true; timerPct = 0; summaryShow = false;
       gameoverScores = scores;
       gameoverShow   = true;
+      revealStep = 0;
+      _revealTimers.forEach(clearTimeout);
+      _revealTimers = [];
+      _revealTimers.push(setTimeout(() => { revealStep = 1; }, 600));
+      _revealTimers.push(setTimeout(() => { revealStep = 2; }, 2100));
+      _revealTimers.push(setTimeout(() => { revealStep = 3; launchConfetti(); }, 3900));
     });
     socket.on('server_error', msg => {
       errorMsg = msg;
@@ -296,6 +319,7 @@
     if (socket) socket.disconnect();
     clearTimeout(feedTimer);
     clearInterval(countdownInterval);
+    _revealTimers.forEach(clearTimeout);
   });
 </script>
 
@@ -482,17 +506,77 @@
   {#if gameoverShow}
     <div id="gameover" style="display:flex">
       <div class="go-card">
-        <div class="go-title">&#x1F3C1; Partie termin&eacute;e</div>
-        <div id="go-scores">
-          {#each gameoverScores as p, i}
-            {@const medals = ['\u{1F947}','\u{1F948}','\u{1F949}']}
-            <div class="go-row rank-{i+1}">
-              <span class="go-medal">{medals[i] || `#${i+1}`}</span>
-              <span class="go-name">{#if p.isGuest}{p.name}&nbsp;<span style="font-size:.7rem;opacity:.5">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="go-name-link">{p.name}</a>{/if}</span>
-              <span class="go-score">{p.score} pts</span>
-            </div>
-          {/each}
+        <div class="go-title">&#x1F3C6; Classement Final</div>
+
+        <!-- Podium top 3 -->
+        <div class="go-podium">
+
+          <!-- 2nd place — left -->
+          <div class="go-podium-slot pos-2">
+            {#if gameoverScores[1]}
+              <div class="go-podium-player" class:go-player-revealed={revealStep >= 2}>
+                <div class="go-podium-avatar">{gameoverScores[1].name[0]?.toUpperCase() ?? '?'}</div>
+                <div class="go-podium-name">{gameoverScores[1].name}</div>
+                <div class="go-podium-score">{gameoverScores[1].score}&nbsp;pts</div>
+              </div>
+            {:else}
+              <div class="go-podium-player go-podium-placeholder go-player-revealed">
+                <div class="go-podium-avatar empty">?</div>
+                <div class="go-podium-name">&mdash;</div>
+              </div>
+            {/if}
+            <div class="go-podium-block pos-2">&#x1F948;</div>
+          </div>
+
+          <!-- 1st place — center -->
+          <div class="go-podium-slot pos-1">
+            {#if gameoverScores[0]}
+              <div class="go-podium-player" class:go-player-revealed={revealStep >= 3}>
+                <div class="go-podium-avatar gold">{gameoverScores[0].name[0]?.toUpperCase() ?? '?'}</div>
+                <div class="go-podium-name">{gameoverScores[0].name}</div>
+                <div class="go-podium-score">{gameoverScores[0].score}&nbsp;pts</div>
+              </div>
+            {:else}
+              <div class="go-podium-player go-podium-placeholder go-player-revealed">
+                <div class="go-podium-avatar empty">?</div>
+                <div class="go-podium-name">&mdash;</div>
+              </div>
+            {/if}
+            <div class="go-podium-block pos-1">&#x1F947;</div>
+          </div>
+
+          <!-- 3rd place — right -->
+          <div class="go-podium-slot pos-3">
+            {#if gameoverScores[2]}
+              <div class="go-podium-player" class:go-player-revealed={revealStep >= 1}>
+                <div class="go-podium-avatar">{gameoverScores[2].name[0]?.toUpperCase() ?? '?'}</div>
+                <div class="go-podium-name">{gameoverScores[2].name}</div>
+                <div class="go-podium-score">{gameoverScores[2].score}&nbsp;pts</div>
+              </div>
+            {:else}
+              <div class="go-podium-player go-podium-placeholder go-player-revealed">
+                <div class="go-podium-avatar empty">?</div>
+                <div class="go-podium-name">&mdash;</div>
+              </div>
+            {/if}
+            <div class="go-podium-block pos-3">&#x1F949;</div>
+          </div>
+
         </div>
+
+        <!-- Rest: rank 4+ -->
+        {#if gameoverScores.length > 3}
+          <div class="go-rest">
+            {#each gameoverScores.slice(3) as p, i}
+              <div class="go-row">
+                <span class="go-medal">#{i + 4}</span>
+                <span class="go-name">{#if p.isGuest}{p.name}&nbsp;<span style="font-size:.7rem;opacity:.5">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="go-name-link">{p.name}</a>{/if}</span>
+                <span class="go-score">{p.score}&nbsp;pts</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
         <div class="go-actions">
           {#if !hasOwner || autoStart || isAdmin}
             <button class="start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
