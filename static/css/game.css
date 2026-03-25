@@ -775,9 +775,9 @@ a {
   background: var(--bg2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 22px;
-  padding: 40px 48px;
+  padding: 36px 32px 32px;
   min-width: 320px;
-  max-width: 480px;
+  max-width: 560px;
   width: 100%;
   text-align: center;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
@@ -860,6 +860,162 @@ a {
 }
 .go-back:hover {
   color: var(--text);
+}
+
+/* ── Podium ─────────────────────────────────────────────────────────────────── */
+.go-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+.go-podium-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 160px;
+}
+.go-podium-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.6) translateY(20px);
+  width: 100%;
+}
+.go-podium-player.go-player-revealed {
+  visibility: visible;
+  animation: podiumReveal 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes podiumReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.6) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.go-podium-player.go-podium-placeholder {
+  animation: none !important;
+  opacity: 0.3;
+}
+.go-podium-avatar.empty {
+  background: transparent;
+  border-style: dashed;
+  color: var(--mid);
+  font-size: 1rem;
+}
+.go-podium-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.go-podium-slot.pos-1 .go-podium-avatar {
+  width: 56px;
+  height: 56px;
+  font-size: 1.5rem;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.35);
+}
+.go-podium-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.go-podium-score {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.go-podium-block {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+}
+.go-podium-block.pos-1 {
+  height: 72px;
+  background: rgba(251, 191, 36, 0.07);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+.go-podium-block.pos-2 {
+  height: 52px;
+  background: rgba(148, 163, 184, 0.07);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+.go-podium-block.pos-3 {
+  height: 38px;
+  background: rgba(205, 127, 50, 0.07);
+  border-color: rgba(205, 127, 50, 0.22);
+}
+/* ── Rest list (rank 4+) ────────────────────────────────────────────────────── */
+.go-rest {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 20px;
+  max-height: 160px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+/* ── Confetti ───────────────────────────────────────────────────────────────── */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 400;
+  overflow: hidden;
+}
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
@@ -1057,15 +1213,49 @@ a {
 
   /* Game over */
   .go-card {
-    padding: 24px 18px;
+    padding: 20px 12px 18px;
   }
   .go-title {
     font-size: 1.2rem;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
   .go-row {
     padding: 8px 10px;
     font-size: 0.82rem;
+  }
+  .go-podium {
+    gap: 4px;
+  }
+  .go-podium-slot {
+    max-width: 110px;
+  }
+  .go-podium-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  .go-podium-slot.pos-1 .go-podium-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+  .go-podium-name {
+    font-size: 0.7rem;
+  }
+  .go-podium-score {
+    font-size: 0.65rem;
+  }
+  .go-podium-block.pos-1 {
+    height: 58px;
+    font-size: 1rem;
+  }
+  .go-podium-block.pos-2 {
+    height: 42px;
+    font-size: 1rem;
+  }
+  .go-podium-block.pos-3 {
+    height: 30px;
+    font-size: 0.9rem;
   }
 }
 
@@ -1128,8 +1318,15 @@ a {
   .go-card,
   #gameover,
   #cover-img,
-  .vinyl {
+  .vinyl,
+  .go-player-revealed,
+  .confetti-piece {
     animation: none !important;
+  }
+  .go-podium-player.go-player-revealed {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
   }
 }
 

@@ -949,6 +949,165 @@ body {
   justify-content: center;
 }
 
+/* ─── Salon host podium ─────────────────────────────────────────────────────── */
+.salon-go-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 600px;
+  padding: 0 8px;
+}
+.salon-go-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 180px;
+}
+.salon-go-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.6) translateY(24px);
+  width: 100%;
+}
+.salon-go-player.salon-go-revealed {
+  visibility: visible;
+  animation: salonPodiumReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes salonPodiumReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.6) translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.salon-go-player.salon-go-placeholder {
+  animation: none !important;
+  opacity: 0.3;
+}
+.salon-go-avatar.empty {
+  background: transparent;
+  border-style: dashed;
+  color: var(--mid);
+  font-size: 1.1rem;
+}
+.salon-go-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.salon-go-slot.pos-1 .salon-go-avatar {
+  width: 68px;
+  height: 68px;
+  font-size: 1.8rem;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 28px rgba(251, 191, 36, 0.4);
+}
+.salon-go-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+.salon-go-score {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent2);
+  font-variant-numeric: tabular-nums;
+}
+.salon-go-block {
+  width: 100%;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+}
+.salon-go-block.pos-1 {
+  height: 88px;
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+.salon-go-block.pos-2 {
+  height: 64px;
+  background: rgba(148, 163, 184, 0.07);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+.salon-go-block.pos-3 {
+  height: 46px;
+  background: rgba(205, 127, 50, 0.07);
+  border-color: rgba(205, 127, 50, 0.22);
+}
+/* Rest list (rank 4+) */
+.salon-go-rest {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+/* Confetti (reused from game, defined here for salon host scope) */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
 /* ─── Players sidebar ───────────────────────────────────────────────────────── */
 
 .salon-host-sidebar {

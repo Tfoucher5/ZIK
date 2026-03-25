@@ -12,6 +12,40 @@
   const medals = ['🥇', '🥈', '🥉'];
   const VIS_BARS = Array.from({ length: 18 }, (_, i) => i);
 
+  // ─── Podium reveal ─────────────────────────────────────────────────────────
+  let revealStep = $state(0);
+  let _revealTimers = [];
+
+  $effect(() => {
+    if (phase === 'gameover') {
+      revealStep = 0;
+      _revealTimers.forEach(clearTimeout);
+      _revealTimers = [];
+      _revealTimers.push(setTimeout(() => { revealStep = 1; }, 600));
+      _revealTimers.push(setTimeout(() => { revealStep = 2; }, 2100));
+      _revealTimers.push(setTimeout(() => { revealStep = 3; launchConfetti(); }, 3900));
+    } else {
+      _revealTimers.forEach(clearTimeout);
+      _revealTimers = [];
+      revealStep = 0;
+    }
+  });
+
+  function launchConfetti() {
+    if (typeof document === 'undefined') return;
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    const colors = ['#fbbf24','#a855f7','#3b82f6','#10b981','#f43f5e','#06b6d4','#e879f9','#84cc16'];
+    for (let i = 0; i < 160; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*2}s;animation-duration:${2.5+Math.random()*3}s;width:${5+Math.random()*8}px;height:${6+Math.random()*10}px;transform:rotate(${Math.random()*360}deg);border-radius:${Math.random()>0.5?'50%':'2px'};`;
+      container.appendChild(el);
+    }
+    setTimeout(() => { if (container.parentNode) container.remove(); }, 8000);
+  }
+
   // ─── YouTube ───────────────────────────────────────────────────────────────
   let ytReady = false;
   let ytPlayer;
@@ -55,7 +89,7 @@
   }
 
   onMount(initYT);
-  onDestroy(() => { if (ytPlayer?.destroy) ytPlayer.destroy(); });
+  onDestroy(() => { if (ytPlayer?.destroy) ytPlayer.destroy(); _revealTimers.forEach(clearTimeout); });
 </script>
 
 <div class="salon-host-center" class:phase-summary={phase === 'summary' || phase === 'gameover'}>
@@ -147,16 +181,77 @@
 
     {:else if phase === 'gameover'}
       <div class="salon-gameover">
-        <h2>🏆 Fin de la partie !</h2>
-        <div class="salon-scores-table">
-          {#each finalScores as p, i (p.username)}
-            <div class="salon-scores-row {i < 3 ? 'top' : ''}">
-              <div class="salon-scores-medal">{medals[i] || `#${i+1}`}</div>
-              <div class="salon-scores-name">{p.username}</div>
-              <div class="salon-scores-pts">{p.score} pts</div>
-            </div>
-          {/each}
+        <h2>🏆 Classement Final</h2>
+
+        <!-- Podium top 3 -->
+        <div class="salon-go-podium">
+
+          <!-- 2nd place — left -->
+          <div class="salon-go-slot pos-2">
+            {#if finalScores[1]}
+              <div class="salon-go-player" class:salon-go-revealed={revealStep >= 2}>
+                <div class="salon-go-avatar">{finalScores[1].username[0]?.toUpperCase() ?? '?'}</div>
+                <div class="salon-go-name">{finalScores[1].username}</div>
+                <div class="salon-go-score">{finalScores[1].score} pts</div>
+              </div>
+            {:else}
+              <div class="salon-go-player salon-go-placeholder salon-go-revealed">
+                <div class="salon-go-avatar empty">?</div>
+                <div class="salon-go-name">&mdash;</div>
+              </div>
+            {/if}
+            <div class="salon-go-block pos-2">🥈</div>
+          </div>
+
+          <!-- 1st place — center -->
+          <div class="salon-go-slot pos-1">
+            {#if finalScores[0]}
+              <div class="salon-go-player" class:salon-go-revealed={revealStep >= 3}>
+                <div class="salon-go-avatar gold">{finalScores[0].username[0]?.toUpperCase() ?? '?'}</div>
+                <div class="salon-go-name">{finalScores[0].username}</div>
+                <div class="salon-go-score">{finalScores[0].score} pts</div>
+              </div>
+            {:else}
+              <div class="salon-go-player salon-go-placeholder salon-go-revealed">
+                <div class="salon-go-avatar empty">?</div>
+                <div class="salon-go-name">&mdash;</div>
+              </div>
+            {/if}
+            <div class="salon-go-block pos-1">🥇</div>
+          </div>
+
+          <!-- 3rd place — right -->
+          <div class="salon-go-slot pos-3">
+            {#if finalScores[2]}
+              <div class="salon-go-player" class:salon-go-revealed={revealStep >= 1}>
+                <div class="salon-go-avatar">{finalScores[2].username[0]?.toUpperCase() ?? '?'}</div>
+                <div class="salon-go-name">{finalScores[2].username}</div>
+                <div class="salon-go-score">{finalScores[2].score} pts</div>
+              </div>
+            {:else}
+              <div class="salon-go-player salon-go-placeholder salon-go-revealed">
+                <div class="salon-go-avatar empty">?</div>
+                <div class="salon-go-name">&mdash;</div>
+              </div>
+            {/if}
+            <div class="salon-go-block pos-3">🥉</div>
+          </div>
+
         </div>
+
+        <!-- Rest: rank 4+ -->
+        {#if finalScores.length > 3}
+          <div class="salon-go-rest">
+            {#each finalScores.slice(3) as p, i (p.username)}
+              <div class="salon-scores-row">
+                <div class="salon-scores-medal">#{i + 4}</div>
+                <div class="salon-scores-name">{p.username}</div>
+                <div class="salon-scores-pts">{p.score} pts</div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
         <div class="salon-gameover-actions">
           <button class="btn-salon-start" onclick={onRestart}>🔄 Rejouer</button>
           <button class="btn-salon-next" onclick={onNewSalon}>Nouveau salon</button>
