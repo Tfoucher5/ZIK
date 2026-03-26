@@ -2,8 +2,12 @@
   --c-glass: 255 255 255;
 }
 
-[data-theme="light"] { --c-glass: 0 0 0; }
-[data-theme="violet"] { --c-glass: 255 255 255; }
+[data-theme="light"] {
+  --c-glass: 0 0 0;
+}
+[data-theme="violet"] {
+  --c-glass: 255 255 255;
+}
 
 .legal-page {
   max-width: 720px;

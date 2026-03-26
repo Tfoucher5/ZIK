@@ -29,7 +29,6 @@
   --c-glass: 255 255 255;
 }
 
-
 [data-theme="light"] {
   --c-glass: 0 0 0;
   --bg: #f4f6fb;

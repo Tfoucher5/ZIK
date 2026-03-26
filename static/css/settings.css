@@ -2,8 +2,12 @@
   --c-glass: 255 255 255;
 }
 
-[data-theme="light"] { --c-glass: 0 0 0; }
-[data-theme="violet"] { --c-glass: 255 255 255; }
+[data-theme="light"] {
+  --c-glass: 0 0 0;
+}
+[data-theme="violet"] {
+  --c-glass: 255 255 255;
+}
 
 .settings-page {
   max-width: 640px;
@@ -140,7 +144,11 @@
   left: 0;
   right: 0;
   height: 8px;
-  background: color-mix(in srgb, var(--swatch-bg) 60%, var(--swatch-accent) 40%);
+  background: color-mix(
+    in srgb,
+    var(--swatch-bg) 60%,
+    var(--swatch-accent) 40%
+  );
 }
 .swatch-dot {
   width: 10px;

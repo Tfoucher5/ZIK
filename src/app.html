@@ -14,12 +14,15 @@
     <!-- Theme / animation preference (inline to avoid FOUC) -->
     <script>
       (function () {
-        var t = localStorage.getItem('zik_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', t);
+        var t = localStorage.getItem("zik_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
         // Legacy: migrate zik_dark → zik_theme
-        if (!localStorage.getItem('zik_theme')) {
-          var d = localStorage.getItem('zik_dark');
-          if (d === 'false') { localStorage.setItem('zik_theme', 'light'); document.documentElement.setAttribute('data-theme', 'light'); }
+        if (!localStorage.getItem("zik_theme")) {
+          var d = localStorage.getItem("zik_dark");
+          if (d === "false") {
+            localStorage.setItem("zik_theme", "light");
+            document.documentElement.setAttribute("data-theme", "light");
+          }
         }
         if (localStorage.getItem("zik_animations") === "off") {
           document.documentElement.classList.add("no-animations");
