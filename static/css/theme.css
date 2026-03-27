@@ -80,7 +80,7 @@ html[data-theme="light"] {
   --surface2: rgb(var(--c-glass) / 0.08);
   --surface3: rgb(var(--c-glass) / 0.12);
   --border: rgb(var(--c-glass) / 0.12);
-  --border2: rgb(var(--c-glass) / 0.20);
+  --border2: rgb(var(--c-glass) / 0.2);
   --accent: #0ea5e9;
   --accent2: #7c3aed;
   --accent3: #9f67ff;
