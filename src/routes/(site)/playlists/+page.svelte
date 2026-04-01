@@ -512,7 +512,7 @@
 {#if plModalOpen}
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<div class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) plModalOpen = false; }}>
+<div id="modal-playlist" class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) plModalOpen = false; }}>
   <div class="modal modal-lg">
     <button class="close-btn" onclick={() => plModalOpen = false}>&#x2715;</button>
     <h2>{editingPl ? 'Modifier la playlist' : 'Nouvelle playlist'}</h2>
