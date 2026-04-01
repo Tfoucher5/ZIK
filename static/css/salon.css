@@ -1609,6 +1609,18 @@ body {
 
 /* ─── Multiple choice (Kahoot-style) ─────────────────────────────────────────── */
 
+/* Host TV view: smaller, non-interactive */
+.salon-host-choices .salon-choice-btn {
+  min-height: 64px;
+  font-size: 0.78rem;
+  padding: 10px 8px 12px;
+  cursor: default;
+  pointer-events: none;
+}
+.salon-host-choices .salon-choice-btn::after {
+  display: none;
+}
+
 .salon-choices {
   width: 100%;
   display: grid;

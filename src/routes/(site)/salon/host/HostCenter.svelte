@@ -6,6 +6,7 @@
     currentPhrase = '', players = [],
     roundEnd = null, finalScores = [],
     round = 0, total = 10,
+    choices = null, answerMode = 'free',
     onRestart, onNewSalon, onMusicReady,
   } = $props();
 
@@ -129,6 +130,17 @@
           <div class="salon-finders">
             {#each players.filter(p => p.foundThisRound) as p (p.username)}
               <span class="salon-finder-chip">✓ {p.username}</span>
+            {/each}
+          </div>
+        {/if}
+
+        {#if answerMode === 'multiple' && choices && timerVal > 0}
+          <div class="salon-choices salon-host-choices">
+            {#each choices as choice, i (i)}
+              <div class="salon-choice-btn c{i}">
+                <span class="choice-shape"></span>
+                <span class="choice-text">{choice}</span>
+              </div>
             {/each}
           </div>
         {/if}
