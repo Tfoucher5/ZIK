@@ -25,10 +25,14 @@
       "Bash(sed -i 's/border-color: #f87171;/border-color: var\\(--danger\\);/g' static/css/settings.css)",
       "Bash(grep -E \"\\\\.\\(ts|js|svelte\\)$\")",
       "Bash(find /c/Users/Teamr/Desktop/ZIK/src/lib -type f -name *.ts -o -name *.js)",
-      "Bash(grep -r \"no-animations\\\\|zik_animations\\\\|zik_vol\" /c/Users/Teamr/Desktop/ZIK/src --include=*.svelte --include=*.ts --include=*.js)"
+      "Bash(grep -r \"no-animations\\\\|zik_animations\\\\|zik_vol\" /c/Users/Teamr/Desktop/ZIK/src --include=*.svelte --include=*.ts --include=*.js)",
+      "Read(//c/Users/Teamr/**)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\Teamr\\.claude\\projects\\c--Users-Teamr-Desktop-ZIK\\memory"
+      "c:\\Users\\Teamr\\.claude\\projects\\c--Users-Teamr-Desktop-ZIK\\memory",
+      "c:\\Users\\Teamr\\.claude"
     ]
   }
 }
