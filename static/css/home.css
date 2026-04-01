@@ -226,6 +226,22 @@ img {
   margin-top: 4px;
 }
 
+.btn-join {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+  letter-spacing: 0.2px;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--mid);
@@ -921,6 +937,15 @@ footer,
   font-size: 0.78rem;
   color: var(--dim);
   text-align: center;
+}
+.footer-bottom a {
+  font-size: 0.88rem;
+  color: var(--dim);
+  transition: color 0.15s;
+  text-decoration: none;
+}
+.footer-bottom a:hover {
+  color: var(--text);
 }
 @media (max-width: 768px) {
   .footer-grid {
@@ -1649,23 +1674,26 @@ footer,
 
 /* ── Responsive hero visual ── */
 @media (max-width: 980px) {
-  .hero-content {
-    flex-direction: column;
-    gap: 48px;
-    align-items: flex-start;
-  }
-  .hero-text {
-    max-width: 100%;
-  }
   .hero-visual {
-    flex: none;
-    width: 100%;
-    max-width: 420px;
-    align-self: center;
+    display: none;
   }
-  .hero-visual::before {
-    width: 340px;
-    height: 340px;
+  /* Sur mobile, cacher les feats moins importantes et le lien Explorer */
+  .hero-feat-hide-sm {
+    display: none;
+  }
+  .hero-cta-explore {
+    display: none;
+  }
+  /* Steps : police plus petite sur mobile */
+  .hero-steps {
+    margin: 14px 0 4px;
+    gap: 8px;
+  }
+  .hero-step strong {
+    font-size: 0.78rem;
+  }
+  .hero-step small {
+    font-size: 0.7rem;
   }
 }
 @media (max-width: 600px) {
