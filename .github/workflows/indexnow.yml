@@ -1,0 +1,22 @@
+name: IndexNow — Notifier Bing
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    # Attendre que Vercel finisse de déployer (~60s)
+    steps:
+      - name: Attendre le déploiement Vercel
+        run: sleep 90
+
+      - name: Soumettre les URLs à Bing via IndexNow
+        run: |
+          curl -s -o response.txt -w "%{http_code}" \
+            -X POST https://www.zik-music.fr/api/indexnow \
+            -H "x-admin-key: ${{ secrets.ADMIN_SECRET }}" \
+            > status_code.txt
+          echo "Réponse: $(cat response.txt)"
+          echo "HTTP status: $(cat status_code.txt)"

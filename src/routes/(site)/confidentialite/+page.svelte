@@ -1,7 +1,7 @@
 <svelte:head>
   <title>ZIK — Politique de Confidentialité</title>
   <meta name="description" content="Politique de confidentialité de ZIK, le blind test musical multijoueur en ligne. Données collectées, hébergement RGPD, droits des utilisateurs.">
-  <meta name="robots" content="noindex, follow">
+  <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.zik-music.fr/confidentialite">
   <link rel="stylesheet" href="/css/home.css">
   <link rel="stylesheet" href="/css/legal.css">
