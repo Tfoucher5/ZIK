@@ -7,16 +7,24 @@
   const user = $derived(_ctx.user);
   const authReady = $derived(_ctx.authReady);
 
-  let tab          = $state('public');
-  let pubSearch    = $state('');
-  const filteredPublic = $derived(
-    pubSearch.trim()
-      ? publicRooms.filter(r =>
-          r.name?.toLowerCase().includes(pubSearch.toLowerCase()) ||
-          r.profiles?.username?.toLowerCase().includes(pubSearch.toLowerCase())
-        )
-      : publicRooms
-  );
+  let tab              = $state('public');
+  let pubSearch        = $state('');
+  let filterAutoStart  = $state(false);
+  let filterActive     = $state(false);
+
+  const filteredPublic = $derived.by(() => {
+    let list = publicRooms;
+    if (pubSearch.trim()) {
+      const q = pubSearch.trim().toLowerCase();
+      list = list.filter(r =>
+        r.name?.toLowerCase().includes(q) ||
+        r.profiles?.username?.toLowerCase().includes(q)
+      );
+    }
+    if (filterAutoStart) list = list.filter(r => r.auto_start);
+    if (filterActive)    list = list.filter(r => r.last_active_at && (Date.now() - new Date(r.last_active_at).getTime()) < 3_600_000);
+    return list;
+  });
   let publicRooms  = $state([]);
   let myRooms      = $state([]);
   let userPlaylists = $state([]);
@@ -235,6 +243,21 @@
       <div class="rooms-search-wrap">
         <input class="rooms-search" type="search" bind:value={pubSearch} placeholder="Rechercher une room..." />
       </div>
+      <div class="rooms-filters">
+        <button
+          class="rooms-filter-chip {filterAutoStart ? 'active' : ''}"
+          onclick={() => filterAutoStart = !filterAutoStart}
+        >⚡ Lancement auto</button>
+        <button
+          class="rooms-filter-chip {filterActive ? 'active' : ''}"
+          onclick={() => filterActive = !filterActive}
+        >🔴 Joueurs actifs</button>
+        {#if filterAutoStart || filterActive}
+          <button class="rooms-filter-reset" onclick={() => { filterAutoStart = false; filterActive = false; }}>
+            Réinitialiser
+          </button>
+        {/if}
+      </div>
       {#if pubLoading}
         <div class="pl-loading">Chargement...</div>
       {:else if !publicRooms.length}
@@ -242,11 +265,14 @@
       {:else}
         <div class="rooms-grid">
           {#each filteredPublic as r (r.id)}
-            <div class="room-card">
+            <div class="room-card {r.is_official ? 'room-card-official' : ''}">
               <div class="room-card-head">
                 <span class="room-card-emoji">{r.emoji}</span>
-                <div>
-                  <div class="room-card-name">{r.name}</div>
+                <div style="flex:1;min-width:0">
+                  <div class="room-card-name">
+                    {r.name}
+                    {#if r.is_official}<span class="room-badge-official">✓ Officielle</span>{/if}
+                  </div>
                   {#if r.profiles?.username}<div class="room-card-owner">par {r.profiles.username}</div>{/if}
                 </div>
               </div>
@@ -254,6 +280,7 @@
               <div class="room-card-meta">
                 <span class="room-card-tag">{r.max_rounds} manches</span>
                 <span class="room-card-tag">{r.round_duration}s/manche</span>
+                {#if r.auto_start}<span class="room-card-tag room-card-auto">⚡ Auto</span>{/if}
                 <span class="room-card-tag">Code&nbsp;<strong>{r.code}</strong></span>
                 {#if !r.is_public}<span class="room-card-tag room-card-private">Priv&eacute;e</span>{/if}
               </div>
