@@ -1,7 +1,7 @@
 <svelte:head>
   <title>ZIK — Mentions Légales</title>
   <meta name="description" content="Mentions légales de ZIK, le blind test musical multijoueur en ligne. Éditeur, hébergeur et informations légales.">
-  <meta name="robots" content="noindex, follow">
+  <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.zik-music.fr/mentions-legales">
   <link rel="stylesheet" href="/css/home.css">
   <link rel="stylesheet" href="/css/legal.css">
