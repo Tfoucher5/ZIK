@@ -34,14 +34,14 @@ function generateCode() {
 
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
-async function loadSalonTracks(playlistId) {
+async function loadTracksForPlaylist(playlistId) {
   try {
     const { data: rows } = await supabase
       .from("custom_playlist_tracks")
       .select("artist, title, cover_url, preview_url")
       .eq("playlist_id", playlistId)
       .order("position");
-    if (rows?.length >= 3) {
+    if (rows?.length) {
       return rows.map((t) =>
         buildTrack({
           artist: t.artist,
@@ -52,35 +52,32 @@ async function loadSalonTracks(playlistId) {
       );
     }
   } catch {
-    // custom_playlist_tracks lookup failed — try official room playlist
-  }
-  try {
-    const { data: roomRows } = await supabase
-      .from("rooms")
-      .select("code")
-      .eq("playlist_id", playlistId)
-      .single();
-    if (roomRows?.code) {
-      const { data: trackRows } = await supabase
-        .from("custom_playlist_tracks")
-        .select("artist, title, cover_url, preview_url")
-        .eq("playlist_id", playlistId)
-        .order("position");
-      if (trackRows?.length >= 3) {
-        return trackRows.map((t) =>
-          buildTrack({
-            artist: t.artist,
-            title: t.title,
-            cover: t.cover_url,
-            preview_url: t.preview_url,
-          }),
-        );
-      }
-    }
-  } catch {
-    // fallback also failed
+    // ignore
   }
   return [];
+}
+
+// Accepts a single ID or an array of IDs — returns combined, deduplicated, shuffled tracks
+async function loadSalonTracks(playlistIds) {
+  const ids = Array.isArray(playlistIds) ? playlistIds : [playlistIds];
+  const seen = new Set();
+  const all = [];
+  for (const id of ids) {
+    const tracks = await loadTracksForPlaylist(id);
+    for (const t of tracks) {
+      const key = `${t.artist}|${t.title}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        all.push(t);
+      }
+    }
+  }
+  // Fisher-Yates shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
 }
 
 // ─── Multiple choice helpers ──────────────────────────────────────────────────
@@ -451,10 +448,10 @@ async function startNextRound(code, io) {
 
 // ─── Public API for HTTP-based salon creation ─────────────────────────────────
 
-export async function createSalonRoom({ playlistId, settings }) {
-  const tracks = await loadSalonTracks(playlistId);
+export async function createSalonRoom({ playlistIds, settings }) {
+  const tracks = await loadSalonTracks(playlistIds);
   if (tracks.length < 3) {
-    throw new Error("Playlist introuvable ou trop courte (min. 3 titres).");
+    throw new Error("Playlists introuvables ou trop courtes (min. 3 titres au total).");
   }
 
   const code = generateCode();
@@ -474,7 +471,7 @@ export async function createSalonRoom({ playlistId, settings }) {
     hostSocketId: null,
     _hostDcTimer: null,
     _cleanupTimer: null,
-    settings: { ...s, playlistId },
+    settings: { ...s, playlistIds },
     players: {},
     game: {
       phase: "lobby",

@@ -16,47 +16,61 @@
   let manualNext         = $state(false);
   let showAnswerDuration = $state(7);
 
-  // Playlist picker
-  let allPlaylists     = $state([]);
-  let selectedPlaylist = $state(null);
-  let searchQuery      = $state('');
-  let creating         = $state(false);
-  let error            = $state('');
+  // Playlist picker (multi-select)
+  let allPlaylists = $state([]);
+  let selectedIds  = $state([]);   // tableau d'IDs
+  let searchQuery  = $state('');
+  let creating     = $state(false);
+  let error        = $state('');
 
   let filteredPlaylists = $derived(
     searchQuery.trim()
-      ? allPlaylists.filter(p =>
-          p.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
-        )
+      ? allPlaylists.filter(p => p.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
       : allPlaylists
   );
+
+  let selectedPlaylists = $derived(allPlaylists.filter(p => selectedIds.includes(p.id)));
+  let totalTrackCount   = $derived(selectedPlaylists.reduce((s, p) => s + (p.trackCount || 0), 0));
+
+  function togglePlaylist(pl) {
+    if (selectedIds.includes(pl.id)) {
+      selectedIds = selectedIds.filter(id => id !== pl.id);
+    } else {
+      selectedIds = [...selectedIds, pl.id];
+    }
+  }
+
+  function clamp(val, min, max) { return Math.min(max, Math.max(min, Number(val) || min)); }
 
   async function loadPlaylists() {
     if (!user) return;
     try {
-      const [{ data: mine }, { data: official }] = await Promise.all([
+      const [{ data: mine }, { data: shared }] = await Promise.all([
         sb.from('custom_playlists')
           .select('id, name, emoji, track_count')
           .eq('owner_id', user.id)
           .order('created_at', { ascending: false }),
-        sb.from('rooms')
-          .select('playlist_id, name, emoji')
-          .not('playlist_id', 'is', null),
+        sb.from('custom_playlists')
+          .select('id, name, emoji, track_count, is_official')
+          .or('is_public.eq.true,is_official.eq.true')
+          .neq('owner_id', user.id)
+          .order('name'),
       ]);
 
       const flat = [];
       if (mine?.length) {
         for (const p of mine) {
-          flat.push({ id: p.id, name: p.name, emoji: p.emoji || '🎵', trackCount: p.track_count ?? null, group: 'Mes playlists' });
+          flat.push({ id: p.id, name: p.name, emoji: p.emoji || '🎵', trackCount: p.track_count, group: 'Mes playlists' });
         }
       }
-      if (official?.length) {
-        for (const r of official) {
-          flat.push({ id: r.playlist_id, name: r.name, emoji: r.emoji || '🎵', trackCount: null, group: 'Officielles' });
+      if (shared?.length) {
+        for (const p of shared) {
+          if (flat.some(f => f.id === p.id)) continue;
+          flat.push({ id: p.id, name: p.name, emoji: p.emoji || '🎵', trackCount: p.track_count, group: p.is_official ? 'Officielles' : 'Publiques' });
         }
       }
       allPlaylists = flat;
-      if (!selectedPlaylist && flat.length > 0) selectedPlaylist = flat[0];
+      if (selectedIds.length === 0 && flat.length > 0) selectedIds = [flat[0].id];
     } catch {
       error = 'Impossible de charger les playlists.';
     }
@@ -64,7 +78,7 @@
 
   async function createSalon() {
     error = '';
-    if (!selectedPlaylist) { error = 'Sélectionne une playlist.'; return; }
+    if (selectedIds.length === 0) { error = 'Sélectionne au moins une playlist.'; return; }
     creating = true;
     try {
       const { data: { session } } = await sb.auth.getSession();
@@ -73,7 +87,7 @@
         method: 'POST',
         headers: { 'content-type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
-          playlistId: selectedPlaylist.id,
+          playlistIds: selectedIds,
           settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration },
         }),
       });
@@ -133,7 +147,8 @@
           <label>Nombre de manches</label>
           <div class="salon-range-row">
             <input type="range" min="5" max="20" step="1" bind:value={maxRounds}>
-            <span class="salon-range-val">{maxRounds}</span>
+            <input type="number" min="5" max="20" step="1" class="salon-range-num" bind:value={maxRounds}
+              onchange={() => maxRounds = clamp(maxRounds, 5, 20)}>
           </div>
         </div>
 
@@ -141,7 +156,9 @@
           <label>Durée par manche</label>
           <div class="salon-range-row">
             <input type="range" min="15" max="60" step="5" bind:value={roundDuration}>
-            <span class="salon-range-val">{roundDuration}s</span>
+            <input type="number" min="15" max="60" step="5" class="salon-range-num" bind:value={roundDuration}
+              onchange={() => roundDuration = clamp(roundDuration, 15, 60)}>
+            <span class="salon-range-unit">s</span>
           </div>
         </div>
 
@@ -183,15 +200,17 @@
             <label>Durée d'affichage de la réponse</label>
             <div class="salon-range-row">
               <input type="range" min="3" max="15" step="1" bind:value={showAnswerDuration}>
-              <span class="salon-range-val">{showAnswerDuration}s</span>
+              <input type="number" min="3" max="15" step="1" class="salon-range-num" bind:value={showAnswerDuration}
+                onchange={() => showAnswerDuration = clamp(showAnswerDuration, 3, 15)}>
+              <span class="salon-range-unit">s</span>
             </div>
           </div>
         {/if}
       </div>
 
-      <!-- Colonne droite : sélection playlist -->
+      <!-- Colonne droite : sélection playlists (multi) -->
       <div class="salon-card salon-card-playlist">
-        <h2>🎵 Playlist</h2>
+        <h2>🎵 Playlists</h2>
 
         {#if allPlaylists.length === 0}
           <p style="font-size:.85rem;color:var(--mid)">
@@ -199,18 +218,18 @@
             <a href="/playlists" style="color:var(--accent2)">Crée-en une →</a>
           </p>
         {:else}
-          {#if selectedPlaylist}
-            <div class="salon-playlist-selected">
-              <span class="salon-playlist-emoji">{selectedPlaylist.emoji}</span>
-              <div class="salon-playlist-info">
-                <div class="salon-playlist-name">{selectedPlaylist.name}</div>
-                <div class="salon-playlist-meta">
-                  {selectedPlaylist.group}
-                  {#if selectedPlaylist.trackCount !== null}
-                    · {selectedPlaylist.trackCount} titre{selectedPlaylist.trackCount !== 1 ? 's' : ''}
-                  {/if}
+          <!-- Chips des playlists sélectionnées -->
+          {#if selectedPlaylists.length > 0}
+            <div class="salon-playlist-chips">
+              {#each selectedPlaylists as pl (pl.id)}
+                <div class="salon-playlist-chip">
+                  <span>{pl.emoji} {pl.name}</span>
+                  <button class="salon-chip-remove" onclick={() => togglePlaylist(pl)} aria-label="Retirer {pl.name}">×</button>
                 </div>
-              </div>
+              {/each}
+            </div>
+            <div class="salon-playlist-total">
+              {totalTrackCount} titre{totalTrackCount !== 1 ? 's' : ''} au total
             </div>
           {/if}
 
@@ -227,20 +246,24 @@
               <p style="font-size:.82rem;color:var(--dim);padding:8px 4px">Aucun résultat.</p>
             {:else}
               {#each filteredPlaylists as pl (pl.id)}
+                {@const isSelected = selectedIds.includes(pl.id)}
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                 <div
-                  class="salon-playlist-item {selectedPlaylist?.id === pl.id ? 'selected' : ''}"
-                  onclick={() => selectedPlaylist = pl}
+                  class="salon-playlist-item {isSelected ? 'selected' : ''}"
+                  onclick={() => togglePlaylist(pl)}
                   role="option"
-                  aria-selected={selectedPlaylist?.id === pl.id}
+                  aria-selected={isSelected}
                 >
                   <span class="salon-playlist-emoji">{pl.emoji}</span>
                   <div class="salon-playlist-info">
                     <div class="salon-playlist-name">{pl.name}</div>
                     <div class="salon-playlist-meta">{pl.group}</div>
                   </div>
-                  {#if pl.trackCount !== null}
+                  {#if pl.trackCount}
                     <span class="salon-playlist-count">{pl.trackCount} titres</span>
+                  {/if}
+                  {#if isSelected}
+                    <span class="salon-playlist-check">✓</span>
                   {/if}
                 </div>
               {/each}
@@ -256,7 +279,7 @@
     {/if}
 
     <div class="salon-setup-actions">
-      <button class="btn-salon-create" onclick={createSalon} disabled={creating || !selectedPlaylist}>
+      <button class="btn-salon-create" onclick={createSalon} disabled={creating || selectedIds.length === 0}>
         {creating ? 'Création…' : '🛋️ Créer le salon'}
       </button>
       <a href="/salon/play" class="salon-join-link">Pas l'hôte ? Rejoindre un salon →</a>

@@ -149,6 +149,7 @@
 
   async function saveRoom() {
     if (!roomName.trim()) { roomError = 'Le nom est requis.'; return; }
+    if (!roomPlaylistId) { roomError = 'Sélectionne une playlist pour ta room.'; return; }
     roomSaving = true; roomError = '';
     try {
       const token = await getToken();
