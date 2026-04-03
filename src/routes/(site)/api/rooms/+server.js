@@ -26,7 +26,7 @@ export async function GET({ request }) {
   let query = supabase
     .from("rooms")
     .select(
-      "id, code, name, emoji, description, is_public, max_rounds, round_duration, break_duration, last_active_at, owner_id, playlist_id, profiles!owner_id(username, avatar_url)",
+      "id, code, name, emoji, description, is_public, is_official, auto_start, max_rounds, round_duration, break_duration, last_active_at, owner_id, playlist_id, profiles!owner_id(username, avatar_url)",
     )
     .order("last_active_at", { ascending: false })
     .limit(50);

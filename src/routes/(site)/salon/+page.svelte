@@ -6,48 +6,71 @@
 
   const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
 
-  let user     = $state(null);
+  let user      = $state(null);
   let authReady = $state(false);
 
-  // Settings
-  let playlistId         = $state('');
+  // Paramètres du salon
   let maxRounds          = $state(10);
   let roundDuration      = $state(30);
   let answerMode         = $state('free');
   let manualNext         = $state(false);
   let showAnswerDuration = $state(7);
 
-  // Data
-  let playlists = $state([]);
-  let creating  = $state(false);
-  let error     = $state('');
+  // Playlist picker (multi-select)
+  let allPlaylists = $state([]);
+  let selectedIds  = $state([]);   // tableau d'IDs
+  let searchQuery  = $state('');
+  let creating     = $state(false);
+  let error        = $state('');
+
+  let filteredPlaylists = $derived(
+    searchQuery.trim()
+      ? allPlaylists.filter(p => p.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+      : allPlaylists
+  );
+
+  let selectedPlaylists = $derived(allPlaylists.filter(p => selectedIds.includes(p.id)));
+  let totalTrackCount   = $derived(selectedPlaylists.reduce((s, p) => s + (p.trackCount || 0), 0));
+
+  function togglePlaylist(pl) {
+    if (selectedIds.includes(pl.id)) {
+      selectedIds = selectedIds.filter(id => id !== pl.id);
+    } else {
+      selectedIds = [...selectedIds, pl.id];
+    }
+  }
+
+  function clamp(val, min, max) { return Math.min(max, Math.max(min, Number(val) || min)); }
 
   async function loadPlaylists() {
     if (!user) return;
     try {
-      const { data: mine } = await sb
-        .from('custom_playlists')
-        .select('id, name, emoji, track_count')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+      const [{ data: mine }, { data: shared }] = await Promise.all([
+        sb.from('custom_playlists')
+          .select('id, name, emoji, track_count')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false }),
+        sb.from('custom_playlists')
+          .select('id, name, emoji, track_count, is_official')
+          .or('is_public.eq.true,is_official.eq.true')
+          .neq('owner_id', user.id)
+          .order('name'),
+      ]);
 
-      const { data: official } = await sb
-        .from('rooms')
-        .select('playlist_id, name, emoji')
-        .not('playlist_id', 'is', null);
-
-      const merged = [];
+      const flat = [];
       if (mine?.length) {
-        merged.push({ group: 'Mes playlists', items: mine.map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '🎵' })) });
+        for (const p of mine) {
+          flat.push({ id: p.id, name: p.name, emoji: p.emoji || '🎵', trackCount: p.track_count, group: 'Mes playlists' });
+        }
       }
-      if (official?.length) {
-        merged.push({ group: 'Playlists officielles', items: official.map(r => ({ id: r.playlist_id, name: r.name, emoji: r.emoji || '🎵' })) });
+      if (shared?.length) {
+        for (const p of shared) {
+          if (flat.some(f => f.id === p.id)) continue;
+          flat.push({ id: p.id, name: p.name, emoji: p.emoji || '🎵', trackCount: p.track_count, group: p.is_official ? 'Officielles' : 'Publiques' });
+        }
       }
-      playlists = merged;
-
-      if (!playlistId && merged.length > 0 && merged[0].items.length > 0) {
-        playlistId = merged[0].items[0].id;
-      }
+      allPlaylists = flat;
+      if (selectedIds.length === 0 && flat.length > 0) selectedIds = [flat[0].id];
     } catch {
       error = 'Impossible de charger les playlists.';
     }
@@ -55,7 +78,7 @@
 
   async function createSalon() {
     error = '';
-    if (!playlistId) { error = 'Sélectionne une playlist.'; return; }
+    if (selectedIds.length === 0) { error = 'Sélectionne au moins une playlist.'; return; }
     creating = true;
     try {
       const { data: { session } } = await sb.auth.getSession();
@@ -64,7 +87,7 @@
         method: 'POST',
         headers: { 'content-type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
-          playlistId,
+          playlistIds: selectedIds,
           settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration },
         }),
       });
@@ -93,10 +116,8 @@
 
 <svelte:head>
   <title>ZIK - Mode Salon</title>
-  <!-- Autoriser l’indexation -->
   <meta name="robots" content="index, follow">
-  <!-- Description SEO -->
-  <meta name="description"content="Créer un salon Kahoot-Like pour jouer en famille ou entre amis !">
+  <meta name="description" content="Créer un salon Kahoot-Like pour jouer en famille ou entre amis !">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </svelte:head>
 
@@ -116,100 +137,152 @@
     </div>
 
   {:else}
-    <div class="salon-card">
-      <h2>🛋️ Configurer le salon</h2>
+    <div class="salon-setup-grid">
 
-      <!-- Playlist -->
-      <div class="salon-field">
-        <label>Playlist</label>
-        {#if playlists.length === 0}
-          <p style="font-size:.85rem;color:var(--mid)">Aucune playlist disponible. <a href="/playlists" style="color:var(--accent2)">Crée-en une</a>.</p>
-        {:else}
-          <select bind:value={playlistId}>
-            {#each playlists as group (group.group)}
-              <optgroup label={group.group}>
-                {#each group.items as pl (pl.id)}
-                  <option value={pl.id}>{pl.emoji} {pl.name}</option>
-                {/each}
-              </optgroup>
-            {/each}
-          </select>
+      <!-- Colonne gauche : paramètres -->
+      <div class="salon-card salon-card-params">
+        <h2>⚙️ Paramètres</h2>
+
+        <div class="salon-field">
+          <label>Nombre de manches</label>
+          <div class="salon-range-row">
+            <input type="range" min="5" max="20" step="1" bind:value={maxRounds}>
+            <input type="number" min="5" max="20" step="1" class="salon-range-num" bind:value={maxRounds}
+              onchange={() => maxRounds = clamp(maxRounds, 5, 20)}>
+          </div>
+        </div>
+
+        <div class="salon-field">
+          <label>Durée par manche</label>
+          <div class="salon-range-row">
+            <input type="range" min="15" max="60" step="5" bind:value={roundDuration}>
+            <input type="number" min="15" max="60" step="5" class="salon-range-num" bind:value={roundDuration}
+              onchange={() => roundDuration = clamp(roundDuration, 15, 60)}>
+            <span class="salon-range-unit">s</span>
+          </div>
+        </div>
+
+        <div class="salon-divider"></div>
+
+        <div class="salon-field">
+          <label>Mode réponse</label>
+          <div class="salon-mode-btns">
+            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+            <div class="salon-mode-btn {answerMode === 'free' ? 'selected' : ''}" onclick={() => answerMode = 'free'}>
+              <span class="mode-icon">⌨️</span>
+              <div class="mode-name">Texte libre</div>
+              <div class="mode-desc">Pur savoir, aucun hasard</div>
+            </div>
+            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+            <div class="salon-mode-btn {answerMode === 'multiple' ? 'selected' : ''}" onclick={() => answerMode = 'multiple'}>
+              <span class="mode-icon">🎯</span>
+              <div class="mode-name">Choix multiples</div>
+              <div class="mode-desc">4 options, une seule bonne</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="salon-divider"></div>
+
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+        <div class="salon-field">
+          <div class="salon-toggle-row" onclick={() => manualNext = !manualNext}>
+            <div>
+              <div class="salon-toggle-label">Avancer manuellement</div>
+              <div class="salon-toggle-desc">L'hôte clique pour passer à la manche suivante</div>
+            </div>
+            <div class="salon-toggle {manualNext ? 'on' : ''}"></div>
+          </div>
+        </div>
+
+        {#if !manualNext}
+          <div class="salon-field">
+            <label>Durée d'affichage de la réponse</label>
+            <div class="salon-range-row">
+              <input type="range" min="3" max="15" step="1" bind:value={showAnswerDuration}>
+              <input type="number" min="3" max="15" step="1" class="salon-range-num" bind:value={showAnswerDuration}
+                onchange={() => showAnswerDuration = clamp(showAnswerDuration, 3, 15)}>
+              <span class="salon-range-unit">s</span>
+            </div>
+          </div>
         {/if}
       </div>
 
-      <div class="salon-divider"></div>
+      <!-- Colonne droite : sélection playlists (multi) -->
+      <div class="salon-card salon-card-playlist">
+        <h2>🎵 Playlists</h2>
 
-      <!-- Nombre de manches -->
-      <div class="salon-field">
-        <label>Nombre de manches</label>
-        <div class="salon-range-row">
-          <input type="range" min="5" max="20" step="1" bind:value={maxRounds}>
-          <span class="salon-range-val">{maxRounds}</span>
-        </div>
+        {#if allPlaylists.length === 0}
+          <p style="font-size:.85rem;color:var(--mid)">
+            Aucune playlist disponible.
+            <a href="/playlists" style="color:var(--accent2)">Crée-en une →</a>
+          </p>
+        {:else}
+          <!-- Chips des playlists sélectionnées -->
+          {#if selectedPlaylists.length > 0}
+            <div class="salon-playlist-chips">
+              {#each selectedPlaylists as pl (pl.id)}
+                <div class="salon-playlist-chip">
+                  <span>{pl.emoji} {pl.name}</span>
+                  <button class="salon-chip-remove" onclick={() => togglePlaylist(pl)} aria-label="Retirer {pl.name}">×</button>
+                </div>
+              {/each}
+            </div>
+            <div class="salon-playlist-total">
+              {totalTrackCount} titre{totalTrackCount !== 1 ? 's' : ''} au total
+            </div>
+          {/if}
+
+          <input
+            class="salon-playlist-search"
+            type="search"
+            placeholder="Rechercher une playlist…"
+            bind:value={searchQuery}
+            autocomplete="off"
+          >
+
+          <div class="salon-playlist-list">
+            {#if filteredPlaylists.length === 0}
+              <p style="font-size:.82rem;color:var(--dim);padding:8px 4px">Aucun résultat.</p>
+            {:else}
+              {#each filteredPlaylists as pl (pl.id)}
+                {@const isSelected = selectedIds.includes(pl.id)}
+                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                <div
+                  class="salon-playlist-item {isSelected ? 'selected' : ''}"
+                  onclick={() => togglePlaylist(pl)}
+                  role="option"
+                  aria-selected={isSelected}
+                >
+                  <span class="salon-playlist-emoji">{pl.emoji}</span>
+                  <div class="salon-playlist-info">
+                    <div class="salon-playlist-name">{pl.name}</div>
+                    <div class="salon-playlist-meta">{pl.group}</div>
+                  </div>
+                  {#if pl.trackCount}
+                    <span class="salon-playlist-count">{pl.trackCount} titres</span>
+                  {/if}
+                  {#if isSelected}
+                    <span class="salon-playlist-check">✓</span>
+                  {/if}
+                </div>
+              {/each}
+            {/if}
+          </div>
+        {/if}
       </div>
 
-      <!-- Durée par manche -->
-      <div class="salon-field">
-        <label>Durée par manche</label>
-        <div class="salon-range-row">
-          <input type="range" min="15" max="60" step="5" bind:value={roundDuration}>
-          <span class="salon-range-val">{roundDuration}s</span>
-        </div>
-      </div>
+    </div>
 
-      <div class="salon-divider"></div>
+    {#if error}
+      <p class="salon-error" style="margin-top:12px">{error}</p>
+    {/if}
 
-      <!-- Mode réponse -->
-      <div class="salon-field">
-        <label>Mode réponse</label>
-        <div class="salon-mode-btns">
-          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-          <div class="salon-mode-btn {answerMode === 'free' ? 'selected' : ''}" onclick={() => answerMode = 'free'}>
-            <span class="mode-icon">⌨️</span>
-            <div class="mode-name">Texte libre</div>
-            <div class="mode-desc">Pur savoir, aucun hasard</div>
-          </div>
-          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-          <div class="salon-mode-btn {answerMode === 'multiple' ? 'selected' : ''}" onclick={() => answerMode = 'multiple'}>
-            <span class="mode-icon">🎯</span>
-            <div class="mode-name">Choix multiples</div>
-            <div class="mode-desc">4 options, une seule bonne</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="salon-divider"></div>
-
-      <!-- Avancer manuellement -->
-      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-      <div class="salon-field">
-        <div class="salon-toggle-row" onclick={() => manualNext = !manualNext}>
-          <div>
-            <div class="salon-toggle-label">Avancer manuellement</div>
-            <div class="salon-toggle-desc">L'hôte clique pour passer à la manche suivante</div>
-          </div>
-          <div class="salon-toggle {manualNext ? 'on' : ''}"></div>
-        </div>
-      </div>
-
-      <!-- Durée d'affichage de la réponse (si auto) -->
-      {#if !manualNext}
-        <div class="salon-field">
-          <label>Durée d'affichage de la réponse</label>
-          <div class="salon-range-row">
-            <input type="range" min="3" max="15" step="1" bind:value={showAnswerDuration}>
-            <span class="salon-range-val">{showAnswerDuration}s</span>
-          </div>
-        </div>
-      {/if}
-
-      {#if error}
-        <p class="salon-error">{error}</p>
-      {/if}
-
-      <button class="btn-salon-create" onclick={createSalon} disabled={creating || !playlistId}>
+    <div class="salon-setup-actions">
+      <button class="btn-salon-create" onclick={createSalon} disabled={creating || selectedIds.length === 0}>
         {creating ? 'Création…' : '🛋️ Créer le salon'}
       </button>
+      <a href="/salon/play" class="salon-join-link">Pas l'hôte ? Rejoindre un salon →</a>
     </div>
   {/if}
 </div>

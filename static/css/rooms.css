@@ -199,7 +199,74 @@
 
 /* ── Search bar ───────────────────────────────────────────────────────────── */
 .rooms-search-wrap {
+  margin-bottom: 10px;
+}
+
+/* ── Filter chips ─────────────────────────────────────────────────────────── */
+.rooms-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 20px;
+}
+.rooms-filter-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgb(var(--c-glass) / 0.04);
+  color: var(--mid);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.rooms-filter-chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.rooms-filter-chip.active {
+  background: rgb(var(--c-accent) / 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rooms-filter-reset {
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: none;
+  background: none;
+  color: var(--dim);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+.rooms-filter-reset:hover { color: var(--mid); }
+
+/* ── Official badge & auto tag ────────────────────────────────────────────── */
+.room-badge-official {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent2);
+  background: rgb(var(--c-accent2, 168 85 247) / 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+.room-card-official {
+  border-color: rgba(168, 85, 247, 0.25);
+}
+.room-card-auto {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.07);
 }
 .rooms-search {
   width: 100%;
@@ -221,3 +288,4 @@
 .rooms-search::placeholder {
   color: var(--dim);
 }
+

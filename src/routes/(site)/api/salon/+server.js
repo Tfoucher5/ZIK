@@ -16,12 +16,13 @@ export async function POST({ request }) {
     return json({ error: "Corps invalide" }, { status: 400 });
   }
 
-  const { playlistId, settings } = body;
-  if (!playlistId) return json({ error: "Playlist requise" }, { status: 400 });
+  const { playlistIds, settings } = body;
+  if (!Array.isArray(playlistIds) || playlistIds.length === 0)
+    return json({ error: "Au moins une playlist requise" }, { status: 400 });
 
   try {
     const code = await createSalonRoom({
-      playlistId,
+      playlistIds,
       settings: settings || {},
     });
     return json({ code });
