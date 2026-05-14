@@ -40,12 +40,8 @@
     { x: 18, y: 78, d: 1.1,  dur: 2.9 },
     { x: 82, y: 68, d: 1.7,  dur: 2.3 },
     { x: 46, y: 5,  d: 0.4,  dur: 3.0 },
-    { x: 54, y: 91, d: 0.9,  dur: 1.9 },
     { x: 3,  y: 50, d: 1.4,  dur: 2.7 },
     { x: 97, y: 53, d: 0.2,  dur: 2.5 },
-    { x: 36, y: 10, d: 1.3,  dur: 2.0 },
-    { x: 64, y: 86, d: 0.7,  dur: 3.2 },
-    { x: 14, y: 62, d: 2.0,  dur: 2.6 },
     { x: 76, y: 33, d: 1.6,  dur: 2.2 },
   ];
 
@@ -175,7 +171,8 @@
       <div class="podium-hero">
 
         <!-- 2e -->
-        <div class="hero-card hero-silver" style="animation-delay:0.1s">
+        <div class="hero-card hero-silver">
+          <div class="rank-badge rank-badge-silver">Finaliste</div>
           <div class="hero-pos silver-text">2</div>
           <a href="/user/{eloData[1].username}">
             {#if eloData[1].avatar_url}
@@ -189,30 +186,28 @@
           <div class="hero-games">{eloData[1].games_played} parties</div>
         </div>
 
-        <!-- 1er – anneau tournant -->
-        <div class="gold-ring" style="animation-delay:0s">
-          <div class="gold-ring-spin"></div>
-          <div class="hero-card hero-gold">
-            <div class="hero-shimmer"></div>
-            <div class="champion-badge">Champion</div>
-            <div class="hero-crown">👑</div>
-            <div class="hero-pos gold-text">1</div>
-            <a href="/user/{eloData[0].username}" class="hero-av-wrap">
-              {#if eloData[0].avatar_url}
-                <img class="hero-av av-gold" src={eloData[0].avatar_url} alt={eloData[0].username} width="96" height="96" loading="lazy" />
-              {:else}
-                <div class="hero-av hero-av-fb av-gold" style="width:96px;height:96px">{eloData[0].username[0].toUpperCase()}</div>
-              {/if}
-              <div class="av-halo"></div>
-            </a>
-            <div class="hero-name hero-name-1 {isMe(eloData[0].username) ? 'is-me' : ''}">{eloData[0].username}</div>
-            <div class="hero-elo gold-text">{eloData[0].elo} ELO</div>
-            <div class="hero-games">{eloData[0].games_played} parties</div>
-          </div>
+        <!-- 1er -->
+        <div class="hero-card hero-gold">
+          <div class="hero-shimmer"></div>
+          <div class="champion-badge">Champion</div>
+          <div class="hero-crown">👑</div>
+          <div class="hero-pos">1</div>
+          <a href="/user/{eloData[0].username}" class="hero-av-wrap">
+            {#if eloData[0].avatar_url}
+              <img class="hero-av av-gold" src={eloData[0].avatar_url} alt={eloData[0].username} width="96" height="96" loading="lazy" />
+            {:else}
+              <div class="hero-av hero-av-fb av-gold" style="width:96px;height:96px">{eloData[0].username[0].toUpperCase()}</div>
+            {/if}
+            <div class="av-halo"></div>
+          </a>
+          <div class="hero-name hero-name-1 {isMe(eloData[0].username) ? 'is-me' : ''}">{eloData[0].username}</div>
+          <div class="hero-elo gold-text">{eloData[0].elo} ELO</div>
+          <div class="hero-games">{eloData[0].games_played} parties</div>
         </div>
 
         <!-- 3e -->
-        <div class="hero-card hero-bronze" style="animation-delay:0.18s">
+        <div class="hero-card hero-bronze">
+          <div class="rank-badge rank-badge-bronze">Podium</div>
           <div class="hero-pos bronze-text">3</div>
           <a href="/user/{eloData[2].username}">
             {#if eloData[2].avatar_url}
@@ -514,7 +509,6 @@
     background: rgb(var(--c-glass) / 0.07);
     border: 1px solid var(--border);
     min-width: 148px;
-    animation: hero-rise 0.5s ease both;
   }
 
   @keyframes hero-rise {
@@ -525,20 +519,53 @@
   .hero-silver {
     background: linear-gradient(160deg, rgba(176,190,197,0.09) 0%, rgba(176,190,197,0.02) 100%);
     border-color: rgba(176,190,197,0.3);
-    box-shadow: 0 6px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+    animation: hero-rise 0.5s 0.1s ease both, silver-glow 5s 2s ease-in-out infinite;
   }
+  .hero-silver::before {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    animation: shimmer 9s ease-in-out 3s infinite;
+    pointer-events: none;
+  }
+  @keyframes silver-glow {
+    0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.18); }
+    50%       { box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 0 32px rgba(176,190,197,0.14); border-color: rgba(176,190,197,0.5); }
+  }
+
   .hero-bronze {
     background: linear-gradient(160deg, rgba(205,130,70,0.09) 0%, rgba(205,130,70,0.02) 100%);
     border-color: rgba(205,130,70,0.3);
-    box-shadow: 0 6px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+    animation: hero-rise 0.5s 0.18s ease both, bronze-glow 6s 4s ease-in-out infinite;
   }
+  .hero-bronze::before {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+    animation: shimmer 12s ease-in-out 6s infinite;
+    pointer-events: none;
+  }
+  @keyframes bronze-glow {
+    0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.18); }
+    50%       { box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 0 28px rgba(205,130,70,0.12); border-color: rgba(205,130,70,0.5); }
+  }
+
   .hero-gold {
     min-width: 188px;
-    padding: 30px 24px 24px;
+    padding: 22px 24px 24px;
     background: linear-gradient(160deg, rgba(240,180,41,0.14) 0%, rgba(240,180,41,0.03) 100%);
-    border: none;
+    border: 1px solid rgba(240,180,41,0.45);
     border-radius: 16px;
     overflow: hidden;
+    animation: hero-rise 0.4s ease both, gold-glow 3.5s 0.8s ease-in-out infinite;
+  }
+  @keyframes gold-glow {
+    0%, 100% { box-shadow: 0 0 18px rgba(240,180,41,0.10), 0 10px 44px rgba(0,0,0,0.22); border-color: rgba(240,180,41,0.38); }
+    50%       { box-shadow: 0 0 52px rgba(240,180,41,0.30), 0 10px 44px rgba(0,0,0,0.22); border-color: rgba(240,180,41,0.68); }
   }
 
   /* Shimmer sweep sur la carte or */
@@ -555,48 +582,32 @@
     40%, 100% { left: 160%; }
   }
 
-  /* ─── Anneau tournant (or) ─── */
-  .gold-ring {
-    position: relative;
-    border-radius: 20px;
-    padding: 2px;
-    overflow: hidden;
-    animation: ring-glow 3.5s ease-in-out infinite, hero-rise 0.4s ease both;
-  }
-  .gold-ring-spin {
-    position: absolute;
-    inset: -55%;
-    background: conic-gradient(
-      from 0deg,
-      transparent    0deg,
-      #f0b429       60deg,
-      #fff8d0      120deg,
-      #e6940c      180deg,
-      #fff3a0      240deg,
-      #f0b429      300deg,
-      transparent  360deg
-    );
-    animation: ring-spin 2.8s linear infinite;
-    z-index: 0;
-  }
-  @keyframes ring-spin {
-    to { transform: rotate(360deg); }
-  }
-  @keyframes ring-glow {
-    0%, 100% { box-shadow: 0 0 30px rgba(240,180,41,0.18), 0 12px 50px rgba(0,0,0,0.28); }
-    50%       { box-shadow: 0 0 70px rgba(240,180,41,0.38), 0 12px 50px rgba(0,0,0,0.28); }
-  }
-
-  /* ─── Badge champion ─── */
+  /* ─── Badge champion (flux normal, pas absolu) ─── */
   .champion-badge {
-    position: absolute;
-    top: -10px; left: 50%; transform: translateX(-50%);
     font-size: 0.52rem; font-weight: 900;
     text-transform: uppercase; letter-spacing: 0.18em;
     color: #1a1000;
     background: linear-gradient(135deg, #f5d020, #f0b429, #e6940c);
-    padding: 3px 12px; border-radius: 20px;
+    padding: 3px 14px; border-radius: 20px;
     white-space: nowrap; box-shadow: 0 2px 8px rgba(240,180,41,0.4);
+  }
+
+  /* ─── Badges 2e / 3e ─── */
+  .rank-badge {
+    font-size: 0.5rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    padding: 2px 10px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .rank-badge-silver {
+    color: rgba(184,204,212,0.9);
+    background: rgba(176,190,197,0.1);
+    border: 1px solid rgba(176,190,197,0.3);
+  }
+  .rank-badge-bronze {
+    color: rgba(212,132,74,0.9);
+    background: rgba(205,130,70,0.1);
+    border: 1px solid rgba(205,130,70,0.3);
   }
 
   .hero-crown {
@@ -611,6 +622,13 @@
   .hero-pos {
     font-size: 2.8rem; font-weight: 900; line-height: 1;
     letter-spacing: -0.04em;
+    animation: pos-float 5s ease-in-out infinite;
+  }
+  .hero-silver .hero-pos { animation-delay: 1.6s; }
+  .hero-bronze .hero-pos { animation-delay: 3.2s; }
+  @keyframes pos-float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
   }
   .hero-gold .hero-pos {
     font-size: 3.6rem;
@@ -619,6 +637,7 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter: drop-shadow(0 2px 8px rgba(240,180,41,0.5));
+    animation-duration: 4s;
   }
 
   .hero-av-wrap { position: relative; display: inline-block; }
@@ -872,17 +891,17 @@
 
   /* ─── Killswitch animations (paramètres + prefers-reduced-motion) ─── */
   @media (prefers-reduced-motion: reduce) {
-    .sparkle, .gold-ring-spin, .hero-shimmer, .hero-crown,
-    .av-halo, .gold-ring, .hero-card, .sidebar-card { animation: none !important; }
+    .sparkle, .hero-shimmer, .hero-crown, .av-halo,
+    .hero-card, .hero-pos, .sidebar-card { animation: none !important; }
+    .hero-silver::before, .hero-bronze::before { animation: none !important; }
     .score-fill { transition: none !important; }
   }
   :global(.no-animations) .sparkle,
-  :global(.no-animations) .gold-ring-spin,
   :global(.no-animations) .hero-shimmer,
   :global(.no-animations) .hero-crown,
   :global(.no-animations) .av-halo,
-  :global(.no-animations) .gold-ring,
   :global(.no-animations) .hero-card,
+  :global(.no-animations) .hero-pos,
   :global(.no-animations) .sidebar-card { animation: none !important; }
   :global(.no-animations) .score-fill { transition: none !important; }
 </style>
