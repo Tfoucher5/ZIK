@@ -914,18 +914,38 @@
   }
   @media (max-width: 640px) {
     .classements-page { padding: 14px 14px 60px; }
-    .page-nav { padding: 12px 14px 0; }
-    .cl-hero  { padding: 28px 12px 24px; }
-    .podium-hero { gap: 8px; }
-    .hero-card { min-width: 100px; padding: 16px 10px 14px; }
-    .hero-gold { min-width: 128px; padding: 20px 14px 18px; }
-    .hero-pos  { font-size: 2rem; }
-    .hero-gold .hero-pos { font-size: 2.6rem; }
-    .hero-name { font-size: 0.72rem; max-width: 90px; }
-    .score-bar { width: 70px; }
-    .col-extra { display: none; }
+    .page-nav { padding: calc(var(--nav-h) + 8px) 14px 0; }
+    .cl-hero  { padding: 24px 10px 20px; }
+
+    /* Podium : flex sans min-width fixe */
+    .podium-hero { gap: 6px; }
+    .hero-card { min-width: 0; flex: 1; padding: 14px 8px 12px; }
+    .hero-gold { min-width: 0; flex: 1.3; padding: 18px 10px 16px; }
+    .hero-pos  { font-size: 1.8rem; }
+    .hero-gold .hero-pos { font-size: 2.2rem; animation-duration: 4s; }
+    .hero-name { font-size: 0.66rem; max-width: 76px; }
+    .hero-elo  { font-size: 0.7rem; }
+    .hero-games { display: none; }
+    .hero-crown { font-size: 1.1rem; }
+    .rank-badge    { font-size: 0.44rem; padding: 2px 6px; }
+    .champion-badge { font-size: 0.44rem; padding: 2px 8px; }
+    /* Avatars : override les attributs HTML inline */
+    .av-gold   { width: 52px !important; height: 52px !important; }
+    .av-silver { width: 42px !important; height: 42px !important; }
+    .av-bronze { width: 36px !important; height: 36px !important; }
+
+    /* Table : scroll horizontal + colonnes masquées */
+    .cl-main { overflow-x: auto; }
+    .col-extra  { display: none; }
+    .col-games  { display: none; }
+    .col-score  { min-width: 80px; }
+    .score-bar  { width: 60px; }
+
+    /* Sidebar */
     .sidebar-card { flex-direction: column; align-items: center; text-align: center; }
     .sb-cta { width: 100%; }
+
+    /* Filtres */
     .cl-filters { flex-direction: column; }
     .filter-sep { width: 100%; height: 1px; align-self: auto; }
     .filter-group { padding: 10px 14px; }
