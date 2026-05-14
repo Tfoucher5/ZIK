@@ -137,7 +137,7 @@
 </svelte:head>
 
 <div class="page-nav">
-  <a href="/" class="btn-back">← Accueil</a>
+  <a href="/" class="btn-back">Accueil</a>
 </div>
 
 <main class="classements-page">
