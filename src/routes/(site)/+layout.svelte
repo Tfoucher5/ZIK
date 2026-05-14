@@ -154,6 +154,7 @@
       <div class="footer-col-links">
         <a href="/rooms">Rooms</a>
         <a href="/playlists">Playlists</a>
+        <a href="/classements">Classements</a>
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Documentation</a>
       </div>
