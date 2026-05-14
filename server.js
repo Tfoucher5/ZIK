@@ -11,7 +11,10 @@ const { handler } = await import("./build/handler.js");
 
 import { register } from "./src/lib/server/socket/game.js";
 import { registerSalon } from "./src/lib/server/socket/salon.js";
-import { preloadAllPlaylists } from "./src/lib/server/services/playlist.js";
+import {
+  preloadAllPlaylists,
+  runPreviewRefreshCron,
+} from "./src/lib/server/services/playlist.js";
 
 const _execAsync = _promisify(_execFile);
 const _YTDLP_BIN =
@@ -71,6 +74,10 @@ register(io);
 registerSalon(io);
 preloadAllPlaylists();
 autoUpdateYtDlp();
+
+const PREVIEW_CRON_INTERVAL_MS = 6 * 60 * 60 * 1000; // toutes les 6h
+setTimeout(runPreviewRefreshCron, 30_000); // 30s après démarrage (cache chaud)
+setInterval(runPreviewRefreshCron, PREVIEW_CRON_INTERVAL_MS);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () =>
