@@ -15,6 +15,7 @@
     if (path === '/' || path === '') return 'home';
     if (path.startsWith('/rooms')) return 'rooms';
     if (path.startsWith('/playlists')) return 'playlists';
+    if (path.startsWith('/classements')) return 'classements';
     if (path.startsWith('/salon')) return 'salon';
     if (path.startsWith('/docs')) return 'docs';
     if (path.startsWith('/profile') || path.startsWith('/user')) return 'profile';
@@ -33,9 +34,10 @@
   <a href="/" class="nav-logo">ZIK<span>.</span></a>
 
   <div class="nav-links">
-    <a href="/rooms"     class="nav-link" class:active={activeSection === 'rooms'}>Rooms</a>
-    <a href="/playlists" class="nav-link" class:active={activeSection === 'playlists'}>Playlists</a>
-    <a href="/docs"      class="nav-link" class:active={activeSection === 'docs'}>Docs</a>
+    <a href="/rooms"        class="nav-link" class:active={activeSection === 'rooms'}>Rooms</a>
+    <a href="/playlists"   class="nav-link" class:active={activeSection === 'playlists'}>Playlists</a>
+    <a href="/classements" class="nav-link" class:active={activeSection === 'classements'}>Classements</a>
+    <a href="/docs"        class="nav-link" class:active={activeSection === 'docs'}>Docs</a>
   </div>
 
   <div class="nav-right">
@@ -55,9 +57,10 @@
           <a href="/profile"  class="nav-dd-item">Mon profil</a>
           <a href="/settings" class="nav-dd-item">Param&egrave;tres</a>
           <hr class="nav-dd-sep nav-dd-mobile-only">
-          <a href="/rooms"     class="nav-dd-item nav-dd-mobile-only">Rooms</a>
-          <a href="/playlists" class="nav-dd-item nav-dd-mobile-only">Playlists</a>
-          <a href="/salon"     class="nav-dd-item nav-dd-mobile-only">Mode Salon</a>
+          <a href="/rooms"        class="nav-dd-item nav-dd-mobile-only">Rooms</a>
+          <a href="/playlists"   class="nav-dd-item nav-dd-mobile-only">Playlists</a>
+          <a href="/classements" class="nav-dd-item nav-dd-mobile-only">Classements</a>
+          <a href="/salon"       class="nav-dd-item nav-dd-mobile-only">Mode Salon</a>
           {#if user?.profile?.role === 'super_admin'}
           <hr class="nav-dd-sep">
           <a href="/admin" class="nav-dd-item nav-dd-admin">Admin</a>

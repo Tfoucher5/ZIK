@@ -23,7 +23,6 @@
   let officialQcmRooms = $derived(rooms.filter(r => r.game_mode === 'qcm'));
   let officialClassicRooms = $derived(rooms.filter(r => r.game_mode !== 'qcm'));
 
-  let weeklyLb = $state([]);
   let eloLb = $state([]);
   let lbLoaded = $state(false);
 
@@ -125,14 +124,10 @@
 
   async function loadLeaderboards() {
     try {
-      const [wRes, eRes] = await Promise.all([
-        fetch("/api/leaderboard/weekly").then((r) => r.json()),
-        fetch("/api/leaderboard/elo").then((r) => r.json()),
-      ]);
-      weeklyLb = Array.isArray(wRes) ? wRes : [];
+      const eRes = await fetch("/api/leaderboard/elo").then((r) => r.json());
       eloLb = Array.isArray(eRes) ? eRes : [];
-    } catch (e) {
-      roomCodeErr = e.message;
+    } catch {
+      /* silencieux */
     } finally {
       lbLoaded = true;
     }
@@ -765,95 +760,27 @@
 <!-- ══════════════════════════════ CLASSEMENTS ══════════════════════════════ -->
 <section class="section" id="leaderboards">
   <div class="section-head" use:reveal>
-    <h2>Classements</h2>
-    <p class="section-sub">Les meilleurs joueurs de la semaine et de tous les temps.</p>
+    <h2>Classement ELO</h2>
+    <p class="section-sub">Le vrai ranking compétitif — rooms officielles, mode classique.</p>
   </div>
-  <div class="lb-grid">
-    <!-- Weekly -->
-    <div class="lb-panel" use:reveal={0}>
-      <div class="lb-head">
-        <span class="lb-head-icon">🏆</span>
-        <div>
-          <b>Cette semaine</b>
-          <small>Points sur 7 jours</small>
-        </div>
+  <div class="lb-solo" use:reveal={0}>
+    <div class="lb-intro">
+      <div class="lb-intro-badge">⚡ ELO compétitif</div>
+      <h3 class="lb-intro-title">Prouve ta valeur</h3>
+      <p class="lb-intro-desc">Le classement ELO mesure ta force réelle — il évolue uniquement en Mode Classique, dans les rooms officielles. Chaque victoire contre un adversaire mieux classé rapporte davantage.</p>
+      <div class="lb-intro-chips">
+        <span class="lb-chip">🏛️ Rooms officielles</span>
+        <span class="lb-chip">🎵 Mode Classique</span>
+        <span class="lb-chip">♾️ All-time</span>
       </div>
-
-      {#if weeklyLb.length >= 3}
-        <div class="podium">
-          <!-- 2e -->
-          <div class="podium-slot">
-            <div class="podium-info">
-              <a href="/user/{weeklyLb[1].username}" class="podium-avatar-link">
-                {#if weeklyLb[1].avatar_url}
-                  <img class="podium-avatar" src={weeklyLb[1].avatar_url} alt={weeklyLb[1].username} width="40" height="40" loading="lazy" />
-                {:else}
-                  <div class="podium-avatar podium-fb">{weeklyLb[1].username[0].toUpperCase()}</div>
-                {/if}
-              </a>
-              <div class="podium-name">{weeklyLb[1].username}</div>
-              <div class="podium-score">{weeklyLb[1].weekly_score} pts</div>
-            </div>
-            <div class="podium-step podium-step-2"><span class="podium-num">2</span></div>
-          </div>
-          <!-- 1er -->
-          <div class="podium-slot">
-            <span class="podium-crown">👑</span>
-            <div class="podium-info">
-              <a href="/user/{weeklyLb[0].username}" class="podium-avatar-link">
-                {#if weeklyLb[0].avatar_url}
-                  <img class="podium-avatar" src={weeklyLb[0].avatar_url} alt={weeklyLb[0].username} width="48" height="48" loading="lazy" />
-                {:else}
-                  <div class="podium-avatar podium-fb">{weeklyLb[0].username[0].toUpperCase()}</div>
-                {/if}
-              </a>
-              <div class="podium-name podium-name-1">{weeklyLb[0].username}</div>
-              <div class="podium-score">{weeklyLb[0].weekly_score} pts</div>
-            </div>
-            <div class="podium-step podium-step-1"><span class="podium-num">1</span></div>
-          </div>
-          <!-- 3e -->
-          <div class="podium-slot">
-            <div class="podium-info">
-              <a href="/user/{weeklyLb[2].username}" class="podium-avatar-link">
-                {#if weeklyLb[2].avatar_url}
-                  <img class="podium-avatar" src={weeklyLb[2].avatar_url} alt={weeklyLb[2].username} width="36" height="36" loading="lazy" />
-                {:else}
-                  <div class="podium-avatar podium-fb">{weeklyLb[2].username[0].toUpperCase()}</div>
-                {/if}
-              </a>
-              <div class="podium-name">{weeklyLb[2].username}</div>
-              <div class="podium-score">{weeklyLb[2].weekly_score} pts</div>
-            </div>
-            <div class="podium-step podium-step-3"><span class="podium-num">3</span></div>
-          </div>
-        </div>
-      {/if}
-
-      <div class="lb-scroll">
-        {#if weeklyLb.length === 0}
-          <p class="lb-empty">{lbLoaded ? 'Aucune partie cette semaine… pour l\'instant !' : 'Chargement…'}</p>
-        {:else}
-          {#each weeklyLb.slice(weeklyLb.length >= 3 ? 3 : 0) as p, i}
-            {@const rank = (weeklyLb.length >= 3 ? 3 : 0) + i}
-            <div class="lb-row">
-              <span class="lb-rank">#{rank + 1}</span>
-              <a href="/user/{p.username}" class="lb-name">{p.username}</a>
-              <span class="lb-score">{p.weekly_score} pts</span>
-              <span class="lb-games">{p.games_count} parties</span>
-            </div>
-          {/each}
-        {/if}
-      </div>
+      <a href="/classements" class="btn-ghost lb-more-btn">Voir tous les classements →</a>
     </div>
-
-    <!-- ELO -->
-    <div class="lb-panel" use:reveal={100}>
+    <div class="lb-panel">
       <div class="lb-head">
         <span class="lb-head-icon">⚡</span>
         <div>
           <b>Classement ELO</b>
-          <small>All-time</small>
+          <small>All-time · Rooms officielles</small>
         </div>
       </div>
 
@@ -1429,10 +1356,55 @@
   }
 
   /* ════════════════════════════ LEADERBOARDS ════════════════════════════ */
-  .lb-grid {
+  .lb-solo {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  .lb-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 4px;
+  }
+  .lb-intro-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .lb-intro-title {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+  }
+  .lb-intro-desc {
+    color: var(--dim);
+    font-size: 0.88rem;
+    line-height: 1.65;
+    margin: 0;
+  }
+  .lb-intro-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lb-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    background: rgb(var(--c-glass) / 0.04);
+  }
+  .lb-more-btn {
+    align-self: flex-start;
   }
   .lb-panel {
     background: rgb(var(--c-glass) / 0.04);
@@ -1731,6 +1703,7 @@
     .features-grid { grid-template-columns: repeat(2, 1fr); }
     .salon-cta-phones { display: none; }
     .official-rooms-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .lb-solo { grid-template-columns: 1fr; gap: 24px; }
   }
   @media (max-width: 600px) {
     .section { padding: 44px 16px; }

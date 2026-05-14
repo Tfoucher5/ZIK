@@ -154,6 +154,7 @@
       <div class="footer-col-links">
         <a href="/rooms">Rooms</a>
         <a href="/playlists">Playlists</a>
+        <a href="/classements">Classements</a>
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Documentation</a>
       </div>
@@ -192,7 +193,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · Fait avec ❤️ et beaucoup de musique · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v2.4.2</span>
+    <span class="footer-version-tag">v2.5.0</span>
   </div>
 </footer>
 {/if}
