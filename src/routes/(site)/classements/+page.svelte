@@ -253,9 +253,9 @@
       <div class="filter-group">
         <span class="filter-label">Période</span>
         <div class="filter-track">
-          <button class="seg-btn {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>Cette semaine</button>
-          <button class="seg-btn {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>Ce mois</button>
-          <button class="seg-btn {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>Cette année</button>
+          <button class="seg-btn {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>Semaine</button>
+          <button class="seg-btn {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>Mois</button>
+          <button class="seg-btn {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>Année</button>
         </div>
       </div>
     </div>
