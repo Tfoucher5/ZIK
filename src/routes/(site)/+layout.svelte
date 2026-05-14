@@ -193,7 +193,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · Fait avec ❤️ et beaucoup de musique · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v2.5.0</span>
+    <span class="footer-version-tag">v2.6.0</span>
   </div>
 </footer>
 {/if}
