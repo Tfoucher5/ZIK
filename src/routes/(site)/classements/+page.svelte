@@ -25,6 +25,10 @@
   let maxEloScore = $derived(eloData.length > 0 ? eloData[0].elo : 1);
   let maxScore = $derived(scoreData.length > 0 ? Number(scoreData[0].total_score) : 1);
 
+  let filterSummary = $derived(
+    `${scoreMode === 'classique' ? 'Mode Classique' : 'Mode QCM'} · ${scoreRooms === 'officielles' ? 'Rooms officielles' : 'Toutes les rooms'} · ${scorePeriod === 'semaine' ? '7 derniers jours' : scorePeriod === 'mois' ? '30 derniers jours' : 'All-time'}`
+  );
+
   let gapToNext = $derived.by(() => {
     if (!myRank || myRank.rank <= 1) return null;
     const idx = myRank.rank - 2;
@@ -232,27 +236,30 @@
     <div class="cl-filters">
       <div class="filter-group">
         <span class="filter-label">Mode</span>
-        <div class="filter-pills">
-          <button class="pill {scoreMode === 'classique' ? 'active' : ''}" onclick={() => scoreMode = 'classique'}>Classique</button>
-          <button class="pill {scoreMode === 'qcm' ? 'active' : ''}" onclick={() => scoreMode = 'qcm'}>QCM</button>
+        <div class="filter-track">
+          <button class="seg-btn {scoreMode === 'classique' ? 'active' : ''}" onclick={() => scoreMode = 'classique'}>Classique</button>
+          <button class="seg-btn {scoreMode === 'qcm' ? 'active' : ''}" onclick={() => scoreMode = 'qcm'}>QCM</button>
         </div>
       </div>
+      <div class="filter-sep"></div>
       <div class="filter-group">
         <span class="filter-label">Rooms</span>
-        <div class="filter-pills">
-          <button class="pill {scoreRooms === 'officielles' ? 'active' : ''}" onclick={() => scoreRooms = 'officielles'}>Officielles</button>
-          <button class="pill {scoreRooms === 'toutes' ? 'active' : ''}" onclick={() => scoreRooms = 'toutes'}>Toutes</button>
+        <div class="filter-track">
+          <button class="seg-btn {scoreRooms === 'officielles' ? 'active' : ''}" onclick={() => scoreRooms = 'officielles'}>Officielles</button>
+          <button class="seg-btn {scoreRooms === 'toutes' ? 'active' : ''}" onclick={() => scoreRooms = 'toutes'}>Toutes</button>
         </div>
       </div>
+      <div class="filter-sep"></div>
       <div class="filter-group">
         <span class="filter-label">Période</span>
-        <div class="filter-pills">
-          <button class="pill {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>Semaine</button>
-          <button class="pill {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>Mois</button>
-          <button class="pill {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>All-time</button>
+        <div class="filter-track">
+          <button class="seg-btn {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>7 jours</button>
+          <button class="seg-btn {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>30 jours</button>
+          <button class="seg-btn {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>Tout</button>
         </div>
       </div>
     </div>
+    <p class="filter-summary">{filterSummary}</p>
   {/if}
 
   <!-- ══════════ GRILLE ══════════ -->
@@ -685,23 +692,55 @@
 
   /* ─── Hint + Filtres ─── */
   .cl-hint { font-size: 0.7rem; color: var(--dim); text-align: center; margin-bottom: 20px; }
+
   .cl-filters {
-    display: flex; flex-wrap: wrap; gap: 18px;
-    margin-bottom: 24px; padding: 16px 20px;
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border); border-radius: 12px;
+    display: flex; align-items: center; flex-wrap: wrap;
+    margin-bottom: 8px;
+    background: rgb(var(--c-glass) / 0.05);
+    border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden;
   }
-  .filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .filter-label { font-size: 0.7rem; color: var(--dim); font-weight: 700; min-width: 44px; }
-  .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-  .pill {
-    padding: 5px 14px; border-radius: 20px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--dim); font-size: 0.78rem; font-weight: 600;
-    cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+  .filter-group {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 12px 20px; flex: 1; min-width: 130px;
   }
-  .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .pill:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+  .filter-label {
+    font-size: 0.56rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--dim);
+  }
+  .filter-sep {
+    width: 1px; height: 52px; flex-shrink: 0;
+    background: var(--border);
+    align-self: center;
+  }
+  .filter-track {
+    display: flex;
+    background: rgb(var(--c-glass) / 0.08);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 3px; gap: 2px;
+  }
+  .seg-btn {
+    flex: 1; padding: 5px 10px;
+    border: none; border-radius: 5px;
+    background: transparent;
+    color: var(--dim); font-size: 0.73rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.1s;
+  }
+  .seg-btn:hover:not(.active) { color: var(--text); background: rgb(var(--c-glass) / 0.07); }
+  .seg-btn.active {
+    background: rgb(var(--c-glass) / 0.20);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .seg-btn:active:not(.active) { transform: scale(0.95); }
+
+  .filter-summary {
+    font-size: 0.64rem; color: var(--dim);
+    text-align: center; margin-bottom: 18px;
+    letter-spacing: 0.02em;
+  }
 
   /* ─── Grille ─── */
   .cl-grid {
@@ -887,6 +926,9 @@
     .col-extra { display: none; }
     .sidebar-card { flex-direction: column; align-items: center; text-align: center; }
     .sb-cta { width: 100%; }
+    .cl-filters { flex-direction: column; }
+    .filter-sep { width: 100%; height: 1px; align-self: auto; }
+    .filter-group { padding: 10px 14px; }
   }
 
   /* ─── Killswitch animations (paramètres + prefers-reduced-motion) ─── */
