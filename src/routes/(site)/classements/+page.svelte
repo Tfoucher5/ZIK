@@ -26,7 +26,7 @@
   let maxScore = $derived(scoreData.length > 0 ? Number(scoreData[0].total_score) : 1);
 
   let filterSummary = $derived(
-    `${scoreMode === 'classique' ? 'Mode Classique' : 'Mode QCM'} · ${scoreRooms === 'officielles' ? 'Rooms officielles' : 'Toutes les rooms'} · ${scorePeriod === 'semaine' ? '7 derniers jours' : scorePeriod === 'mois' ? '30 derniers jours' : 'All-time'}`
+    `${scoreMode === 'classique' ? 'Mode Classique' : 'Mode QCM'} · ${scoreRooms === 'officielles' ? 'Rooms officielles' : 'Toutes les rooms'} · ${scorePeriod === 'semaine' ? 'Depuis lundi' : scorePeriod === 'mois' ? 'Depuis le 1er du mois' : 'Depuis le 1er janvier'}`
   );
 
   let gapToNext = $derived.by(() => {
@@ -253,9 +253,9 @@
       <div class="filter-group">
         <span class="filter-label">Période</span>
         <div class="filter-track">
-          <button class="seg-btn {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>7 jours</button>
-          <button class="seg-btn {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>30 jours</button>
-          <button class="seg-btn {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>Tout</button>
+          <button class="seg-btn {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>Cette semaine</button>
+          <button class="seg-btn {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>Ce mois</button>
+          <button class="seg-btn {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>Cette année</button>
         </div>
       </div>
     </div>
