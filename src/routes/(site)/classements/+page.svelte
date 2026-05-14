@@ -397,7 +397,7 @@
   .page-nav {
     max-width: 1300px;
     margin: 0 auto;
-    padding: 16px 28px 0;
+    padding: calc(var(--nav-h) + 12px) 28px 0;
   }
   .btn-back {
     display: inline-flex; align-items: center; gap: 6px;
