@@ -691,6 +691,36 @@ async function saveGameResults(roomId, finalScores) {
   }
 }
 
+async function saveMidGamePlayer(roomId, player) {
+  const room = getOrCreateRoom(roomId);
+  const dbGameId = room.game.dbGameId;
+  if (!dbGameId) return;
+  try {
+    await supabase.from("game_players").insert({
+      game_id: dbGameId,
+      user_id: player.userId || null,
+      username: player.name,
+      score: player.score,
+      rank: null,
+      is_guest: player.isGuest || !player.userId,
+    });
+    if (player.userId && !player.isGuest && room.game_mode !== "qcm") {
+      await supabase.rpc("update_player_stats", {
+        p_user_id: player.userId,
+        p_score: player.score,
+        p_rank: null,
+        p_total_players: Object.keys(room.players).length,
+        p_elo_change: 0,
+      });
+    }
+    console.log(
+      `Score mi-partie sauvegarde: ${player.name} — ${player.score} pts`,
+    );
+  } catch (e) {
+    console.error("Erreur sauvegarde mi-partie:", e.message);
+  }
+}
+
 /**
  * Returns true if the player's input should count as a match for the target.
  * Uses GLOBAL similarity only — no word decomposition (prevents single-word cheating).
@@ -812,6 +842,15 @@ function leaveRoom(socket, roomId, io) {
       clearTimeout(room.players[name]._dcTimer);
       room.players[name]._dcTimer = setTimeout(() => {
         if (!roomGames[roomId]) return;
+        const leavingPlayer = room.players[name];
+        if (
+          leavingPlayer &&
+          room.game.isActive &&
+          room.game.dbGameId &&
+          leavingPlayer.score > 0
+        ) {
+          saveMidGamePlayer(roomId, leavingPlayer).catch(() => {});
+        }
         delete room.players[name];
         const active = Object.values(room.players)
           .filter((p) => !p._dcTimer)
