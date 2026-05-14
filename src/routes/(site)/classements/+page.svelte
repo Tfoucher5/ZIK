@@ -486,11 +486,14 @@
   }
 
   .hero-eyebrow {
-    position: relative;
-    text-align: center;
+    position: relative; z-index: 1;
+    display: block; width: fit-content; margin: 0 auto 36px;
     font-size: 0.65rem; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.12em;
-    color: var(--dim); margin-bottom: 36px;
+    color: var(--text);
+    background: rgb(var(--c-glass) / 0.14);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 16px;
   }
 
   .podium-hero {
@@ -656,7 +659,7 @@
     font-size: 0.84rem; font-weight: 700; color: var(--text);
     max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .hero-name-1 { font-size: 0.96rem; color: #f0b429; }
+  .hero-name-1 { font-size: 0.96rem; color: var(--text); }
   .hero-name.is-me { color: var(--accent) !important; }
   .hero-elo  { font-size: 0.82rem; font-weight: 700; }
   .hero-games { font-size: 0.62rem; color: var(--dim); }
@@ -866,4 +869,20 @@
     .sidebar-card { flex-direction: column; align-items: center; text-align: center; }
     .sb-cta { width: 100%; }
   }
+
+  /* ─── Killswitch animations (paramètres + prefers-reduced-motion) ─── */
+  @media (prefers-reduced-motion: reduce) {
+    .sparkle, .gold-ring-spin, .hero-shimmer, .hero-crown,
+    .av-halo, .gold-ring, .hero-card, .sidebar-card { animation: none !important; }
+    .score-fill { transition: none !important; }
+  }
+  :global(.no-animations) .sparkle,
+  :global(.no-animations) .gold-ring-spin,
+  :global(.no-animations) .hero-shimmer,
+  :global(.no-animations) .hero-crown,
+  :global(.no-animations) .av-halo,
+  :global(.no-animations) .gold-ring,
+  :global(.no-animations) .hero-card,
+  :global(.no-animations) .sidebar-card { animation: none !important; }
+  :global(.no-animations) .score-fill { transition: none !important; }
 </style>
