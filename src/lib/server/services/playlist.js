@@ -204,6 +204,39 @@ export async function refreshExpiredPreviews(trackRows) {
   );
 }
 
+// ─── Cron refresh global ─────────────────────────────────────────────────────
+
+export async function runPreviewRefreshCron() {
+  const threshold = new Date(
+    Date.now() + PREVIEW_REFRESH_MARGIN_MS,
+  ).toISOString();
+  try {
+    const { data: rows, error } = await getAdminClient()
+      .from("custom_playlist_tracks")
+      .select(
+        "id, artist, title, preview_url, preview_expires_at, external_id, custom_artist, custom_title",
+      )
+      .not("preview_url", "is", null)
+      .or(
+        `preview_expires_at.lt.${threshold},and(preview_expires_at.is.null,preview_url.ilike.%hdnea%)`,
+      );
+
+    if (error) throw error;
+    if (!rows?.length) {
+      console.log("[cron] Previews Deezer: aucune expiration imminente.");
+      return;
+    }
+
+    await refreshExpiredPreviews(rows);
+
+    // Vider le cache pour que les rooms rechargent les URLs fraîches
+    Object.keys(playlistCache).forEach((k) => delete playlistCache[k]);
+    console.log("[cron] Cache playlists invalidé après refresh.");
+  } catch (e) {
+    console.error("[cron] Erreur refresh previews:", e.message);
+  }
+}
+
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
 export async function loadPlaylist(roomId) {
