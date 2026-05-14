@@ -16,15 +16,18 @@ function makeCache(ttlMs) {
 }
 const _cache = makeCache(60_000);
 
-export async function GET() {
-  const cached = _cache.get();
-  if (cached) return json(cached);
+export async function GET({ url }) {
+  const offset = Math.max(0, parseInt(url.searchParams.get("offset") || "0"));
+  if (offset === 0) {
+    const cached = _cache.get();
+    if (cached) return json(cached);
+  }
   const { data, error } = await supabase
     .from("profiles")
     .select("username, avatar_url, elo, level, games_played")
     .order("elo", { ascending: false })
-    .limit(20);
+    .range(offset, offset + 19);
   if (error) return json({ error: error.message }, { status: 500 });
-  _cache.set(data);
+  if (offset === 0) _cache.set(data);
   return json(data);
 }
