@@ -20,16 +20,14 @@
 
   let myRank = $state(null);
   let myUserId = $state(null);
+  let myRankLoaded = $state(false);
 
   async function fetchScore(reset = false) {
     scoreLoading = true;
-    if (reset) { scoreData = []; scoreOffset = 0; }
+    if (reset) { scoreData = []; scoreOffset = 0; scoreInited = false; }
     try {
-      const params = new URLSearchParams({
-        mode: scoreMode, rooms: scoreRooms, periode: scorePeriod,
-        offset: reset ? 0 : scoreOffset, limit: 20,
-      });
-      const res = await fetch(`/api/leaderboard/score?${params}`);
+      const qs = `mode=${scoreMode}&rooms=${scoreRooms}&periode=${scorePeriod}&offset=${reset ? 0 : scoreOffset}`;
+      const res = await fetch(`/api/leaderboard/score?${qs}`);
       const rows = await res.json();
       const arr = Array.isArray(rows) ? rows : [];
       if (reset) { scoreData = arr; scoreOffset = arr.length; }
@@ -56,13 +54,16 @@
 
   async function fetchMyRank() {
     if (!myUserId) return;
+    myRankLoaded = false;
     try {
       const mode = activeTab === "elo" ? "elo" : scoreMode;
       let qs = `userId=${encodeURIComponent(myUserId)}&mode=${mode}`;
       if (activeTab === "score") qs += `&rooms=${scoreRooms}&periode=${scorePeriod}`;
       const res = await fetch(`/api/leaderboard/my-rank?${qs}`);
       myRank = await res.json();
-    } catch { myRank = null; }
+    } catch { myRank = null; } finally {
+      myRankLoaded = true;
+    }
   }
 
   $effect(() => {
@@ -90,6 +91,12 @@
     return myRank?.username === username;
   }
 
+  function rankClass(i) {
+    if (i === 0) return "rank-gold";
+    if (i === 1) return "rank-silver";
+    if (i === 2) return "rank-bronze";
+    return "";
+  }
 </script>
 
 <svelte:head>
@@ -113,54 +120,77 @@
     </button>
   </div>
 
+  <!-- Ta position — toujours visible si connecté -->
+  {#if myUserId}
+    <div class="my-pos-bar">
+      <span class="my-pos-label">Ta position</span>
+      {#if !myRankLoaded}
+        <span class="my-pos-loading">…</span>
+      {:else if myRank}
+        <span class="my-pos-rank">#{myRank.rank}</span>
+        <span class="my-pos-sep">·</span>
+        <span class="my-pos-name">{myRank.username}</span>
+        <span class="my-pos-score">
+          {activeTab === 'elo' ? `${myRank.score} ELO` : `${Number(myRank.score).toLocaleString('fr-FR')} pts`}
+          · {myRank.games_count} partie{myRank.games_count > 1 ? 's' : ''}
+        </span>
+      {:else}
+        <span class="my-pos-none">Pas encore classé dans cette catégorie</span>
+      {/if}
+    </div>
+  {/if}
+
   <!-- ── ELO ── -->
   {#if activeTab === 'elo'}
     <div class="cl-hint">Rooms officielles · Mode classique · All-time</div>
     <div class="cl-table-wrap">
       {#if eloData.length >= 3}
         <div class="podium">
+          <!-- 2e place -->
           <div class="podium-slot">
             <div class="podium-info">
               <a href="/user/{eloData[1].username}" class="podium-avatar-link">
                 {#if eloData[1].avatar_url}
-                  <img class="podium-avatar" src={eloData[1].avatar_url} alt={eloData[1].username} width="44" height="44" loading="lazy" />
+                  <img class="podium-avatar avatar-silver" src={eloData[1].avatar_url} alt={eloData[1].username} width="44" height="44" loading="lazy" />
                 {:else}
-                  <div class="podium-avatar podium-fb">{eloData[1].username[0].toUpperCase()}</div>
+                  <div class="podium-avatar podium-fb avatar-silver">{eloData[1].username[0].toUpperCase()}</div>
                 {/if}
               </a>
               <div class="podium-name {isMe(eloData[1].username) ? 'is-me' : ''}">{eloData[1].username}</div>
-              <div class="podium-score">{eloData[1].elo} ELO</div>
+              <div class="podium-score silver-text">{eloData[1].elo} ELO</div>
             </div>
-            <div class="podium-step podium-step-2"><span class="podium-num">2</span></div>
+            <div class="podium-step podium-step-2"><span class="podium-num silver-text">2</span></div>
           </div>
+          <!-- 1re place -->
           <div class="podium-slot">
             <span class="podium-crown">👑</span>
             <div class="podium-info">
               <a href="/user/{eloData[0].username}" class="podium-avatar-link">
                 {#if eloData[0].avatar_url}
-                  <img class="podium-avatar" src={eloData[0].avatar_url} alt={eloData[0].username} width="56" height="56" loading="lazy" />
+                  <img class="podium-avatar avatar-gold" src={eloData[0].avatar_url} alt={eloData[0].username} width="60" height="60" loading="lazy" />
                 {:else}
-                  <div class="podium-avatar podium-fb" style="width:56px;height:56px">{eloData[0].username[0].toUpperCase()}</div>
+                  <div class="podium-avatar podium-fb avatar-gold" style="width:60px;height:60px">{eloData[0].username[0].toUpperCase()}</div>
                 {/if}
               </a>
               <div class="podium-name podium-name-1 {isMe(eloData[0].username) ? 'is-me' : ''}">{eloData[0].username}</div>
-              <div class="podium-score">{eloData[0].elo} ELO</div>
+              <div class="podium-score gold-text">{eloData[0].elo} ELO</div>
             </div>
-            <div class="podium-step podium-step-1"><span class="podium-num">1</span></div>
+            <div class="podium-step podium-step-1"><span class="podium-num gold-text">1</span></div>
           </div>
+          <!-- 3e place -->
           <div class="podium-slot">
             <div class="podium-info">
               <a href="/user/{eloData[2].username}" class="podium-avatar-link">
                 {#if eloData[2].avatar_url}
-                  <img class="podium-avatar" src={eloData[2].avatar_url} alt={eloData[2].username} width="36" height="36" loading="lazy" />
+                  <img class="podium-avatar avatar-bronze" src={eloData[2].avatar_url} alt={eloData[2].username} width="36" height="36" loading="lazy" />
                 {:else}
-                  <div class="podium-avatar podium-fb" style="width:36px;height:36px">{eloData[2].username[0].toUpperCase()}</div>
+                  <div class="podium-avatar podium-fb avatar-bronze" style="width:36px;height:36px">{eloData[2].username[0].toUpperCase()}</div>
                 {/if}
               </a>
               <div class="podium-name {isMe(eloData[2].username) ? 'is-me' : ''}">{eloData[2].username}</div>
-              <div class="podium-score">{eloData[2].elo} ELO</div>
+              <div class="podium-score bronze-text">{eloData[2].elo} ELO</div>
             </div>
-            <div class="podium-step podium-step-3"><span class="podium-num">3</span></div>
+            <div class="podium-step podium-step-3"><span class="podium-num bronze-text">3</span></div>
           </div>
         </div>
       {/if}
@@ -182,7 +212,7 @@
               <td class="col-rank">{rank}</td>
               <td class="col-player">
                 {#if p.avatar_url}
-                  <img class="row-avatar" src={p.avatar_url} alt={p.username} width="24" height="24" loading="lazy" />
+                  <img class="row-avatar" src={p.avatar_url} alt={p.username} width="28" height="28" loading="lazy" />
                 {:else}
                   <div class="row-avatar row-avatar-fb">{p.username[0].toUpperCase()}</div>
                 {/if}
@@ -203,16 +233,6 @@
         </button>
       {/if}
     </div>
-
-    <!-- Ma position ELO si hors top -->
-    {#if myRank && !eloData.some(p => p.username === myRank.username)}
-      <div class="my-rank-row">
-        <span class="my-rank-label">Ta position</span>
-        <span class="my-rank-num">#{myRank.rank}</span>
-        <span class="my-rank-name">{myRank.username}</span>
-        <span class="my-rank-score">{myRank.score} ELO</span>
-      </div>
-    {/if}
   {/if}
 
   <!-- ── Score ── -->
@@ -259,11 +279,11 @@
           </thead>
           <tbody>
             {#each scoreData as p, i}
-              <tr class="cl-row {isMe(p.username) ? 'row-me' : ''}">
+              <tr class="cl-row {isMe(p.username) ? 'row-me' : ''} {rankClass(i)}">
                 <td class="col-rank">{i + 1}</td>
                 <td class="col-player">
                   {#if p.avatar_url}
-                    <img class="row-avatar" src={p.avatar_url} alt={p.username} width="24" height="24" loading="lazy" />
+                    <img class="row-avatar" src={p.avatar_url} alt={p.username} width="28" height="28" loading="lazy" />
                   {:else}
                     <div class="row-avatar row-avatar-fb">{p.username[0].toUpperCase()}</div>
                   {/if}
@@ -284,24 +304,14 @@
         {/if}
       {/if}
     </div>
-
-    <!-- Ma position Score si hors top -->
-    {#if myRank && scoreInited && !scoreData.some(p => p.username === myRank?.username)}
-      <div class="my-rank-row">
-        <span class="my-rank-label">Ta position</span>
-        <span class="my-rank-num">#{myRank.rank}</span>
-        <span class="my-rank-name">{myRank.username}</span>
-        <span class="my-rank-score">{Number(myRank.score).toLocaleString('fr-FR')} pts</span>
-      </div>
-    {/if}
   {/if}
 </main>
 
 <style>
   .classements-page {
-    max-width: 780px;
+    max-width: 1060px;
     margin: 0 auto;
-    padding: 80px 20px 60px;
+    padding: 80px 24px 60px;
   }
 
   .cl-header { text-align: center; margin-bottom: 36px; }
@@ -312,11 +322,14 @@
   .cl-tabs {
     display: flex;
     gap: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     background: rgb(var(--c-glass) / 0.04);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 4px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
   }
   .cl-tab {
     flex: 1;
@@ -336,6 +349,34 @@
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
   }
 
+  /* Ma position — barre permanente */
+  .my-pos-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 18px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    background: rgb(var(--c-accent) / 0.07);
+    font-size: 0.87rem;
+    flex-wrap: wrap;
+  }
+  .my-pos-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .my-pos-rank { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 1rem; }
+  .my-pos-sep { color: var(--dim); }
+  .my-pos-name { font-weight: 600; }
+  .my-pos-score { color: var(--dim); font-size: 0.82rem; margin-left: auto; }
+  .my-pos-loading { color: var(--dim); font-size: 0.82rem; }
+  .my-pos-none { color: var(--dim); font-size: 0.82rem; font-style: italic; }
+
   /* Hint + Filters */
   .cl-hint { font-size: 0.72rem; color: var(--dim); margin-bottom: 20px; text-align: center; }
   .cl-filters {
@@ -343,13 +384,13 @@
     flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 24px;
-    padding: 16px;
+    padding: 16px 20px;
     background: rgb(var(--c-glass) / 0.04);
     border: 1px solid var(--border);
     border-radius: 12px;
   }
   .filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .filter-label { font-size: 0.72rem; color: var(--dim); font-weight: 600; min-width: 44px; }
+  .filter-label { font-size: 0.72rem; color: var(--dim); font-weight: 600; min-width: 48px; }
   .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
   .pill {
     padding: 5px 14px;
@@ -369,16 +410,21 @@
   }
   .pill:hover:not(.active) { border-color: var(--accent); color: var(--text); }
 
+  /* Couleurs métal */
+  .gold-text   { color: #f0b429; }
+  .silver-text { color: #a0aec0; }
+  .bronze-text { color: #cd7f32; }
+
   /* Podium */
   .podium {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    gap: 8px;
-    margin-bottom: 28px;
+    gap: 12px;
+    margin-bottom: 32px;
   }
   .podium-slot { display: flex; flex-direction: column; align-items: center; }
-  .podium-crown { font-size: 1rem; margin-bottom: 4px; line-height: 1; }
+  .podium-crown { font-size: 1.1rem; margin-bottom: 4px; line-height: 1; }
   .podium-info { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; }
   .podium-avatar-link { display: block; }
   .podium-avatar {
@@ -390,76 +436,89 @@
     border-radius: 50%;
     border: 2px solid var(--border);
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.9rem;
+    font-weight: 700; font-size: 1rem;
     background: rgb(var(--c-glass) / 0.1);
     color: var(--text);
   }
-  .podium-name { font-size: 0.72rem; font-weight: 700; color: var(--text); text-align: center; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .podium-name-1 { color: var(--accent); }
-  .podium-name.is-me { color: var(--accent2); }
-  .podium-score { font-size: 0.6rem; color: var(--dim); text-align: center; }
+  .avatar-gold  { border-color: #f0b429 !important; box-shadow: 0 0 16px rgb(240 180 41 / 0.35); }
+  .avatar-silver { border-color: #a0aec0 !important; box-shadow: 0 0 10px rgb(160 174 192 / 0.2); }
+  .avatar-bronze { border-color: #cd7f32 !important; box-shadow: 0 0 10px rgb(205 127 50 / 0.2); }
+
+  .podium-name { font-size: 0.75rem; font-weight: 700; color: var(--text); text-align: center; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .podium-name-1 { color: #f0b429; font-size: 0.82rem; }
+  .podium-name.is-me { color: var(--accent); }
+  .podium-score { font-size: 0.62rem; text-align: center; font-weight: 600; }
   .podium-step {
-    width: 72px;
+    width: 84px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 4px 4px 0 0;
-    background: rgb(var(--c-glass) / 0.08);
+    border-radius: 6px 6px 0 0;
     border: 1px solid var(--border);
     border-bottom: none;
   }
-  .podium-step-1 { height: 68px; }
-  .podium-step-2 { height: 48px; }
-  .podium-step-3 { height: 32px; }
-  .podium-num { font-size: 0.7rem; font-weight: 800; color: var(--dim); }
-  .podium-slot:nth-child(2) .podium-avatar,
-  .podium-slot:nth-child(2) .podium-fb {
-    width: 56px; height: 56px;
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgb(var(--c-accent) / 0.3);
+  .podium-step-1 {
+    height: 80px;
+    background: linear-gradient(to top, rgb(240 180 41 / 0.18), rgb(240 180 41 / 0.06));
+    border-color: rgb(240 180 41 / 0.35);
   }
-  .podium-slot:nth-child(1) .podium-avatar,
-  .podium-slot:nth-child(1) .podium-fb { width: 44px; height: 44px; border-color: #94a3b8; }
-  .podium-slot:nth-child(3) .podium-avatar,
-  .podium-slot:nth-child(3) .podium-fb { width: 36px; height: 36px; border-color: #c2774a; }
+  .podium-step-2 {
+    height: 56px;
+    background: linear-gradient(to top, rgb(160 174 192 / 0.15), rgb(160 174 192 / 0.04));
+    border-color: rgb(160 174 192 / 0.3);
+  }
+  .podium-step-3 {
+    height: 36px;
+    background: linear-gradient(to top, rgb(205 127 50 / 0.15), rgb(205 127 50 / 0.04));
+    border-color: rgb(205 127 50 / 0.3);
+  }
+  .podium-num { font-size: 0.75rem; font-weight: 800; }
 
   /* Table */
   .cl-table-wrap { margin-bottom: 16px; }
   .cl-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
   }
   .cl-table thead th {
     text-align: left;
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--dim);
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
   .cl-row td {
-    padding: 10px 12px;
+    padding: 11px 14px;
     border-bottom: 1px solid rgb(var(--c-glass) / 0.06);
     vertical-align: middle;
   }
   .cl-row:last-child td { border-bottom: none; }
   .cl-row:hover td { background: rgb(var(--c-glass) / 0.04); }
-  .cl-row.row-me td { background: rgb(var(--c-accent) / 0.06); }
+  .cl-row.row-me td {
+    background: rgb(var(--c-accent) / 0.07);
+  }
+  .cl-row.row-me .col-rank { color: var(--accent); }
 
-  .col-rank { width: 36px; font-size: 0.72rem; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; }
+  /* Couleurs rang top 3 (onglet Score) */
+  .rank-gold .col-rank  { color: #f0b429; font-weight: 800; }
+  .rank-silver .col-rank { color: #a0aec0; font-weight: 800; }
+  .rank-bronze .col-rank { color: #cd7f32; font-weight: 800; }
+
+  .col-rank { width: 40px; font-size: 0.78rem; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; }
   .col-player { display: flex; align-items: center; gap: 10px; }
   .col-score { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .col-extra { color: var(--dim); font-size: 0.78rem; }
-  .col-games { color: var(--dim); font-size: 0.78rem; text-align: right; }
+  .col-extra { color: var(--dim); font-size: 0.8rem; }
+  .col-games { color: var(--dim); font-size: 0.8rem; text-align: right; }
 
   .row-avatar { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .row-avatar-fb {
-    width: 24px; height: 24px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     background: rgb(var(--c-glass) / 0.12);
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.65rem; font-weight: 700; color: var(--text);
+    font-size: 0.68rem; font-weight: 700; color: var(--text);
     flex-shrink: 0;
   }
   .row-name { color: var(--text); font-weight: 600; transition: color 0.15s; }
@@ -477,7 +536,7 @@
   .btn-load-more {
     display: block;
     margin: 16px auto 0;
-    padding: 10px 28px;
+    padding: 10px 32px;
     border-radius: 10px;
     border: 1px solid var(--border);
     background: transparent;
@@ -490,28 +549,12 @@
   .btn-load-more:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.08); color: var(--text); }
   .btn-load-more:disabled { opacity: 0.5; cursor: default; }
 
-  /* Ma position */
-  .my-rank-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    margin-top: 8px;
-    border-radius: 10px;
-    border: 1px solid var(--accent);
-    background: rgb(var(--c-accent) / 0.06);
-    font-size: 0.86rem;
-  }
-  .my-rank-label { font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-  .my-rank-num { font-weight: 800; font-variant-numeric: tabular-nums; }
-  .my-rank-name { font-weight: 600; flex: 1; }
-  .my-rank-score { font-weight: 700; color: var(--accent); }
-
   .cl-empty { text-align: center; color: var(--dim); font-size: 0.85rem; padding: 40px 0; }
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     .classements-page { padding: 60px 14px 40px; }
     .cl-filters { gap: 14px; }
     .col-extra { display: none; }
+    .my-pos-score { margin-left: 0; }
   }
 </style>

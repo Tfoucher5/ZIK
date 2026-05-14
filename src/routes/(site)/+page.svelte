@@ -764,6 +764,17 @@
     <p class="section-sub">Le vrai ranking compétitif — rooms officielles, mode classique.</p>
   </div>
   <div class="lb-solo" use:reveal={0}>
+    <div class="lb-intro">
+      <div class="lb-intro-badge">⚡ ELO compétitif</div>
+      <h3 class="lb-intro-title">Prouve ta valeur</h3>
+      <p class="lb-intro-desc">Le classement ELO mesure ta force réelle — il évolue uniquement en Mode Classique, dans les rooms officielles. Chaque victoire contre un adversaire mieux classé rapporte davantage.</p>
+      <div class="lb-intro-chips">
+        <span class="lb-chip">🏛️ Rooms officielles</span>
+        <span class="lb-chip">🎵 Mode Classique</span>
+        <span class="lb-chip">♾️ All-time</span>
+      </div>
+      <a href="/classements" class="btn-ghost lb-more-btn">Voir tous les classements →</a>
+    </div>
     <div class="lb-panel">
       <div class="lb-head">
         <span class="lb-head-icon">⚡</span>
@@ -837,7 +848,6 @@
         {/if}
       </div>
     </div>
-    <a href="/classements" class="btn-ghost lb-more-btn">Voir tous les classements →</a>
   </div>
 </section>
 
@@ -1347,14 +1357,54 @@
 
   /* ════════════════════════════ LEADERBOARDS ════════════════════════════ */
   .lb-solo {
-    max-width: 520px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+    max-width: 920px;
     margin: 0 auto;
+  }
+  .lb-intro {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
+    padding-top: 4px;
+  }
+  .lb-intro-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .lb-intro-title {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+  }
+  .lb-intro-desc {
+    color: var(--dim);
+    font-size: 0.88rem;
+    line-height: 1.65;
+    margin: 0;
+  }
+  .lb-intro-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lb-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    background: rgb(var(--c-glass) / 0.04);
   }
   .lb-more-btn {
-    align-self: center;
+    align-self: flex-start;
   }
   .lb-panel {
     background: rgb(var(--c-glass) / 0.04);
@@ -1653,6 +1703,7 @@
     .features-grid { grid-template-columns: repeat(2, 1fr); }
     .salon-cta-phones { display: none; }
     .official-rooms-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .lb-solo { grid-template-columns: 1fr; gap: 24px; }
   }
   @media (max-width: 600px) {
     .section { padding: 44px 16px; }
