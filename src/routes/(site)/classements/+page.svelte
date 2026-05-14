@@ -497,9 +497,14 @@
   .cl-row:last-child td { border-bottom: none; }
   .cl-row:hover td { background: rgb(var(--c-glass) / 0.04); }
   .cl-row.row-me td {
-    background: rgb(var(--c-accent) / 0.07);
+    background: rgb(var(--c-accent) / 0.13);
   }
-  .cl-row.row-me .col-rank { color: var(--accent); }
+  .cl-row.row-me td:first-child {
+    border-left: 3px solid var(--accent);
+    padding-left: 11px;
+  }
+  .cl-row.row-me .col-rank { color: var(--accent); font-weight: 800; }
+  .cl-row.row-me .row-name { color: var(--accent); }
 
   /* Couleurs rang top 3 (onglet Score) */
   .rank-gold .col-rank  { color: #f0b429; font-weight: 800; }
