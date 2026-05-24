@@ -867,16 +867,17 @@ function leaveRoom(socket, roomId, io) {
     if (room.players[name]) {
       clearTimeout(room.players[name]._dcTimer);
 
-      // Capturer l'état au moment du départ — room.game peut changer en 30s
+      // Capturer l'état au moment du départ — room.game peut changer en 5s
       const playerSnapshot = { ...room.players[name] };
-      const wasActive = room.game.isActive;
+      // wasActive ne suffit pas : entre deux manches isActive=false, pourtant la partie est en cours
+      const wasInGame = !!room.game.dbGameId && room.game.currentRound > 0;
       const dbGameId = room.game.dbGameId;
       const gameMode = room.game_mode;
       const totalPlayers = Object.keys(room.players).length;
 
       room.players[name]._dcTimer = setTimeout(() => {
-        // Sauvegarder si la partie était active et n'a pas été terminée normalement
-        if (wasActive && dbGameId && playerSnapshot.score > 0) {
+        // Sauvegarder si la partie était en cours (manche active ou break) et pas terminée normalement
+        if (wasInGame && dbGameId && playerSnapshot.score > 0) {
           const currentRoom = roomGames[roomId];
           if (!currentRoom?.game._ended) {
             saveMidGamePlayer(
@@ -915,7 +916,7 @@ function leaveRoom(socket, roomId, io) {
             cleanupRoom(roomId);
           }
         }
-      }, 30_000);
+      }, 5_000);
     }
   }
   socket.leave(`room:${roomId}`);

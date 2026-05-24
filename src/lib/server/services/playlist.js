@@ -239,6 +239,16 @@ export async function runPreviewRefreshCron() {
 
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
+function dedup(tracks) {
+  const seen = new Set();
+  return tracks.filter((t) => {
+    const key = t.cleanArtist + "|" + t.cleanTitle;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export async function loadPlaylist(roomId) {
   if (customRooms[roomId]) return customRooms[roomId].tracks;
   if (playlistCache[roomId]?.length > 0) return playlistCache[roomId];
@@ -269,13 +279,15 @@ export async function loadPlaylist(roomId) {
 
       if (trackRows?.length >= 3) {
         await refreshExpiredPreviews(trackRows);
-        const tracks = trackRows.map((t) =>
-          buildTrack({
-            artist: t.artist,
-            title: t.title,
-            cover: t.cover_url,
-            preview_url: t.preview_url,
-          }),
+        const tracks = dedup(
+          trackRows.map((t) =>
+            buildTrack({
+              artist: t.artist,
+              title: t.title,
+              cover: t.cover_url,
+              preview_url: t.preview_url,
+            }),
+          ),
         );
         playlistCache[roomId] = tracks;
         console.log(
@@ -300,20 +312,22 @@ export async function loadPlaylist(roomId) {
         .order("position");
       if (trackRows?.length >= 3) {
         await refreshExpiredPreviews(trackRows);
-        const tracks = trackRows.map((t) =>
-          buildTrack({
-            artist: t.artist,
-            title: t.title,
-            cover: t.cover_url,
-            preview_url: t.preview_url,
-            custom_artist: t.custom_artist || null,
-            custom_title: t.custom_title || null,
-            custom_feats: t.custom_feats || null,
-            extraAnswers: (t.track_answers || []).map((a) => ({
-              label: a.answer_types?.name || "",
-              value: a.value,
-            })),
-          }),
+        const tracks = dedup(
+          trackRows.map((t) =>
+            buildTrack({
+              artist: t.artist,
+              title: t.title,
+              cover: t.cover_url,
+              preview_url: t.preview_url,
+              custom_artist: t.custom_artist || null,
+              custom_title: t.custom_title || null,
+              custom_feats: t.custom_feats || null,
+              extraAnswers: (t.track_answers || []).map((a) => ({
+                label: a.answer_types?.name || "",
+                value: a.value,
+              })),
+            }),
+          ),
         );
         playlistCache[roomId] = tracks;
         console.log(
