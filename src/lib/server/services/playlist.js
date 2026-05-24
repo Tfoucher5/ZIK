@@ -239,6 +239,16 @@ export async function runPreviewRefreshCron() {
 
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
+function dedup(tracks) {
+  const seen = new Set();
+  return tracks.filter((t) => {
+    const key = t.cleanArtist + "|" + t.cleanTitle;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export async function loadPlaylist(roomId) {
   if (customRooms[roomId]) return customRooms[roomId].tracks;
   if (playlistCache[roomId]?.length > 0) return playlistCache[roomId];
@@ -269,14 +279,14 @@ export async function loadPlaylist(roomId) {
 
       if (trackRows?.length >= 3) {
         await refreshExpiredPreviews(trackRows);
-        const tracks = trackRows.map((t) =>
+        const tracks = dedup(trackRows.map((t) =>
           buildTrack({
             artist: t.artist,
             title: t.title,
             cover: t.cover_url,
             preview_url: t.preview_url,
           }),
-        );
+        ));
         playlistCache[roomId] = tracks;
         console.log(
           `Room DB "${roomId}": ${tracks.length} titres chargés (${playlistIds.length} playlist(s))`,
@@ -300,7 +310,7 @@ export async function loadPlaylist(roomId) {
         .order("position");
       if (trackRows?.length >= 3) {
         await refreshExpiredPreviews(trackRows);
-        const tracks = trackRows.map((t) =>
+        const tracks = dedup(trackRows.map((t) =>
           buildTrack({
             artist: t.artist,
             title: t.title,
@@ -314,7 +324,7 @@ export async function loadPlaylist(roomId) {
               value: a.value,
             })),
           }),
-        );
+        ));
         playlistCache[roomId] = tracks;
         console.log(
           `Room DB "${roomId}": ${tracks.length} titres chargés (legacy)`,
