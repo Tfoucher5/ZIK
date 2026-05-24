@@ -49,6 +49,7 @@
       <a href="/admin/rooms"     class="adm-nav-link">◧ Rooms</a>
       <a href="/admin/playlists" class="adm-nav-link">◫ Playlists</a>
       <a href="/admin/live"      class="adm-nav-link">◎ Live</a>
+      <a href="/admin/errors"   class="adm-nav-link">⚠ Errors</a>
     </div>
     <div class="adm-nav-user">
       <span class="adm-badge">ROOT</span>

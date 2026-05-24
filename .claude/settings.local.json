@@ -58,7 +58,18 @@
       "Bash(npm uninstall *)",
       "Bash(bin/yt-dlp.exe --version)",
       "Bash(xargs ls *)",
-      "Bash(grep -E \"\\\\.js$|^d\")"
+      "Bash(grep -E \"\\\\.js$|^d\")",
+      "Bash(git -C /c/Users/Teamr/Desktop/ZIK stash pop)",
+      "Bash(git -C /c/Users/Teamr/Desktop/ZIK show e79803c:src/routes/\\\\\\(site\\\\\\)/rooms/+page.svelte)",
+      "Bash(git -C /c/Users/Teamr/Desktop/ZIK diff e79803c..d494f25 -- src/routes/\\\\\\(site\\\\\\)/+layout.svelte)",
+      "Bash(git -C /c/Users/Teamr/Desktop/ZIK show e79803c:src/routes/\\\\\\(site\\\\\\)/room/\\\\[code\\\\]/+page.svelte)",
+      "Bash(ls docs/superpowers/specs/)",
+      "Bash(mkdir -p docs/superpowers/specs)",
+      "Bash(grep -v \"^[0-9]*:[[:space:]]*//\")",
+      "Skill(superpowers:systematic-debugging)",
+      "Bash(bin\\\\yt-dlp.exe *)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects"
     ]
   }
 }
