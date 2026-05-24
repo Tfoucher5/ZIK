@@ -189,6 +189,7 @@ function getOrCreateRoom(roomId) {
       totalFullFound: 0,
       lastRoundData: null,
       dbGameId: null,
+      flushedScores: {},
       isSyncWaiting: false,
       readyPlayers: new Set(),
       readyTimer: null,
@@ -298,6 +299,8 @@ function endRound(roomId, reason, io) {
       });
     }
   });
+
+  flushRoundScores(roomId).catch(() => {});
 
   game.breakTimer = setTimeout(() => {
     game.breakTimer = null;
@@ -629,6 +632,27 @@ async function startNextRound(roomId, io) {
   }
 }
 
+async function flushRoundScores(roomId) {
+  const room = roomGames[roomId];
+  if (!room?.game?.dbGameId) return;
+  const game = room.game;
+  const players = Object.values(room.players).filter(
+    (p) => p.userId && !p.isGuest && p.score > 0,
+  );
+  await Promise.allSettled(
+    players.map(async (p) => {
+      const already = game.flushedScores[p.userId] || 0;
+      const delta = p.score - already;
+      if (delta <= 0) return;
+      await supabase.rpc("flush_player_score", {
+        p_user_id: p.userId,
+        p_score_delta: delta,
+      });
+      game.flushedScores[p.userId] = p.score;
+    }),
+  );
+}
+
 async function saveGameResults(roomId, finalScores) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
@@ -703,9 +727,10 @@ async function saveGameResults(roomId, finalScores) {
       for (let i = 0; i < finalScores.length; i++) {
         const p = finalScores[i];
         if (p.userId && !p.isGuest) {
+          const alreadyFlushed = room.game.flushedScores?.[p.userId] || 0;
           await supabase.rpc("update_player_stats", {
             p_user_id: p.userId,
-            p_score: p.score,
+            p_score: p.score - alreadyFlushed,
             p_rank: i + 1,
             p_total_players: finalScores.length,
             p_elo_change: eloChanges[p.userId] ?? 0,
@@ -732,15 +757,6 @@ async function saveMidGamePlayer(roomId, player) {
       rank: null,
       is_guest: player.isGuest || !player.userId,
     });
-    if (player.userId && !player.isGuest && room.game_mode !== "qcm") {
-      await supabase.rpc("update_player_stats", {
-        p_user_id: player.userId,
-        p_score: player.score,
-        p_rank: null,
-        p_total_players: Object.keys(room.players).length,
-        p_elo_change: 0,
-      });
-    }
     console.log(
       `Score mi-partie sauvegarde: ${player.name} — ${player.score} pts`,
     );
