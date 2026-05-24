@@ -189,7 +189,6 @@ function getOrCreateRoom(roomId) {
       totalFullFound: 0,
       lastRoundData: null,
       dbGameId: null,
-      flushedScores: {},
       isSyncWaiting: false,
       readyPlayers: new Set(),
       readyTimer: null,
@@ -299,8 +298,6 @@ function endRound(roomId, reason, io) {
       });
     }
   });
-
-  flushRoundScores(roomId).catch(() => {});
 
   game.breakTimer = setTimeout(() => {
     game.breakTimer = null;
@@ -632,31 +629,11 @@ async function startNextRound(roomId, io) {
   }
 }
 
-async function flushRoundScores(roomId) {
-  const room = roomGames[roomId];
-  if (!room?.game?.dbGameId) return;
-  const game = room.game;
-  const players = Object.values(room.players).filter(
-    (p) => p.userId && !p.isGuest && p.score > 0,
-  );
-  await Promise.allSettled(
-    players.map(async (p) => {
-      const already = game.flushedScores[p.userId] || 0;
-      const delta = p.score - already;
-      if (delta <= 0) return;
-      await supabase.rpc("flush_player_score", {
-        p_user_id: p.userId,
-        p_score_delta: delta,
-      });
-      game.flushedScores[p.userId] = p.score;
-    }),
-  );
-}
-
 async function saveGameResults(roomId, finalScores) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
   if (!dbGameId) return;
+  room.game._ended = true; // bloquer saveMidGamePlayer pour éviter double-entrée
 
   try {
     await supabase
@@ -727,10 +704,9 @@ async function saveGameResults(roomId, finalScores) {
       for (let i = 0; i < finalScores.length; i++) {
         const p = finalScores[i];
         if (p.userId && !p.isGuest) {
-          const alreadyFlushed = room.game.flushedScores?.[p.userId] || 0;
           await supabase.rpc("update_player_stats", {
             p_user_id: p.userId,
-            p_score: p.score - alreadyFlushed,
+            p_score: p.score,
             p_rank: i + 1,
             p_total_players: finalScores.length,
             p_elo_change: eloChanges[p.userId] ?? 0,
@@ -744,10 +720,7 @@ async function saveGameResults(roomId, finalScores) {
   }
 }
 
-async function saveMidGamePlayer(roomId, player) {
-  const room = getOrCreateRoom(roomId);
-  const dbGameId = room.game.dbGameId;
-  if (!dbGameId) return;
+async function saveMidGamePlayer(dbGameId, player, gameMode, totalPlayers) {
   try {
     await supabase.from("game_players").insert({
       game_id: dbGameId,
@@ -757,6 +730,15 @@ async function saveMidGamePlayer(roomId, player) {
       rank: null,
       is_guest: player.isGuest || !player.userId,
     });
+    if (player.userId && !player.isGuest && gameMode !== "qcm") {
+      await supabase.rpc("update_player_stats", {
+        p_user_id: player.userId,
+        p_score: player.score,
+        p_rank: null,
+        p_total_players: totalPlayers,
+        p_elo_change: 0,
+      });
+    }
     console.log(
       `Score mi-partie sauvegarde: ${player.name} — ${player.score} pts`,
     );
@@ -884,17 +866,24 @@ function leaveRoom(socket, roomId, io) {
     delete room.socketToName[socket.id];
     if (room.players[name]) {
       clearTimeout(room.players[name]._dcTimer);
+
+      // Capturer l'état au moment du départ — room.game peut changer en 30s
+      const playerSnapshot = { ...room.players[name] };
+      const wasActive = room.game.isActive;
+      const dbGameId = room.game.dbGameId;
+      const gameMode = room.game_mode;
+      const totalPlayers = Object.keys(room.players).length;
+
       room.players[name]._dcTimer = setTimeout(() => {
-        if (!roomGames[roomId]) return;
-        const leavingPlayer = room.players[name];
-        if (
-          leavingPlayer &&
-          room.game.isActive &&
-          room.game.dbGameId &&
-          leavingPlayer.score > 0
-        ) {
-          saveMidGamePlayer(roomId, leavingPlayer).catch(() => {});
+        // Sauvegarder si la partie était active et n'a pas été terminée normalement
+        if (wasActive && dbGameId && playerSnapshot.score > 0) {
+          const currentRoom = roomGames[roomId];
+          if (!currentRoom?.game._ended) {
+            saveMidGamePlayer(dbGameId, playerSnapshot, gameMode, totalPlayers).catch(() => {});
+          }
         }
+
+        if (!roomGames[roomId]) return;
         delete room.players[name];
         const active = Object.values(room.players)
           .filter((p) => !p._dcTimer)
