@@ -879,7 +879,12 @@ function leaveRoom(socket, roomId, io) {
         if (wasActive && dbGameId && playerSnapshot.score > 0) {
           const currentRoom = roomGames[roomId];
           if (!currentRoom?.game._ended) {
-            saveMidGamePlayer(dbGameId, playerSnapshot, gameMode, totalPlayers).catch(() => {});
+            saveMidGamePlayer(
+              dbGameId,
+              playerSnapshot,
+              gameMode,
+              totalPlayers,
+            ).catch(() => {});
           }
         }
 
