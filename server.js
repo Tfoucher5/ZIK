@@ -15,6 +15,18 @@ import {
   preloadAllPlaylists,
   runPreviewRefreshCron,
 } from "./src/lib/server/services/playlist.js";
+import { pushError } from "./src/lib/server/state.js";
+
+const _origError = console.error.bind(console);
+const _origWarn = console.warn.bind(console);
+console.error = (...args) => {
+  _origError(...args);
+  pushError("error", ...args);
+};
+console.warn = (...args) => {
+  _origWarn(...args);
+  pushError("warn", ...args);
+};
 
 const _execAsync = _promisify(_execFile);
 const _YTDLP_BIN =
@@ -74,6 +86,7 @@ register(io);
 registerSalon(io);
 preloadAllPlaylists();
 autoUpdateYtDlp();
+setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h
 
 const PREVIEW_CRON_INTERVAL_MS = 6 * 60 * 60 * 1000; // toutes les 6h
 setTimeout(runPreviewRefreshCron, 30_000); // 30s après démarrage (cache chaud)

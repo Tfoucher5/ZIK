@@ -2,8 +2,6 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const stringSimilarity = require("string-similarity");
 
-import { YouTube } from "youtube-sr";
-
 import { supabase } from "../config.js";
 import {
   playlistCache,
@@ -335,13 +333,43 @@ function triggerRoundStart(roomId, io) {
 }
 
 async function ytsSearch(artist, title) {
-  const results = await YouTube.search(`${artist} - ${title}`, {
-    type: "video",
-    limit: 5,
-  });
-  if (!results.length) return null;
-  const topic = results.find((v) => v.channel?.name?.endsWith("- Topic"));
-  return topic || results[0];
+  try {
+    const { stdout } = await execFileAsync(
+      YTDLP_BIN,
+      [
+        `ytsearch5:${artist} - ${title}`,
+        "--flat-playlist",
+        "-j",
+        "--no-warnings",
+        "--socket-timeout",
+        "8",
+      ],
+      { timeout: 12000, maxBuffer: 2 * 1024 * 1024 },
+    );
+    const results = stdout
+      .trim()
+      .split("\n")
+      .map((l) => {
+        try {
+          return JSON.parse(l);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+    if (!results.length) return null;
+    const topic = results.find(
+      (v) => v.channel?.endsWith("- Topic") || v.uploader?.endsWith("- Topic"),
+    );
+    const picked = topic || results[0];
+    return {
+      id: picked.id,
+      duration: (picked.duration || 0) * 1000,
+      channel: { name: picked.channel || picked.uploader || "" },
+    };
+  } catch {
+    return null;
+  }
 }
 
 function previewCacheKey(track) {
