@@ -174,11 +174,12 @@ function cleanupRoom(roomId) {
   room.game.readyTimer = null;
   if (room.game.dbGameId && !room.game._ended) {
     room.game._ended = true;
-    supabase
-      .from("games")
-      .update({ ended_at: new Date().toISOString() })
-      .eq("id", room.game.dbGameId)
-      .catch(() => {});
+    (async () => {
+      await supabase
+        .from("games")
+        .update({ ended_at: new Date().toISOString() })
+        .eq("id", room.game.dbGameId);
+    })().catch(() => {});
   }
   delete roomGames[roomId];
   console.log(`Room "${roomId}" liberee de la memoire`);
