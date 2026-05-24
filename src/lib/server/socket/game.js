@@ -71,7 +71,6 @@ function calcQcmPoints(timeTaken, roundDuration) {
   return Math.round(MAX_PTS - (MAX_PTS - MIN_PTS) * ratio);
 }
 
-
 const DEFAULT_ROUND_DURATION = 30;
 const DEFAULT_BREAK_DURATION = 7;
 const AUTO_START_DELAY = 5; // seconds
