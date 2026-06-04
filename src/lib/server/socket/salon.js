@@ -5,6 +5,7 @@ const stringSimilarity = require("string-similarity");
 import { YouTube } from "youtube-sr";
 
 import { supabase } from "../config.js";
+import { userClient } from "../middleware/auth.js";
 import { salonRooms } from "../state.js";
 import {
   buildTrack,
@@ -36,9 +37,9 @@ function generateCode() {
 
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
-async function loadTracksForPlaylist(playlistId) {
+async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {
-    const { data: rows } = await supabase
+    const { data: rows } = await client
       .from("custom_playlist_tracks")
       .select(
         "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name))",
@@ -70,12 +71,12 @@ async function loadTracksForPlaylist(playlistId) {
 }
 
 // Accepts a single ID or an array of IDs — returns combined, deduplicated, shuffled tracks
-async function loadSalonTracks(playlistIds) {
+async function loadSalonTracks(playlistIds, client = supabase) {
   const ids = Array.isArray(playlistIds) ? playlistIds : [playlistIds];
   const seen = new Set();
   const all = [];
   for (const id of ids) {
-    const tracks = await loadTracksForPlaylist(id);
+    const tracks = await loadTracksForPlaylist(id, client);
     for (const t of tracks) {
       const key = `${t.artist}|${t.title}`;
       if (!seen.has(key)) {
@@ -506,8 +507,9 @@ async function startNextRound(code, io) {
 
 // ─── Public API for HTTP-based salon creation ─────────────────────────────────
 
-export async function createSalonRoom({ playlistIds, settings }) {
-  const tracks = await loadSalonTracks(playlistIds);
+export async function createSalonRoom({ playlistIds, settings, token }) {
+  const client = token ? userClient(token) : supabase;
+  const tracks = await loadSalonTracks(playlistIds, client);
   if (tracks.length < 3) {
     throw new Error(
       "Playlists introuvables ou trop courtes (min. 3 titres au total).",
