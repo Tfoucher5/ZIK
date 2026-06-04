@@ -24,6 +24,7 @@ export async function POST({ request }) {
     const code = await createSalonRoom({
       playlistIds,
       settings: settings || {},
+      token,
     });
     return json({ code });
   } catch (e) {
