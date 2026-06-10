@@ -1,7 +1,10 @@
 <script>
   import { onMount, getContext } from 'svelte';
 
-  let { data } = $props();
+  let { data, form } = $props();
+
+  let maintEnabled = $state(data.maintenance?.enabled ?? false);
+  let maintMessage = $state(data.maintenance?.message ?? '');
 
   let live = $state(null);
   let connected = $state(false);
@@ -10,6 +13,7 @@
   let retryTimer;
 
   const adminCtx = getContext('adminToken');
+  const token = $derived(adminCtx?.token ?? '');
 
   onMount(() => {
     connect();
@@ -60,6 +64,35 @@
         <div class="stat-value" style="color:{card.color}">{card.value()}</div>
       </div>
     {/each}
+  </div>
+
+  <!-- Maintenance mode -->
+  <div class="maint-section" class:maint-on={maintEnabled}>
+    <div class="live-header">
+      <span class="live-title">// MAINTENANCE_MODE</span>
+      <span class="maint-state" class:active={data.maintenance?.enabled}>
+        {data.maintenance?.enabled ? '● ACTIF — SITE FERMÉ' : '○ INACTIF'}
+      </span>
+    </div>
+    <form method="POST" action="?/maintenance" class="maint-form">
+      <input type="hidden" name="_token" value={token}>
+      <label class="maint-toggle">
+        <input type="checkbox" name="enabled" bind:checked={maintEnabled}>
+        Activer le mode maintenance (bloque tout le site sauf /admin)
+      </label>
+      <textarea
+        name="message"
+        rows="3"
+        maxlength="500"
+        placeholder="Message affiché aux visiteurs (optionnel)…"
+        bind:value={maintMessage}
+      ></textarea>
+      <div class="maint-actions">
+        <button type="submit" class="maint-btn">APPLIQUER</button>
+        {#if form?.maintenanceSaved}<span class="maint-ok">// SAVED</span>{/if}
+        {#if form?.maintenanceError}<span class="maint-err">// {form.maintenanceError}</span>{/if}
+      </div>
+    </form>
   </div>
 
   <!-- Live panel -->
@@ -118,6 +151,54 @@
 
 <style>
 .dash { display: flex; flex-direction: column; gap: 32px; }
+
+/* -- Maintenance -- */
+.maint-section {
+  border: 1px solid rgba(0,255,65,0.2);
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.maint-section.maint-on { border-color: rgba(255,68,68,0.5); }
+.maint-state { font-size: 0.72rem; color: rgba(0,255,65,0.5); }
+.maint-state.active { color: #ff4444; }
+.maint-form { display: flex; flex-direction: column; gap: 10px; }
+.maint-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #00ff41;
+  cursor: pointer;
+}
+.maint-toggle input { accent-color: #ff4444; }
+.maint-form textarea {
+  background: rgba(0,255,65,0.04);
+  border: 1px solid rgba(0,255,65,0.2);
+  border-radius: 4px;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 8px 10px;
+  resize: vertical;
+}
+.maint-actions { display: flex; align-items: center; gap: 12px; }
+.maint-btn {
+  background: transparent;
+  border: 1px solid #00ff41;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  padding: 6px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.maint-btn:hover { background: rgba(0,255,65,0.1); }
+.maint-ok { font-size: 0.72rem; color: #00ff41; }
+.maint-err { font-size: 0.72rem; color: #ff4444; }
 
 .dash-header { display: flex; align-items: baseline; gap: 16px; }
 .dash-title { font-size: 1.2rem; font-weight: 700; color: #00ff41; letter-spacing: 0.1em; }
