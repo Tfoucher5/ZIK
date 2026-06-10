@@ -3,6 +3,7 @@
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import ReportModal from '$lib/components/ReportModal.svelte';
+  import AchievementToast from '$lib/components/AchievementToast.svelte';
 
   // URL params — read once on mount
   let ROOM_ID  = 'pop';
@@ -36,6 +37,9 @@
   let _announceTimer = null;
   let gameoverShow = $state(false);
   let gameoverScores = $state([]);
+  let achToasts = $state([]);
+  let shareResultId = $state(null);
+  let shareCopied = $state(false);
   let guessVal    = $state('');
   let guessDisabled = $state(true);
   let gameMode    = $state('classic');
@@ -103,6 +107,21 @@
   let chatEl       = null;
 
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  async function shareResult() {
+    if (!shareResultId) return;
+    const url = `${location.origin}/results/${shareResultId}`;
+    const me = gameoverScores.find(p => p.name === USERNAME);
+    const text = me ? `J'ai marqué ${me.score} pts au blind test "${roomLabel}" sur ZIK ! Tu fais mieux ?` : 'Défie-moi au blind test sur ZIK !';
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Mon score ZIK', text, url }); return; } catch { /* annulé */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      shareCopied = true;
+      setTimeout(() => { shareCopied = false; }, 2500);
+    } catch { /* clipboard indisponible */ }
+  }
 
   function savedVol() { return browser ? parseInt(localStorage.getItem('zik_vol') ?? '50') : 50; }
   function setVol(v) {
@@ -407,7 +426,7 @@
       ps.forEach(p => { _prevScores[p.name] = p.score; });
     });
     socket.on('init_history', h => { history = Array.isArray(h) ? [...h].reverse() : []; });
-    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; });
+    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; shareResultId = null; shareCopied = false; });
     socket.on('round_loading', () => {
       clearTimeout(_roundLoadingTimer);
       _roundLoadingTimer = setTimeout(() => { roundLoading = true; }, 1500);
@@ -533,6 +552,10 @@
       _revealTimers.push(setTimeout(() => { revealStep = 2; }, 2100));
       _revealTimers.push(setTimeout(() => { revealStep = 3; launchConfetti(); }, 3900));
     });
+    socket.on('achievements_unlocked', list => {
+      if (Array.isArray(list)) achToasts = [...achToasts, ...list];
+    });
+    socket.on('game_result_id', id => { shareResultId = id; });
     socket.on('server_error', msg => {
       errorMsg = msg;
       setTimeout(() => { errorMsg = ''; }, 4000);
@@ -931,6 +954,11 @@
       {/if}
 
       <div class="g-go-actions">
+        {#if shareResultId}
+          <button class="g-go-share" onclick={shareResult}>
+            {shareCopied ? '✅ Lien copié !' : '📤 Partager mon score'}
+          </button>
+        {/if}
         {#if !hasOwner || autoStart || isAdmin}
           <button class="g-start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
         {:else}
@@ -991,5 +1019,26 @@
   <div aria-hidden="true" style="position:fixed;inset:0;z-index:98" onclick={() => { openMenuFor = null; }}></div>
 {/if}
 
+<!-- Toast succès débloqués -->
+<AchievementToast items={achToasts} onConsume={() => { achToasts = achToasts.slice(1); }} />
+
 <!-- Hidden YouTube player -->
 <div id="yt-player" style="position:fixed;bottom:-1px;left:-1px;width:1px;height:1px;overflow:hidden;pointer-events:none"></div>
+
+<style>
+.g-go-share {
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  color: #c4b5fd;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.g-go-share:hover {
+  background: rgba(124, 58, 237, 0.3);
+  transform: translateY(-1px);
+}
+</style>
