@@ -2,6 +2,7 @@
   import { onMount, getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
   import ProfileStats from '$lib/components/ProfileStats.svelte';
+  import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -192,6 +193,7 @@
   </div>
 
   {#if profile}
+    <AchievementsPanel {sb} userId={user.id} />
     <ProfileStats {profile} {stats} />
   {/if}
 {/if}
