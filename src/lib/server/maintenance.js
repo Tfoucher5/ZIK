@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { supabase, getAdminClient } from "./config.js";
 
 // Fail-open : si la table site_settings n'existe pas encore ou si la requête
@@ -5,6 +6,43 @@ import { supabase, getAdminClient } from "./config.js";
 
 let _cache = { value: null, at: 0 };
 const TTL = 15_000;
+
+// ─── Bypass super_admin ───────────────────────────────────────────────────────
+// L'auth est côté client (pas de session serveur), donc le hook ne peut pas
+// identifier l'admin. À la place, le layout admin pose un cookie signé HMAC
+// via /api/admin/maintenance-bypass : le hook laisse passer ce cookie.
+
+export const BYPASS_COOKIE = "zik_maint_bypass";
+const BYPASS_TTL_MS = 12 * 60 * 60 * 1000;
+
+function bypassSecret() {
+  return (
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || "zik"
+  );
+}
+
+function sign(exp) {
+  return crypto
+    .createHmac("sha256", bypassSecret())
+    .update(`maint:${exp}`)
+    .digest("hex")
+    .slice(0, 32);
+}
+
+export function makeBypassToken() {
+  const exp = Date.now() + BYPASS_TTL_MS;
+  return `${exp}.${sign(exp)}`;
+}
+
+export function isValidBypassToken(token) {
+  if (!token) return false;
+  const [expStr, sig] = String(token).split(".");
+  const exp = Number(expStr);
+  if (!exp || exp < Date.now() || !sig) return false;
+  const expected = sign(exp);
+  if (sig.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+}
 
 export async function getMaintenance() {
   if (Date.now() - _cache.at < TTL) return _cache.value;
