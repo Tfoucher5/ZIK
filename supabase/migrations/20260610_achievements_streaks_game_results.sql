@@ -79,6 +79,7 @@ ON CONFLICT (id) DO NOTHING;
 CREATE OR REPLACE FUNCTION public.update_player_streaks(p_user_id uuid, p_won boolean)
 RETURNS TABLE(current_streak int, best_streak int, win_streak int, best_win_streak int)
 LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
 AS $function$
 #variable_conflict use_column
 DECLARE
