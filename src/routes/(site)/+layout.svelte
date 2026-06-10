@@ -157,6 +157,7 @@
         <a href="/classements">Classements</a>
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Documentation</a>
+        <a href="/nouveautes">Nouveautés</a>
       </div>
     </div>
 
