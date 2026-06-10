@@ -1,11 +1,18 @@
-import { getMaintenance, maintenanceHtml } from "$lib/server/maintenance.js";
+import {
+  getMaintenance,
+  maintenanceHtml,
+  isValidBypassToken,
+  BYPASS_COOKIE,
+} from "$lib/server/maintenance.js";
 
 const MAINTENANCE_EXEMPT = ["/admin", "/api/admin"];
 
 export async function handle({ event, resolve }) {
   const path = event.url.pathname;
 
-  const exempt = MAINTENANCE_EXEMPT.some((p) => path.startsWith(p));
+  const exempt =
+    MAINTENANCE_EXEMPT.some((p) => path.startsWith(p)) ||
+    isValidBypassToken(event.cookies.get(BYPASS_COOKIE));
   if (!exempt) {
     const maintenance = await getMaintenance();
     if (maintenance?.enabled) {

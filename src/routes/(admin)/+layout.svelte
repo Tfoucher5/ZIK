@@ -28,6 +28,10 @@
     adminUsername = profile.username || session.user.email;
     adminToken = session.access_token;
     ready = true;
+
+    // Cookie de bypass : le super_admin peut naviguer tout le site
+    // même quand le mode maintenance est actif
+    fetch(`/api/admin/maintenance-bypass?token=${encodeURIComponent(adminToken)}`).catch(() => {});
   });
 </script>
 
