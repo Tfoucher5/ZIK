@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { dicebear } from '$lib/utils.js';
   import ProfileStats from '$lib/components/ProfileStats.svelte';
+  import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -160,6 +161,9 @@
     </div>
   </div>
 
+  {#if !profile.is_private || isOwnProfile}
+    <AchievementsPanel {sb} userId={profile.id} />
+  {/if}
   <ProfileStats {profile} {stats} />
 {/if}
 </div>
