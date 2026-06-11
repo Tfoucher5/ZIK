@@ -3,6 +3,17 @@
 
 export const NEWS = [
   {
+    date: "2026-06-11",
+    version: "2.7.0",
+    tag: "Nouveauté",
+    title: "Profil repensé : onglets, stats par mode et Early Adopter",
+    items: [
+      "Le profil est maintenant organisé en onglets : 📊 Statistiques et 🏅 Succès.",
+      "Les statistiques séparent enfin le mode Classique et le mode QCM : plus de scores mélangés !",
+      "Le succès 🌟 Early Adopter est attribué automatiquement à tous les comptes créés avant le 1er juin 2026. Merci les précurseurs !",
+    ],
+  },
+  {
     date: "2026-06-10",
     version: "2.6.0",
     tag: "Nouveauté",
