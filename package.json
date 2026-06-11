@@ -17,11 +17,11 @@
     "dotenv": "^17.4.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^8.0.5",
-    "resend": "^6.12.2",
+    "resend": "^6.12.4",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.8.3",
     "string-similarity": "^4.0.4",
-    "svelte": "^5.53.7",
+    "svelte": "^5.56.3",
     "youtube-sr": "^4.3.12"
   },
   "devDependencies": {
