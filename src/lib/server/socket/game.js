@@ -852,6 +852,7 @@ async function startAutoCountdown(roomId, io) {
           .insert({
             room_id: roomId,
             rounds: room.game.maxRounds,
+            mode: room.game_mode === "qcm" ? "qcm" : "classic",
           })
           .select()
           .single();
@@ -1124,6 +1125,7 @@ export function register(io) {
           .insert({
             room_id: roomId,
             rounds: room.game.maxRounds,
+            mode: room.game_mode === "qcm" ? "qcm" : "classic",
           })
           .select()
           .single();
