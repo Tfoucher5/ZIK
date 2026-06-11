@@ -32,6 +32,9 @@ function tierRank(level) {
   return { bronze: 1, silver: 2, gold: 3 }[level] || 0;
 }
 
+// Comptes créés avant le 1er juin 2026 (heure de Paris) = précurseurs
+const EARLY_ADOPTER_CUTOFF = Date.parse("2026-06-01T00:00:00+02:00");
+
 /**
  * Met à jour les streaks puis vérifie les succès d'un joueur en fin de partie.
  * gameData: { score, rank, totalPlayers, correctRounds, totalRounds }
@@ -54,7 +57,7 @@ export async function checkAchievements(userId, gameData) {
       await Promise.all([
         supabase
           .from("profiles")
-          .select("total_score, games_played")
+          .select("total_score, games_played, created_at")
           .eq("id", userId)
           .single(),
         supabase
@@ -92,14 +95,24 @@ export async function checkAchievements(userId, gameData) {
           : 0,
       score_total: profile.total_score ?? 0,
       games_played: profile.games_played ?? 0,
+      early_adopter:
+        profile.created_at &&
+        Date.parse(profile.created_at) < EARLY_ADOPTER_CUTOFF
+          ? 1
+          : 0,
     };
 
-    const ONE_TIME_TARGETS = { first_win: 1, big_game: 40, perfect_game: 1 };
+    const ONE_TIME_TARGETS = {
+      first_win: 1,
+      big_game: 40,
+      perfect_game: 1,
+      early_adopter: 1,
+    };
 
     const unlocks = [];
     for (const def of defs) {
       const value = values[def.id];
-      if (value === undefined) continue; // ex: early_adopter (manuel)
+      if (value === undefined) continue; // succès inconnu du code (ajouté en BDD sans logique)
 
       if (def.type === "one_time") {
         const target = ONE_TIME_TARGETS[def.id] ?? 1;
