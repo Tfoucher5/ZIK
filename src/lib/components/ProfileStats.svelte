@@ -55,19 +55,26 @@
     return { points: polyline, fill, labels: games.map(g => fmtDate(g.endedAt)), minS, midS, maxS, yMin, yMid, yMax, ox, tw, H };
   }
 
-  const recent  = $derived(stats?.recentGames ?? []);
+  // Switcher mode classique / QCM
+  let mode = $state('classic');
+  const isQcm = $derived(mode === 'qcm');
+  const m = $derived(isQcm ? stats?.qcm : stats);
+
+  const recent  = $derived(m?.recentGames ?? []);
   const curve   = $derived(buildCurve(recent));
   const history = $derived(recent.slice(0, 6));
 
   const avgScore = $derived(
-    profile.games_played > 0 ? Math.round(profile.total_score / profile.games_played) : 0
+    isQcm
+      ? (m?.winRate?.total > 0 ? Math.round((m.totalScore ?? 0) / m.winRate.total) : 0)
+      : (profile.games_played > 0 ? Math.round(profile.total_score / profile.games_played) : 0)
   );
 
   const xpMin = $derived(xpForLevel(profile.level));
   const xpMax = $derived(xpForNextLevel(profile.level));
   const xpPct = $derived(Math.min(100, Math.round(((profile.xp - xpMin) / (xpMax - xpMin)) * 100)));
 
-  const byType = $derived(stats?.scoreByRoomType ?? {
+  const byType = $derived(m?.scoreByRoomType ?? {
     official: { count: 0, totalScore: 0 },
     public:   { count: 0, totalScore: 0 },
     private:  { count: 0, totalScore: 0 },
@@ -78,13 +85,13 @@
   }
 
   const bestByRoom = $derived(
-    Object.entries(stats?.bestByRoom ?? {})
+    Object.entries(m?.bestByRoom ?? {})
       .sort((a, b) => b[1] - a[1])
-      .map(([code, score]) => ({ room: stats?.roomInfo?.[code], score }))
+      .map(([code, score]) => ({ room: m?.roomInfo?.[code], score }))
       .filter(e => e.room)
   );
 
-  const winRate = $derived(stats?.winRate ?? { wins: 0, total: 0 });
+  const winRate = $derived(m?.winRate ?? { wins: 0, total: 0 });
   const wrPct   = $derived(
     winRate.total > 0 ? Math.round((winRate.wins / winRate.total) * 100) : 0
   );
@@ -98,33 +105,59 @@
 </script>
 
 <div class="profile-grid-wrap">
+  <div class="pf-mode-switch" role="tablist" aria-label="Mode de jeu">
+    <button
+      class="pf-mode-btn"
+      class:active={!isQcm}
+      role="tab"
+      aria-selected={!isQcm}
+      onclick={() => mode = 'classic'}
+    >🎤 Classique</button>
+    <button
+      class="pf-mode-btn"
+      class:active={isQcm}
+      role="tab"
+      aria-selected={isQcm}
+      onclick={() => mode = 'qcm'}
+    >🎨 QCM</button>
+  </div>
+
   <div class="profile-grid">
 
     <!-- Rangée 1 : 4 stats -->
-    <div class="pf-card pf-col-3">
-      <div class="pf-card-title">ELO</div>
-      <div class="pf-stat-val">{profile.elo ?? '—'}</div>
-      <div class="pf-stat-lbl">Classement</div>
-      {#if stats?.topPercent}
-        <div class="pf-stat-sub">Top {stats.topPercent}% des joueurs</div>
-      {/if}
-    </div>
+    {#if !isQcm}
+      <div class="pf-card pf-col-3">
+        <div class="pf-card-title">ELO</div>
+        <div class="pf-stat-val">{profile.elo ?? '—'}</div>
+        <div class="pf-stat-lbl">Classement</div>
+        {#if stats?.topPercent}
+          <div class="pf-stat-sub">Top {stats.topPercent}% des joueurs</div>
+        {/if}
+      </div>
+    {:else}
+      <div class="pf-card pf-col-3">
+        <div class="pf-card-title">Meilleur score</div>
+        <div class="pf-stat-val">{fmtScore(m?.bestScore ?? 0)}</div>
+        <div class="pf-stat-lbl">En une partie</div>
+        <div class="pf-stat-sub">Pas d'ELO en mode QCM</div>
+      </div>
+    {/if}
 
     <div class="pf-card pf-col-3">
       <div class="pf-card-title">Parties jou&eacute;es</div>
-      <div class="pf-stat-val">{winRate.total || profile.games_played || '—'}</div>
+      <div class="pf-stat-val">{winRate.total || (!isQcm && profile.games_played) || '—'}</div>
       <div class="pf-stat-lbl">Total</div>
-      {#if stats?.gamesThisMonth != null}
-        <div class="pf-stat-sub">{stats.gamesThisMonth} ce mois</div>
+      {#if m?.gamesThisMonth != null}
+        <div class="pf-stat-sub">{m.gamesThisMonth} ce mois</div>
       {/if}
     </div>
 
     <div class="pf-card pf-col-3">
       <div class="pf-card-title">Score total</div>
-      <div class="pf-stat-val">{fmtScore(profile.total_score ?? 0)}</div>
+      <div class="pf-stat-val">{fmtScore((isQcm ? m?.totalScore : profile.total_score) ?? 0)}</div>
       <div class="pf-stat-lbl">Tous temps</div>
       {#if avgScore > 0}
-        <div class="pf-stat-sub">moy. {avgScore} pts&nbsp;/&nbsp;partie</div>
+        <div class="pf-stat-sub">moy. {fmtScore(avgScore)} pts&nbsp;/&nbsp;partie</div>
       {/if}
     </div>
 
@@ -258,21 +291,21 @@
 
     <div class="pf-card pf-col-4">
       <div class="pf-card-title">Score moyen</div>
-      <div class="pf-stat-val" style="font-size:2.8rem">{avgScore || '—'}</div>
+      <div class="pf-stat-val" style="font-size:2.8rem">{avgScore ? fmtScore(avgScore) : '—'}</div>
       <div class="pf-stat-lbl">Points&nbsp;/&nbsp;partie</div>
-      {#if stats && stats.winRate?.total > 0}
+      {#if m && m.winRate?.total > 0}
         <div class="pf-mini-stats">
           <div class="pf-mini-stat">
-            <div class="pf-mini-val">{stats.bestScore}</div>
+            <div class="pf-mini-val">{fmtScore(m.bestScore)}</div>
             <div class="pf-mini-lbl">Meilleur</div>
           </div>
           <div class="pf-mini-stat">
-            <div class="pf-mini-val">{stats.worstScore}</div>
+            <div class="pf-mini-val">{fmtScore(m.worstScore)}</div>
             <div class="pf-mini-lbl">Pire</div>
           </div>
-          {#if stats.bestRank != null}
+          {#if m.bestRank != null}
             <div class="pf-mini-stat">
-              <div class="pf-mini-val">#{stats.bestRank}</div>
+              <div class="pf-mini-val">#{m.bestRank}</div>
               <div class="pf-mini-lbl">Meilleur rang</div>
             </div>
           {/if}
@@ -290,6 +323,34 @@
   margin: 0 auto;
   padding: 24px clamp(16px, 5vw, 60px) 60px;
 }
+
+/* -- Switcher mode -- */
+.pf-mode-switch {
+  display: inline-flex;
+  gap: 4px;
+  background: rgb(var(--c-glass) / 0.05);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.pf-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pf-mode-btn.active {
+  background: rgb(var(--accent-rgb) / 0.15);
+  color: var(--accent);
+}
+.pf-mode-btn:hover:not(.active) { color: var(--text); }
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);

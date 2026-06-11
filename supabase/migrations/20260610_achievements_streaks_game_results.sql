@@ -72,7 +72,7 @@ INSERT INTO public.achievements (id, name, description, icon, type, tiers, rarit
   ('perfect_game',  'Sans faute',        'Trouve artiste et titre sur toutes les manches d''une partie (5 manches minimum)', '🎯', 'one_time', NULL, 'rare', 'score'),
   ('score_total',   'Collectionneur',    'Cumule des points au total', '💰', 'tiered', '[{"level":"bronze","target":500,"rarity":"common"},{"level":"silver","target":2500,"rarity":"rare"},{"level":"gold","target":10000,"rarity":"epic"}]', 'common', 'score'),
   ('games_played',  'Vétéran',           'Joue des parties', '🎮', 'tiered', '[{"level":"bronze","target":10,"rarity":"common"},{"level":"silver","target":50,"rarity":"rare"},{"level":"gold","target":200,"rarity":"epic"}]', 'common', 'social'),
-  ('early_adopter', 'Early Adopter',     'Parmi les tout premiers joueurs de ZIK', '🌟', 'one_time', NULL, 'legendary', 'social')
+  ('early_adopter', 'Early Adopter',     'Compte créé avant le 1er juin 2026 — merci les précurseurs !', '🌟', 'one_time', NULL, 'legendary', 'social')
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. RPC streaks (atomique, fuseau Europe/Paris)
