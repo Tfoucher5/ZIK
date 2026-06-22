@@ -272,7 +272,7 @@ export async function loadPlaylist(roomId) {
       const { data: trackRows } = await supabase
         .from("custom_playlist_tracks")
         .select(
-          "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title",
+          "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name))",
         )
         .in("playlist_id", playlistIds)
         .order("position");
@@ -285,6 +285,13 @@ export async function loadPlaylist(roomId) {
             title: t.title,
             cover: t.cover_url,
             preview_url: t.preview_url,
+            custom_artist: t.custom_artist || null,
+            custom_title: t.custom_title || null,
+            custom_feats: t.custom_feats || null,
+            extraAnswers: (t.track_answers || []).map((a) => ({
+              label: a.answer_types?.name || "",
+              value: a.value,
+            })),
           }),
         ));
         playlistCache[roomId] = tracks;
