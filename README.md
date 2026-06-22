@@ -56,6 +56,9 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 - **Classement ELO** all-time
 - **Classement hebdomadaire**
 - Meilleurs scores par room sur le profil
+- **Succès** : 10 achievements à débloquer (bronze / argent / or) affichés sur le profil
+- **Séries de jeu** : jours consécutifs joués 🔥 et victoires d'affilée ⚡ avec records
+- **Score partageable** : lien public `/results/[id]` en fin de partie pour défier ses amis
 
 ### 👤 Profil & Auth
 
@@ -84,12 +87,14 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 - **Signalement bug** : contexte de room inclus automatiquement
 - **Interface admin** `/admin/reports` : protégée super_admin, filtres type/statut, actions et notes internes
 - **Notifications email** instantanées pour chaque nouveau report (Resend via Edge Function Supabase)
+- **Mode maintenance** : toggle + message personnalisé depuis le dashboard admin, page 503 pour les visiteurs (`/admin` reste accessible)
 
 ### 📖 Documentation
 
 - Page `/docs` complète avec 10 sections détaillées (gameplay, points, Mode Salon, playlists, FAQ…)
 - Sidebar sticky avec navigation et highlight de la section active
 - Indexée SEO — accessible depuis les moteurs de recherche
+- Page `/nouveautes` : mur d'actualité chronologique des mises à jour du site
 
 ---
 
@@ -131,6 +136,8 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 │       ├── +page.svelte       # Accueil (rooms + classements)
 │       ├── game/              # Interface de jeu temps réel
 │       ├── docs/              # Documentation en ligne (/docs)
+│       ├── nouveautes/        # Mur d'actualité des mises à jour
+│       ├── results/[id]/      # Carte de score partageable (publique)
 │       ├── salon/             # Mode Salon (setup + hôte + joueur)
 │       │   ├── host/          # Écran hôte (TV/ordi) — HostCenter, PlayerSidebar
 │       │   └── play/          # Interface joueur (téléphone) — JoinForm, RoundPlay, SummaryView…
@@ -150,6 +157,16 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 ---
 
 ## 📋 Changelog
+
+### v2.6.0 — Succès, séries, scores partageables & maintenance
+
+- **Succès** : 10 achievements (one-time et bronze/argent/or) stockés en base (`achievements`, `user_achievements`), vérifiés côté serveur en fin de partie, toast de déblocage en jeu, grille filtrable sur le profil (perso et public)
+- **Séries de jeu** : jours consécutifs joués et victoires d'affilée (+ records), calcul atomique via RPC `update_player_streaks` (fuseau Europe/Paris), affichées en haut du profil
+- **Score partageable** : chaque fin de partie classique génère un lien public `/results/[id]` (carte score + succès débloqués + CTA), bouton "Partager mon score" sur l'écran de fin (Web Share API ou copie du lien)
+- **Page `/nouveautes`** : mur d'actualité chronologique des mises à jour, lien footer + sitemap
+- **Mode maintenance** : toggle + message depuis le dashboard admin (table `site_settings`), page 503 stylée pour les visiteurs, `/admin` et `/api/admin` exemptés, fail-open si la table est absente
+- **Chat en jeu** : fenêtre déplaçable (drag sur l'en-tête) et redimensionnable (bord gauche) sur desktop, position/largeur mémorisées
+- Migration SQL : `supabase/migrations/20260610_achievements_streaks_game_results.sql` + `20260610_site_settings.sql`
 
 ### v2.0.4 — Enrichissement multi-sources & correctifs
 
@@ -330,6 +347,15 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 - [x] Architecture CSS v2.0 — styles scoped par composant, finis les CSS par page
 - [x] Boutons retour sur toutes les pages secondaires
 - [x] Corrections mobile (rejoindre par code, hero overflow, profil hero)
+
+### ✅ v2.6.0 — Rétention & Growth
+
+- [x] Succès (achievements) avec tiers bronze/argent/or et toast de déblocage
+- [x] Séries de jeu (jours consécutifs + victoires d'affilée) sur le profil
+- [x] Carte de score partageable (`/results/[id]`) + bouton Partager en fin de partie
+- [x] Page Nouveautés (`/nouveautes`) — mur d'actualité
+- [x] Mode maintenance togglable depuis l'admin
+- [x] Chat en jeu déplaçable et redimensionnable
 
 ---
 

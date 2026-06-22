@@ -1,4 +1,31 @@
+import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
+import { getMaintenance, setMaintenance } from "$lib/server/maintenance.js";
+import { requireAdmin, logAdminAction } from "$lib/server/middleware/auth.js";
+
+export const actions = {
+  maintenance: async ({ request }) => {
+    const { adminUser, formData } = await requireAdmin(request);
+    const enabled = formData.get("enabled") === "on";
+    const message = String(formData.get("message") || "").slice(0, 500);
+    try {
+      await setMaintenance(enabled, message);
+    } catch {
+      return fail(500, {
+        maintenanceError:
+          "Sauvegarde impossible — la table site_settings existe-t-elle ? (migration 20260610_site_settings.sql)",
+      });
+    }
+    await logAdminAction(
+      adminUser.id,
+      enabled ? "maintenance_on" : "maintenance_off",
+      null,
+      "site",
+      { message },
+    );
+    return { maintenanceSaved: true };
+  },
+};
 
 export async function load() {
   const sb = getAdminClient();
@@ -53,7 +80,10 @@ export async function load() {
   const s = uptimeSeconds % 60;
   const uptime = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 
+  const maintenance = await getMaintenance();
+
   return {
+    maintenance,
     stats: {
       totalUsers,
       gamesToday,

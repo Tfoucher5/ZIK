@@ -17,6 +17,7 @@ import {
   buildTrack,
   calcSpeedBonus,
 } from "../services/playlist.js";
+import { checkAchievements, saveGameResult } from "../services/achievements.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { ytdlAudioCache } from "../ytdlCache.js";
@@ -70,7 +71,6 @@ function calcQcmPoints(timeTaken, roundDuration) {
   );
   return Math.round(MAX_PTS - (MAX_PTS - MIN_PTS) * ratio);
 }
-
 
 const DEFAULT_ROUND_DURATION = 30;
 const DEFAULT_BREAK_DURATION = 7;
@@ -200,6 +200,7 @@ function resetRoundFlags(room) {
 function resetScores(room, io) {
   Object.keys(room.players).forEach((n) => {
     room.players[n].score = 0;
+    room.players[n].roundsFullFound = 0;
   });
   io.to(`room:${room.roomId}`).emit(
     "update_players",
@@ -456,7 +457,7 @@ async function startNextRound(roomId, io) {
       .sort((a, b) => b.score - a.score)
       .map(sanitizePlayer);
     io.to(`room:${roomId}`).emit("game_over", finalScores);
-    await saveGameResults(roomId, finalScores);
+    await saveGameResults(roomId, finalScores, io);
     return;
   }
 
@@ -602,7 +603,7 @@ async function startNextRound(roomId, io) {
   }
 }
 
-async function saveGameResults(roomId, finalScores) {
+async function saveGameResults(roomId, finalScores, io) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
   if (!dbGameId) return;
@@ -684,6 +685,39 @@ async function saveGameResults(roomId, finalScores) {
             p_total_players: finalScores.length,
             p_elo_change: eloChanges[p.userId] ?? 0,
           });
+        }
+      }
+
+      const roomMeta = dbRooms[roomId] || customRooms[roomId] || {};
+      const totalRounds = room.game.currentRound;
+      for (let i = 0; i < finalScores.length; i++) {
+        const p = finalScores[i];
+        if (!p.userId || p.isGuest) continue;
+        const unlocks = await checkAchievements(p.userId, {
+          score: p.score,
+          rank: i + 1,
+          totalPlayers: finalScores.length,
+          correctRounds: room.players[p.name]?.roundsFullFound || 0,
+          totalRounds,
+        });
+        const resultId = await saveGameResult({
+          gameId: dbGameId,
+          userId: p.userId,
+          username: p.name,
+          score: p.score,
+          rank: i + 1,
+          totalPlayers: finalScores.length,
+          roomName: roomMeta.name || roomId,
+          roomEmoji: roomMeta.emoji || null,
+          achievementIds: unlocks.map((u) =>
+            u.tier ? `${u.id}:${u.tier}` : u.id,
+          ),
+        });
+        const sockId = room.nameToSocket[p.name];
+        if (sockId) {
+          if (unlocks.length)
+            io.to(sockId).emit("achievements_unlocked", unlocks);
+          if (resultId) io.to(sockId).emit("game_result_id", resultId);
         }
       }
     }
@@ -818,6 +852,7 @@ async function startAutoCountdown(roomId, io) {
           .insert({
             room_id: roomId,
             rounds: room.game.maxRounds,
+            mode: room.game_mode === "qcm" ? "qcm" : "classic",
           })
           .select()
           .single();
@@ -853,7 +888,12 @@ function leaveRoom(socket, roomId, io) {
         if (wasInGame && dbGameId && playerSnapshot.score > 0) {
           const currentRoom = roomGames[roomId];
           if (!currentRoom?.game._ended) {
-            saveMidGamePlayer(dbGameId, playerSnapshot, gameMode, totalPlayers).catch(() => {});
+            saveMidGamePlayer(
+              dbGameId,
+              playerSnapshot,
+              gameMode,
+              totalPlayers,
+            ).catch(() => {});
           }
         }
 
@@ -1085,6 +1125,7 @@ export function register(io) {
           .insert({
             room_id: roomId,
             rounds: room.game.maxRounds,
+            mode: room.game_mode === "qcm" ? "qcm" : "classic",
           })
           .select()
           .single();
@@ -1221,6 +1262,7 @@ export function register(io) {
         (track.extraAnswers || []).every((_, i) => user.foundExtras[i]);
       if (allMainFound && !user._fullFoundCounted) {
         user._fullFoundCounted = true;
+        user.roundsFullFound = (user.roundsFullFound || 0) + 1;
         if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
         room.game.totalFullFound++;
         socket.emit("reveal_cover", { cover: room.game.currentTrack.cover });

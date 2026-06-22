@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { dicebear } from '$lib/utils.js';
   import ProfileStats from '$lib/components/ProfileStats.svelte';
+  import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -14,6 +15,7 @@
   let stats      = $state(null);
   let loading    = $state(true);
   let notFound   = $state(false);
+  let activeTab  = $state('stats');
 
   const username     = $derived($page.params.username);
   const avatar       = $derived(profile?.avatar_url || dicebear(profile?.username || '?'));
@@ -160,7 +162,15 @@
     </div>
   </div>
 
-  <ProfileStats {profile} {stats} />
+  <div class="profile-tabs" role="tablist" aria-label="Sections du profil">
+    <button class="profile-tab" class:active={activeTab === 'stats'} role="tab" aria-selected={activeTab === 'stats'} onclick={() => activeTab = 'stats'}>📊 Statistiques</button>
+    <button class="profile-tab" class:active={activeTab === 'succes'} role="tab" aria-selected={activeTab === 'succes'} onclick={() => activeTab = 'succes'}>🏅 Succès</button>
+  </div>
+  {#if activeTab === 'stats'}
+    <ProfileStats {profile} {stats} />
+  {:else}
+    <AchievementsPanel {sb} userId={profile.id} />
+  {/if}
 {/if}
 </div>
 
@@ -266,6 +276,33 @@
   margin-top: 3px;
 }
 .profile-back-row { padding: 14px clamp(16px, 5vw, 60px) 0; }
+
+/* -- Onglets profil -- */
+.profile-tabs {
+  display: flex;
+  gap: 8px;
+  max-width: 980px;
+  margin: 20px auto 0;
+  padding: 0 clamp(16px, 5vw, 60px);
+  border-bottom: 1px solid var(--border);
+}
+.profile-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.profile-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.profile-tab:hover:not(.active) { color: var(--text); }
 .profile-xp-row { margin-top: 12px; max-width: 300px; display: flex; flex-direction: column; gap: 5px; }
 .profile-xp-level { font-size: 0.75rem; font-weight: 700; color: var(--text); }
 .profile-xp-caption { font-size: 0.68rem; color: var(--dim); }
