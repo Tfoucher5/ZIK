@@ -314,7 +314,9 @@
   }
 
   async function loadEditorTracks() {
-    const { data, error } = await sb.from('custom_playlist_tracks').select('*').eq('playlist_id', editorPl.id).order('position');
+    const { data, error } = await sb.from('custom_playlist_tracks')
+      .select('*, track_answers(answer_type_id, value, answer_types(name))')
+      .eq('playlist_id', editorPl.id).order('position');
     if (error) { toast(error.message, 'error'); return; }
     editorTracks = data || [];
   }
