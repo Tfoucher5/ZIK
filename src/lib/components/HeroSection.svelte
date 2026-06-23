@@ -115,7 +115,8 @@
     .hero-title { letter-spacing: -1.5px; max-width: 100%; word-break: break-word; }
     .hero-actions { flex-direction: column; width: 100%; }
     .hero-actions :global(.btn-accent),
-    .hero-actions :global(.btn-ghost) { width: 100%; justify-content: center; }
+    .hero-actions :global(.btn-ghost),
+    .hero-actions :global(.btn-discord) { width: 100%; justify-content: center; }
   }
   @media (max-width: 380px) {
     .hero-title { letter-spacing: -1px; }
