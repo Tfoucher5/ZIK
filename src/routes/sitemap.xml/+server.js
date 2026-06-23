@@ -8,6 +8,7 @@ const STATIC_PAGES = [
   { loc: "/playlists", changefreq: "weekly", priority: "0.7" },
   { loc: "/salon", changefreq: "monthly", priority: "0.7" },
   { loc: "/docs", changefreq: "monthly", priority: "0.6" },
+  { loc: "/nouveautes", changefreq: "weekly", priority: "0.5" },
   { loc: "/vs/kahoot", changefreq: "monthly", priority: "0.6" },
   { loc: "/vs/blinest", changefreq: "monthly", priority: "0.6" },
   { loc: "/vs/blindtest-io", changefreq: "monthly", priority: "0.6" },

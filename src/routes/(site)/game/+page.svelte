@@ -3,6 +3,7 @@
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import ReportModal from '$lib/components/ReportModal.svelte';
+  import AchievementToast from '$lib/components/AchievementToast.svelte';
 
   // URL params — read once on mount
   let ROOM_ID  = 'pop';
@@ -36,6 +37,9 @@
   let _announceTimer = null;
   let gameoverShow = $state(false);
   let gameoverScores = $state([]);
+  let achToasts = $state([]);
+  let shareResultId = $state(null);
+  let shareCopied = $state(false);
   let guessVal    = $state('');
   let guessDisabled = $state(true);
   let gameMode    = $state('classic');
@@ -102,7 +106,96 @@
   let chatUnread   = $state(0);
   let chatEl       = null;
 
+  // Chat déplaçable / redimensionnable (desktop uniquement)
+  const CHAT_W_MIN = 260, CHAT_W_MAX = 560, CHAT_W_DEFAULT = 300;
+  let chatPos      = $state(null);   // { x, y } — null = position par défaut (ancré en bas à droite)
+  let chatW        = $state(CHAT_W_DEFAULT);
+  let isMobileView = $state(false);
+  let _chatDrag    = null;
+  let _chatResize  = null;
+
+  const chatStyle = $derived(
+    isMobileView ? '' :
+    chatPos ? `left:${chatPos.x}px;top:${chatPos.y}px;right:auto;bottom:auto;width:${chatW}px;` :
+    chatW !== CHAT_W_DEFAULT ? `width:${chatW}px;` : ''
+  );
+
+  function clampChatPos(p) {
+    const maxX = Math.max(0, window.innerWidth - 80);
+    const maxY = Math.max(0, window.innerHeight - 60);
+    return { x: Math.min(Math.max(0, p.x), maxX), y: Math.min(Math.max(0, p.y), maxY) };
+  }
+
+  function initChatPrefs() {
+    isMobileView = window.innerWidth <= 640;
+    try {
+      const w = parseInt(localStorage.getItem('zik_chat_w'));
+      if (w >= CHAT_W_MIN && w <= CHAT_W_MAX) chatW = w;
+      const p = JSON.parse(localStorage.getItem('zik_chat_pos') || 'null');
+      if (p && typeof p.x === 'number' && typeof p.y === 'number') chatPos = clampChatPos(p);
+    } catch { /* localStorage indisponible */ }
+  }
+
+  function saveChatPrefs() {
+    try {
+      localStorage.setItem('zik_chat_w', String(chatW));
+      if (chatPos) localStorage.setItem('zik_chat_pos', JSON.stringify(chatPos));
+    } catch { /* localStorage indisponible */ }
+  }
+
+  function chatDragStart(e) {
+    if (isMobileView || e.target.closest('.g-chat-close')) return;
+    const rect = e.currentTarget.parentElement.getBoundingClientRect();
+    _chatDrag = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+  function chatDragMove(e) {
+    if (!_chatDrag) return;
+    chatPos = clampChatPos({ x: e.clientX - _chatDrag.dx, y: e.clientY - _chatDrag.dy });
+  }
+  function chatDragEnd() {
+    if (!_chatDrag) return;
+    _chatDrag = null;
+    saveChatPrefs();
+  }
+
+  function chatResizeStart(e) {
+    if (isMobileView) return;
+    _chatResize = { startX: e.clientX, startW: chatW, startPosX: chatPos?.x ?? null };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+  function chatResizeMove(e) {
+    if (!_chatResize) return;
+    const dx = e.clientX - _chatResize.startX;
+    const w = Math.min(CHAT_W_MAX, Math.max(CHAT_W_MIN, _chatResize.startW - dx));
+    if (_chatResize.startPosX !== null) {
+      chatPos = { x: _chatResize.startPosX + (_chatResize.startW - w), y: chatPos.y };
+    }
+    chatW = w;
+  }
+  function chatResizeEnd() {
+    if (!_chatResize) return;
+    _chatResize = null;
+    saveChatPrefs();
+  }
+
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  async function shareResult() {
+    if (!shareResultId) return;
+    const url = `${location.origin}/results/${shareResultId}`;
+    const me = gameoverScores.find(p => p.name === USERNAME);
+    const text = me ? `J'ai marqué ${me.score} pts au blind test "${roomLabel}" sur ZIK ! Tu fais mieux ?` : 'Défie-moi au blind test sur ZIK !';
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Mon score ZIK', text, url }); return; } catch { /* annulé */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      shareCopied = true;
+      setTimeout(() => { shareCopied = false; }, 2500);
+    } catch { /* clipboard indisponible */ }
+  }
 
   function savedVol() { return browser ? parseInt(localStorage.getItem('zik_vol') ?? '50') : 50; }
   function setVol(v) {
@@ -354,6 +447,13 @@
     }
   }
 
+  onMount(() => {
+    initChatPrefs();
+    const onResize = () => { isMobileView = window.innerWidth <= 640; if (chatPos) chatPos = clampChatPos(chatPos); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  });
+
   onMount(async () => {
     lockMediaSession();
     const P  = new URLSearchParams(location.search);
@@ -407,7 +507,7 @@
       ps.forEach(p => { _prevScores[p.name] = p.score; });
     });
     socket.on('init_history', h => { history = Array.isArray(h) ? [...h].reverse() : []; });
-    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; });
+    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; shareResultId = null; shareCopied = false; });
     socket.on('round_loading', () => {
       clearTimeout(_roundLoadingTimer);
       _roundLoadingTimer = setTimeout(() => { roundLoading = true; }, 1500);
@@ -533,6 +633,10 @@
       _revealTimers.push(setTimeout(() => { revealStep = 2; }, 2100));
       _revealTimers.push(setTimeout(() => { revealStep = 3; launchConfetti(); }, 3900));
     });
+    socket.on('achievements_unlocked', list => {
+      if (Array.isArray(list)) achToasts = [...achToasts, ...list];
+    });
+    socket.on('game_result_id', id => { shareResultId = id; });
     socket.on('server_error', msg => {
       errorMsg = msg;
       setTimeout(() => { errorMsg = ''; }, 4000);
@@ -931,6 +1035,11 @@
       {/if}
 
       <div class="g-go-actions">
+        {#if shareResultId}
+          <button class="g-go-share" onclick={shareResult}>
+            {shareCopied ? '✅ Lien copié !' : '📤 Partager mon score'}
+          </button>
+        {/if}
         {#if !hasOwner || autoStart || isAdmin}
           <button class="g-start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
         {:else}
@@ -944,8 +1053,27 @@
 
 <!-- Chat -->
 {#if chatOpen}
-  <div class="g-chat-panel">
-    <div class="g-chat-head">
+  <div class="g-chat-panel" style={chatStyle}>
+    {#if !isMobileView}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="g-chat-resize"
+        title="Redimensionner"
+        onpointerdown={chatResizeStart}
+        onpointermove={chatResizeMove}
+        onpointerup={chatResizeEnd}
+        onpointercancel={chatResizeEnd}
+      ></div>
+    {/if}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="g-chat-head"
+      class:g-chat-head--draggable={!isMobileView}
+      onpointerdown={chatDragStart}
+      onpointermove={chatDragMove}
+      onpointerup={chatDragEnd}
+      onpointercancel={chatDragEnd}
+    >
       <span>&#x1F4AC; Chat</span>
       <button class="g-chat-close" onclick={toggleChat}>&#x2715;</button>
     </div>
@@ -991,5 +1119,44 @@
   <div aria-hidden="true" style="position:fixed;inset:0;z-index:98" onclick={() => { openMenuFor = null; }}></div>
 {/if}
 
+<!-- Toast succès débloqués -->
+<AchievementToast items={achToasts} onConsume={() => { achToasts = achToasts.slice(1); }} />
+
 <!-- Hidden YouTube player -->
 <div id="yt-player" style="position:fixed;bottom:-1px;left:-1px;width:1px;height:1px;overflow:hidden;pointer-events:none"></div>
+
+<style>
+.g-go-share {
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  color: #c4b5fd;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.g-go-share:hover {
+  background: rgba(124, 58, 237, 0.3);
+  transform: translateY(-1px);
+}
+
+.g-chat-resize {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 1;
+}
+
+.g-chat-head--draggable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.g-chat-head--draggable:active { cursor: grabbing; }
+</style>
