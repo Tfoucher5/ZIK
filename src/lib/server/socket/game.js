@@ -607,7 +607,6 @@ async function saveGameResults(roomId, finalScores, io) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
   if (!dbGameId) return;
-  room.game._ended = true; // bloquer saveMidGamePlayer pour éviter double-entrée
 
   try {
     await supabase
@@ -626,6 +625,11 @@ async function saveGameResults(roomId, finalScores, io) {
     await supabase.from("game_players").insert(players);
 
     const room = getOrCreateRoom(roomId);
+    // Marquer chaque joueur sauvegardé — _dcTimer vérifie ce flag pour éviter double-save
+    room.game._ended = true;
+    finalScores.forEach((p) => {
+      if (room.players[p.name]) room.players[p.name]._savedToDb = true;
+    });
     const eloEligible =
       !!dbRooms[roomId]?.is_public &&
       finalScores.length >= 3 &&
@@ -884,10 +888,10 @@ function leaveRoom(socket, roomId, io) {
       const totalPlayers = Object.keys(room.players).length;
 
       room.players[name]._dcTimer = setTimeout(() => {
-        // Sauvegarder si la partie était en cours (manche active ou break) et pas terminée normalement
+        // Sauvegarder si la partie était en cours et que saveGameResults n'a pas déjà persisté ce joueur
         if (wasInGame && dbGameId && playerSnapshot.score > 0) {
           const currentRoom = roomGames[roomId];
-          if (!currentRoom?.game._ended) {
+          if (!currentRoom?.players[name]?._savedToDb) {
             saveMidGamePlayer(
               dbGameId,
               playerSnapshot,
