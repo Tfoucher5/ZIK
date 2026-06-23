@@ -47,6 +47,13 @@ export async function POST({ request }) {
           title: String(t.title || "").trim(),
           cover: t.cover_url,
           preview_url: t.preview_url,
+          custom_artist: t.custom_artist || null,
+          custom_title: t.custom_title || null,
+          custom_feats: t.custom_feats || null,
+          extraAnswers: (t.track_answers || []).map((a) => ({
+            label: a.answer_types?.name || "",
+            value: a.value,
+          })),
         }),
       )
       .filter((t) => t.artist && t.title),
