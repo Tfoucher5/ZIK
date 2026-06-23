@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
+import { getAdminClient } from "$lib/server/config.js";
 import { parseFeaturing } from "$lib/server/services/playlist.js";
 import { playlistCache, dbRooms } from "$lib/server/state.js";
 
@@ -64,7 +65,9 @@ export async function PUT({ params, request }) {
       ? custom_feats.map((f) => String(f).trim()).filter(Boolean)
       : null;
 
-  const { error } = await uSupa
+  const admin = getAdminClient();
+
+  const { error } = await admin
     .from("custom_playlist_tracks")
     .update({
       custom_artist: custom_artist?.trim() || null,
@@ -76,7 +79,7 @@ export async function PUT({ params, request }) {
   if (error) return json({ error: error.message }, { status: 400 });
 
   // Remplacer les réponses supplémentaires (Film, Série, etc.)
-  await uSupa.from("track_answers").delete().eq("track_id", params.trackId);
+  await admin.from("track_answers").delete().eq("track_id", params.trackId);
   if (Array.isArray(extra_answers) && extra_answers.length) {
     const rows = extra_answers
       .filter((a) => a.type_id && a.value?.trim())
@@ -85,7 +88,7 @@ export async function PUT({ params, request }) {
         answer_type_id: Number(a.type_id),
         value: String(a.value).trim(),
       }));
-    if (rows.length) await uSupa.from("track_answers").insert(rows);
+    if (rows.length) await admin.from("track_answers").insert(rows);
   }
 
   // Invalider le cache des rooms qui utilisent cette playlist
