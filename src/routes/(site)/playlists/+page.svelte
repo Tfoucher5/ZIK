@@ -904,9 +904,9 @@
 
     <div class="answer-field">
       <label class="answer-label">Featuring</label>
-      {#each customFeats as _, i}
+      {#each customFeats as feat, i}
         <div class="answer-row">
-          <input type="text" bind:value={customFeats[i]} class="answer-value-input" placeholder="Nom du feat…" maxlength="100">
+          <input type="text" value={feat} oninput={(e) => { customFeats[i] = e.currentTarget.value; }} class="answer-value-input" placeholder="Nom du feat…" maxlength="100">
           <button class="track-remove-btn" onclick={() => removeCustomFeat(i)}>&#x2715;</button>
         </div>
       {/each}
@@ -920,14 +920,14 @@
 
     <div class="answer-field">
       <label class="answer-label">Réponses supplémentaires (Film, Série…)</label>
-      {#each extraAnswers as _, i}
+      {#each extraAnswers as ans, i}
         <div class="answer-row">
-          <select bind:value={extraAnswers[i].typeId} class="answer-type-select">
+          <select value={ans.typeId} onchange={(e) => { extraAnswers[i] = { ...extraAnswers[i], typeId: Number(e.currentTarget.value) }; }} class="answer-type-select">
             {#each EXTRA_ANSWER_TYPES as t}
               <option value={t.id}>{t.name}</option>
             {/each}
           </select>
-          <input type="text" bind:value={extraAnswers[i].value} class="answer-value-input" placeholder="Ex : Le Roi Lion" maxlength="150">
+          <input type="text" value={ans.value} oninput={(e) => { extraAnswers[i] = { ...extraAnswers[i], value: e.currentTarget.value }; }} class="answer-value-input" placeholder="Ex : Le Roi Lion" maxlength="150">
           <button class="track-remove-btn" onclick={() => { extraAnswers = extraAnswers.filter((_, idx) => idx !== i); }}>&#x2715;</button>
         </div>
       {/each}
