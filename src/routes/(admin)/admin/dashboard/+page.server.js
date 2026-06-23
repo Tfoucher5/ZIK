@@ -5,9 +5,6 @@ export async function load() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const sevenDaysAgo = new Date(
-    Date.now() - 7 * 24 * 60 * 60 * 1000,
-  ).toISOString();
 
   const results = await Promise.allSettled([
     sb.from("profiles").select("*", { count: "exact", head: true }),
@@ -27,14 +24,7 @@ export async function load() {
       .from("custom_playlists")
       .select("*", { count: "exact", head: true })
       .eq("is_official", true),
-    sb
-      .from("game_players")
-      .select("user_id, games!inner(started_at)", {
-        count: "exact",
-        head: true,
-      })
-      .gte("games.started_at", sevenDaysAgo)
-      .not("user_id", "is", null),
+    sb.rpc("count_active_players_7d"),
   ]);
 
   const getCount = (r) => (r.status === "fulfilled" ? (r.value.count ?? 0) : 0);
@@ -44,8 +34,27 @@ export async function load() {
     publicRooms,
     pendingReports,
     officialPlaylists,
-    activeUsers7d,
-  ] = results.map(getCount);
+    rpcActiveUsers7d,
+  ] = results;
+
+  const activeUsers7d =
+    rpcActiveUsers7d.status === "fulfilled"
+      ? (rpcActiveUsers7d.value.data ?? 0)
+      : 0;
+
+  const [
+    totalUsersVal,
+    gamesTodayVal,
+    publicRoomsVal,
+    pendingReportsVal,
+    officialPlaylistsVal,
+  ] = [
+    totalUsers,
+    gamesToday,
+    publicRooms,
+    pendingReports,
+    officialPlaylists,
+  ].map(getCount);
 
   const uptimeSeconds = Math.floor(process.uptime());
   const h = Math.floor(uptimeSeconds / 3600);
@@ -55,11 +64,11 @@ export async function load() {
 
   return {
     stats: {
-      totalUsers,
-      gamesToday,
-      publicRooms,
-      pendingReports,
-      officialPlaylists,
+      totalUsers: totalUsersVal,
+      gamesToday: gamesTodayVal,
+      publicRooms: publicRoomsVal,
+      pendingReports: pendingReportsVal,
+      officialPlaylists: officialPlaylistsVal,
       activeUsers7d,
       uptime,
     },
