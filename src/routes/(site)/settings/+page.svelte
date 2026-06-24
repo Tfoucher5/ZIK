@@ -26,10 +26,14 @@
       const { data: { identities } } = await sb.auth.getUserIdentities();
       if (identities.length <= 1) {
         toast('Impossible de délier : c\'est ta seule méthode de connexion.', 'error');
+        discordLoading = false;
         return;
       }
       const discordIdentity = identities.find(i => i.provider === 'discord');
-      if (!discordIdentity) return;
+      if (!discordIdentity) {
+        discordLoading = false;
+        return;
+      }
       const { error } = await sb.auth.unlinkIdentity(discordIdentity);
       if (error) throw error;
       const { data: { session } } = await sb.auth.getSession();
