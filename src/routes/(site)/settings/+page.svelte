@@ -158,7 +158,19 @@
   $effect(() => {
     if (authReady && user && !_discordScrollDone) {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('discord') === 'link') {
+      const discordParam = params.get('discord');
+
+      if (discordParam === 'linked') {
+        _discordScrollDone = true;
+        // Vider le cache profil pour forcer un rechargement depuis la BDD
+        try { sessionStorage.removeItem('zik_profile_' + user.id); } catch {}
+        sb.from('profiles').select('*').eq('id', user.id).single().then(({ data: p }) => {
+          if (p) {
+            user.profile = p;
+          }
+        });
+        setTimeout(() => document.getElementById('discord-section')?.scrollIntoView({ behavior: 'smooth' }), 300);
+      } else if (discordParam === 'link') {
         _discordScrollDone = true;
         setTimeout(() => document.getElementById('discord-section')?.scrollIntoView({ behavior: 'smooth' }), 200);
       }
