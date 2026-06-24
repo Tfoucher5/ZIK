@@ -13,6 +13,7 @@
   let isPrivate  = $state(false);
   let privLoading = $state(false);
   let discordLoading = $state(false);
+  let _discordScrollDone = $state(false);
 
   async function linkDiscord() {
     if (!sb) return;
@@ -37,11 +38,13 @@
       const { error } = await sb.auth.unlinkIdentity(discordIdentity);
       if (error) throw error;
       const { data: { session } } = await sb.auth.getSession();
-      await fetch('/api/profile/update', {
+      const r = await fetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
         body: JSON.stringify({ discord_id: null, discord_username: null, discord_avatar: null }),
       });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
       if (user.profile) {
         user.profile.discord_id = null;
         user.profile.discord_username = null;
@@ -133,16 +136,22 @@
     activeTheme = localStorage.getItem('zik_theme') || 'dark';
     const el = document.getElementById('pref-volume');
     if (el) el.style.setProperty('--vol', volVal + '%');
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('discord') === 'link' && user) {
-      setTimeout(() => document.getElementById('discord-section')?.scrollIntoView({ behavior: 'smooth' }), 200);
-    }
   });
 
   // Load privacy setting from profile when user is available
   $effect(() => {
     if (user?.profile) {
       isPrivate = user.profile.is_private ?? false;
+    }
+  });
+
+  $effect(() => {
+    if (authReady && user && !_discordScrollDone) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('discord') === 'link') {
+        _discordScrollDone = true;
+        setTimeout(() => document.getElementById('discord-section')?.scrollIntoView({ behavior: 'smooth' }), 200);
+      }
     }
   });
 
