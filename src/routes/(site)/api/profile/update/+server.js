@@ -7,7 +7,14 @@ export async function POST({ request }) {
   const user = await verifyToken(token);
   if (!user) return json({ error: "Session invalide" }, { status: 401 });
 
-  const { username, avatar_url, is_private, discord_id, discord_username, discord_avatar } = await request.json();
+  const {
+    username,
+    avatar_url,
+    is_private,
+    discord_id,
+    discord_username,
+    discord_avatar,
+  } = await request.json();
   const updates = {};
   if (username !== undefined) {
     if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username))
@@ -17,7 +24,8 @@ export async function POST({ request }) {
   if (avatar_url !== undefined) updates.avatar_url = avatar_url || null;
   if (is_private !== undefined) updates.is_private = Boolean(is_private);
   if (discord_id !== undefined) updates.discord_id = discord_id;
-  if (discord_username !== undefined) updates.discord_username = discord_username;
+  if (discord_username !== undefined)
+    updates.discord_username = discord_username;
   if (discord_avatar !== undefined) updates.discord_avatar = discord_avatar;
   if (!Object.keys(updates).length)
     return json({ error: "Rien à mettre à jour" }, { status: 400 });
