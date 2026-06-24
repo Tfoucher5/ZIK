@@ -36,6 +36,7 @@ zik-discord-bot/
 ```
 
 **Dépendances principales :**
+
 - `discord.js` v14
 - `@discordjs/voice`
 - `@discordjs/opus` (codec audio)
@@ -47,6 +48,7 @@ zik-discord-bot/
 ### Variables d'environnement
 
 **Côté bot (`zik-discord-bot`) :**
+
 ```env
 DISCORD_TOKEN
 DISCORD_CLIENT_ID
@@ -57,6 +59,7 @@ ZIK_BASE_URL=https://www.zik-music.fr
 ```
 
 **Côté ZIK web (à ajouter dans Railway + `.env`) :**
+
 ```env
 DISCORD_CLIENT_ID
 DISCORD_CLIENT_SECRET
@@ -161,13 +164,14 @@ Discord est ajouté comme **provider OAuth natif Supabase** (exactement comme Go
 
 ```js
 // Connexion / inscription avec Discord
-await supabase.auth.signInWithOAuth({ provider: 'discord' })
+await supabase.auth.signInWithOAuth({ provider: "discord" });
 
 // Liaison d'un compte existant (depuis /settings, user déjà connecté)
-await supabase.auth.linkIdentity({ provider: 'discord' })
+await supabase.auth.linkIdentity({ provider: "discord" });
 ```
 
 **Section Discord dans `/settings` :**
+
 - Si non lié → bouton "Connecter mon Discord"
 - Si lié → affichage `discord_username`, avatar Discord miniature, bouton "Délier" (si au moins une autre méthode de connexion existe — on n'autorise pas à supprimer la seule méthode d'auth)
 
@@ -211,6 +215,7 @@ Si le compte Discord n'est pas lié à un compte ZIK → message d'erreur epheme
 **Embed avec pagination (3 pages via boutons Précédent/Suivant) :**
 
 **Page 1 — Général**
+
 ```
 ┌─────────────────────────────────────────┐
 │  [avatar ZIK]   🎵 Stats ZIK de Theo    │
@@ -229,12 +234,14 @@ Si le compte Discord n'est pas lié à un compte ZIK → message d'erreur epheme
 ```
 
 Couleur embed selon ELO :
+
 - `< 1100` → gris `#95a5a6`
 - `1100–1300` → bleu `#3498db`
 - `1300–1500` → violet `#7c3aed`
 - `> 1500` → or `#f1c40f`
 
 **Page 2 — Mode Classique**
+
 ```
 │  🎮 Mode Classique                      │
 │                                         │
@@ -243,9 +250,11 @@ Couleur embed selon ELO :
 │  Meilleur score   4 200                 │
 │  Top rang obtenu  🥇 1er                │
 ```
-*(données depuis game_players filtrées sur mode='classic')*
+
+_(données depuis game_players filtrées sur mode='classic')_
 
 **Page 3 — Mode QCM**
+
 ```
 │  ❓ Mode QCM                            │
 │                                         │
@@ -261,6 +270,7 @@ Couleur embed selon ELO :
 
 **Réponse :** publique  
 **Options :**
+
 - `room` (optionnel) : code de la room (ex: `RXKP2A`)
 - `mode` (optionnel) : `classique` | `qcm` | `discord`
 
@@ -269,6 +279,7 @@ Couleur embed selon ELO :
 **Avec `mode`** → filtre les parties selon le mode (nécessite que `weekly_leaderboard` supporte un paramètre mode, à ajouter)
 
 **Embed :**
+
 ```
 ┌─────────────────────────────────────────┐
 │  🏆 Classement ZIK — Semaine du 23 juin │
@@ -296,6 +307,7 @@ Couleur embed selon ELO :
 **Critère "active" :** `rooms.is_public = true` et `rooms.last_active_at > now() - interval '10 minutes'`
 
 **Sans argument :**
+
 ```
 ┌─────────────────────────────────────────┐
 │  🎮 Rooms actives sur ZIK               │
@@ -334,11 +346,11 @@ Jeu **non-classé** : XP gagné, `discord_games_played` incrémenté, **aucun im
 
 ### Commandes
 
-| Commande | Description |
-|---|---|
-| `/zik-start [playlist] [rounds]` | Lance une partie (défaut: 10 rounds, max: 20) |
-| `/zik-stop` | Arrête la partie en cours (hôte ou admin serveur) |
-| `/zik-skip` | Vote pour passer le round actuel (≥ 50% des joueurs) |
+| Commande                         | Description                                          |
+| -------------------------------- | ---------------------------------------------------- |
+| `/zik-start [playlist] [rounds]` | Lance une partie (défaut: 10 rounds, max: 20)        |
+| `/zik-stop`                      | Arrête la partie en cours (hôte ou admin serveur)    |
+| `/zik-skip`                      | Vote pour passer le round actuel (≥ 50% des joueurs) |
 
 ---
 
@@ -347,6 +359,7 @@ Jeu **non-classé** : XP gagné, `discord_games_played` incrémenté, **aucun im
 **1. L'utilisateur lance `/zik-start` dans un canal texte**
 
 Le bot vérifie :
+
 - L'utilisateur est dans un vocal → sinon erreur ephemeral "Tu dois être dans un salon vocal !"
 - Pas de partie déjà en cours dans ce serveur → sinon erreur
 
@@ -375,12 +388,14 @@ Si `/zik-start playlist:Rock` → recherche directe `ILIKE '%Rock%'` dans les pl
 **3. Création du thread de partie**
 
 Le bot crée un **thread temporaire** dans le canal courant :
+
 ```
 Nom du thread : "🎮 Blind Test — Rock Classics"
 Auto-archive : 60 minutes
 ```
 
 Le bot poste dans le thread :
+
 ```
 ┌─────────────────────────────────────────┐
 │  🎮 Blind Test — Rock Classics          │
@@ -401,9 +416,11 @@ Le bot poste dans le thread :
 ```
 
 Le bot DM chaque membre du vocal pour vérifier l'accessibilité :
+
 > "🎮 Partie de Blind Test en cours sur **[Nom du serveur]** ! Réponds ici pendant la partie pour que personne ne voie ta réponse. Tu es prêt ?"
 
 Si le DM échoue (DMs désactivés) → bot poste dans le thread :
+
 > "⚠️ @Joueur — Je ne peux pas t'envoyer de DM. Active les DMs du serveur dans tes paramètres de confidentialité pour participer !"
 
 **4. Démarrage**
@@ -460,6 +477,7 @@ Si le DM échoue (DMs désactivés) → bot poste dans le thread :
 ```
 
 **Calcul des points par round :**
+
 - Réponse correcte : `10 - floor(secondes_écoulées / 3)`, minimum 1 point
 - Premier à trouver dans le round : aucun bonus supplémentaire (non-compétitif)
 - Pas de réponse dans le temps : 0 point
@@ -490,37 +508,42 @@ Si le DM échoue (DMs désactivés) → bot poste dans le thread :
 
 ```js
 // 1. Insert dans games
-const { data: game } = await supabase.from('games').insert({
-  room_id: `discord:${guildId}`,
-  source: 'discord',
-  mode: 'classic',
-  rounds: totalRounds,
-  started_at: state.startedAt,
-  ended_at: new Date().toISOString(),
-}).select().single()
+const { data: game } = await supabase
+  .from("games")
+  .insert({
+    room_id: `discord:${guildId}`,
+    source: "discord",
+    mode: "classic",
+    rounds: totalRounds,
+    started_at: state.startedAt,
+    ended_at: new Date().toISOString(),
+  })
+  .select()
+  .single();
 
 // 2. Insert dans game_players (un par joueur)
-await supabase.from('game_players').insert(
+await supabase.from("game_players").insert(
   players.map((p, i) => ({
     game_id: game.id,
-    user_id: p.zikUserId || null,         // null si compte non lié
+    user_id: p.zikUserId || null, // null si compte non lié
     username: p.discordUsername,
     score: p.score,
     rank: i + 1,
     is_guest: !p.zikUserId,
-  }))
-)
+  })),
+);
 
 // 3. Update stats pour les comptes liés seulement
-for (const p of players.filter(p => p.zikUserId)) {
-  await supabase.rpc('update_player_stats_discord', {
+for (const p of players.filter((p) => p.zikUserId)) {
+  await supabase.rpc("update_player_stats_discord", {
     p_user_id: p.zikUserId,
     p_score: p.score,
-  })
+  });
 }
 ```
 
 **Nettoyage :**
+
 - Bot quitte le vocal
 - Thread auto-archivé (60 min, configuré à la création)
 
@@ -560,15 +583,15 @@ const activeGames = new Map()
 
 ### Edge cases
 
-| Situation | Comportement |
-|---|---|
-| Bot expulsé du vocal | Partie arrêtée, BDD sauvegardée jusqu'au round en cours |
-| Hôte quitte le vocal | Partie continue, n'importe quel autre joueur peut `/zik-stop` |
-| Tous les joueurs quittent | Partie arrêtée après 60s d'inactivité |
-| Preview URL inaccessible | Round passé automatiquement avec message "⚠️ Audio indisponible, round ignoré" |
-| DMs désactivés par un joueur | Joueur exclu des participants, signalé dans le thread au lancement |
-| Timeout global 90 min | Partie arrêtée proprement, BDD sauvegardée |
-| `/zik-skip` vote | Si ≥ 50% des joueurs votent → round passé, aucun point attribué, réponse révélée |
+| Situation                    | Comportement                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| Bot expulsé du vocal         | Partie arrêtée, BDD sauvegardée jusqu'au round en cours                          |
+| Hôte quitte le vocal         | Partie continue, n'importe quel autre joueur peut `/zik-stop`                    |
+| Tous les joueurs quittent    | Partie arrêtée après 60s d'inactivité                                            |
+| Preview URL inaccessible     | Round passé automatiquement avec message "⚠️ Audio indisponible, round ignoré"   |
+| DMs désactivés par un joueur | Joueur exclu des participants, signalé dans le thread au lancement               |
+| Timeout global 90 min        | Partie arrêtée proprement, BDD sauvegardée                                       |
+| `/zik-skip` vote             | Si ≥ 50% des joueurs votent → round passé, aucun point attribué, réponse révélée |
 
 ---
 
