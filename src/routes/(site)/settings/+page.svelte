@@ -17,7 +17,17 @@
 
   async function linkDiscord() {
     if (!sb) return;
-    await sb.auth.linkIdentity({ provider: 'discord', options: { redirectTo: window.location.origin + '/settings' } });
+    discordLoading = true;
+    try {
+      const { error } = await sb.auth.linkIdentity({
+        provider: 'discord',
+        options: { redirectTo: window.location.origin + '/settings?discord=linked' },
+      });
+      if (error) throw error;
+    } catch (e) {
+      toast('Erreur : ' + e.message, 'error');
+      discordLoading = false;
+    }
   }
 
   async function unlinkDiscord() {
