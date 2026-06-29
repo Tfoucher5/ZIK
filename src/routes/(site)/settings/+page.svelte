@@ -1,6 +1,7 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import { toast } from '$lib/toast.svelte.js';
+  import Modal from '$lib/components/Modal.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -360,50 +361,46 @@
 </main>
 
 <!-- ── Delete account confirmation modal ──────────────────────────────────── -->
-{#if deleteModalOpen}
-  <div class="delete-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
-    <div class="delete-modal">
-      <h2 class="delete-modal-title" id="delete-modal-title">&#x1F6A8; Supprimer mon compte</h2>
-      <p class="delete-modal-desc">
-        Cette action est <strong>irr&eacute;versible</strong>. Ton profil, tes playlists, tes scores et toutes tes donn&eacute;es seront supprim&eacute;s d&eacute;finitivement.
-      </p>
-      <div class="delete-modal-confirm-label">
-        Pour confirmer, tape ton pseudo&nbsp;:
-        <strong class="delete-modal-username">{user?.profile?.username || user?.email?.split('@')[0] || '…'}</strong>
-      </div>
-      <input
-        id="delete-confirm-input"
-        class="delete-modal-input"
-        type="text"
-        bind:value={deleteConfirmText}
-        placeholder="Ton pseudo ici"
-        autocomplete="off"
-        spellcheck="false"
-        disabled={deleteLoading}
-        onkeydown={e => { if (e.key === 'Enter') confirmDeleteAccount(); if (e.key === 'Escape') closeDeleteModal(); }}
-      >
-      {#if deleteError}
-        <p class="delete-modal-error">{deleteError}</p>
-      {/if}
-      <div class="delete-modal-actions">
-        <button class="btn-delete-cancel" onclick={closeDeleteModal} disabled={deleteLoading}>
-          Annuler
-        </button>
-        <button
-          class="btn-delete-confirm"
-          onclick={confirmDeleteAccount}
-          disabled={deleteLoading || deleteConfirmText.trim() !== (user?.profile?.username || user?.email?.split('@')[0] || '')}
-        >
-          {#if deleteLoading}
-            Suppression…
-          {:else}
-            Supprimer d&eacute;finitivement
-          {/if}
-        </button>
-      </div>
-    </div>
+<Modal open={deleteModalOpen} onClose={closeDeleteModal} maxWidth="420px">
+  <h2 class="delete-modal-title" id="delete-modal-title">&#x1F6A8; Supprimer mon compte</h2>
+  <p class="delete-modal-desc">
+    Cette action est <strong>irr&eacute;versible</strong>. Ton profil, tes playlists, tes scores et toutes tes donn&eacute;es seront supprim&eacute;s d&eacute;finitivement.
+  </p>
+  <div class="delete-modal-confirm-label">
+    Pour confirmer, tape ton pseudo&nbsp;:
+    <strong class="delete-modal-username">{user?.profile?.username || user?.email?.split('@')[0] || '…'}</strong>
   </div>
-{/if}
+  <input
+    id="delete-confirm-input"
+    class="delete-modal-input"
+    type="text"
+    bind:value={deleteConfirmText}
+    placeholder="Ton pseudo ici"
+    autocomplete="off"
+    spellcheck="false"
+    disabled={deleteLoading}
+    onkeydown={e => { if (e.key === 'Enter') confirmDeleteAccount(); if (e.key === 'Escape') closeDeleteModal(); }}
+  >
+  {#if deleteError}
+    <p class="delete-modal-error">{deleteError}</p>
+  {/if}
+  <div class="delete-modal-actions">
+    <button class="btn-delete-cancel" onclick={closeDeleteModal} disabled={deleteLoading}>
+      Annuler
+    </button>
+    <button
+      class="btn-delete-confirm"
+      onclick={confirmDeleteAccount}
+      disabled={deleteLoading || deleteConfirmText.trim() !== (user?.profile?.username || user?.email?.split('@')[0] || '')}
+    >
+      {#if deleteLoading}
+        Suppression…
+      {:else}
+        Supprimer d&eacute;finitivement
+      {/if}
+    </button>
+  </div>
+</Modal>
 
 <style>
 .settings-page {
@@ -610,21 +607,6 @@
 .btn-danger:hover { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.65); }
 
 /* -- Delete modal -- */
-.delete-overlay {
-  position: fixed; inset: 0;
-  background: rgba(4,6,14,0.82);
-  backdrop-filter: blur(8px);
-  z-index: 9000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
-}
-.delete-modal {
-  background: var(--bg2);
-  border: 1px solid rgba(239,68,68,0.35);
-  border-radius: var(--radius);
-  padding: 32px; max-width: 420px; width: 100%;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-}
 .delete-modal-title {
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 1.25rem; font-weight: 800;
