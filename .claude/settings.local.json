@@ -69,7 +69,8 @@
       "Skill(superpowers:systematic-debugging)",
       "Bash(bin\\\\yt-dlp.exe *)",
       "mcp__claude_ai_Vercel__list_teams",
-      "mcp__claude_ai_Vercel__list_projects"
+      "mcp__claude_ai_Vercel__list_projects",
+      "Bash(npm run *)"
     ]
   }
 }

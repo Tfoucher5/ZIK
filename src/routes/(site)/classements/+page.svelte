@@ -677,11 +677,13 @@
     margin-bottom: 8px;
     background: rgb(var(--c-glass) / 0.05);
     border: 1px solid var(--border); border-radius: 14px;
-    overflow: hidden;
   }
   .filter-group {
     display: flex; flex-direction: column; gap: 6px;
     padding: 12px 20px; flex: 1; min-width: 165px;
+  }
+  .cl-filters > .filter-group:last-child {
+    flex: 1.5; min-width: 300px;
   }
   .filter-label {
     font-size: 0.56rem; font-weight: 800;
@@ -698,6 +700,7 @@
     background: rgb(var(--c-glass) / 0.08);
     border: 1px solid var(--border);
     border-radius: 8px; padding: 3px; gap: 2px;
+    overflow: hidden;
   }
   .seg-btn {
     flex: 1; padding: 5px 10px;

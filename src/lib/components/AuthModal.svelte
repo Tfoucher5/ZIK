@@ -163,6 +163,7 @@
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 20px;
+    color: #1a1a2e;
   }
 
   .modal-logo span {
@@ -259,6 +260,8 @@
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
+    color: #1a1a2e;
+    background: #fff;
   }
 
   .field input:focus {

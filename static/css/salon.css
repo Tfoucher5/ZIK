@@ -118,10 +118,13 @@ body {
   display: flex;
   flex-direction: column;
 }
+.salon-setup-grid .salon-card-playlist {
+  min-height: 0;
+  overflow: hidden;
+}
 .salon-setup-grid .salon-card-playlist .salon-playlist-list {
   flex: 1;
   min-height: 0;
-  max-height: none;
 }
 .salon-setup-actions {
   display: flex;
