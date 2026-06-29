@@ -4,7 +4,7 @@ import { getAdminClient } from "$lib/server/config.js";
 import {
   adminGetRoomsSnapshot,
   adminGetChatHistory,
-} from "$lib/server/socket/game.js";
+} from "$lib/server/socket/game/index.js";
 
 export async function GET({ url, request }) {
   const token = url.searchParams.get("token");

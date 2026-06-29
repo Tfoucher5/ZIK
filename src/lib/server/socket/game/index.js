@@ -1,0 +1,15 @@
+export {
+  register,
+  adminGetRoomsSnapshot,
+  adminPauseRoom,
+  adminResumeRoom,
+  adminSkipRound,
+  adminEndGame,
+  adminKickPlayer,
+  adminBlockRoom,
+  adminUnblockRoom,
+  adminAnnounce,
+  adminCloseRoom,
+  adminGetChatHistory,
+  adminSendChat,
+} from "./core.js";
