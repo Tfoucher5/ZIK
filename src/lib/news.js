@@ -3,6 +3,30 @@
 
 export const NEWS = [
   {
+    date: "2026-06-29",
+    version: "2.8.0",
+    tag: "Amélioration",
+    title: "Corrections UI, rooms améliorées et Bot Discord",
+    items: [
+      "La popup de connexion s'affiche correctement sur tous les thèmes (texte invisible corrigé).",
+      "Le champ description d'une room est maintenant un textarea : plus facile de voir et modifier un texte long.",
+      "Le sélecteur de playlists dans les rooms a été retravaillé visuellement.",
+      "Mode Salon : la liste des playlists occupe désormais toute la hauteur disponible dans la fenêtre de configuration.",
+      "Onglets ELO/Score sur la page Classements : espacement corrigé.",
+      "Le bouton filtre « Semaine / Mois / Année » ne déborde plus sur petits écrans.",
+      "Mentions légales, CGU et Politique de confidentialité mis à jour pour inclure le Bot Discord ZIK.",
+    ],
+  },
+  {
+    date: "2026-06-15",
+    version: "2.7.1",
+    tag: "Correctif",
+    title: "Liaison Discord : bouton mis à jour en temps réel",
+    items: [
+      "Le bouton « Lier mon compte Discord » se rafraîchit maintenant immédiatement après la liaison, sans avoir à recharger la page.",
+    ],
+  },
+  {
     date: "2026-06-11",
     version: "2.7.0",
     tag: "Nouveauté",
