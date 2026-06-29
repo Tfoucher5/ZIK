@@ -5,6 +5,7 @@
   import AuthModal from '$lib/components/AuthModal.svelte';
   import AnnouncementPopup from '$lib/components/AnnouncementPopup.svelte';
   import ContactModal from '$lib/components/ContactModal.svelte';
+  import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
@@ -134,6 +135,8 @@
 <AnnouncementPopup {sb} />
 
 {@render children()}
+
+<Toast />
 
 {#if !isGame}
 <footer class="site-footer">
