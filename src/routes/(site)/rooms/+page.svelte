@@ -459,7 +459,7 @@
 
     <div class="field">
       <label for="description">Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></label>
-      <input type="text" bind:value={roomDesc} placeholder="Un petit mot pour d\u00e9crire la room..." maxlength="200">
+      <textarea bind:value={roomDesc} placeholder="Un petit mot pour d\u00e9crire la room..." maxlength="200" rows="3"></textarea>
     </div>
 
     <div class="field">
@@ -477,7 +477,7 @@
         placeholder="Rechercher une playlist..."
         style="margin-bottom:6px"
       />
-      <div style="max-height:180px;overflow-y:auto;border:1px solid var(--border, rgba(255,255,255,.1));border-radius:8px;padding:4px 0">
+      <div class="pl-picker-list">
         {#if filteredPlaylists.length === 0}
           <div style="padding:10px 14px;font-size:.8rem;color:var(--dim)">Aucune playlist trouvée.</div>
         {:else}
@@ -896,6 +896,24 @@
     box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08);
   }
   .field select { cursor: pointer; }
+  .field textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+  .pl-picker-list {
+    max-height: 200px; overflow-y: auto;
+    border: 1px solid var(--border2);
+    border-radius: 8px; padding: 4px 0;
+    scrollbar-width: thin;
+  }
+  .pl-picker-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; font-size: 0.84rem; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .pl-picker-row:hover { background: rgb(var(--c-glass) / 0.07); }
+  .pl-picker-row.selected { background: rgb(var(--accent-rgb) / 0.09); color: var(--accent); }
+  .pl-picker-check { width: 16px; flex-shrink: 0; font-size: 0.78rem; color: var(--accent); font-weight: 700; }
+  .pl-picker-group { margin-left: auto; font-size: 0.72rem; color: var(--dim); white-space: nowrap; }
+  .pl-picker-count { font-size: 0.72rem; color: var(--dim); white-space: nowrap; }
 
   .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
 
