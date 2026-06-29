@@ -1,4 +1,6 @@
 <script>
+  import Modal from '$lib/components/Modal.svelte';
+
   let { open = $bindable(false) } = $props();
 
   let name    = $state('');
@@ -38,12 +40,7 @@
   }
 </script>
 
-{#if open}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="cm-backdrop" onclick={close}>
-    <div class="cm-modal" onclick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-      <button class="cm-close" onclick={close} aria-label="Fermer">&times;</button>
-
+<Modal {open} onClose={close} maxWidth="520px">
       {#if success}
         <div class="cm-success">
           <div class="cm-success-icon">✓</div>
@@ -82,43 +79,9 @@
           {loading ? 'Envoi…' : 'Envoyer →'}
         </button>
       {/if}
-    </div>
-  </div>
-{/if}
+</Modal>
 
 <style>
-.cm-backdrop {
-  position: fixed; inset: 0; z-index: 900;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-  animation: cmFadeIn 0.2s ease;
-}
-@keyframes cmFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.cm-modal {
-  background: var(--surface, #111827);
-  border: 1px solid var(--border, rgba(255,255,255,0.08));
-  border-radius: 20px;
-  padding: 32px 28px 28px;
-  width: 100%; max-width: 520px;
-  position: relative;
-  animation: cmSlideIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
-}
-@keyframes cmSlideIn {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to   { opacity: 1; transform: none; }
-}
-
-.cm-close {
-  position: absolute; top: 14px; right: 16px;
-  background: none; border: none; color: var(--mid, #6b7280);
-  font-size: 1.4rem; cursor: pointer; line-height: 1;
-  transition: color 0.15s;
-}
-.cm-close:hover { color: var(--text, #fff); }
-
 .cm-title {
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 1.4rem; font-weight: 800; margin-bottom: 4px;
