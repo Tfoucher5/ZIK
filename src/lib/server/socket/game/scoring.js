@@ -1,4 +1,7 @@
-import { displayString } from "../../services/playlist.js";
+function displayString(str) {
+  if (!str) return "";
+  return str.replace(/ *\([^)]*\) */g, " ").replace(/ *\[[^\]]*\] */g, " ").replace(/\s+/g, " ").trim();
+}
 
 export function makeChoices(correct, allTracks) {
   const label = (t) =>
