@@ -8,7 +8,7 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Politique de confidentialit&eacute;</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: avril 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
 
   <section>
     <h2>1. Responsable du traitement</h2>
@@ -70,7 +70,19 @@
       <li><strong>Spotify Web API</strong> &mdash; import de playlists r&eacute;serv&eacute; &agrave; l&rsquo;&eacute;diteur du site en raison des restrictions du mode d&eacute;veloppeur Spotify (seuls les comptes explicitement autoris&eacute;s dans le tableau de bord Spotify Developer peuvent utiliser cette fonctionnalit&eacute;)</li>
       <li><strong>DiceBear</strong> &mdash; g&eacute;n&eacute;ration d&rsquo;avatars via URL (aucune donn&eacute;e personnelle envoy&eacute;e)</li>
       <li><strong>api.qrserver.com</strong> &mdash; g&eacute;n&eacute;ration du QR code en Mode Salon (le code salon est envoy&eacute; sous forme d&rsquo;URL uniquement)</li>
+      <li><strong>Discord</strong> &mdash; le bot Discord ZIK acc&egrave;de &agrave; votre identifiant Discord uniquement lors d&rsquo;une liaison volontaire de compte (commande <code>/link</code>). Cet identifiant est stock&eacute; dans la base Supabase exclusivement pour associ&eacute; votre compte ZIK &agrave; votre compte Discord et afficher vos stats depuis Discord. Il n&rsquo;est pas partag&eacute; avec des tiers.</li>
     </ul>
+  </section>
+
+  <section>
+    <h2>6bis. Bot Discord ZIK</h2>
+    <p>Le bot Discord ZIK est un service optionnel accessible depuis le serveur Discord officiel. Il permet de consulter des statistiques, le classement et d&rsquo;organiser des blind tests vocaux directement dans Discord.</p>
+    <p><strong>Donn&eacute;es trait&eacute;es par le bot&nbsp;:</strong></p>
+    <ul>
+      <li>Identifiant Discord (snowflake) &mdash; collect&eacute; uniquement lors de la liaison volontaire de compte via <code>/link</code></li>
+      <li>Pseudo ZIK et statistiques de jeu &mdash; lus depuis la base de donn&eacute;es Supabase pour r&eacute;pondre aux commandes</li>
+    </ul>
+    <p>Le bot <strong>ne stocke aucune donn&eacute;e Discord en dehors de l&rsquo;identifiant de liaison</strong>, ne lit pas les messages priv&eacute;s, et n&rsquo;a acc&egrave;s qu&rsquo;aux serveurs o&ugrave; il est explicitement invit&eacute;. Vous pouvez d&eacute;lier votre compte &agrave; tout moment depuis vos <a href="/settings">Param&egrave;tres</a>.</p>
   </section>
 
   <section>

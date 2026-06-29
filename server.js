@@ -9,7 +9,7 @@ import { writeFileSync as _writeFileSync } from "fs";
 // SvelteKit production handler (built by `npm run build`)
 const { handler } = await import("./build/handler.js");
 
-import { register } from "./src/lib/server/socket/game.js";
+import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon.js";
 import {
   preloadAllPlaylists,

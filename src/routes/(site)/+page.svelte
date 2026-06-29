@@ -2,9 +2,9 @@
   import { onMount } from "svelte";
   import { goto } from '$app/navigation';
   import HeroSection from '$lib/components/HeroSection.svelte';
-  import GlassCard from '$lib/components/GlassCard.svelte';
-  import StatCard from '$lib/components/StatCard.svelte';
-  import RoomCard from '$lib/components/RoomCard.svelte';
+  import Avatar from '$lib/components/Avatar.svelte';
+  import Modal from '$lib/components/Modal.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
 
   let rooms = $state([]);
   let totalOnline = $state(0);
@@ -637,7 +637,7 @@
       {/each}
     </div>
   {:else if pubRooms.length === 0}
-    <p class="pub-empty">Aucune room publique en ce moment. <a href="/rooms">Crée la première →</a></p>
+    <EmptyState icon="🎮" title="Aucune room publique en ce moment." />
   {:else}
     {#if pubQcmRooms.length > 0}
       {#if pubClassicRooms.length > 0}
@@ -795,11 +795,9 @@
           <div class="podium-slot">
             <div class="podium-info">
               <a href="/user/{eloLb[1].username}" class="podium-avatar-link">
-                {#if eloLb[1].avatar_url}
-                  <img class="podium-avatar" src={eloLb[1].avatar_url} alt={eloLb[1].username} width="40" height="40" loading="lazy" />
-                {:else}
-                  <div class="podium-avatar podium-fb">{eloLb[1].username[0].toUpperCase()}</div>
-                {/if}
+                <span class="podium-av podium-av-r2">
+                  <Avatar url={eloLb[1].avatar_url} username={eloLb[1].username} size={40} />
+                </span>
               </a>
               <div class="podium-name">{eloLb[1].username}</div>
               <div class="podium-score">{eloLb[1].elo}</div>
@@ -810,11 +808,9 @@
             <span class="podium-crown">👑</span>
             <div class="podium-info">
               <a href="/user/{eloLb[0].username}" class="podium-avatar-link">
-                {#if eloLb[0].avatar_url}
-                  <img class="podium-avatar" src={eloLb[0].avatar_url} alt={eloLb[0].username} width="48" height="48" loading="lazy" />
-                {:else}
-                  <div class="podium-avatar podium-fb">{eloLb[0].username[0].toUpperCase()}</div>
-                {/if}
+                <span class="podium-av podium-av-r1">
+                  <Avatar url={eloLb[0].avatar_url} username={eloLb[0].username} size={52} />
+                </span>
               </a>
               <div class="podium-name podium-name-1">{eloLb[0].username}</div>
               <div class="podium-score">{eloLb[0].elo}</div>
@@ -824,11 +820,9 @@
           <div class="podium-slot">
             <div class="podium-info">
               <a href="/user/{eloLb[2].username}" class="podium-avatar-link">
-                {#if eloLb[2].avatar_url}
-                  <img class="podium-avatar" src={eloLb[2].avatar_url} alt={eloLb[2].username} width="36" height="36" loading="lazy" />
-                {:else}
-                  <div class="podium-avatar podium-fb">{eloLb[2].username[0].toUpperCase()}</div>
-                {/if}
+                <span class="podium-av podium-av-r3">
+                  <Avatar url={eloLb[2].avatar_url} username={eloLb[2].username} size={36} />
+                </span>
               </a>
               <div class="podium-name">{eloLb[2].username}</div>
               <div class="podium-score">{eloLb[2].elo}</div>
@@ -900,32 +894,26 @@
 </section>
 
 <!-- ══════════════════════════════ GUEST MODAL ══════════════════════════════ -->
-{#if guestOpen}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
-  <div class="overlay" role="dialog" aria-modal="true" tabindex="-1"
-    onclick={(e) => { if (e.target === e.currentTarget) guestOpen = false; }}>
-    <div class="modal">
-      <h2>Jouer en invité</h2>
-      <p class="mdesc">
-        Ton score ne sera pas sauvegardé.
-        <button onclick={() => guestOpen = false}
-          style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font:inherit">
-          Me connecter →
-        </button>
-      </p>
-      <div class="field">
-        <label for="guestUsernameInput">Pseudo</label>
-        <input id="guestUsernameInput" type="text" bind:value={guestUsername}
-          placeholder="MonPseudo" maxlength="20" autocomplete="off"
-          onkeypress={(e) => { if (e.key === 'Enter') confirmGuest(); }} />
-      </div>
-      <div class="modal-btns">
-        <button class="btn-ghost" onclick={() => guestOpen = false}>Annuler</button>
-        <button class="btn-accent" onclick={confirmGuest}>Jouer →</button>
-      </div>
-    </div>
+<Modal open={guestOpen} onClose={() => guestOpen = false} maxWidth="360px">
+  <h2 class="guest-h2">Jouer en invité</h2>
+  <p class="mdesc">
+    Ton score ne sera pas sauvegardé.
+    <button onclick={() => guestOpen = false}
+      style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font:inherit">
+      Me connecter →
+    </button>
+  </p>
+  <div class="field">
+    <label for="guestUsernameInput">Pseudo</label>
+    <input id="guestUsernameInput" type="text" bind:value={guestUsername}
+      placeholder="MonPseudo" maxlength="20" autocomplete="off"
+      onkeypress={(e) => { if (e.key === 'Enter') confirmGuest(); }} />
   </div>
-{/if}
+  <div class="modal-btns">
+    <button class="btn-ghost" onclick={() => guestOpen = false}>Annuler</button>
+    <button class="btn-accent" onclick={confirmGuest}>Jouer →</button>
+  </div>
+</Modal>
 
 <style>
   /* ════════════════════════════ SYSTÈME DE SECTIONS ════════════════════════════ */
@@ -1106,13 +1094,6 @@
   }
   .code-join-err { font-size: 0.75rem; color: #f87171; width: 100%; margin-top: -4px; }
 
-  /* ════════════════════════════ ROOMS GRID ════════════════════════════ */
-  .rooms-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 10px;
-  }
-
   /* ════════════════════════════ PUBLIC ROOMS ════════════════════════════ */
   .pub-grid {
     display: grid;
@@ -1168,8 +1149,6 @@
     transition: background 0.15s;
   }
   .pub-btn:hover { background: rgb(var(--accent-rgb) / 0.16); }
-  .pub-empty { font-size: 0.85rem; color: var(--dim); }
-  .pub-empty a { color: var(--accent); }
   .pub-section-head {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     margin-bottom: 10px;
@@ -1459,16 +1438,19 @@
     padding-bottom: 10px;
   }
   .podium-avatar-link { display: block; }
-  .podium-avatar {
-    border-radius: 50%; object-fit: cover;
-    border: 2px solid var(--border); display: block;
-  }
-  .podium-fb {
-    display: flex; align-items: center; justify-content: center;
-    background: var(--surface); border-radius: 50%;
+  .podium-av {
+    border-radius: 50%;
+    overflow: hidden;
     border: 2px solid var(--border);
-    font-weight: 700; font-size: 0.85rem; color: var(--text);
+    display: block;
+    flex-shrink: 0;
   }
+  .podium-av-r1 {
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgb(var(--accent-rgb) / 0.3);
+  }
+  .podium-av-r2 { border-color: #94a3b8; }
+  .podium-av-r3 { border-color: #c2774a; }
   .podium-name {
     font-size: 0.68rem; font-weight: 700; text-align: center;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
@@ -1507,18 +1489,6 @@
     font-size: 1.1rem; font-weight: 900;
     color: var(--text); opacity: 0.55;
   }
-
-  /* Avatars tailles par position */
-  .podium-slot:nth-child(1) .podium-avatar,
-  .podium-slot:nth-child(1) .podium-fb { width: 40px; height: 40px; border-color: #94a3b8; }
-  .podium-slot:nth-child(2) .podium-avatar,
-  .podium-slot:nth-child(2) .podium-fb {
-    width: 52px; height: 52px;
-    border-color: var(--accent);
-    box-shadow: 0 0 16px rgb(var(--accent-rgb) / 0.3);
-  }
-  .podium-slot:nth-child(3) .podium-avatar,
-  .podium-slot:nth-child(3) .podium-fb { width: 36px; height: 36px; border-color: #c2774a; }
 
   /* ════ Official room cards ════ */
   .official-rooms-grid {
@@ -1679,17 +1649,7 @@
   .lb-games { font-size: 0.62rem; color: var(--dim); min-width: 60px; text-align: right; }
 
   /* ════════════════════════════ GUEST MODAL ════════════════════════════ */
-  .overlay {
-    position: fixed; inset: 0; z-index: 400;
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center; padding: 16px;
-  }
-  .modal {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
-    padding: 28px; width: 100%; max-width: 360px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .modal h2 {
+  .guest-h2 {
     font-family: "Bricolage Grotesque", sans-serif;
     font-size: 1.2rem; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;
   }
@@ -1716,7 +1676,6 @@
     .features-grid { grid-template-columns: 1fr; }
     .official-rooms-grid { grid-template-columns: 1fr; }
     .pub-grid { grid-template-columns: 1fr 1fr; }
-    .lb-grid { grid-template-columns: 1fr; }
     .stats-inner { grid-template-columns: 1fr 1px 1fr 1px 1fr; max-width: 100%; }
     .salon-cta { margin: 8px 16px 0; padding: 36px 20px; }
     .section-head h2 { font-size: 1.45rem; }
@@ -1732,7 +1691,6 @@
   @media (max-width: 400px) {
     .pub-grid { grid-template-columns: 1fr; }
     /* Stats strip : réduire le texte pour éviter le débordement */
-    .stat-num { font-size: 1.6rem; }
     .stat-label { font-size: 0.58rem; }
   }
 

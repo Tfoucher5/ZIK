@@ -1,4 +1,6 @@
 <script>
+  import Modal from '$lib/components/Modal.svelte';
+
   /**
    * @type {{
    *   sb: any,
@@ -78,13 +80,7 @@
   }
 </script>
 
-{#if open}
-<!-- svelte-ignore a11y_interactive_supports_focus -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<div id="auth-modal" class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) close(); }}>
-  <div class="modal" id="auth-box">
-    <button class="close-btn" onclick={close}>&#x2715;</button>
-
+<Modal {open} onClose={close} maxWidth="400px" boxBg="#fff" closeBtnColor="rgba(0,0,0,0.35)">
     {#if view === 'login'}
       <div id="view-login">
         <div class="modal-logo">ZIK<span>.</span></div>
@@ -160,49 +156,14 @@
         </div>
       </div>
     {/if}
-  </div>
-</div>
-{/if}
+</Modal>
 
 <style>
-  #auth-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .modal {
-    background: #fff;
-    border-radius: 12px;
-    padding: 32px;
-    width: 100%;
-    max-width: 400px;
-    position: relative;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  }
-
-  .close-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-  }
-
   .modal-logo {
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 20px;
+    color: #1a1a2e;
   }
 
   .modal-logo span {
@@ -212,6 +173,7 @@
   h2 {
     margin: 0 0 8px 0;
     font-size: 22px;
+    color: #1a1a2e;
   }
 
   .mdesc {
@@ -298,6 +260,8 @@
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
+    color: #1a1a2e;
+    background: #fff;
   }
 
   .field input:focus {

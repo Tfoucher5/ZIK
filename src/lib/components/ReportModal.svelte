@@ -1,4 +1,6 @@
 <script>
+  import Modal from '$lib/components/Modal.svelte';
+
   /**
    * ReportModal — signalement joueur ou bug en jeu
    * Props:
@@ -77,12 +79,7 @@
   }
 </script>
 
-{#if open}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="rm-backdrop" onclick={close}>
-    <div class="rm-modal" onclick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-      <button class="rm-close" onclick={close} aria-label="Fermer">&times;</button>
-
+<Modal {open} onClose={close} maxWidth="440px">
       {#if success}
         <div class="rm-success">
           <div class="rm-success-icon">✓</div>
@@ -125,43 +122,9 @@
           {loading ? 'Envoi…' : 'Envoyer le signalement →'}
         </button>
       {/if}
-    </div>
-  </div>
-{/if}
+</Modal>
 
 <style>
-.rm-backdrop {
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-  animation: rmFadeIn 0.18s ease;
-}
-@keyframes rmFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.rm-modal {
-  background: var(--surface, #111827);
-  border: 1px solid var(--border, rgba(255,255,255,0.08));
-  border-radius: 18px;
-  padding: 28px 24px 24px;
-  width: 100%; max-width: 440px;
-  position: relative;
-  animation: rmSlideIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
-}
-@keyframes rmSlideIn {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to   { opacity: 1; transform: none; }
-}
-
-.rm-close {
-  position: absolute; top: 12px; right: 14px;
-  background: none; border: none; color: var(--mid, #6b7280);
-  font-size: 1.3rem; cursor: pointer; line-height: 1;
-  transition: color 0.15s;
-}
-.rm-close:hover { color: var(--text, #fff); }
-
 .rm-title {
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 1.2rem; font-weight: 800; margin-bottom: 4px;

@@ -12,7 +12,7 @@ import {
   adminAnnounce,
   adminCloseRoom,
   adminSendChat,
-} from "$lib/server/socket/game.js";
+} from "$lib/server/socket/game/index.js";
 
 const ALLOWED_ACTIONS = [
   "pause",

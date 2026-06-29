@@ -8,7 +8,7 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Mentions L&eacute;gales</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: avril 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
 
   <section>
     <h2>1. &Eacute;diteur du site</h2>
@@ -30,6 +30,11 @@
     <ul>
       <li><strong>Supabase Inc.</strong> &mdash; infrastructure h&eacute;berg&eacute;e en Union Europ&eacute;enne, conforme RGPD &mdash; <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">supabase.com</a></li>
     </ul>
+  </section>
+
+  <section>
+    <h2>2bis. Bot Discord ZIK</h2>
+    <p>ZIK exploite un <strong>bot Discord</strong> accessible sur le serveur Discord officiel ZIK. Ce bot est un service distinct de l&rsquo;application web&nbsp;; il est h&eacute;berg&eacute; sur <strong>Railway</strong> et acc&egrave;de &agrave; la base de donn&eacute;es Supabase via une cl&eacute; de service s&eacute;curis&eacute;e. Il ne collecte aucune donn&eacute;e au-del&agrave; de ce qui est n&eacute;cessaire &agrave; son fonctionnement (identifiant Discord lors d&rsquo;une liaison de compte). Pour plus de d&eacute;tails, consultez la <a href="/confidentialite">Politique de confidentialit&eacute;</a>.</p>
   </section>
 
   <section>

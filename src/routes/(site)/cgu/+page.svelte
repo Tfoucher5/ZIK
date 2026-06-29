@@ -8,11 +8,12 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Conditions G&eacute;n&eacute;rales d&apos;Utilisation</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: mars 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
 
   <section>
     <h2>1. Pr&eacute;sentation du service</h2>
     <p>ZIK est une application web de blind test musical multijoueur, accessible gratuitement &agrave; l&rsquo;adresse <strong>www.zik-music.fr</strong>. Le service permet aux utilisateurs de participer &agrave; des parties de blind test en temps r&eacute;el, de cr&eacute;er des playlists personnalis&eacute;es, d&rsquo;organiser des sessions en Mode Salon (Kahoot-like) et de se mesurer &agrave; d&rsquo;autres joueurs via un classement ELO.</p>
+    <p>ZIK propose &eacute;galement un <strong>bot Discord</strong> sur son serveur officiel, permettant de consulter ses stats, d&rsquo;acc&eacute;der au classement et d&rsquo;organiser des blind tests vocaux directement depuis Discord.</p>
     <p>Le service est &eacute;dit&eacute; par Th&eacute;o Foucher (voir les <a href="/mentions-legales">Mentions l&eacute;gales</a>).</p>
   </section>
 
@@ -34,6 +35,12 @@
     <p>ZIK utilise l&rsquo;<strong>API YouTube IFrame</strong> pour diffuser des extraits musicaux &agrave; des fins de divertissement. Les droits sur les &oelig;uvres musicales appartiennent &agrave; leurs auteurs, compositeurs et ayants droit respectifs. ZIK ne revendique aucun droit sur ces contenus et ne proc&egrave;de &agrave; aucun stockage des fichiers audio.</p>
     <p>L&rsquo;import de playlists est possible via l&rsquo;API <strong>Deezer</strong> (disponible pour tout utilisateur connect&eacute;) et via l&rsquo;API <strong>Spotify</strong> (r&eacute;serv&eacute; &agrave; l&rsquo;&eacute;diteur du site, en raison des restrictions du mode d&eacute;veloppeur Spotify). Les donn&eacute;es de ces playlists (noms de titres, artistes) sont utilis&eacute;es uniquement dans le cadre du jeu.</p>
     <p>Il est interdit de t&eacute;l&eacute;charger, reproduire ou distribuer les extraits musicaux diffus&eacute;s par le service en dehors de son contexte de jeu.</p>
+  </section>
+
+  <section>
+    <h2>3bis. Bot Discord</h2>
+    <p>L&rsquo;utilisation du bot Discord ZIK est soumise aux <a href="https://discord.com/terms" target="_blank" rel="noopener noreferrer">Conditions d&rsquo;utilisation Discord</a>. En utilisant les commandes du bot, l&rsquo;utilisateur accepte que son identifiant Discord puisse &ecirc;tre associ&eacute; &agrave; son compte ZIK s&rsquo;il choisit de lier les deux via la commande <code>/link</code>. Cette liaison est volontaire et r&eacute;versible depuis les <a href="/settings">Param&egrave;tres</a> ZIK.</p>
+    <p>Le blind test vocal en Mode Discord utilise les playlists de votre compte ZIK. Les m&ecirc;mes r&egrave;gles de comportement s&rsquo;appliquent que sur le site (voir article 4 ci-dessous).</p>
   </section>
 
   <section>

@@ -1,7 +1,10 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import HeroSection from '$lib/components/HeroSection.svelte';
-  import { page } from '$app/stores';
+  import EmptyState from '$lib/components/EmptyState.svelte';
+  import TrackRow from './TrackRow.svelte';
+  import TrackSearch from './TrackSearch.svelte';
+  import { toast } from '$lib/toast.svelte.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -25,46 +28,22 @@
   let plLoading = $state(true);
 
   // Playlist modal (create/edit)
-  let plModalOpen  = $state(false);
-  let editingPl    = $state(null);
-  let plName       = $state('');
-  let plEmoji      = $state('&#x1F3B5;');
-  let plPublic     = $state(false);
-  let plError      = $state('');
-  let plSaving     = $state(false);
+  let plModalOpen = $state(false);
+  let editingPl   = $state(null);
+  let plName      = $state('');
+  let plEmoji     = $state('🎵');
+  let plPublic    = $state(false);
+  let plError     = $state('');
+  let plSaving    = $state(false);
 
   // Editor modal
   let editorOpen   = $state(false);
   let editorPl     = $state(null);
   let editorTracks = $state([]);
-  let editorTab    = $state('search');
-  let isAdmin      = $derived(user?.profile?.role === 'super_admin');
-
-  // Search
-  let searchQuery   = $state('');
-  let searchSource  = $state('deezer');
-  let searchResults = $state([]);
-  let searchLoading = $state(false);
-
-  // Import Spotify
-  let spotifyUrl       = $state('');
-  let spImportPreview  = $state(null);
-  let spLoading        = $state(false);
-  let spConnected      = $state(false);
-
-  // Import Deezer
-  let deezerUrl       = $state('');
-  let dzImportPreview = $state(null);
-  let dzLoading       = $state(false);
-
-  // Manual
-  let manArtist  = $state('');
-  let manTitle   = $state('');
-  let manPreview = $state('');
-  let manError   = $state('');
+  const isAdmin    = $derived(user?.profile?.role === 'super_admin');
 
   // Admin section
-  let adminOfficials = $state([]);
+  let adminOfficials  = $state([]);
   let adminIsOfficial = $state(false);
   let adminLinkedRoom = $state('');
 
@@ -74,7 +53,7 @@
   let customArtist     = $state('');
   let customTitle      = $state('');
   let customFeats      = $state([]);
-  let extraAnswers     = $state([]); // [{ typeId, value }]
+  let extraAnswers     = $state([]);
   let answersSaving    = $state(false);
 
   const EXTRA_ANSWER_TYPES = [
@@ -85,6 +64,202 @@
     { id: 7, name: 'Animé' },
   ];
 
+  // Room settings (ephemeral room from playlist)
+  let rsOpen     = $state(false);
+  let rsRounds   = $state(10);
+  let rsDuration = $state(30);
+  let rsBreak    = $state(7);
+  let rsError    = $state('');
+  let rsSaving   = $state(false);
+
+  // Room code modal (after creation)
+  let rcOpen = $state(false);
+  let rcCode = $state('');
+
+  // ─── Spotify callback (runs on page load, before editor opens) ─────────────
+  async function handleSpotifyCallback() {
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get('code');
+    const state  = params.get('state');
+    if (params.get('error') || !code || state !== 'sp_import') {
+      if (params.get('error')) history.replaceState({}, '', '/playlists');
+      return;
+    }
+    history.replaceState({}, '', '/playlists');
+    const verifier = sessionStorage.getItem('sp_verifier');
+    const clientId = spotifyClientId;
+    if (!verifier || !clientId) return;
+    try {
+      const r = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: window.location.origin + '/playlists', client_id: clientId, code_verifier: verifier }),
+      });
+      const json = await r.json();
+      if (!json.access_token) throw new Error(json.error_description || 'Token exchange failed');
+      sessionStorage.setItem('sp_token',     json.access_token);
+      sessionStorage.setItem('sp_token_exp', Date.now() + json.expires_in * 1000);
+      sessionStorage.removeItem('sp_verifier');
+      toast('Spotify connecté !', 'success');
+    } catch (e) { toast('Erreur Spotify : ' + e.message, 'error'); }
+  }
+
+  // ─── Init ──────────────────────────────────────────────────────────────────
+  onMount(async () => {
+    await handleSpotifyCallback();
+    if (!sb || !user) { plLoading = false; return; }
+    await loadPlaylists();
+  });
+
+  // Reload playlists when user logs in after page load (async auth resolution)
+  let _lastLoadedUid = null;
+  $effect(() => {
+    const uid = user?.id;
+    if (uid && uid !== _lastLoadedUid && sb) {
+      _lastLoadedUid = uid;
+      loadPlaylists();
+    }
+  });
+
+  async function ensureSession() {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error || !session) throw new Error('Session expirée — reconnecte-toi.');
+    const exp = session.expires_at * 1000;
+    if (exp - Date.now() < 60_000) {
+      const { data, error: rErr } = await sb.auth.refreshSession();
+      if (rErr || !data.session) throw new Error('Session expirée — reconnecte-toi.');
+    }
+    return session;
+  }
+
+  async function loadPlaylists() {
+    plLoading = true;
+    const { data, error } = await sb.from('custom_playlists').select('*, custom_playlist_tracks!playlist_id(count)').eq('owner_id', user.id).order('updated_at', { ascending: false });
+    if (data) data.forEach(pl => { pl.track_count = pl.custom_playlist_tracks?.[0]?.count ?? 0; });
+    plLoading = false;
+    playlists = error ? [] : (data || []);
+  }
+
+  // ─── Playlist create/edit modal ────────────────────────────────────────────
+  function openPlModal(pl = null) {
+    editingPl = pl;
+    plName   = pl?.name   ?? '';
+    plEmoji  = pl?.emoji  ?? '🎵';
+    plPublic = pl?.is_public ?? false;
+    plError  = '';
+    plModalOpen = true;
+    setTimeout(() => document.getElementById('pl-name-input')?.focus(), 80);
+  }
+
+  async function savePl() {
+    const name  = plName.trim();
+    const emoji = plEmoji.trim() || '🎵';
+    if (!name) { plError = 'Le nom est requis.'; return; }
+    plSaving = true; plError = '';
+    try { await ensureSession(); } catch (e) { plError = e.message; plSaving = false; return; }
+
+    if (editingPl) {
+      const { error } = await sb.from('custom_playlists')
+        .update({ name, emoji, is_public: plPublic, updated_at: new Date().toISOString() })
+        .eq('id', editingPl.id);
+      if (error) { plError = error.message; plSaving = false; return; }
+      toast('Playlist mise à jour', 'success');
+      if (editorOpen && editorPl?.id === editingPl.id) {
+        editorPl = { ...editorPl, name, emoji, is_public: plPublic };
+      }
+    } else {
+      const { data, error } = await sb.from('custom_playlists')
+        .insert({ owner_id: user.id, name, emoji, is_public: plPublic })
+        .select().single();
+      if (error) { plError = error.message; plSaving = false; return; }
+      toast('Playlist créée !', 'success');
+      plModalOpen = false;
+      await loadPlaylists();
+      openEditor(data);
+      plSaving = false;
+      return;
+    }
+    plSaving = false;
+    plModalOpen = false;
+    await loadPlaylists();
+  }
+
+  // ─── Editor ────────────────────────────────────────────────────────────────
+  async function openEditor(pl) {
+    editorPl     = pl;
+    editorTracks = [];
+    editorOpen   = true;
+    await loadEditorTracks();
+    if (isAdmin) await loadAdminRooms();
+    adminIsOfficial = !!pl.is_official;
+    adminLinkedRoom = pl.linked_room_id || '';
+  }
+
+  async function loadEditorTracks() {
+    const { data, error } = await sb.from('custom_playlist_tracks')
+      .select('*, track_answers(answer_type_id, value, answer_types(name))')
+      .eq('playlist_id', editorPl.id).order('position');
+    if (error) { toast(error.message, 'error'); return; }
+    editorTracks = data || [];
+  }
+
+  async function removeTrack(trackId) {
+    const { error } = await sb.from('custom_playlist_tracks').delete().eq('id', trackId);
+    if (error) { toast(error.message, 'error'); return; }
+    editorTracks = editorTracks.filter(t => t.id !== trackId);
+  }
+
+  function normalize(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+  async function addTrack(trackData) {
+    const extId = trackData.external_id;
+    const norm  = normalize(trackData.artist) + '|' + normalize(trackData.title);
+    const isDup = editorTracks.some(t => (extId && t.external_id === extId) || (normalize(t.artist) + '|' + normalize(t.title)) === norm);
+    if (isDup) { toast('Ce titre est déjà dans la playlist.', 'error'); return false; }
+    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return false; }
+    const { data, error } = await sb.from('custom_playlist_tracks').insert({
+      playlist_id: editorPl.id, artist: trackData.artist, title: trackData.title,
+      preview_url: trackData.preview_url || null, cover_url: trackData.cover_url || null,
+      source: trackData.source || 'manual', external_id: trackData.external_id || null,
+      position: editorTracks.length,
+    }).select().single();
+    if (error) { toast(error.message, 'error'); return false; }
+    editorTracks = [...editorTracks, data];
+    return true;
+  }
+
+  async function addBatch(tracks) {
+    const existingIds = new Set(editorTracks.map(t => t.external_id).filter(Boolean));
+    const newTracks   = tracks.filter(t => !existingIds.has(t.external_id));
+    if (!newTracks.length) return { added: 0 };
+    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return { added: 0 }; }
+    const rows = newTracks.map((t, i) => ({
+      playlist_id: editorPl.id, artist: t.artist, title: t.title,
+      preview_url: t.preview_url || null, cover_url: t.cover_url || null,
+      source: t.source, external_id: t.external_id || null,
+      position: editorTracks.length + i,
+    }));
+    const { data, error } = await sb.from('custom_playlist_tracks').insert(rows).select();
+    if (error) { toast(error.message, 'error'); return { added: 0 }; }
+    editorTracks = [...editorTracks, ...data];
+    return { added: data.length };
+  }
+
+  async function deletePl() {
+    if (!editorPl) return;
+    if (!confirm(`Supprimer "${editorPl.name}" ? Cette action est irréversible.`)) return;
+    const deletedId = editorPl.id;
+    editorOpen = false; editorPl = null;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const r = await fetch(`/api/playlists/${deletedId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session?.access_token}` } });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+      toast('Playlist supprimée.', 'success');
+      await loadPlaylists();
+    } catch (e) { toast('Erreur suppression : ' + e.message, 'error'); }
+  }
+
+  // ─── Answers editor ────────────────────────────────────────────────────────
   async function openAnswersEditor(track) {
     answersTrack = track;
     customArtist = '';
@@ -134,340 +309,6 @@
     }
   }
 
-  // Room settings (ephemeral room from playlist)
-  let rsOpen     = $state(false);
-  let rsRounds   = $state(10);
-  let rsDuration = $state(30);
-  let rsBreak    = $state(7);
-  let rsError    = $state('');
-  let rsSaving   = $state(false);
-
-  // Room code modal (after creation)
-  let rcOpen = $state(false);
-  let rcCode = $state('');
-
-  let toastMsg  = $state('');
-  let toastType = $state('');
-  let _tt = null;
-  function toast(msg, type = '') {
-    clearTimeout(_tt); toastMsg = msg; toastType = type;
-    _tt = setTimeout(() => { toastMsg = ''; }, 3200);
-  }
-
-  // ─── Spotify token helpers ─────────────────────────────────────────────────
-  function getSpotifyToken() {
-    const t   = sessionStorage.getItem('sp_token');
-    const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
-    return (t && Date.now() < exp) ? t : null;
-  }
-  function clearSpotifyToken() {
-    sessionStorage.removeItem('sp_token');
-    sessionStorage.removeItem('sp_token_exp');
-  }
-
-  // ─── PKCE helpers ──────────────────────────────────────────────────────────
-  function b64url(buf) {
-    return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-  }
-  function genVerifier(len = 64) { return b64url(crypto.getRandomValues(new Uint8Array(len))); }
-  async function genChallenge(v) { return b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v))); }
-
-  async function connectSpotify() {
-    const clientId = spotifyClientId;
-    if (!clientId) { toast('SPOTIFY_CLIENT_ID non configur\u00e9.', 'error'); return; }
-    const verifier  = genVerifier();
-    const challenge = await genChallenge(verifier);
-    sessionStorage.setItem('sp_verifier', verifier);
-    const params = new URLSearchParams({
-      response_type: 'code', client_id: clientId,
-      scope: 'playlist-read-private playlist-read-collaborative user-read-private',
-      redirect_uri: window.location.origin + '/playlists', code_challenge_method: 'S256',
-      code_challenge: challenge, state: 'sp_import',
-    });
-    window.location.href = 'https://accounts.spotify.com/authorize?' + params;
-  }
-
-  function disconnectSpotify() { clearSpotifyToken(); spConnected = false; toast('Spotify d\u00e9connect\u00e9.', 'success'); }
-
-  async function handleSpotifyCallback() {
-    const params = new URLSearchParams(window.location.search);
-    const code   = params.get('code');
-    const state  = params.get('state');
-    if (params.get('error') || !code || state !== 'sp_import') {
-      if (params.get('error')) history.replaceState({}, '', '/playlists');
-      return;
-    }
-    history.replaceState({}, '', '/playlists');
-    const verifier = sessionStorage.getItem('sp_verifier');
-    const clientId = spotifyClientId;
-    if (!verifier || !clientId) return;
-    try {
-      const r = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: window.location.origin + '/playlists', client_id: clientId, code_verifier: verifier }),
-      });
-      const json = await r.json();
-      if (!json.access_token) throw new Error(json.error_description || 'Token exchange failed');
-      sessionStorage.setItem('sp_token',     json.access_token);
-      sessionStorage.setItem('sp_token_exp', Date.now() + json.expires_in * 1000);
-      sessionStorage.removeItem('sp_verifier');
-      spConnected = true;
-      toast('Spotify connect\u00e9 !', 'success');
-    } catch (e) { toast('Erreur Spotify : ' + e.message, 'error'); }
-  }
-
-  // ─── Init ──────────────────────────────────────────────────────────────────
-  onMount(async () => {
-    await handleSpotifyCallback();
-    spConnected = !!getSpotifyToken();
-    if (!sb || !user) { plLoading = false; return; }
-    await loadPlaylists();
-  });
-
-  // Reload playlists when user logs in after page load (async auth resolution)
-  let _lastLoadedUid = null;
-  $effect(() => {
-    const uid = user?.id;
-    if (uid && uid !== _lastLoadedUid && sb) {
-      _lastLoadedUid = uid;
-      loadPlaylists();
-    }
-  });
-
-  async function ensureSession() {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) throw new Error('Session expir\u00e9e \u2014 reconnecte-toi.');
-    const exp = session.expires_at * 1000;
-    if (exp - Date.now() < 60_000) {
-      const { data, error: rErr } = await sb.auth.refreshSession();
-      if (rErr || !data.session) throw new Error('Session expir\u00e9e \u2014 reconnecte-toi.');
-    }
-    return session;
-  }
-
-  async function loadPlaylists() {
-    plLoading = true;
-    const { data, error } = await sb.from('custom_playlists').select('*, custom_playlist_tracks!playlist_id(count)').eq('owner_id', user.id).order('updated_at', { ascending: false });
-    if (data) data.forEach(pl => { pl.track_count = pl.custom_playlist_tracks?.[0]?.count ?? 0; });
-    plLoading = false;
-    playlists = error ? [] : (data || []);
-  }
-
-  // ─── Playlist create/edit modal ────────────────────────────────────────────
-  function openPlModal(pl = null) {
-    editingPl = pl;
-    plName   = pl?.name   ?? '';
-    plEmoji  = pl?.emoji  ?? '🎵';
-    plPublic = pl?.is_public ?? false;
-    plError  = '';
-    plModalOpen = true;
-    setTimeout(() => document.getElementById('pl-name-input')?.focus(), 80);
-  }
-
-  async function savePl() {
-    const name = plName.trim();
-    const emoji = plEmoji.trim() || '🎵';
-    if (!name) { plError = 'Le nom est requis.'; return; }
-    plSaving = true; plError = '';
-    try { await ensureSession(); } catch (e) { plError = e.message; plSaving = false; return; }
-
-    if (editingPl) {
-      const { error } = await sb.from('custom_playlists')
-        .update({ name, emoji, is_public: plPublic, updated_at: new Date().toISOString() })
-        .eq('id', editingPl.id);
-      if (error) { plError = error.message; plSaving = false; return; }
-      toast('Playlist mise \u00e0 jour', 'success');
-      if (editorOpen && editorPl?.id === editingPl.id) {
-        editorPl = { ...editorPl, name, emoji, is_public: plPublic };
-      }
-    } else {
-      const { data, error } = await sb.from('custom_playlists')
-        .insert({ owner_id: user.id, name, emoji, is_public: plPublic })
-        .select().single();
-      if (error) { plError = error.message; plSaving = false; return; }
-      toast('Playlist cr\u00e9\u00e9e !', 'success');
-      plModalOpen = false;
-      await loadPlaylists();
-      openEditor(data);
-      plSaving = false;
-      return;
-    }
-    plSaving = false;
-    plModalOpen = false;
-    await loadPlaylists();
-  }
-
-  // ─── Editor ────────────────────────────────────────────────────────────────
-  async function openEditor(pl) {
-    editorPl = pl;
-    editorTracks = [];
-    editorTab = 'search';
-    searchResults = [];
-    spImportPreview = null;
-    dzImportPreview = null;
-    searchQuery = ''; spotifyUrl = ''; deezerUrl = '';
-    editorOpen = true;
-    await loadEditorTracks();
-    if (isAdmin) await loadAdminRooms();
-    adminIsOfficial = !!pl.is_official;
-    adminLinkedRoom = pl.linked_room_id || '';
-  }
-
-  async function loadEditorTracks() {
-    const { data, error } = await sb.from('custom_playlist_tracks')
-      .select('*, track_answers(answer_type_id, value, answer_types(name))')
-      .eq('playlist_id', editorPl.id).order('position');
-    if (error) { toast(error.message, 'error'); return; }
-    editorTracks = data || [];
-  }
-
-  async function removeTrack(trackId) {
-    const { error } = await sb.from('custom_playlist_tracks').delete().eq('id', trackId);
-    if (error) { toast(error.message, 'error'); return; }
-    editorTracks = editorTracks.filter(t => t.id !== trackId);
-  }
-
-  function normalize(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-
-  async function addTrack(trackData) {
-    const extId = trackData.external_id;
-    const norm  = normalize(trackData.artist) + '|' + normalize(trackData.title);
-    const isDup = editorTracks.some(t => (extId && t.external_id === extId) || (normalize(t.artist) + '|' + normalize(t.title)) === norm);
-    if (isDup) { toast('Ce titre est d\u00e9j\u00e0 dans la playlist.', 'error'); return false; }
-    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return false; }
-    const { data, error } = await sb.from('custom_playlist_tracks').insert({
-      playlist_id: editorPl.id, artist: trackData.artist, title: trackData.title,
-      preview_url: trackData.preview_url || null, cover_url: trackData.cover_url || null,
-      source: trackData.source || 'manual', external_id: trackData.external_id || null,
-      position: editorTracks.length,
-    }).select().single();
-    if (error) { toast(error.message, 'error'); return false; }
-    editorTracks = [...editorTracks, data];
-    return true;
-  }
-
-  async function deletePl() {
-    if (!editorPl) return;
-    if (!confirm(`Supprimer "${editorPl.name}" ? Cette action est irr\u00e9versible.`)) return;
-    const deletedId = editorPl.id;
-    editorOpen = false; editorPl = null;
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      const r = await fetch(`/api/playlists/${deletedId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session?.access_token}` } });
-      const body = await r.json();
-      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-      toast('Playlist supprim\u00e9e.', 'success');
-      await loadPlaylists();
-    } catch (e) { toast('Erreur suppression : ' + e.message, 'error'); }
-  }
-
-  // ─── Search ────────────────────────────────────────────────────────────────
-  async function doSearch() {
-    const q = searchQuery.trim();
-    if (!q) return;
-    searchLoading = true; searchResults = []; _addingIdx = {};
-    try {
-      const r = await fetch(`/api/${searchSource}/search?q=${encodeURIComponent(q)}`);
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
-      searchResults = data;
-    } catch (e) { toast(e.message, 'error'); }
-    searchLoading = false;
-  }
-
-  let _addingIdx = $state({});
-  async function addFromSearch(i) {
-    _addingIdx = { ..._addingIdx, [i]: true };
-    const ok = await addTrack(searchResults[i]);
-    _addingIdx = { ..._addingIdx, [i]: ok ? 'done' : false };
-  }
-
-  // ─── Spotify import ────────────────────────────────────────────────────────
-  function extractSpotifyId(input) {
-    const m = input.trim().match(/playlist\/([a-zA-Z0-9]+)/);
-    if (m) return m[1];
-    if (/^[a-zA-Z0-9]{22}$/.test(input.trim())) return input.trim();
-    return null;
-  }
-
-  async function importSpotify() {
-    const id = extractSpotifyId(spotifyUrl);
-    if (!id) { toast('URL ou ID Spotify invalide.', 'error'); return; }
-    const token = getSpotifyToken();
-    if (!token) { toast('Connecte ton compte Spotify d\u2019abord.', 'error'); return; }
-    spLoading = true; spImportPreview = null;
-    try {
-      const r = await fetch(`/api/spotify/playlist-user/${id}`, { headers: { 'X-Spotify-Token': token } });
-      const data = await r.json();
-      if (!r.ok) {
-        if (r.status === 401) clearSpotifyToken();
-        throw new Error(data.error || `HTTP ${r.status}`);
-      }
-      spImportPreview = data;
-    } catch (e) { toast(e.message, 'error'); }
-    spLoading = false;
-  }
-
-  async function confirmSpotifyImport() {
-    if (!spImportPreview) return;
-    const existingIds = new Set(editorTracks.map(t => t.external_id).filter(Boolean));
-    const newTracks   = spImportPreview.tracks.filter(t => !existingIds.has(t.external_id));
-    if (!newTracks.length) { toast('Tous les titres sont d\u00e9j\u00e0 dans la playlist.', 'error'); return; }
-    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return; }
-    const rows = newTracks.map((t, i) => ({ playlist_id: editorPl.id, artist: t.artist, title: t.title, preview_url: t.preview_url || null, cover_url: t.cover_url || null, source: t.source, external_id: t.external_id || null, position: editorTracks.length + i }));
-    const { data, error } = await sb.from('custom_playlist_tracks').insert(rows).select();
-    if (error) { toast(error.message, 'error'); return; }
-    editorTracks = [...editorTracks, ...data];
-    spImportPreview = null;
-    toast(`${data.length} titre${data.length !== 1 ? 's' : ''} import\u00e9${data.length !== 1 ? 's' : ''} !`, 'success');
-  }
-
-  // ─── Deezer import ─────────────────────────────────────────────────────────
-  function extractDeezerId(input) {
-    const m = input.trim().match(/playlist\/(\d+)/);
-    if (m) return m[1];
-    if (/^\d+$/.test(input.trim())) return input.trim();
-    return null;
-  }
-
-  async function importDeezer() {
-    const id = extractDeezerId(deezerUrl);
-    if (!id) { toast('URL ou ID Deezer invalide.', 'error'); return; }
-    dzLoading = true; dzImportPreview = null;
-    try {
-      const r = await fetch(`/api/deezer/playlist/${id}`);
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
-      dzImportPreview = data;
-    } catch (e) { toast(e.message, 'error'); }
-    dzLoading = false;
-  }
-
-  async function confirmDeezerImport() {
-    if (!dzImportPreview) return;
-    const existingIds = new Set(editorTracks.map(t => t.external_id).filter(Boolean));
-    const newTracks   = dzImportPreview.tracks.filter(t => !existingIds.has(t.external_id));
-    if (!newTracks.length) { toast('Tous les titres sont d\u00e9j\u00e0 dans la playlist.', 'error'); return; }
-    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return; }
-    const rows = newTracks.map((t, i) => ({ playlist_id: editorPl.id, artist: t.artist, title: t.title, preview_url: t.preview_url || null, cover_url: t.cover_url || null, source: t.source, external_id: t.external_id || null, position: editorTracks.length + i }));
-    const { data, error } = await sb.from('custom_playlist_tracks').insert(rows).select();
-    if (error) { toast(error.message, 'error'); return; }
-    editorTracks = [...editorTracks, ...data];
-    dzImportPreview = null;
-    toast(`${data.length} titre${data.length !== 1 ? 's' : ''} import\u00e9${data.length !== 1 ? 's' : ''} !`, 'success');
-  }
-
-  // ─── Manual add ────────────────────────────────────────────────────────────
-  async function addManual() {
-    const artist  = manArtist.trim();
-    const title   = manTitle.trim();
-    const preview = manPreview.trim();
-    if (!artist || !title) { manError = 'Artiste et titre sont requis.'; return; }
-    manError = '';
-    const ok = await addTrack({ artist, title, preview_url: preview || null, source: 'manual' });
-    if (ok) { manArtist = ''; manTitle = ''; manPreview = ''; toast('Titre ajout\u00e9 !', 'success'); }
-  }
-
   // ─── Admin ─────────────────────────────────────────────────────────────────
   async function loadAdminRooms() {
     try {
@@ -486,7 +327,7 @@
       });
       const body = await r.json();
       if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-      toast('Statut officiel mis \u00e0 jour.', 'success');
+      toast('Statut officiel mis à jour.', 'success');
     } catch (e) { toast('Erreur : ' + e.message, 'error'); }
   }
 
@@ -525,7 +366,7 @@
 
   function copyLink() {
     const url = `${location.origin}/game?roomId=${rcCode}`;
-    navigator.clipboard.writeText(url).then(() => toast('Lien copi\u00e9 !', 'success')).catch(() => toast('Copie \u00e9chou\u00e9e', 'error'));
+    navigator.clipboard.writeText(url).then(() => toast('Lien copié !', 'success')).catch(() => toast('Copie échouée', 'error'));
   }
 </script>
 
@@ -674,147 +515,28 @@
     </div>
     {/if}
 
-    <!-- Tabs -->
-    <div class="editor-tabs">
-      {#each ['search','import-spotify','import-deezer','manual'] as t}
-        {@const labels = { search: 'Rechercher un titre', 'import-spotify': 'Importer Spotify', 'import-deezer': 'Importer Deezer', manual: 'Ajouter manuellement' }}
-        <button class="etab" class:active={editorTab === t} onclick={() => editorTab = t}
-          style={t === 'import-spotify' && !isAdmin ? 'display:none' : ''}>{labels[t]}</button>
-      {/each}
-    </div>
-
-    <!-- Tab: search -->
-    {#if editorTab === 'search'}
-    <div class="tab-pane">
-      <div class="search-bar">
-        <div class="search-source-toggle">
-          <button class="src-btn" class:active={searchSource === 'deezer'} onclick={() => searchSource = 'deezer'}>Deezer</button>
-          <button class="src-btn" class:active={searchSource === 'spotify'} onclick={() => searchSource = 'spotify'}>Spotify</button>
-        </div>
-        <input type="text" bind:value={searchQuery} placeholder="Artiste, titre..." autocomplete="off" class="input-glass"
-          onkeypress={e => { if (e.key === 'Enter') doSearch(); }}>
-        <button class="btn-accent sm" onclick={doSearch} disabled={searchLoading}>{searchLoading ? '...' : 'Rechercher'}</button>
-      </div>
-      <div class="search-results">
-        {#each searchResults as t, i (t.external_id || i)}
-          <div class="track-row">
-            {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="">{/if}
-            <div class="track-info">
-              <div class="track-title">{t.title}</div>
-              <div class="track-artist">{t.artist}</div>
-            </div>
-            <span class="track-source">{t.source}</span>
-            <button class="track-add-btn" class:added={_addingIdx[i] === 'done'}
-              onclick={() => addFromSearch(i)} disabled={!!_addingIdx[i]}>
-              {_addingIdx[i] === 'done' ? '✅ Ajouté' : _addingIdx[i] ? '...' : '+ Ajouter'}
-            </button>
-          </div>
-        {/each}
-      </div>
-    </div>
-
-    <!-- Tab: import-spotify -->
-    {:else if editorTab === 'import-spotify'}
-    <div class="tab-pane">
-      {#if !spotifyClientId}
-        <p class="import-hint" style="color:#f87171">Spotify non configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> dans ton fichier <code>.env</code>.</p>
-      {:else if !spConnected}
-        <p class="import-hint">Connecte ton compte Spotify pour importer tes playlists (publiques et privées).</p>
-        <button class="btn-spotify" onclick={connectSpotify}>Connecter Spotify</button>
-      {:else}
-        <div class="spotify-connected-bar">
-          <span class="spotify-connected-label">&#x2713; Spotify connecté</span>
-          <button class="btn-link-sm" onclick={disconnectSpotify}>Déconnecter</button>
-        </div>
-        <p class="import-hint">Colle l’URL ou l’ID d’une playlist Spotify.</p>
-        <div class="search-bar">
-          <input type="text" bind:value={spotifyUrl} placeholder="https://open.spotify.com/playlist/... ou ID" class="input-glass"
-            onkeypress={e => { if (e.key === 'Enter') importSpotify(); }}>
-          <button class="btn-accent sm" onclick={importSpotify} disabled={spLoading}>{spLoading ? '...' : 'Importer'}</button>
-        </div>
-        {#if spImportPreview}
-          <div class="import-preview">
-            <div class="import-preview-header">
-              {#if spImportPreview.cover}<img class="import-preview-cover" src={spImportPreview.cover} alt="">{/if}
-              <div>
-                <div class="import-preview-name">{spImportPreview.name}</div>
-                <div class="import-preview-count">{spImportPreview.tracks.length} titres</div>
-              </div>
-            </div>
-            <div class="import-actions">
-              <button class="btn-accent sm" onclick={confirmSpotifyImport}>Tout importer ({spImportPreview.tracks.length} titres)</button>
-              <button class="btn-ghost sm" onclick={() => spImportPreview = null}>Annuler</button>
-            </div>
-          </div>
-        {/if}
-      {/if}
-    </div>
-
-    <!-- Tab: import-deezer -->
-    {:else if editorTab === 'import-deezer'}
-    <div class="tab-pane">
-      <p class="import-hint">Colle l’URL ou l’ID d’une playlist Deezer publique.</p>
-      <div class="search-bar">
-        <input type="text" bind:value={deezerUrl} placeholder="https://www.deezer.com/playlist/... ou ID" class="input-glass"
-          onkeypress={e => { if (e.key === 'Enter') importDeezer(); }}>
-        <button class="btn-accent sm" onclick={importDeezer} disabled={dzLoading}>{dzLoading ? '...' : 'Importer'}</button>
-      </div>
-      {#if dzImportPreview}
-        <div class="import-preview">
-          <div class="import-preview-header">
-            {#if dzImportPreview.cover}<img class="import-preview-cover" src={dzImportPreview.cover} alt="">{/if}
-            <div>
-              <div class="import-preview-name">{dzImportPreview.name}</div>
-              <div class="import-preview-count">{dzImportPreview.tracks.length} titres</div>
-            </div>
-          </div>
-          <div class="import-actions">
-            <button class="btn-accent sm" onclick={confirmDeezerImport}>Tout importer ({dzImportPreview.tracks.length} titres)</button>
-            <button class="btn-ghost sm" onclick={() => dzImportPreview = null}>Annuler</button>
-          </div>
-        </div>
-      {/if}
-    </div>
-
-    <!-- Tab: manual -->
-    {:else if editorTab === 'manual'}
-    <div class="tab-pane">
-      <div class="manual-form">
-        <div class="pl-form-row">
-          <div class="field" style="flex:1"><label for="artiste">Artiste</label><input type="text" bind:value={manArtist} placeholder="Ex: PNL" maxlength="100" class="input-glass"></div>
-          <div class="field" style="flex:1"><label for="titre">Titre</label><input type="text" bind:value={manTitle} placeholder="Ex: Au DD" maxlength="100" class="input-glass"></div>
-        </div>
-        <div class="field">
-          <label for="url">URL Preview (MP3, 30s) <span style="color:var(--dim);font-weight:400">&mdash; optionnel</span></label>
-          <input type="url" bind:value={manPreview} placeholder="https://...mp3" class="input-glass">
-        </div>
-        {#if manError}<div class="alert-err">{manError}</div>{/if}
-        <button class="btn-accent" onclick={addManual}>Ajouter à la playlist</button>
-      </div>
-    </div>
-    {/if}
+    <!-- Search / import tabs -->
+    <TrackSearch onAdd={addTrack} onAddBatch={addBatch} />
 
     <!-- Tracks list -->
     <div class="tracks-section">
       <div class="tracks-section-head">
         <h3>Titres dans la playlist</h3>
-        {#if !editorTracks.length}<span class="tracks-empty-hint">Ajoute des titres via les onglets ci-dessus.</span>{/if}
       </div>
-      <div class="tracks-list">
-        {#each editorTracks as t, i (t.id)}
-          <div class="track-row-pl">
-            <span class="track-num">{i + 1}</span>
-            {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="" onerror={e => e.currentTarget.style.display='none'}>{/if}
-            <div class="track-info">
-              <div class="track-title">{t.title}</div>
-              <div class="track-artist">{t.artist}</div>
-            </div>
-            <span class="track-source">{t.source}</span>
-            <button class="track-answers-btn" title="Réponses custom" onclick={() => openAnswersEditor(t)}>&#x270E;</button>
-            <button class="track-remove-btn" onclick={() => removeTrack(t.id)}>&#x2715;</button>
-          </div>
-        {/each}
-      </div>
+      {#if !editorTracks.length}
+        <EmptyState icon="🎵" title="Aucun titre" description="Ajoute des titres via les onglets ci-dessus." />
+      {:else}
+        <div class="tracks-list">
+          {#each editorTracks as t, i (t.id)}
+            <TrackRow
+              track={t}
+              index={i + 1}
+              onRemove={() => removeTrack(t.id)}
+              onEditAnswers={() => openAnswersEditor(t)}
+            />
+          {/each}
+        </div>
+      {/if}
     </div>
 
   </div>
@@ -845,7 +567,7 @@
         <span class="room-setting-val">{rsRounds}</span>
       </div>
       <div class="room-setting-row">
-        <label for="dureeManche">Durée d’une manche (sec)</label>
+        <label for="dureeManche">Durée d'une manche (sec)</label>
         <input type="range" bind:value={rsDuration} min="10" max="60" step="5">
         <span class="room-setting-val">{rsDuration}s</span>
       </div>
@@ -872,7 +594,7 @@
   <div class="modal modal-lg">
     <button class="close-btn" onclick={() => rcOpen = false}>&#x2715;</button>
     <h2>Room créée !</h2>
-    <p class="mdesc">Partage ce code à tes amis pour qu’ils rejoignent la room.</p>
+    <p class="mdesc">Partage ce code à tes amis pour qu'ils rejoignent la room.</p>
     <div class="room-code-box">
       <div class="room-code-label">Code de la room</div>
       <div class="room-code">{rcCode}</div>
@@ -906,7 +628,7 @@
 
     <div class="answer-field">
       <label class="answer-label">Featuring</label>
-      {#each customFeats as feat, i}
+      {#each customFeats as feat, i (i)}
         <div class="answer-row">
           <input type="text" value={feat} oninput={(e) => { customFeats[i] = e.currentTarget.value; }} class="answer-value-input" placeholder="Nom du feat…" maxlength="100">
           <button class="track-remove-btn" onclick={() => removeCustomFeat(i)}>&#x2715;</button>
@@ -922,10 +644,10 @@
 
     <div class="answer-field">
       <label class="answer-label">Réponses supplémentaires (Film, Série…)</label>
-      {#each extraAnswers as ans, i}
+      {#each extraAnswers as ans, i (i)}
         <div class="answer-row">
           <select value={ans.typeId} onchange={(e) => { extraAnswers[i] = { ...extraAnswers[i], typeId: Number(e.currentTarget.value) }; }} class="answer-type-select">
-            {#each EXTRA_ANSWER_TYPES as t}
+            {#each EXTRA_ANSWER_TYPES as t (t.id)}
               <option value={t.id}>{t.name}</option>
             {/each}
           </select>
@@ -944,11 +666,6 @@
     </div>
   </div>
 </div>
-{/if}
-
-<!-- Toast -->
-{#if toastMsg}
-  <div class="toast {toastType}" style="display:block">{toastMsg}</div>
 {/if}
 
 <style>
@@ -1203,213 +920,6 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* ── Editor tabs ─────────────────────────────────────────────────────────────── */
-.editor-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-.etab {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--mid);
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s,
-    background 0.15s;
-}
-.etab:hover {
-  color: var(--text);
-  border-color: rgb(var(--c-glass) / 0.2);
-}
-.etab.active {
-  color: var(--accent);
-  border-color: rgb(var(--accent-rgb) / 0.3);
-  background: rgb(var(--accent-rgb) / 0.07);
-}
-
-/* ── Search bar ──────────────────────────────────────────────────────────────── */
-.search-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.search-bar input {
-  flex: 1;
-  min-width: 180px;
-}
-.search-source-toggle {
-  display: flex;
-  gap: 4px;
-}
-.src-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--mid);
-  padding: 7px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
-}
-.src-btn.active {
-  color: var(--accent);
-  border-color: rgb(var(--accent-rgb) / 0.3);
-  background: rgb(var(--accent-rgb) / 0.07);
-}
-
-/* ── Search results ──────────────────────────────────────────────────────────── */
-.search-results {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 280px;
-  overflow-y: auto;
-}
-
-.track-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgb(var(--c-glass) / 0.03);
-  border: 1px solid var(--border);
-  transition: border-color 0.15s;
-}
-.track-row:hover {
-  border-color: rgb(var(--c-glass) / 0.15);
-}
-.track-cover {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  object-fit: cover;
-  background: rgb(var(--c-glass) / 0.05);
-  flex-shrink: 0;
-}
-.track-info {
-  flex: 1;
-  min-width: 0;
-}
-.track-title {
-  font-size: 0.88rem;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.track-artist {
-  font-size: 0.75rem;
-  color: var(--mid);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.track-source {
-  font-size: 0.65rem;
-  color: var(--dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
-}
-.track-add-btn {
-  background: rgb(var(--accent-rgb) / 0.1);
-  border: 1px solid rgb(var(--accent-rgb) / 0.2);
-  color: var(--accent);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-.track-add-btn:hover {
-  background: rgb(var(--accent-rgb) / 0.2);
-}
-.track-add-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.track-add-btn.added {
-  background: rgba(74, 222, 128, 0.1);
-  border-color: rgba(74, 222, 128, 0.2);
-  color: var(--success);
-}
-
-/* ── Import preview ──────────────────────────────────────────────────────────── */
-.import-hint {
-  font-size: 0.84rem;
-  color: var(--mid);
-  margin-bottom: 14px;
-}
-.import-preview {
-  margin-top: 14px;
-}
-.import-preview-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 14px;
-  background: rgb(var(--c-glass) / 0.04);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-.import-preview-cover {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: var(--surface);
-}
-.import-preview-name {
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 700;
-}
-.import-preview-count {
-  font-size: 0.78rem;
-  color: var(--mid);
-  margin-top: 2px;
-}
-.import-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-.import-notice {
-  background: rgba(251, 191, 36, 0.06);
-  border: 1px solid rgba(251, 191, 36, 0.2);
-  border-radius: 10px;
-  padding: 16px;
-}
-.import-notice p {
-  font-size: 0.84rem;
-  color: var(--mid);
-}
-.import-notice code {
-  background: rgb(var(--c-glass) / 0.08);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 0.82rem;
-  color: var(--text);
-}
-
 /* ── Tracks list (in editor) ─────────────────────────────────────────────────── */
 .tracks-section {
   margin-top: 28px;
@@ -1427,10 +937,6 @@
   font-size: 1rem;
   font-weight: 700;
 }
-.tracks-empty-hint {
-  font-size: 0.8rem;
-  color: var(--dim);
-}
 
 .tracks-list {
   display: flex;
@@ -1440,36 +946,6 @@
   overflow-y: auto;
 }
 
-.track-row-pl {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  background: rgb(var(--c-glass) / 0.02);
-  border: 1px solid var(--border);
-}
-.track-row-pl .track-num {
-  font-size: 0.75rem;
-  color: var(--dim);
-  width: 22px;
-  flex-shrink: 0;
-  text-align: right;
-}
-.track-row-pl .track-cover {
-  width: 34px;
-  height: 34px;
-}
-.track-row-pl .track-info {
-  flex: 1;
-  min-width: 0;
-}
-.track-row-pl .track-title {
-  font-size: 0.84rem;
-}
-.track-row-pl .track-artist {
-  font-size: 0.72rem;
-}
 .track-remove-btn {
   background: transparent;
   border: none;
@@ -1491,33 +967,18 @@
   color: var(--danger);
   background: rgba(239, 68, 68, 0.1);
 }
-.track-answers-btn {
-  background: transparent;
-  border: none;
-  color: var(--dim);
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
+
+/* ── Modal actions ── */
+.modal-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 0.15s,
-    background 0.15s;
-  flex-shrink: 0;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
-.track-answers-btn:hover {
-  color: var(--accent);
-  background: rgb(var(--c-accent) / 0.12);
-}
-.answers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 14px 0;
-}
+
+/* ── Answer fields ───────────────────────────────────────────────────────────── */
 .answer-field {
   display: flex;
   flex-direction: column;
@@ -1559,57 +1020,6 @@
 .answer-value-input:focus {
   border-color: rgb(var(--accent-rgb) / 0.4);
   box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08);
-}
-
-/* ── Modal actions ── */
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-/* ── Manual form ─────────────────────────────────────────────────────────────── */
-.manual-form {
-  max-width: 520px;
-}
-
-/* ── Toast ───────────────────────────────────────────────────────────────────── */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 12px 22px;
-  border-radius: 50px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  z-index: 999;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  animation: toastIn 0.2s ease;
-}
-.toast.success {
-  border-color: rgba(74, 222, 128, 0.3);
-  color: var(--success);
-}
-.toast.error {
-  border-color: rgba(239, 68, 68, 0.3);
-  color: var(--danger);
-}
-@keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
 
 /* ── Room launch modal ───────────────────────────────────────────────────────── */
@@ -1746,53 +1156,6 @@
   flex-wrap: wrap;
 }
 
-/* ── Spotify PKCE connect ────────────────────────────────────────────────────── */
-.btn-spotify {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #1db954;
-  color: #000;
-  font-weight: 700;
-  font-size: 0.88rem;
-  padding: 10px 20px;
-  border-radius: 50px;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-spotify:hover {
-  opacity: 0.85;
-}
-.spotify-connected-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(29, 185, 84, 0.1);
-  border: 1px solid rgba(29, 185, 84, 0.3);
-  border-radius: 10px;
-  padding: 8px 14px;
-  margin-bottom: 10px;
-  font-size: 0.83rem;
-}
-.spotify-connected-label {
-  color: #1db954;
-  font-weight: 600;
-  flex: 1;
-}
-.btn-link-sm {
-  background: none;
-  border: none;
-  color: var(--dim);
-  font-size: 0.78rem;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-.btn-link-sm:hover {
-  color: var(--fg);
-}
-
 /* ── Admin section ───────────────────────────────────────────────────────────── */
 .admin-section {
   background: rgba(251, 191, 36, 0.06);
@@ -1843,13 +1206,6 @@
   }
   .editor-header-actions {
     width: 100%;
-  }
-  .editor-tabs {
-    gap: 4px;
-  }
-  .etab {
-    font-size: 0.72rem;
-    padding: 6px 10px;
   }
   .modal-xl {
     padding: 24px 18px;

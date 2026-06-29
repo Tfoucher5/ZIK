@@ -8,7 +8,7 @@ const webSocketServer = {
     if (!server.httpServer) return;
     // Dynamically import to support ESM modules with top-level await
     Promise.all([
-      import("./src/lib/server/socket/game.js"),
+      import("./src/lib/server/socket/game/index.js"),
       import("./src/lib/server/socket/salon.js"),
       import("./src/lib/server/services/playlist.js"),
     ]).then(([{ register }, { registerSalon }, { preloadAllPlaylists }]) => {

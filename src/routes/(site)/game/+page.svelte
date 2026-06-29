@@ -180,8 +180,6 @@
     saveChatPrefs();
   }
 
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
   async function shareResult() {
     if (!shareResultId) return;
     const url = `${location.origin}/results/${shareResultId}`;
@@ -322,31 +320,6 @@
     };
     audio.onended = () => {
       if (_roundActive) { audio.currentTime = 0; audio.play().catch(() => {}); }
-    };
-    audio.load();
-  }
-
-  function loadPreview(previewUrl) {
-    const audio = document.getElementById('previewAudio');
-    if (!audio) return;
-    if (ytPlayer?.stopVideo) ytPlayer.stopVideo();
-    audio.pause();
-    audio.onloadedmetadata = null;
-    startMediaGuard();
-    audio.src = previewUrl;
-    audio.volume = savedVol() / 100;
-    audio.onloadedmetadata = () => {
-      const maxSeek = Math.max(0, Math.min((audio.duration || 30) - 10, 20));
-      audio.currentTime = Math.random() * maxSeek;
-      audio.play().catch(() => {
-        const resume = () => {
-          audio.play().catch(() => {});
-          document.removeEventListener('pointerdown', resume, true);
-          document.removeEventListener('keydown',     resume, true);
-        };
-        document.addEventListener('pointerdown', resume, true);
-        document.addEventListener('keydown',     resume, true);
-      });
     };
     audio.load();
   }
@@ -581,16 +554,6 @@
       showFeedback(data.msg, cls);
     });
     socket.on('reveal_cover', ({ cover }) => { if (cover) { coverSrc = cover; showCover = true; } });
-    socket.on('qcm_reveal', ({ correctChoiceIndex }) => {
-      qcmReveal = correctChoiceIndex;
-      const correct = qcmChoices[correctChoiceIndex];
-      if (correct) {
-        const sep = correct.indexOf(' — ');
-        const won = qcmChosen === correctChoiceIndex;
-        slotArtist = { val: sep > -1 ? correct.slice(0, sep) : correct, state: won ? 'found' : 'missed' };
-        slotTitle  = { val: sep > -1 ? correct.slice(sep + 3) : '—', state: won ? 'found' : 'missed' };
-      }
-    });
     socket.on('choice_result', (result) => {
       qcmChoiceResult = result;
     });

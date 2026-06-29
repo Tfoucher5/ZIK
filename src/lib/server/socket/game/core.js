@@ -2,105 +2,45 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const stringSimilarity = require("string-similarity");
 
-import { supabase } from "../config.js";
+import { supabase } from "../../config.js";
 import {
   playlistCache,
   customRooms,
   dbRooms,
   roomGames,
   chatHistories,
-} from "../state.js";
+} from "../../state.js";
 import {
   loadPlaylist,
   cleanString,
   displayString,
-  buildTrack,
   calcSpeedBonus,
-} from "../services/playlist.js";
-import { checkAchievements, saveGameResult } from "../services/achievements.js";
-import { execFile } from "child_process";
-import { promisify } from "util";
-import { ytdlAudioCache } from "../ytdlCache.js";
-import { YTDLP_BIN, YTDL_TTL, getYtAudioUrl } from "../ytdlAudio.js";
-
-const execFileAsync = promisify(execFile);
-
-// ─── QCM helpers ─────────────────────────────────────────────────────────────
-
-function makeChoices(correct, allTracks) {
-  const label = (t) =>
-    `${displayString(t.mainArtist || t.artist)} — ${displayString(t.title)}`;
-  const correctLabel = label(correct);
-  const correctArtistKey = (correct.mainArtist || correct.artist || "")
-    .toLowerCase()
-    .trim();
-  const pool = allTracks.filter((t) => label(t) !== correctLabel);
-  const sameArtistPool = pool.filter(
-    (t) =>
-      (t.mainArtist || t.artist || "").toLowerCase().trim() ===
-      correctArtistKey,
-  );
-  const diffArtistPool = pool.filter(
-    (t) =>
-      (t.mainArtist || t.artist || "").toLowerCase().trim() !==
-      correctArtistKey,
-  );
-  let wrongTracks;
-  if (sameArtistPool.length >= 1 && Math.random() < 0.4) {
-    const decoy =
-      sameArtistPool[Math.floor(Math.random() * sameArtistPool.length)];
-    const remaining = diffArtistPool
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2);
-    wrongTracks = [decoy, ...remaining].sort(() => Math.random() - 0.5);
-  } else {
-    wrongTracks = pool.sort(() => Math.random() - 0.5).slice(0, 3);
-  }
-  const choices = [correctLabel, ...wrongTracks.map(label)].sort(
-    () => Math.random() - 0.5,
-  );
-  return { choices, correctChoiceIndex: choices.indexOf(correctLabel) };
-}
-
-function calcQcmPoints(timeTaken, roundDuration) {
-  const MAX_PTS = 1000;
-  const MIN_PTS = 200;
-  const ratio = Math.min(
-    1,
-    Math.max(0, timeTaken / Math.max(1, roundDuration)),
-  );
-  return Math.round(MAX_PTS - (MAX_PTS - MIN_PTS) * ratio);
-}
-
-const DEFAULT_ROUND_DURATION = 30;
-const DEFAULT_BREAK_DURATION = 7;
-const AUTO_START_DELAY = 5; // seconds
+} from "../../services/playlist.js";
+import {
+  checkAchievements,
+  saveGameResult,
+} from "../../services/achievements.js";
+import { ytdlAudioCache } from "../../ytdlCache.js";
+import { YTDL_TTL, getYtAudioUrl } from "../../ytdlAudio.js";
+import {
+  DEFAULT_ROUND_DURATION,
+  DEFAULT_BREAK_DURATION,
+  AUTO_START_DELAY,
+} from "./config.js";
+import { scheduleChatClear, cancelChatClear, addChatMessage } from "./chat.js";
+import { makeChoices, calcQcmPoints } from "./scoring.js";
+import {
+  ytsSearch,
+  previewCacheKey,
+  validPreviewUrl,
+  getDeezerPreview,
+  getItunesPreview,
+  prefetchNextRound,
+} from "./audio.js";
 
 // ─── Auto-start countdowns ────────────────────────────────────────────────────
 // Map: roomId -> { timer, startAt, seconds }
 const autoStartCountdowns = {};
-
-// ─── Chat ─────────────────────────────────────────────────────────────────────
-const CHAT_MAX_MESSAGES = 50;
-const CHAT_CLEAR_DELAY = 30 * 60 * 1000; // 30 min après room vide
-
-function getChatHistory(roomId) {
-  if (!chatHistories[roomId])
-    chatHistories[roomId] = { messages: [], clearTimer: null };
-  return chatHistories[roomId];
-}
-function scheduleChatClear(roomId) {
-  const h = chatHistories[roomId];
-  if (!h) return;
-  clearTimeout(h.clearTimer);
-  h.clearTimer = setTimeout(() => {
-    delete chatHistories[roomId];
-  }, CHAT_CLEAR_DELAY);
-}
-function cancelChatClear(roomId) {
-  const h = chatHistories[roomId];
-  if (h) clearTimeout(h.clearTimer);
-}
 
 // ─── Emit helpers ────────────────────────────────────────────────────────────
 
@@ -304,144 +244,6 @@ function triggerRoundStart(roomId, io) {
   room.game.timer = room.game.roundDuration;
   io.to(`room:${roomId}`).emit("round_start_sync");
   startTimer(roomId, io);
-}
-
-async function ytsSearch(artist, title) {
-  try {
-    const { stdout } = await execFileAsync(
-      YTDLP_BIN,
-      [
-        `ytsearch5:${artist} - ${title}`,
-        "--flat-playlist",
-        "-j",
-        "--no-warnings",
-        "--socket-timeout",
-        "8",
-      ],
-      { timeout: 12000, maxBuffer: 2 * 1024 * 1024 },
-    );
-    const results = stdout
-      .trim()
-      .split("\n")
-      .map((l) => {
-        try {
-          return JSON.parse(l);
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
-    if (!results.length) return null;
-    const topic = results.find(
-      (v) => v.channel?.endsWith("- Topic") || v.uploader?.endsWith("- Topic"),
-    );
-    const picked = topic || results[0];
-    return {
-      id: picked.id,
-      duration: (picked.duration || 0) * 1000,
-      channel: { name: picked.channel || picked.uploader || "" },
-    };
-  } catch {
-    return null;
-  }
-}
-
-function previewCacheKey(track) {
-  return `prev_${(track.cleanArtist + track.cleanTitle).replace(/\W/g, "").slice(0, 32)}`;
-}
-
-function validPreviewUrl(url) {
-  if (!url) return null;
-  const m = url.match(/hdnea=exp=(\d+)/);
-  if (m && parseInt(m[1], 10) * 1000 < Date.now()) return null;
-  return url;
-}
-
-async function getDeezerPreview(artist, title) {
-  const q = encodeURIComponent(`${artist} ${title}`);
-  const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=5`, {
-    signal: AbortSignal.timeout(5000),
-  });
-  const data = await res.json();
-  return data.data?.[0]?.preview || null;
-}
-
-async function getItunesPreview(artist, title) {
-  const q = encodeURIComponent(`${artist} ${title}`);
-  const res = await fetch(
-    `https://itunes.apple.com/search?term=${q}&entity=song&limit=5`,
-    {
-      signal: AbortSignal.timeout(5000),
-    },
-  );
-  const data = await res.json();
-  return data.results?.[0]?.previewUrl || null;
-}
-
-// Précharge la manche suivante en arrière-plan pendant que la manche courante tourne.
-// Résultat stocké dans game.prefetchedRound — consommé par startNextRound si valide.
-async function prefetchNextRound(roomId) {
-  const room = roomGames[roomId];
-  if (!room) return;
-  const game = room.game;
-  if (game.sessionPlaylist.length === 0) return;
-
-  const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
-  if (!nextTrack) return;
-
-  try {
-    const artist = nextTrack.mainArtist || nextTrack.artist;
-    const video = await ytsSearch(artist, nextTrack.title);
-
-    let videoId = null,
-      startSeconds = 0,
-      ytAudio = null;
-
-    if (video) {
-      videoId = video.id;
-      const durationSec = Math.round((video.duration || 0) / 1000);
-      startSeconds = Math.max(
-        0,
-        Math.floor(
-          Math.random() * Math.max(1, durationSec - game.roundDuration - 10),
-        ),
-      );
-      ytAudio = await Promise.race([
-        getYtAudioUrl(videoId).catch(() => null),
-        new Promise((resolve) => setTimeout(() => resolve(null), 12000)),
-      ]);
-      if (ytAudio) ytdlAudioCache.set(videoId, ytAudio);
-    }
-
-    // Preview seulement si pas de videoId du tout
-    if (!ytAudio && !videoId) {
-      const artist = nextTrack.mainArtist || nextTrack.artist;
-      const previewUrl =
-        validPreviewUrl(nextTrack.preview_url) ||
-        (await getDeezerPreview(artist, nextTrack.title).catch(() => null)) ||
-        (await getItunesPreview(artist, nextTrack.title).catch(() => null));
-      if (previewUrl) {
-        const pKey = previewCacheKey(nextTrack);
-        ytdlAudioCache.set(pKey, {
-          url: previewUrl,
-          mimeType: "audio/mpeg",
-          fetchedAt: Date.now(),
-        });
-        videoId = pKey;
-        startSeconds = 0;
-        ytAudio = { url: previewUrl };
-      }
-    }
-
-    const room2 = roomGames[roomId];
-    if (!room2 || room2.game !== game) return;
-    if (game.sessionPlaylist[game.sessionPlaylist.length - 1] !== nextTrack)
-      return;
-
-    game.prefetchedRound = { track: nextTrack, videoId, startSeconds, ytAudio };
-  } catch {
-    // Échec silencieux — startNextRound fera le fetch normalement
-  }
 }
 
 async function startNextRound(roomId, io) {
@@ -800,11 +602,6 @@ function checkClose(input, target) {
   return false;
 }
 
-// Legacy – kept for API compat
-function wordMatch(input, target) {
-  return false;
-}
-
 // ─── Auto-start helpers ───────────────────────────────────────────────────────
 
 function cancelAutoCountdown(roomId, io) {
@@ -1096,7 +893,7 @@ export function register(io) {
         if (!pId || !oId || pId !== oId) {
           return socket.emit(
             "server_error",
-            "Seul l\u2019administrateur peut lancer la partie.",
+            "Seul l’administrateur peut lancer la partie.",
           );
         }
       }
@@ -1347,10 +1144,7 @@ export function register(io) {
       if (room.players[name]) room.players[name]._lastChat = now;
 
       const message = { name, text, ts: now };
-      const history = getChatHistory(roomId);
-      history.messages.push(message);
-      if (history.messages.length > CHAT_MAX_MESSAGES) history.messages.shift();
-
+      addChatMessage(roomId, message);
       io.to(`room:${roomId}`).emit("chat_message", message);
     });
 
@@ -1555,9 +1349,7 @@ export function adminSendChat(roomId, text, adminName) {
   if (!msg) return false;
   const name = `${adminName || "Admin"} - admin`;
   const message = { name, text: msg, ts: Date.now() };
-  const history = getChatHistory(roomId);
-  history.messages.push(message);
-  if (history.messages.length > CHAT_MAX_MESSAGES) history.messages.shift();
+  addChatMessage(roomId, message);
   io.to(`room:${roomId}`).emit("chat_message", message);
   return true;
 }
