@@ -3,6 +3,8 @@
   import { dicebear } from '$lib/utils.js';
   import ProfileStats from '$lib/components/ProfileStats.svelte';
   import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
+  import Toast from '$lib/components/Toast.svelte';
+  import { toast } from '$lib/toast.svelte.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -22,16 +24,6 @@
   let editError     = $state('');
   let editLoading   = $state(false);
   let avatarPreview = $state('');
-
-  let toastMsg  = $state('');
-  let toastType = $state('');
-  let _toastTimer = null;
-
-  function toast(msg, type = '') {
-    clearTimeout(_toastTimer);
-    toastMsg = msg; toastType = type;
-    _toastTimer = setTimeout(() => { toastMsg = ''; }, 3200);
-  }
 
   const name   = $derived(profile?.username || user?.email?.split('@')[0] || 'Joueur');
   const avatar = $derived(profile?.avatar_url || dicebear(name));
@@ -243,9 +235,7 @@
 </div>
 {/if}
 
-{#if toastMsg}
-  <div class="toast {toastType}" style="display:block">{toastMsg}</div>
-{/if}
+<Toast />
 
 <style>
 /* -- Profile page -- */
@@ -407,19 +397,6 @@
   font-size: 0.68rem;
   color: var(--dim);
 }
-.profile-privacy-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  color: var(--dim);
-  margin-top: 6px;
-  background: rgb(var(--c-glass) / 0.06);
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  padding: 2px 10px;
-}
-
 /* -- Modal edition -- */
 .avatar-preview-wrap {
   display: flex;
@@ -445,24 +422,6 @@
   font-size: 0.82rem;
   margin-top: 6px;
 }
-
-/* -- Toast -- */
-.toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  padding: 10px 20px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.toast.success { border-color: var(--success); color: var(--success); }
-.toast.error   { border-color: var(--danger);  color: var(--danger); }
 
 /* -- Overlay + Modal -- */
 .overlay {

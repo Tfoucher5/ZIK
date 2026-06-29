@@ -1,6 +1,8 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import HeroSection from '$lib/components/HeroSection.svelte';
+  import Toast from '$lib/components/Toast.svelte';
+  import { toast } from '$lib/toast.svelte.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -83,14 +85,6 @@
   let deleteModalOpen = $state(false);
   let deletingRoomId  = $state(null);
   let deleteLoading   = $state(false);
-
-  let toastMsg  = $state('');
-  let toastType = $state('');
-  let _tt = null;
-  function toast(msg, type = '') {
-    clearTimeout(_tt); toastMsg = msg; toastType = type;
-    _tt = setTimeout(() => { toastMsg = ''; }, 3500);
-  }
 
   onMount(() => { loadPublicRooms(); });
 
@@ -596,12 +590,7 @@
 </div>
 {/if}
 
-<!-- Toast -->
-{#if toastMsg}
-  <div class="toast-container">
-    <div class="toast toast-{toastType} toast-show">{toastMsg}</div>
-  </div>
-{/if}
+<Toast />
 
 <style>
   /* ── Layout ── */
@@ -871,19 +860,6 @@
   .rooms-empty span { font-size: 2.5rem; }
   .rooms-empty p { font-size: 0.88rem; line-height: 1.6; max-width: 300px; }
 
-  /* ── Auth wall ── */
-  .auth-wall {
-    padding: 80px 16px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-  .auth-wall-icon { font-size: 3rem; }
-  .auth-wall h2 { font-size: 1.2rem; font-weight: 700; font-family: "Bricolage Grotesque", sans-serif; }
-  .auth-wall p { font-size: 0.85rem; color: var(--mid); max-width: 340px; }
-
   /* ── Modale création/édition ── */
   .overlay {
     position: fixed; inset: 0; z-index: 400;
@@ -903,12 +879,6 @@
     position: relative;
   }
   .modal-sm { max-width: 380px; }
-  .modal-title {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: 1.2rem;
-    font-weight: 800;
-    margin-bottom: 20px;
-  }
   .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
   .field label { font-size: 0.78rem; font-weight: 600; color: var(--mid); }
   .field input, .field textarea, .field select {
@@ -926,59 +896,8 @@
     box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08);
   }
   .field select { cursor: pointer; }
-  .field-row { display: flex; gap: 12px; }
-  .field-hint { font-size: 0.7rem; color: var(--dim); margin-top: -8px; margin-bottom: 8px; }
-  .field-error { font-size: 0.75rem; color: #f87171; }
-
-  /* Playlist picker dans modal */
-  .pl-picker { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  .pl-picker-search { border: none; border-bottom: 1px solid var(--border); border-radius: 0; }
-  .pl-picker-list { max-height: 200px; overflow-y: auto; }
-  .pl-picker-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px; cursor: pointer;
-    transition: background 0.15s;
-  }
-  .pl-picker-item:hover { background: rgb(var(--c-glass) / 0.05); }
-  .pl-picker-item.selected { background: rgb(var(--accent-rgb) / 0.05); }
-  .pl-picker-item input[type="checkbox"] { accent-color: var(--accent); }
-  .pl-picker-empty { padding: 16px; text-align: center; color: var(--dim); font-size: 0.82rem; }
-  .pl-selected-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .pl-chip {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 0.72rem; font-weight: 600;
-    background: rgb(var(--accent-rgb) / 0.08);
-    border: 1px solid rgb(var(--accent-rgb) / 0.2);
-    color: var(--accent);
-    padding: 4px 10px; border-radius: 20px;
-  }
-  .pl-chip-remove { cursor: pointer; color: var(--mid); font-size: 0.8rem; background: none; border: none; padding: 0; font-family: inherit; }
-  .pl-track-count { font-size: 0.72rem; color: var(--dim); margin-top: 6px; }
 
   .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
-  .modal-error { font-size: 0.78rem; color: #f87171; margin-top: -12px; margin-bottom: 8px; }
-
-  /* ── Delete modal ── */
-  .delete-modal-text { font-size: 0.88rem; color: var(--mid); margin-bottom: 20px; line-height: 1.6; }
-
-  /* ── Toast ── */
-  .toast {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 500;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    white-space: nowrap;
-  }
-  .toast-success { border-color: rgba(74,222,128,0.3); color: #4ade80; }
-  .toast-error { border-color: rgba(248,113,113,0.3); color: #f87171; }
 
   @media (max-width: 600px) {
     .rooms-main { padding: 20px 16px 80px; }
