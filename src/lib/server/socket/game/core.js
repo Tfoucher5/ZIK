@@ -602,12 +602,6 @@ function checkClose(input, target) {
   return false;
 }
 
-// Legacy – kept for API compat
-// eslint-disable-next-line no-unused-vars
-function wordMatch(input, target) {
-  return false;
-}
-
 // ─── Auto-start helpers ───────────────────────────────────────────────────────
 
 function cancelAutoCountdown(roomId, io) {
