@@ -80,7 +80,7 @@
   }
 </script>
 
-<Modal {open} onClose={close} maxWidth="400px" boxBg="#fff">
+<Modal {open} onClose={close} maxWidth="400px" boxBg="#fff" closeBtnColor="rgba(0,0,0,0.35)">
     {#if view === 'login'}
       <div id="view-login">
         <div class="modal-logo">ZIK<span>.</span></div>
@@ -172,6 +172,7 @@
   h2 {
     margin: 0 0 8px 0;
     font-size: 22px;
+    color: #1a1a2e;
   }
 
   .mdesc {

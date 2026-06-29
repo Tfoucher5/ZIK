@@ -1,5 +1,5 @@
 <script>
-  let { open, onClose, maxWidth = '440px', boxBg = 'rgba(20, 20, 35, 0.98)', children } = $props();
+  let { open, onClose, maxWidth = '440px', boxBg = 'rgba(20, 20, 35, 0.98)', closeBtnColor = 'rgba(255,255,255,0.5)', children } = $props();
 </script>
 
 {#if open}
@@ -12,7 +12,7 @@
   onclick={e => { if (e.target === e.currentTarget) onClose(); }}
 >
   <div class="modal-box" style="max-width: {maxWidth}; background: {boxBg}">
-    <button class="modal-close" onclick={onClose} aria-label="Fermer">✕</button>
+    <button class="modal-close" onclick={onClose} aria-label="Fermer" style="color: {closeBtnColor}">✕</button>
     {@render children()}
   </div>
 </div>
@@ -56,10 +56,9 @@
     border: none;
     font-size: 20px;
     cursor: pointer;
-    color: rgba(255,255,255,0.5);
     line-height: 1;
     padding: 4px;
-    transition: color 0.15s;
+    transition: opacity 0.15s;
   }
-  .modal-close:hover { color: #fff; }
+  .modal-close:hover { opacity: 0.7; }
 </style>

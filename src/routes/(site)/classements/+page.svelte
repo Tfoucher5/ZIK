@@ -155,7 +155,9 @@
     <p class="cl-sub">ELO compétitif · Scores classique et QCM · Filtre et explore.</p>
   </div>
 
-  <TabBar tabs={TABS} active={activeTab} onChange={(id) => { activeTab = id; }} />
+  <div class="tabs-wrap">
+    <TabBar tabs={TABS} active={activeTab} onChange={(id) => { activeTab = id; }} />
+  </div>
 
   <!-- ══════════ HERO ══════════ -->
   {#if activeTab === 'elo' && eloData.length >= 3}
@@ -415,6 +417,7 @@
   }
 
   .cl-header { text-align: center; margin-bottom: 28px; }
+  .tabs-wrap { margin-bottom: 24px; }
   .cl-header h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 6px; }
   .cl-sub { color: var(--dim); font-size: 0.88rem; }
 
@@ -678,7 +681,7 @@
   }
   .filter-group {
     display: flex; flex-direction: column; gap: 6px;
-    padding: 12px 20px; flex: 1; min-width: 130px;
+    padding: 12px 20px; flex: 1; min-width: 165px;
   }
   .filter-label {
     font-size: 0.56rem; font-weight: 800;
