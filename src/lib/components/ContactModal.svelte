@@ -138,7 +138,6 @@
 .cm-success .cm-btn { width: auto; padding: 11px 28px; margin-top: 4px; }
 
 @media (max-width: 480px) {
-  .cm-modal { padding: 24px 18px 20px; border-radius: 16px; }
   .cm-row { grid-template-columns: 1fr; gap: 0; }
 }
 </style>

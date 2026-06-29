@@ -80,7 +80,7 @@
   }
 </script>
 
-<Modal {open} onClose={close} maxWidth="400px">
+<Modal {open} onClose={close} maxWidth="400px" boxBg="#fff">
     {#if view === 'login'}
       <div id="view-login">
         <div class="modal-logo">ZIK<span>.</span></div>
