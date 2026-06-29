@@ -1,5 +1,13 @@
 <script>
   import { onMount } from "svelte";
+  import TabBar from '$lib/components/TabBar.svelte';
+  import LoadMore from '$lib/components/LoadMore.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
+
+  const TABS = [
+    { id: 'elo', label: 'ELO' },
+    { id: 'score', label: 'Score' },
+  ];
 
   let { data } = $props();
 
@@ -147,14 +155,7 @@
     <p class="cl-sub">ELO compétitif · Scores classique et QCM · Filtre et explore.</p>
   </div>
 
-  <div class="cl-tabs">
-    <button class="cl-tab {activeTab === 'elo' ? 'active' : ''}" onclick={() => activeTab = 'elo'}>
-      ⚡ ELO
-    </button>
-    <button class="cl-tab {activeTab === 'score' ? 'active' : ''}" onclick={() => activeTab = 'score'}>
-      🏆 Score
-    </button>
-  </div>
+  <TabBar tabs={TABS} active={activeTab} onChange={(id) => { activeTab = id; }} />
 
   <!-- ══════════ HERO ══════════ -->
   {#if activeTab === 'elo' && eloData.length >= 3}
@@ -269,43 +270,43 @@
 
       <!-- ELO table -->
       {#if activeTab === 'elo'}
-        <table class="cl-table">
-          <thead>
-            <tr>
-              <th class="col-rank">#</th>
-              <th class="col-player">Joueur</th>
-              <th class="col-score">ELO</th>
-              <th class="col-extra">Niveau</th>
-              <th class="col-games">Parties</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each eloData as p, i}
-              <tr class="cl-row {isMe(p.username) ? 'row-me' : ''} {rankClass(i)}">
-                <td class="col-rank">{i + 1}</td>
-                <td class="col-player">
-                  {#if p.avatar_url}
-                    <img class="row-av" src={p.avatar_url} alt={p.username} width="30" height="30" loading="lazy" />
-                  {:else}
-                    <div class="row-av row-av-fb">{p.username[0].toUpperCase()}</div>
-                  {/if}
-                  <a href="/user/{p.username}" class="row-name">{p.username}</a>
-                  {#if isMe(p.username)}<span class="me-badge">Toi</span>{/if}
-                </td>
-                <td class="col-score">
-                  <span class="score-val">{p.elo}</span>
-                  <div class="score-bar"><div class="score-fill" style="width:{eloPct(p.elo)}%"></div></div>
-                </td>
-                <td class="col-extra">Nv.&nbsp;{p.level}</td>
-                <td class="col-games">{p.games_played}</td>
+        {#if eloData.length === 0 && !eloLoading}
+          <EmptyState icon="🏆" title="Aucun joueur pour l'instant" />
+        {:else}
+          <table class="cl-table">
+            <thead>
+              <tr>
+                <th class="col-rank">#</th>
+                <th class="col-player">Joueur</th>
+                <th class="col-score">ELO</th>
+                <th class="col-extra">Niveau</th>
+                <th class="col-games">Parties</th>
               </tr>
-            {/each}
-          </tbody>
-        </table>
-        {#if eloHasMore}
-          <button class="btn-load-more" onclick={loadMoreElo} disabled={eloLoading}>
-            {eloLoading ? 'Chargement…' : 'Charger plus'}
-          </button>
+            </thead>
+            <tbody>
+              {#each eloData as p, i}
+                <tr class="cl-row {isMe(p.username) ? 'row-me' : ''} {rankClass(i)}">
+                  <td class="col-rank">{i + 1}</td>
+                  <td class="col-player">
+                    {#if p.avatar_url}
+                      <img class="row-av" src={p.avatar_url} alt={p.username} width="30" height="30" loading="lazy" />
+                    {:else}
+                      <div class="row-av row-av-fb">{p.username[0].toUpperCase()}</div>
+                    {/if}
+                    <a href="/user/{p.username}" class="row-name">{p.username}</a>
+                    {#if isMe(p.username)}<span class="me-badge">Toi</span>{/if}
+                  </td>
+                  <td class="col-score">
+                    <span class="score-val">{p.elo}</span>
+                    <div class="score-bar"><div class="score-fill" style="width:{eloPct(p.elo)}%"></div></div>
+                  </td>
+                  <td class="col-extra">Nv.&nbsp;{p.level}</td>
+                  <td class="col-games">{p.games_played}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+          <LoadMore loading={eloLoading} hasMore={eloHasMore} onLoad={loadMoreElo} />
         {/if}
       {/if}
 
@@ -314,7 +315,7 @@
         {#if scoreLoading && scoreData.length === 0}
           <p class="cl-empty">Chargement…</p>
         {:else if scoreData.length === 0 && scoreInited}
-          <p class="cl-empty">Aucun résultat pour ces filtres.</p>
+          <EmptyState icon="🔍" title="Aucun résultat pour ces filtres." />
         {:else}
           <table class="cl-table">
             <thead>
@@ -347,11 +348,7 @@
               {/each}
             </tbody>
           </table>
-          {#if scoreHasMore}
-            <button class="btn-load-more" onclick={() => fetchScore(false)} disabled={scoreLoading}>
-              {scoreLoading ? 'Chargement…' : 'Charger plus'}
-            </button>
-          {/if}
+          <LoadMore loading={scoreLoading} hasMore={scoreHasMore} onLoad={() => fetchScore(false)} />
         {/if}
       {/if}
 
@@ -420,27 +417,6 @@
   .cl-header { text-align: center; margin-bottom: 28px; }
   .cl-header h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 6px; }
   .cl-sub { color: var(--dim); font-size: 0.88rem; }
-
-  /* ─── Onglets ─── */
-  .cl-tabs {
-    display: flex; gap: 6px;
-    margin: 0 auto 32px;
-    max-width: 300px;
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border);
-    border-radius: 12px; padding: 4px;
-  }
-  .cl-tab {
-    flex: 1; padding: 9px 0; border-radius: 9px;
-    border: none; background: transparent;
-    color: var(--dim); font-size: 0.88rem; font-weight: 600;
-    cursor: pointer; transition: background 0.18s, color 0.18s;
-  }
-  .cl-tab.active {
-    background: rgb(var(--c-glass) / 0.14);
-    color: var(--text);
-    box-shadow: 0 1px 4px rgb(0 0 0 / 0.14);
-  }
 
   /* ─── Couleurs métal ─── */
   .gold-text   { color: #f0b429; }
@@ -821,15 +797,6 @@
     border-radius: 4px; padding: 1px 5px; margin-left: 4px;
   }
 
-  .btn-load-more {
-    display: block; margin: 18px auto 0;
-    padding: 10px 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: transparent;
-    color: var(--dim); font-size: 0.82rem; font-weight: 600;
-    cursor: pointer; transition: background 0.15s, color 0.15s;
-  }
-  .btn-load-more:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.08); color: var(--text); }
-  .btn-load-more:disabled { opacity: 0.5; cursor: default; }
   .cl-empty { text-align: center; color: var(--dim); font-size: 0.85rem; padding: 40px 0; }
 
   /* ════════════════════════ SIDEBAR ════════════════════════ */
