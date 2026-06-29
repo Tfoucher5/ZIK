@@ -1,5 +1,6 @@
 <script>
-  import { onMount, onDestroy, getContext } from 'svelte';
+  import { onMount, getContext } from 'svelte';
+  import { toast } from '$lib/toast.svelte.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -74,16 +75,6 @@
   let deleteLoading     = $state(false);
   let deleteError       = $state('');
 
-  let toastMsg  = $state('');
-  let toastType = $state('');
-  let _toastTimer = null;
-
-  function toast(msg, type = '') {
-    clearTimeout(_toastTimer);
-    toastMsg = msg; toastType = type;
-    _toastTimer = setTimeout(() => { toastMsg = ''; }, 3200);
-  }
-
   function openDeleteModal() {
     deleteConfirmText = '';
     deleteError = '';
@@ -124,8 +115,6 @@
       deleteLoading = false;
     }
   }
-
-  onDestroy(() => clearTimeout(_toastTimer));
 
   const THEMES = [
     { id: 'dark',   label: 'Sombre',  bg: '#070b10', accent: '#3ecfff' },
@@ -416,10 +405,6 @@
   </div>
 {/if}
 
-{#if toastMsg}
-  <div class="toast {toastType}" style="display:block">{toastMsg}</div>
-{/if}
-
 <style>
 .settings-page {
   max-width: 640px;
@@ -680,16 +665,6 @@
 }
 .btn-delete-confirm:hover:not(:disabled) { filter: brightness(1.12); }
 .btn-delete-confirm:disabled { opacity: 0.35; cursor: not-allowed; filter: none; }
-
-/* -- Toast -- */
-.toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  z-index: 999; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 50px; padding: 10px 20px; font-size: 0.85rem;
-  white-space: nowrap; pointer-events: none;
-}
-.toast.success { border-color: var(--success); color: var(--success); }
-.toast.error   { border-color: var(--danger);  color: var(--danger); }
 
 /* -- Responsive -- */
 @media (max-width: 640px) {
