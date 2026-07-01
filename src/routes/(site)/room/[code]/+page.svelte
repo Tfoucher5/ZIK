@@ -235,7 +235,7 @@
     margin-bottom: 16px;
   }
   .room-title {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: clamp(2rem, 5vw, 3.2rem);
     font-weight: 800;
     letter-spacing: -1px;
@@ -279,7 +279,7 @@
     text-align: center;
   }
   .room-join-title {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 20px;
@@ -296,13 +296,13 @@
   }
   .btn-room-join {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent, #3ecfff), var(--accent2, #a78bfa));
+    background: #ff00ff;
     border: none;
-    color: #0a0d1a;
+    color: #000;
     font-size: 1rem;
     font-weight: 700;
     padding: 13px;
-    border-radius: 12px;
+    border-radius: 3px;
     cursor: pointer;
     font-family: inherit;
     transition: opacity 0.15s, filter 0.15s;
@@ -330,8 +330,8 @@
     box-sizing: border-box;
   }
   .room-guest-input:focus {
-    border-color: var(--accent, #3ecfff);
-    box-shadow: 0 0 0 3px rgba(62, 207, 255, 0.15);
+    border-color: rgba(255, 0, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(255, 0, 255, 0.1);
   }
   .room-guest-error {
     font-size: 0.78rem;
@@ -371,7 +371,7 @@
     padding: 0 clamp(16px, 5vw, 80px) 80px;
   }
   .room-seo-block h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 16px;
@@ -390,7 +390,7 @@
     line-height: 1.6;
   }
   .room-seo-block a {
-    color: var(--accent, #3ecfff);
+    color: var(--accent, #ff00ff);
     text-decoration: none;
   }
   .room-seo-block a:hover { text-decoration: underline; }

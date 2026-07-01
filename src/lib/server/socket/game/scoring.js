@@ -1,6 +1,10 @@
 function displayString(str) {
   if (!str) return "";
-  return str.replace(/ *\([^)]*\) */g, " ").replace(/ *\[[^\]]*\] */g, " ").replace(/\s+/g, " ").trim();
+  return str
+    .replace(/ *\([^)]*\) */g, " ")
+    .replace(/ *\[[^\]]*\] */g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function makeChoices(correct, allTracks) {

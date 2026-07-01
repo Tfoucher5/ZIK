@@ -229,7 +229,7 @@
 }
 .profile-hero-info { flex: 1; min-width: 0; }
 .profile-username {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.9rem;
   font-weight: 800;
   letter-spacing: -0.5px;

@@ -154,7 +154,7 @@
 }
 
 .ach-title {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.05rem;
   font-weight: 800;
   margin: 0;
@@ -162,7 +162,7 @@
 
 .ach-count {
   font-size: 0.78rem;
-  color: var(--accent, #a78bfa);
+  color: var(--accent, #ff00ff);
   font-weight: 700;
   margin-left: 6px;
 }
@@ -181,9 +181,9 @@
   transition: all 0.15s ease;
 }
 .ach-filter.active {
-  border-color: rgb(var(--accent-rgb, 124 58 237) / 0.5);
-  color: var(--accent, #a78bfa);
-  background: rgb(var(--accent-rgb, 124 58 237) / 0.08);
+  border-color: rgba(255, 0, 255, 0.4);
+  color: var(--accent, #ff00ff);
+  background: rgba(255, 0, 255, 0.08);
 }
 
 .ach-grid {

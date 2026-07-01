@@ -321,7 +321,7 @@
         font-weight: 800;
         letter-spacing: -0.04em;
         color: #f1f5f9;
-        font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+        font-family: 'Barlow Condensed', system-ui, sans-serif;
     }
 
     .desc {

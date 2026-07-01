@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
+import { supabase, getAdminClient } from "$lib/server/config.js";
 import { roomGames } from "$lib/server/state.js";
 import {
   requireAuth,
@@ -24,13 +24,13 @@ export async function GET({ request }) {
     }
   }
 
-  let query = supabase
+  let query = getAdminClient()
     .from("rooms")
     .select(
       "id, code, name, emoji, description, is_public, is_official, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, owner_id, playlist_id, profiles!owner_id(username, avatar_url), custom_playlists!playlist_id(track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
     )
     .order("last_active_at", { ascending: false })
-    .limit(50);
+    .limit(200);
 
   if (!isSuperAdmin) query = query.eq("is_public", true);
 
@@ -95,7 +95,30 @@ export async function GET({ request }) {
     };
   });
 
-  return json(result);
+  const allPids = [...new Set(result.flatMap((r) => r.playlist_ids))];
+  let coverMap = {};
+  if (allPids.length > 0) {
+    const { data: tc } = await supabase
+      .from("custom_playlist_tracks")
+      .select("playlist_id, cover_url")
+      .in("playlist_id", allPids)
+      .not("cover_url", "is", null)
+      .neq("cover_url", "")
+      .limit(300);
+    for (const t of tc || []) {
+      if (!coverMap[t.playlist_id]) coverMap[t.playlist_id] = new Set();
+      coverMap[t.playlist_id].add(t.cover_url);
+    }
+  }
+
+  return json(
+    result.map((r) => ({
+      ...r,
+      covers: [
+        ...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])])),
+      ].slice(0, 9),
+    })),
+  );
 }
 
 export async function POST({ request }) {

@@ -463,7 +463,7 @@
   background: var(--surface);
 }
 .import-preview-name {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-weight: 700;
 }
 .import-preview-count {

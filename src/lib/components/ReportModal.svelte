@@ -126,7 +126,7 @@
 
 <style>
 .rm-title {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.2rem; font-weight: 800; margin-bottom: 4px;
 }
 .rm-username { color: var(--accent, #6366f1); }
@@ -140,7 +140,7 @@
 .rm-field textarea {
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border, rgba(255,255,255,0.08));
-  border-radius: 10px;
+  border-radius: 3px;
   padding: 10px 12px;
   color: var(--text, #fff);
   font-family: inherit; font-size: 0.88rem;
@@ -148,11 +148,11 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .rm-field select { resize: none; cursor: pointer; }
-.rm-field select option { background: #1f2937; }
+.rm-field select option { background: #111; }
 .rm-field select:focus,
 .rm-field textarea:focus {
-  border-color: var(--accent, #6366f1);
-  box-shadow: 0 0 0 3px rgb(99 102 241 / 0.15);
+  border-color: rgba(255, 0, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 0, 255, 0.08);
 }
 .rm-field textarea { min-height: 90px; }
 
@@ -160,9 +160,9 @@
 
 .rm-btn {
   width: 100%;
-  background: linear-gradient(135deg, var(--accent, #6366f1), var(--accent2, #a78bfa));
-  color: #fff; border: none;
-  padding: 12px; border-radius: 50px;
+  background: #ff00ff;
+  color: #000; border: none;
+  padding: 12px; border-radius: 3px;
   font-weight: 700; font-size: 0.9rem; font-family: inherit;
   cursor: pointer; transition: opacity 0.15s, transform 0.1s;
 }
@@ -179,7 +179,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 1.4rem; color: #4ade80;
 }
-.rm-success h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.2rem; font-weight: 800; }
+.rm-success h2 { font-family: "Barlow Condensed", sans-serif; font-size: 1.2rem; font-weight: 800; }
 .rm-success p { color: var(--mid, #6b7280); font-size: 0.85rem; }
 .rm-success .rm-btn { width: auto; padding: 10px 24px; margin-top: 4px; }
 </style>

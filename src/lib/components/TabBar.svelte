@@ -34,8 +34,8 @@
   }
   .tab:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
   .tab.active {
-    background: rgba(62, 207, 255, 0.15);
-    border-color: rgba(62, 207, 255, 0.5);
-    color: #3ecfff;
+    background: rgba(255, 0, 255, 0.12);
+    border-color: rgba(255, 0, 255, 0.45);
+    color: #ff00ff;
   }
 </style>

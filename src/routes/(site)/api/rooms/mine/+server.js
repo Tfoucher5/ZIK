@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { supabase } from "$lib/server/config.js";
 import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
 import { roomGames } from "$lib/server/state.js";
 
@@ -7,7 +8,7 @@ export async function GET({ request }) {
   const { data, error } = await userClient(token)
     .from("rooms")
     .select(
-      "id, code, name, emoji, description, is_public, auto_start, max_rounds, round_duration, break_duration, last_active_at, playlist_id, custom_playlists!playlist_id(track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
+      "id, code, name, emoji, description, is_public, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, playlist_id, custom_playlists!playlist_id(track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
     )
     .eq("owner_id", user.id)
     .order("last_active_at", { ascending: false });
@@ -54,6 +55,7 @@ export async function GET({ request }) {
       description: r.description,
       is_public: r.is_public,
       auto_start: r.auto_start,
+      game_mode: r.game_mode || "classic",
       max_rounds: r.max_rounds,
       round_duration: r.round_duration,
       break_duration: r.break_duration,
@@ -65,5 +67,28 @@ export async function GET({ request }) {
     };
   });
 
-  return json(result);
+  const allPids = [...new Set(result.flatMap((r) => r.playlist_ids))];
+  let coverMap = {};
+  if (allPids.length > 0) {
+    const { data: tc } = await supabase
+      .from("custom_playlist_tracks")
+      .select("playlist_id, cover_url")
+      .in("playlist_id", allPids)
+      .not("cover_url", "is", null)
+      .neq("cover_url", "")
+      .limit(200);
+    for (const t of tc || []) {
+      if (!coverMap[t.playlist_id]) coverMap[t.playlist_id] = new Set();
+      coverMap[t.playlist_id].add(t.cover_url);
+    }
+  }
+
+  return json(
+    result.map((r) => ({
+      ...r,
+      covers: [
+        ...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])])),
+      ].slice(0, 6),
+    })),
+  );
 }

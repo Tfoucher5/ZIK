@@ -425,7 +425,7 @@
 }
 .settings-back:hover { color: var(--text); }
 .settings-title {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -608,7 +608,7 @@
 
 /* -- Delete modal -- */
 .delete-modal-title {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.25rem; font-weight: 800;
   color: var(--danger); margin-bottom: 12px;
 }

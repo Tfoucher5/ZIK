@@ -26,7 +26,7 @@
     background: linear-gradient(90deg, transparent, rgb(var(--accent-rgb) / 0.3), transparent);
   }
   .sc-val {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.8rem;
     font-weight: 900;
     letter-spacing: -2px;

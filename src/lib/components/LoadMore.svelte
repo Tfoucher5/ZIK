@@ -27,8 +27,8 @@
     transition: all 0.15s;
   }
   .load-more-btn:hover:not(:disabled) {
-    border-color: rgba(62,207,255,0.4);
-    color: #3ecfff;
+    border-color: rgba(255,0,255,0.4);
+    color: #ff00ff;
   }
   .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

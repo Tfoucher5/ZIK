@@ -1,44 +1,47 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from '$app/navigation';
+  import { dicebear } from '$lib/utils.js';
   import HeroSection from '$lib/components/HeroSection.svelte';
-  import Avatar from '$lib/components/Avatar.svelte';
   import Modal from '$lib/components/Modal.svelte';
-  import EmptyState from '$lib/components/EmptyState.svelte';
+
+  const POSTER_COVERS = [
+    'https://api.deezer.com/album/302127/image',
+    'https://api.deezer.com/album/55483022/image',
+    'https://api.deezer.com/album/526894/image',
+    'https://api.deezer.com/album/1128639/image',
+    'https://api.deezer.com/album/7290289/image',
+    'https://api.deezer.com/album/141522612/image',
+    'https://api.deezer.com/album/10088148/image',
+    'https://api.deezer.com/album/527346/image',
+    'https://api.deezer.com/album/41899162/image',
+    'https://api.deezer.com/album/9769684/image',
+  ];
+  const COLLAGE_ROTS = [-2.5, 1.8, -1.2, 2.2, -0.8, 1.5, -3.1, 0.7, -1.8, 2.4];
+  const COLLAGE_TY   = [0, -8, 5, -12, 7, -4, 2, 10, -6, 4];
 
   let rooms = $state([]);
   let totalOnline = $state(0);
   let displayOnline = $state(0);
-  let displayRooms = $state(0);
-  let displayUsers = $state(0);
   let roomCodeVal = $state("");
   let roomCodeErr = $state("");
   let roomCodeLoading = $state(false);
 
-  let pubRooms = $state([]);
-  let pubLoading = $state(true);
-  let pubQcmRooms = $derived(pubRooms.filter(r => r.game_mode === 'qcm').slice(0, 7));
-  let pubClassicRooms = $derived(pubRooms.filter(r => r.game_mode !== 'qcm').slice(0, 7));
-
-  let officialQcmRooms = $derived(rooms.filter(r => r.game_mode === 'qcm'));
   let officialClassicRooms = $derived(rooms.filter(r => r.game_mode !== 'qcm'));
+  let activeClassicRooms = $derived(officialClassicRooms.filter(r => r.online > 0));
+  let waitingClassicRooms = $derived(officialClassicRooms.filter(r => !r.online || r.online === 0));
 
   let eloLb = $state([]);
-  let lbLoaded = $state(false);
-
+  let globalStats = $state({ publicPlaylists: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
   let guestUsername = $state("");
   let pendingRoom = $state(null);
-
+  let pendingGameMode = $state('classic');
   let _roomsTimer = null;
 
-  /* ── Compteurs animés ── */
   $effect(() => {
     const target = totalOnline;
-    if (target === 0) {
-      displayOnline = 0;
-      return;
-    }
+    if (target === 0) { displayOnline = 0; return; }
     let raf;
     const start = performance.now();
     const from = displayOnline;
@@ -50,45 +53,12 @@
     return () => cancelAnimationFrame(raf);
   });
 
-  $effect(() => {
-    const target = rooms.length + pubRooms.length;
-    if (target === 0) {
-      displayRooms = 0;
-      return;
-    }
-    let raf;
-    const start = performance.now();
-    const from = displayRooms;
-    (function tick(now) {
-      const p = Math.min((now - start) / 700, 1);
-      displayRooms = Math.round(from + (target - from) * (1 - (1 - p) ** 3));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    })(start);
-    return () => cancelAnimationFrame(raf);
-  });
-
-  function animateUsers(target) {
-    if (target === 0) { displayUsers = 0; return; }
-    let raf;
-    const start = performance.now();
-    const from = displayUsers;
-    (function tick(now) {
-      const p = Math.min((now - start) / 1000, 1);
-      displayUsers = Math.round(from + (target - from) * (1 - (1 - p) ** 3));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    })(start);
-  }
-
-  /* ── Scroll reveal (Svelte action) ── */
   function reveal(node, delay = 0) {
     node.style.setProperty("--rd", `${delay}ms`);
     node.classList.add("will-reveal");
     const io = new IntersectionObserver(
       ([e]) => {
-        if (e.isIntersecting) {
-          node.classList.add("revealed");
-          io.disconnect();
-        }
+        if (e.isIntersecting) { node.classList.add("revealed"); io.disconnect(); }
       },
       { threshold: 0.07, rootMargin: "0px 0px -48px 0px" },
     );
@@ -96,7 +66,6 @@
     return { destroy: () => io.disconnect() };
   }
 
-  /* ── Data loading ── */
   async function loadRooms() {
     clearTimeout(_roomsTimer);
     try {
@@ -104,42 +73,28 @@
       const data = await res.json();
       rooms = data.rooms ?? data;
       totalOnline = data.totalOnline ?? rooms.reduce((s, r) => s + (r.online || 0), 0);
-    } catch {
-      rooms = [];
-    }
+    } catch { rooms = []; }
     if (!document.hidden) _roomsTimer = setTimeout(loadRooms, 30_000);
-  }
-
-  async function loadPubRooms() {
-    try {
-      const res = await fetch("/api/rooms/public");
-      const data = await res.json();
-      pubRooms = Array.isArray(data) ? data : [];
-    } catch {
-      pubRooms = [];
-    } finally {
-      pubLoading = false;
-    }
   }
 
   async function loadLeaderboards() {
     try {
-      const eRes = await fetch("/api/leaderboard/elo").then((r) => r.json());
+      const eRes = await fetch("/api/leaderboard/elo").then(r => r.json());
       eloLb = Array.isArray(eRes) ? eRes : [];
-    } catch {
-      /* silencieux */
-    } finally {
-      lbLoaded = true;
-    }
+    } catch { /* silencieux */ }
+  }
+
+  async function loadGlobalStats() {
+    try {
+      const s = await fetch("/api/stats/global").then(r => r.json());
+      globalStats = { publicPlaylists: s.publicPlaylists ?? 0, gamesMonth: s.gamesMonth ?? 0 };
+    } catch { /* silencieux */ }
   }
 
   async function joinByCode() {
     roomCodeErr = "";
     const code = roomCodeVal.trim().toUpperCase();
-    if (code.length < 4) {
-      roomCodeErr = "Code invalide.";
-      return;
-    }
+    if (code.length < 4) { roomCodeErr = "Code invalide."; return; }
     roomCodeLoading = true;
     try {
       const r = await fetch(`/api/rooms/custom/${code}`);
@@ -164,20 +119,9 @@
     else openGuestModal(roomId, gameMode);
   }
 
-  let pendingGameMode = $state('classic');
-
   function navigateToGame(roomId, username, userId, isGuest, gameMode = 'classic') {
-    if (!username) {
-      openGuestModal(roomId, gameMode);
-      return;
-    }
-    const p = new URLSearchParams({
-      roomId,
-      username,
-      userId: userId || "",
-      isGuest: isGuest ? "1" : "0",
-      gameMode,
-    });
+    if (!username) { openGuestModal(roomId, gameMode); return; }
+    const p = new URLSearchParams({ roomId, username, userId: userId || "", isGuest: isGuest ? "1" : "0", gameMode });
     window.location.href = `/game?${p}`;
   }
 
@@ -187,10 +131,7 @@
     const saved = localStorage.getItem("zik_guest");
     if (saved) guestUsername = saved;
     guestOpen = true;
-    setTimeout(
-      () => document.getElementById("guestUsernameInput")?.focus(),
-      80,
-    );
+    setTimeout(() => document.getElementById("guestUsernameInput")?.focus(), 80);
   }
 
   function confirmGuest() {
@@ -298,24 +239,12 @@
     ]
   });
 
-  async function loadGlobalStats() {
-    try {
-      const res = await fetch("/api/stats/global");
-      const data = await res.json();
-      animateUsers(data.users ?? 0);
-    } catch { /* non-bloquant */ }
-  }
-
   onMount(() => {
     loadRooms();
-    loadPubRooms();
     loadLeaderboards();
     loadGlobalStats();
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        loadRooms();
-        loadPubRooms();
-      }
+      if (!document.hidden) loadRooms();
     });
   });
 </script>
@@ -337,9 +266,8 @@
 <!-- ══════════════════════════════ HERO ══════════════════════════════ -->
 <HeroSection
   badge={displayOnline > 0 ? `${displayOnline} joueurs en ligne` : 'Blind Test Multijoueur'}
-  title="T'as l'oreille ?"
-  titleAccent="Prouve-le."
-  subtitle="Multijoueur, temps réel, classements ELO. Prouve que tes oreilles valent mieux que les leurs."
+  playlistCount={globalStats.publicPlaylists}
+  gamesMonth={globalStats.gamesMonth}
 >
   <button class="btn-accent" onclick={() => goto('/rooms')}>Jouer maintenant →</button>
   <button class="btn-ghost" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Explorer les rooms</button>
@@ -351,512 +279,196 @@
   </a>
 </HeroSection>
 
-<!-- ══════════════════════════════ STATS STRIP ══════════════════════════════ -->
-<div class="stats-strip">
-  <div class="stats-inner">
-    <div class="stat-item">
-      <span class="stat-value accent">{displayOnline > 0 ? displayOnline : '—'}</span>
-      <span class="stat-label">Joueurs live</span>
-    </div>
-    <div class="stat-sep"></div>
-    <div class="stat-item">
-      <span class="stat-value">{displayRooms || '—'}</span>
-      <span class="stat-label">Rooms actives</span>
-    </div>
-    <div class="stat-sep"></div>
-    <div class="stat-item">
-      <span class="stat-value">{displayUsers || '—'}</span>
-      <span class="stat-label">Joueurs inscrits</span>
-    </div>
+<!-- ══════════════════════════════ TICKER ══════════════════════════════ -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    {#each Array(3) as _, ti (ti)}
+      <span>Blind Test</span><span class="tk-sep"> /// </span>
+      <span>Multijoueur</span><span class="tk-sep"> /// </span>
+      <span>Gratuit</span><span class="tk-sep"> /// </span>
+      <span>Spotify &amp; Deezer</span><span class="tk-sep"> /// </span>
+      <span>Classement ELO</span><span class="tk-sep"> /// </span>
+      <span>Mode Salon</span><span class="tk-sep"> /// </span>
+      <span>Sans inscription</span><span class="tk-sep"> /// </span>
+    {/each}
   </div>
 </div>
 
-<!-- ══════════════════════════════ FEATURES ══════════════════════════════ -->
-<section class="section" use:reveal>
-  <div class="section-head">
-    <h2>Pourquoi <span class="text-gradient">ZIK</span>&nbsp;?</h2>
-    <p class="section-sub">Tout ce qu'il faut pour un blind test parfait, sans prise de tête.</p>
-  </div>
-  <div class="features-grid">
-    <div class="feat-card" use:reveal={0}>
-      <div class="feat-icon">🎮</div>
-      <div class="feat-body">
-        <h3>Multijoueur live</h3>
-        <p>Jusqu'à 20 joueurs en simultané, classement mis à jour en temps réel à chaque manche.</p>
-      </div>
+<!-- ══════════════════════════════ COLLAGE — ROOMS ══════════════════════════════ -->
+<section class="poster-wall" id="rooms">
+  <div class="pw-head">
+    <div class="pw-head-left">
+      <h2 class="pw-title">Rooms <em>officielles</em></h2>
+      {#if totalOnline > 0}
+        <span class="pw-live">● {totalOnline} en ligne</span>
+      {/if}
     </div>
-    <div class="feat-card" use:reveal={80}>
-      <div class="feat-icon">🎵</div>
-      <div class="feat-body">
-        <h3>Spotify &amp; Deezer</h3>
-        <p>Importe tes playlists en 2 clics — Spotify, Deezer ou saisie manuelle. Aucune limite.</p>
-      </div>
-    </div>
-    <div class="feat-card" use:reveal={160}>
-      <div class="feat-icon">📊</div>
-      <div class="feat-body">
-        <h3>Classement ELO</h3>
-        <p>Système de rating dynamique. Grimpe, surveille ta progression, compare-toi aux meilleurs.</p>
-      </div>
-    </div>
-    <div class="feat-card" use:reveal={240}>
-      <div class="feat-icon">📺</div>
-      <div class="feat-body">
-        <h3>Mode Salon</h3>
-        <p>Grand écran TV, téléphones comme manettes, QCM style Kahoot. Idéal pour les soirées.</p>
-      </div>
-    </div>
-    <div class="feat-card" use:reveal={80}>
-      <div class="feat-icon">⚡</div>
-      <div class="feat-body">
-        <h3>Sans inscription</h3>
-        <p>Mode invité instant — entre un pseudo et c'est parti. Crée un compte pour sauvegarder tes stats.</p>
-      </div>
-    </div>
-    <div class="feat-card" use:reveal={160}>
-      <div class="feat-icon">🔒</div>
-      <div class="feat-body">
-        <h3>Rooms privées</h3>
-        <p>Crée ta room, partage un code à 6 lettres. Que tes amis, pas d'inconnus si tu veux.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════ QU'EST-CE QUE ZIK ══════════════════════════════ -->
-<section class="section section-about" use:reveal id="a-propos">
-  <div class="about-inner">
-    <div class="about-text">
-      <h2>Qu'est-ce que <span class="text-gradient">ZIK</span>&nbsp;?</h2>
-      <p>
-        ZIK est un jeu de blind test musical multijoueur gratuit, accessible directement dans le navigateur.
-        Les joueurs s'affrontent en temps réel pour identifier les titres et artistes d'extraits musicaux.
-        Aucune installation, aucune inscription obligatoire.
-      </p>
-      <p>
-        ZIK se distingue des autres blind tests en ligne par trois modes de jeu complémentaires :
-      </p>
-      <ul class="about-list">
-        <li><strong>Mode Classique</strong> — saisie libre du titre et de l'artiste, avec classement ELO compétitif. Idéal pour tester ses connaissances musicales sérieusement.</li>
-        <li><strong>Mode QCM</strong> — quatre propositions à choix multiple, style Kahoot. Accessible à tous, sans pression.</li>
-        <li><strong>Mode Salon</strong> — un hôte diffuse la musique depuis son grand écran (TV ou PC), les invités répondent depuis leur smartphone avec un code ou QR code. Parfait pour les soirées entre amis.</li>
-      </ul>
-      <p>
-        ZIK prend en charge l'import de playlists complètes depuis <strong>Spotify</strong> et <strong>Deezer</strong>,
-        ainsi que la création de playlists personnalisées directement sur le site.
-        Chaque partie peut accueillir jusqu'à 20 joueurs simultanément.
-      </p>
-    </div>
-    <div class="about-aside">
-      <div class="about-stat-card">
-        <span class="about-stat-icon">🎵</span>
-        <span class="about-stat-label">Import Spotify &amp; Deezer</span>
-      </div>
-      <div class="about-stat-card">
-        <span class="about-stat-icon">🏆</span>
-        <span class="about-stat-label">Classement ELO compétitif</span>
-      </div>
-      <div class="about-stat-card">
-        <span class="about-stat-icon">📺</span>
-        <span class="about-stat-label">Mode Salon — TV + smartphones</span>
-      </div>
-      <div class="about-stat-card">
-        <span class="about-stat-icon">⚡</span>
-        <span class="about-stat-label">Gratuit, sans inscription</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════ ROOMS OFFICIELLES ══════════════════════════════ -->
-<section class="section" id="rooms">
-  <div class="section-head" use:reveal>
-    <div class="section-head-row">
-      <div>
-        <h2>Rooms officielles</h2>
-        {#if totalOnline > 0}
-          <span class="inline-pill">{totalOnline} joueur{totalOnline !== 1 ? 's' : ''} en ligne</span>
-        {/if}
-      </div>
-      <a href="/rooms" class="section-link">Toutes les rooms →</a>
-    </div>
-  </div>
-
-  <div class="code-join" use:reveal>
-    <span class="code-join-label">Code privé</span>
-    <div class="code-join-bar">
-      <input
-        type="text"
-        bind:value={roomCodeVal}
-        placeholder="ABCD12"
-        maxlength="6"
-        autocomplete="off"
-        spellcheck="false"
-        oninput={(e) => { roomCodeVal = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
-        onkeypress={(e) => { if (e.key === 'Enter') joinByCode(); }}
-      />
-      <button class="btn-accent sm" onclick={joinByCode} disabled={roomCodeLoading}>
-        {roomCodeLoading ? '…' : 'Rejoindre →'}
-      </button>
-    </div>
-    {#if roomCodeErr}<p class="code-join-err">{roomCodeErr}</p>{/if}
   </div>
 
   {#if officialClassicRooms.length > 0}
-    {#if officialQcmRooms.length > 0}
-      <div class="pub-section-head" style="margin-bottom:12px">
-        <span class="pub-section-badge">⌨️ Classique — Saisie libre</span>
-        <span class="pub-section-hint">Classement ELO</span>
-      </div>
-    {/if}
-    <div class="official-rooms-grid" style={officialQcmRooms.length > 0 ? 'margin-bottom:28px' : ''}>
-      {#each officialClassicRooms.slice(0, 5) as room, i}
+    <div class="collage-grid">
+      {#each [...activeClassicRooms, ...waitingClassicRooms].slice(0, 10) as room, i (room.id)}
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
-        <div class="official-card" role="button" tabindex="0"
-          onclick={() => joinRoom(room.id, 'classic')}
-          onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && joinRoom(room.id, 'classic')}
-          use:reveal={i * 40}>
-          <div class="official-card-stripe"></div>
-          <div class="official-card-header">
-            <span class="official-card-emoji">{room.emoji}</span>
-            <span class="official-card-badge">⭐ Officielle</span>
+        <div
+          class="cc"
+          class:cc--live={room.online > 0}
+          style="--rot:{COLLAGE_ROTS[i % COLLAGE_ROTS.length]}deg; --ty:{COLLAGE_TY[i % COLLAGE_TY.length]}px"
+          role="button"
+          tabindex="0"
+          onclick={() => joinRoom(room.id, room.game_mode)}
+          onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && joinRoom(room.id, room.game_mode)}
+          use:reveal={i * 50}
+        >
+          <div class="cc-img" style="background-image:url('{room.cover_url ?? POSTER_COVERS[i % POSTER_COVERS.length]}')">
+            {#if room.online > 0}
+              <span class="cc-live-badge">● Live</span>
+            {/if}
           </div>
-          <div class="official-card-name">{room.name}</div>
-          {#if room.description}
-            <div class="official-card-desc">{room.description}</div>
-          {/if}
-          <div class="official-card-footer">
-            <span class="official-card-online" class:official-online-live={room.online > 0}>
-              <span class="official-online-dot" class:live={room.online > 0}></span>
-              {room.online > 0 ? `${room.online} en ligne` : 'Disponible'}
-            </span>
-            <button class="official-card-btn" onclick={(e) => { e.stopPropagation(); joinRoom(room.id, 'classic'); }}>
-              Rejoindre →
-            </button>
-          </div>
-        </div>
-      {/each}
-      <a href="/rooms" class="official-card official-card-more" use:reveal={5 * 40}>
-        <span class="card-more-icon">🎮</span>
-        <span class="card-more-label">Voir toutes les rooms</span>
-        <span class="card-more-arrow">→</span>
-      </a>
-    </div>
-  {/if}
-
-  {#if officialQcmRooms.length > 0}
-    <div class="pub-section-head" style="margin-bottom:12px">
-      <span class="pub-section-badge pub-section-qcm">🎯 QCM — Casual</span>
-      <span class="pub-section-hint">Choix multiple · Pas d'ELO</span>
-    </div>
-    <div class="official-rooms-grid">
-      {#each officialQcmRooms.slice(0, 5) as room, i}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
-        <div class="official-card official-card-qcm" role="button" tabindex="0"
-          onclick={() => joinRoom(room.id, 'qcm')}
-          onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && joinRoom(room.id, 'qcm')}
-          use:reveal={i * 40}>
-          <div class="official-card-stripe official-card-stripe-qcm"></div>
-          <div class="official-card-header">
-            <span class="official-card-emoji">{room.emoji}</span>
-            <div style="display:flex;gap:6px;align-items:center">
-              <span class="official-card-badge">⭐ Officielle</span>
-              <span class="official-card-badge-qcm">🎯 QCM</span>
+          <div class="cc-info">
+            <span class="cc-mode">Classique</span>
+            <div class="cc-name">{room.emoji} {room.name}</div>
+            <div class="cc-status" class:cc-status--live={room.online > 0}>
+              {room.online > 0 ? `${room.online} joueur${room.online > 1 ? 's' : ''}` : 'Disponible'}
             </div>
           </div>
-          <div class="official-card-name">{room.name}</div>
-          {#if room.description}
-            <div class="official-card-desc">{room.description}</div>
-          {/if}
-          <div class="official-card-footer">
-            <span class="official-card-online" class:official-online-live={room.online > 0}>
-              <span class="official-online-dot" class:live={room.online > 0}></span>
-              {room.online > 0 ? `${room.online} en ligne` : 'Disponible'}
-            </span>
-            <button class="official-card-btn official-card-btn-qcm" onclick={(e) => { e.stopPropagation(); joinRoom(room.id, 'qcm'); }}>
-              Rejoindre →
-            </button>
-          </div>
         </div>
       {/each}
-      <a href="/rooms" class="official-card official-card-more official-card-more-qcm" use:reveal={5 * 40}>
-        <span class="card-more-icon">🎯</span>
-        <span class="card-more-label">Voir toutes les rooms QCM</span>
-        <span class="card-more-arrow">→</span>
-      </a>
     </div>
-  {/if}
-</section>
-
-<!-- ══════════════════════════════ QCM CTA ══════════════════════════════ -->
-<div class="qcm-cta" use:reveal>
-  <div class="qcm-cta-inner">
-    <div class="qcm-cta-left">
-      <span class="qcm-cta-tag">✦ Nouveau · Mode Casual</span>
-      <h2 class="qcm-cta-title">Mode QCM</h2>
-      <p class="qcm-cta-desc">4 propositions, 1 bonne réponse. Idéal pour jouer sans pression ou initier des amis au blind test. Pas d'ELO, que du plaisir.</p>
-      <div class="qcm-cta-actions">
-        <a href="/rooms?mode=qcm" class="btn-accent">Voir les rooms QCM →</a>
-        <a href="/docs#qcm" class="btn-ghost sm">En savoir plus</a>
-      </div>
-    </div>
-    <div class="qcm-choices-preview" aria-hidden="true">
-      <div class="qcm-choice qcm-c0">● Daft Punk — Get Lucky</div>
-      <div class="qcm-choice qcm-c1">◆ Pharrell Williams — Happy</div>
-      <div class="qcm-choice qcm-c2">▲ Michael Jackson — Thriller</div>
-      <div class="qcm-choice qcm-c3">■ The Weeknd — Blinding Lights</div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════ ROOMS PUBLIQUES ══════════════════════════════ -->
-{#if pubLoading || pubRooms.length > 0}
-<section class="section" id="public-rooms">
-  <div class="section-head" use:reveal>
-    <div class="section-head-row">
-      <div>
-        <h2>Rooms en direct</h2>
-        {#if !pubLoading}
-          {@const activeCount = pubRooms.filter(r => r.online > 0).length}
-          {#if activeCount > 0}
-            <span class="inline-pill pill-hot">
-              <span class="dot-hot"></span>
-              {activeCount} active{activeCount > 1 ? 's' : ''}
-            </span>
-          {/if}
-        {/if}
-      </div>
-      <a href="/rooms" class="section-link">Créer une room →</a>
-    </div>
-  </div>
-
-  {#if pubLoading}
-    <div class="pub-grid">
-      {#each Array(6) as _, i}
-        <div class="pub-skeleton" style="--i:{i}"></div>
-      {/each}
-    </div>
-  {:else if pubRooms.length === 0}
-    <EmptyState icon="🎮" title="Aucune room publique en ce moment." />
   {:else}
-    {#if pubQcmRooms.length > 0}
-      {#if pubClassicRooms.length > 0}
-        <div class="pub-section-head">
-          <span class="pub-section-badge pub-section-qcm">🎯 QCM — Casual</span>
-          <span class="pub-section-hint">Choix multiple · Pas d'ELO</span>
-        </div>
-      {/if}
-      <div class="pub-grid" style={pubClassicRooms.length > 0 ? 'margin-bottom:24px' : ''}>
-        {#each pubQcmRooms as room, i (room.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
-          <div
-            class="pub-card pub-card-qcm"
-            class:pub-hot={room.online >= 2}
-            class:pub-fire={room.online >= 5}
-            style="--i:{i}"
-            onclick={() => joinRoom(room.id, 'qcm')}
-            role="button"
-            tabindex="0"
-          >
-            <div class="pub-card-top">
-              <span class="pub-emoji">{room.emoji}</span>
-              <div class="pub-badges">
-                <span class="pub-badge-qcm">🎯 QCM</span>
-                {#if room.online >= 5}<span class="pub-popular">🔥</span>{/if}
-              </div>
-            </div>
-            <div class="pub-name">{room.name}</div>
-            {#if room.host}<div class="pub-host">par <strong>{room.host}</strong></div>{/if}
-            {#if room.description}<div class="pub-desc">{room.description}</div>{/if}
-            <div class="pub-footer">
-              <span class="pub-online" class:pub-online-live={room.online > 0}>
-                <span class="pub-dot" class:pub-dot-live={room.online > 0}></span>
-                {room.online > 0 ? `${room.online} en ligne` : 'Vide'}
-              </span>
-              <button class="pub-btn" onclick={(e) => { e.stopPropagation(); joinRoom(room.id, 'qcm'); }}>
-                Jouer →
-              </button>
-            </div>
-          </div>
-        {/each}
-        <a href="/rooms" class="pub-card pub-card-more">
-          <span class="card-more-icon">🎯</span>
-          <span class="card-more-label">Voir plus de rooms</span>
-          <span class="card-more-arrow">→</span>
-        </a>
-      </div>
-    {/if}
-
-    {#if pubClassicRooms.length > 0}
-      {#if pubQcmRooms.length > 0}
-        <div class="pub-section-head">
-          <span class="pub-section-badge">⌨️ Classique</span>
-          <span class="pub-section-hint">Saisie libre · Classement ELO</span>
-        </div>
-      {/if}
-      <div class="pub-grid">
-        {#each pubClassicRooms as room, i (room.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
-          <div
-            class="pub-card"
-            class:pub-hot={room.online >= 2}
-            class:pub-fire={room.online >= 5}
-            style="--i:{i}"
-            onclick={() => joinRoom(room.id, 'classic')}
-            role="button"
-            tabindex="0"
-          >
-            <div class="pub-card-top">
-              <span class="pub-emoji">{room.emoji}</span>
-              {#if room.online >= 5}
-                <span class="pub-popular">🔥 Populaire</span>
-              {/if}
-            </div>
-            <div class="pub-name">{room.name}</div>
-            {#if room.host}<div class="pub-host">par <strong>{room.host}</strong></div>{/if}
-            {#if room.description}<div class="pub-desc">{room.description}</div>{/if}
-            <div class="pub-footer">
-              <span class="pub-online" class:pub-online-live={room.online > 0}>
-                <span class="pub-dot" class:pub-dot-live={room.online > 0}></span>
-                {room.online > 0 ? `${room.online} en ligne` : 'Vide'}
-              </span>
-              <button class="pub-btn" onclick={(e) => { e.stopPropagation(); joinRoom(room.id, 'classic'); }}>
-                Jouer →
-              </button>
-            </div>
-          </div>
-        {/each}
-        <a href="/rooms" class="pub-card pub-card-more">
-          <span class="card-more-icon">🎮</span>
-          <span class="card-more-label">Voir plus de rooms</span>
-          <span class="card-more-arrow">→</span>
-        </a>
-      </div>
-    {/if}
+    <div class="collage-empty"><p>Chargement des rooms…</p></div>
   {/if}
+
+  <div class="pw-cta-wrap">
+    <a href="/rooms" class="pw-cta">Voir toutes les rooms →</a>
+  </div>
 </section>
-{/if}
+
+<!-- ══════════════════════════════ FEATURES ══════════════════════════════ -->
+<section class="features" use:reveal>
+  <h2 class="feat-title">Pourquoi <em>ZIK</em> ?</h2>
+  <div class="feat-grid">
+    <div class="feat-item">
+      <span class="feat-n">01</span>
+      <span class="feat-tag">Spotify · Deezer</span>
+      <div class="feat-name">Tes playlists, tes règles</div>
+    </div>
+    <div class="feat-item">
+      <span class="feat-n">02</span>
+      <span class="feat-tag">Socket.io · Temps réel</span>
+      <div class="feat-name">Zéro latence</div>
+    </div>
+    <div class="feat-item">
+      <span class="feat-n">03</span>
+      <span class="feat-tag">ELO mondial</span>
+      <div class="feat-name">Un classement qui compte</div>
+    </div>
+    <div class="feat-item">
+      <span class="feat-n">04</span>
+      <span class="feat-tag">Mode Salon</span>
+      <div class="feat-name">Grand écran + téléphone</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ CHART — TOP JOUEURS ══════════════════════════════ -->
+<section class="chart" id="leaderboards" use:reveal>
+  <div class="chart-head">
+    <div>
+      <h2 class="chart-h">Top Joueurs</h2>
+      <span class="chart-sub">Classement ELO · Rooms officielles</span>
+    </div>
+  </div>
+
+  {#if eloLb.length === 0}
+    <p class="chart-empty">Chargement…</p>
+  {:else}
+    {#each eloLb.slice(0, 8) as p, i (p.username)}
+      <a href="/user/{p.username}" class="chart-row">
+        <span class="chart-pos" class:top3={i < 3}>{i + 1}</span>
+        <span class="chart-mv">—</span>
+        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} />
+        <div class="chart-info">
+          <div class="c-nm">{p.username}</div>
+          <div class="c-sb">{p.games_played} partie{p.games_played !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="chart-elo">{p.elo}<small>pts ELO</small></div>
+      </a>
+    {/each}
+  {/if}
+
+  <div class="chart-cta-wrap">
+    <a href="/classements" class="chart-cta">Classement complet →</a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ TICKET — CODE PRIVÉ ══════════════════════════════ -->
+<section class="ticket-section" use:reveal>
+  <div class="ticket-left">
+    <span class="ticket-kicker">Rejoindre une partie</span>
+    <h2 class="ticket-title">T'as un code&nbsp;?<br>Entre-le.</h2>
+    <div class="quick-links">
+      <a href="/rooms" class="ql">Rooms</a>
+      <a href="/classements" class="ql">Classements</a>
+      <a href="/playlists" class="ql">Playlists</a>
+      <a href="/salon" class="ql">Mode Salon</a>
+      <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="ql ql-discord">Discord</a>
+    </div>
+  </div>
+
+  <div class="ticket">
+    <div class="stub">
+      <span class="stub-logo">ZIK<em>.</em></span>
+      <span class="stub-label">Billet d'entrée</span>
+    </div>
+    <div class="ticket-main">
+      <div class="ticket-event">Blind Test</div>
+      <div class="ticket-venue">ZIK · Multijoueur en ligne</div>
+      <label class="ticket-code-label" for="ticket-code-input">Code de la room</label>
+      <div class="ticket-row">
+        <input
+          id="ticket-code-input"
+          class="ticket-input"
+          type="text"
+          bind:value={roomCodeVal}
+          placeholder="ABC123"
+          maxlength="6"
+          autocomplete="off"
+          spellcheck="false"
+          oninput={(e) => { roomCodeVal = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
+          onkeypress={(e) => { if (e.key === 'Enter') joinByCode(); }}
+        />
+        <button class="ticket-go" onclick={joinByCode} disabled={roomCodeLoading}>
+          {roomCodeLoading ? '…' : '→'}
+        </button>
+      </div>
+      {#if roomCodeErr}<p class="ticket-err">{roomCodeErr}</p>{/if}
+    </div>
+  </div>
+</section>
 
 <!-- ══════════════════════════════ MODE SALON CTA ══════════════════════════════ -->
 <div class="salon-cta" use:reveal>
   <div class="salon-cta-inner">
-    <div class="salon-cta-left">
-      <span class="salon-cta-tag">✦ Pour les soirées</span>
-      <h2 class="salon-cta-title">Mode Salon</h2>
-      <p class="salon-cta-desc">Grand écran sur la TV, chaque joueur répond depuis son téléphone. Idéal pour les soirées entre amis — style Kahoot, mais avec tes musiques.</p>
-      <div class="salon-cta-actions">
+    <div class="salon-left">
+      <span class="salon-kicker">✦ Pour les soirées</span>
+      <h2 class="salon-title">Mode Salon</h2>
+      <p class="salon-desc">Grand écran sur la TV, chaque joueur répond depuis son téléphone. Style Kahoot, mais avec tes musiques.</p>
+      <div class="salon-actions">
         <a href="/salon" class="btn-accent">Lancer une session →</a>
         <a href="/docs#salon" class="btn-ghost sm">En savoir plus</a>
       </div>
     </div>
-    <div class="salon-cta-phones" aria-hidden="true">
-      <div class="sphone sphone-left">
-        <div class="sphone-screen"><span class="sphone-shape" style="color:#22c55e">▲</span></div>
-      </div>
-      <div class="sphone sphone-center">
-        <div class="sphone-screen"><span class="sphone-shape" style="color:#f59e0b">◆</span></div>
-      </div>
-      <div class="sphone sphone-right">
-        <div class="sphone-screen"><span class="sphone-shape" style="color:#3b82f6">●</span></div>
-      </div>
+    <div class="salon-phones" aria-hidden="true">
+      <div class="sphone sphone-l"><div class="sphone-s"><span style="color:#22c55e">▲</span></div></div>
+      <div class="sphone sphone-c"><div class="sphone-s"><span style="color:#f59e0b">◆</span></div></div>
+      <div class="sphone sphone-r"><div class="sphone-s"><span style="color:#3b82f6">●</span></div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════ CLASSEMENTS ══════════════════════════════ -->
-<section class="section" id="leaderboards">
-  <div class="section-head" use:reveal>
-    <h2>Classement ELO</h2>
-    <p class="section-sub">Le vrai ranking compétitif — rooms officielles, mode classique.</p>
-  </div>
-  <div class="lb-solo" use:reveal={0}>
-    <div class="lb-intro">
-      <div class="lb-intro-badge">⚡ ELO compétitif</div>
-      <h3 class="lb-intro-title">Prouve ta valeur</h3>
-      <p class="lb-intro-desc">Le classement ELO mesure ta force réelle — il évolue uniquement en Mode Classique, dans les rooms officielles. Chaque victoire contre un adversaire mieux classé rapporte davantage.</p>
-      <div class="lb-intro-chips">
-        <span class="lb-chip">🏛️ Rooms officielles</span>
-        <span class="lb-chip">🎵 Mode Classique</span>
-        <span class="lb-chip">♾️ All-time</span>
-      </div>
-      <a href="/classements" class="btn-ghost lb-more-btn">Voir tous les classements →</a>
-    </div>
-    <div class="lb-panel">
-      <div class="lb-head">
-        <span class="lb-head-icon">⚡</span>
-        <div>
-          <b>Classement ELO</b>
-          <small>All-time · Rooms officielles</small>
-        </div>
-      </div>
-
-      {#if eloLb.length >= 3}
-        <div class="podium">
-          <div class="podium-slot">
-            <div class="podium-info">
-              <a href="/user/{eloLb[1].username}" class="podium-avatar-link">
-                <span class="podium-av podium-av-r2">
-                  <Avatar url={eloLb[1].avatar_url} username={eloLb[1].username} size={40} />
-                </span>
-              </a>
-              <div class="podium-name">{eloLb[1].username}</div>
-              <div class="podium-score">{eloLb[1].elo}</div>
-            </div>
-            <div class="podium-step podium-step-2"><span class="podium-num">2</span></div>
-          </div>
-          <div class="podium-slot">
-            <span class="podium-crown">👑</span>
-            <div class="podium-info">
-              <a href="/user/{eloLb[0].username}" class="podium-avatar-link">
-                <span class="podium-av podium-av-r1">
-                  <Avatar url={eloLb[0].avatar_url} username={eloLb[0].username} size={52} />
-                </span>
-              </a>
-              <div class="podium-name podium-name-1">{eloLb[0].username}</div>
-              <div class="podium-score">{eloLb[0].elo}</div>
-            </div>
-            <div class="podium-step podium-step-1"><span class="podium-num">1</span></div>
-          </div>
-          <div class="podium-slot">
-            <div class="podium-info">
-              <a href="/user/{eloLb[2].username}" class="podium-avatar-link">
-                <span class="podium-av podium-av-r3">
-                  <Avatar url={eloLb[2].avatar_url} username={eloLb[2].username} size={36} />
-                </span>
-              </a>
-              <div class="podium-name">{eloLb[2].username}</div>
-              <div class="podium-score">{eloLb[2].elo}</div>
-            </div>
-            <div class="podium-step podium-step-3"><span class="podium-num">3</span></div>
-          </div>
-        </div>
-      {/if}
-
-      <div class="lb-scroll">
-        {#if eloLb.length === 0}
-          <p class="lb-empty">{lbLoaded ? 'Aucun joueur classé pour l\'instant.' : 'Chargement…'}</p>
-        {:else}
-          {#each eloLb.slice(eloLb.length >= 3 ? 3 : 0) as p, i}
-            {@const rank = (eloLb.length >= 3 ? 3 : 0) + i}
-            <div class="lb-row">
-              <span class="lb-rank">#{rank + 1}</span>
-              <a href="/user/{p.username}" class="lb-name">{p.username}</a>
-              <span class="lb-score">{p.elo}</span>
-              <span class="lb-games">{p.games_played} parties</span>
-            </div>
-          {/each}
-        {/if}
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ══════════════════════════════ FAQ ══════════════════════════════ -->
-<section class="section section-faq" use:reveal id="faq">
-  <div class="section-head">
-    <h2>Questions fréquentes</h2>
-    <p class="section-sub">Tout ce que tu dois savoir sur ZIK.</p>
-  </div>
+<section class="faq-section" id="faq" use:reveal>
+  <h2 class="faq-title">Questions fréquentes</h2>
   <div class="faq-list">
     <details class="faq-item">
       <summary class="faq-q">C'est quoi ZIK ?</summary>
@@ -916,279 +528,560 @@
 </Modal>
 
 <style>
-  /* ════════════════════════════ SYSTÈME DE SECTIONS ════════════════════════════ */
-  .section {
-    padding: 64px clamp(20px, 5vw, 72px);
-    max-width: 1240px;
-    margin: 0 auto;
-    width: 100%;
+  /* ════════════════════════════ TICKER ════════════════════════════ */
+  .ticker {
+    background: #ff00ff;
+    overflow: hidden;
+    padding: 9px 0;
+    white-space: nowrap;
   }
-  .section-head { margin-bottom: 32px; }
-  .section-head h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: clamp(1.6rem, 3vw, 2.2rem);
+  .ticker-track {
+    display: inline-flex;
+    gap: 0;
+    animation: ticker-scroll 28s linear infinite;
+  }
+  .ticker-track span {
+    font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
-    letter-spacing: -1px;
-    line-height: 1.1;
-    margin-bottom: 6px;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #080808;
+    padding: 0 28px;
+    flex-shrink: 0;
   }
-  .section-sub {
-    font-size: 0.88rem;
-    color: var(--mid);
-    line-height: 1.6;
+  .tk-sep { opacity: 0.3; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-33.333%); }
   }
-  .section-head-row {
+
+  /* ════════════════════════════ POSTER WALL ════════════════════════════ */
+  .poster-wall {
+    padding: 72px 0 80px;
+    background: #060606;
+    position: relative;
+  }
+  .pw-head {
     display: flex;
-    align-items: flex-end;
+    align-items: baseline;
     justify-content: space-between;
+    padding: 0 48px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pw-head-left { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .pw-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .pw-title em {
+    -webkit-text-stroke: 2px #fafafa;
+    color: transparent;
+    font-style: normal;
+  }
+  .pw-live {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #ff00ff;
+  }
+
+  /* ── Collage grid ── */
+  .collage-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+    padding: 16px 56px 32px;
+  }
+  .collage-empty {
+    padding: 40px 48px;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85rem;
+  }
+
+  .cc {
+    transform: rotate(var(--rot, 0deg)) translateY(var(--ty, 0px));
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+    background: #fafafa;
+    box-shadow: 4px 8px 24px rgba(0,0,0,0.6);
+    position: relative;
+    z-index: 1;
+  }
+  .cc:hover {
+    transform: rotate(0deg) translateY(-6px) scale(1.05);
+    z-index: 10;
+    box-shadow: 6px 14px 36px rgba(0,0,0,0.75);
+  }
+  .cc--live {
+    box-shadow: 0 0 0 2px #ff00ff, 4px 8px 24px rgba(0,0,0,0.6);
+  }
+  .cc--live:hover {
+    box-shadow: 0 0 0 2px #ff00ff, 6px 14px 36px rgba(255,0,255,0.25);
+  }
+
+  .cc-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #222;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: block;
+  }
+  .cc-live-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: #ff00ff;
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.5rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+  }
+
+  .cc-info {
+    background: #fafafa;
+    padding: 9px 11px 12px;
+    border-top: 2px solid #080808;
+  }
+  .cc-mode {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.46rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: rgba(0,0,0,0.35);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .cc-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.88rem;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+    line-height: 1.05;
+    color: #080808;
+  }
+  .cc-status {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.52rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(0,0,0,0.38);
+    margin-top: 4px;
+  }
+  .cc-status--live { color: #ff00ff; }
+
+  .pw-cta-wrap {
+    padding: 40px 48px 0;
+    display: flex;
+    justify-content: center;
+  }
+  .pw-cta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #080808;
+    background: #ff00ff;
+    border: 2px solid #ff00ff;
+    padding: 14px 48px;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    display: inline-block;
+  }
+  .pw-cta:hover { background: transparent; color: #ff00ff; }
+
+  /* ════════════════════════════ FEATURES ════════════════════════════ */
+  .features {
+    padding: 72px 48px;
+    background: #080808;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .feat-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 4vw, 3rem);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    margin-bottom: 48px;
+  }
+  .feat-title em { color: #ff00ff; font-style: normal; }
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+  .feat-item {
+    padding: 28px 24px;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .feat-item:hover {
+    border-color: rgba(255,0,255,0.2);
+    background: rgba(255,0,255,0.03);
+  }
+  .feat-n {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 3.5rem;
+    color: rgba(255,255,255,0.06);
+    line-height: 1;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .feat-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #ff00ff;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .feat-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+    line-height: 1.05;
+  }
+
+  /* ════════════════════════════ CHART ════════════════════════════ */
+  .chart {
+    padding: 72px 48px;
+    background: #050505;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .chart::before {
+    content: 'ZIK.';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 28vw;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255,0,255,0.14);
+    pointer-events: none;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .chart-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .chart-h {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+  }
+  .chart-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #ff00ff;
+    margin-bottom: 36px;
+    display: block;
+  }
+  .chart-empty { color: rgba(255,255,255,0.3); font-size: 0.85rem; padding: 24px 0; }
+
+  .chart-cta-wrap {
+    padding: 40px 0 0;
+    display: flex;
+    justify-content: center;
+  }
+  .chart-cta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #fafafa;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.25);
+    padding: 14px 48px;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+  }
+  .chart-cta:hover { border-color: #ff00ff; color: #ff00ff; }
+  .chart-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #222;
+    flex-shrink: 0;
+  }
+  .chart-mv { font-size: 0.8rem; color: #444; }
+  .chart-row {
+    display: grid;
+    grid-template-columns: 56px 24px 36px 1fr 110px;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.15s;
+  }
+  .chart-row::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0; right: 0; height: 1px;
+    background: #ff00ff;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s;
+  }
+  .chart-row:hover::after { transform: scaleX(1); }
+  .chart-pos {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.8rem;
+    line-height: 1;
+    color: rgba(255,255,255,0.1);
+    letter-spacing: -1px;
+  }
+  .top3 { color: rgba(255,0,255,0.3) !important; }
+  .chart-info { min-width: 0; }
+  .c-nm {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+  }
+  .c-sb {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #555;
+  }
+  .chart-elo {
+    text-align: right;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.8rem;
+    letter-spacing: -0.5px;
+  }
+  .chart-elo small {
+    font-size: 0.52rem;
+    color: #444;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: block;
+  }
+
+  /* ════════════════════════════ TICKET ════════════════════════════ */
+  .ticket-section {
+    padding: 72px 48px;
+    background: #060606;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+    align-items: center;
+  }
+  .ticket-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .ticket-kicker {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: #ff00ff;
+    display: block;
+  }
+  .ticket-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2.2rem, 5vw, 4.5rem);
+    text-transform: uppercase;
+    letter-spacing: -1.5px;
+    line-height: 0.9;
+  }
+  .quick-links {
+    display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
-  .section-link {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--accent);
-    white-space: nowrap;
-    transition: opacity 0.15s;
-    opacity: 0.85;
+  .ql {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 18px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    background: rgba(255,255,255,0.03);
   }
-  .section-link:hover { opacity: 1; }
-  .inline-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 0.67rem; font-weight: 700;
-    background: rgb(var(--accent-rgb) / 0.08);
-    border: 1px solid rgb(var(--accent-rgb) / 0.2);
-    color: var(--accent);
-    padding: 2px 10px; border-radius: 20px; margin-left: 8px;
-    vertical-align: middle;
-  }
-  .pill-hot { color: #f87171; background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); }
-  .dot-hot {
-    display: inline-block; width: 5px; height: 5px; border-radius: 50%;
-    background: #f87171; box-shadow: 0 0 5px #f87171;
-  }
-
-  /* ════════════════════════════ STATS STRIP ════════════════════════════ */
-  .stats-strip {
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    background: rgb(var(--c-glass) / 0.02);
+  .ql:hover { color: #fafafa; border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.07); }
+  .ql-discord { color: #7289da; border-color: rgba(114,137,218,0.4); background: rgba(114,137,218,0.06); }
+  .ql-discord:hover { color: #fff; border-color: rgba(114,137,218,0.8); background: rgba(114,137,218,0.15); }
+  .ticket {
+    background: #0f0f0f;
+    border: 1px solid rgba(255,255,255,0.1);
     position: relative;
+    overflow: hidden;
   }
-  .stats-strip::before {
-    content: "";
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 400px; height: 1px;
-    background: linear-gradient(90deg, transparent, rgb(var(--accent-rgb) / 0.3), transparent);
+  .ticket::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 172px; bottom: 0; width: 1px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 5px,
+      transparent 5px, transparent 11px
+    );
   }
-  .stats-inner {
-    display: grid;
-    grid-template-columns: 1fr 1px 1fr 1px 1fr;
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 0 clamp(20px, 5vw, 72px);
-  }
-  .stat-item {
+  .stub {
+    position: absolute;
+    top: 0; left: 0; bottom: 0; width: 172px;
+    background: #0a0a0a;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 20px 12px;
-  }
-  .stat-value {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-    font-weight: 900;
-    letter-spacing: -1px;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .stat-value.accent { color: var(--accent); }
-  .stat-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--dim);
-    text-align: center;
-  }
-  .stat-sep {
-    background: var(--border);
-    margin: 16px 0;
-  }
-
-  /* ════════════════════════════ FEATURES ════════════════════════════ */
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .feat-card {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border);
-    border-radius: 14px;
+    gap: 6px;
     padding: 20px;
-    transition: background 0.2s, border-color 0.2s;
   }
-  .feat-card:hover {
-    background: rgb(var(--c-glass) / 0.07);
-    border-color: var(--border2);
+  .stub-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    letter-spacing: 0.1em;
   }
-  .feat-icon {
-    font-size: 1.5rem;
-    flex-shrink: 0;
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgb(var(--c-glass) / 0.06);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-  }
-  .feat-body h3 {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: 0.92rem;
+  .stub-logo em { color: #ff00ff; font-style: normal; }
+  .stub-label {
+    font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
+    font-size: 0.52rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #333;
+    writing-mode: vertical-rl;
+  }
+  .ticket-main { padding: 28px 28px 28px 200px; }
+  .ticket-event {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .ticket-venue {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #444;
+    margin-bottom: 22px;
+  }
+  .ticket-code-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #ff00ff;
+    display: block;
     margin-bottom: 5px;
   }
-  .feat-body p {
-    font-size: 0.8rem;
-    color: var(--mid);
-    line-height: 1.55;
-  }
-
-  /* ════════════════════════════ CODE JOIN ════════════════════════════ */
-  .code-join {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    background: rgb(var(--c-glass) / 0.03);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 28px;
-  }
-  .code-join-label {
-    font-size: 0.78rem; font-weight: 700; color: var(--mid); white-space: nowrap;
-  }
-  .code-join-bar { display: flex; gap: 8px; flex: 1; min-width: 200px; }
-  .code-join-bar input {
+  .ticket-row { display: flex; }
+  .ticket-input {
     flex: 1;
-    background: rgb(var(--c-glass) / 0.05);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 8px 14px;
-    color: var(--text);
-    font-size: 0.92rem;
-    font-family: "Bricolage Grotesque", sans-serif;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-right: none;
+    padding: 12px 16px;
+    color: #fafafa;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
     outline: none;
-    letter-spacing: 0.12em;
-    font-weight: 800;
+    transition: border-color 0.2s;
   }
-  .code-join-bar input:focus {
-    border-color: rgb(var(--accent-rgb) / 0.45);
-    box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.1);
-  }
-  .code-join-err { font-size: 0.75rem; color: #f87171; width: 100%; margin-top: -4px; }
-
-  /* ════════════════════════════ PUBLIC ROOMS ════════════════════════════ */
-  .pub-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 10px;
-  }
-  .pub-skeleton {
-    height: 100px;
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    animation: pulse-glow 1.5s ease-in-out infinite;
-    animation-delay: calc(var(--i) * 0.1s);
-  }
-  .pub-card {
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
+  .ticket-input:focus { border-color: rgba(255,0,255,0.5); }
+  .ticket-input::placeholder { color: #282828; }
+  .ticket-go {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #000;
+    background: #ff00ff;
+    border: none;
+    padding: 12px 20px;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
+    transition: opacity 0.15s;
   }
-  .pub-card:hover {
-    background: rgb(var(--c-glass) / 0.08);
-    border-color: var(--border2);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
-  }
-  .pub-card.pub-hot { border-color: rgb(var(--accent-rgb) / 0.2); }
-  .pub-card.pub-fire { border-color: rgb(var(--accent-rgb) / 0.32); background: rgb(var(--accent-rgb) / 0.03); }
-  .pub-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
-  .pub-emoji { font-size: 1.3rem; }
-  .pub-popular {
-    font-size: 0.6rem; font-weight: 700; color: var(--accent);
-    background: rgb(var(--accent-rgb) / 0.1); border: 1px solid rgb(var(--accent-rgb) / 0.2);
-    padding: 2px 7px; border-radius: 20px;
-  }
-  .pub-name { font-size: 0.86rem; font-weight: 700; margin-bottom: 2px; }
-  .pub-host { font-size: 0.7rem; color: var(--dim); margin-bottom: 6px; }
-  .pub-desc { font-size: 0.7rem; color: var(--mid); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pub-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 8px; }
-  .pub-online { font-size: 0.68rem; color: var(--dim); display: flex; align-items: center; gap: 4px; }
-  .pub-online-live { color: var(--accent); font-weight: 600; }
-  .pub-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
-  .pub-dot-live { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
-  .pub-btn {
-    font-size: 0.7rem; font-weight: 800; color: var(--accent);
-    background: rgb(var(--accent-rgb) / 0.08); border: 1px solid rgb(var(--accent-rgb) / 0.2);
-    border-radius: 5px; cursor: pointer; font-family: inherit; padding: 3px 9px;
-    transition: background 0.15s;
-  }
-  .pub-btn:hover { background: rgb(var(--accent-rgb) / 0.16); }
-  .pub-section-head {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-  .pub-section-badge {
-    font-size: 0.75rem; font-weight: 700;
-    background: rgb(var(--c-glass) / 0.06);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 3px 11px; border-radius: 20px;
-  }
-  .pub-section-qcm {
-    background: rgba(74,222,128,0.08);
-    border-color: rgba(74,222,128,0.25);
-    color: #4ade80;
-  }
-  .pub-section-hint { font-size: 0.7rem; color: var(--dim); }
-  .pub-card-qcm { border-color: rgba(74,222,128,0.2); background: rgba(74,222,128,0.025); }
-  .pub-card-qcm:hover { border-color: rgba(74,222,128,0.35); }
-  .pub-badges { display: flex; align-items: center; gap: 4px; }
-  .pub-badge-qcm {
-    font-size: 0.58rem; font-weight: 700;
-    background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25);
-    color: #4ade80; padding: 2px 7px; border-radius: 20px;
-  }
+  .ticket-go:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ticket-err { font-size: 0.72rem; color: #f87171; margin-top: 6px; }
 
   /* ════════════════════════════ MODE SALON CTA ════════════════════════════ */
   .salon-cta {
-    margin: 8px clamp(20px, 5vw, 72px) 0;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(62,207,255,0.07) 0%, rgba(167,139,250,0.11) 100%);
-    border: 1px solid rgba(167,139,250,0.2);
+    margin: 0;
+    background: #0f0f0f;
+    border-top: 1px solid rgba(255,0,255,0.12);
+    border-bottom: 1px solid rgba(255,0,255,0.12);
     padding: 48px clamp(24px, 5vw, 64px);
     position: relative;
     overflow: hidden;
   }
   .salon-cta::before {
-    content: "";
+    content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 75% 50%, rgba(167,139,250,0.1) 0%, transparent 55%);
+    background: radial-gradient(ellipse at 75% 50%, rgba(255,0,255,0.06) 0%, transparent 55%);
     pointer-events: none;
   }
   .salon-cta-inner {
@@ -1199,571 +1092,77 @@
     max-width: 1100px;
     margin: 0 auto;
   }
-  .salon-cta-left {
+  .salon-left {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 14px;
   }
-  .salon-cta-tag {
-    display: inline-flex; width: fit-content;
-    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--accent2);
-    background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.25);
-    padding: 4px 12px; border-radius: 50px;
+  .salon-kicker {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(255,0,255,0.08);
+    border: 1px solid rgba(255,0,255,0.25);
+    padding: 4px 12px;
+    display: inline-block;
+    width: fit-content;
   }
-  .salon-cta-title {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  .salon-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
     font-weight: 900;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    color: var(--text);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    line-height: 1;
   }
-  .salon-cta-desc {
+  .salon-desc {
     font-size: 0.9rem;
     color: var(--mid);
     line-height: 1.65;
     max-width: 420px;
   }
-  .salon-cta-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .salon-cta-phones {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    flex-shrink: 0;
-  }
+  .salon-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .salon-phones { display: flex; align-items: flex-end; gap: 10px; flex-shrink: 0; }
   .sphone {
     width: 56px; height: 96px;
-    background: rgb(var(--c-glass) / 0.12);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgb(var(--c-glass) / 0.2);
-    border-radius: 12px;
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
   }
-  .sphone-left  { transform: rotate(-7deg) translateY(10px); }
-  .sphone-center { transform: translateY(-8px); }
-  .sphone-right { transform: rotate(7deg) translateY(6px); }
-  .sphone-screen {
+  .sphone-l { transform: rotate(-7deg) translateY(10px); }
+  .sphone-c { transform: translateY(-8px); }
+  .sphone-r { transform: rotate(7deg) translateY(6px); }
+  .sphone-s {
     width: 40px; height: 68px;
     background: rgba(0,0,0,0.45);
     border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
   }
-  .sphone-shape { font-size: 1.5rem; }
-
-  /* ════════════════════════════ QCM CTA ════════════════════════════ */
-  .official-card-badge-qcm {
-    font-size: 0.58rem;
-    font-weight: 700;
-    background: rgba(74,222,128,0.1);
-    border: 1px solid rgba(74,222,128,0.25);
-    color: #4ade80;
-    padding: 2px 7px;
-    border-radius: 20px;
-    margin-right: auto;
-  }
-  .qcm-cta {
-    margin: 0 clamp(20px, 5vw, 72px) 8px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(74,222,128,0.07) 0%, rgba(62,207,255,0.06) 100%);
-    border: 1px solid rgba(74,222,128,0.2);
-    padding: 48px clamp(24px, 5vw, 64px);
-    position: relative;
-    overflow: hidden;
-  }
-  .qcm-cta::before {
-    content: "";
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 75% 50%, rgba(74,222,128,0.08) 0%, transparent 55%);
-    pointer-events: none;
-  }
-  .qcm-cta-inner {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 48px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .qcm-cta-left {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .qcm-cta-tag {
-    display: inline-flex; width: fit-content;
-    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
-    color: #4ade80;
-    background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25);
-    padding: 4px 12px; border-radius: 50px;
-  }
-  .qcm-cta-title {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-    font-weight: 900;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    color: var(--text);
-  }
-  .qcm-cta-desc {
-    font-size: 0.9rem;
-    color: var(--mid);
-    line-height: 1.65;
-    max-width: 420px;
-  }
-  .qcm-cta-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .qcm-choices-preview {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex-shrink: 0;
-    width: 260px;
-  }
-  .qcm-choice {
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    border: 1px solid transparent;
-  }
-  .qcm-c0 { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.3); color: #fca5a5; }
-  .qcm-c1 { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.3); color: #93c5fd; }
-  .qcm-c2 { background: rgba(234,179,8,.12); border-color: rgba(234,179,8,.3); color: #fde68a; }
-  .qcm-c3 { background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.4); color: #4ade80; box-shadow: 0 0 10px rgba(74,222,128,.15); }
-  @media (max-width: 900px) {
-    .qcm-choices-preview { display: none; }
-  }
-  @media (max-width: 600px) {
-    .qcm-cta { margin: 0 16px 8px; padding: 36px 20px; }
-  }
-
-  /* ════════════════════════════ LEADERBOARDS ════════════════════════════ */
-  .lb-solo {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: start;
-    max-width: 920px;
-    margin: 0 auto;
-  }
-  .lb-intro {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    padding-top: 4px;
-  }
-  .lb-intro-badge {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-  .lb-intro-title {
-    font-size: clamp(1.4rem, 3vw, 1.9rem);
-    font-weight: 800;
-    line-height: 1.2;
-    margin: 0;
-  }
-  .lb-intro-desc {
-    color: var(--dim);
-    font-size: 0.88rem;
-    line-height: 1.65;
-    margin: 0;
-  }
-  .lb-intro-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .lb-chip {
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    color: var(--dim);
-    background: rgb(var(--c-glass) / 0.04);
-  }
-  .lb-more-btn {
-    align-self: flex-start;
-  }
-  .lb-panel {
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-  }
-  .lb-panel::before {
-    content: "";
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    opacity: 0.45;
-  }
-  .lb-head {
-    display: flex; align-items: center; gap: 12px;
-    padding: 18px 18px 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .lb-head-icon { font-size: 1.3rem; flex-shrink: 0; }
-  .lb-head b { font-size: 0.9rem; font-weight: 700; display: block; }
-  .lb-head small { font-size: 0.7rem; color: var(--dim); }
-
-  /* ════ Podium rectangles ════ */
-  .podium {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 6px;
-    padding: 20px 16px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .podium-slot {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-  }
-  .podium-crown { font-size: 1rem; margin-bottom: 4px; line-height: 1; }
-  .podium-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding-bottom: 10px;
-  }
-  .podium-avatar-link { display: block; }
-  .podium-av {
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid var(--border);
-    display: block;
-    flex-shrink: 0;
-  }
-  .podium-av-r1 {
-    border-color: var(--accent);
-    box-shadow: 0 0 16px rgb(var(--accent-rgb) / 0.3);
-  }
-  .podium-av-r2 { border-color: #94a3b8; }
-  .podium-av-r3 { border-color: #c2774a; }
-  .podium-name {
-    font-size: 0.68rem; font-weight: 700; text-align: center;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
-  }
-  .podium-name-1 { color: var(--accent); }
-  .podium-score { font-size: 0.6rem; color: var(--dim); text-align: center; }
-
-  /* Les marches */
-  .podium-step {
-    width: 100%;
-    border-radius: 6px 6px 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .podium-step-1 {
-    height: 68px;
-    background: linear-gradient(180deg, rgba(62,207,255,0.22) 0%, rgba(62,207,255,0.08) 100%);
-    border: 1px solid rgb(var(--accent-rgb) / 0.35);
-    border-bottom: none;
-  }
-  .podium-step-2 {
-    height: 48px;
-    background: linear-gradient(180deg, rgba(148,163,184,0.18) 0%, rgba(148,163,184,0.06) 100%);
-    border: 1px solid rgba(148,163,184,0.3);
-    border-bottom: none;
-  }
-  .podium-step-3 {
-    height: 32px;
-    background: linear-gradient(180deg, rgba(194,119,74,0.18) 0%, rgba(194,119,74,0.06) 100%);
-    border: 1px solid rgba(194,119,74,0.3);
-    border-bottom: none;
-  }
-  .podium-num {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: 1.1rem; font-weight: 900;
-    color: var(--text); opacity: 0.55;
-  }
-
-  /* ════ Official room cards ════ */
-  .official-rooms-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
-  }
-  .official-card {
-    position: relative;
-    background: linear-gradient(135deg, rgb(var(--c-glass) / 0.06) 0%, rgba(167,139,250,0.04) 100%);
-    border: 1px solid rgba(167,139,250,0.25);
-    border-radius: 14px;
-    padding: 18px;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.15s;
-    overflow: hidden;
-  }
-  .official-card::before {
-    content: "";
-    position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
-    background: linear-gradient(180deg, var(--accent2), var(--accent));
-    border-radius: 0 2px 2px 0;
-    opacity: 0.7;
-  }
-  .official-card:hover {
-    background: linear-gradient(135deg, rgb(var(--c-glass) / 0.09) 0%, rgba(167,139,250,0.07) 100%);
-    border-color: rgba(167,139,250,0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  }
-  .official-card:hover::before { opacity: 1; }
-  .official-card-header {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
-  }
-  .official-card-emoji { font-size: 1.6rem; }
-  .official-card-badge {
-    font-size: 0.6rem; font-weight: 700;
-    color: var(--accent2);
-    background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.25);
-    padding: 2px 9px; border-radius: 20px;
-  }
-  .official-card-name {
-    font-size: 0.92rem; font-weight: 800;
-    color: var(--text); margin-bottom: 5px;
-  }
-  .official-card-desc {
-    font-size: 0.75rem; color: var(--mid); line-height: 1.5; margin-bottom: 12px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .official-card-footer {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  }
-  .official-card-online {
-    font-size: 0.68rem; color: var(--dim);
-    display: flex; align-items: center; gap: 5px;
-  }
-  .official-online-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: var(--dim); flex-shrink: 0;
-  }
-  .official-online-dot.live { background: #4ade80; box-shadow: 0 0 5px #4ade80; }
-  .official-online-live { color: #4ade80; font-weight: 600; }
-  .official-card-btn {
-    font-size: 0.72rem; font-weight: 700;
-    color: var(--accent2);
-    background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.25);
-    border-radius: 7px; cursor: pointer; font-family: inherit; padding: 5px 12px;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .official-card-btn:hover { background: rgba(167,139,250,0.18); border-color: rgba(167,139,250,0.4); }
-  .official-card-qcm {
-    border-color: rgba(74,222,128,0.25);
-    background: linear-gradient(135deg, rgb(var(--c-glass) / 0.06) 0%, rgba(74,222,128,0.04) 100%);
-  }
-  .official-card-qcm:hover { border-color: rgba(74,222,128,0.4); }
-  .official-card-stripe-qcm { background: linear-gradient(180deg, #4ade80, #22c55e); }
-  .official-card-btn-qcm {
-    color: #4ade80;
-    background: rgba(74,222,128,0.08);
-    border-color: rgba(74,222,128,0.25);
-  }
-  .official-card-btn-qcm:hover { background: rgba(74,222,128,0.16); border-color: rgba(74,222,128,0.4); }
-
-  /* ════════════════════════════ FAKE "VOIR PLUS" CARDS ════════════════════════════ */
-  .official-card-more {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-decoration: none;
-    border-style: dashed;
-    border-color: rgba(167,139,250,0.2);
-    background: transparent;
-    color: var(--mid);
-    transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
-    min-height: 120px;
-  }
-  .official-card-more:hover {
-    background: rgba(167,139,250,0.06);
-    border-color: rgba(167,139,250,0.45);
-    color: var(--accent2);
-    transform: translateY(-2px);
-  }
-  .official-card-more-qcm {
-    border-color: rgba(74,222,128,0.2);
-  }
-  .official-card-more-qcm:hover {
-    background: rgba(74,222,128,0.05);
-    border-color: rgba(74,222,128,0.4);
-    color: #4ade80;
-  }
-  .pub-card-more {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-decoration: none;
-    border-style: dashed;
-    border-color: rgba(255,255,255,0.1);
-    background: transparent;
-    color: var(--mid);
-    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
-    min-height: 80px;
-  }
-  .pub-card-more:hover {
-    background: rgb(var(--c-glass) / 0.06);
-    border-color: var(--border2);
-    color: var(--accent);
-    transform: translateY(-2px);
-  }
-  .card-more-icon { font-size: 1.4rem; }
-  .card-more-label { font-size: 0.8rem; font-weight: 700; }
-  .card-more-arrow { font-size: 1rem; }
-
-  /* Scrollable list */
-  .lb-scroll {
-    max-height: 260px;
-    overflow-y: auto;
-    padding: 6px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .lb-scroll::-webkit-scrollbar { width: 4px; }
-  .lb-scroll::-webkit-scrollbar-track { background: transparent; }
-  .lb-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  .lb-empty { padding: 20px; text-align: center; color: var(--dim); font-size: 0.82rem; }
-  .lb-row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; border-radius: 7px;
-    transition: background 0.12s;
-  }
-  .lb-row:hover { background: rgb(var(--c-glass) / 0.06); }
-  .lb-rank { font-size: 0.68rem; font-weight: 700; color: var(--dim); min-width: 26px; font-variant-numeric: tabular-nums; }
-  .lb-name { font-size: 0.82rem; font-weight: 600; flex: 1; color: var(--text); transition: color 0.15s; }
-  .lb-name:hover { color: var(--accent); }
-  .lb-score { font-size: 0.82rem; font-weight: 700; }
-  .lb-games { font-size: 0.62rem; color: var(--dim); min-width: 60px; text-align: right; }
-
-  /* ════════════════════════════ GUEST MODAL ════════════════════════════ */
-  .guest-h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: 1.2rem; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;
-  }
-  .mdesc { font-size: 0.82rem; color: var(--mid); margin-bottom: 20px; line-height: 1.5; }
-  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
-  .field label { font-size: 0.75rem; font-weight: 600; color: var(--mid); }
-  .field input {
-    background: rgb(var(--c-glass) / 0.04); border: 1px solid var(--border2);
-    border-radius: 8px; padding: 10px 14px; color: var(--text);
-    font-size: 0.88rem; font-family: inherit; outline: none;
-  }
-  .field input:focus { border-color: rgb(var(--accent-rgb) / 0.4); box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08); }
-  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-
-  /* ════════════════════════════ RESPONSIVE ════════════════════════════ */
-  @media (max-width: 900px) {
-    .features-grid { grid-template-columns: repeat(2, 1fr); }
-    .salon-cta-phones { display: none; }
-    .official-rooms-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-    .lb-solo { grid-template-columns: 1fr; gap: 24px; }
-  }
-  @media (max-width: 600px) {
-    .section { padding: 44px 16px; }
-    .features-grid { grid-template-columns: 1fr; }
-    .official-rooms-grid { grid-template-columns: 1fr; }
-    .pub-grid { grid-template-columns: 1fr 1fr; }
-    .stats-inner { grid-template-columns: 1fr 1px 1fr 1px 1fr; max-width: 100%; }
-    .salon-cta { margin: 8px 16px 0; padding: 36px 20px; }
-    .section-head h2 { font-size: 1.45rem; }
-    .podium-step-1 { height: 56px; }
-    .podium-step-2 { height: 40px; }
-    .podium-step-3 { height: 28px; }
-    /* Code-join : bouton sous l'input */
-    .code-join { flex-direction: column; align-items: stretch; }
-    .code-join-bar { flex-direction: column; min-width: 0; }
-    .code-join-bar :global(.btn-accent),
-    .code-join-bar button { width: 100%; justify-content: center; }
-  }
-  @media (max-width: 400px) {
-    .pub-grid { grid-template-columns: 1fr; }
-    /* Stats strip : réduire le texte pour éviter le débordement */
-    .stat-label { font-size: 0.58rem; }
-  }
-
-  /* ════════════════════════════ SECTION ABOUT ════════════════════════════ */
-  .about-inner {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 48px;
-    align-items: start;
-  }
-  .about-text h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-size: clamp(1.6rem, 3vw, 2.2rem);
-    font-weight: 900;
-    letter-spacing: -1px;
-    margin-bottom: 20px;
-  }
-  .about-text p {
-    font-size: 0.9rem;
-    color: var(--mid);
-    line-height: 1.7;
-    margin-bottom: 14px;
-  }
-  .about-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .about-list li {
-    font-size: 0.88rem;
-    color: var(--mid);
-    line-height: 1.6;
-    padding-left: 18px;
-    position: relative;
-  }
-  .about-list li::before {
-    content: "→";
-    position: absolute;
-    left: 0;
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .about-aside {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .about-stat-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgb(var(--c-glass) / 0.04);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-  }
-  .about-stat-icon { font-size: 1.3rem; flex-shrink: 0; }
-  .about-stat-label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
 
   /* ════════════════════════════ FAQ ════════════════════════════ */
-  .faq-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 800px;
+  .faq-section {
+    padding: 72px clamp(20px, 5vw, 72px);
+    max-width: 1000px;
+    margin: 0 auto;
   }
+  .faq-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    margin-bottom: 32px;
+  }
+  .faq-list { display: flex; flex-direction: column; gap: 8px; }
   .faq-item {
-    background: rgb(var(--c-glass) / 0.04);
+    background: rgba(255,255,255,0.02);
     border: 1px solid var(--border);
-    border-radius: 12px;
     overflow: hidden;
     transition: border-color 0.15s;
   }
@@ -1779,27 +1178,59 @@
     justify-content: space-between;
     gap: 8px;
   }
-  .faq-q::after {
-    content: "+";
-    font-size: 1.1rem;
-    color: var(--accent);
-    flex-shrink: 0;
-    transition: transform 0.2s;
+  .faq-q::after { content: '+'; font-size: 1.1rem; color: var(--accent); flex-shrink: 0; }
+  .faq-item[open] .faq-q::after { content: '−'; }
+  .faq-a { font-size: 0.84rem; color: var(--mid); line-height: 1.65; padding: 0 20px 16px; margin: 0; }
+
+  /* ════════════════════════════ GUEST MODAL ════════════════════════════ */
+  .guest-h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.02em;
   }
-  .faq-item[open] .faq-q::after { content: "−"; }
-  .faq-a {
-    font-size: 0.84rem;
-    color: var(--mid);
-    line-height: 1.65;
-    padding: 0 20px 16px;
-    margin: 0;
+  .mdesc { font-size: 0.82rem; color: var(--mid); margin-bottom: 20px; line-height: 1.5; }
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
+  .field label { font-size: 0.75rem; font-weight: 600; color: var(--mid); }
+  .field input {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border2);
+    border-radius: 3px; padding: 10px 14px; color: var(--text);
+    font-size: 0.88rem; font-family: inherit; outline: none;
+  }
+  .field input:focus { border-color: rgba(255,0,255,0.45); box-shadow: 0 0 0 3px rgba(255,0,255,0.08); }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ════════════════════════════ RESPONSIVE ════════════════════════════ */
+  @media (max-width: 900px) {
+    .pw-head { padding: 0 24px; }
+    .collage-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px 24px 24px; }
+    .pw-cta-wrap { padding: 28px 24px 0; }
+    .features { padding: 48px 24px; }
+    .feat-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart { padding: 48px 24px; }
+    .ticket-section { padding: 48px 24px; grid-template-columns: 1fr; gap: 36px; }
+    .salon-phones { display: none; }
+    .faq-section { padding: 48px 24px; }
   }
 
-  @media (max-width: 900px) {
-    .about-inner { grid-template-columns: 1fr; }
-    .about-aside { display: grid; grid-template-columns: 1fr 1fr; }
-  }
   @media (max-width: 600px) {
-    .about-aside { grid-template-columns: 1fr; }
+    .pw-head { padding: 0 16px; }
+    .collage-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px 16px 20px; }
+    .cc { --rot: 0deg; --ty: 0px; }
+    .pw-cta-wrap { padding: 24px 16px 0; }
+    .pw-cta { width: 100%; text-align: center; }
+    .features { padding: 40px 16px; }
+    .feat-grid { grid-template-columns: 1fr 1fr; }
+    .feat-name { font-size: 1.1rem; }
+    .chart { padding: 40px 16px; }
+    .chart-row { grid-template-columns: 40px 20px 28px 1fr 80px; gap: 10px; }
+    .chart-avatar { width: 28px; height: 28px; }
+    .ticket-section { padding: 40px 16px; }
+    .ticket::before { display: none; }
+    .ticket-main { padding: 20px; }
+    .stub { display: none; }
+    .faq-section { padding: 40px 16px; }
+  }
+
+  @media (max-width: 380px) {
+    .collage-grid { grid-template-columns: 1fr; gap: 10px; }
   }
 </style>

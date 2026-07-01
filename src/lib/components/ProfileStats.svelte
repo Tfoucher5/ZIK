@@ -400,7 +400,7 @@
 
 /* -- Stat big -- */
 .pf-stat-val {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2.4rem;
   font-weight: 900;
   color: var(--accent);
@@ -488,7 +488,7 @@
 .pf-score-info { flex: 1; min-width: 0; }
 .pf-score-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pf-score-pts {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-weight: 800;
   font-size: 1rem;
   color: var(--accent);
@@ -508,7 +508,7 @@
 .pf-hist-date { font-size: 0.7rem; color: var(--dim); width: 52px; flex-shrink: 0; }
 .pf-hist-room { flex: 1; font-size: 0.82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pf-hist-score {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-weight: 700;
   color: var(--accent);
   font-size: 0.9rem;
@@ -534,7 +534,7 @@
   margin-bottom: 14px;
 }
 .pf-level-num {
-  font-family: 'Bricolage Grotesque', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2.8rem;
   font-weight: 900;
   color: var(--accent);
@@ -550,6 +550,6 @@
 .pf-mini-stats { display: flex; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
 .pf-mini-stat { flex: 1; text-align: center; padding: 0 8px; border-right: 1px solid var(--border); }
 .pf-mini-stat:last-child { border-right: none; }
-.pf-mini-val { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.2rem; font-weight: 800; }
+.pf-mini-val { font-family: "Barlow Condensed", sans-serif; font-size: 1.2rem; font-weight: 800; }
 .pf-mini-lbl { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
 </style>

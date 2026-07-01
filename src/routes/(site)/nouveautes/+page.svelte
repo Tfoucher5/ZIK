@@ -97,12 +97,12 @@
 .breadcrumb a:hover { color: #fff; }
 
 .news-title {
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  font-weight: 800;
-  background: linear-gradient(135deg, #a78bfa, #7c3aed);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  color: #fafafa;
   margin: 0 0 8px;
 }
 
@@ -171,8 +171,8 @@
 .news-version {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #a78bfa;
-  font-family: monospace;
+  color: #ff00ff;
+  font-family: "Barlow Condensed", sans-serif;
 }
 
 .news-date {

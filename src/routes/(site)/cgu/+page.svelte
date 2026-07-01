@@ -86,7 +86,7 @@
   padding: calc(var(--nav-h) + 32px) 24px 80px;
 }
 .legal-page h1 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -95,7 +95,7 @@
 .legal-date { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
 .legal-page section { margin-bottom: 32px; }
 .legal-page h2 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 10px;

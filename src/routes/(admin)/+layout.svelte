@@ -114,7 +114,7 @@
   z-index: 100;
 }
 .adm-logo {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-weight: 800;
   font-size: 1.2rem;
   letter-spacing: -0.5px;

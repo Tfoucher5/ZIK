@@ -119,15 +119,12 @@
   font-size: 3.4rem;
   font-weight: 900;
   line-height: 1;
-  background: linear-gradient(135deg, #a78bfa, #7c3aed);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ff00ff;
 }
 .result-score span {
   font-size: 1.1rem;
   margin-left: 6px;
-  -webkit-text-fill-color: #a78bfa;
+  color: #ff00ff;
 }
 
 .result-rank {

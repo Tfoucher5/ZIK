@@ -68,7 +68,7 @@
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #a78bfa;
+  color: #ff00ff;
   font-weight: 700;
 }
 

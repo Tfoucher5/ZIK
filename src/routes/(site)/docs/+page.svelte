@@ -1010,7 +1010,7 @@
 
   /* ── Titres ── */
   .doc-title {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     font-weight: 800;
     letter-spacing: -1px;
@@ -1038,7 +1038,7 @@
   }
 
   .doc-content h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.6rem;
     font-weight: 800;
     color: var(--text, #fff);

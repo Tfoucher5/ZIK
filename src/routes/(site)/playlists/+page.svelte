@@ -1,6 +1,5 @@
 <script>
   import { onMount, getContext } from 'svelte';
-  import HeroSection from '$lib/components/HeroSection.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import TrackRow from './TrackRow.svelte';
   import TrackSearch from './TrackSearch.svelte';
@@ -390,11 +389,12 @@
   <script type="application/ld+json">{@html playlistsJsonLd}</script>
 </svelte:head>
 
-<HeroSection
-  title="Tes"
-  titleAccent="playlists."
-  subtitle="Crée, importe, joue. Spotify, Deezer, ou manuellement."
-/>
+<header class="page-head">
+  <div class="page-head-inner">
+    <h1 class="page-head-title">Playlists</h1>
+    <p class="page-head-sub">Crée, importe, joue · Spotify, Deezer, ou manuellement</p>
+  </div>
+</header>
 
 {#if user}
 <div class="pl-toolbar">
@@ -705,7 +705,7 @@
   margin-bottom: 20px;
 }
 .auth-wall h2 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.4rem;
   margin-bottom: 10px;
 }
@@ -774,7 +774,7 @@
   display: block;
 }
 .pl-card-name {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-weight: 700;
   font-size: 1rem;
   margin-bottom: 6px;
@@ -895,7 +895,7 @@
   flex-shrink: 0;
 }
 .editor-header h2 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 4px;
@@ -933,7 +933,7 @@
   margin-bottom: 14px;
 }
 .tracks-section-head h3 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1rem;
   font-weight: 700;
 }
@@ -1127,7 +1127,7 @@
   margin-bottom: 10px;
 }
 .room-code {
-  font-family: "Bricolage Grotesque", monospace;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2.6rem;
   font-weight: 800;
   letter-spacing: 6px;
