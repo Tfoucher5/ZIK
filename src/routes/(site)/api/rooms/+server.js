@@ -81,13 +81,12 @@ export async function GET({ request }) {
   const allPids = [...new Set(result.flatMap((r) => r.playlist_ids))];
   let coverMap = {};
   if (allPids.length > 0) {
-    const { data: tc } = await supabase.rpc("get_covers_by_playlists", {
+    const { data: tc } = await getAdminClient().rpc("get_covers_by_playlists", {
       pids: allPids,
       max_per_playlist: 9,
     });
-    for (const t of tc || []) {
-      if (!coverMap[t.playlist_id]) coverMap[t.playlist_id] = new Set();
-      coverMap[t.playlist_id].add(t.cover_url);
+    for (const [pid, covers] of Object.entries(tc || {})) {
+      coverMap[pid] = new Set(covers);
     }
   }
 

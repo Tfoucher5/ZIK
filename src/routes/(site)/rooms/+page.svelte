@@ -736,7 +736,7 @@
 
 <style>
   /* ── Page layout ── */
-  .rooms-page { width: 100%; padding-top: var(--nav-h); padding-bottom: 96px; }
+  .rooms-page { width: 100%; padding-top: var(--nav-h); padding-bottom: 0; }
   .rp-inner {
     max-width: 1400px;
     margin: 0 auto;
