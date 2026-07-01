@@ -29,5 +29,9 @@ export async function GET({ url }) {
     .range(offset, offset + 19);
   if (error) return json({ error: error.message }, { status: 500 });
   if (offset === 0) _cache.set(data);
-  return json(data);
+  const cc =
+    offset === 0
+      ? { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" }
+      : {};
+  return json(data, { headers: cc });
 }

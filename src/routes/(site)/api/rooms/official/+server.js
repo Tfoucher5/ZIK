@@ -77,7 +77,14 @@ export async function GET() {
       0,
     );
 
-    return json({ rooms: result, totalOnline });
+    return json(
+      { rooms: result, totalOnline },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (e) {
     return json({ error: e.message }, { status: 500 });
   }

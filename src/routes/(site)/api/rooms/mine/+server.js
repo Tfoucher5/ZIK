@@ -2,6 +2,7 @@ import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
 import { roomGames } from "$lib/server/state.js";
+import { backfillCovers } from "$lib/server/services/coverBackfill.js";
 
 export async function GET({ request }) {
   const { user, token } = await requireAuth(request);
@@ -70,25 +71,32 @@ export async function GET({ request }) {
   const allPids = [...new Set(result.flatMap((r) => r.playlist_ids))];
   let coverMap = {};
   if (allPids.length > 0) {
-    const { data: tc } = await supabase
-      .from("custom_playlist_tracks")
-      .select("playlist_id, cover_url")
-      .in("playlist_id", allPids)
-      .not("cover_url", "is", null)
-      .neq("cover_url", "")
-      .limit(200);
+    const { data: tc } = await supabase.rpc("get_covers_by_playlists", {
+      pids: allPids,
+      max_per_playlist: 144,
+    });
     for (const t of tc || []) {
       if (!coverMap[t.playlist_id]) coverMap[t.playlist_id] = new Set();
       coverMap[t.playlist_id].add(t.cover_url);
     }
   }
 
-  return json(
-    result.map((r) => ({
-      ...r,
-      covers: [
-        ...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])])),
-      ].slice(0, 6),
-    })),
-  );
+  const response = result.map((r) => ({
+    ...r,
+    covers: [
+      ...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])])),
+    ].slice(0, 144),
+  }));
+
+  // Backfill en arrière-plan pour les playlists sans cover_url en BDD
+  const emptyPids = [
+    ...new Set(
+      response
+        .filter((r) => r.covers.length === 0)
+        .flatMap((r) => r.playlist_ids),
+    ),
+  ];
+  if (emptyPids.length) backfillCovers(emptyPids).catch(() => {});
+
+  return json(response);
 }

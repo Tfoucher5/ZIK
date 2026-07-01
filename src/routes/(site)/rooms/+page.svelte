@@ -142,22 +142,22 @@
   let deleteLoading   = $state(false);
 
   let selectedMineIdx = $state(0);
-  let mineW = $state(0);
-  let mineH = $state(0);
 
-  const COVERS = $derived.by(() => {
-    const w = mineW || 620;
-    const h = mineH || 450;
-    const size = Math.max(72, Math.round(Math.min(w / 5, h / 3)));
-    const step = size + 4;
-    const cols = Math.ceil(w / step) + 2;
-    const rows = Math.ceil(h / step) + 1;
+  const COV_SIZE = 90;
+  const COV_STEP = COV_SIZE + 4;
+  const COVER_POSITIONS = (() => {
     const pos = [];
-    for (let row = 0; row < rows; row++) {
-      const ox = row % 2 === 0 ? 0 : -(step / 2);
-      for (let col = 0; col < cols; col++) pos.push({ x: ox + col * step, y: row * step });
+    for (let row = 0; row < 6; row++) {
+      const ox = row % 2 === 0 ? 0 : -(COV_STEP / 2);
+      for (let col = 0; col < 24; col++) pos.push({ x: ox + col * COV_STEP, y: row * COV_STEP });
     }
-    return { pos, size };
+    return pos;
+  })();
+
+  // Précharge toutes les covers de toutes les rooms dès que myRooms est dispo
+  $effect(() => {
+    const allUrls = new Set(myRooms.flatMap(r => r.covers ?? []));
+    allUrls.forEach(url => { const i = new Image(); i.src = url; });
   });
 
   onMount(() => { loadPublicRooms(); });
@@ -445,7 +445,6 @@
                       {#each r.playlists.slice(0, cfg.maxPl) as pl, pi (pi)}
                         <div class="pwh-setrow">
                           <span class="pwh-setn">{pl.name}</span>
-                          <span class="pwh-setc">{pl.track_count}</span>
                         </div>
                       {/each}
                       {#if r.playlists.length > cfg.maxPl}
@@ -501,19 +500,18 @@
 
         <!-- Panneau détail (droite desktop / haut mobile) -->
         <div class="mine-panel">
-          <div class="mine-fan" bind:clientWidth={mineW} bind:clientHeight={mineH}>
-            {#if sel.covers?.length}
-              {#each COVERS.pos as pos, ci (ci)}
-                <img class="mine-cov" src={sel.covers[ci % sel.covers.length]} alt="" loading="lazy"
-                  style="width:{COVERS.size}px;height:{COVERS.size}px;top:{pos.y}px;left:{pos.x}px" />
-              {/each}
-            {:else}
-              {#each COVERS.pos as pos, ci (ci)}
-                {@const hue = ((sel.name?.charCodeAt(0) ?? 0) * 53 + ci * 37) % 360}
+          <div class="mine-fan">
+            {#each COVER_POSITIONS as pos, ci (ci)}
+              {@const hue = ((sel.name?.charCodeAt(0) ?? 0) * 53 + ci * 37) % 360}
+              {#if ci < (sel.covers?.length ?? 0)}
+                <img class="mine-cov" src={sel.covers[ci]} alt=""
+                  style="width:{COV_SIZE}px;height:{COV_SIZE}px;top:{pos.y}px;left:{pos.x}px"
+                  onerror={e => { e.currentTarget.style.background = `hsl(${hue}deg,22%,8%)`; e.currentTarget.removeAttribute('src'); }} />
+              {:else}
                 <div class="mine-cov"
-                  style="width:{COVERS.size}px;height:{COVERS.size}px;top:{pos.y}px;left:{pos.x}px;background:hsl({hue}deg,28%,10%)"></div>
-              {/each}
-            {/if}
+                  style="width:{COV_SIZE}px;height:{COV_SIZE}px;top:{pos.y}px;left:{pos.x}px;background:hsl({hue}deg,22%,8%)"></div>
+              {/if}
+            {/each}
           </div>
           <div class="mine-g1"></div>
           <div class="mine-g2"></div>
@@ -1506,11 +1504,23 @@
     .patchwork:has(.pw-room:hover) .pw-room:not(:hover) { filter: none; }
     .pw-room:hover { filter: none; }
     .pw-empty { display: none; }
+    .pw-cover-empty {
+      position: relative !important; inset: unset !important;
+      flex-shrink: 0; width: 110px; align-self: stretch;
+      transform: none !important;
+    }
+    .pw-name { font-size: 1rem !important; }
+    .pw-name.pw-a { font-size: 1.1rem !important; }
+    .pw-code { font-size: 0.72rem !important; color: rgba(255,255,255,0.3) !important; }
   }
 
   @media (max-width: 700px) {
     .mine-wrap { flex-direction: column; height: auto; }
-    .mine-panel { order: 1; height: 240px; width: 100%; }
+    .mine-panel { order: 1; height: 300px; width: 100%; }
+    .mine-g1 {
+      background: linear-gradient(to top,
+        rgba(0,0,0,.9) 0%, rgba(0,0,0,.55) 22%, rgba(0,0,0,.08) 45%, rgba(0,0,0,0) 60%);
+    }
     .mine-idx { order: 2; width: 100%; border-right: none; border-top: 1px solid rgba(255,255,255,.14); }
     .mine-list { max-height: 300px; }
     .mine-g2 { background: linear-gradient(to right, rgba(0,0,0,.7) 0%, rgba(0,0,0,0) 40%); }

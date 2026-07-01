@@ -5,6 +5,8 @@
   import HeroSection from '$lib/components/HeroSection.svelte';
   import Modal from '$lib/components/Modal.svelte';
 
+  let { data } = $props();
+
   const POSTER_COVERS = [
     'https://api.deezer.com/album/302127/image',
     'https://api.deezer.com/album/55483022/image',
@@ -20,8 +22,8 @@
   const COLLAGE_ROTS = [-2.5, 1.8, -1.2, 2.2, -0.8, 1.5, -3.1, 0.7, -1.8, 2.4];
   const COLLAGE_TY   = [0, -8, 5, -12, 7, -4, 2, 10, -6, 4];
 
-  let rooms = $state([]);
-  let totalOnline = $state(0);
+  let rooms = $state(data.rooms ?? []);
+  let totalOnline = $state(data.totalOnline ?? 0);
   let displayOnline = $state(0);
   let roomCodeVal = $state("");
   let roomCodeErr = $state("");
@@ -31,8 +33,8 @@
   let activeClassicRooms = $derived(officialClassicRooms.filter(r => r.online > 0));
   let waitingClassicRooms = $derived(officialClassicRooms.filter(r => !r.online || r.online === 0));
 
-  let eloLb = $state([]);
-  let globalStats = $state({ publicPlaylists: 0, gamesMonth: 0 });
+  let eloLb = $state(data.eloLb ?? []);
+  let globalStats = $state(data.globalStats ?? { publicPlaylists: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
   let guestUsername = $state("");
   let pendingRoom = $state(null);
@@ -75,20 +77,6 @@
       totalOnline = data.totalOnline ?? rooms.reduce((s, r) => s + (r.online || 0), 0);
     } catch { rooms = []; }
     if (!document.hidden) _roomsTimer = setTimeout(loadRooms, 30_000);
-  }
-
-  async function loadLeaderboards() {
-    try {
-      const eRes = await fetch("/api/leaderboard/elo").then(r => r.json());
-      eloLb = Array.isArray(eRes) ? eRes : [];
-    } catch { /* silencieux */ }
-  }
-
-  async function loadGlobalStats() {
-    try {
-      const s = await fetch("/api/stats/global").then(r => r.json());
-      globalStats = { publicPlaylists: s.publicPlaylists ?? 0, gamesMonth: s.gamesMonth ?? 0 };
-    } catch { /* silencieux */ }
   }
 
   async function joinByCode() {
@@ -241,8 +229,6 @@
 
   onMount(() => {
     loadRooms();
-    loadLeaderboards();
-    loadGlobalStats();
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) loadRooms();
     });
@@ -386,7 +372,7 @@
       <a href="/user/{p.username}" class="chart-row">
         <span class="chart-pos" class:top3={i < 3}>{i + 1}</span>
         <span class="chart-mv">—</span>
-        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} />
+        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} width="32" height="32" />
         <div class="chart-info">
           <div class="c-nm">{p.username}</div>
           <div class="c-sb">{p.games_played} partie{p.games_played !== 1 ? 's' : ''}</div>

@@ -132,7 +132,7 @@
     </div>
     <div class="profile-hero-inner">
       <div class="profile-avatar-wrap">
-        <img src={avatar} alt="" class="profile-avatar-big">
+        <img src={avatar} alt="" class="profile-avatar-big" width="88" height="88">
       </div>
       <div class="profile-hero-info">
         <div class="profile-username">{profile.username}</div>

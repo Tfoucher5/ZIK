@@ -37,7 +37,11 @@ export async function GET() {
       gamesMonth: gamesMonth ?? 0,
     };
     _cacheExp = Date.now() + 5 * 60_000;
-    return json(_cache);
+    return json(_cache, {
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
   } catch {
     return json(
       { users: 0, publicRooms: 0, publicPlaylists: 0, gamesMonth: 0 },

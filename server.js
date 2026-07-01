@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import compression from "compression";
 import { execFile as _execFile } from "child_process";
 import { promisify as _promisify } from "util";
 import { join as _join } from "path";
@@ -73,7 +74,10 @@ async function autoUpdateYtDlp() {
   }
 }
 
-const server = createServer(handler);
+const compress = compression({ threshold: 1024 });
+const server = createServer((req, res) =>
+  compress(req, res, () => handler(req, res)),
+);
 
 const io = new Server(server, {
   transports: ["websocket", "polling"],

@@ -157,7 +157,7 @@
     </div>
     <div class="profile-hero-inner">
       <div class="profile-avatar-wrap">
-        <img src={avatar} alt="" class="profile-avatar-big">
+        <img src={avatar} alt="" class="profile-avatar-big" width="88" height="88">
         <button class="profile-avatar-edit" onclick={openEdit} title="Changer l'avatar">&#x270E;</button>
       </div>
       <div class="profile-hero-info">

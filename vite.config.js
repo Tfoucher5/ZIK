@@ -27,4 +27,15 @@ const webSocketServer = {
 /** @type {import('vite').UserConfig} */
 export default {
   plugins: [sveltekit(), webSocketServer],
+  build: {
+    target: "es2020",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/@supabase")) return "supabase";
+          if (id.includes("node_modules/socket.io-client")) return "socketio";
+        },
+      },
+    },
+  },
 };
