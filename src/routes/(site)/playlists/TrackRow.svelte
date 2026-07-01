@@ -19,7 +19,7 @@
     </div>
   {/if}
   {#if onEditAnswers}
-    <button class="track-answers-btn" title="Réponses custom" onclick={onEditAnswers}>&#x270E;</button>
+    <button class="track-answers-btn" title="Modifier les réponses" onclick={onEditAnswers}>&#x270E;</button>
   {/if}
   <button class="track-remove-btn" onclick={onRemove}>&#x2715;</button>
 </div>
@@ -29,13 +29,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  background: rgb(var(--c-glass) / 0.02);
-  border: 1px solid var(--border);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
 }
 .track-num {
-  font-size: 0.75rem;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.7rem;
   color: var(--dim);
   width: 22px;
   flex-shrink: 0;
@@ -44,9 +43,8 @@
 .track-cover {
   width: 34px;
   height: 34px;
-  border-radius: 6px;
   object-fit: cover;
-  background: rgb(var(--c-glass) / 0.05);
+  background: var(--border);
   flex-shrink: 0;
 }
 .track-info {
@@ -61,17 +59,17 @@
   text-overflow: ellipsis;
 }
 .track-artist {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--mid);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .track-source {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   color: var(--dim);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   flex-shrink: 0;
 }
 .track-reorder {
@@ -85,54 +83,47 @@
   color: var(--dim);
   width: 22px;
   height: 22px;
-  border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.12s;
 }
-.track-move-btn:hover {
-  color: var(--text);
-  background: rgb(var(--c-glass) / 0.1);
-}
+.track-move-btn:hover { color: var(--text); }
+
 .track-answers-btn {
   background: transparent;
-  border: none;
-  color: var(--dim);
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  border: 1px solid var(--border2);
+  color: var(--mid);
+  width: 28px;
+  height: 28px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, background 0.15s;
+  transition: border-color 0.12s, color 0.12s;
   flex-shrink: 0;
 }
 .track-answers-btn:hover {
+  border-color: var(--accent);
   color: var(--accent);
-  background: rgb(var(--c-accent) / 0.12);
 }
+
 .track-remove-btn {
   background: transparent;
   border: none;
   color: var(--dim);
   width: 26px;
   height: 26px;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.12s;
   flex-shrink: 0;
 }
-.track-remove-btn:hover {
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
-}
+.track-remove-btn:hover { color: var(--danger); }
 </style>

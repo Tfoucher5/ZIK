@@ -35,16 +35,10 @@
   let plError     = $state('');
   let plSaving    = $state(false);
 
-  // Editor modal
+  // Editor (inline dans panneau droit)
   let editorOpen   = $state(false);
   let editorPl     = $state(null);
   let editorTracks = $state([]);
-  const isAdmin    = $derived(user?.profile?.role === 'super_admin');
-
-  // Admin section
-  let adminOfficials  = $state([]);
-  let adminIsOfficial = $state(false);
-  let adminLinkedRoom = $state('');
 
   // Éditeur de réponses par track
   let answersModalOpen = $state(false);
@@ -188,9 +182,6 @@
     editorTracks = [];
     editorOpen   = true;
     await loadEditorTracks();
-    if (isAdmin) await loadAdminRooms();
-    adminIsOfficial = !!pl.is_official;
-    adminLinkedRoom = pl.linked_room_id || '';
   }
 
   async function loadEditorTracks() {
@@ -308,28 +299,6 @@
     }
   }
 
-  // ─── Admin ─────────────────────────────────────────────────────────────────
-  async function loadAdminRooms() {
-    try {
-      const r = await fetch('/api/rooms/official');
-      adminOfficials = r.ok ? await r.json() : [];
-    } catch { adminOfficials = []; }
-  }
-
-  async function saveOfficial() {
-    if (!isAdmin || !editorPl) return;
-    const { data: { session } } = await sb.auth.getSession();
-    try {
-      const r = await fetch(`/api/playlists/${editorPl.id}/official`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ is_official: adminIsOfficial, linked_room_id: adminLinkedRoom || null }),
-      });
-      const body = await r.json();
-      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-      toast('Statut officiel mis à jour.', 'success');
-    } catch (e) { toast('Erreur : ' + e.message, 'error'); }
-  }
-
   // ─── Room settings (ephemeral) ─────────────────────────────────────────────
   function openRoomSettings() {
     if (!editorPl) return;
@@ -396,50 +365,93 @@
   </div>
 </header>
 
-{#if user}
-<div class="pl-toolbar">
-  <button class="btn-accent sm" onclick={() => openPlModal()}>+ Nouvelle playlist</button>
-</div>
-{/if}
+<div class="pl-split">
+  <!-- ── Panneau gauche ── -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="pl-left" class:mobile-hidden={editorOpen}>
+    <div class="pl-left-head">
+      <span class="pl-left-title">Playlists</span>
+      {#if user}
+        <button class="pl-new-btn" onclick={() => openPlModal()}>+ Nouvelle</button>
+      {/if}
+    </div>
 
-<div class="pl-main">
-  {#if !authReady && !user}
-    <div class="pl-loading">Chargement...</div>
-  {:else if !user}
-    <div class="auth-wall">
-      <div class="auth-wall-icon">&#x1F3B5;</div>
-      <h2>Connecte-toi pour accéder à tes playlists</h2>
-      <p>Crée un compte gratuit pour sauvegarder et partager tes playlists.</p>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
-        <button class="btn-ghost" onclick={() => openAuthModal('login')}>Se connecter</button>
-        <button class="btn-accent" onclick={() => openAuthModal('register')}>Créer un compte</button>
-      </div>
-    </div>
-  {:else if plLoading}
-    <div class="pl-loading">Chargement...</div>
-  {:else}
-    <div id="playlists-grid" class="playlists-grid">
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="pl-card pl-card-new" onclick={() => openPlModal()}>
-        <span class="pl-card-new-icon">+</span>
-        <span>Nouvelle playlist</span>
-      </div>
-      {#each playlists as pl (pl.id)}
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="pl-card" onclick={() => openEditor(pl)}>
-          <span class="pl-card-emoji">{pl.emoji}</span>
-          <div class="pl-card-name">{pl.name}</div>
-          <div class="pl-card-meta">{pl.track_count ?? 0} titre{(pl.track_count ?? 0) !== 1 ? 's' : ''}</div>
-          <div class="pl-card-footer">
-            <span class="pl-card-badge {pl.is_public ? '' : 'private'}">{pl.is_public ? 'Publique' : 'Privée'}</span>
-            <button class="pl-card-edit" onclick={e => { e.stopPropagation(); openEditor(pl); }}>Modifier &rarr;</button>
-          </div>
+    {#if !authReady && !user}
+      <div class="pl-loading">Chargement...</div>
+    {:else if !user}
+      <div class="pl-auth-wall">
+        <p>Connecte-toi pour créer tes playlists</p>
+        <div class="pl-auth-btns">
+          <button class="btn-ghost" onclick={() => openAuthModal('login')}>Se connecter</button>
+          <button class="btn-accent" onclick={() => openAuthModal('register')}>Créer un compte</button>
         </div>
-      {/each}
-    </div>
-  {/if}
+      </div>
+    {:else if plLoading}
+      <div class="pl-loading">Chargement...</div>
+    {:else if playlists.length === 0}
+      <div class="pl-list-empty" onclick={() => openPlModal()}>
+        <span class="pl-list-empty-plus">+</span>
+        <span>Crée ta première playlist</span>
+      </div>
+    {:else}
+      <div class="pl-list">
+        {#each playlists as pl (pl.id)}
+          <div class="pl-item" class:active={editorPl?.id === pl.id} onclick={() => openEditor(pl)}>
+            <div class="pl-item-info">
+              <div class="pl-item-name">{pl.name}</div>
+              <div class="pl-item-count">{pl.track_count ?? 0} titre{(pl.track_count ?? 0) !== 1 ? 's' : ''}</div>
+            </div>
+            <span class="pl-badge {pl.is_public ? 'pl-badge-pub' : 'pl-badge-priv'}">{pl.is_public ? 'PUB' : 'PRIV'}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
+
+  <!-- ── Panneau droit ── -->
+  <div class="pl-right" class:mobile-hidden={!editorOpen}>
+    {#if !editorOpen || !editorPl}
+      <div class="pl-right-empty">
+        <div class="pl-right-empty-line"></div>
+        <span class="pl-right-empty-msg">Sélectionne une playlist</span>
+      </div>
+    {:else}
+      <button class="pl-back-mobile" onclick={() => { editorOpen = false; editorPl = null; }}>← Retour</button>
+
+      <div class="pl-editor-head">
+        <div class="pl-editor-title-block">
+          <div class="pl-editor-title">{editorPl.name}</div>
+          <div class="pl-editor-sub">{editorTracks.length} titre{editorTracks.length !== 1 ? 's' : ''} · {editorPl.is_public ? 'Publique' : 'Privée'}</div>
+        </div>
+        <div class="pl-editor-acts">
+          <button class="pl-act-mod" onclick={() => openPlModal(editorPl)}>Modifier</button>
+          <button class="pl-act-launch" onclick={openRoomSettings}>Lancer une room →</button>
+          <button class="pl-act-del" onclick={deletePl}>Supprimer</button>
+        </div>
+      </div>
+
+      <TrackSearch onAdd={addTrack} onAddBatch={addBatch} />
+
+      <div class="pl-tracks-area">
+        <div class="pl-tracks-head">
+          <span class="pl-tracks-lbl">Titres dans la playlist — {editorTracks.length}</span>
+        </div>
+        {#if !editorTracks.length}
+          <EmptyState icon="🎵" title="Aucun titre" description="Ajoute des titres via les onglets ci-dessus." />
+        {:else}
+          {#each editorTracks as t, i (t.id)}
+            <TrackRow
+              track={t}
+              index={i + 1}
+              onRemove={() => removeTrack(t.id)}
+              onEditAnswers={() => openAnswersEditor(t)}
+            />
+          {/each}
+        {/if}
+      </div>
+    {/if}
+  </div>
 </div>
 
 <!-- Playlist create/edit modal -->
@@ -447,21 +459,31 @@
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div id="modal-playlist" class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) plModalOpen = false; }}>
-  <div class="modal modal-lg">
-    <button class="close-btn" onclick={() => plModalOpen = false}>&#x2715;</button>
-    <h2>{editingPl ? 'Modifier la playlist' : 'Nouvelle playlist'}</h2>
-    <p class="mdesc">Donne un nom et un emoji à ta playlist.</p>
-    <div class="pl-form-row">
-      <div class="field" style="flex:0 0 80px"><label for="emoji">Emoji</label><input type="text" bind:value={plEmoji} maxlength="4" class="input-glass emoji-input"></div>
-      <div class="field" style="flex:1"><label for="nom">Nom</label><input id="pl-name-input" type="text" bind:value={plName} placeholder="Ma playlist rap" maxlength="60" class="input-glass"
-        onkeypress={e => { if (e.key === 'Enter') savePl(); }}></div>
+  <div class="modal modal-pl-create">
+    <div class="plc-head">
+      <span class="plc-eyebrow">{editingPl ? 'Modifier la playlist' : 'Nouvelle playlist'}</span>
+      <button class="close-btn" onclick={() => plModalOpen = false}>&#x2715;</button>
     </div>
-    <div class="field">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" bind:checked={plPublic} style="width:auto;accent-color:var(--accent)">
-        Rendre cette playlist publique
-      </label>
+
+    <div class="plc-fields">
+      <div class="plc-field">
+        <label class="plc-label" for="pl-name-input">Nom</label>
+        <input id="pl-name-input" type="text" bind:value={plName} placeholder="MA PLAYLIST" maxlength="60" class="plc-name-input"
+          onkeypress={e => { if (e.key === 'Enter') savePl(); }}>
+      </div>
+      <div class="plc-field">
+        <span class="plc-label">Visibilité</span>
+        <div class="plc-seg">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div class="plc-seg-btn" class:on={!plPublic} onclick={() => plPublic = false}>Privée</div>
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div class="plc-seg-btn" class:on={plPublic} onclick={() => plPublic = true}>Publique</div>
+        </div>
+      </div>
     </div>
+
     {#if plError}<div class="alert-err">{plError}</div>{/if}
     <div class="modal-footer">
       <button class="btn-ghost" onclick={() => plModalOpen = false}>Annuler</button>
@@ -471,77 +493,6 @@
 </div>
 {/if}
 
-<!-- Editor modal -->
-{#if editorOpen && editorPl}
-<!-- svelte-ignore a11y_interactive_supports_focus -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<div class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) editorOpen = false; }}>
-  <div class="modal modal-xl">
-    <button class="close-btn" onclick={() => editorOpen = false}>&#x2715;</button>
-
-    <div class="editor-header">
-      <span class="editor-pl-emoji">{editorPl.emoji}</span>
-      <div>
-        <h2>{editorPl.name}</h2>
-        <span class="pill">{editorTracks.length} titre{editorTracks.length !== 1 ? 's' : ''}</span>
-      </div>
-      <div class="editor-header-actions">
-        <button class="btn-ghost sm" onclick={() => openPlModal(editorPl)}>Modifier</button>
-        <button class="btn-accent sm" onclick={openRoomSettings}>Lancer une room &rarr;</button>
-        <button class="btn-danger sm" onclick={deletePl}>Supprimer</button>
-      </div>
-    </div>
-
-    <!-- Admin section -->
-    {#if isAdmin}
-    <div class="admin-section">
-      <div class="admin-section-title">Admin &mdash; Playlist officielle</div>
-      <div class="admin-row">
-        <label class="admin-label">
-          <input type="checkbox" bind:checked={adminIsOfficial} style="width:auto;accent-color:var(--accent)">
-          Marquer comme playlist officielle
-        </label>
-      </div>
-      <div class="admin-row">
-        <label class="admin-label" style="flex:1" for="linkedRoom">Room liée</label>
-        <select bind:value={adminLinkedRoom} class="admin-select">
-          <option value="">&mdash; Aucune &mdash;</option>
-          {#each adminOfficials as r (r.id)}
-            <option value={r.id}>{r.emoji || ''} {r.name}</option>
-          {/each}
-        </select>
-      </div>
-      <button class="btn-accent sm" onclick={saveOfficial}>Enregistrer</button>
-    </div>
-    {/if}
-
-    <!-- Search / import tabs -->
-    <TrackSearch onAdd={addTrack} onAddBatch={addBatch} />
-
-    <!-- Tracks list -->
-    <div class="tracks-section">
-      <div class="tracks-section-head">
-        <h3>Titres dans la playlist</h3>
-      </div>
-      {#if !editorTracks.length}
-        <EmptyState icon="🎵" title="Aucun titre" description="Ajoute des titres via les onglets ci-dessus." />
-      {:else}
-        <div class="tracks-list">
-          {#each editorTracks as t, i (t.id)}
-            <TrackRow
-              track={t}
-              index={i + 1}
-              onRemove={() => removeTrack(t.id)}
-              onEditAnswers={() => openAnswersEditor(t)}
-            />
-          {/each}
-        </div>
-      {/if}
-    </div>
-
-  </div>
-</div>
-{/if}
 
 <!-- Room settings modal -->
 {#if rsOpen}
@@ -669,306 +620,335 @@
 {/if}
 
 <style>
-/* ── Toolbar ────────────────────────────────────────────────────────────────── */
-.pl-toolbar {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px clamp(16px, 5vw, 80px) 0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* ── Main ────────────────────────────────────────────────────────────────────── */
-.pl-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px clamp(16px, 5vw, 80px) 80px;
-}
-.pl-loading {
-  color: var(--dim);
-  font-size: 0.9rem;
-  padding: 40px 0;
-}
-
-/* ── Auth wall ───────────────────────────────────────────────────────────────── */
-.auth-wall {
-  text-align: center;
-  padding: 80px 20px;
-  background: rgb(var(--c-glass) / 0.03);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-}
-.auth-wall-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-.auth-wall h2 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.4rem;
-  margin-bottom: 10px;
-}
-.auth-wall p {
-  color: var(--mid);
-  font-size: 0.9rem;
-}
-
-/* ── Playlists grid ──────────────────────────────────────────────────────────── */
-.playlists-grid {
+/* ── Split View ──────────────────────────────────────────────────────────── */
+.pl-split {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  width: 100%;
-}
-@media (min-width: 480px) {
-  .playlists-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (min-width: 800px) {
-  .playlists-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (min-width: 1100px) {
-  .playlists-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  grid-template-columns: 300px 1fr;
+  border-top: 1px solid var(--border);
+  min-height: calc(100vh - 140px);
 }
 
-.pl-card {
-  background: rgb(var(--c-glass) / 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 22px;
-  cursor: pointer;
-  transition:
-    transform 0.2s,
-    border-color 0.2s,
-    box-shadow 0.2s,
-    background 0.2s;
-  position: relative;
-  overflow: hidden;
+/* ── Panneau gauche ──────────────────────────────────────────────────────── */
+.pl-left {
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  min-height: 150px;
+  background: #030303;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow: hidden;
 }
-.pl-card::before {
-  content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(var(--c-glass) / 0.15), transparent);
-}
-.pl-card:hover {
-  transform: translateY(-3px);
-  border-color: rgb(var(--accent-rgb) / 0.2);
-  background: rgb(var(--c-glass) / 0.07);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-}
-
-.pl-card-emoji {
-  font-size: 2rem;
-  margin-bottom: 12px;
-  display: block;
-}
-.pl-card-name {
-  font-family: "Barlow Condensed", sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  margin-bottom: 6px;
-}
-.pl-card-meta {
-  font-size: 0.75rem;
-  color: var(--dim);
-  margin-bottom: 8px;
-}
-.pl-card-footer {
+.pl-left-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: auto;
-  padding-top: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.pl-card-badge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+.pl-left-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 1.3rem;
   text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: rgb(var(--accent-rgb) / 0.1);
-  border: 1px solid rgb(var(--accent-rgb) / 0.15);
-  color: var(--accent);
+  letter-spacing: 0.06em;
 }
-.pl-card-badge.private {
-  background: rgb(var(--c-glass) / 0.05);
-  border-color: var(--border);
-  color: var(--dim);
-}
-.pl-card-edit {
+.pl-new-btn {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   color: var(--mid);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: inherit;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 14px;
   cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
+  transition: border-color 0.12s, color 0.12s;
 }
-.pl-card-edit:hover {
-  color: var(--text);
-  border-color: rgb(var(--c-glass) / 0.2);
-}
+.pl-new-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-.pl-card-new {
-  border-style: dashed;
-  border-color: rgb(var(--c-glass) / 0.1);
+.pl-loading { color: var(--dim); font-size: 0.82rem; padding: 24px 16px; }
+
+.pl-auth-wall { padding: 24px 16px; display: flex; flex-direction: column; gap: 14px; }
+.pl-auth-wall p { font-size: 0.8rem; color: var(--mid); }
+.pl-auth-btns { display: flex; flex-direction: column; gap: 8px; }
+
+.pl-list-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 160px;
+  gap: 8px;
+  height: 160px;
+  cursor: pointer;
   color: var(--dim);
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition:
-    color 0.2s,
-    border-color 0.2s;
+  font-size: 0.78rem;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.15s;
 }
-.pl-card-new:hover {
-  color: var(--accent);
-  border-color: rgb(var(--accent-rgb) / 0.3);
+.pl-list-empty:hover { color: var(--accent); }
+.pl-list-empty-plus { font-size: 1.6rem; line-height: 1; }
+
+.pl-list {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-rgb) / 0.35) transparent;
 }
-.pl-card-new-icon {
-  font-size: 2rem;
+.pl-list::-webkit-scrollbar { width: 3px; }
+.pl-list::-webkit-scrollbar-track { background: transparent; }
+.pl-list::-webkit-scrollbar-thumb { background: rgb(var(--accent-rgb) / 0.35); }
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  transition: background 0.1s;
+}
+.pl-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.12s;
+}
+.pl-item:hover::before,
+.pl-item.active::before { width: 2px; }
+.pl-item:hover { background: rgba(255,255,255,0.02); }
+.pl-item.active { background: rgba(255,0,255,0.04); }
+.pl-item-info { flex: 1; min-width: 0; }
+.pl-item-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-item.active .pl-item-name { color: var(--accent); }
+.pl-item-count { font-size: 0.62rem; color: var(--dim); margin-top: 2px; }
+
+.pl-badge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+.pl-badge-pub { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.3); }
+.pl-badge-priv { color: var(--dim); border-color: var(--border2); }
+
+/* ── Panneau droit ───────────────────────────────────────────────────────── */
+.pl-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+}
+.pl-right-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.pl-right-empty-line { width: 40px; height: 2px; background: var(--accent); }
+.pl-right-empty-msg {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dim);
 }
 
-/* ── Modals size overrides ───────────────────────────────────────────────────── */
-.modal-lg {
-  max-width: 620px;
+.pl-back-mobile { display: none; }
+
+.pl-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 2px solid var(--accent);
+  flex-shrink: 0;
 }
+.pl-editor-title-block { flex: 1; min-width: 0; }
+.pl-editor-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-editor-sub {
+  font-size: 0.6rem;
+  color: var(--mid);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.pl-editor-acts { display: flex; gap: 6px; flex-shrink: 0; }
+.pl-act-mod {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--mid);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.pl-act-mod:hover { border-color: var(--text); color: var(--text); }
+.pl-act-launch {
+  background: var(--accent);
+  border: none;
+  color: #000;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.pl-act-launch:hover { opacity: 0.82; }
+.pl-act-del {
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--danger);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.pl-act-del:hover { background: rgba(239,68,68,0.1); }
+
+.pl-tracks-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-rgb) / 0.35) transparent;
+}
+.pl-tracks-area::-webkit-scrollbar { width: 3px; }
+.pl-tracks-area::-webkit-scrollbar-track { background: transparent; }
+.pl-tracks-area::-webkit-scrollbar-thumb { background: rgb(var(--accent-rgb) / 0.35); }
+.pl-tracks-head {
+  padding: 12px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.pl-tracks-lbl {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* ── Modale création / modification ──────────────────────────────────────── */
+.modal-pl-create { max-width: 480px; }
+.plc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.plc-eyebrow {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.plc-fields { display: flex; flex-direction: column; gap: 22px; margin-bottom: 4px; }
+.plc-field { display: flex; flex-direction: column; gap: 8px; }
+.plc-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.plc-name-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 0 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.plc-name-input::placeholder { color: var(--dim); }
+.plc-name-input:focus { border-color: var(--accent); }
+.plc-seg { display: flex; }
+.plc-seg-btn {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 20px;
+  border: 1px solid var(--border2);
+  border-right: none;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.plc-seg-btn:last-child { border-right: 1px solid var(--border2); }
+.plc-seg-btn.on { background: var(--accent); border-color: var(--accent); color: #000; }
+
+/* ── Modals size overrides ───────────────────────────────────────────────────── */
+.modal-lg { max-width: 620px; }
 .modal-xl {
   max-width: 960px;
   max-height: 92vh;
   overflow-y: auto;
 }
+#modal-playlist { z-index: 700; }
 
-#modal-playlist {
-  z-index: 700;
-}
-
-/* ── Playlist form ───────────────────────────────────────────────────────────── */
-.pl-form-row {
-  display: flex;
-  gap: 12px;
-}
-.emoji-input {
-  text-align: center;
-  font-size: 1.5rem;
-  padding: 8px !important;
-}
 .modal-footer {
   display: flex;
   gap: 10px;
   margin-top: 20px;
   justify-content: flex-end;
 }
-
-/* ── Editor header ───────────────────────────────────────────────────────────── */
-.editor-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 20px;
-}
-.editor-pl-emoji {
-  font-size: 2.2rem;
-  flex-shrink: 0;
-}
-.editor-header h2 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.editor-header-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-}
-.btn-danger {
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: var(--danger);
-  padding: 8px 14px;
-  border-radius: 50px;
-  font-size: 0.8rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
-
-/* ── Tracks list (in editor) ─────────────────────────────────────────────────── */
-.tracks-section {
-  margin-top: 28px;
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
-}
-.tracks-section-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.tracks-section-head h3 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.tracks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.track-remove-btn {
-  background: transparent;
-  border: none;
-  color: var(--dim);
-  width: 26px;
-  height: 26px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 0.15s,
-    background 0.15s;
-  flex-shrink: 0;
-}
-.track-remove-btn:hover {
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
-}
-
-/* ── Modal actions ── */
 .modal-actions {
   display: flex;
   gap: 10px;
@@ -977,6 +957,22 @@
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
+
+.track-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.track-remove-btn:hover { color: var(--danger); }
 
 /* ── Answer fields ───────────────────────────────────────────────────────────── */
 .answer-field {
@@ -1156,59 +1152,32 @@
   flex-wrap: wrap;
 }
 
-/* ── Admin section ───────────────────────────────────────────────────────────── */
-.admin-section {
-  background: rgba(251, 191, 36, 0.06);
-  border: 1px solid rgba(251, 191, 36, 0.2);
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
-}
-.admin-section-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 10px;
-}
-.admin-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.admin-label {
-  font-size: 0.83rem;
-  color: var(--mid);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-}
-.admin-select {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--fg);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.83rem;
-  flex: 1;
-}
-
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .pl-form-row {
-    flex-direction: column;
-  }
-  .editor-header {
-    flex-wrap: wrap;
-  }
-  .editor-header-actions {
+@media (max-width: 700px) {
+  .pl-split { grid-template-columns: 1fr; }
+  .pl-left { position: static; height: auto; max-height: none; }
+  .pl-right { position: static; height: auto; }
+  .mobile-hidden { display: none; }
+  .pl-back-mobile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--mid);
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    cursor: pointer;
     width: 100%;
+    transition: color 0.12s;
   }
-  .modal-xl {
-    padding: 24px 18px;
-  }
+  .pl-back-mobile:hover { color: var(--text); }
+  .pl-editor-acts { flex-wrap: wrap; }
+  .modal-xl { padding: 24px 18px; }
 }
 </style>
