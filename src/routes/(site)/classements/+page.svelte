@@ -1,13 +1,7 @@
 <script>
   import { onMount } from "svelte";
-  import TabBar from '$lib/components/TabBar.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
-
-  const TABS = [
-    { id: 'elo', label: 'ELO' },
-    { id: 'score', label: 'Score' },
-  ];
 
   let { data } = $props();
 
@@ -30,8 +24,10 @@
   let myUserId = $state(null);
   let myRankLoaded = $state(false);
 
-  let maxEloScore = $derived(eloData.length > 0 ? eloData[0].elo : 1);
-  let maxScore = $derived(scoreData.length > 0 ? Number(scoreData[0].total_score) : 1);
+  let list = $derived(activeTab === "elo" ? eloData : scoreData);
+  let maxVal = $derived(
+    list.length > 0 ? (activeTab === "elo" ? list[0].elo : Number(list[0].total_score)) : 1
+  );
 
   let filterSummary = $derived(
     `${scoreMode === 'classique' ? 'Mode Classique' : 'Mode QCM'} · ${scoreRooms === 'officielles' ? 'Rooms officielles' : 'Toutes les rooms'} · ${scorePeriod === 'semaine' ? 'Depuis lundi' : scorePeriod === 'mois' ? 'Depuis le 1er du mois' : 'Depuis le 1er janvier'}`
@@ -46,16 +42,20 @@
     return aboveScore - myRank.score;
   });
 
-  const sparkles = [
-    { x: 8,  y: 22, d: 0,    dur: 2.4 },
-    { x: 92, y: 15, d: 0.6,  dur: 2.1 },
-    { x: 18, y: 78, d: 1.1,  dur: 2.9 },
-    { x: 82, y: 68, d: 1.7,  dur: 2.3 },
-    { x: 46, y: 5,  d: 0.4,  dur: 3.0 },
-    { x: 3,  y: 50, d: 1.4,  dur: 2.7 },
-    { x: 97, y: 53, d: 0.2,  dur: 2.5 },
-    { x: 76, y: 33, d: 1.6,  dur: 2.2 },
-  ];
+  let gapToTop = $derived.by(() => {
+    if (!myRank || myRank.rank <= 1 || list.length === 0) return null;
+    return maxVal - myRank.score;
+  });
+
+  let barPct = $derived.by(() => {
+    if (!myRank) return 0;
+    if (myRank.rank <= 1) return 100;
+    if (gapToNext !== null && gapToNext > 0) {
+      const above = myRank.score + gapToNext;
+      return above > 0 ? Math.min(100, Math.round((myRank.score / above) * 100)) : 0;
+    }
+    return maxVal > 0 ? Math.min(100, Math.round((myRank.score / maxVal) * 100)) : 0;
+  });
 
   async function fetchScore(reset = false) {
     scoreLoading = true;
@@ -124,19 +124,25 @@
 
   function isMe(u) { return myRank?.username === u; }
 
-  function rankClass(i) {
-    if (i === 0) return "rank-gold";
-    if (i === 1) return "rank-silver";
-    if (i === 2) return "rank-bronze";
-    return "";
+  function valLabel(p) {
+    return activeTab === "elo" ? String(p.elo) : Number(p.total_score).toLocaleString('fr-FR');
+  }
+  function gamesOf(p) {
+    return activeTab === "elo" ? p.games_played : p.games_count;
+  }
+  function pct(p) {
+    const v = activeTab === "elo" ? p.elo : Number(p.total_score);
+    return Math.min(100, Math.round((v / maxVal) * 100));
   }
 
-  function eloPct(elo) {
-    return Math.min(100, Math.round((elo / maxEloScore) * 100));
-  }
-  function scorePct(s) {
-    return Math.min(100, Math.round((Number(s) / maxScore) * 100));
-  }
+  const CERTS = ["💎 Disque de diamant", "Disque de platine", "Disque d'or"];
+  let unit = $derived(activeTab === "elo" ? "ELO" : "pts");
+  let showLoading = $derived(activeTab === "score" && scoreLoading && scoreData.length === 0);
+  let showEmpty = $derived(
+    activeTab === "elo"
+      ? eloData.length === 0 && !eloLoading
+      : scoreData.length === 0 && scoreInited && !scoreLoading
+  );
 </script>
 
 <svelte:head>
@@ -144,799 +150,557 @@
   <meta name="description" content="Classements ZIK — ELO compétitif, scores par mode et par période. Découvrez les meilleurs joueurs de blind test." />
 </svelte:head>
 
-<div class="page-nav">
-  <a href="/" class="btn-back">Accueil</a>
-</div>
+<main class="hp-page">
 
-<main class="classements-page">
+  <header class="hp-hero">
+    <h1>Hit-<em>parade</em><span class="hp-dot">.</span></h1>
+    <div class="hp-live"><span class="hp-live-dot"></span>Classement en direct</div>
+  </header>
 
-  <div class="cl-header">
-    <h1>Classements</h1>
-    <p class="cl-sub">ELO compétitif · Scores classique et QCM · Filtre et explore.</p>
+  <div class="hp-toolbar">
+    <button class="hp-tab" class:active={activeTab === 'elo'} onclick={() => activeTab = 'elo'}>ELO</button>
+    <button class="hp-tab" class:active={activeTab === 'score'} onclick={() => activeTab = 'score'}>Score</button>
+    <span class="hp-sep"></span>
+
+    {#if activeTab === 'elo'}
+      <span class="hp-context">Rooms officielles · Mode classique · All-time</span>
+    {:else}
+      <div class="hp-chips">
+        <button class="hp-chip" class:on={scoreMode === 'classique'} onclick={() => scoreMode = 'classique'}>Classique</button>
+        <button class="hp-chip" class:on={scoreMode === 'qcm'} onclick={() => scoreMode = 'qcm'}>QCM</button>
+        <span class="hp-sep"></span>
+        <button class="hp-chip" class:on={scoreRooms === 'officielles'} onclick={() => scoreRooms = 'officielles'}>Officielles</button>
+        <button class="hp-chip" class:on={scoreRooms === 'toutes'} onclick={() => scoreRooms = 'toutes'}>Toutes</button>
+        <span class="hp-sep"></span>
+        <button class="hp-chip" class:on={scorePeriod === 'semaine'} onclick={() => scorePeriod = 'semaine'}>Semaine</button>
+        <button class="hp-chip" class:on={scorePeriod === 'mois'} onclick={() => scorePeriod = 'mois'}>Mois</button>
+        <button class="hp-chip" class:on={scorePeriod === 'alltime'} onclick={() => scorePeriod = 'alltime'}>Année</button>
+      </div>
+    {/if}
   </div>
 
-  <div class="tabs-wrap">
-    <TabBar tabs={TABS} active={activeTab} onChange={(id) => { activeTab = id; }} />
-  </div>
+  {#if activeTab === 'score'}
+    <p class="hp-summary">{filterSummary}</p>
+  {/if}
 
-  <!-- ══════════ HERO ══════════ -->
-  {#if activeTab === 'elo' && eloData.length >= 3}
-    <div class="cl-hero">
+  {#if showLoading}
+    <p class="hp-loading">Chargement…</p>
+  {:else if showEmpty}
+    <EmptyState icon="🏆" title={activeTab === 'elo' ? "Aucun joueur pour l'instant" : "Aucun résultat pour ces filtres."} />
+  {:else if list.length > 0}
 
-      <!-- Spotlights -->
-      <div class="spot spot-gold"></div>
-      <div class="spot spot-silver"></div>
-      <div class="spot spot-bronze"></div>
+    {#if list.length >= 3}
+      <!-- ── N°1 : le single de la semaine ── -->
+      <section class="champ">
+        <div class="champ-vinyl" aria-hidden="true">
+          <div class="disc">
+            <div class="disc-label">
+              {#if list[0].avatar_url}
+                <img src={list[0].avatar_url} alt="" loading="lazy" />
+              {:else}
+                <span>{list[0].username[0].toUpperCase()}</span>
+              {/if}
+            </div>
+          </div>
+        </div>
+        <div class="champ-info">
+          <span class="champ-tag">★ N°1 du classement</span>
+          <a href="/user/{list[0].username}" class="champ-name" class:is-me={isMe(list[0].username)}>{list[0].username}</a>
+          <p class="champ-meta">
+            {#if activeTab === 'elo'}<b>Nv.&nbsp;{list[0].level}</b>&nbsp;·&nbsp;{/if}{gamesOf(list[0])} partie{gamesOf(list[0]) > 1 ? 's' : ''}
+            {#if isMe(list[0].username)}· <b class="me-flag">C'est toi</b>{/if}
+          </p>
+        </div>
+        <div class="champ-val">
+          <div class="champ-num">{valLabel(list[0])}</div>
+          <div class="champ-unit">{unit}</div>
+          <div class="champ-cert">{CERTS[0]}</div>
+        </div>
+      </section>
 
-      <!-- Sparkles -->
-      {#each sparkles as s}
-        <div class="sparkle" style="left:{s.x}%;top:{s.y}%;animation-delay:{s.d}s;animation-duration:{s.dur}s"></div>
+      <!-- ── 2 & 3 : certifications ── -->
+      <div class="duo">
+        {#each [list[1], list[2]] as p, i (p.username)}
+          <div class="cert-card" class:plat={i === 0} class:gold={i === 1}>
+            <span class="cert-rank">{i + 2}</span>
+            <div class="cert-mini">
+              <i>
+                {#if p.avatar_url}
+                  <img src={p.avatar_url} alt="" loading="lazy" />
+                {:else}
+                  {p.username[0].toUpperCase()}
+                {/if}
+              </i>
+            </div>
+            <div class="cert-id">
+              <a href="/user/{p.username}" class="cert-name" class:is-me={isMe(p.username)}>{p.username}</a>
+              <div class="cert-sub">{CERTS[i + 1]} · {gamesOf(p)} partie{gamesOf(p) > 1 ? 's' : ''}</div>
+            </div>
+            <div class="cert-val">{valLabel(p)}<small>{unit}</small></div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+
+    <!-- ── Le reste du chart ── -->
+    <section class="chart">
+      {#if list.length >= 3}
+        <div class="chart-head">
+          <h2>Le reste du chart</h2>
+          <span>Rang · Joueur · {unit === 'ELO' ? 'ELO · Niveau' : 'Score'} · Parties</span>
+        </div>
+      {/if}
+
+      {#each list.slice(list.length >= 3 ? 3 : 0) as p, i (p.username)}
+        {@const rank = i + (list.length >= 3 ? 4 : 1)}
+        <div class="row" class:row-me={isMe(p.username)}>
+          <span class="row-rank">{rank}</span>
+          <div class="row-player">
+            {#if p.avatar_url}
+              <img class="row-av" src={p.avatar_url} alt={p.username} width="38" height="38" loading="lazy" />
+            {:else}
+              <div class="row-av row-av-fb">{p.username[0].toUpperCase()}</div>
+            {/if}
+            <div class="row-name-wrap">
+              <a href="/user/{p.username}" class="row-name" class:is-me={isMe(p.username)}>{p.username}</a>
+              {#if activeTab === 'elo'}<small>Nv. {p.level}</small>{/if}
+            </div>
+            {#if isMe(p.username)}<span class="me-badge">Toi</span>{/if}
+          </div>
+          <div class="row-val">
+            <div class="row-num">{valLabel(p)}</div>
+            <div class="row-bar"><i style="width:{pct(p)}%"></i></div>
+          </div>
+          <span class="row-games">{gamesOf(p)}</span>
+        </div>
       {/each}
 
-      <div class="hero-eyebrow">⚡ Rooms officielles · Mode Classique · All-time</div>
-
-      <div class="podium-hero">
-
-        <!-- 2e -->
-        <div class="hero-card hero-silver">
-          <div class="rank-badge rank-badge-silver">Finaliste</div>
-          <div class="hero-pos silver-text">2</div>
-          <a href="/user/{eloData[1].username}">
-            {#if eloData[1].avatar_url}
-              <img class="hero-av av-silver" src={eloData[1].avatar_url} alt={eloData[1].username} width="68" height="68" loading="lazy" />
-            {:else}
-              <div class="hero-av hero-av-fb av-silver" style="width:68px;height:68px">{eloData[1].username[0].toUpperCase()}</div>
-            {/if}
-          </a>
-          <div class="hero-name {isMe(eloData[1].username) ? 'is-me' : ''}">{eloData[1].username}</div>
-          <div class="hero-elo silver-text">{eloData[1].elo} ELO</div>
-          <div class="hero-games">{eloData[1].games_played} parties</div>
-        </div>
-
-        <!-- 1er -->
-        <div class="hero-card hero-gold">
-          <div class="hero-shimmer"></div>
-          <div class="champion-badge">Champion</div>
-          <div class="hero-crown">👑</div>
-          <div class="hero-pos">1</div>
-          <a href="/user/{eloData[0].username}" class="hero-av-wrap">
-            {#if eloData[0].avatar_url}
-              <img class="hero-av av-gold" src={eloData[0].avatar_url} alt={eloData[0].username} width="96" height="96" loading="lazy" />
-            {:else}
-              <div class="hero-av hero-av-fb av-gold" style="width:96px;height:96px">{eloData[0].username[0].toUpperCase()}</div>
-            {/if}
-            <div class="av-halo"></div>
-          </a>
-          <div class="hero-name hero-name-1 {isMe(eloData[0].username) ? 'is-me' : ''}">{eloData[0].username}</div>
-          <div class="hero-elo gold-text">{eloData[0].elo} ELO</div>
-          <div class="hero-games">{eloData[0].games_played} parties</div>
-        </div>
-
-        <!-- 3e -->
-        <div class="hero-card hero-bronze">
-          <div class="rank-badge rank-badge-bronze">Podium</div>
-          <div class="hero-pos bronze-text">3</div>
-          <a href="/user/{eloData[2].username}">
-            {#if eloData[2].avatar_url}
-              <img class="hero-av av-bronze" src={eloData[2].avatar_url} alt={eloData[2].username} width="56" height="56" loading="lazy" />
-            {:else}
-              <div class="hero-av hero-av-fb av-bronze" style="width:56px;height:56px">{eloData[2].username[0].toUpperCase()}</div>
-            {/if}
-          </a>
-          <div class="hero-name {isMe(eloData[2].username) ? 'is-me' : ''}">{eloData[2].username}</div>
-          <div class="hero-elo bronze-text">{eloData[2].elo} ELO</div>
-          <div class="hero-games">{eloData[2].games_played} parties</div>
-        </div>
-
-      </div>
-    </div>
-  {:else if activeTab === 'elo'}
-    <div class="cl-hint">Rooms officielles · Mode classique · All-time</div>
-  {/if}
-
-  <!-- ══════════ FILTRES (Score) ══════════ -->
-  {#if activeTab === 'score'}
-    <div class="cl-filters">
-      <div class="filter-group">
-        <span class="filter-label">Mode</span>
-        <div class="filter-track">
-          <button class="seg-btn {scoreMode === 'classique' ? 'active' : ''}" onclick={() => scoreMode = 'classique'}>Classique</button>
-          <button class="seg-btn {scoreMode === 'qcm' ? 'active' : ''}" onclick={() => scoreMode = 'qcm'}>QCM</button>
-        </div>
-      </div>
-      <div class="filter-sep"></div>
-      <div class="filter-group">
-        <span class="filter-label">Rooms</span>
-        <div class="filter-track">
-          <button class="seg-btn {scoreRooms === 'officielles' ? 'active' : ''}" onclick={() => scoreRooms = 'officielles'}>Officielles</button>
-          <button class="seg-btn {scoreRooms === 'toutes' ? 'active' : ''}" onclick={() => scoreRooms = 'toutes'}>Toutes</button>
-        </div>
-      </div>
-      <div class="filter-sep"></div>
-      <div class="filter-group">
-        <span class="filter-label">Période</span>
-        <div class="filter-track">
-          <button class="seg-btn {scorePeriod === 'semaine' ? 'active' : ''}" onclick={() => scorePeriod = 'semaine'}>Semaine</button>
-          <button class="seg-btn {scorePeriod === 'mois' ? 'active' : ''}" onclick={() => scorePeriod = 'mois'}>Mois</button>
-          <button class="seg-btn {scorePeriod === 'alltime' ? 'active' : ''}" onclick={() => scorePeriod = 'alltime'}>Année</button>
-        </div>
-      </div>
-    </div>
-    <p class="filter-summary">{filterSummary}</p>
-  {/if}
-
-  <!-- ══════════ GRILLE ══════════ -->
-  <div class="cl-grid">
-
-    <div class="cl-main">
-
-      <!-- ELO table -->
       {#if activeTab === 'elo'}
-        {#if eloData.length === 0 && !eloLoading}
-          <EmptyState icon="🏆" title="Aucun joueur pour l'instant" />
-        {:else}
-          <table class="cl-table">
-            <thead>
-              <tr>
-                <th class="col-rank">#</th>
-                <th class="col-player">Joueur</th>
-                <th class="col-score">ELO</th>
-                <th class="col-extra">Niveau</th>
-                <th class="col-games">Parties</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each eloData as p, i}
-                <tr class="cl-row {isMe(p.username) ? 'row-me' : ''} {rankClass(i)}">
-                  <td class="col-rank">{i + 1}</td>
-                  <td class="col-player">
-                    {#if p.avatar_url}
-                      <img class="row-av" src={p.avatar_url} alt={p.username} width="30" height="30" loading="lazy" />
-                    {:else}
-                      <div class="row-av row-av-fb">{p.username[0].toUpperCase()}</div>
-                    {/if}
-                    <a href="/user/{p.username}" class="row-name">{p.username}</a>
-                    {#if isMe(p.username)}<span class="me-badge">Toi</span>{/if}
-                  </td>
-                  <td class="col-score">
-                    <span class="score-val">{p.elo}</span>
-                    <div class="score-bar"><div class="score-fill" style="width:{eloPct(p.elo)}%"></div></div>
-                  </td>
-                  <td class="col-extra">Nv.&nbsp;{p.level}</td>
-                  <td class="col-games">{p.games_played}</td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-          <LoadMore loading={eloLoading} hasMore={eloHasMore} onLoad={loadMoreElo} />
-        {/if}
+        <LoadMore loading={eloLoading} hasMore={eloHasMore} onLoad={loadMoreElo} />
+      {:else}
+        <LoadMore loading={scoreLoading} hasMore={scoreHasMore} onLoad={() => fetchScore(false)} />
       {/if}
+    </section>
 
-      <!-- Score table -->
-      {#if activeTab === 'score'}
-        {#if scoreLoading && scoreData.length === 0}
-          <p class="cl-empty">Chargement…</p>
-        {:else if scoreData.length === 0 && scoreInited}
-          <EmptyState icon="🔍" title="Aucun résultat pour ces filtres." />
-        {:else}
-          <table class="cl-table">
-            <thead>
-              <tr>
-                <th class="col-rank">#</th>
-                <th class="col-player">Joueur</th>
-                <th class="col-score">Score</th>
-                <th class="col-games">Parties</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each scoreData as p, i}
-                <tr class="cl-row {isMe(p.username) ? 'row-me' : ''} {rankClass(i)}">
-                  <td class="col-rank">{i + 1}</td>
-                  <td class="col-player">
-                    {#if p.avatar_url}
-                      <img class="row-av" src={p.avatar_url} alt={p.username} width="30" height="30" loading="lazy" />
-                    {:else}
-                      <div class="row-av row-av-fb">{p.username[0].toUpperCase()}</div>
-                    {/if}
-                    <a href="/user/{p.username}" class="row-name">{p.username}</a>
-                    {#if isMe(p.username)}<span class="me-badge">Toi</span>{/if}
-                  </td>
-                  <td class="col-score">
-                    <span class="score-val">{Number(p.total_score).toLocaleString('fr-FR')} pts</span>
-                    <div class="score-bar"><div class="score-fill" style="width:{scorePct(p.total_score)}%"></div></div>
-                  </td>
-                  <td class="col-games">{p.games_count}</td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-          <LoadMore loading={scoreLoading} hasMore={scoreHasMore} onLoad={() => fetchScore(false)} />
-        {/if}
-      {/if}
-
-    </div>
-
-    <!-- ══ Sidebar ══ -->
-    <div class="cl-sidebar">
-      <div class="sidebar-card">
-        {#if !myUserId}
-          <div class="sb-guest-icon">🏆</div>
-          <p class="sb-guest-text">Connecte-toi pour suivre ta position en temps réel.</p>
-          <a href="/" class="sb-cta">Se connecter</a>
-        {:else if !myRankLoaded}
-          <div class="sb-label">Ta position</div>
-          <div class="sb-loading">…</div>
-        {:else if myRank}
-          <div class="sb-label">Ta position</div>
-          <div class="sb-rank">#{myRank.rank}</div>
-          <div class="sb-username">{myRank.username}</div>
-          <div class="sb-score">
-            {activeTab === 'elo' ? `${myRank.score} ELO` : `${Number(myRank.score).toLocaleString('fr-FR')} pts`}
-          </div>
-          <div class="sb-games">{myRank.games_count} partie{myRank.games_count > 1 ? 's' : ''}</div>
-          {#if gapToNext !== null && gapToNext > 0}
-            <div class="sb-gap">
-              +{activeTab === 'elo' ? gapToNext : Number(gapToNext).toLocaleString('fr-FR')} pour monter au #{myRank.rank - 1}
-            </div>
-          {/if}
-          <a href="/rooms" class="sb-cta">Jouer maintenant</a>
-        {:else}
-          <div class="sb-label">Ta position</div>
-          <div class="sb-none">Pas encore classé dans cette catégorie.</div>
-          <a href="/rooms" class="sb-cta">Jouer maintenant</a>
-        {/if}
-      </div>
-    </div>
-
-  </div>
+  {/if}
 </main>
 
+<!-- ── Barre de lecture : ta position ── -->
+<div class="playerbar">
+  {#if !myUserId}
+    <div class="pb-guest">
+      <span class="pb-guest-txt">🎧 Connecte-toi pour suivre ta position en temps réel.</span>
+      <a href="/" class="pb-cta">Se connecter</a>
+    </div>
+  {:else if !myRankLoaded}
+    <div class="pb-guest"><span class="pb-guest-txt">Ta position…</span></div>
+  {:else if myRank}
+    <div class="pb-id">
+      {#if myRank.avatar_url}
+        <img class="pb-av" src={myRank.avatar_url} alt={myRank.username} width="46" height="46" />
+      {:else}
+        <div class="pb-av pb-av-fb">{myRank.username[0].toUpperCase()}</div>
+      {/if}
+      <div class="pb-t">
+        <div class="pb-n">{myRank.username}</div>
+        <div class="pb-s">
+          {activeTab === 'elo' ? `${myRank.score} ELO` : `${Number(myRank.score).toLocaleString('fr-FR')} pts`}
+          · {myRank.games_count} partie{myRank.games_count > 1 ? 's' : ''}
+        </div>
+      </div>
+      <span class="pb-rank">#{myRank.rank}</span>
+    </div>
+    <div class="pb-track">
+      <div class="pb-lbl">
+        {#if myRank.rank <= 1}
+          <span>Au sommet du chart</span>
+          <span class="pb-nxt">Défends ta place</span>
+        {:else if gapToNext !== null && gapToNext > 0}
+          <span>En route vers <b>#{myRank.rank - 1}</b></span>
+          <span class="pb-nxt">▲ {activeTab === 'elo' ? gapToNext : Number(gapToNext).toLocaleString('fr-FR')} pts pour monter</span>
+        {:else if gapToTop !== null && gapToTop > 0}
+          <span>En route vers <b>#{myRank.rank - 1}</b></span>
+          <span class="pb-nxt">▲ {activeTab === 'elo' ? gapToTop : Number(gapToTop).toLocaleString('fr-FR')} pts du sommet</span>
+        {:else}
+          <span>En route vers <b>#{myRank.rank - 1}</b></span>
+          <span class="pb-nxt">Continue de grimper</span>
+        {/if}
+      </div>
+      <div class="pb-line"><i style="width:{barPct}%"></i></div>
+    </div>
+    <a href="/rooms" class="pb-cta">Jouer maintenant →</a>
+  {:else}
+    <div class="pb-guest">
+      <span class="pb-guest-txt">Pas encore classé dans cette catégorie.</span>
+      <a href="/rooms" class="pb-cta">Jouer maintenant →</a>
+    </div>
+  {/if}
+</div>
+
 <style>
-  /* ─── Navigation ─── */
-  .page-nav {
-    max-width: 1300px;
+  .hp-page {
+    max-width: 1200px;
     margin: 0 auto;
-    padding: calc(var(--nav-h) + 12px) 28px 0;
-  }
-  .btn-back {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 0.8rem; font-weight: 600; color: var(--dim);
-    text-decoration: none;
-    padding: 6px 12px; border-radius: 8px;
-    border: 1px solid var(--border);
-    background: rgb(var(--c-glass) / 0.03);
-    transition: color 0.15s, background 0.15s;
-  }
-  .btn-back:hover { color: var(--text); background: rgb(var(--c-glass) / 0.08); }
-
-  /* ─── Page ─── */
-  .classements-page {
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 28px 28px 80px;
+    padding: calc(var(--nav-h) + 44px) 48px 150px;
   }
 
-  .cl-header { text-align: center; margin-bottom: 28px; }
-  .tabs-wrap { margin-bottom: 24px; }
-  .cl-header h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 6px; }
-  .cl-sub { color: var(--dim); font-size: 0.88rem; }
+  /* ── Hero ── */
+  .hp-hero {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .hp-hero h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; text-transform: uppercase; line-height: 0.88;
+    font-size: clamp(52px, 7.5vw, 104px); letter-spacing: -0.01em;
+  }
+  .hp-hero h1 em {
+    font-style: normal; color: transparent;
+    -webkit-text-stroke: 2px rgb(var(--c-glass) / 0.8);
+  }
+  .hp-dot { color: var(--accent); }
+  .hp-live {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
+    border: 1px solid rgb(var(--accent-rgb) / 0.45); border-radius: var(--r);
+    padding: 7px 13px; margin-bottom: 10px;
+  }
+  .hp-live-dot {
+    width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+    animation: hp-pulse 2s infinite;
+  }
+  @keyframes hp-pulse { 50% { opacity: 0.3; } }
 
-  /* ─── Couleurs métal ─── */
-  .gold-text   { color: #f0b429; }
-  .silver-text { color: #b8ccd4; }
-  .bronze-text { color: #d4844a; }
+  /* ── Toolbar ── */
+  .hp-toolbar { display: flex; align-items: center; gap: 10px; padding: 24px 0 0; flex-wrap: wrap; }
+  .hp-tab {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.2rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 7px 20px; border: 1px solid var(--border2); border-radius: var(--r);
+    color: var(--mid); cursor: pointer; background: none;
+    transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+  }
+  .hp-tab:hover:not(.active) { color: var(--text); border-color: var(--border2); }
+  .hp-tab.active {
+    color: #000; background: var(--accent); border-color: var(--accent);
+    box-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.4);
+  }
+  .hp-sep { width: 1px; height: 24px; background: var(--border2); margin: 0 6px; flex-shrink: 0; }
+  .hp-context {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.76rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
+  }
+  .hp-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hp-chip {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.76rem;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 7px 13px; border: 1px solid var(--border); border-radius: var(--r);
+    color: var(--mid); cursor: pointer; background: none;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .hp-chip:hover:not(.on) { color: var(--text); }
+  .hp-chip.on {
+    color: var(--text); border-color: rgb(var(--accent-rgb) / 0.6);
+    background: rgb(var(--accent-rgb) / 0.08);
+  }
+  .hp-summary {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); padding-top: 12px;
+  }
+  .hp-loading { text-align: center; color: var(--dim); font-size: 0.85rem; padding: 60px 0; }
 
-  /* ════════════════════════ HERO ════════════════════════ */
-  .cl-hero {
-    position: relative;
-    background: linear-gradient(175deg,
-      rgb(var(--c-glass) / 0.09) 0%,
-      rgb(var(--c-glass) / 0.04) 60%,
-      rgb(var(--c-glass) / 0.07) 100%
-    );
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 48px 32px 44px;
-    margin-bottom: 32px;
-    overflow: hidden;
+  /* ── N°1 ── */
+  .champ {
+    margin-top: 34px; border: 1px solid var(--border2); border-radius: var(--r);
+    position: relative; overflow: hidden;
+    background: linear-gradient(100deg, rgb(var(--accent-rgb) / 0.10), transparent 45%), var(--bg2);
+    display: grid; grid-template-columns: 280px 1fr auto; align-items: center; gap: 20px;
+    min-height: 240px;
   }
-
-  /* Spotlights */
-  .spot {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    filter: blur(60px);
+  .champ-vinyl { position: relative; height: 100%; min-height: 240px; }
+  .disc {
+    position: absolute; left: -170px; top: 50%; transform: translateY(-50%);
+    width: 400px; height: 400px; border-radius: 50%;
+    background: repeating-radial-gradient(circle at 50% 50%, #181818 0 1.5px, #0d0d0d 1.5px 3.8px);
+    box-shadow: 0 0 0 1px rgb(var(--c-glass) / 0.09), 30px 0 80px rgba(0, 0, 0, 0.7);
+    animation: disc-spin 14s linear infinite;
   }
-  .spot-gold   { width: 320px; height: 200px; top: -40px; left: 50%; transform: translateX(-50%); background: rgba(240,180,41,0.09); }
-  .spot-silver { width: 200px; height: 160px; bottom: 10px; left: 8%;  background: rgba(176,190,197,0.07); }
-  .spot-bronze { width: 180px; height: 140px; bottom: 10px; right: 8%; background: rgba(205,130,70,0.07); }
-
-  /* Sparkles */
-  .sparkle {
-    position: absolute;
-    width: 3px; height: 3px;
-    border-radius: 50%;
-    background: rgba(240,180,41,0.75);
-    pointer-events: none;
-    animation: sparkle-blink var(--dur,2.4s) var(--delay,0s) ease-in-out infinite;
+  @keyframes disc-spin { to { transform: translateY(-50%) rotate(360deg); } }
+  .disc::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0 12%, rgb(var(--c-glass) / 0.09) 16%, transparent 21%, transparent 55%, rgb(var(--c-glass) / 0.05) 60%, transparent 66%);
   }
-  @keyframes sparkle-blink {
-    0%, 100% { opacity: 0; transform: scale(0.2); }
-    50%       { opacity: 1; transform: scale(1); }
+  .disc-label {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 34%; height: 34%; border-radius: 50%; z-index: 1; overflow: hidden;
+    background: radial-gradient(circle, #ffd9ff, var(--accent) 75%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 2.2rem; color: #000;
   }
-
-  .hero-eyebrow {
-    position: relative; z-index: 1;
-    display: block; width: fit-content; margin: 0 auto 36px;
-    font-size: 0.65rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.12em;
-    color: var(--text);
-    background: rgb(var(--c-glass) / 0.14);
-    border: 1px solid var(--border);
-    border-radius: 20px; padding: 5px 16px;
+  .disc-label img { width: 100%; height: 100%; object-fit: cover; }
+  .champ-info { padding: 34px 0; min-width: 0; }
+  .champ-tag {
+    display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: #000; background: var(--accent); border-radius: var(--radius-sm); padding: 5px 10px;
   }
-
-  .podium-hero {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 16px;
+  .champ-name {
+    display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    text-transform: uppercase; line-height: 0.9; color: var(--text);
+    font-size: clamp(44px, 6vw, 84px); margin-top: 12px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.15s;
   }
-
-  /* ─── Cartes hero ─── */
-  .hero-card {
-    position: relative;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 7px; text-align: center;
-    padding: 24px 20px 20px;
-    border-radius: 18px;
-    background: rgb(var(--c-glass) / 0.07);
-    border: 1px solid var(--border);
-    min-width: 148px;
+  .champ-name:hover { color: var(--accent); }
+  .champ-meta {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.85rem;
+    letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-top: 12px;
   }
-
-  @keyframes hero-rise {
-    from { opacity: 0; transform: translateY(32px); }
-    to   { opacity: 1; transform: translateY(0); }
+  .champ-meta b { color: var(--text); }
+  .champ-meta .me-flag { color: var(--accent); }
+  .champ-val { padding-right: 44px; text-align: right; }
+  .champ-num {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; line-height: 1;
+    font-size: clamp(56px, 6.5vw, 100px);
+    color: transparent; -webkit-text-stroke: 2.5px var(--accent);
   }
-
-  .hero-silver {
-    background: linear-gradient(160deg, rgba(176,190,197,0.09) 0%, rgba(176,190,197,0.02) 100%);
-    border-color: rgba(176,190,197,0.3);
-    overflow: hidden;
-    animation: hero-rise 0.5s 0.1s ease both, silver-glow 5s 2s ease-in-out infinite;
+  .champ-unit {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 0.75rem;
+    letter-spacing: 0.34em; text-transform: uppercase; color: var(--accent);
   }
-  .hero-silver::before {
-    content: '';
-    position: absolute; top: 0; left: -100%;
-    width: 50%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-    animation: shimmer 9s ease-in-out 3s infinite;
-    pointer-events: none;
-  }
-  @keyframes silver-glow {
-    0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.18); }
-    50%       { box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 0 32px rgba(176,190,197,0.14); border-color: rgba(176,190,197,0.5); }
-  }
-
-  .hero-bronze {
-    background: linear-gradient(160deg, rgba(205,130,70,0.09) 0%, rgba(205,130,70,0.02) 100%);
-    border-color: rgba(205,130,70,0.3);
-    overflow: hidden;
-    animation: hero-rise 0.5s 0.18s ease both, bronze-glow 6s 4s ease-in-out infinite;
-  }
-  .hero-bronze::before {
-    content: '';
-    position: absolute; top: 0; left: -100%;
-    width: 50%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
-    animation: shimmer 12s ease-in-out 6s infinite;
-    pointer-events: none;
-  }
-  @keyframes bronze-glow {
-    0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.18); }
-    50%       { box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 0 28px rgba(205,130,70,0.12); border-color: rgba(205,130,70,0.5); }
-  }
-
-  .hero-gold {
-    min-width: 188px;
-    padding: 22px 24px 24px;
-    background: linear-gradient(160deg, rgba(240,180,41,0.14) 0%, rgba(240,180,41,0.03) 100%);
-    border: 1px solid rgba(240,180,41,0.45);
-    border-radius: 16px;
-    overflow: hidden;
-    animation: hero-rise 0.4s ease both, gold-glow 3.5s 0.8s ease-in-out infinite;
-  }
-  @keyframes gold-glow {
-    0%, 100% { box-shadow: 0 0 18px rgba(240,180,41,0.10), 0 10px 44px rgba(0,0,0,0.22); border-color: rgba(240,180,41,0.38); }
-    50%       { box-shadow: 0 0 52px rgba(240,180,41,0.30), 0 10px 44px rgba(0,0,0,0.22); border-color: rgba(240,180,41,0.68); }
+  .champ-cert {
+    margin-top: 12px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim);
   }
 
-  /* Shimmer sweep sur la carte or */
-  .hero-shimmer {
-    position: absolute;
-    top: 0; left: -100%;
-    width: 60%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-    animation: shimmer 4s ease-in-out 0.6s infinite;
-    pointer-events: none;
+  /* ── 2 & 3 ── */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  .cert-card {
+    border: 1px solid var(--border); border-radius: var(--r); background: var(--surface);
+    display: flex; align-items: center; gap: 18px; padding: 16px 22px;
   }
-  @keyframes shimmer {
-    0%       { left: -100%; }
-    40%, 100% { left: 160%; }
+  .cert-rank {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 2.8rem;
+    line-height: 1; color: transparent; -webkit-text-stroke: 1.6px rgb(var(--c-glass) / 0.55);
   }
-
-  /* ─── Badge champion (flux normal, pas absolu) ─── */
-  .champion-badge {
-    font-size: 0.52rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 0.18em;
-    color: #1a1000;
-    background: linear-gradient(135deg, #f5d020, #f0b429, #e6940c);
-    padding: 3px 14px; border-radius: 20px;
-    white-space: nowrap; box-shadow: 0 2px 8px rgba(240,180,41,0.4);
+  .cert-mini {
+    width: 76px; height: 76px; border-radius: 50%; flex-shrink: 0; position: relative;
+    background: repeating-radial-gradient(circle at 50% 50%, #181818 0 1.2px, #0d0d0d 1.2px 3px);
+    box-shadow: 0 0 0 1px rgb(var(--c-glass) / 0.09);
   }
-
-  /* ─── Badges 2e / 3e ─── */
-  .rank-badge {
-    font-size: 0.5rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.14em;
-    padding: 2px 10px; border-radius: 20px;
+  .cert-mini i {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 44%; height: 44%; border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-style: normal;
+    font-size: 0.85rem; color: #000;
+  }
+  .cert-mini i img { width: 100%; height: 100%; object-fit: cover; }
+  .cert-card.plat .cert-mini i { background: radial-gradient(circle, #fff, #b9c4d4 78%); }
+  .cert-card.gold .cert-mini i { background: radial-gradient(circle, #ffe8b0, #d9a520 78%); }
+  .cert-id { flex: 1; min-width: 0; }
+  .cert-name {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.5rem;
+    text-transform: uppercase; line-height: 1; color: var(--text);
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.15s;
+  }
+  .cert-name:hover { color: var(--accent); }
+  .cert-sub {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.64rem;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-top: 5px;
+  }
+  .cert-val {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.8rem;
     white-space: nowrap;
   }
-  .rank-badge-silver {
-    color: rgba(184,204,212,0.9);
-    background: rgba(176,190,197,0.1);
-    border: 1px solid rgba(176,190,197,0.3);
-  }
-  .rank-badge-bronze {
-    color: rgba(212,132,74,0.9);
-    background: rgba(205,130,70,0.1);
-    border: 1px solid rgba(205,130,70,0.3);
+  .cert-val small {
+    display: block; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.24em;
+    color: var(--dim); text-align: right;
   }
 
-  .hero-crown {
-    font-size: 1.5rem; line-height: 1;
-    animation: crown-float 2.6s ease-in-out infinite;
+  /* ── Chart ── */
+  .chart { margin-top: 44px; }
+  .chart-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    border-bottom: 2px solid var(--text); padding-bottom: 10px;
   }
-  @keyframes crown-float {
-    0%, 100% { transform: translateY(0) rotate(-3deg); }
-    50%       { transform: translateY(-7px) rotate(3deg); }
+  .chart-head h2 {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.9rem;
+    text-transform: uppercase; letter-spacing: 0.02em;
   }
-
-  .hero-pos {
-    font-size: 2.8rem; font-weight: 900; line-height: 1;
-    letter-spacing: -0.04em;
-    animation: pos-float 5s ease-in-out infinite;
+  .chart-head span {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.68rem;
+    letter-spacing: 0.28em; text-transform: uppercase; color: var(--dim);
   }
-  .hero-silver .hero-pos { animation-delay: 1.6s; }
-  .hero-bronze .hero-pos { animation-delay: 3.2s; }
-  @keyframes pos-float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-5px); }
+  .row {
+    display: grid; grid-template-columns: 80px 1fr 130px 80px; gap: 14px; align-items: center;
+    padding: 12px 6px; border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
   }
-  .hero-gold .hero-pos {
-    font-size: 3.6rem;
-    background: linear-gradient(160deg, #f5d020, #f0b429, #e67e00);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 8px rgba(240,180,41,0.5));
-    animation-duration: 4s;
+  .row:hover { background: var(--surface); }
+  .row-rank {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 2.4rem;
+    line-height: 1; color: transparent; -webkit-text-stroke: 1.4px rgb(var(--c-glass) / 0.45);
   }
-
-  .hero-av-wrap { position: relative; display: inline-block; }
-  .hero-av {
-    display: block; border-radius: 50%; object-fit: cover;
-    border: 3px solid var(--border);
-  }
-  .hero-av-fb {
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1.4rem;
-    background: rgb(var(--c-glass) / 0.14); color: var(--text);
-    border: 3px solid var(--border);
-  }
-  .av-gold   { border-color: #f0b429 !important; box-shadow: 0 0 22px rgba(240,180,41,0.6); }
-  .av-silver { border-color: #b8ccd4 !important; box-shadow: 0 0 12px rgba(176,190,197,0.4); }
-  .av-bronze { border-color: #d4844a !important; box-shadow: 0 0 12px rgba(205,130,70,0.4); }
-
-  /* Double halo pulsant autour de l'avatar #1 */
-  .av-halo {
-    position: absolute;
-    inset: -7px; border-radius: 50%;
-    border: 2px solid rgba(240,180,41,0.55);
-    animation: halo 2.2s ease-in-out infinite;
-    pointer-events: none;
-  }
-  .av-halo::after {
-    content: '';
-    position: absolute; inset: -8px; border-radius: 50%;
-    border: 1px solid rgba(240,180,41,0.2);
-    animation: halo 2.2s 0.5s ease-in-out infinite;
-  }
-  @keyframes halo {
-    0%, 100% { transform: scale(1); opacity: 0.55; }
-    50%       { transform: scale(1.1); opacity: 1; }
-  }
-
-  .hero-name {
-    font-size: 0.84rem; font-weight: 700; color: var(--text);
-    max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .hero-name-1 { font-size: 0.96rem; color: var(--text); }
-  .hero-name.is-me { color: var(--accent) !important; }
-  .hero-elo  { font-size: 0.82rem; font-weight: 700; }
-  .hero-games { font-size: 0.62rem; color: var(--dim); }
-
-  /* ─── Hint + Filtres ─── */
-  .cl-hint { font-size: 0.7rem; color: var(--dim); text-align: center; margin-bottom: 20px; }
-
-  .cl-filters {
-    display: flex; align-items: center; flex-wrap: wrap;
-    margin-bottom: 8px;
-    background: rgb(var(--c-glass) / 0.05);
-    border: 1px solid var(--border); border-radius: 14px;
-  }
-  .filter-group {
-    display: flex; flex-direction: column; gap: 6px;
-    padding: 12px 20px; flex: 1; min-width: 165px;
-  }
-  .cl-filters > .filter-group:last-child {
-    flex: 1.5; min-width: 300px;
-  }
-  .filter-label {
-    font-size: 0.56rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.1em;
-    color: var(--dim);
-  }
-  .filter-sep {
-    width: 1px; height: 52px; flex-shrink: 0;
-    background: var(--border);
-    align-self: center;
-  }
-  .filter-track {
-    display: flex;
-    background: rgb(var(--c-glass) / 0.08);
-    border: 1px solid var(--border);
-    border-radius: 8px; padding: 3px; gap: 2px;
-    overflow: hidden;
-  }
-  .seg-btn {
-    flex: 1; padding: 5px 10px;
-    border: none; border-radius: 5px;
-    background: transparent;
-    color: var(--dim); font-size: 0.73rem; font-weight: 600;
-    cursor: pointer; white-space: nowrap;
-    transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.1s;
-  }
-  .seg-btn:hover:not(.active) { color: var(--text); background: rgb(var(--c-glass) / 0.07); }
-  .seg-btn.active {
-    background: rgb(var(--c-glass) / 0.20);
-    color: var(--text);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.05);
-  }
-  .seg-btn:active:not(.active) { transform: scale(0.95); }
-
-  .filter-summary {
-    font-size: 0.64rem; color: var(--dim);
-    text-align: center; margin-bottom: 18px;
-    letter-spacing: 0.02em;
-  }
-
-  /* ─── Grille ─── */
-  .cl-grid {
-    display: grid;
-    grid-template-columns: 1fr 284px;
-    gap: 28px; align-items: start;
-  }
-
-  /* ════════════════════════ TABLE ════════════════════════ */
-  .cl-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-  .cl-table thead th {
-    text-align: left;
-    font-size: 0.65rem; font-weight: 700; color: var(--dim);
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase; letter-spacing: 0.05em;
-  }
-  .cl-row td {
-    padding: 11px 14px;
-    border-bottom: 1px solid rgb(var(--c-glass) / 0.06);
-    vertical-align: middle;
-  }
-  .cl-row:last-child td { border-bottom: none; }
-  .cl-row:hover td { background: rgb(var(--c-glass) / 0.04); }
-
-  /* Highlight moi */
-  .cl-row.row-me td          { background: rgb(var(--c-accent) / 0.1); }
-  .cl-row.row-me td:first-child {
-    border-left: 3px solid var(--accent) !important;
-    padding-left: 11px;
-  }
-  .cl-row.row-me .col-rank   { color: var(--accent); font-weight: 800; }
-  .cl-row.row-me .row-name   { color: var(--accent); font-weight: 700; }
-  .cl-row.row-me .score-fill { background: var(--accent) !important; }
-
-  /* Couleurs rang */
-  .rank-gold td:first-child   { border-left: 3px solid rgba(240,180,41,0.6); padding-left: 11px; }
-  .rank-silver td:first-child { border-left: 3px solid rgba(176,190,197,0.5); padding-left: 11px; }
-  .rank-bronze td:first-child { border-left: 3px solid rgba(205,130,70,0.5); padding-left: 11px; }
-  .rank-gold .col-rank   { color: #f0b429; font-weight: 800; }
-  .rank-silver .col-rank { color: #b8ccd4; font-weight: 800; }
-  .rank-bronze .col-rank { color: #d4844a; font-weight: 800; }
-  .rank-gold .score-fill   { background: #f0b429; }
-  .rank-silver .score-fill { background: #b8ccd4; }
-  .rank-bronze .score-fill { background: #d4844a; }
-
-  .col-rank { width: 40px; font-size: 0.8rem; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; }
-  .col-player { display: flex; align-items: center; gap: 10px; }
-  .col-score { min-width: 120px; }
-  .col-extra { color: var(--dim); font-size: 0.8rem; }
-  .col-games { color: var(--dim); font-size: 0.8rem; text-align: right; }
-
-  /* Barre de score */
-  .score-val { display: block; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; margin-bottom: 4px; }
-  .score-bar {
-    height: 3px; width: 110px; max-width: 100%;
-    background: rgb(var(--c-glass) / 0.12);
-    border-radius: 2px; overflow: hidden;
-  }
-  .score-fill {
-    height: 100%; border-radius: 2px;
-    background: var(--accent);
-    transition: width 0.6s ease;
-  }
-
-  .row-av { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .row-player { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .row-av { width: 38px; height: 38px; border-radius: var(--r); object-fit: cover; flex-shrink: 0; }
   .row-av-fb {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: rgb(var(--c-glass) / 0.12);
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.68rem; font-weight: 700; color: var(--text); flex-shrink: 0;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1rem;
+    background: var(--surface3); color: var(--text);
   }
-  .row-name { color: var(--text); font-weight: 600; transition: color 0.15s; }
+  .row-name-wrap { min-width: 0; }
+  .row-name {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.3rem;
+    text-transform: uppercase; color: var(--text);
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.15s;
+  }
   .row-name:hover { color: var(--accent); }
+  .row-name-wrap small {
+    display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
+  }
   .me-badge {
-    font-size: 0.58rem; font-weight: 800;
-    background: var(--accent); color: #fff;
-    border-radius: 4px; padding: 1px 5px; margin-left: 4px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 0.6rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    background: var(--accent); color: #000; border-radius: var(--radius-sm); padding: 3px 7px;
+    flex-shrink: 0;
+  }
+  .row-val { text-align: right; }
+  .row-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.5rem; }
+  .row-bar { height: 3px; background: var(--surface2); margin-top: 5px; border-radius: 2px; overflow: hidden; }
+  .row-bar i { display: block; height: 100%; background: var(--accent); transition: width 0.6s ease; }
+  .row-games {
+    text-align: right; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 0.95rem; color: var(--mid);
+  }
+  .row-me { background: rgb(var(--accent-rgb) / 0.07); border-color: rgb(var(--accent-rgb) / 0.35); }
+  .row-me .row-rank { color: var(--accent); -webkit-text-stroke: 0; }
+  .is-me { color: var(--accent) !important; }
+
+  /* ── Barre de lecture ── */
+  .playerbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+    background: rgba(10, 10, 10, 0.96); border-top: 1px solid rgb(var(--accent-rgb) / 0.4);
+    box-shadow: 0 -12px 44px rgb(var(--accent-rgb) / 0.09);
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 28px;
+    padding: 13px 48px;
+  }
+  .pb-id { display: flex; align-items: center; gap: 14px; }
+  .pb-av { width: 46px; height: 46px; border-radius: var(--r); object-fit: cover; }
+  .pb-av-fb {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.15rem;
+    background: var(--accent); color: #000;
+  }
+  .pb-t { line-height: 1.15; }
+  .pb-n { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.25rem; text-transform: uppercase; }
+  .pb-s {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.66rem;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  }
+  .pb-rank {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 2.3rem;
+    color: transparent; -webkit-text-stroke: 1.8px var(--accent); margin-left: 8px;
+  }
+  .pb-track { min-width: 0; }
+  .pb-lbl {
+    display: flex; justify-content: space-between; gap: 12px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.66rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-bottom: 7px;
+  }
+  .pb-lbl b { color: var(--text); }
+  .pb-lbl .pb-nxt { color: var(--accent); }
+  .pb-line { position: relative; height: 5px; background: var(--surface2); border-radius: 3px; }
+  .pb-line i {
+    position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 3px;
+    box-shadow: 0 0 12px rgb(var(--accent-rgb) / 0.6);
+  }
+  .pb-line i::after {
+    content: ""; position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+    width: 13px; height: 13px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.8);
+  }
+  .pb-cta {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #000; background: var(--accent); border: none; border-radius: var(--r);
+    padding: 13px 30px; cursor: pointer; white-space: nowrap; text-align: center;
+    box-shadow: 0 0 26px rgb(var(--accent-rgb) / 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .pb-cta:hover { transform: translateY(-2px); box-shadow: 0 0 36px rgb(var(--accent-rgb) / 0.5); }
+  .pb-guest {
+    grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 20px;
+    flex-wrap: wrap;
+  }
+  .pb-guest-txt {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.8rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
   }
 
-  .cl-empty { text-align: center; color: var(--dim); font-size: 0.85rem; padding: 40px 0; }
-
-  /* ════════════════════════ SIDEBAR ════════════════════════ */
-  .cl-sidebar { position: sticky; top: 80px; }
-
-  .sidebar-card {
-    position: relative;
-    background: rgb(var(--c-glass) / 0.05);
-    border-radius: 20px;
-    padding: 30px 22px 24px;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 8px; text-align: center;
-    animation: sb-pulse 4s ease-in-out infinite;
-  }
-  /* Gradient border via box-shadow empilé */
-  @keyframes sb-pulse {
-    0%, 100% {
-      box-shadow:
-        0 0 0 1px rgba(var(--c-accent), 0.5),
-        0 0 32px rgb(var(--c-accent) / 0.08),
-        0 8px 40px rgba(0,0,0,0.16);
-    }
-    50% {
-      box-shadow:
-        0 0 0 1px rgba(var(--c-accent), 0.9),
-        0 0 60px rgb(var(--c-accent) / 0.18),
-        0 8px 40px rgba(0,0,0,0.16);
-    }
-  }
-
-  .sb-label {
-    font-size: 0.6rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.14em;
-    color: var(--accent);
-  }
-  .sb-rank {
-    font-size: 4rem; font-weight: 900; line-height: 1;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 12px rgb(var(--c-accent) / 0.35));
-  }
-  .sb-username { font-size: 0.95rem; font-weight: 700; color: var(--text); }
-  .sb-score    { font-size: 0.86rem; font-weight: 700; color: var(--accent); }
-  .sb-games    { font-size: 0.7rem; color: var(--dim); }
-  .sb-gap {
-    font-size: 0.72rem; color: var(--dim);
-    background: rgb(var(--c-glass) / 0.08);
-    border: 1px solid var(--border);
-    border-radius: 8px; padding: 7px 12px;
-    margin-top: 4px; width: 100%;
-    line-height: 1.4;
-  }
-  .sb-none    { font-size: 0.8rem; color: var(--dim); font-style: italic; }
-  .sb-loading { color: var(--dim); font-size: 0.82rem; padding: 16px 0; }
-  .sb-guest-icon { font-size: 2.4rem; }
-  .sb-guest-text { font-size: 0.8rem; color: var(--dim); line-height: 1.6; }
-  .sb-cta {
-    display: block; width: 100%; margin-top: 16px;
-    padding: 12px 0; border-radius: 11px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff; font-weight: 800; font-size: 0.86rem;
-    text-decoration: none; text-align: center;
-    box-shadow: 0 4px 20px rgb(var(--c-accent) / 0.3);
-    transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
-  }
-  .sb-cta:hover {
-    opacity: 0.92;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgb(var(--c-accent) / 0.4);
-  }
-
-  /* ─── Responsive ─── */
+  /* ── Responsive ── */
   @media (max-width: 960px) {
-    .cl-grid { grid-template-columns: 1fr; }
-    .cl-sidebar { position: static; }
-    .sidebar-card { flex-direction: row; flex-wrap: wrap; justify-content: space-between; text-align: left; padding: 18px 20px; }
-    .sb-rank { font-size: 2.6rem; }
-    .sb-cta  { width: auto; padding: 10px 22px; margin-top: 0; }
-    .sb-gap  { width: auto; }
+    .hp-page { padding: calc(var(--nav-h) + 32px) 24px 170px; }
+    .champ { grid-template-columns: 150px 1fr; min-height: 190px; }
+    .champ-vinyl { min-height: 190px; grid-row: 1 / span 2; height: 100%; }
+    .disc { width: 280px; height: 280px; left: -150px; }
+    .champ-val { grid-column: 2; padding: 0 24px 22px; text-align: left; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .champ-num { font-size: 52px; }
+    .champ-cert { margin-top: 0; }
+    .duo { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 56px 1fr 110px 60px; }
+    .row-rank { font-size: 1.9rem; }
+  }
+  /* Bottom-nav mobile du site (58px) : remonter la barre de lecture */
+  @media (max-width: 768px) {
+    .playerbar { bottom: 58px; }
+    .hp-page { padding-bottom: 200px; }
   }
   @media (max-width: 640px) {
-    .classements-page { padding: 14px 14px 60px; }
-    .page-nav { padding: calc(var(--nav-h) + 8px) 14px 0; }
-    .cl-hero  { padding: 24px 10px 20px; }
+    .hp-page { padding: calc(var(--nav-h) + 24px) 14px 210px; }
+    .hp-hero h1 { font-size: 15vw; }
+    .champ { grid-template-columns: 92px 1fr; gap: 12px; min-height: 150px; }
+    .champ-vinyl { min-height: 150px; }
+    .disc { width: 190px; height: 190px; left: -110px; }
+    .champ-info { padding: 20px 0; }
+    .champ-name { font-size: 11vw; }
+    .champ-meta { font-size: 0.7rem; letter-spacing: 0.16em; }
+    .champ-val { padding: 0 16px 18px; }
+    .champ-num { font-size: 42px; -webkit-text-stroke-width: 2px; }
+    .cert-card { padding: 12px 14px; gap: 12px; }
+    .cert-mini { width: 56px; height: 56px; }
+    .cert-rank { font-size: 2rem; }
+    .cert-name { font-size: 1.2rem; }
+    .cert-val { font-size: 1.4rem; }
+    .chart-head span { display: none; }
+    .row { grid-template-columns: 40px 1fr 90px; gap: 10px; padding: 10px 2px; }
+    .row-games { display: none; }
+    .row-rank { font-size: 1.5rem; -webkit-text-stroke-width: 1px; }
+    .row-av { width: 32px; height: 32px; }
+    .row-name { font-size: 1.05rem; }
+    .row-num { font-size: 1.2rem; }
 
-    /* Podium : flex sans min-width fixe */
-    .podium-hero { gap: 6px; }
-    .hero-card { min-width: 0; flex: 1; padding: 14px 8px 12px; }
-    .hero-gold { min-width: 0; flex: 1.3; padding: 18px 10px 16px; }
-    .hero-pos  { font-size: 1.8rem; }
-    .hero-gold .hero-pos { font-size: 2.2rem; animation-duration: 4s; }
-    .hero-name { font-size: 0.66rem; max-width: 76px; }
-    .hero-elo  { font-size: 0.7rem; }
-    .hero-games { display: none; }
-    .hero-crown { font-size: 1.1rem; }
-    .rank-badge    { font-size: 0.44rem; padding: 2px 6px; }
-    .champion-badge { font-size: 0.44rem; padding: 2px 8px; }
-    /* Avatars : override les attributs HTML inline */
-    .av-gold   { width: 52px !important; height: 52px !important; }
-    .av-silver { width: 42px !important; height: 42px !important; }
-    .av-bronze { width: 36px !important; height: 36px !important; }
-
-    /* Table : scroll horizontal + colonnes masquées */
-    .cl-main { overflow-x: auto; }
-    .col-extra  { display: none; }
-    .col-games  { display: none; }
-    .col-score  { min-width: 80px; }
-    .score-bar  { width: 60px; }
-
-    /* Sidebar */
-    .sidebar-card { flex-direction: column; align-items: center; text-align: center; }
-    .sb-cta { width: 100%; }
-
-    /* Filtres */
-    .cl-filters { flex-direction: column; }
-    .filter-sep { width: 100%; height: 1px; align-self: auto; }
-    .filter-group { padding: 10px 14px; }
+    .playerbar { grid-template-columns: 1fr auto; gap: 12px; padding: 10px 14px; }
+    .pb-track { display: none; }
+    .pb-id { gap: 10px; min-width: 0; }
+    .pb-av { width: 38px; height: 38px; flex-shrink: 0; }
+    .pb-t { min-width: 0; }
+    .pb-n { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pb-s { display: none; }
+    .pb-rank { font-size: 1.6rem; margin-left: 0; flex-shrink: 0; -webkit-text-stroke-width: 1.4px; }
+    .pb-cta { padding: 11px 16px; font-size: 0.85rem; }
   }
 
-  /* ─── Killswitch animations (paramètres + prefers-reduced-motion) ─── */
+  /* ── Animations désactivées ── */
   @media (prefers-reduced-motion: reduce) {
-    .sparkle, .hero-shimmer, .hero-crown, .av-halo,
-    .hero-card, .hero-pos, .sidebar-card { animation: none !important; }
-    .hero-silver::before, .hero-bronze::before { animation: none !important; }
-    .score-fill { transition: none !important; }
+    .disc, .hp-live-dot { animation: none !important; }
+    .row-bar i { transition: none !important; }
   }
-  :global(.no-animations) .sparkle,
-  :global(.no-animations) .hero-shimmer,
-  :global(.no-animations) .hero-crown,
-  :global(.no-animations) .av-halo,
-  :global(.no-animations) .hero-card,
-  :global(.no-animations) .hero-pos,
-  :global(.no-animations) .sidebar-card { animation: none !important; }
-  :global(.no-animations) .score-fill { transition: none !important; }
+  :global(.no-animations) .disc,
+  :global(.no-animations) .hp-live-dot { animation: none !important; }
+  :global(.no-animations) .row-bar i { transition: none !important; }
 </style>

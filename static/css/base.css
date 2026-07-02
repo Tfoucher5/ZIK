@@ -476,8 +476,12 @@ button {
   width: 100%;
   transition: border-color 0.15s;
 }
-.input-glass::placeholder { color: var(--dim); }
-.input-glass:focus { border-color: rgba(255, 0, 255, 0.6); }
+.input-glass::placeholder {
+  color: var(--dim);
+}
+.input-glass:focus {
+  border-color: rgba(255, 0, 255, 0.6);
+}
 
 /* ── Badges ── */
 .badge-live {
