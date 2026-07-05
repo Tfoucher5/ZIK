@@ -14,9 +14,11 @@ export async function backfillCovers(playlistIds) {
     const fetchFn = await getFetch();
 
     const { data: tracks } = await admin
-      .from("custom_playlist_tracks")
-      .select("id, external_id, source")
-      .in("playlist_id", pids)
+      .from("tracks")
+      .select(
+        "id, external_id, source, custom_playlist_tracks!inner(playlist_id)",
+      )
+      .in("custom_playlist_tracks.playlist_id", pids)
       .is("cover_url", null)
       .not("external_id", "is", null)
       .in("source", ["spotify", "deezer"])
@@ -79,10 +81,7 @@ export async function backfillCovers(playlistIds) {
 
     await Promise.all(
       updates.map((u) =>
-        admin
-          .from("custom_playlist_tracks")
-          .update({ cover_url: u.cover_url })
-          .eq("id", u.id),
+        admin.from("tracks").update({ cover_url: u.cover_url }).eq("id", u.id),
       ),
     );
 

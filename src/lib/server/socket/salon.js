@@ -8,11 +8,12 @@ import { supabase } from "../config.js";
 import { userClient } from "../middleware/auth.js";
 import { salonRooms } from "../state.js";
 import {
-  buildTrack,
+  buildTrackFromRow,
   calcSpeedBonus,
   cleanString,
   displayString,
   refreshExpiredPreviews,
+  TRACK_ROW_SELECT,
 } from "../services/playlist.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -41,28 +42,12 @@ async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {
     const { data: rows } = await client
       .from("custom_playlist_tracks")
-      .select(
-        "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name))",
-      )
+      .select(TRACK_ROW_SELECT)
       .eq("playlist_id", playlistId)
       .order("position");
     if (rows?.length) {
       await refreshExpiredPreviews(rows);
-      return rows.map((t) =>
-        buildTrack({
-          artist: t.artist,
-          title: t.title,
-          cover: t.cover_url,
-          preview_url: t.preview_url,
-          custom_artist: t.custom_artist || null,
-          custom_title: t.custom_title || null,
-          custom_feats: t.custom_feats || null,
-          extraAnswers: (t.track_answers || []).map((a) => ({
-            label: a.answer_types?.name || "",
-            value: a.value,
-          })),
-        }),
-      );
+      return rows.map(buildTrackFromRow);
     }
   } catch {
     // ignore

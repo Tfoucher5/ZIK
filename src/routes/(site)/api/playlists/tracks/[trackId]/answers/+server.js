@@ -8,7 +8,7 @@ async function getOwnedTrack(uSupa, trackId, userId) {
   const { data } = await uSupa
     .from("custom_playlist_tracks")
     .select(
-      "playlist_id, artist, title, custom_artist, custom_title, custom_feats, custom_playlists(owner_id)",
+      "playlist_id, artist, title, custom_artist, custom_title, custom_feats, tracks(artist, title), custom_playlists(owner_id)",
     )
     .eq("id", trackId)
     .single();
@@ -28,7 +28,8 @@ export async function GET({ params, request }) {
   const track = await getOwnedTrack(uSupa, params.trackId, user.id);
   if (!track) return json({ error: "Non autorisé" }, { status: 403 });
 
-  const parsed = parseFeaturing(track.artist || "");
+  const meta = track.tracks || track;
+  const parsed = parseFeaturing(meta.artist || "");
   const { data: extraRows } = await uSupa
     .from("track_answers")
     .select("answer_type_id, value")
@@ -39,7 +40,7 @@ export async function GET({ params, request }) {
     custom_feats: track.custom_feats || null,
     default_artist: parsed.main,
     default_feats: parsed.feats,
-    default_title: track.title,
+    default_title: meta.title,
     extra_answers: extraRows || [],
   });
 }

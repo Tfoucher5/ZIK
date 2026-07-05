@@ -184,12 +184,29 @@
     await loadEditorTracks();
   }
 
+  // Métadonnées canoniques du catalogue `tracks` aplaties sur la ligne de liaison
+  // (fallback anciennes colonnes pour les lignes d'avant migration).
+  function flattenTrackRow(row) {
+    const { tracks: meta, ...rest } = row;
+    if (!meta) return rest;
+    return {
+      ...rest,
+      track_id: meta.id,
+      artist: meta.artist,
+      title: meta.title,
+      preview_url: meta.preview_url,
+      cover_url: meta.cover_url,
+      external_id: meta.external_id,
+      source: meta.source,
+    };
+  }
+
   async function loadEditorTracks() {
     const { data, error } = await sb.from('custom_playlist_tracks')
-      .select('*, track_answers(answer_type_id, value, answer_types(name))')
+      .select('*, tracks(*), track_answers(answer_type_id, value, answer_types(name))')
       .eq('playlist_id', editorPl.id).order('position');
     if (error) { toast(error.message, 'error'); return; }
-    editorTracks = data || [];
+    editorTracks = (data || []).map(flattenTrackRow);
   }
 
   async function removeTrack(trackId) {
@@ -200,38 +217,71 @@
 
   function normalize(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
+  // Upsert des titres dans le catalogue partagé → track_ids canoniques
+  async function resolveTrackIds(trackList) {
+    await ensureSession();
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch('/api/tracks/resolve', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session?.access_token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ tracks: trackList }),
+    });
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+    return body.ids;
+  }
+
+  // Les anciennes colonnes (artist, title, …) sont encore remplies pendant la
+  // transition de migration (NOT NULL + rollback possible) — retirées en étape 3.
+  function linkRow(t, trackId, position) {
+    return {
+      playlist_id: editorPl.id, track_id: trackId, position,
+      artist: t.artist, title: t.title,
+      preview_url: t.preview_url || null, cover_url: t.cover_url || null,
+      source: t.source || 'manual', external_id: t.external_id || null,
+    };
+  }
+
   async function addTrack(trackData) {
     const extId = trackData.external_id;
     const norm  = normalize(trackData.artist) + '|' + normalize(trackData.title);
     const isDup = editorTracks.some(t => (extId && t.external_id === extId) || (normalize(t.artist) + '|' + normalize(t.title)) === norm);
     if (isDup) { toast('Ce titre est déjà dans la playlist.', 'error'); return false; }
-    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return false; }
-    const { data, error } = await sb.from('custom_playlist_tracks').insert({
-      playlist_id: editorPl.id, artist: trackData.artist, title: trackData.title,
-      preview_url: trackData.preview_url || null, cover_url: trackData.cover_url || null,
-      source: trackData.source || 'manual', external_id: trackData.external_id || null,
-      position: editorTracks.length,
-    }).select().single();
-    if (error) { toast(error.message, 'error'); return false; }
-    editorTracks = [...editorTracks, data];
-    return true;
+    try {
+      const [trackId] = await resolveTrackIds([trackData]);
+      if (editorTracks.some(t => t.track_id === trackId)) {
+        toast('Ce titre est déjà dans la playlist.', 'error');
+        return false;
+      }
+      const { data, error } = await sb.from('custom_playlist_tracks')
+        .insert(linkRow(trackData, trackId, editorTracks.length))
+        .select('*, tracks(*)').single();
+      if (error) throw new Error(error.message);
+      editorTracks = [...editorTracks, flattenTrackRow(data)];
+      return true;
+    } catch (e) { toast(e.message, 'error'); return false; }
   }
 
   async function addBatch(tracks) {
     const existingIds = new Set(editorTracks.map(t => t.external_id).filter(Boolean));
     const newTracks   = tracks.filter(t => !existingIds.has(t.external_id));
     if (!newTracks.length) return { added: 0 };
-    try { await ensureSession(); } catch (e) { toast(e.message, 'error'); return { added: 0 }; }
-    const rows = newTracks.map((t, i) => ({
-      playlist_id: editorPl.id, artist: t.artist, title: t.title,
-      preview_url: t.preview_url || null, cover_url: t.cover_url || null,
-      source: t.source, external_id: t.external_id || null,
-      position: editorTracks.length + i,
-    }));
-    const { data, error } = await sb.from('custom_playlist_tracks').insert(rows).select();
-    if (error) { toast(error.message, 'error'); return { added: 0 }; }
-    editorTracks = [...editorTracks, ...data];
-    return { added: data.length };
+    try {
+      const ids = await resolveTrackIds(newTracks);
+      const linkedIds = {};
+      for (const t of editorTracks) if (t.track_id) linkedIds[t.track_id] = true;
+      const rows = [];
+      newTracks.forEach((t, i) => {
+        if (linkedIds[ids[i]]) return;
+        linkedIds[ids[i]] = true;
+        rows.push(linkRow(t, ids[i], editorTracks.length + rows.length));
+      });
+      if (!rows.length) return { added: 0 };
+      const { data, error } = await sb.from('custom_playlist_tracks').insert(rows).select('*, tracks(*)');
+      if (error) throw new Error(error.message);
+      editorTracks = [...editorTracks, ...data.map(flattenTrackRow)];
+      return { added: data.length };
+    } catch (e) { toast(e.message, 'error'); return { added: 0 }; }
   }
 
   async function deletePl() {
