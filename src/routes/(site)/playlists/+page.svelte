@@ -499,39 +499,63 @@
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) rsOpen = false; }}>
-  <div class="modal modal-lg">
+  <div class="modal modal-lg modal-eph">
     <button class="close-btn" onclick={() => rsOpen = false}>&#x2715;</button>
+
     <div class="room-eph-header">
-      <span class="room-eph-badge">&#x26A1; Room éphémère</span>
-      <h2>Lancer une room</h2>
-      <p class="mdesc">Playlist : {editorPl?.emoji} {editorPl?.name} &mdash; {editorTracks.length} titre{editorTracks.length !== 1 ? 's' : ''}</p>
+      <div class="room-eph-ico">&#x26A1;</div>
+      <div>
+        <div class="room-eph-kicker">Room éphémère</div>
+        <h2 class="room-eph-title">Lancer une room</h2>
+      </div>
     </div>
+
+    <div class="room-eph-pl">
+      <span class="room-eph-pl-tile">{editorPl?.emoji}</span>
+      <div class="room-eph-pl-info">
+        <div class="room-eph-pl-name">{editorPl?.name}</div>
+        <div class="room-eph-pl-meta">{editorTracks.length} titre{editorTracks.length !== 1 ? 's' : ''}</div>
+      </div>
+    </div>
+
     <div class="room-eph-notice">
       <span class="room-eph-icon">&#x1F4A1;</span>
       <div>Cette room est <strong>temporaire</strong> &mdash; elle disparaîtra automatiquement après 4h d&apos;inactivité.
         Pour créer une room permanente, <a href="/rooms" class="room-eph-link">rendez-vous sur la page Rooms</a>.</div>
     </div>
+
     <div class="room-settings">
-      <div class="room-setting-row">
-        <label for="nbManches">Nombre de manches</label>
-        <input type="range" bind:value={rsRounds} min="3" max={editorTracks.length} step="1">
-        <span class="room-setting-val">{rsRounds}</span>
+      <div class="room-setting">
+        <div class="room-setting-head">
+          <span class="room-setting-label">Nombre de manches</span>
+          <span class="room-setting-val">{rsRounds}</span>
+        </div>
+        <input type="range" bind:value={rsRounds} min="3" max={editorTracks.length} step="1"
+          style="--p:{editorTracks.length > 3 ? ((rsRounds - 3) / (editorTracks.length - 3)) * 100 : 100}%">
       </div>
-      <div class="room-setting-row">
-        <label for="dureeManche">Durée d'une manche (sec)</label>
-        <input type="range" bind:value={rsDuration} min="10" max="60" step="5">
-        <span class="room-setting-val">{rsDuration}s</span>
+      <div class="room-setting">
+        <div class="room-setting-head">
+          <span class="room-setting-label">Durée d'une manche</span>
+          <span class="room-setting-val">{rsDuration}s</span>
+        </div>
+        <input type="range" bind:value={rsDuration} min="10" max="60" step="5"
+          style="--p:{((rsDuration - 10) / 50) * 100}%">
       </div>
-      <div class="room-setting-row">
-        <label for="pause">Pause entre titres (sec)</label>
-        <input type="range" bind:value={rsBreak} min="3" max="15" step="1">
-        <span class="room-setting-val">{rsBreak}s</span>
+      <div class="room-setting">
+        <div class="room-setting-head">
+          <span class="room-setting-label">Pause entre titres</span>
+          <span class="room-setting-val">{rsBreak}s</span>
+        </div>
+        <input type="range" bind:value={rsBreak} min="3" max="15" step="1"
+          style="--p:{((rsBreak - 3) / 12) * 100}%">
       </div>
     </div>
+
     {#if rsError}<div class="alert-err">{rsError}</div>{/if}
+
     <div class="modal-footer">
       <button class="btn-ghost" onclick={() => rsOpen = false}>Annuler</button>
-      <button class="btn-accent" onclick={createRoom} disabled={rsSaving}>{rsSaving ? 'Création...' : 'Créer la room'}</button>
+      <button class="room-eph-create" onclick={createRoom} disabled={rsSaving}>{rsSaving ? 'Création…' : 'Créer la room →'}</button>
     </div>
   </div>
 </div>
@@ -542,17 +566,27 @@
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) rcOpen = false; }}>
-  <div class="modal modal-lg">
+  <div class="modal modal-lg modal-eph">
     <button class="close-btn" onclick={() => rcOpen = false}>&#x2715;</button>
-    <h2>Room créée !</h2>
+
+    <div class="room-eph-header">
+      <div class="room-eph-ico is-ok">&#x2713;</div>
+      <div>
+        <div class="room-eph-kicker is-ok">Room créée</div>
+        <h2 class="room-eph-title">C'est prêt !</h2>
+      </div>
+    </div>
     <p class="mdesc">Partage ce code à tes amis pour qu'ils rejoignent la room.</p>
+
     <div class="room-code-box">
       <div class="room-code-label">Code de la room</div>
-      <div class="room-code">{rcCode}</div>
+      <div class="room-code">
+        {#each rcCode.split('') as ch, i (i)}<b>{ch}</b>{/each}
+      </div>
       <div class="room-share-url">{typeof window !== 'undefined' ? `${window.location.origin}/game?roomId=${rcCode}` : ''}</div>
       <div class="room-code-actions">
         <button class="btn-ghost sm" onclick={copyLink}>Copier le lien</button>
-        <button class="btn-accent" onclick={joinRoomNow}>Rejoindre maintenant &rarr;</button>
+        <button class="room-eph-create" onclick={joinRoomNow}>Rejoindre maintenant &rarr;</button>
       </div>
     </div>
   </div>
@@ -1018,35 +1052,126 @@
   box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08);
 }
 
-/* ── Room launch modal ───────────────────────────────────────────────────────── */
+/* ── Room launch modal — identité v3 (verre + liseré) ────────────────────────── */
+.modal-eph {
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--bg2) 88%, transparent);
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgb(var(--c-glass) / 0.06);
+  overflow: hidden;
+}
+.modal-eph::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgb(var(--accent-rgb) / 0.8), transparent);
+  opacity: 0.7;
+}
+
 .room-eph-header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding-right: 28px;
+}
+.room-eph-ico {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.14);
+  color: var(--gold);
+}
+.room-eph-ico.is-ok {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.18);
+  color: var(--success);
+}
+.room-eph-kicker {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
   margin-bottom: 4px;
 }
-.room-eph-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  background: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.35);
-  color: var(--gold);
-  padding: 3px 10px;
-  border-radius: 20px;
-  margin-bottom: 8px;
+.room-eph-kicker.is-ok {
+  color: var(--success);
 }
+.room-eph-title {
+  margin-bottom: 0 !important;
+  line-height: 1.05;
+}
+
+.room-eph-pl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgb(var(--c-glass) / 0.03);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  margin-bottom: 12px;
+}
+.room-eph-pl-tile {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  background: rgb(var(--accent-rgb) / 0.1);
+  border: 1px solid rgb(var(--accent-rgb) / 0.35);
+}
+.room-eph-pl-info {
+  min-width: 0;
+}
+.room-eph-pl-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.room-eph-pl-meta {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-top: 2px;
+}
+
 .room-eph-notice {
   display: flex;
   gap: 10px;
   align-items: flex-start;
   background: rgb(var(--accent-rgb) / 0.05);
-  border: 1px solid rgb(var(--accent-rgb) / 0.15);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border: 1px solid rgb(var(--accent-rgb) / 0.18);
+  border-radius: 12px;
+  padding: 11px 14px;
   font-size: 0.78rem;
   color: var(--mid);
   line-height: 1.5;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .room-eph-icon {
   flex-shrink: 0;
@@ -1061,93 +1186,169 @@
 .room-settings {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin: 0 0 16px;
+  gap: 18px;
+  margin: 0 0 20px;
 }
-.room-setting-row {
+.room-setting-head {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 9px;
 }
-.room-setting-row label {
-  font-size: 0.82rem;
-  color: var(--mid);
-  flex: 1;
-  min-width: 0;
+.room-setting-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.room-setting-row input[type="range"] {
+.room-setting-val {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgb(var(--accent-rgb) / 0.08);
+  border: 1px solid rgb(var(--accent-rgb) / 0.3);
+  border-radius: 7px;
+  padding: 2px 9px;
+}
+.room-setting input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  flex: 1;
-  height: 4px;
+  width: 100%;
+  height: 20px;
   cursor: pointer;
-  border-radius: 99px;
-  background: rgb(var(--c-glass) / 0.12);
+  background: transparent;
   outline: none;
   border: none;
 }
-.room-setting-row input[type="range"]::-webkit-slider-thumb {
+.room-setting input[type="range"]::-webkit-slider-runnable-track {
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--p, 50%),
+    rgb(var(--c-glass) / 0.1) var(--p, 50%)
+  );
+}
+.room-setting input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 17px;
+  height: 17px;
+  margin-top: -6px;
   border-radius: 50%;
-  background: var(--accent);
-  cursor: pointer;
-  box-shadow: 0 0 6px rgb(var(--accent-rgb) / 0.5);
+  background: #fff;
+  border: 4px solid var(--accent);
+  box-shadow: 0 0 12px rgb(var(--accent-rgb) / 0.7);
 }
-.room-setting-row input[type="range"]::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+.room-setting input[type="range"]::-moz-range-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(var(--c-glass) / 0.1);
+}
+.room-setting input[type="range"]::-moz-range-progress {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.room-setting input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--accent);
+  box-shadow: 0 0 12px rgb(var(--accent-rgb) / 0.7);
+}
+
+.room-eph-create {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #000;
   border: none;
-  background: var(--accent);
   cursor: pointer;
+  background: linear-gradient(120deg, var(--accent), #b34dff);
+  padding: 12px 26px;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgb(var(--accent-rgb) / 0.35);
+  transition:
+    transform 0.12s,
+    box-shadow 0.15s;
 }
-.room-setting-val {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--accent);
-  min-width: 36px;
-  text-align: right;
+.room-eph-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 30px rgb(var(--accent-rgb) / 0.5);
 }
+.room-eph-create:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .room-code-box {
   text-align: center;
-  padding: 24px 0 8px;
+  padding: 14px 0 4px;
 }
 .room-code-label {
-  font-size: 0.75rem;
-  color: var(--dim);
-  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--mid);
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  margin-bottom: 10px;
-}
-.room-code {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 2.6rem;
-  font-weight: 800;
-  letter-spacing: 6px;
-  color: var(--accent);
-  background: rgb(var(--accent-rgb) / 0.07);
-  border: 1px solid rgb(var(--accent-rgb) / 0.2);
-  border-radius: 14px;
-  padding: 14px 24px;
-  display: inline-block;
   margin-bottom: 14px;
 }
+.room-code-label::before,
+.room-code-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.room-code {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.room-code b {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 1.7rem;
+  width: 46px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--accent-rgb) / 0.08);
+  border: 1px solid rgb(var(--accent-rgb) / 0.45);
+  border-radius: 12px;
+  color: var(--accent);
+  text-shadow: 0 0 16px rgb(var(--accent-rgb) / 0.7);
+  box-shadow: 0 0 20px rgb(var(--accent-rgb) / 0.1);
+}
 .room-share-url {
-  font-size: 0.78rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
   color: var(--dim);
   word-break: break-all;
   background: rgb(var(--c-glass) / 0.04);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 14px;
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 16px;
 }
 .room-code-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
   justify-content: center;
   flex-wrap: wrap;
 }
