@@ -15,7 +15,8 @@
   let roomLabel   = $state('');
   let roundInfo   = $state('En attente\u2026');
   let timerPct    = $state(100);
-  let timerColor  = $state('var(--accent)');
+  let timerSecs   = $state(null);
+  let deckSpin    = $state(false);
   let players     = $state([]);
   let history     = $state([]);
   let slotArtist  = $state({ val: '???', state: null });
@@ -113,6 +114,13 @@
   let isMobileView = $state(false);
   let _chatDrag    = null;
   let _chatResize  = null;
+
+  const maxScore = $derived(Math.max(1, ...players.map(p => p.score)));
+  const clockStr = $derived(
+    timerSecs === null
+      ? '--:--'
+      : `${String(Math.floor(timerSecs / 60)).padStart(2, '0')}:${String(timerSecs % 60).padStart(2, '0')}`
+  );
 
   const chatStyle = $derived(
     isMobileView ? '' :
@@ -405,6 +413,16 @@
     socket.emit('submit_choice', { choiceIndex: index });
   }
 
+  function chatHue(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return h;
+  }
+  function chatTime(ts) {
+    const d = new Date(ts);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
   function sendChat() {
     const text = chatInput.trim();
     if (!text || !socket) return;
@@ -496,7 +514,7 @@
       extraSlots = (data.extraLabels || []).map(label => ({ val: '???', state: null, label }));
       slotArtist = { val: '???', state: null };
       slotTitle  = { val: '???', state: null };
-      timerPct = 100; timerColor = 'var(--accent)';
+      timerPct = 100; timerSecs = null; deckSpin = true;
       guessDisabled = true; guessVal = '';
       qcmChoices = data.choices || [];
       qcmChosen = null;
@@ -543,7 +561,7 @@
     });
     socket.on('timer_update', ({ current, max }) => {
       timerPct = (current / max) * 100;
-      timerColor = timerPct < 30 ? 'var(--danger)' : timerPct < 60 ? '#f59e0b' : 'var(--accent)';
+      timerSecs = Math.max(0, current);
     });
     socket.on('feedback', data => {
       if (data.type === 'success_artist') slotArtist = { val: data.val, state: 'found' };
@@ -579,14 +597,14 @@
       summaryShow = true;
       summaryReason = data.reason;
       summaryFinder = data.totalFound > 0 ? `\u{1F3C6} 1er : ${data.firstFinder} \u2014 ${data.totalFound} joueur(s) ont tout trouv\u00e9` : '\u274C Personne n\u2019a trouv\u00e9';
-      _roundActive = false; _waitingForSync = false; syncWaiting = false; guessDisabled = true; stopVideo(); timerPct = 0;
+      _roundActive = false; _waitingForSync = false; syncWaiting = false; guessDisabled = true; stopVideo(); timerPct = 0; deckSpin = false;
       stopMediaGuard();
       history = [data, ...history];
     });
     socket.on('game_over', scores => {
       _roundActive = false; stopVideo();
       stopMediaGuard();
-      guessDisabled = true; timerPct = 0; summaryShow = false;
+      guessDisabled = true; timerPct = 0; deckSpin = false; summaryShow = false;
       gameoverScores = scores;
       gameoverShow   = true;
       revealStep = 0;
@@ -660,7 +678,8 @@
 <svelte:head>
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="/css/game.css?v=2.1.1">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/game.css?v=2.8.0">
 </svelte:head>
 
 {#if showDcBanner}
@@ -668,9 +687,6 @@
 {/if}
 
 <audio id="previewAudio" style="display:none" preload="auto"></audio>
-
-<!-- Timer bar (fixed top) -->
-<div class="g-timer"><div class="g-timer-fill" style="width:{timerPct}%;background:{timerColor}"></div></div>
 
 {#if adminAnnounceMsg}
   <div class="g-admin-announce" role="alert">
@@ -684,10 +700,12 @@
   <!-- Header -->
   <header class="g-header">
     <a href="/" class="g-back">&#x2190; Rooms</a>
-    <div class="g-header-mid">
-      <div class="g-room-name">{roomLabel}</div>
-      <div class="g-round-info">{roundInfo}</div>
+    <div class="g-header-room">
+      <span class="g-live"></span>
+      <span class="g-room-name">{roomLabel}</span>
     </div>
+    <div class="g-round-info">{roundInfo}</div>
+    <div class="g-header-spacer"></div>
     <div class="g-header-right">
       <button class="g-chat-toggle" onclick={toggleChat} title="Chat" class:g-chat-active={chatOpen}>
         &#x1F4AC;
@@ -695,8 +713,9 @@
       </button>
       <button class="g-bug-btn" onclick={openBugReport} title="Signaler un bug">🐛</button>
       <div class="g-vol">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-        <input type="range" id="volSlider" min="0" max="100" value={volValue} oninput={e => setVol(parseInt(e.target.value))}>
+        <span class="g-vol-label">VOL</span>
+        <input type="range" id="volSlider" min="0" max="100" value={volValue} oninput={e => setVol(parseInt(e.target.value))} aria-label="Volume">
+        <span class="g-vol-pct">{volValue}</span>
       </div>
     </div>
   </header>
@@ -706,32 +725,35 @@
 
     <!-- Sidebar gauche : classement -->
     <aside class="g-sidebar g-sidebar-scores">
-      <div class="g-sidebar-title">Classement</div>
+      <div class="g-sidebar-title">Classement <span class="n">{players.length} J.</span></div>
       <div class="g-player-list" id="player-list">
         {#each players as p, i (p.name)}
-          <div class="g-player rank-{i+1}">
-            <span class="g-player-rank">{p.rank}</span>
-            <span class="g-player-name">
-              <a href="/user/{p.name}" class="g-player-link" onclick={e => e.stopPropagation()}>{p.name}</a>
-            </span>
-            <div class="g-badges">
-              <span class="g-badge {p.foundArtist ? 'found' : ''}">A</span>
-              <span class="g-badge {p.foundTitle ? 'found' : ''}">T</span>
-              {#if p.foundFeats?.some(Boolean)}<span class="g-badge found">F</span>{/if}
+          <div class="g-strip rank-{i+1}" class:me={p.name === USERNAME}>
+            <div class="g-strip-top">
+              <span class="g-strip-rank">{String(i + 1).padStart(2, '0')}</span>
+              <span class="g-strip-name">
+                <a href="/user/{p.name}" class="g-player-link" onclick={e => e.stopPropagation()}>{p.name}</a>
+                <span class="g-badges">
+                  <span class="g-badge {p.foundArtist ? 'found' : ''}">A</span>
+                  <span class="g-badge {p.foundTitle ? 'found' : ''}">T</span>
+                  {#if p.foundFeats?.some(Boolean)}<span class="g-badge found">F</span>{/if}
+                </span>
+              </span>
+              <span class="g-strip-score {p.scored ? 'flash' : ''}">{p.score}<small>pt</small></span>
+              {#if p.name !== USERNAME}
+                <div class="g-player-menu">
+                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
+                  <span class="g-menu-dot" role="button" tabindex="0" onclick={e => { e.stopPropagation(); openMenuFor = openMenuFor === p.name ? null : p.name; }}>⋯</span>
+                  {#if openMenuFor === p.name}
+                    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                    <div class="g-dropdown" role="menu" tabindex="-1" onclick={e => e.stopPropagation()}>
+                      <button class="g-dd-item" onclick={() => openUserReport(p)}>🚨 Signaler ce joueur</button>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
             </div>
-            <span class="g-player-score {p.scored ? 'flash' : ''}">{p.score}<small>pt</small></span>
-            {#if p.name !== USERNAME}
-              <div class="g-player-menu">
-                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
-                <span class="g-menu-dot" role="button" tabindex="0" onclick={e => { e.stopPropagation(); openMenuFor = openMenuFor === p.name ? null : p.name; }}>⋯</span>
-                {#if openMenuFor === p.name}
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                  <div class="g-dropdown" role="menu" tabindex="-1" onclick={e => e.stopPropagation()}>
-                    <button class="g-dd-item" onclick={() => openUserReport(p)}>🚨 Signaler ce joueur</button>
-                  </div>
-                {/if}
-              </div>
-            {/if}
+            <div class="g-strip-vu"><div class="g-strip-vu-fill" style="width:{(p.score / maxScore) * 100}%"></div></div>
           </div>
         {/each}
       </div>
@@ -741,16 +763,24 @@
     <div class="g-col-center">
       <main class="g-center">
 
-        <!-- Pochette -->
-        <div class="g-cover-wrap">
-          {#if !showCover}
-            <div class="g-cover-placeholder">
-              <div class="vinyl"></div>
-              <span class="vinyl-q">?</span>
-            </div>
-          {:else}
-            <img class="g-cover-img" src={coverSrc} alt="Pochette">
-          {/if}
+        <!-- Disque-chrono -->
+        <div class="g-deck" class:spinning={deckSpin} style="--t:{timerPct / 100}">
+          <div class="g-deck-ring" class:warn={timerSecs !== null && timerPct < 30}></div>
+          <div class="g-vinyl"></div>
+          <div class="g-tonearm">
+            <div class="g-tonearm-arm"><div class="g-tonearm-head"></div></div>
+            <div class="g-tonearm-pivot"></div>
+          </div>
+          <div class="g-deck-label">
+            {#if showCover && coverSrc}
+              <img class="g-deck-cover" src={coverSrc} alt="Pochette">
+            {:else}
+              <div class="g-deck-clock">
+                <div class="t" class:warn={timerSecs !== null && timerPct < 30}>{clockStr}</div>
+                <div class="l">Restant</div>
+              </div>
+            {/if}
+          </div>
         </div>
 
         <!-- Slots artiste / titre -->
@@ -781,14 +811,6 @@
 
         <!-- Feedback toast -->
         <div class="g-feedback {feedback.msg ? 'show ' + feedback.cls : ''}">{feedback.msg}</div>
-
-        <!-- Round summary (desktop inline, mobile overlay géré séparément) -->
-        {#if summaryShow}
-          <div class="g-summary g-summary-desktop">
-            <p class="g-summary-reason">{summaryReason}</p>
-            <p class="g-summary-finder">{summaryFinder}</p>
-          </div>
-        {/if}
 
         <!-- Chargement imprévu (yt-dlp lent, prefetch KO) -->
         {#if roundLoading}
@@ -881,46 +903,68 @@
           </div>
         {:else if gameMode !== 'qcm'}
           <div class="g-input-wrap">
+            <span class="g-input-prompt">&gt;</span>
             <input
               type="text"
               id="guessInput"
               class="g-input"
-              placeholder="Artiste ou titre&hellip;"
+              placeholder="Artiste ou titre&hellip; tape ta r&eacute;ponse"
               disabled={guessDisabled}
               bind:value={guessVal}
               autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" maxlength="100"
               onkeydown={e => { if (e.key === 'Enter') submitGuess(); }}
             >
-            <button class="g-submit-btn" disabled={guessDisabled} onclick={submitGuess} aria-label="Valider">&#x2192;</button>
+            <button class="g-submit-btn" disabled={guessDisabled} onclick={submitGuess}>Deviner</button>
           </div>
         {/if}
       </div>
     </div>
 
-    <!-- Sidebar droite : historique -->
+    <!-- Sidebar droite : derniers titres -->
     <aside class="g-sidebar g-sidebar-history">
-      <div class="g-sidebar-title">Historique</div>
+      <div class="g-sidebar-title">Derniers titres <span class="n">{history.length}</span></div>
       <div class="g-history-list" id="history-list">
-        {#each history as item (item.answer + item.round)}
+        {#each history as item, hi (item.answer + item.round)}
           {@const _di = item.answer.indexOf(' - ')}
           {@const _ha = _di > -1 ? item.answer.slice(0, _di) : item.answer}
           {@const _ht = _di > -1 ? item.answer.slice(_di + 3) : '—'}
-          <div class="g-hitem">
-            {#if item.cover}
-              <img src={item.cover} alt="" class="g-hitem-img">
-            {:else}
-              <div class="g-hitem-img g-hitem-noimg">&#x266A;</div>
-            {/if}
-            <div class="g-hitem-info">
-              <div class="g-hitem-artist" class:found={item.foundArtist}>{_ha}</div>
-              {#if item.featArtists?.length}
-                {#each item.featArtists as fa, fi}
-                  <div class="g-hitem-feat" class:found={item.foundFeats?.[fi]}>feat. {fa}</div>
-                {/each}
-              {/if}
-              <div class="g-hitem-title" class:found={item.foundTitle}>{_ht}</div>
+          {#if hi === 0}
+            <div class="g-feat" style={item.cover ? `background-image:url(${item.cover})` : ''}>
+              {#if !item.cover}<div class="g-feat-note">&#x266A;</div>{/if}
+              <div class="g-feat-grad"></div>
+              <div class="g-feat-info">
+                <div class="g-feat-num">Manche {item.round} — dernier titre</div>
+                <div class="g-feat-art">{_ha}</div>
+                {#if item.featArtists?.length}
+                  {#each item.featArtists as fa, fi}
+                    <div class="g-feat-feat" class:found={item.foundFeats?.[fi]}>feat. {fa}</div>
+                  {/each}
+                {/if}
+                <div class="g-feat-tit">{_ht}</div>
+                <div class="g-feat-badges">
+                  <span class="g-rb" class:on={item.foundArtist}>ARTISTE {item.foundArtist ? '✓' : '✕'}</span>
+                  <span class="g-rb" class:on={item.foundTitle}>TITRE {item.foundTitle ? '✓' : '✕'}</span>
+                </div>
+              </div>
             </div>
-          </div>
+          {:else}
+            <div class="g-hitem">
+              {#if item.cover}
+                <img src={item.cover} alt="" class="g-hitem-img">
+              {:else}
+                <div class="g-hitem-img g-hitem-noimg">&#x266A;</div>
+              {/if}
+              <div class="g-hitem-info">
+                <div class="g-hitem-artist" class:found={item.foundArtist}>{_ha}</div>
+                {#if item.featArtists?.length}
+                  {#each item.featArtists as fa, fi}
+                    <div class="g-hitem-feat" class:found={item.foundFeats?.[fi]}>feat. {fa}</div>
+                  {/each}
+                {/if}
+                <div class="g-hitem-title" class:found={item.foundTitle}>{_ht}</div>
+              </div>
+            </div>
+          {/if}
         {/each}
       </div>
     </aside>
@@ -929,75 +973,89 @@
 
 </div>
 
-<!-- Round summary MOBILE (overlay fixe au dessus de l'input) -->
-{#if summaryShow}
-  <div class="g-summary-mobile">
-    <p class="g-summary-reason">{summaryReason}</p>
-    <p class="g-summary-finder">{summaryFinder}</p>
+<!-- Splash reveal plein écran (fin de manche) -->
+{#if summaryShow && !gameoverShow}
+  <div class="g-reveal">
+    <div class="g-rv-bg" style={coverSrc ? `background-image:url(${coverSrc})` : ''}></div>
+    <div class="g-rv-inner">
+      <div class="g-rv-sleeve">
+        <div class="g-rv-vinyl"></div>
+        {#if coverSrc}
+          <img class="g-rv-cover" src={coverSrc} alt="Pochette">
+        {:else}
+          <div class="g-rv-cover-fb">&#x266A;</div>
+        {/if}
+      </div>
+      <div class="g-rv-info">
+        <div class="g-rv-eyebrow">{roundInfo} — Réponse</div>
+        <h1 class="g-rv-artist" class:missed={slotArtist.state === 'missed'}>{slotArtist.val}</h1>
+        {#each featSlots as fs}
+          <div class="g-rv-feat">feat. {fs.val}</div>
+        {/each}
+        <div class="g-rv-title" class:missed={slotTitle.state === 'missed'}>{slotTitle.val}</div>
+        {#each extraSlots as es}
+          <div class="g-rv-extra">{es.label} : {es.val}</div>
+        {/each}
+        <div class="g-rv-chips">
+          <span class="g-rv-chip" class:none={!summaryFinder.includes('1er')}>{summaryFinder}</span>
+        </div>
+        <div class="g-rv-next">{summaryReason}</div>
+      </div>
+    </div>
   </div>
 {/if}
 
 <!-- Game Over -->
 {#if gameoverShow}
   <div class="g-gameover">
-    <div class="g-go-card">
-      <div class="g-go-title">&#x1F3C6; Classement Final</div>
+    <div class="g-go-inner">
 
-      <div class="g-go-podium">
-        <!-- 2e -->
-        <div class="g-podium-slot pos-2">
-          {#if gameoverScores[1]}
-            <div class="g-podium-player" class:revealed={revealStep >= 2}>
-              <div class="g-podium-avatar">{gameoverScores[1].name[0]?.toUpperCase() ?? '?'}</div>
-              <div class="g-podium-name">{gameoverScores[1].name}</div>
-              <div class="g-podium-score">{gameoverScores[1].score}&nbsp;pts</div>
+      <!-- Le trophée : disque d'or -->
+      <div class="g-go-award" class:won={revealStep >= 3}>
+        <div class="g-go-frame">
+          <div class="g-go-disc-wrap">
+            <div class="g-go-disc"></div>
+            <div class="g-go-disc-label">
+              {#if revealStep >= 3 && gameoverScores[0]}
+                <span class="g-go-disc-name">{gameoverScores[0].name}</span>
+                <span class="g-go-disc-pts">{gameoverScores[0].score} pts</span>
+              {:else}
+                <span class="g-go-disc-q">?</span>
+              {/if}
             </div>
-          {:else}
-            <div class="g-podium-player g-podium-empty revealed"><div class="g-podium-avatar empty">?</div><div class="g-podium-name">&mdash;</div></div>
-          {/if}
-          <div class="g-podium-block pos-2">&#x1F948;</div>
-        </div>
-        <!-- 1er -->
-        <div class="g-podium-slot pos-1">
-          {#if gameoverScores[0]}
-            <div class="g-podium-player" class:revealed={revealStep >= 3}>
-              <div class="g-podium-avatar gold">{gameoverScores[0].name[0]?.toUpperCase() ?? '?'}</div>
-              <div class="g-podium-name">{gameoverScores[0].name}</div>
-              <div class="g-podium-score">{gameoverScores[0].score}&nbsp;pts</div>
-            </div>
-          {:else}
-            <div class="g-podium-player g-podium-empty revealed"><div class="g-podium-avatar empty">?</div><div class="g-podium-name">&mdash;</div></div>
-          {/if}
-          <div class="g-podium-block pos-1">&#x1F947;</div>
-        </div>
-        <!-- 3e -->
-        <div class="g-podium-slot pos-3">
-          {#if gameoverScores[2]}
-            <div class="g-podium-player" class:revealed={revealStep >= 1}>
-              <div class="g-podium-avatar">{gameoverScores[2].name[0]?.toUpperCase() ?? '?'}</div>
-              <div class="g-podium-name">{gameoverScores[2].name}</div>
-              <div class="g-podium-score">{gameoverScores[2].score}&nbsp;pts</div>
-            </div>
-          {:else}
-            <div class="g-podium-player g-podium-empty revealed"><div class="g-podium-avatar empty">?</div><div class="g-podium-name">&mdash;</div></div>
-          {/if}
-          <div class="g-podium-block pos-3">&#x1F949;</div>
+          </div>
+          <div class="g-go-plaque">
+            <div class="g-go-plaque-title">Disque d'or</div>
+            <div class="g-go-plaque-sub">décerné à</div>
+            <div class="g-go-plaque-name">{revealStep >= 3 ? (gameoverScores[0]?.name ?? '—') : '· · ·'}</div>
+            <div class="g-go-plaque-room">{roomLabel}</div>
+          </div>
         </div>
       </div>
 
-      {#if gameoverScores.length > 3}
-        <div class="g-go-rest">
-          {#each gameoverScores.slice(3) as p, i}
-            <div class="g-go-row">
-              <span class="g-go-medal">#{i + 4}</span>
-              <span class="g-go-name">{#if p.isGuest}{p.name}&nbsp;<span class="g-go-guest">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="g-go-link">{p.name}</a>{/if}</span>
-              <span class="g-go-score">{p.score}&nbsp;pts</span>
+      <!-- Les crédits de fin -->
+      <div class="g-go-credits">
+        <div class="g-go-eyebrow">Partie terminée</div>
+        <div class="g-go-credits-title">Crédits de fin</div>
+        <div class="g-go-tracklist">
+          {#each gameoverScores as p, i (p.name)}
+            <div
+              class="g-go-track t{Math.min(i + 1, 4)}"
+              class:me={p.name === USERNAME}
+              class:revealed={i === 0 ? revealStep >= 3 : i === 1 ? revealStep >= 2 : revealStep >= 1}
+            >
+              <span class="g-go-tnum">{String(i + 1).padStart(2, '0')}</span>
+              <span class="g-go-tname">
+                {#if p.isGuest}{p.name} <span class="g-go-guest">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="g-go-link">{p.name}</a>{/if}
+                {#if p.name === USERNAME}<span class="g-go-tyou">TOI</span>{/if}
+              </span>
+              <span class="g-go-tfill"></span>
+              <span class="g-go-tpts">{p.score} pts</span>
             </div>
           {/each}
         </div>
-      {/if}
 
-      <div class="g-go-actions">
+        <div class="g-go-actions">
         {#if shareResultId}
           <button class="g-go-share" onclick={shareResult}>
             {shareCopied ? '✅ Lien copié !' : '📤 Partager mon score'}
@@ -1015,7 +1073,9 @@
           </svg>
           Rejoindre le Discord
         </a>
+        </div>
       </div>
+
     </div>
   </div>
 {/if}
@@ -1043,17 +1103,37 @@
       onpointerup={chatDragEnd}
       onpointercancel={chatDragEnd}
     >
-      <span>&#x1F4AC; Chat</span>
-      <button class="g-chat-close" onclick={toggleChat}>&#x2715;</button>
+      <span class="g-chat-head-title"><span class="g-chat-live"></span>Chat</span>
+      <button class="g-chat-close" onclick={toggleChat} aria-label="Fermer le chat">&#x2715;</button>
     </div>
     <div class="g-chat-msgs" bind:this={chatEl}>
       {#if chatMessages.length === 0}
-        <div class="g-chat-empty">Aucun message pour l&apos;instant&hellip;</div>
+        <div class="g-chat-empty">
+          <span class="g-chat-empty-ico">&#x1F4AC;</span>
+          <span>Aucun message pour l&apos;instant</span>
+          <small>Lance la conversation !</small>
+        </div>
       {/if}
-      {#each chatMessages as m (m.ts + m.name)}
-        <div class="g-chat-msg" class:g-chat-mine={m.name === USERNAME} class:g-chat-admin={m.name.endsWith(' - admin')}>
-          <span class="g-chat-author">{m.name}</span>
-          <span class="g-chat-text">{m.text}</span>
+      {#each chatMessages as m, i (m.ts + m.name)}
+        {@const mine = m.name === USERNAME}
+        {@const admin = m.name.endsWith(' - admin')}
+        {@const grouped = i > 0 && chatMessages[i - 1].name === m.name}
+        <div
+          class="g-chat-msg"
+          class:g-chat-mine={mine}
+          class:g-chat-admin={admin}
+          class:g-chat-grouped={grouped}
+          style="--h:{chatHue(m.name)}"
+        >
+          {#if !mine}
+            <span class="g-chat-avatar">{admin ? '★' : m.name[0].toUpperCase()}</span>
+          {/if}
+          <div class="g-chat-body">
+            {#if !grouped && !mine}
+              <span class="g-chat-author">{m.name}<span class="g-chat-time">{chatTime(m.ts)}</span></span>
+            {/if}
+            <span class="g-chat-text" title={chatTime(m.ts)}>{m.text}</span>
+          </div>
         </div>
       {/each}
     </div>
@@ -1067,7 +1147,11 @@
         autocomplete="off" autocorrect="off" spellcheck="false"
         onkeydown={e => { if (e.key === 'Enter') sendChat(); }}
       >
-      <button class="g-chat-send" onclick={sendChat}>&#x2192;</button>
+      <button class="g-chat-send" onclick={sendChat} aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
     </div>
   </div>
 {/if}
@@ -1096,30 +1180,34 @@
 
 <style>
 .g-go-share {
-  background: rgba(124, 58, 237, 0.15);
-  border: 1px solid rgba(124, 58, 237, 0.45);
-  color: #c4b5fd;
+  background: none;
+  border: 1px solid rgba(255, 0, 255, 0.45);
+  color: var(--accent);
+  font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  padding: 10px 20px;
-  border-radius: 999px;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 22px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 .g-go-share:hover {
-  background: rgba(124, 58, 237, 0.3);
-  transform: translateY(-1px);
+  background: rgba(255, 0, 255, 0.1);
+  box-shadow: 0 0 18px rgba(255, 0, 255, 0.2);
 }
 .g-go-discord {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 18px;
   background: #5865f2;
   color: #fff;
-  font-size: 0.82rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-decoration: none;
   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
   box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
@@ -1132,7 +1220,7 @@
 
 .g-chat-resize {
   position: absolute;
-  left: -4px;
+  left: 0;
   top: 0;
   bottom: 0;
   width: 9px;
