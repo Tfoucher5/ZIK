@@ -161,25 +161,33 @@
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
+<div class="salon-blob b1"></div>
+<div class="salon-blob b2"></div>
+
 <div class="salon-host">
 
   <!-- Header -->
   <header class="salon-host-header">
+    <div class="salon-host-brand">ZIK <span>Salon</span></div>
     <div class="salon-host-code">
-      <img class="salon-host-qr-sm" src={qrUrl(80)} alt="QR" width="40" height="40">
+      <img class="salon-host-qr-sm" src={qrUrl(100)} alt="QR" width="46" height="46">
       <div>
-        <div class="salon-code-label">Code</div>
-        <div class="salon-code-val">{code}</div>
+        <div class="salon-code-label">Rejoindre</div>
+        <div class="salon-code-chars">
+          {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
+        </div>
       </div>
     </div>
     <div class="salon-host-url-full">
-      zik-music.fr/salon/play?code=<strong style="color:var(--accent2)">{code}</strong>
+      zik-music.fr/salon/play<br><span>→ entre le code sur ton tel</span>
     </div>
-    {#if phase === 'round'}
-      <div class="salon-host-round">Manche <strong>{round} / {total}</strong></div>
-    {/if}
-    <div style="font-size:.8rem;color:var(--mid)">
-      {players.length} joueur{players.length !== 1 ? 's' : ''}
+    <div class="salon-host-header-right">
+      {#if phase === 'round' || phase === 'summary'}
+        <div class="salon-host-round">Manche <b>{round} / {total}</b></div>
+      {/if}
+      <div class="salon-host-players-pill">
+        <i></i>{players.length} joueur{players.length !== 1 ? 's' : ''}
+      </div>
     </div>
   </header>
 
@@ -204,7 +212,13 @@
       onMusicReady={() => socket?.emit('salon_music_ready')}
     />
 
-    <PlayerSidebar {players} {phase} answerMode={settings.answerMode || 'free'} />
+    <PlayerSidebar
+      players={phase === 'gameover'
+        ? players.filter(p => !finalScores.slice(0, 3).some(s => s.username === p.username))
+        : players}
+      {phase}
+      answerMode={settings.answerMode || 'free'}
+    />
 
   </div>
 

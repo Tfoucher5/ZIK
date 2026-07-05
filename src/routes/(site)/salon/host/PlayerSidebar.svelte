@@ -1,47 +1,47 @@
 <script>
   let { players = [], phase = 'lobby', answerMode = 'free' } = $props();
+
+  function hue(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return h;
+  }
 </script>
 
-<div class="salon-host-sidebar">
-  <div class="salon-sidebar-title">Joueurs</div>
-  <div class="salon-players-list">
+<!-- La fosse : les joueurs en personnages devant la scène.
+     Bras levés + téléphone qui flashe quand ils ont répondu. -->
+<div class="salon-crowd">
+  {#if players.length === 0}
+    <div class="salon-crowd-empty">
+      {phase === 'gameover' ? 'Tout le monde est sur le podium ! 🎉' : 'La fosse est vide… scannez le QR pour entrer !'}
+    </div>
+  {:else}
     {#each players as p, i (p.username)}
-      <div class="salon-player-row">
-        <div class="salon-player-rank">{i + 1}</div>
-        <div class="salon-player-name">{p.username}</div>
-        <div class="salon-player-score">{p.score ?? 0}</div>
-        {#if phase === 'round' || phase === 'summary'}
-          <div class="salon-player-found">
-            {#if answerMode === 'multiple'}
-              <!-- QCM: just show "answered" (✓) — no correctness reveal during round -->
-              {#if p.answeredThisRound || p.foundThisRound}
-                <span class="found-el" title="A répondu">✓</span>
-              {:else}
-                <span class="found-el empty">…</span>
-              {/if}
-            {:else}
-              <!-- Free mode: show individual element discovery -->
-              {#if p.foundArtist}
-                <span class="found-el" title="Artiste">🎤</span>
-              {:else}
-                <span class="found-el empty">🎤</span>
-              {/if}
-              {#if (p.totalFeatCount || 0) > 0}
-                {#if (p.foundFeatCount || 0) > 0}
-                  <span class="found-el" title="Feat">{p.foundFeatCount}🎸</span>
-                {:else}
-                  <span class="found-el empty">🎸</span>
-                {/if}
-              {/if}
-              {#if p.foundTitle}
-                <span class="found-el" title="Titre">🎵</span>
-              {:else}
-                <span class="found-el empty">🎵</span>
-              {/if}
-            {/if}
+      {@const active = p.answeredThisRound || p.foundThisRound}
+      {@const inGame = phase === 'round' || phase === 'summary'}
+      {@const h = hue(p.username)}
+      <div
+        class="crowd-p"
+        class:hot={active && inGame}
+        style="--h:{h};--d:{(i % 7) * 0.4}s;--sz:{0.88 + ((h + i) % 4) * 0.06}"
+      >
+        <span class="crowd-name">{p.username}</span>
+        <span class="crowd-pts">{p.score ?? 0}<small>pt</small></span>
+        <div class="crowd-fig">
+          <i class="crowd-arm l"></i>
+          <i class="crowd-arm r"></i>
+          <i class="crowd-phone"></i>
+          <i class="crowd-head"></i>
+          <i class="crowd-torso"></i>
+        </div>
+        {#if inGame && answerMode === 'free'}
+          <div class="salon-crowd-badges">
+            <span class:ok={p.foundArtist}>A</span>
+            {#if (p.totalFeatCount || 0) > 0}<span class:ok={(p.foundFeatCount || 0) > 0}>F</span>{/if}
+            <span class:ok={p.foundTitle}>T</span>
           </div>
         {/if}
       </div>
     {/each}
-  </div>
+  {/if}
 </div>
