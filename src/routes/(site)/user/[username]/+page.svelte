@@ -1,9 +1,8 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import { page } from '$app/stores';
-  import { dicebear } from '$lib/utils.js';
-  import ProfileStats from '$lib/components/ProfileStats.svelte';
-  import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
+  import { goto } from '$app/navigation';
+  import ProfileView from '$lib/components/ProfileView.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -11,27 +10,13 @@
   const user      = $derived(_ctx.user);
   const authReady = $derived(_ctx.authReady);
 
-  let profile    = $state(null);
-  let stats      = $state(null);
-  let loading    = $state(true);
-  let notFound   = $state(false);
-  let activeTab  = $state('stats');
+  let profile  = $state(null);
+  let stats    = $state(null);
+  let loading  = $state(true);
+  let notFound = $state(false);
 
   const username     = $derived($page.params.username);
-  const avatar       = $derived(profile?.avatar_url || dicebear(profile?.username || '?'));
   const isOwnProfile = $derived(user?.profile?.username === profile?.username);
-
-  function fmtSince(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  }
-
-  function xpForLevel(lvl) { return Math.round(50 * Math.pow(Math.max(0, lvl - 1), 2.5)); }
-  function xpForNextLevel(lvl) { return Math.round(50 * Math.pow(lvl, 2.5)); }
-  function xpPct(xp, level) {
-    const min = xpForLevel(level), max = xpForNextLevel(level);
-    return Math.min(100, Math.round(((xp - min) / (max - min)) * 100));
-  }
 
   onMount(async () => {
     if (!sb) { loading = false; return; }
@@ -45,7 +30,7 @@
       try {
         const r = await fetch(url, opts);
         if (r.ok) return r;
-        if (r.status === 404) return r; // pas la peine de retry un 404
+        if (r.status === 404) return r;
         if (i < retries - 1) await new Promise(res => setTimeout(res, 600 * (i + 1)));
       } catch {
         if (i < retries - 1) await new Promise(res => setTimeout(res, 600 * (i + 1)));
@@ -114,63 +99,16 @@
   </div>
 {:else if profile?.is_private && !isOwnProfile}
   <div class="profile-auth-wall">
-    <div class="profile-auth-msg">
-      <div class="confirm-emoji">&#x1F510;</div>
-      <h2>Profil priv&eacute;</h2>
-      <p><strong>{profile.username}</strong> a rendu son profil priv&eacute;.</p>
+    <div class="profile-auth-msg wall-private">
+      <div class="wall-tape"></div>
+      <div class="confirm-emoji">&#x1F6A7;</div>
+      <h2>Acc&egrave;s refus&eacute;</h2>
+      <p><strong>{profile.username}</strong> a rendu son backstage priv&eacute;.</p>
       <a href="/" class="btn-ghost" style="margin-top:16px">&larr; Retour &agrave; l&apos;accueil</a>
     </div>
   </div>
 {:else if profile}
-  <div class="profile-back-row">
-    <button class="btn-back" onclick={() => history.back()}>Retour</button>
-  </div>
-  <div class="profile-hero">
-    <div class="hero-bg">
-      <div class="aurora-blob aurora-blob-1" style="opacity:0.5"></div>
-      <div class="aurora-blob aurora-blob-2" style="opacity:0.3"></div>
-    </div>
-    <div class="profile-hero-inner">
-      <div class="profile-avatar-wrap">
-        <img src={avatar} alt="" class="profile-avatar-big" width="88" height="88">
-      </div>
-      <div class="profile-hero-info">
-        <div class="profile-username">{profile.username}</div>
-        <div class="profile-hero-meta">
-          <span class="profile-elo-badge">ELO {profile.elo ?? '—'}</span>
-          {#if stats?.topPercent}
-            <span class="profile-top-badge">&#x1F3C6; Top {stats.topPercent}%</span>
-          {/if}
-          {#if profile.is_private}
-            <span class="profile-privacy-badge">&#x1F510; Profil priv&eacute;</span>
-          {/if}
-        </div>
-        {#if profile.created_at}
-          <div class="profile-since">Membre depuis {fmtSince(profile.created_at)}</div>
-        {/if}
-        <div class="profile-xp-row">
-          <div class="profile-xp-level">Niveau {profile.level ?? 1}</div>
-          <div class="profile-xp-bar">
-            <div class="profile-xp-fill" style="width:{xpPct(profile.xp ?? 0, profile.level ?? 1)}%"></div>
-          </div>
-          <div class="profile-xp-caption">{profile.xp ?? 0} / {xpForNextLevel(profile.level ?? 1)} XP</div>
-        </div>
-      </div>
-      {#if isOwnProfile}
-        <a href="/profile" class="btn-ghost sm">Modifier mon profil</a>
-      {/if}
-    </div>
-  </div>
-
-  <div class="profile-tabs" role="tablist" aria-label="Sections du profil">
-    <button class="profile-tab" class:active={activeTab === 'stats'} role="tab" aria-selected={activeTab === 'stats'} onclick={() => activeTab = 'stats'}>📊 Statistiques</button>
-    <button class="profile-tab" class:active={activeTab === 'succes'} role="tab" aria-selected={activeTab === 'succes'} onclick={() => activeTab = 'succes'}>🏅 Succès</button>
-  </div>
-  {#if activeTab === 'stats'}
-    <ProfileStats {profile} {stats} />
-  {:else}
-    <AchievementsPanel {sb} userId={profile.id} />
-  {/if}
+  <ProfileView {profile} {stats} {sb} userId={profile.id} editable={isOwnProfile} onEdit={() => goto('/profile')} />
 {/if}
 </div>
 
@@ -195,129 +133,10 @@
   align-items: center;
   gap: 8px;
 }
+.wall-private { position: relative; padding: 40px 32px 32px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg2); overflow: hidden; }
+.wall-tape { position: absolute; top: 0; left: 0; right: 0; height: 22px; background: repeating-linear-gradient(-45deg, var(--bg) 0 14px, var(--gold) 14px 28px); opacity: 0.85; }
 #profile-page {
   padding-top: var(--nav-h);
   flex: 1;
-}
-
-/* -- Hero -- */
-.profile-hero {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.06) 0%, transparent 60%);
-  border-bottom: 1px solid var(--border);
-  padding: 36px clamp(16px, 5vw, 60px) 28px;
-}
-.profile-hero-inner {
-  position: relative;
-  z-index: 1;
-  max-width: 980px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.profile-avatar-wrap { position: relative; flex-shrink: 0; }
-.profile-avatar-big {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgb(var(--accent-rgb) / 0.35);
-  background: var(--surface);
-}
-.profile-hero-info { flex: 1; min-width: 0; }
-.profile-username {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.9rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-.profile-hero-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-.profile-elo-badge {
-  font-size: 0.82rem;
-  color: var(--accent);
-  font-weight: 600;
-}
-.profile-top-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgb(var(--accent-rgb) / 0.1);
-  border: 1px solid rgb(var(--accent-rgb) / 0.25);
-  border-radius: 99px;
-  padding: 2px 10px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-.profile-privacy-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  color: var(--dim);
-  margin-top: 6px;
-  background: rgb(var(--c-glass) / 0.06);
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  padding: 2px 10px;
-}
-.profile-since {
-  font-size: 0.78rem;
-  color: var(--dim);
-  margin-top: 3px;
-}
-.profile-back-row { padding: 14px clamp(16px, 5vw, 60px) 0; }
-
-/* -- Onglets profil -- */
-.profile-tabs {
-  display: flex;
-  gap: 8px;
-  max-width: 980px;
-  margin: 20px auto 0;
-  padding: 0 clamp(16px, 5vw, 60px);
-  border-bottom: 1px solid var(--border);
-}
-.profile-tab {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--dim);
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.profile-tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-.profile-tab:hover:not(.active) { color: var(--text); }
-.profile-xp-row { margin-top: 12px; max-width: 300px; display: flex; flex-direction: column; gap: 5px; }
-.profile-xp-level { font-size: 0.75rem; font-weight: 700; color: var(--text); }
-.profile-xp-caption { font-size: 0.68rem; color: var(--dim); }
-.profile-xp-bar {
-  background: rgb(var(--c-glass) / 0.08);
-  border-radius: 99px;
-  height: 6px;
-}
-.profile-xp-fill {
-  background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.6s ease;
-}
-@media (max-width: 700px) {
-  .profile-username { font-size: 1.5rem; }
 }
 </style>

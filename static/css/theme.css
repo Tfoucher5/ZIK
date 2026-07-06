@@ -54,6 +54,7 @@ html[data-theme="dark"] {
   --danger: #f87171;
   --warn: #fbbf24;
   --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
 
   /* Texte */
   --text: #fafafa;
@@ -90,6 +91,7 @@ html[data-theme="light"] {
   --danger: #dc2626;
   --warn: #d97706;
   --gold: #d97706;
+  --gold-rgb: 217 119 6;
   --text: #0f172a;
   --mid: #475569;
   --dim: #94a3b8;
@@ -114,6 +116,7 @@ html[data-theme="violet"] {
   --danger: #f87171;
   --warn: #fbbf24;
   --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
   --text: #f0eeff;
   --mid: #9d8dc4;
   --dim: #5b4d8a;

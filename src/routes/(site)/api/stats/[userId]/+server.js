@@ -32,6 +32,7 @@ function buildModeStats(rows, roomMap) {
   });
 
   const wins = rows.filter((r) => r.rank === 1).length;
+  const podiums = rows.filter((r) => r.rank && r.rank <= 3).length;
   const scores = rows.map((r) => r.score);
   const totalScore = scores.reduce((a, b) => a + b, 0);
   const bestScore = scores.length ? Math.max(...scores) : 0;
@@ -64,6 +65,7 @@ function buildModeStats(rows, roomMap) {
     recentGames,
     scoreByRoomType,
     winRate: { wins, total: rows.length },
+    podiums,
     totalScore,
     bestScore,
     worstScore,

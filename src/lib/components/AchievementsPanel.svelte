@@ -116,9 +116,7 @@
 
 <style>
 .ach-panel {
-  max-width: 980px;
-  margin: 28px auto 0;
-  padding: 0 clamp(16px, 5vw, 60px);
+  margin: 0;
 }
 
 .ach-streaks {
