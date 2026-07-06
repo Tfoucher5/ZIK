@@ -3,6 +3,16 @@
 
 export const NEWS = [
   {
+    date: "2026-07-07",
+    version: "2.9.0",
+    tag: "Nouveauté",
+    title: "Mot de passe oublié",
+    items: [
+      "Un lien « Mot de passe oublié ? » est disponible sur la fenêtre de connexion.",
+      "Saisis ton email pour recevoir un lien de réinitialisation, puis choisis un nouveau mot de passe.",
+    ],
+  },
+  {
     date: "2026-06-29",
     version: "2.8.0",
     tag: "Amélioration",

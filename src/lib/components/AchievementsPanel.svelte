@@ -21,6 +21,10 @@
   const unlockedCount = $derived(new Set(unlocked.map(u => u.achievement_id)).size);
   const filteredDefs = $derived(activeCat === 'all' ? defs : defs.filter(d => d.category === activeCat));
 
+  const COLLAPSED_COUNT = 6;
+  let expanded = $state(false);
+  const shownDefs = $derived(expanded ? filteredDefs : filteredDefs.slice(0, COLLAPSED_COUNT));
+
   function bestTier(def) {
     if (def.type !== 'tiered' || !Array.isArray(def.tiers)) return null;
     let best = null;
@@ -76,14 +80,14 @@
           <button
             class="ach-filter"
             class:active={activeCat === c.id}
-            onclick={() => activeCat = c.id}
+            onclick={() => { activeCat = c.id; expanded = false; }}
           >{c.label}</button>
         {/each}
       </div>
     </div>
 
     <div class="ach-grid">
-      {#each filteredDefs as def (def.id)}
+      {#each shownDefs as def (def.id)}
         {@const won = isUnlocked(def)}
         {@const tier = bestTier(def)}
         <div class="ach-card" class:locked={!won} class:ach-card--legendary={won && def.rarity === 'legendary'}>
@@ -111,6 +115,15 @@
         </div>
       {/each}
     </div>
+
+    {#if filteredDefs.length > COLLAPSED_COUNT}
+      <div class="ach-toggle-row">
+        <button class="ach-toggle" onclick={() => expanded = !expanded}>
+          <span class="ach-toggle-car" class:open={expanded}>▾</span>
+          {expanded ? 'Réduire' : `Voir les ${filteredDefs.length} badges`}
+        </button>
+      </div>
+    {/if}
   </section>
 {/if}
 
@@ -188,8 +201,29 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 12px;
-  padding-bottom: 28px;
 }
+
+.ach-toggle-row { display: flex; justify-content: center; margin-top: 16px; }
+.ach-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: none;
+  border: 1.5px dashed var(--border2, rgba(255,255,255,0.16));
+  border-radius: 999px;
+  color: var(--mid, rgba(255,255,255,0.46));
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ach-toggle:hover { color: var(--accent, #ff00ff); border-color: rgba(255, 0, 255, 0.5); }
+.ach-toggle-car { display: inline-block; transition: transform 0.25s ease; }
+.ach-toggle-car.open { transform: rotate(180deg); }
 
 .ach-card {
   display: flex;

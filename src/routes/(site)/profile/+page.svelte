@@ -130,7 +130,7 @@
     </div>
   </div>
 {:else if profile}
-  <ProfileView {profile} {stats} {sb} userId={user.id} editable onEdit={openEdit} />
+  <ProfileView {profile} {stats} {sb} userId={user.id} viewerId={user.id} editable onEdit={openEdit} />
 {/if}
 </div>
 

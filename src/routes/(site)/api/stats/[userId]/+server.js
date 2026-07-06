@@ -116,16 +116,19 @@ export async function GET({ params, url }) {
     const classic = buildModeStats(classicRows, roomMap);
     const qcm = buildModeStats(qcmRows, roomMap);
 
-    // Top % classement
+    // Classement : rang réel + top %
     const aboveCount = aboveRes.count ?? 0;
     const totalCount = totalRes.count ?? 1;
     const topPercent = Math.max(1, Math.ceil((aboveCount / totalCount) * 100));
+    const rank = aboveCount + 1;
 
     // Champs historiques (mode classique) conservés pour compatibilité
     return json({
       ...classic,
       qcm,
       topPercent,
+      rank,
+      totalPlayers: totalCount,
     });
   } catch (e) {
     return json({ error: e.message }, { status: 500 });

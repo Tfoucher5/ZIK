@@ -3,7 +3,7 @@
    * @type {{
    *   sb: any,
    *   open: boolean,
-   *   view: 'login'|'register'|'confirm',
+   *   view: 'login'|'register'|'confirm'|'reset',
    *   onClose: () => void,
    *   onSuccess?: () => void
    * }}
@@ -15,6 +15,10 @@
   let loginError    = $state('');
   let loginLoading  = $state(false);
   let showLoginPwd  = $state(false);
+
+  let resetError   = $state('');
+  let resetLoading = $state(false);
+  let resetSent    = $state(false);
 
   let regUsername = $state('');
   let regEmail    = $state('');
@@ -34,8 +38,9 @@
   });
 
   function resetFields() {
-    loginError = ''; regError = '';
-    loginLoading = false; regLoading = false;
+    loginError = ''; regError = ''; resetError = '';
+    loginLoading = false; regLoading = false; resetLoading = false;
+    resetSent = false;
   }
 
   function close() {
@@ -66,6 +71,19 @@
         onSuccess?.();
       }, 1900);
     }
+  }
+
+  async function handleReset() {
+    resetError = '';
+    if (!sb) { resetError = 'Supabase non configure.'; return; }
+    if (!loginEmail) { resetError = 'Renseigne ton email.'; return; }
+    resetLoading = true;
+    const { error } = await sb.auth.resetPasswordForEmail(loginEmail, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+    resetLoading = false;
+    if (error) resetError = error.message;
+    else resetSent = true;
   }
 
   async function handleRegister() {
@@ -188,6 +206,8 @@
           </div>
         </div>
 
+        <button type="button" class="forgot" onclick={() => setView('reset')}>Mot de passe oublié ?</button>
+
         {#if loginError}<div class="alert-err">{loginError}</div>{/if}
 
         <button class="submit" onclick={handleLogin} disabled={loginLoading || entering}>
@@ -241,6 +261,37 @@
       </div>
 
       <p class="gl-switch">Déjà sur la liste ? <button onclick={() => setView('login')} type="button">Faire vérifier</button></p>
+
+    {:else if view === 'reset'}
+      <h2 class="gl-title">Oublié <em>le code</em><span class="dot"> ?</span></h2>
+      <p class="gl-sub">Le videur t'envoie un nouveau sésame par mail</p>
+
+      <div class="board">
+        <div class="board-head"><b>Récupération</b><span>{nowLabel}</span></div>
+
+        {#if resetSent}
+          <p class="confirm-txt">
+            Si un compte existe pour <b>{loginEmail}</b>, un lien de réinitialisation
+            vient de partir. Clique dessus pour choisir un nouveau mot de passe.
+          </p>
+          <div class="stamp resa on">Envoyé</div>
+          <button class="submit ghost" onclick={() => setView('login')}>Retour</button>
+        {:else}
+          <div class="field">
+            <label for="gl-reset-email">Email</label>
+            <input id="gl-reset-email" type="email" bind:value={loginEmail} placeholder="ton@email.com" autocomplete="email"
+              onkeypress={e => { if (e.key === 'Enter') handleReset(); }} />
+          </div>
+
+          {#if resetError}<div class="alert-err">{resetError}</div>{/if}
+
+          <button class="submit" onclick={handleReset} disabled={resetLoading}>
+            {resetLoading ? 'Envoi en cours…' : 'Envoyer le lien'}
+          </button>
+        {/if}
+      </div>
+
+      <p class="gl-switch">Ça te revient ? <button onclick={() => setView('login')} type="button">Faire vérifier</button></p>
 
     {:else if view === 'confirm'}
       <h2 class="gl-title">Vérifie <em>tes mails</em><span class="dot">.</span></h2>
@@ -482,6 +533,14 @@
     transition: color 0.15s;
   }
   .pwd-eye:hover { color: var(--accent); }
+
+  .forgot {
+    display: block; margin: -4px 0 12px auto; background: none; border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.68rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
+    transition: color 0.15s;
+  }
+  .forgot:hover { color: var(--accent); }
 
   .alert-err {
     background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.4);

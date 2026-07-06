@@ -108,7 +108,7 @@
     </div>
   </div>
 {:else if profile}
-  <ProfileView {profile} {stats} {sb} userId={profile.id} editable={isOwnProfile} onEdit={() => goto('/profile')} />
+  <ProfileView {profile} {stats} {sb} userId={profile.id} viewerId={user?.id ?? null} editable={isOwnProfile} onEdit={() => goto('/profile')} />
 {/if}
 </div>
 

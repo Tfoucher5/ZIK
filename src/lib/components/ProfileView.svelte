@@ -2,7 +2,45 @@
   import { dicebear } from '$lib/utils.js';
   import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
 
-  let { profile, stats, sb, userId, editable = false, onEdit = () => {} } = $props();
+  let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {} } = $props();
+
+  const isOwn = $derived(viewerId != null && viewerId === profile?.id);
+  const canFollow = $derived(viewerId != null && !isOwn);
+
+  // ── Données sociales (abonnés / abonnements / amis) ──
+  let social = $state({ followers: 0, following: 0, friendsCount: 0, friends: [], viewerFollows: false, followsViewer: false, isFriend: false });
+  let followBusy = $state(false);
+
+  async function loadSocial() {
+    if (!sb || !profile?.id) return;
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const r = await fetch(`/api/social/${profile.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (r.ok) social = await r.json();
+    } catch { /* réseau indisponible */ }
+  }
+
+  async function toggleFollow() {
+    if (followBusy || !canFollow) return;
+    followBusy = true;
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const r = await fetch('/api/follow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetId: profile.id }),
+      });
+      if (r.ok) await loadSocial();
+    } finally {
+      followBusy = false;
+    }
+  }
+
+  $effect(() => {
+    if (profile?.id) loadSocial();
+  });
 
   let mode = $state('classic');
   const isQcm = $derived(mode === 'qcm');
@@ -112,14 +150,16 @@
     return `#${r}`;
   }
 
-  const topPct = $derived(stats?.topPercent);
+  const rank = $derived(stats?.rank);
+  const classementValue = $derived(rank != null ? `#${rank}` : null);
 
   // Nav setlist
   const sections = [
-    { id: 'rider', n: '01', t: 'Le rider' },
-    { id: 'tour', n: '02', t: "L'itinéraire" },
-    { id: 'case', n: '03', t: 'Le flight case' },
-    { id: 'log', n: '04', t: 'Le carnet' },
+    { id: 'rider', n: '01', t: 'Statistiques' },
+    { id: 'tour', n: '02', t: 'Meilleurs scores' },
+    { id: 'guests', n: '03', t: 'Amis' },
+    { id: 'case', n: '04', t: 'Badges' },
+    { id: 'log', n: '05', t: 'Historique' },
   ];
   let activeSection = $state('rider');
 
@@ -171,7 +211,7 @@
 
     <div class="marquee-grid">
       <div class="headliner">
-        {#if topPct}<span class="kicker">★ Top {topPct}% du classement</span>{/if}
+        {#if classementValue}<span class="kicker">★ {classementValue} au classement</span>{/if}
         <h1 class="name">{name}<span class="pt">.</span></h1>
         <div class="tagline">
           {#if profile?.created_at}Membre depuis {fmtSince(profile.created_at)} · {/if}
@@ -182,16 +222,28 @@
           <div class="hs max"><b>{elo || '—'}</b><span>ELO</span></div>
           <div class="hs"><b>{fmtScore(profile?.total_score ?? m?.totalScore ?? 0)}</b><span>Score total</span></div>
           <div class="hs"><b>{pct(podiums, total)}%</b><span>Podiums</span></div>
-          {#if topPct}<div class="hs gold"><b>Top {topPct}%</b><span>Classement</span></div>{/if}
+          {#if classementValue}<div class="hs gold"><b>{classementValue}</b><span>Classement</span></div>{/if}
         </div>
 
-        {#if editable}
-          <div class="marquee-actions">
-            <button class="btn btn-accent" onclick={onEdit}>Modifier le pass</button>
-          </div>
-        {/if}
+        <div class="social-row">
+          <div class="social-cell"><b>{social.followers}</b><span>Abonnés</span></div>
+          <div class="social-cell"><b>{social.following}</b><span>Abonnements</span></div>
+          <div class="social-cell amis"><b>{social.friendsCount}</b><span>Amis</span></div>
+        </div>
 
-        <div class="scroll-hint"><span class="arw"></span> Dérouler le programme</div>
+        <div class="marquee-actions">
+          {#if social.isFriend}<span class="tag-ami-line">★ Vous êtes amis</span>{/if}
+          {#if editable || isOwn}
+            <button class="btn btn-accent" onclick={onEdit}>Modifier le pass</button>
+          {:else if canFollow}
+            <button class="btn" class:btn-friend={social.isFriend} class:btn-following={social.viewerFollows && !social.isFriend} onclick={toggleFollow} disabled={followBusy}>
+              {social.isFriend ? '★ Ami' : social.viewerFollows ? '✓ Suivi' : '+ Suivre'}
+            </button>
+            {#if social.followsViewer && !social.viewerFollows}<span class="follows-you">Vous suit</span>{/if}
+          {/if}
+        </div>
+
+        <div class="scroll-hint"><span class="arw"></span> Faire défiler</div>
       </div>
 
       <div class="pass-wrap" role="presentation" onmousemove={tilt} onmouseleave={untilt}>
@@ -217,7 +269,7 @@
   <div class="tour">
     <aside class="rail">
       <div class="rail-card">
-        <div class="rail-lbl">Le programme</div>
+        <div class="rail-lbl">Sommaire</div>
         <nav class="rail-nav">
           {#each sections as s (s.id)}
             <button class="rail-link" class:active={activeSection === s.id} onclick={() => goTo(s.id)}>
@@ -234,8 +286,8 @@
       <section class="prog-block" id="pv-rider" use:reveal>
         <div class="block-head">
           <span class="block-num">01</span>
-          <h2>Le rider technique</h2>
-          <span class="tape">Fiche technique</span>
+          <h2>Statistiques</h2>
+          <span class="sub">Mode {isQcm ? 'QCM' : 'classique'}</span>
         </div>
         <div class="case rider-body">
           <div class="mode-tabs" role="tablist">
@@ -244,18 +296,18 @@
           </div>
           <div class="rider-top">
             <div class="dial">
-              <svg viewBox="0 0 220 130">
-                <path d="M22,120 A98,98 0 0,1 198,120" fill="none" stroke="var(--pv-track)" stroke-width="15" stroke-linecap="round"/>
-                <path d="M22,120 A98,98 0 0,1 198,120" fill="none" stroke="url(#pvdg)" stroke-width="15" stroke-linecap="round"
+              <svg viewBox="0 0 220 128" aria-hidden="true">
+                <path d="M22,118 A96,96 0 0,1 198,118" fill="none" stroke="var(--pv-track)" stroke-width="14" stroke-linecap="round"/>
+                <path d="M22,118 A96,96 0 0,1 198,118" fill="none" stroke="url(#pvdg)" stroke-width="14" stroke-linecap="round"
                   stroke-dasharray={dialCirc} style="stroke-dashoffset:{dialOffset}; transition:stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)"/>
                 <defs><linearGradient id="pvdg" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stop-color="var(--success)"/><stop offset="55%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--gold)"/>
                 </linearGradient></defs>
-                <line x1="110" y1="120" x2="110" y2="36" stroke="var(--text)" stroke-width="3" stroke-linecap="round"
-                  style="transform-origin:110px 120px; transform:rotate({dialAngle}deg); transition:transform 1.2s cubic-bezier(.22,1.4,.36,1)"/>
-                <circle cx="110" cy="120" r="6" fill="var(--text)"/>
+                <line x1="110" y1="118" x2="110" y2="46" stroke="var(--text)" stroke-width="3" stroke-linecap="round"
+                  style="transform-origin:110px 118px; transform:rotate({dialAngle}deg); transition:transform 1.2s cubic-bezier(.22,1.4,.36,1)"/>
+                <circle cx="110" cy="118" r="7" fill="var(--bg2)" stroke="var(--text)" stroke-width="2.5"/>
               </svg>
-              <div class="dial-read"><b>{elo || '—'}</b><span>ELO</span></div>
+              <div class="dial-read"><b>{elo || '—'}</b><span>points ELO</span></div>
             </div>
             <div class="dial-side">
               <div class="kv">
@@ -293,8 +345,8 @@
       <section class="prog-block" id="pv-tour" use:reveal>
         <div class="block-head">
           <span class="block-num">02</span>
-          <h2>L'itinéraire</h2>
-          <span class="sub">Meilleur score par room</span>
+          <h2>Meilleurs scores</h2>
+          <span class="sub">Par room officielle</span>
         </div>
         <div class="split">
           <div class="case tour-map">
@@ -312,7 +364,7 @@
             {/if}
           </div>
           <div>
-            <div class="tape" style="margin-bottom:14px">Accréditations</div>
+            <div class="tape" style="margin-bottom:14px">Répartition</div>
             <div class="case tiers">
               {#if typeTotal > 0}
                 <div class="tier-bar">
@@ -331,22 +383,46 @@
         </div>
       </section>
 
-      <!-- 03 FLIGHT CASE -->
-      <section class="prog-block" id="pv-case" use:reveal>
+      <!-- 03 GUESTLIST -->
+      <section class="prog-block" id="pv-guests" use:reveal>
         <div class="block-head">
           <span class="block-num">03</span>
-          <h2>Le flight case</h2>
-          <span class="sub">Badges & séries</span>
+          <h2>Amis</h2>
+          <span class="sub">{social.friendsCount} ami{social.friendsCount > 1 ? 's' : ''}</span>
+        </div>
+        <div class="case gl">
+          {#if social.friends.length}
+            {#each social.friends as f (f.id)}
+              <a class="gl-row" href="/user/{f.username}">
+                <span class="gl-av"><img src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34"></span>
+                <div class="gl-id"><div class="gl-name">{f.username}</div><div class="gl-sub">Niveau {f.level ?? 1}</div></div>
+                <span class="gl-elo">{f.elo ?? '—'} ELO</span>
+              </a>
+            {/each}
+          {:else}
+            <p class="pv-empty" style="padding:20px">
+              {#if isOwn}Tu n'as pas encore d'amis. Suis des joueurs depuis leur profil&nbsp;: dès qu'ils te suivent en retour, ils rejoignent ta guestlist.{:else}Aucun ami pour le moment.{/if}
+            </p>
+          {/if}
+        </div>
+      </section>
+
+      <!-- 04 FLIGHT CASE -->
+      <section class="prog-block" id="pv-case" use:reveal>
+        <div class="block-head">
+          <span class="block-num">04</span>
+          <h2>Badges</h2>
+          <span class="sub">Succès & séries</span>
         </div>
         <AchievementsPanel {sb} {userId} />
       </section>
 
-      <!-- 04 CARNET -->
+      <!-- 05 CARNET -->
       <section class="prog-block" id="pv-log" use:reveal>
         <div class="block-head">
-          <span class="block-num">04</span>
-          <h2>Le carnet de route</h2>
-          <span class="sub">Dernières sessions</span>
+          <span class="block-num">05</span>
+          <h2>Historique</h2>
+          <span class="sub">Dernières parties</span>
         </div>
         <div class="case log">
           {#if carnet.length}
@@ -446,6 +522,31 @@
   .btn:hover { border-color: rgb(var(--c-glass) / 0.4); transform: translateY(-1px); }
   .btn-accent { background: var(--accent); border-color: var(--accent); color: #000; box-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.35); }
   .btn-accent:hover { box-shadow: 0 0 36px rgb(var(--accent-rgb) / 0.55); }
+  .btn-following { border-color: rgb(var(--accent-rgb) / 0.6); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }
+  .btn-friend { border-color: rgb(var(--gold-rgb) / 0.6); color: var(--gold); background: rgb(var(--gold-rgb) / 0.08); }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+  .follows-you { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--border2); border-radius: 99px; padding: 4px 10px; }
+
+  /* Compteurs sociaux */
+  .social-row { display: inline-flex; margin-top: 22px; border: 1px solid var(--border2); border-radius: 99px; overflow: hidden; max-width: 100%; }
+  .social-cell { display: flex; align-items: baseline; gap: 7px; padding: 9px 20px; border-right: 1px solid var(--border); }
+  .social-cell:last-child { border-right: none; }
+  .social-cell b { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 1rem; font-variant-numeric: tabular-nums; }
+  .social-cell.amis b { color: var(--gold); }
+  .social-cell span { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+  .tag-ami-line { display: inline-flex; align-items: center; gap: 7px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+
+  /* Guestlist */
+  .gl { padding: 6px 0; }
+  .gl-row { display: flex; align-items: center; gap: 12px; padding: 11px 20px; border-bottom: 1px solid var(--border); transition: background 0.15s, transform 0.15s; text-decoration: none; color: var(--text); }
+  .gl-row:last-child { border-bottom: none; }
+  .gl-row:hover { background: rgb(var(--c-glass) / 0.02); transform: translateX(3px); }
+  .gl-av { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; overflow: hidden; border: 1px solid rgb(var(--accent-rgb) / 0.4); background: var(--surface); display: block; }
+  .gl-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gl-id { flex: 1; min-width: 0; }
+  .gl-name { font-weight: 600; font-size: 0.88rem; }
+  .gl-sub { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-top: 1px; }
+  .gl-elo { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; color: var(--mid); flex-shrink: 0; }
 
   .scroll-hint { display: flex; align-items: center; gap: 9px; margin-top: 30px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim); }
   .scroll-hint .arw { position: relative; display: inline-block; width: 16px; height: 26px; border: 1.5px solid var(--dim); border-radius: 9px; flex-shrink: 0; }
@@ -517,11 +618,11 @@
   .mode-tabs button.on { color: #000; background: var(--accent); }
   .mode-tabs button[data-mode="qcm"].on { background: var(--success); }
   .rider-top { display: flex; align-items: center; gap: 34px; flex-wrap: wrap; margin-bottom: 20px; }
-  .dial { position: relative; width: 210px; flex-shrink: 0; }
+  .dial { width: 210px; flex-shrink: 0; text-align: center; }
   .dial svg { width: 100%; display: block; overflow: visible; }
-  .dial-read { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); text-align: center; }
-  .dial-read b { display: block; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 1.7rem; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .dial-read span { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim); }
+  .dial-read { margin-top: 10px; }
+  .dial-read b { display: block; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 2rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .dial-read span { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.6rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--dim); margin-top: 7px; }
   .dial-side { flex: 1; min-width: 220px; }
   .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
   .kv-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dotted var(--border2); }
@@ -598,12 +699,20 @@
   @media (max-width: 640px) {
     .kv { grid-template-columns: 1fr; }
     .split { grid-template-columns: 1fr; }
-    .headline-stats { width: 100%; }
-    .hs { flex: 1; padding: 12px 14px; }
+    .headline-stats { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+    .hs { padding: 12px 14px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-width: 0; }
+    .hs:nth-child(2n) { border-right: none; }
+    .hs:nth-child(n + 3) { border-bottom: none; }
+    .hs b, .hs.max b { font-size: 1.5rem; }
+    .social-row { display: flex; width: 100%; }
+    .social-cell { flex: 1; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px; text-align: center; }
+    .social-cell span { font-size: 0.54rem; letter-spacing: 0.1em; }
     .log-head { display: none; }
     .log-row { grid-template-columns: 1fr 64px; }
     .log-num, .log-mode, .log-date, .log-rank { display: none; }
-    .rider-top { gap: 20px; }
+    .rider-top { flex-direction: column; gap: 20px; }
+    .dial { align-self: center; }
+    .dial-side { width: 100%; min-width: 0; }
     .block-head { flex-wrap: wrap; }
     .block-head .sub, .block-head .tape { margin-left: 0; }
   }
