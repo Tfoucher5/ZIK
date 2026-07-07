@@ -8,8 +8,9 @@
   const canFollow = $derived(viewerId != null && !isOwn);
 
   // ── Données sociales (abonnés / abonnements / amis) ──
-  let social = $state({ followers: 0, following: 0, friendsCount: 0, friends: [], viewerFollows: false, followsViewer: false, isFriend: false });
+  let social = $state({ followers: 0, following: 0, friendsCount: 0, friends: [], viewerFollows: false, followsViewer: false, friendStatus: 'none', isFriend: false, pendingRequests: [], pendingCount: 0 });
   let followBusy = $state(false);
+  let friendBusy = $state(false);
 
   async function loadSocial() {
     if (!sb || !profile?.id) return;
@@ -35,6 +36,22 @@
       if (r.ok) await loadSocial();
     } finally {
       followBusy = false;
+    }
+  }
+
+  async function friendAction(action, targetId = profile.id) {
+    if (friendBusy) return;
+    friendBusy = true;
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const r = await fetch('/api/friend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetId, action }),
+      });
+      if (r.ok) await loadSocial();
+    } finally {
+      friendBusy = false;
     }
   }
 
@@ -232,12 +249,21 @@
         </div>
 
         <div class="marquee-actions">
-          {#if social.isFriend}<span class="tag-ami-line">★ Vous êtes amis</span>{/if}
           {#if editable || isOwn}
             <button class="btn btn-accent" onclick={onEdit}>Modifier le pass</button>
           {:else if canFollow}
-            <button class="btn" class:btn-friend={social.isFriend} class:btn-following={social.viewerFollows && !social.isFriend} onclick={toggleFollow} disabled={followBusy}>
-              {social.isFriend ? '★ Ami' : social.viewerFollows ? '✓ Suivi' : '+ Suivre'}
+            {#if social.friendStatus === 'friends'}
+              <button class="btn btn-friend" onclick={() => friendAction('remove')} disabled={friendBusy}>★ Amis</button>
+            {:else if social.friendStatus === 'pending_out'}
+              <button class="btn btn-following" onclick={() => friendAction('remove')} disabled={friendBusy}>⏳ Demande envoyée</button>
+            {:else if social.friendStatus === 'pending_in'}
+              <button class="btn btn-accent" onclick={() => friendAction('accept')} disabled={friendBusy}>✓ Accepter</button>
+              <button class="btn" onclick={() => friendAction('remove')} disabled={friendBusy}>Refuser</button>
+            {:else}
+              <button class="btn btn-accent" onclick={() => friendAction('request')} disabled={friendBusy}>+ Ajouter en ami</button>
+            {/if}
+            <button class="btn" class:btn-following={social.viewerFollows} onclick={toggleFollow} disabled={followBusy}>
+              {social.viewerFollows ? '✓ Suivi' : '+ Suivre'}
             </button>
             {#if social.followsViewer && !social.viewerFollows}<span class="follows-you">Vous suit</span>{/if}
           {/if}
@@ -390,6 +416,23 @@
           <h2>Amis</h2>
           <span class="sub">{social.friendsCount} ami{social.friendsCount > 1 ? 's' : ''}</span>
         </div>
+
+        {#if isOwn && social.pendingRequests.length}
+          <div class="tape" style="margin-bottom:12px">Demandes reçues · {social.pendingCount}</div>
+          <div class="case gl" style="margin-bottom:18px">
+            {#each social.pendingRequests as p (p.id)}
+              <div class="gl-row">
+                <a class="gl-av" href="/user/{p.username}"><img src={p.avatar_url || dicebear(p.username)} alt="" width="34" height="34"></a>
+                <a class="gl-id" href="/user/{p.username}"><div class="gl-name">{p.username}</div><div class="gl-sub">Niveau {p.level ?? 1}</div></a>
+                <span class="req-actions">
+                  <button class="btn-req accept" onclick={() => friendAction('accept', p.id)} disabled={friendBusy}>Accepter</button>
+                  <button class="btn-req" onclick={() => friendAction('remove', p.id)} disabled={friendBusy}>Refuser</button>
+                </span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
         <div class="case gl">
           {#if social.friends.length}
             {#each social.friends as f (f.id)}
@@ -401,7 +444,7 @@
             {/each}
           {:else}
             <p class="pv-empty" style="padding:20px">
-              {#if isOwn}Tu n'as pas encore d'amis. Suis des joueurs depuis leur profil&nbsp;: dès qu'ils te suivent en retour, ils rejoignent ta guestlist.{:else}Aucun ami pour le moment.{/if}
+              {#if isOwn}Tu n'as pas encore d'amis. Depuis le profil d'un joueur, clique sur «&nbsp;Ajouter en ami&nbsp;»&nbsp;: dès qu'il accepte, il rejoint ta guestlist.{:else}Aucun ami pour le moment.{/if}
             </p>
           {/if}
         </div>
@@ -514,7 +557,7 @@
   .hs.gold b { color: var(--gold); }
   .hs span { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-top: 5px; display: block; }
 
-  .marquee-actions { margin-top: 24px; }
+  .marquee-actions { margin-top: 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .btn {
     font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase;
     padding: 11px 26px; border-radius: 99px; cursor: pointer; border: 1.5px solid var(--border2); background: none; color: var(--text); transition: all 0.15s;
@@ -534,7 +577,6 @@
   .social-cell b { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 1rem; font-variant-numeric: tabular-nums; }
   .social-cell.amis b { color: var(--gold); }
   .social-cell span { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
-  .tag-ami-line { display: inline-flex; align-items: center; gap: 7px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
 
   /* Guestlist */
   .gl { padding: 6px 0; }
@@ -547,6 +589,12 @@
   .gl-name { font-weight: 600; font-size: 0.88rem; }
   .gl-sub { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-top: 1px; }
   .gl-elo { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; color: var(--mid); flex-shrink: 0; }
+  .gl-row > a { text-decoration: none; color: inherit; }
+  .req-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-req { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 12px; border-radius: 99px; cursor: pointer; border: 1.5px solid var(--border2); background: none; color: var(--mid); transition: all 0.15s; }
+  .btn-req:hover { color: var(--text); border-color: rgb(var(--c-glass) / 0.4); }
+  .btn-req.accept { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }
+  .btn-req:disabled { opacity: 0.55; cursor: default; }
 
   .scroll-hint { display: flex; align-items: center; gap: 9px; margin-top: 30px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim); }
   .scroll-hint .arw { position: relative; display: inline-block; width: 16px; height: 26px; border: 1.5px solid var(--dim); border-radius: 9px; flex-shrink: 0; }

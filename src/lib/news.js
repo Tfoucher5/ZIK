@@ -4,6 +4,17 @@
 export const NEWS = [
   {
     date: "2026-07-07",
+    version: "2.10.0",
+    tag: "Nouveauté",
+    title: "Amis et abonnements",
+    items: [
+      "Deux façons de te connecter aux autres joueurs : suivre un profil (comme un abonnement, sans confirmation) ou envoyer une demande d'ami.",
+      "Une amitié se confirme des deux côtés : la personne doit accepter ta demande.",
+      "Retrouve tes demandes d'amis reçues directement sur ton profil, pour les accepter ou les refuser.",
+    ],
+  },
+  {
+    date: "2026-07-07",
     version: "2.9.0",
     tag: "Nouveauté",
     title: "Mot de passe oublié",
