@@ -30,14 +30,13 @@
 **Largest chunk : C8Fhqtzq.js (208433 o, ~203 Ko)**
 
 ## Compression
-- Précompression build : **présente** (.br et .gz générés pour tous fichiers CSS/JS)
-- Compression à la volée : via middleware `compression` Express (gzip uniquement, pas brotli)
-- Fichiers .br disponibles mais serveur n'envoie que .gz par défaut
+- Précompression build : **présente** (.br et .gz générés — adapter-node v5 précompresse par défaut, contrairement à l'hypothèse de la spec)
+- Compression à la volée : middleware `compression` (gzip uniquement) pour les réponses dynamiques
+- Le service des .br par sirv reste à vérifier avec curl (Task 1)
 
 ## Fonts
 - Google Fonts externes (2 connexions : fonts.googleapis.com + fonts.gstatic.com)
-- Police primaire : Montserrat
-- Police secondaire : Inter
+- Familles : Barlow (400/500/600), Barlow Condensed (700/800/900 + italic 900), JetBrains Mono (400/500/700)
 
 ## Audio jeu
 - **Mode Classique** : player_ready émis avant buffering complet
