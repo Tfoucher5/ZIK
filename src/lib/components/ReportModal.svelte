@@ -160,7 +160,7 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--overlay);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -184,11 +184,11 @@
   background: color-mix(in srgb, var(--bg2, #0f0f0f) 88%, transparent);
   backdrop-filter: blur(24px) saturate(1.4);
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.6),
     0 0 60px rgb(var(--rm-c) / 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    inset 0 1px 0 rgb(var(--c-glass) / 0.06);
   animation: rm-pop-in 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 .rm-box.rm-bug { --rm-c: 251 191 36; }
@@ -232,7 +232,7 @@
   justify-content: center;
   border-radius: 8px;
   background: rgb(var(--c-glass, 255 255 255) / 0.05);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   color: var(--mid, #8896aa);
   font-size: 0.72rem;
   cursor: pointer;
@@ -311,7 +311,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--border, rgba(255, 255, 255, 0.1));
+  background: var(--border, rgb(var(--c-glass) / 0.1));
 }
 .rm-req { color: var(--accent, #ff00ff); }
 
@@ -330,7 +330,7 @@
   font-weight: 600;
   text-align: left;
   background: rgb(var(--c-glass, 255 255 255) / 0.04);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   border-radius: 10px;
   color: var(--mid, #8896aa);
   cursor: pointer;
@@ -342,12 +342,12 @@
   height: 8px;
   flex-shrink: 0;
   border-radius: 2px;
-  border: 1px solid var(--border2, rgba(255, 255, 255, 0.18));
+  border: 1px solid var(--border2, rgb(var(--c-glass) / 0.18));
   background: transparent;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .rm-motif:hover {
-  border-color: var(--border2, rgba(255, 255, 255, 0.18));
+  border-color: var(--border2, rgb(var(--c-glass) / 0.18));
   color: var(--text, #fafafa);
 }
 .rm-motif.on {
@@ -364,7 +364,7 @@
 
 .rm-field textarea {
   background: rgb(var(--c-glass, 255 255 255) / 0.05);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   border-radius: 12px;
   padding: 12px 14px 28px;
   color: var(--text, #fafafa);
@@ -406,7 +406,7 @@
   width: 100%;
   padding: 14px;
   background: linear-gradient(135deg, var(--accent, #ff00ff), var(--accent2, #cc00cc));
-  color: #000;
+  color: var(--on-accent);
   border: none;
   border-radius: 12px;
   font-family: "Barlow Condensed", sans-serif;

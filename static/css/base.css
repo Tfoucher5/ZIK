@@ -89,7 +89,7 @@ img {
   letter-spacing: -0.01em;
   text-transform: uppercase;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+  -webkit-text-stroke: 1px rgb(var(--c-glass) / 0.2);
   padding: 0 16px;
   height: var(--nav-h);
   display: flex;
@@ -99,7 +99,7 @@ img {
     color 0.15s;
 }
 .nav-link:hover {
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.55);
+  -webkit-text-stroke: 1px rgb(var(--c-glass) / 0.55);
 }
 .nav-link.active {
   color: var(--accent);
@@ -109,7 +109,7 @@ img {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.1);
+  color: rgb(var(--c-glass) / 0.1);
   pointer-events: none;
   user-select: none;
 }
@@ -202,7 +202,7 @@ img {
   align-items: center;
   gap: 9px;
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgb(var(--c-glass) / 0.1);
   cursor: pointer;
   color: var(--text);
   padding: 4px 10px;
@@ -211,7 +211,7 @@ img {
   font-family: inherit;
 }
 .nav-avatar-wrap:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgb(var(--c-glass) / 0.25);
 }
 #nav-avatar {
   width: 26px;
@@ -340,7 +340,7 @@ img {
     box-shadow 0.15s;
 }
 .bn-home-inner svg {
-  stroke: #000;
+  stroke: var(--on-accent);
 }
 .bn-home:hover .bn-home-inner,
 .bn-home.active .bn-home-inner {
@@ -368,7 +368,7 @@ button {
   -webkit-appearance: none;
   appearance: none;
   background: var(--accent);
-  color: #000;
+  color: var(--on-accent);
   border: none;
   padding: 11px 22px;
   border-radius: 3px;
@@ -425,7 +425,7 @@ button {
     border-color 0.15s;
 }
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--c-glass) / 0.05);
   color: var(--text);
   border-color: var(--border2);
 }
@@ -458,7 +458,7 @@ button {
   font-family: inherit;
 }
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--c-glass) / 0.05);
   color: var(--text);
 }
 
@@ -480,7 +480,7 @@ button {
   color: var(--dim);
 }
 .input-glass:focus {
-  border-color: rgba(255, 0, 255, 0.6);
+  border-color: rgb(var(--accent-rgb) / 0.6);
 }
 
 /* ── Badges ── */
@@ -508,7 +508,7 @@ button {
 
 /* ── Footer — style "Journal" ── */
 .site-footer {
-  background: #060606;
+  background: var(--bg);
 }
 .footer-stripe {
   height: 4px;
@@ -537,7 +537,7 @@ button {
 .footer-mast-divider {
   width: 2px;
   height: 48px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgb(var(--c-glass) / 0.12);
   flex-shrink: 0;
 }
 .footer-mast-info {
@@ -551,7 +551,7 @@ button {
   font-size: 0.52rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.22);
+  color: rgb(var(--c-glass) / 0.22);
 }
 .footer-mast-tagline {
   font-family: "Barlow Condensed", sans-serif;
@@ -559,7 +559,7 @@ button {
   font-size: 1rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgb(var(--c-glass) / 0.5);
 }
 .footer-mast-online {
   display: flex;
@@ -570,14 +570,14 @@ button {
   font-size: 0.52rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgb(var(--c-glass) / 0.25);
 }
 .footer-online-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 6px #22c55e;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
   flex-shrink: 0;
 }
 
@@ -618,7 +618,7 @@ button {
   font-size: 0.76rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgb(var(--c-glass) / 0.38);
   transition: color 0.15s;
   display: block;
   text-align: left;
@@ -671,7 +671,7 @@ button {
   font-size: 0.58rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.18);
+  color: rgb(var(--c-glass) / 0.18);
 }
 
 /* Bas */
@@ -687,21 +687,21 @@ button {
   font-weight: 700;
   font-size: 0.62rem;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.18);
+  color: rgb(var(--c-glass) / 0.18);
 }
 .footer-copy a {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgb(var(--c-glass) / 0.28);
   transition: color 0.15s;
 }
 .footer-copy a:hover {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgb(var(--c-glass) / 0.55);
 }
 .footer-version-tag {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 700;
   font-size: 0.6rem;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.14);
+  color: rgb(var(--c-glass) / 0.14);
 }
 
 @media (max-width: 900px) {
@@ -765,7 +765,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 500;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -896,7 +896,7 @@ button {
 .field input {
   width: 100%;
   padding: 11px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgb(var(--c-glass) / 0.04);
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--text);
@@ -909,7 +909,7 @@ button {
 }
 .field input:focus {
   border-color: var(--accent);
-  background: rgba(255, 0, 255, 0.04);
+  background: rgb(var(--accent-rgb) / 0.04);
 }
 .field input::placeholder {
   color: var(--dim);
@@ -943,7 +943,7 @@ button {
 .alert-err {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  color: var(--danger);
   padding: 9px 13px;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -990,8 +990,8 @@ button {
 /* ── Page header (remplacement HeroSection sur pages secondaires) ── */
 .page-head {
   padding: calc(var(--nav-h) + 40px) clamp(20px, 5vw, 72px) 40px;
-  background: #060606;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg);
+  border-bottom: 1px solid rgb(var(--c-glass) / 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -1001,7 +1001,7 @@ button {
   inset: 0;
   background: linear-gradient(
     108deg,
-    rgba(255, 0, 255, 0.04) 0%,
+    rgb(var(--accent-rgb) / 0.04) 0%,
     transparent 60%
   );
   pointer-events: none;
@@ -1018,7 +1018,7 @@ button {
   text-transform: uppercase;
   letter-spacing: -2px;
   line-height: 1;
-  color: #fafafa;
+  color: var(--text);
 }
 .page-head-sub {
   font-family: "Barlow Condensed", sans-serif;
@@ -1026,6 +1026,6 @@ button {
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgb(var(--c-glass) / 0.35);
   margin-top: 10px;
 }

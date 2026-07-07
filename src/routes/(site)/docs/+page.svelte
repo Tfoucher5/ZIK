@@ -965,12 +965,12 @@
 
   .doc-sidebar nav ul li a:hover {
     color: var(--text, #fff);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgb(var(--c-glass) / 0.05);
   }
 
   .doc-sidebar nav ul li a.active {
     color: var(--accent, #7c3aed);
-    background: rgba(124, 58, 237, 0.1);
+    background: rgb(var(--accent-rgb) / 0.1);
     font-weight: 600;
   }
 
@@ -978,7 +978,7 @@
   .doc-content {
     min-width: 0;
     padding-left: 40px;
-    border-left: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-left: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
   }
 
   /* ── Bouton retour ── */
@@ -1005,7 +1005,7 @@
   }
 
   .breadcrumb-sep {
-    color: var(--border, rgba(255,255,255,0.2));
+    color: var(--border, rgb(var(--c-glass) / 0.2));
   }
 
   /* ── Titres ── */
@@ -1030,7 +1030,7 @@
   .doc-content section {
     margin-bottom: 64px;
     padding-bottom: 64px;
-    border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
+    border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.06));
   }
 
   .doc-content section:last-of-type {
@@ -1076,8 +1076,8 @@
   .doc-content code {
     font-family: monospace;
     font-size: 0.82rem;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgb(var(--c-glass) / 0.07);
+    border: 1px solid rgb(var(--c-glass) / 0.1);
     padding: 2px 6px;
     border-radius: 4px;
     color: var(--text, #fff);
@@ -1121,18 +1121,18 @@
   }
 
   .doc-table th {
-    background: rgba(255,255,255,0.07);
+    background: rgb(var(--c-glass) / 0.07);
     color: var(--text, #fff);
     font-weight: 700;
     text-align: left;
     padding: 10px 14px;
-    border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+    border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   }
 
   .doc-table td {
     color: var(--mid, #ccc);
     padding: 10px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgb(var(--c-glass) / 0.04);
   }
 
   .doc-table tr:last-child td {
@@ -1140,7 +1140,7 @@
   }
 
   .doc-table tr:hover td {
-    background: rgba(255,255,255,0.02);
+    background: rgb(var(--c-glass) / 0.02);
   }
 
   /* ── Tip & Warn boxes ── */
@@ -1157,8 +1157,8 @@
   }
 
   .doc-tip {
-    background: rgba(124, 58, 237, 0.1);
-    border: 1px solid rgba(124, 58, 237, 0.25);
+    background: rgb(var(--accent-rgb) / 0.1);
+    border: 1px solid rgb(var(--accent-rgb) / 0.25);
     color: var(--mid, #ccc);
   }
 
@@ -1190,7 +1190,7 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     background: var(--accent, #7c3aed);
-    color: #fff;
+    color: var(--on-accent);
     border-radius: 4px;
     padding: 2px 7px;
     vertical-align: middle;
@@ -1206,10 +1206,10 @@
   }
 
   .faq-item {
-    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
     border-radius: 10px;
     overflow: hidden;
-    background: rgba(255,255,255,0.02);
+    background: rgb(var(--c-glass) / 0.02);
   }
 
   .faq-item summary {
@@ -1243,12 +1243,12 @@
   }
 
   .faq-item summary:hover {
-    background: rgba(255,255,255,0.03);
+    background: rgb(var(--c-glass) / 0.03);
   }
 
   .faq-body {
     padding: 0 18px 16px;
-    border-top: 1px solid var(--border, rgba(255,255,255,0.06));
+    border-top: 1px solid var(--border, rgb(var(--c-glass) / 0.06));
   }
 
   .faq-body p {
@@ -1262,7 +1262,7 @@
   .doc-footer-note {
     margin-top: 48px;
     padding-top: 24px;
-    border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-top: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
     font-size: 0.8rem;
     color: var(--dim, #888);
     text-align: center;

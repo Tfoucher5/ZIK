@@ -125,7 +125,7 @@
 
 .cm-field input, .cm-field textarea {
   background: rgb(var(--c-glass, 255 255 255) / 0.05);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   border-radius: 10px;
   padding: 11px 14px;
   color: var(--text, #fafafa);
@@ -157,7 +157,7 @@
 .cm-btn {
   width: 100%;
   background: linear-gradient(135deg, var(--accent, #ff00ff), var(--accent2, #cc00cc));
-  color: #000; border: none;
+  color: var(--on-accent); border: none;
   padding: 13px; border-radius: 10px;
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900; font-size: 0.95rem;

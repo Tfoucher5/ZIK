@@ -1181,7 +1181,7 @@
 <style>
 .g-go-share {
   background: none;
-  border: 1px solid rgba(255, 0, 255, 0.45);
+  border: 1px solid rgb(var(--accent-rgb) / 0.45);
   color: var(--accent);
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
@@ -1193,8 +1193,8 @@
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 .g-go-share:hover {
-  background: rgba(255, 0, 255, 0.1);
-  box-shadow: 0 0 18px rgba(255, 0, 255, 0.2);
+  background: rgb(var(--accent-rgb) / 0.1);
+  box-shadow: 0 0 18px rgb(var(--accent-rgb) / 0.2);
 }
 .g-go-discord {
   display: inline-flex;

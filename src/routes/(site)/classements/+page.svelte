@@ -1,11 +1,16 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, getContext } from "svelte";
   import LoadMore from '$lib/components/LoadMore.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
 
   let { data } = $props();
 
+  const _ctx = getContext('zik');
+  const sb = _ctx.sb;
+  const user = $derived(_ctx.user);
+
   let activeTab = $state("elo");
+  let eloScope = $state("global");
   let scoreMode = $state("classique");
   let scoreRooms = $state("officielles");
   let scorePeriod = $state("semaine");
@@ -24,7 +29,15 @@
   let myUserId = $state(null);
   let myRankLoaded = $state(false);
 
-  let list = $derived(activeTab === "elo" ? eloData : scoreData);
+  let friendsData = $state([]);
+  let friendsLoading = $state(false);
+  let friendsInited = $state(false);
+
+  const eloAmis = $derived(activeTab === "elo" && eloScope === "amis");
+
+  let list = $derived(
+    activeTab === "elo" ? (eloScope === "amis" ? friendsData : eloData) : scoreData
+  );
   let maxVal = $derived(
     list.length > 0 ? (activeTab === "elo" ? list[0].elo : Number(list[0].total_score)) : 1
   );
@@ -87,9 +100,33 @@
     } catch { /* silencieux */ } finally { eloLoading = false; }
   }
 
+  async function fetchFriends() {
+    friendsLoading = true;
+    try {
+      const token = (await sb?.auth.getSession())?.data?.session?.access_token;
+      if (!token) { friendsData = []; return; }
+      const res = await fetch('/api/leaderboard/friends', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const rows = await res.json();
+      friendsData = Array.isArray(rows) ? rows : [];
+    } catch { /* silencieux */ } finally {
+      friendsLoading = false;
+      friendsInited = true;
+    }
+  }
+
   async function fetchMyRank() {
     if (!myUserId) return;
     myRankLoaded = false;
+    if (eloAmis) {
+      const idx = friendsData.findIndex((p) => p.id === myUserId);
+      myRank = idx >= 0
+        ? { rank: idx + 1, score: friendsData[idx].elo, games_count: friendsData[idx].games_played, username: friendsData[idx].username, avatar_url: friendsData[idx].avatar_url }
+        : null;
+      myRankLoaded = true;
+      return;
+    }
     try {
       const mode = activeTab === "elo" ? "elo" : scoreMode;
       let qs = `userId=${encodeURIComponent(myUserId)}&mode=${mode}`;
@@ -110,10 +147,17 @@
   });
 
   $effect(() => {
+    if (!eloAmis) return;
+    fetchFriends();
+  });
+
+  $effect(() => {
     void activeTab;
+    void eloScope;
     void scoreMode;
     void scoreRooms;
     void scorePeriod;
+    void friendsData;
     fetchMyRank();
   });
 
@@ -137,10 +181,15 @@
 
   const CERTS = ["💎 Disque de diamant", "Disque de platine", "Disque d'or"];
   let unit = $derived(activeTab === "elo" ? "ELO" : "pts");
-  let showLoading = $derived(activeTab === "score" && scoreLoading && scoreData.length === 0);
+  let showLoading = $derived(
+    (activeTab === "score" && scoreLoading && scoreData.length === 0) ||
+    (eloAmis && friendsLoading && friendsData.length === 0)
+  );
   let showEmpty = $derived(
     activeTab === "elo"
-      ? eloData.length === 0 && !eloLoading
+      ? eloAmis
+        ? friendsData.length <= 1 && friendsInited && !friendsLoading
+        : eloData.length === 0 && !eloLoading
       : scoreData.length === 0 && scoreInited && !scoreLoading
   );
 </script>
@@ -163,7 +212,14 @@
     <span class="hp-sep"></span>
 
     {#if activeTab === 'elo'}
-      <span class="hp-context">Rooms officielles · Mode classique · All-time</span>
+      {#if user}
+        <div class="hp-chips">
+          <button class="hp-chip" class:on={eloScope === 'global'} onclick={() => eloScope = 'global'}>Global</button>
+          <button class="hp-chip" class:on={eloScope === 'amis'} onclick={() => eloScope = 'amis'}>Amis</button>
+        </div>
+        <span class="hp-sep"></span>
+      {/if}
+      <span class="hp-context">{eloAmis ? 'Toi et tes amis · ELO' : 'Rooms officielles · Mode classique · All-time'}</span>
     {:else}
       <div class="hp-chips">
         <button class="hp-chip" class:on={scoreMode === 'classique'} onclick={() => scoreMode = 'classique'}>Classique</button>
@@ -186,7 +242,7 @@
   {#if showLoading}
     <p class="hp-loading">Chargement…</p>
   {:else if showEmpty}
-    <EmptyState icon="🏆" title={activeTab === 'elo' ? "Aucun joueur pour l'instant" : "Aucun résultat pour ces filtres."} />
+    <EmptyState icon="🏆" title={eloAmis ? "Ajoute des amis pour te comparer à eux ici." : activeTab === 'elo' ? "Aucun joueur pour l'instant" : "Aucun résultat pour ces filtres."} />
   {:else if list.length > 0}
 
     {#if list.length >= 3}
@@ -276,7 +332,9 @@
       {/each}
 
       {#if activeTab === 'elo'}
-        <LoadMore loading={eloLoading} hasMore={eloHasMore} onLoad={loadMoreElo} />
+        {#if !eloAmis}
+          <LoadMore loading={eloLoading} hasMore={eloHasMore} onLoad={loadMoreElo} />
+        {/if}
       {:else}
         <LoadMore loading={scoreLoading} hasMore={scoreHasMore} onLoad={() => fetchScore(false)} />
       {/if}
@@ -383,7 +441,7 @@
   }
   .hp-tab:hover:not(.active) { color: var(--text); border-color: var(--border2); }
   .hp-tab.active {
-    color: #000; background: var(--accent); border-color: var(--accent);
+    color: var(--on-accent); background: var(--accent); border-color: var(--accent);
     box-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.4);
   }
   .hp-sep { width: 1px; height: 24px; background: var(--border2); margin: 0 6px; flex-shrink: 0; }
@@ -434,16 +492,16 @@
   .disc-label {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: 34%; height: 34%; border-radius: 50%; z-index: 1; overflow: hidden;
-    background: radial-gradient(circle, #ffd9ff, var(--accent) 75%);
+    background: radial-gradient(circle, #fff, var(--accent) 75%);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 2.2rem; color: #000;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 2.2rem; color: var(--on-accent);
   }
   .disc-label img { width: 100%; height: 100%; object-fit: cover; }
   .champ-info { padding: 34px 0; min-width: 0; }
   .champ-tag {
     display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
     font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
-    color: #000; background: var(--accent); border-radius: var(--radius-sm); padding: 5px 10px;
+    color: var(--on-accent); background: var(--accent); border-radius: var(--radius-sm); padding: 5px 10px;
   }
   .champ-name {
     display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
@@ -566,7 +624,7 @@
   .me-badge {
     font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 0.6rem;
     letter-spacing: 0.2em; text-transform: uppercase;
-    background: var(--accent); color: #000; border-radius: var(--radius-sm); padding: 3px 7px;
+    background: var(--accent); color: var(--on-accent); border-radius: var(--radius-sm); padding: 3px 7px;
     flex-shrink: 0;
   }
   .row-val { text-align: right; }
@@ -584,7 +642,7 @@
   /* ── Barre de lecture ── */
   .playerbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
-    background: rgba(10, 10, 10, 0.96); border-top: 1px solid rgb(var(--accent-rgb) / 0.4);
+    background: rgb(var(--bg-rgb) / 0.96); border-top: 1px solid rgb(var(--accent-rgb) / 0.4);
     box-shadow: 0 -12px 44px rgb(var(--accent-rgb) / 0.09);
     display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 28px;
     padding: 13px 48px;
@@ -594,7 +652,7 @@
   .pb-av-fb {
     display: flex; align-items: center; justify-content: center;
     font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.15rem;
-    background: var(--accent); color: #000;
+    background: var(--accent); color: var(--on-accent);
   }
   .pb-t { line-height: 1.15; }
   .pb-n { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.25rem; text-transform: uppercase; }
@@ -627,7 +685,7 @@
   .pb-cta {
     font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1rem;
     letter-spacing: 0.12em; text-transform: uppercase;
-    color: #000; background: var(--accent); border: none; border-radius: var(--r);
+    color: var(--on-accent); background: var(--accent); border: none; border-radius: var(--r);
     padding: 13px 30px; cursor: pointer; white-space: nowrap; text-align: center;
     box-shadow: 0 0 26px rgb(var(--accent-rgb) / 0.35);
     transition: transform 0.15s, box-shadow 0.15s;

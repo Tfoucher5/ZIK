@@ -70,8 +70,8 @@
   text-align: center;
   padding: 36px 28px;
   border-radius: 24px;
-  background: linear-gradient(160deg, rgba(124, 58, 237, 0.14), rgba(17, 17, 27, 0.9));
-  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.14), rgba(17, 17, 27, 0.9));
+  border: 1px solid rgb(var(--accent-rgb) / 0.35);
   box-shadow: 0 16px 60px rgba(0, 0, 0, 0.45);
 }
 
@@ -82,7 +82,7 @@
   letter-spacing: 0.02em;
   margin-bottom: 18px;
 }
-.result-brand span { color: #7c3aed; }
+.result-brand span { color: var(--accent); }
 
 .result-room {
   display: inline-flex;
@@ -90,7 +90,7 @@
   gap: 8px;
   font-weight: 700;
   color: #c4b5fd;
-  background: rgba(124, 58, 237, 0.14);
+  background: rgb(var(--accent-rgb) / 0.14);
   padding: 6px 16px;
   border-radius: 999px;
   margin-bottom: 22px;
@@ -108,7 +108,7 @@
   font-size: 1.8rem;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(135deg, #7c3aed, #4c1d95);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
 }
 
 .result-name { font-size: 1.3rem; font-weight: 800; color: #fff; }
@@ -119,12 +119,12 @@
   font-size: 3.4rem;
   font-weight: 900;
   line-height: 1;
-  color: #ff00ff;
+  color: var(--accent);
 }
 .result-score span {
   font-size: 1.1rem;
   margin-left: 6px;
-  color: #ff00ff;
+  color: var(--accent);
 }
 
 .result-rank {
@@ -152,8 +152,8 @@
   font-weight: 700;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgb(var(--c-glass) / 0.06);
+  border: 1px solid rgb(var(--c-glass) / 0.12);
   color: #e5e7eb;
 }
 .result-ach--rare      { border-color: rgba(37, 99, 235, 0.5); color: #93c5fd; }
@@ -163,8 +163,8 @@
 .result-cta {
   display: inline-block;
   margin-top: 26px;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--on-accent);
   font-weight: 800;
   padding: 12px 26px;
   border-radius: 999px;
@@ -173,7 +173,7 @@
 }
 .result-cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 24px rgb(var(--accent-rgb) / 0.4);
 }
 
 .result-sub {

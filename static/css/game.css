@@ -1,4 +1,4 @@
-﻿/* â”€â”€ ZIK â€” Page de jeu (refonte v2.2.0 Â« Disque-Chrono Â») â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* â”€â”€ ZIK â€” Page de jeu (refonte v2.2.0 Â« Disque-Chrono Â») â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    DA : brutalist magenta â€” Barlow / Barlow Condensed / JetBrains Mono.
    Signature : le vinyle central EST le timer (anneau conique qui se consume,
    bras de lecture qui avance) + splash reveal plein Ã©cran avec la pochette.
@@ -703,7 +703,7 @@ a {
   background: conic-gradient(
     from -90deg,
     var(--accent) calc(var(--t) * 1turn),
-    rgb(var(--c-glass) / 0.06) 0
+    rgba(255, 255, 255, 0.06) 0
   );
   -webkit-mask: radial-gradient(
     farthest-side,
@@ -722,7 +722,7 @@ a {
   background: conic-gradient(
     from -90deg,
     var(--danger) calc(var(--t) * 1turn),
-    rgb(var(--c-glass) / 0.06) 0
+    rgba(255, 255, 255, 0.06) 0
   );
   filter: drop-shadow(0 0 12px rgba(248, 113, 113, 0.55));
 }
@@ -740,7 +740,7 @@ a {
     ),
     #0d0d0d;
   box-shadow:
-    inset 0 0 0 1px rgb(var(--c-glass) / 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
     inset 0 0 60px rgba(0, 0, 0, 0.9),
     0 12px 50px rgba(0, 0, 0, 0.7);
   animation: g-spin 3.6s linear infinite;
@@ -758,10 +758,10 @@ a {
   background: conic-gradient(
     from 20deg,
     transparent 0deg,
-    rgb(var(--c-glass) / 0.05) 30deg,
+    rgba(255, 255, 255, 0.05) 30deg,
     transparent 70deg,
     transparent 180deg,
-    rgb(var(--c-glass) / 0.04) 215deg,
+    rgba(255, 255, 255, 0.04) 215deg,
     transparent 250deg
   );
 }
@@ -850,7 +850,7 @@ a {
   width: 3.5%;
   height: 74%;
   background: linear-gradient(#2c2c2c, #1a1a1a);
-  border: 1px solid rgb(var(--c-glass) / 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   transform-origin: top center;
   transform: rotate(24deg);
 }
@@ -1009,11 +1009,11 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(8, 8, 8, 0.95);
+  background: rgb(var(--bg-rgb) / 0.95);
   border: 1px solid rgba(255, 179, 0, 0.6);
   padding: 14px 22px;
   font-size: 0.95rem;
-  color: #fff;
+  color: var(--text);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   max-width: min(480px, 90vw);
   text-align: center;
@@ -1040,7 +1040,7 @@ a {
 /* â”€â”€ Start / countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .g-start-btn {
   background: var(--accent);
-  color: #000;
+  color: var(--on-accent);
   border: none;
   padding: 16px 42px;
   font-family: var(--g-cond);
@@ -1158,7 +1158,7 @@ a {
 }
 .g-submit-btn {
   background: var(--accent);
-  color: #000;
+  color: var(--on-accent);
   border: none;
   padding: 0 34px;
   font-family: var(--g-cond);
@@ -1184,7 +1184,7 @@ a {
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  background: rgba(8, 8, 8, 0.9);
+  background: rgb(var(--bg-rgb) / 0.9);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border2);
   padding: 6px 14px;
@@ -1284,7 +1284,7 @@ a {
     ),
     #0d0d0d;
   box-shadow:
-    inset 0 0 0 1px rgb(var(--c-glass) / 0.09),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.09),
     18px 0 50px rgba(0, 0, 0, 0.8);
   animation: g-spin 7s linear infinite;
 }
@@ -1302,7 +1302,7 @@ a {
   inset: 0;
   width: 100%;
   height: 100%;
-  border: 1px solid rgb(var(--c-glass) / 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 34px 90px rgba(0, 0, 0, 0.85);
 }
 .g-rv-cover {
@@ -1688,7 +1688,7 @@ a {
   font-weight: 900;
   letter-spacing: 0.2em;
   color: var(--accent);
-  border: 1px solid rgba(255, 0, 255, 0.4);
+  border: 1px solid rgb(var(--accent-rgb) / 0.4);
   padding: 1px 5px;
   margin-left: 7px;
   vertical-align: 2px;
@@ -2060,7 +2060,7 @@ a {
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   border: none;
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
   box-shadow: 0 4px 14px rgb(var(--accent-rgb) / 0.35);
   transition:

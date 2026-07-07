@@ -144,7 +144,7 @@
   align-items: center;
   gap: 12px;
   background: rgb(var(--c-glass, 255 255 255) / 0.04);
-  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   border-radius: 14px;
   padding: 12px 18px;
   flex: 1;
@@ -182,7 +182,7 @@
 
 .ach-filter {
   background: transparent;
-  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.12));
   color: var(--dim, #9ca3af);
   border-radius: 999px;
   padding: 4px 12px;
@@ -192,9 +192,9 @@
   transition: all 0.15s ease;
 }
 .ach-filter.active {
-  border-color: rgba(255, 0, 255, 0.4);
+  border-color: rgb(var(--accent-rgb) / 0.4);
   color: var(--accent, #ff00ff);
-  background: rgba(255, 0, 255, 0.08);
+  background: rgb(var(--accent-rgb) / 0.08);
 }
 
 .ach-grid {
@@ -214,14 +214,14 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   background: none;
-  border: 1.5px dashed var(--border2, rgba(255,255,255,0.16));
+  border: 1.5px dashed var(--border2, rgb(var(--c-glass) / 0.16));
   border-radius: 999px;
-  color: var(--mid, rgba(255,255,255,0.46));
+  color: var(--mid, rgb(var(--c-glass) / 0.46));
   padding: 8px 18px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.ach-toggle:hover { color: var(--accent, #ff00ff); border-color: rgba(255, 0, 255, 0.5); }
+.ach-toggle:hover { color: var(--accent, #ff00ff); border-color: rgb(var(--accent-rgb) / 0.5); }
 .ach-toggle-car { display: inline-block; transition: transform 0.25s ease; }
 .ach-toggle-car.open { transform: rotate(180deg); }
 
@@ -230,7 +230,7 @@
   gap: 12px;
   align-items: flex-start;
   background: rgb(var(--c-glass, 255 255 255) / 0.04);
-  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   border-radius: 14px;
   padding: 14px;
 }
@@ -279,8 +279,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgb(var(--c-glass) / 0.1);
+  border: 1px solid rgb(var(--c-glass) / 0.15);
 }
 .ach-dot--bronze.on { background: #b46432; border-color: #e8a97a; }
 .ach-dot--silver.on { background: #bec3cd; border-color: #e5e9f0; }

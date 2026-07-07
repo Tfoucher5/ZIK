@@ -59,6 +59,21 @@
       (function () {
         var t = localStorage.getItem("zik_theme") || "dark";
         document.documentElement.setAttribute("data-theme", t);
+        var bgs = {
+          dark: "#080808",
+          light: "#e8edf8",
+          violet: "#0c0814",
+          ocean: "#050b13",
+          sunset: "#140806",
+          emeraude: "#04100a",
+        };
+        if (bgs[t]) {
+          document
+            .querySelectorAll('meta[name="theme-color"]')
+            .forEach(function (m) {
+              m.content = bgs[t];
+            });
+        }
         // Legacy: migrate zik_dark → zik_theme
         if (!localStorage.getItem("zik_theme")) {
           var d = localStorage.getItem("zik_dark");

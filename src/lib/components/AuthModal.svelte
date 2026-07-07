@@ -348,7 +348,7 @@
   }
   .neon small {
     display: block; font-size: 0.16em; letter-spacing: 0.85em; color: #fafafa;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7); text-align: center; margin-top: 8px;
+    text-shadow: 0 0 10px rgb(var(--c-glass) / 0.7); text-align: center; margin-top: 8px;
   }
   @keyframes neon-flicker {
     0%, 8.5%, 9.5%, 23%, 23.8%, 55%, 55.6%, 100% { opacity: 1; }
@@ -400,7 +400,7 @@
   }
   .poster {
     position: absolute; bottom: 13%; left: 14%; width: 72%;
-    background: var(--accent); color: #000; padding: 10px 12px 12px;
+    background: var(--accent); color: var(--on-accent); padding: 10px 12px 12px;
     transform: rotate(-3deg); border-radius: 2px;
     font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -411,7 +411,7 @@
     position: absolute; bottom: 30%; right: 10%; transform: rotate(6deg);
     font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 0.72rem;
     letter-spacing: 0.2em; text-transform: uppercase; color: #fafafa;
-    border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 3px; padding: 5px 9px; opacity: 0.75;
+    border: 2px solid rgb(var(--c-glass) / 0.5); border-radius: 3px; padding: 5px 9px; opacity: 0.75;
   }
 
   .doorlight {
@@ -429,7 +429,7 @@
 
   /* ════════ LE CHECKPOINT ════════ */
   .checkpoint {
-    position: relative; background: #0c0c0c; border-left: 1px solid var(--border2);
+    position: relative; background: var(--bg2); border-left: 1px solid var(--border2);
     display: flex; flex-direction: column; justify-content: center;
     padding: 40px clamp(24px, 3vw, 48px);
     box-shadow: -40px 0 90px rgba(0, 0, 0, 0.6);
@@ -453,7 +453,7 @@
   }
 
   .board {
-    position: relative; background: #101010; border: 1px solid var(--border2); border-radius: var(--r, 5px);
+    position: relative; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r, 5px);
     padding: 30px 26px 24px;
   }
   .board::before {
@@ -550,7 +550,7 @@
 
   .submit {
     width: 100%; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.05rem;
-    letter-spacing: 0.14em; text-transform: uppercase; color: #000; background: var(--accent);
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--on-accent); background: var(--accent);
     border: none; border-radius: var(--r, 5px); padding: 13px; cursor: pointer;
     box-shadow: 0 0 26px rgb(var(--accent-rgb) / 0.35); transition: transform 0.15s;
   }

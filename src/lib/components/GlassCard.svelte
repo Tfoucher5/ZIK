@@ -12,7 +12,7 @@
 
 <style>
   .glass-card {
-    background: #111;
+    background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 22px;
@@ -23,7 +23,7 @@
     color: var(--text);
   }
   .glass-card:hover {
-    background: #161616;
+    background: var(--surface2);
     border-color: var(--border2);
     transform: translateY(-3px);
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);

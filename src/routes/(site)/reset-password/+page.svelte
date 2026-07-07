@@ -106,7 +106,7 @@
     padding: 40px 20px;
   }
   .card {
-    width: 100%; max-width: 420px; background: #101010;
+    width: 100%; max-width: 420px; background: var(--bg2);
     border: 1px solid var(--border2); border-radius: var(--r, 5px);
     padding: 34px 28px 28px; position: relative;
   }
@@ -152,7 +152,7 @@
   .btn {
     display: block; width: 100%; text-align: center;
     font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.05rem;
-    letter-spacing: 0.14em; text-transform: uppercase; color: #000; background: var(--accent);
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--on-accent); background: var(--accent);
     border: none; border-radius: var(--r, 5px); padding: 13px; cursor: pointer;
     box-shadow: 0 0 26px rgb(var(--accent-rgb) / 0.35); transition: transform 0.15s;
   }

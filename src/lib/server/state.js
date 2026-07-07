@@ -8,6 +8,7 @@ globalThis.__zik_roomGames = globalThis.__zik_roomGames ?? {};
 globalThis.__zik_salonRooms = globalThis.__zik_salonRooms ?? {};
 globalThis.__zik_chatHistories = globalThis.__zik_chatHistories ?? {};
 globalThis.__zik_errorLog = globalThis.__zik_errorLog ?? [];
+globalThis.__zik_presence = globalThis.__zik_presence ?? new Map();
 
 export const playlistCache = globalThis.__zik_playlistCache; // roomId -> Track[]
 export const customRooms = globalThis.__zik_customRooms; // code   -> { id, name, emoji, tracks, ... }
@@ -16,6 +17,7 @@ export const roomGames = globalThis.__zik_roomGames; // roomId -> { roomId, play
 export const salonRooms = globalThis.__zik_salonRooms; // code   -> { code, hostSocketId, settings, players, game }
 export const chatHistories = globalThis.__zik_chatHistories; // roomId -> { messages: [], clearTimer: null }
 export const errorLog = globalThis.__zik_errorLog; // { ts, level, msg }[]
+export const presence = globalThis.__zik_presence; // userId -> Set<socketId>
 
 const MAX_ERROR_LOG = 300;
 

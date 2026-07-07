@@ -90,11 +90,11 @@
   display: flex;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--text-muted, #9ca3af);
+  color: var(--mid);
   margin-bottom: 24px;
 }
 .breadcrumb a { color: inherit; text-decoration: none; }
-.breadcrumb a:hover { color: #fff; }
+.breadcrumb a:hover { color: var(--text); }
 
 .news-title {
   font-family: "Barlow Condensed", sans-serif;
@@ -102,12 +102,12 @@
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: -0.5px;
-  color: #fafafa;
+  color: var(--text);
   margin: 0 0 8px;
 }
 
 .news-subtitle {
-  color: var(--text-muted, #9ca3af);
+  color: var(--mid);
   font-size: 1.05rem;
   margin: 0 0 40px;
   line-height: 1.6;
@@ -140,7 +140,7 @@
 .news-line {
   width: 2px;
   flex: 1;
-  background: linear-gradient(to bottom, rgba(124, 58, 237, 0.4), rgba(124, 58, 237, 0.08));
+  background: linear-gradient(to bottom, rgb(var(--accent-rgb) / 0.4), rgb(var(--accent-rgb) / 0.08));
   margin: 6px 0;
 }
 
@@ -171,19 +171,19 @@
 .news-version {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #ff00ff;
+  color: var(--accent);
   font-family: "Barlow Condensed", sans-serif;
 }
 
 .news-date {
   font-size: 0.82rem;
-  color: var(--text-muted, #9ca3af);
+  color: var(--mid);
 }
 
 .news-entry-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 10px;
 }
 
@@ -193,7 +193,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  color: var(--text-secondary, #d1d5db);
+  color: var(--mid);
   line-height: 1.55;
   font-size: 0.95rem;
 }
@@ -202,18 +202,18 @@
   margin-top: 24px;
   text-align: center;
   padding: 28px;
-  border: 1px solid rgba(124, 58, 237, 0.25);
+  border: 1px solid rgb(var(--accent-rgb) / 0.25);
   border-radius: 16px;
-  background: rgba(124, 58, 237, 0.06);
+  background: rgb(var(--accent-rgb) / 0.06);
 }
 .news-footer-cta p {
-  color: var(--text-secondary, #d1d5db);
+  color: var(--mid);
   margin: 0 0 14px;
 }
 .news-cta-btn {
   display: inline-block;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--on-accent);
   font-weight: 700;
   padding: 10px 26px;
   border-radius: 999px;
@@ -222,7 +222,7 @@
 }
 .news-cta-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 24px rgb(var(--accent-rgb) / 0.4);
 }
 
 @media (max-width: 600px) {

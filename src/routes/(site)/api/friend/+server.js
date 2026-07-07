@@ -1,6 +1,10 @@
 import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
+import {
+  createNotification,
+  deleteNotifications,
+} from "$lib/server/services/notifications.js";
 
 const ACTIONS = new Set(["request", "accept", "remove"]);
 
@@ -44,6 +48,16 @@ export async function POST({ request }) {
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
           .eq("id", inverse.id);
         if (error) return json({ error: error.message }, { status: 400 });
+        await deleteNotifications({
+          user_id: user.id,
+          actor_id: targetId,
+          type: "friend_request",
+        });
+        await createNotification({
+          userId: targetId,
+          type: "friend_accept",
+          actorId: user.id,
+        });
       }
       return json({ friendStatus: "friends" });
     }
@@ -65,6 +79,11 @@ export async function POST({ request }) {
       .from("friendships")
       .insert({ requester_id: user.id, addressee_id: targetId });
     if (error) return json({ error: error.message }, { status: 400 });
+    await createNotification({
+      userId: targetId,
+      type: "friend_request",
+      actorId: user.id,
+    });
     return json({ friendStatus: "pending_out" });
   }
 
@@ -84,6 +103,16 @@ export async function POST({ request }) {
       .update({ status: "accepted", accepted_at: new Date().toISOString() })
       .eq("id", req.id);
     if (error) return json({ error: error.message }, { status: 400 });
+    await deleteNotifications({
+      user_id: user.id,
+      actor_id: targetId,
+      type: "friend_request",
+    });
+    await createNotification({
+      userId: targetId,
+      type: "friend_accept",
+      actorId: user.id,
+    });
     return json({ friendStatus: "friends" });
   }
 
@@ -95,5 +124,15 @@ export async function POST({ request }) {
       `and(requester_id.eq.${user.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${user.id})`,
     );
   if (error) return json({ error: error.message }, { status: 400 });
+  await deleteNotifications({
+    user_id: targetId,
+    actor_id: user.id,
+    type: "friend_request",
+  });
+  await deleteNotifications({
+    user_id: user.id,
+    actor_id: targetId,
+    type: "friend_request",
+  });
   return json({ friendStatus: "none" });
 }

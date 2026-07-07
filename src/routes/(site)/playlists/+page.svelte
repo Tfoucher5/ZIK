@@ -717,7 +717,7 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  background: #030303;
+  background: var(--bg);
   position: sticky;
   top: 56px;
   height: calc(100vh - 56px);
@@ -807,8 +807,8 @@
 }
 .pl-item:hover::before,
 .pl-item.active::before { width: 2px; }
-.pl-item:hover { background: rgba(255,255,255,0.02); }
-.pl-item.active { background: rgba(255,0,255,0.04); }
+.pl-item:hover { background: rgb(var(--c-glass) / 0.02); }
+.pl-item.active { background: rgb(var(--accent-rgb) / 0.04); }
 .pl-item-info { flex: 1; min-width: 0; }
 .pl-item-name {
   font-family: "Barlow Condensed", sans-serif;
@@ -909,7 +909,7 @@
 .pl-act-launch {
   background: var(--accent);
   border: none;
-  color: #000;
+  color: var(--on-accent);
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900;
   font-size: 0.64rem;
@@ -1016,7 +1016,7 @@
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 .plc-seg-btn:last-child { border-right: 1px solid var(--border2); }
-.plc-seg-btn.on { background: var(--accent); border-color: var(--accent); color: #000; }
+.plc-seg-btn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 /* ── Modals size overrides ───────────────────────────────────────────────────── */
 .modal-lg { max-width: 620px; }
@@ -1317,10 +1317,10 @@
   font-size: 0.92rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #000;
+  color: var(--on-accent);
   border: none;
   cursor: pointer;
-  background: linear-gradient(120deg, var(--accent), #b34dff);
+  background: linear-gradient(120deg, var(--accent), var(--accent2));
   padding: 12px 26px;
   border-radius: 12px;
   box-shadow: 0 6px 22px rgb(var(--accent-rgb) / 0.35);

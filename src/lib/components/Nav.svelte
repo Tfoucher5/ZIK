@@ -1,6 +1,7 @@
 <script>
   import { dicebear } from '$lib/utils.js';
   import { page } from '$app/state';
+  import NotificationsMenu from '$lib/components/NotificationsMenu.svelte';
 
   /** @type {{ user: any, onLogin: () => void, onRegister: () => void, onLogout: () => void }} */
   let { user, onLogin, onRegister, onLogout } = $props();
@@ -50,6 +51,7 @@
     </a>
 
     {#if user}
+      <NotificationsMenu />
       <div class="nav-profile-wrap">
         <button class="nav-avatar-wrap" onclick={toggleDropdown} aria-haspopup="true">
           <img id="nav-avatar" src={avatar} alt="" width="28" height="28">

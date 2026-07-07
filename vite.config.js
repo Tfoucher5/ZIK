@@ -10,17 +10,26 @@ const webSocketServer = {
     Promise.all([
       import("./src/lib/server/socket/game/index.js"),
       import("./src/lib/server/socket/salon.js"),
+      import("./src/lib/server/socket/presence.js"),
       import("./src/lib/server/services/playlist.js"),
-    ]).then(([{ register }, { registerSalon }, { preloadAllPlaylists }]) => {
-      const io = new Server(server.httpServer, {
-        transports: ["websocket", "polling"],
-        perMessageDeflate: { threshold: 1024 },
-      });
-      register(io);
-      registerSalon(io);
-      preloadAllPlaylists();
-      console.log("[ZIK] Socket.IO attache au serveur Vite");
-    });
+    ]).then(
+      ([
+        { register },
+        { registerSalon },
+        { registerPresence },
+        { preloadAllPlaylists },
+      ]) => {
+        const io = new Server(server.httpServer, {
+          transports: ["websocket", "polling"],
+          perMessageDeflate: { threshold: 1024 },
+        });
+        register(io);
+        registerSalon(io);
+        registerPresence(io);
+        preloadAllPlaylists();
+        console.log("[ZIK] Socket.IO attache au serveur Vite");
+      },
+    );
   },
 };
 

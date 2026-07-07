@@ -14,18 +14,18 @@
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(30, 30, 40, 0.95);
-    color: #fff;
+    background: var(--modal-bg);
+    color: var(--text);
     padding: 12px 24px;
     border-radius: 8px;
     font-size: 0.95rem;
     z-index: 9999;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgb(var(--c-glass) / 0.08);
     white-space: nowrap;
     animation: toast-in 0.2s ease;
   }
-  .toast--success { border-color: rgba(62, 207, 255, 0.4); }
+  .toast--success { border-color: rgb(var(--accent-rgb) / 0.4); }
   .toast--error   { border-color: rgba(255, 80, 80, 0.4); }
   @keyframes toast-in {
     from { opacity: 0; transform: translateX(-50%) translateY(8px); }

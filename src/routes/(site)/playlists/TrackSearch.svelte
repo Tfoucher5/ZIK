@@ -222,7 +222,7 @@
 {:else if editorTab === 'import-spotify'}
 <div class="tab-pane">
   {#if !spotifyClientId}
-    <p class="import-hint" style="color:#f87171">Spotify non configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> dans ton fichier <code>.env</code>.</p>
+    <p class="import-hint" style="color:var(--danger)">Spotify non configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> dans ton fichier <code>.env</code>.</p>
   {:else if !spConnected}
     <p class="import-hint">Connecte ton compte Spotify pour importer tes playlists (publiques et privées).</p>
     <button class="btn-spotify" onclick={connectSpotify}>Connecter Spotify</button>
@@ -323,7 +323,7 @@
   transition: color 0.12s, background 0.12s;
 }
 .etab:last-child { border-right: none; }
-.etab:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.etab:hover { color: var(--text); background: rgb(var(--c-glass) / 0.02); }
 .etab.active { color: var(--accent); background: rgb(var(--accent-rgb) / 0.06); }
 
 .tab-pane { padding: 14px 20px; }
@@ -379,7 +379,7 @@
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
 }
-.track-row:hover { background: rgba(255,255,255,0.02); }
+.track-row:hover { background: rgb(var(--c-glass) / 0.02); }
 .track-cover {
   width: 36px;
   height: 36px;
@@ -435,7 +435,7 @@
   gap: 12px;
   margin-bottom: 12px;
   padding: 12px 14px;
-  background: rgba(255,255,255,0.02);
+  background: rgb(var(--c-glass) / 0.02);
   border: 1px solid var(--border);
 }
 .import-preview-cover { width: 44px; height: 44px; object-fit: cover; background: var(--border); flex-shrink: 0; }

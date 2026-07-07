@@ -7,6 +7,7 @@
   import ContactModal from '$lib/components/ContactModal.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
+  import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -63,6 +64,7 @@
       sessionStorage.setItem('zik_uid',   user.id);
       sessionStorage.setItem('zik_uname', user.email?.split('@')[0] || 'Joueur');
     }
+    initNotifications(sb);
   }
 
   function openAuthModal(view = 'login') {
@@ -89,6 +91,7 @@
         currentUser = null;
         sessionStorage.removeItem('zik_uid');
         sessionStorage.removeItem('zik_uname');
+        teardownNotifications();
       }
     });
   });

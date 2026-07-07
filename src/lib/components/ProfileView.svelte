@@ -1,6 +1,7 @@
 <script>
   import { dicebear } from '$lib/utils.js';
   import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
+  import InviteModal from '$lib/components/InviteModal.svelte';
 
   let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {} } = $props();
 
@@ -11,6 +12,9 @@
   let social = $state({ followers: 0, following: 0, friendsCount: 0, friends: [], viewerFollows: false, followsViewer: false, friendStatus: 'none', isFriend: false, pendingRequests: [], pendingCount: 0 });
   let followBusy = $state(false);
   let friendBusy = $state(false);
+  let presenceMap = $state({});
+  let inviteOpen = $state(false);
+  let inviteTarget = $state(null);
 
   async function loadSocial() {
     if (!sb || !profile?.id) return;
@@ -20,7 +24,39 @@
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (r.ok) social = await r.json();
+      loadPresence();
     } catch { /* réseau indisponible */ }
+  }
+
+  // Présence : mes amis (mon profil) ou le propriétaire du profil (si ami)
+  async function loadPresence() {
+    if (!viewerId) return;
+    const ids = isOwn ? social.friends.map(f => f.id) : social.isFriend ? [profile.id] : [];
+    if (!ids.length) { presenceMap = {}; return; }
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const r = await fetch(`/api/presence?ids=${ids.join(',')}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) presenceMap = await r.json();
+    } catch { /* réseau indisponible */ }
+  }
+
+  function joinFriendRoom(room) {
+    const username = sessionStorage.getItem('zik_uname') || 'Joueur';
+    const p = new URLSearchParams({
+      roomId: room.roomId,
+      username,
+      userId: viewerId || '',
+      isGuest: '0',
+      gameMode: room.gameMode || 'classic',
+    });
+    window.location.href = `/game?${p}`;
+  }
+
+  function openInvite(target) {
+    inviteTarget = target;
+    inviteOpen = true;
   }
 
   async function toggleFollow() {
@@ -254,6 +290,11 @@
           {:else if canFollow}
             {#if social.friendStatus === 'friends'}
               <button class="btn btn-friend" onclick={() => friendAction('remove')} disabled={friendBusy}>★ Amis</button>
+              {#if presenceMap[profile.id]?.room}
+                <button class="btn btn-accent" onclick={() => joinFriendRoom(presenceMap[profile.id].room)}>▶ Rejoindre sa room</button>
+              {:else}
+                <button class="btn" onclick={() => openInvite({ id: profile.id, username: name })}>Inviter à jouer</button>
+              {/if}
             {:else if social.friendStatus === 'pending_out'}
               <button class="btn btn-following" onclick={() => friendAction('remove')} disabled={friendBusy}>⏳ Demande envoyée</button>
             {:else if social.friendStatus === 'pending_in'}
@@ -436,11 +477,28 @@
         <div class="case gl">
           {#if social.friends.length}
             {#each social.friends as f (f.id)}
-              <a class="gl-row" href="/user/{f.username}">
-                <span class="gl-av"><img src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34"></span>
-                <div class="gl-id"><div class="gl-name">{f.username}</div><div class="gl-sub">Niveau {f.level ?? 1}</div></div>
+              {@const pr = presenceMap[f.id]}
+              <div class="gl-row">
+                <a class="gl-av" href="/user/{f.username}" class:gl-online={pr?.online}>
+                  <img src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34">
+                </a>
+                <a class="gl-id" href="/user/{f.username}">
+                  <div class="gl-name">{f.username}</div>
+                  <div class="gl-sub" class:gl-sub-live={pr?.online}>
+                    {#if pr?.room}En room · {pr.room.roomName}{:else if pr?.online}En ligne{:else}Niveau {f.level ?? 1}{/if}
+                  </div>
+                </a>
                 <span class="gl-elo">{f.elo ?? '—'} ELO</span>
-              </a>
+                {#if isOwn}
+                  <span class="req-actions">
+                    {#if pr?.room}
+                      <button class="btn-req accept" onclick={() => joinFriendRoom(pr.room)}>Rejoindre</button>
+                    {:else}
+                      <button class="btn-req" onclick={() => openInvite(f)}>Inviter</button>
+                    {/if}
+                  </span>
+                {/if}
+              </div>
             {/each}
           {:else}
             <p class="pv-empty" style="padding:20px">
@@ -489,6 +547,15 @@
     </main>
   </div>
 </div>
+
+<InviteModal
+  open={inviteOpen}
+  onClose={() => { inviteOpen = false; }}
+  {sb}
+  {viewerId}
+  targetId={inviteTarget?.id}
+  targetName={inviteTarget?.username}
+/>
 
 <style>
   .pv {
@@ -563,7 +630,7 @@
     padding: 11px 26px; border-radius: 99px; cursor: pointer; border: 1.5px solid var(--border2); background: none; color: var(--text); transition: all 0.15s;
   }
   .btn:hover { border-color: rgb(var(--c-glass) / 0.4); transform: translateY(-1px); }
-  .btn-accent { background: var(--accent); border-color: var(--accent); color: #000; box-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.35); }
+  .btn-accent { background: var(--accent); border-color: var(--accent); color: var(--on-accent); box-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.35); }
   .btn-accent:hover { box-shadow: 0 0 36px rgb(var(--accent-rgb) / 0.55); }
   .btn-following { border-color: rgb(var(--accent-rgb) / 0.6); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }
   .btn-friend { border-color: rgb(var(--gold-rgb) / 0.6); color: var(--gold); background: rgb(var(--gold-rgb) / 0.08); }
@@ -583,8 +650,16 @@
   .gl-row { display: flex; align-items: center; gap: 12px; padding: 11px 20px; border-bottom: 1px solid var(--border); transition: background 0.15s, transform 0.15s; text-decoration: none; color: var(--text); }
   .gl-row:last-child { border-bottom: none; }
   .gl-row:hover { background: rgb(var(--c-glass) / 0.02); transform: translateX(3px); }
-  .gl-av { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; overflow: hidden; border: 1px solid rgb(var(--accent-rgb) / 0.4); background: var(--surface); display: block; }
+  .gl-av { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; overflow: hidden; border: 1px solid rgb(var(--accent-rgb) / 0.4); background: var(--surface); display: block; position: relative; }
   .gl-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gl-av.gl-online { overflow: visible; }
+  .gl-av.gl-online img { border-radius: 50%; }
+  .gl-av.gl-online::after {
+    content: ''; position: absolute; right: -2px; bottom: -2px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--success); border: 2px solid var(--bg2);
+    box-shadow: 0 0 8px rgb(74 222 128 / 0.55);
+  }
+  .gl-sub-live { color: var(--success) !important; }
   .gl-id { flex: 1; min-width: 0; }
   .gl-name { font-weight: 600; font-size: 0.88rem; }
   .gl-sub { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-top: 1px; }
@@ -619,7 +694,7 @@
   .pass-nm { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; line-height: 0.95; word-break: break-word; }
   .pass-nm .pt { color: var(--accent); }
   .pass-since { font-family: "JetBrains Mono", monospace; font-size: 0.58rem; color: var(--mid); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .pass-access { margin-top: 15px; text-align: center; background: var(--accent); color: #000; border-radius: 4px; font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.98rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 0; }
+  .pass-access { margin-top: 15px; text-align: center; background: var(--accent); color: var(--on-accent); border-radius: 4px; font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.98rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 0; }
   .pass-barcode { margin-top: 15px; height: 34px; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--text) 0 2px, transparent 2px 5px, var(--text) 5px 6px, transparent 6px 11px, var(--text) 11px 14px, transparent 14px 17px); opacity: 0.7; }
   .pass-code { font-family: "JetBrains Mono", monospace; font-size: 0.56rem; color: var(--dim); text-align: center; margin-top: 6px; letter-spacing: 0.24em; }
 
@@ -663,7 +738,7 @@
   .mode-tabs { display: inline-flex; border: 1.5px solid var(--border2); border-radius: 99px; overflow: hidden; margin-bottom: 18px; }
   .mode-tabs button { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; background: none; border: none; border-right: 1px solid var(--border); color: var(--mid); padding: 8px 16px; cursor: pointer; }
   .mode-tabs button:last-child { border-right: none; }
-  .mode-tabs button.on { color: #000; background: var(--accent); }
+  .mode-tabs button.on { color: var(--on-accent); background: var(--accent); }
   .mode-tabs button[data-mode="qcm"].on { background: var(--success); }
   .rider-top { display: flex; align-items: center; gap: 34px; flex-wrap: wrap; margin-bottom: 20px; }
   .dial { width: 210px; flex-shrink: 0; text-align: center; }
@@ -707,7 +782,7 @@
   .tier-bar i { display: block; height: 100%; }
   .tier-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px dashed var(--border); font-size: 0.82rem; }
   .tier-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .tier-chip { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; color: #000; flex-shrink: 0; }
+  .tier-chip { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; color: var(--on-accent); flex-shrink: 0; }
   .tier-name { flex: 1; color: var(--mid); }
   .tier-count { font-family: "JetBrains Mono", monospace; font-size: 0.66rem; color: var(--dim); }
   .tier-pts { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 0.78rem; }
