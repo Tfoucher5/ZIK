@@ -76,9 +76,13 @@ async function autoUpdateYtDlp() {
 }
 
 const compress = compression({ threshold: 1024 });
-const server = createServer((req, res) =>
-  compress(req, res, () => handler(req, res)),
-);
+const IMMUTABLE_RE = /^\/(css|fonts|favicon)\//;
+const server = createServer((req, res) => {
+  if (IMMUTABLE_RE.test(req.url)) {
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  }
+  compress(req, res, () => handler(req, res));
+});
 
 const io = new Server(server, {
   transports: ["websocket", "polling"],
