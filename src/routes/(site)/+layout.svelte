@@ -8,6 +8,7 @@
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
+  import { ADSENSE_CLIENT } from '$lib/ads.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -72,8 +73,19 @@
     authOpen = true;
   }
 
+  let adsLoaded = false;
+  function loadAdsScript() {
+    if (adsLoaded || currentUser?.profile?.role === 'super_admin') return;
+    adsLoaded = true;
+    const s = document.createElement('script');
+    s.async = true;
+    s.crossOrigin = 'anonymous';
+    s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+    document.head.appendChild(s);
+  }
+
   onMount(async () => {
-    if (!sb) { authReady = true; return; }
+    if (!sb) { authReady = true; loadAdsScript(); return; }
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) await applyUser(session.user);
@@ -82,6 +94,7 @@
     }
 
     authReady = true;
+    loadAdsScript();
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await applyUser(session.user);
