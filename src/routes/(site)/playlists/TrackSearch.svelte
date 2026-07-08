@@ -203,7 +203,7 @@
   <div class="search-results">
     {#each searchResults as t, i (t.external_id || i)}
       <div class="track-row">
-        {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="">{/if}
+        {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="" loading="lazy" decoding="async">{/if}
         <div class="track-info">
           <div class="track-title">{t.title}</div>
           <div class="track-artist">{t.artist}</div>

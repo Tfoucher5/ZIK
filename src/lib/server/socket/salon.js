@@ -397,6 +397,23 @@ function endRound(code, reason, io) {
   }
 }
 
+async function searchTrackVideo(track, roundDuration) {
+  const artist = track.mainArtist || track.artist;
+  const results = await YouTube.search(`${artist} - ${track.title}`, {
+    type: "video",
+    limit: 5,
+  });
+  if (!results.length) throw new Error("No video");
+  const video =
+    results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
+  const durationSec = Math.round((video.duration || 0) / 1000);
+  const safeStart = Math.max(
+    0,
+    Math.floor(Math.random() * Math.max(1, durationSec - roundDuration - 10)),
+  );
+  return { video, safeStart };
+}
+
 async function startNextRound(code, io) {
   const salon = salonRooms[code];
   if (!salon) return;
@@ -425,21 +442,25 @@ async function startNextRound(code, io) {
   const track = game.currentTrack;
 
   try {
-    const artist = track.mainArtist || track.artist;
-    const results = await YouTube.search(`${artist} - ${track.title}`, {
-      type: "video",
-      limit: 5,
-    });
-    if (!results.length) throw new Error("No video");
-
-    const video =
-      results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
-    const duration = salon.settings.roundDuration;
-    const durationSec = Math.round((video.duration || 0) / 1000);
-    const safeStart = Math.max(
-      0,
-      Math.floor(Math.random() * Math.max(1, durationSec - duration - 10)),
-    );
+    let video, safeStart;
+    if (game.prefetchedRound?.track === track) {
+      ({ video, safeStart } = game.prefetchedRound);
+      game.prefetchedRound = null;
+    }
+    if (!video && game._prefetchPromise) {
+      await game._prefetchPromise.catch(() => {});
+      game._prefetchPromise = null;
+      if (game.prefetchedRound?.track === track) {
+        ({ video, safeStart } = game.prefetchedRound);
+        game.prefetchedRound = null;
+      }
+    }
+    if (!video) {
+      ({ video, safeStart } = await searchTrackVideo(
+        track,
+        salon.settings.roundDuration,
+      ));
+    }
 
     game.phase = "round";
     game.timerActive = false;
@@ -484,6 +505,19 @@ async function startNextRound(code, io) {
 
     // Wait for host to signal music is playing (max 5s fallback)
     game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
+
+    // Précharger la recherche YouTube du round suivant pendant celui-ci
+    const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
+    if (nextTrack) {
+      game._prefetchPromise = searchTrackVideo(
+        nextTrack,
+        salon.settings.roundDuration,
+      )
+        .then((r) => {
+          game.prefetchedRound = { track: nextTrack, ...r };
+        })
+        .catch(() => {});
+    }
   } catch (err) {
     console.error(`Salon skip "${track.title}":`, err.message);
     startNextRound(code, io);

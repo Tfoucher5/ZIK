@@ -596,6 +596,8 @@
     display: grid; grid-template-columns: 80px 1fr 130px 80px; gap: 14px; align-items: center;
     padding: 12px 6px; border-bottom: 1px solid var(--border);
     transition: background 0.15s;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 63px;
   }
   .row:hover { background: var(--surface); }
   .row-rank {

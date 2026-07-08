@@ -304,16 +304,28 @@
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
   }
 
-  function loadAudio(audioUrl, startSeconds) {
+  function loadAudio(audioUrl, startSeconds, onReady) {
     const audio = document.getElementById('previewAudio');
     if (!audio) return;
     if (ytPlayer?.stopVideo) ytPlayer.stopVideo();
     audio.pause();
     audio.onloadedmetadata = null;
     audio.onended = null;
+    audio.oncanplaythrough = null;
     startMediaGuard();
     audio.src = audioUrl;
     audio.volume = savedVol() / 100;
+    if (onReady) {
+      let readySent = false;
+      const markReady = () => {
+        if (readySent) return;
+        readySent = true;
+        clearTimeout(readyFallback);
+        onReady();
+      };
+      const readyFallback = setTimeout(markReady, 4000);
+      audio.oncanplaythrough = markReady;
+    }
     audio.onloadedmetadata = () => {
       audio.currentTime = startSeconds;
       audio.play().catch(() => {
@@ -335,7 +347,7 @@
   function stopVideo() {
     if (ytReady && ytPlayer) ytPlayer.stopVideo();
     const audio = document.getElementById('previewAudio');
-    if (audio) { audio.onended = null; audio.pause(); audio.src = ''; }
+    if (audio) { audio.onended = null; audio.oncanplaythrough = null; audio.pause(); audio.src = ''; }
   }
 
   function showFeedback(msg, cls) {
@@ -530,8 +542,7 @@
       _lastVideo = { videoId: data.videoId, startSeconds: data.startSeconds, startedAt: Date.now() };
       if (data.audioUrl) {
         _usingIframe = false;
-        loadAudio(data.audioUrl, data.startSeconds);
-        if (socket) socket.emit('player_ready');
+        loadAudio(data.audioUrl, data.startSeconds, () => socket?.emit('player_ready'));
       } else {
         _usingIframe = true;
         loadVideo(data.videoId, data.startSeconds);
@@ -950,7 +961,7 @@
           {:else}
             <div class="g-hitem">
               {#if item.cover}
-                <img src={item.cover} alt="" class="g-hitem-img">
+                <img src={item.cover} alt="" class="g-hitem-img" loading="lazy" decoding="async">
               {:else}
                 <div class="g-hitem-img g-hitem-noimg">&#x266A;</div>
               {/if}

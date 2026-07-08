@@ -5,7 +5,7 @@
 <div class="track-row-pl">
   <span class="track-num">{index}</span>
   {#if track.cover_url}
-    <img class="track-cover" src={track.cover_url} alt="" width="34" height="34" onerror={e => e.currentTarget.style.display='none'}>
+    <img class="track-cover" src={track.cover_url} alt="" width="34" height="34" loading="lazy" decoding="async" onerror={e => e.currentTarget.style.display='none'}>
   {/if}
   <div class="track-info">
     <div class="track-title">{track.title}</div>
@@ -31,6 +31,8 @@
   gap: 10px;
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 55px;
 }
 .track-num {
   font-family: "Barlow Condensed", sans-serif;

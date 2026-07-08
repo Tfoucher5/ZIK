@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "node scripts/ensure-ytdlp.mjs && vite build",
+    "build": "node scripts/ensure-ytdlp.mjs && vite build && node scripts/minify-css.mjs",
     "start": "node server.js",
     "preview": "vite preview",
     "lint": "eslint . && prettier --check .",
@@ -29,6 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/compression": "^1.8.1",
+    "esbuild": "^0.28.1",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.19.0",

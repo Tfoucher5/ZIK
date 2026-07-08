@@ -372,7 +372,7 @@
       <a href="/user/{p.username}" class="chart-row">
         <span class="chart-pos" class:top3={i < 3}>{i + 1}</span>
         <span class="chart-mv">—</span>
-        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} width="32" height="32" />
+        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} width="32" height="32" loading="lazy" decoding="async" />
         <div class="chart-info">
           <div class="c-nm">{p.username}</div>
           <div class="c-sb">{p.games_played} partie{p.games_played !== 1 ? 's' : ''}</div>

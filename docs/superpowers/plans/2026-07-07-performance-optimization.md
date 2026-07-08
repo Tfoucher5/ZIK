@@ -22,20 +22,24 @@
 ### Task 0: Mesure de référence
 
 **Files:**
+
 - Create: `docs/superpowers/plans/2026-07-07-perf-baseline.md`
 
 **Interfaces:**
+
 - Produces: chiffres de départ (poids CSS/JS, présence compression) utilisés par Task 7 pour prouver les gains.
 
 - [ ] **Step 1: Build prod et relevé des tailles**
 
 Run:
+
 ```bash
 npm run build
 du -sb build/client/css/*.css | sort -rn
 find build/client/_app/immutable -name "*.js" -exec du -b {} + | sort -rn | head -15
 ls build/client/css/ | head
 ```
+
 Expected: tailles brutes des CSS (~21 Ko base, ~58 Ko game, ~72 Ko salon), pas de fichiers `.br`/`.gz` (précompression pas encore activée).
 
 - [ ] **Step 2: Noter la référence**
@@ -46,6 +50,7 @@ Expected: tailles brutes des CSS (~21 Ko base, ~58 Ko game, ~72 Ko salon), pas d
 # Baseline perf — avant optimisation (2026-07-07)
 
 ## CSS (build/client/css, non minifiés, servis sans cache long)
+
 - base.css : <taille> o
 - game.css : <taille> o
 - salon.css : <taille> o
@@ -53,15 +58,19 @@ Expected: tailles brutes des CSS (~21 Ko base, ~58 Ko game, ~72 Ko salon), pas d
 - animations.css : <taille> o
 
 ## JS (top chunks immutable)
+
 - <liste des 15 plus gros>
 
 ## Compression
+
 - Précompression build : absente (gzip à la volée uniquement via `compression`)
 
 ## Fonts
+
 - Google Fonts externes (2 connexions : fonts.googleapis.com + fonts.gstatic.com)
 
 ## Audio jeu
+
 - player_ready émis avant buffering ; Salon : recherche YouTube synchrone à chaque round
 ```
 
@@ -79,10 +88,12 @@ git commit -m "docs: spec + plan + baseline optimisation performance"
 ### Task 1: Précompression build + cache headers immutable
 
 **Files:**
+
 - Modify: `svelte.config.js`
 - Modify: `server.js:78-81`
 
 **Interfaces:**
+
 - Consumes: rien.
 - Produces: fichiers `.br`/`.gz` dans `build/client/` (Task 3 devra les régénérer pour les CSS minifiés) ; headers `Cache-Control` immutable sur `/css/*`, `/fonts/*`, `/favicon/*` (Task 2 dépend de `/fonts/*`).
 
@@ -132,12 +143,15 @@ Sans risque : ces chemins sont déjà versionnés par `?v=` (un bump d'URL inval
 - [ ] **Step 3: Vérifier build + headers**
 
 Run:
+
 ```bash
 npm run build && ls build/client/css/
 ```
+
 Expected: chaque `.css` accompagné de `.css.br` et `.css.gz`.
 
 Run (serveur prod local) :
+
 ```bash
 node server.js &
 sleep 3
@@ -145,6 +159,7 @@ curl -sI "http://localhost:3000/css/base.css?v=test" | grep -iE "cache-control|c
 curl -sI -H "Accept-Encoding: br" "http://localhost:3000/css/base.css?v=test" | grep -iE "content-encoding"
 kill %1
 ```
+
 Expected: `Cache-Control: public, max-age=31536000, immutable` et `Content-Encoding: br`.
 
 - [ ] **Step 4: Vérifier que le dev fonctionne toujours**
@@ -163,12 +178,14 @@ git commit -m "perf: precompression brotli/gzip au build + cache immutable css/f
 ### Task 2: Self-host des fonts (suppression Google Fonts)
 
 **Files:**
+
 - Create: `scripts/fetch-fonts.mjs`
 - Create: `static/fonts/*.woff2` (générés par le script)
 - Create: `static/css/fonts.css` (généré par le script)
 - Modify: `src/app.html:38-54`
 
 **Interfaces:**
+
 - Consumes: cache headers `/fonts/*` de Task 1.
 - Produces: `/css/fonts.css` + `/fonts/*.woff2` locaux référencés par `app.html`.
 
@@ -194,8 +211,11 @@ const css = await (
 
 mkdirSync("static/fonts", { recursive: true });
 
-const blocks = [...css.matchAll(/\/\* ([a-z-]+) \*\/\s*(@font-face\s*\{[^}]*\})/g)];
-if (!blocks.length) throw new Error("Aucun bloc @font-face trouvé — UA refusée ?");
+const blocks = [
+  ...css.matchAll(/\/\* ([a-z-]+) \*\/\s*(@font-face\s*\{[^}]*\})/g),
+];
+if (!blocks.length)
+  throw new Error("Aucun bloc @font-face trouvé — UA refusée ?");
 
 let out = "/* Fonts self-hostées — générées par scripts/fetch-fonts.mjs */\n";
 for (const [, subset, block] of blocks) {
@@ -225,45 +245,45 @@ Expected: ~20 fichiers `.woff2` listés avec leurs tailles + « static/css/fonts
 Dans `src/app.html`, remplacer :
 
 ```html
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://e-cdns-images.dzcdn.net" crossorigin />
-    <link rel="dns-prefetch" href="https://api.deezer.com" />
-    <!-- Fonts async (non-render-blocking) — display=swap évite le FOIT -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media = 'all'"
-    />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://e-cdns-images.dzcdn.net" crossorigin />
+<link rel="dns-prefetch" href="https://api.deezer.com" />
+<!-- Fonts async (non-render-blocking) — display=swap évite le FOIT -->
+<link
+  href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+  rel="stylesheet"
+  media="print"
+  onload="this.media = 'all'"
+/>
+<noscript>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+</noscript>
 ```
 
 par :
 
 ```html
-    <link rel="preconnect" href="https://e-cdns-images.dzcdn.net" crossorigin />
-    <link rel="dns-prefetch" href="https://api.deezer.com" />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/barlow-400-latin.woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/barlow-condensed-800-latin.woff2"
-      crossorigin
-    />
-    <link rel="stylesheet" href="/css/fonts.css?v=3.0.0" />
+<link rel="preconnect" href="https://e-cdns-images.dzcdn.net" crossorigin />
+<link rel="dns-prefetch" href="https://api.deezer.com" />
+<link
+  rel="preload"
+  as="font"
+  type="font/woff2"
+  href="/fonts/barlow-400-latin.woff2"
+  crossorigin
+/>
+<link
+  rel="preload"
+  as="font"
+  type="font/woff2"
+  href="/fonts/barlow-condensed-800-latin.woff2"
+  crossorigin
+/>
+<link rel="stylesheet" href="/css/fonts.css?v=3.0.0" />
 ```
 
 (Si les noms exacts des deux fichiers préchargés diffèrent de ceux générés au Step 2, utiliser les noms réels.)
@@ -284,10 +304,12 @@ git commit -m "perf: fonts self-hostées (woff2 locaux, suppression Google Fonts
 ### Task 3: Minification post-build des CSS statiques
 
 **Files:**
+
 - Create: `scripts/minify-css.mjs`
 - Modify: `package.json:8` (script `build`) + devDependency `esbuild`
 
 **Interfaces:**
+
 - Consumes: `.br`/`.gz` générés par la précompression de Task 1 (ils sont régénérés ici pour les CSS minifiés).
 - Produces: `build/client/css/*.css` minifiés + `.br`/`.gz` cohérents. Le dev et les URLs ne changent pas.
 
@@ -327,7 +349,9 @@ for (const f of readdirSync(dir).filter((n) => n.endsWith(".css"))) {
       params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
     }),
   );
-  console.log(`${f}: ${src.length} → ${code.length} o (br: ${brotliCompressSync(buf, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length} o)`);
+  console.log(
+    `${f}: ${src.length} → ${code.length} o (br: ${brotliCompressSync(buf, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length} o)`,
+  );
 }
 ```
 
@@ -349,9 +373,11 @@ par :
 
 Run: `npm run build`
 Expected: log de minification par fichier (game.css ~58 Ko → ~45 Ko et br nettement plus petit), et :
+
 ```bash
 head -c 200 build/client/css/game.css
 ```
+
 Expected: CSS minifié (une seule ligne). Vérifier que `static/css/game.css` (source) est **inchangé** (`git status` propre côté `static/`).
 
 - [ ] **Step 5: Commit (après confirmation utilisateur)**
@@ -366,14 +392,16 @@ git commit -m "perf: minification post-build des CSS statiques + recompression b
 ### Task 4: `player_ready` émis au vrai buffering audio (jeu classique)
 
 **Files:**
+
 - Modify: `src/routes/(site)/game/+page.svelte:307-339` (fonction `loadAudio` + `stopVideo`)
 - Modify: `src/routes/(site)/game/+page.svelte:531-538` (handler `start_round`)
 
 **Interfaces:**
+
 - Consumes: mécanisme serveur existant `player_ready` → `round_start_sync` (75 % de prêts ou 6 s, `core.js:1151-1176`) — inchangé.
 - Produces: `loadAudio(audioUrl, startSeconds, onReady)` — `onReady` appelé une seule fois quand l'audio est bufferisé (`canplaythrough`) ou après 4 s de fallback.
 
-Contexte : aujourd'hui le client émet `player_ready` immédiatement après avoir *lancé* le chargement (`+page.svelte:534`), donc la fenêtre de sync ne couvre pas le téléchargement — des joueurs entendent le son en retard. En émettant à `canplaythrough`, le round démarre quand l'audio est réellement prêt chez 75 % des joueurs.
+Contexte : aujourd'hui le client émet `player_ready` immédiatement après avoir _lancé_ le chargement (`+page.svelte:534`), donc la fenêtre de sync ne couvre pas le téléchargement — des joueurs entendent le son en retard. En émettant à `canplaythrough`, le round démarre quand l'audio est réellement prêt chez 75 % des joueurs.
 
 - [ ] **Step 1: Modifier `loadAudio`**
 
@@ -424,13 +452,22 @@ par :
 Dans la même page, remplacer :
 
 ```js
-    if (audio) { audio.onended = null; audio.pause(); audio.src = ''; }
+if (audio) {
+  audio.onended = null;
+  audio.pause();
+  audio.src = "";
+}
 ```
 
 par :
 
 ```js
-    if (audio) { audio.onended = null; audio.oncanplaythrough = null; audio.pause(); audio.src = ''; }
+if (audio) {
+  audio.onended = null;
+  audio.oncanplaythrough = null;
+  audio.pause();
+  audio.src = "";
+}
 ```
 
 - [ ] **Step 3: Émettre `player_ready` via le callback**
@@ -475,9 +512,11 @@ git commit -m "perf: player_ready emis au vrai buffering audio (canplaythrough +
 ### Task 5: Salon — prefetch de la recherche YouTube du round suivant
 
 **Files:**
+
 - Modify: `src/lib/server/socket/salon.js:400-491` (fonction `startNextRound` + helper)
 
 **Interfaces:**
+
 - Consumes: `YouTube.search` (déjà importé dans `salon.js`), `game.sessionPlaylist` (pile, `pop()` à chaque round).
 - Produces: `searchTrackVideo(track, roundDuration)` → `{ video, safeStart }` ; `game.prefetchedRound = { track, video, safeStart }` et `game._prefetchPromise` (mêmes noms que le pattern de `core.js`).
 
@@ -561,28 +600,28 @@ Attention : la variable locale `duration` disparaît — vérifier qu'elle n'ét
 Toujours dans `startNextRound`, remplacer :
 
 ```js
-    // Wait for host to signal music is playing (max 5s fallback)
-    game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
+// Wait for host to signal music is playing (max 5s fallback)
+game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
 ```
 
 par :
 
 ```js
-    // Wait for host to signal music is playing (max 5s fallback)
-    game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
+// Wait for host to signal music is playing (max 5s fallback)
+game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
 
-    // Précharger la recherche YouTube du round suivant pendant celui-ci
-    const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
-    if (nextTrack) {
-      game._prefetchPromise = searchTrackVideo(
-        nextTrack,
-        salon.settings.roundDuration,
-      )
-        .then((r) => {
-          game.prefetchedRound = { track: nextTrack, ...r };
-        })
-        .catch(() => {});
-    }
+// Précharger la recherche YouTube du round suivant pendant celui-ci
+const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
+if (nextTrack) {
+  game._prefetchPromise = searchTrackVideo(
+    nextTrack,
+    salon.settings.roundDuration,
+  )
+    .then((r) => {
+      game.prefetchedRound = { track: nextTrack, ...r };
+    })
+    .catch(() => {});
+}
 ```
 
 - [ ] **Step 4: Vérifier en jouant un salon**
@@ -606,6 +645,7 @@ git commit -m "perf(salon): prefetch de la recherche YouTube du round suivant"
 ### Task 6: Images lazy + content-visibility sur les listes
 
 **Files:**
+
 - Modify: `src/routes/(site)/game/+page.svelte:953`
 - Modify: `src/routes/(site)/rooms/+page.svelte:507`
 - Modify: `src/routes/(site)/playlists/TrackSearch.svelte:206`
@@ -616,6 +656,7 @@ git commit -m "perf(salon): prefetch de la recherche YouTube du round suivant"
 - Modify: `src/routes/(site)/playlists/TrackRow.svelte` (style scoped `.track-row-pl`)
 
 **Interfaces:**
+
 - Consumes: rien. Produces: rien (changements locaux de rendu, zéro changement visuel).
 
 - [ ] **Step 1: Ajouter `loading="lazy" decoding="async"` aux images de listes**
@@ -636,15 +677,15 @@ Ne PAS lazy-loader les images visibles immédiatement au premier écran (covers 
 Dans le `<style>` scoped de `src/routes/(site)/classements/+page.svelte`, ajouter à la règle `.row` existante :
 
 ```css
-    content-visibility: auto;
-    contain-intrinsic-size: auto 56px;
+content-visibility: auto;
+contain-intrinsic-size: auto 56px;
 ```
 
 Dans le `<style>` scoped de `src/routes/(site)/playlists/TrackRow.svelte`, ajouter à `.track-row-pl` :
 
 ```css
-    content-visibility: auto;
-    contain-intrinsic-size: auto 46px;
+content-visibility: auto;
+contain-intrinsic-size: auto 46px;
 ```
 
 Ajuster les valeurs `56px`/`46px` à la hauteur réelle d'une ligne (mesurer via devtools) pour éviter tout saut de scrollbar.
@@ -665,19 +706,23 @@ git commit -m "perf: lazy-loading images de listes + content-visibility classeme
 ### Task 7: Mesure finale + lint (PAS de bump de version — branche v3.0.0)
 
 **Files:**
+
 - Modify: `docs/superpowers/plans/2026-07-07-perf-baseline.md` (section « Après »)
 
 **Interfaces:**
+
 - Consumes: baseline de Task 0.
 
 - [ ] **Step 1: Re-mesure**
 
 Run:
+
 ```bash
 npm run build
 du -sb build/client/css/*.css | sort -rn
 ls -la build/client/css/ | grep -E "\.br"
 ```
+
 Ajouter une section « ## Après optimisation » dans `2026-07-07-perf-baseline.md` avec les nouvelles tailles (CSS minifiés + tailles `.br`) et les changements qualitatifs (fonts locales, cache immutable, player_ready bufferisé, prefetch salon).
 
 - [ ] **Step 2: Lint**

@@ -504,7 +504,7 @@
             {#each COVER_POSITIONS as pos, ci (ci)}
               {@const hue = ((sel.name?.charCodeAt(0) ?? 0) * 53 + ci * 37) % 360}
               {#if ci < (sel.covers?.length ?? 0)}
-                <img class="mine-cov" src={sel.covers[ci]} alt=""
+                <img class="mine-cov" src={sel.covers[ci]} alt="" loading="lazy" decoding="async"
                   style="width:{COV_SIZE}px;height:{COV_SIZE}px;top:{pos.y}px;left:{pos.x}px"
                   onerror={e => { e.currentTarget.style.background = `hsl(${hue}deg,22%,8%)`; e.currentTarget.removeAttribute('src'); }} />
               {:else}

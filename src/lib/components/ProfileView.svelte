@@ -463,7 +463,7 @@
           <div class="case gl" style="margin-bottom:18px">
             {#each social.pendingRequests as p (p.id)}
               <div class="gl-row">
-                <a class="gl-av" href="/user/{p.username}"><img src={p.avatar_url || dicebear(p.username)} alt="" width="34" height="34"></a>
+                <a class="gl-av" href="/user/{p.username}"><img src={p.avatar_url || dicebear(p.username)} alt="" width="34" height="34" loading="lazy" decoding="async"></a>
                 <a class="gl-id" href="/user/{p.username}"><div class="gl-name">{p.username}</div><div class="gl-sub">Niveau {p.level ?? 1}</div></a>
                 <span class="req-actions">
                   <button class="btn-req accept" onclick={() => friendAction('accept', p.id)} disabled={friendBusy}>Accepter</button>
@@ -480,7 +480,7 @@
               {@const pr = presenceMap[f.id]}
               <div class="gl-row">
                 <a class="gl-av" href="/user/{f.username}" class:gl-online={pr?.online}>
-                  <img src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34">
+                  <img src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34" loading="lazy" decoding="async">
                 </a>
                 <a class="gl-id" href="/user/{f.username}">
                   <div class="gl-name">{f.username}</div>
