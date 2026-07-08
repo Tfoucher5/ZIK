@@ -1,5 +1,7 @@
 <script>
   import { onMount } from 'svelte';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   let activeSection = $state('decouverte');
 
@@ -917,6 +919,8 @@
     <div class="doc-footer-note">
       <p>Documentation mise &agrave; jour &mdash; avril 2026. Une question non couverte&nbsp;? Utilisez le <strong>formulaire de contact</strong> dans le footer ou ouvrez une <a href="https://github.com/Tfoucher5/ZIK/issues" target="_blank" rel="noopener noreferrer">issue GitHub</a>.</p>
     </div>
+
+    <AdSlot adSlot={AD_SLOTS.content} />
   </main>
 </div>
 

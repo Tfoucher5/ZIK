@@ -2,6 +2,8 @@
   import { onMount, getContext } from "svelte";
   import LoadMore from '$lib/components/LoadMore.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   let { data } = $props();
 
@@ -394,6 +396,8 @@
     </div>
   {/if}
 </div>
+
+<AdSlot adSlot={AD_SLOTS.content} />
 
 <style>
   .hp-page {

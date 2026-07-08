@@ -1,5 +1,7 @@
 <script>
   import { NEWS } from '$lib/news.js';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   const TAG_COLORS = {
     'Nouveauté': 'new',
@@ -77,6 +79,8 @@
     <p>Une idée d'amélioration ? Un bug ?</p>
     <a class="news-cta-btn" href="/rooms">Jouer maintenant</a>
   </div>
+
+  <AdSlot adSlot={AD_SLOTS.content} />
 </main>
 
 <style>

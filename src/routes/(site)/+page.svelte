@@ -4,6 +4,8 @@
   import { dicebear } from '$lib/utils.js';
   import HeroSection from '$lib/components/HeroSection.svelte';
   import Modal from '$lib/components/Modal.svelte';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   let { data } = $props();
 
@@ -490,6 +492,8 @@
     </details>
   </div>
 </section>
+
+<AdSlot adSlot={AD_SLOTS.home} />
 
 <!-- ══════════════════════════════ GUEST MODAL ══════════════════════════════ -->
 <Modal open={guestOpen} onClose={() => guestOpen = false} maxWidth="360px">

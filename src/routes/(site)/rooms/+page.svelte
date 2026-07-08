@@ -3,6 +3,8 @@
   import Toast from '$lib/components/Toast.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
   import { toast } from '$lib/toast.svelte.js';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -595,6 +597,7 @@
     {/if}
   {/if}
 
+  <AdSlot adSlot={AD_SLOTS.content} />
 </div>
 
 <!-- Room modal -->
