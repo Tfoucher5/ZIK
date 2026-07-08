@@ -33,8 +33,8 @@
 ```js
 export const ADSENSE_CLIENT = "ca-pub-6495356963886902";
 export const AD_SLOTS = {
-  home: "",      // rempli après création des unités dans le dashboard
-  content: "",   // rooms, classements, playlists, docs, nouveautes
+  home: "", // rempli après création des unités dans le dashboard
+  content: "", // rooms, classements, playlists, docs, nouveautes
   gameLobby: "",
   gameOver: "",
 };
@@ -44,16 +44,16 @@ Un slot vide ⇒ `AdSlot` ne rend rien (permet de merger avant que les unités e
 
 ## Emplacements
 
-| Page / moment | Position | Slot |
-|---|---|---|
-| Home | entre le classement et le footer | home |
-| /rooms | sous la liste | content |
-| /classements | sous le tableau | content |
-| /playlists | sous la grille | content |
-| /docs | bas de page | content |
-| /nouveautes | bas de page | content |
-| Jeu — lobby d'attente | encart sous la liste des joueurs | gameLobby |
-| Jeu — game over | encart sous le tableau des scores | gameOver |
+| Page / moment         | Position                          | Slot      |
+| --------------------- | --------------------------------- | --------- |
+| Home                  | entre le classement et le footer  | home      |
+| /rooms                | sous la liste                     | content   |
+| /classements          | sous le tableau                   | content   |
+| /playlists            | sous la grille                    | content   |
+| /docs                 | bas de page                       | content   |
+| /nouveautes           | bas de page                       | content   |
+| Jeu — lobby d'attente | encart sous la liste des joueurs  | gameLobby |
+| Jeu — game over       | encart sous le tableau des scores | gameOver  |
 
 ## RGPD / conformité
 
