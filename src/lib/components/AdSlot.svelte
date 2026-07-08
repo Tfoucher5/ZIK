@@ -45,7 +45,7 @@
     border-radius: var(--r, 8px);
     background: var(--surface);
   }
-  .ad-box:has(ins[data-ad-status='unfilled']) { display: none; }
+  .ad-box:has(:global(ins[data-ad-status='unfilled'])) { display: none; }
   .ad-label {
     display: block;
     margin-bottom: 8px;
