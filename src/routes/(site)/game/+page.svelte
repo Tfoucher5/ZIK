@@ -4,6 +4,8 @@
   import { goto } from '$app/navigation';
   import ReportModal from '$lib/components/ReportModal.svelte';
   import AchievementToast from '$lib/components/AchievementToast.svelte';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   // URL params — read once on mount
   let ROOM_ID  = 'pop';
@@ -863,6 +865,10 @@
           {/if}
         {/if}
 
+        {#if showStart && !gameoverShow}
+          <AdSlot adSlot={AD_SLOTS.gameLobby} height={90} />
+        {/if}
+
       </main>
 
       <!-- Input bar (dans la colonne centrale) -->
@@ -1085,6 +1091,8 @@
           Rejoindre le Discord
         </a>
         </div>
+
+        <AdSlot adSlot={AD_SLOTS.gameOver} height={90} />
       </div>
 
     </div>
