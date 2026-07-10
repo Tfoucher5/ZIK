@@ -41,7 +41,7 @@
   });
 
   let eloLb = $state(data.eloLb ?? []);
-  let globalStats = $state(data.globalStats ?? { publicPlaylists: 0, gamesMonth: 0 });
+  let globalStats = $state(data.globalStats ?? { users: 0, publicPlaylists: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
   let guestUsername = $state("");
   let pendingRoom = $state(null);
@@ -84,6 +84,20 @@
       totalOnline = data.totalOnline ?? rooms.reduce((s, r) => s + (r.online || 0), 0);
     } catch { rooms = []; }
     if (!document.hidden) _roomsTimer = setTimeout(loadRooms, 30_000);
+  }
+
+  async function loadStats() {
+    try {
+      const r = await fetch("/api/stats/global", { cache: "no-store" });
+      if (r.ok) {
+        const d = await r.json();
+        globalStats = {
+          users: d.users ?? 0,
+          publicPlaylists: d.publicPlaylists ?? 0,
+          gamesMonth: d.gamesMonth ?? 0,
+        };
+      }
+    } catch { /* réseau */ }
   }
 
   async function joinByCode() {
@@ -236,9 +250,12 @@
 
   onMount(() => {
     loadRooms();
+    loadStats();
+    const statsTimer = setInterval(() => { if (!document.hidden) loadStats(); }, 60_000);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) loadRooms();
     });
+    return () => clearInterval(statsTimer);
   });
 </script>
 
@@ -261,6 +278,7 @@
   badge={displayOnline > 0 ? `${displayOnline} joueurs en ligne` : 'Blind Test Multijoueur'}
   playlistCount={globalStats.publicPlaylists}
   gamesMonth={globalStats.gamesMonth}
+  userCount={globalStats.users}
 >
   <button class="btn-accent" onclick={() => goto('/rooms')}>Jouer maintenant →</button>
   <button class="btn-ghost" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Explorer les rooms</button>
@@ -1161,6 +1179,8 @@
   /* ════════════════════════════ FAQ ════════════════════════════ */
   .faq-section {
     padding: 72px clamp(20px, 5vw, 72px);
+    /* width explicite : flex item (body) + margin auto ⇒ sinon largeur au contenu, les encadrés bougent à l'ouverture */
+    width: 100%;
     max-width: 1000px;
     margin: 0 auto;
   }

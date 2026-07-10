@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  let { badge = null, playlistCount = 0, gamesMonth = 0, children } = $props();
+  let { badge = null, playlistCount = 0, gamesMonth = 0, userCount = 0, children } = $props();
 
   const FALLBACK = [
     'https://api.deezer.com/album/302127/image',
@@ -116,6 +116,10 @@
   <div class="badge b3" aria-hidden="true">
     <span class="badge-big">{gamesMonth > 0 ? fmt(gamesMonth) : '—'}</span>
     <span class="badge-lbl">Parties ce mois</span>
+  </div>
+  <div class="badge b4" aria-hidden="true">
+    <span class="badge-big">{userCount > 0 ? fmt(userCount) : '—'}</span>
+    <span class="badge-lbl">Joueurs inscrits</span>
   </div>
 </section>
 
@@ -290,6 +294,18 @@
   .b3 .badge-big { font-size: 1.5rem; color: var(--text); }
   .b3 .badge-lbl { color: rgb(var(--c-glass) / 0.7); }
 
+  /* b4 — joueurs inscrits, fond sombre + border blanche */
+  .b4 {
+    right: 28%;
+    top: 16%;
+    background: rgb(var(--bg-rgb) / 0.82);
+    border: 1px solid rgb(var(--c-glass) / 0.35);
+    padding: 14px 18px;
+    animation: float2 4.5s ease-in-out 0.5s infinite;
+  }
+  .b4 .badge-big { font-size: 1.5rem; color: var(--text); }
+  .b4 .badge-lbl { color: rgb(var(--c-glass) / 0.7); }
+
   @keyframes float1 {
     0%, 100% { transform: rotate(2.5deg) translateY(0); }
     50%       { transform: rotate(2.5deg) translateY(-8px); }
@@ -301,7 +317,7 @@
   }
 
   @media (max-width: 900px) {
-    .b1, .b2, .b3 { display: none; }
+    .b1, .b2, .b3, .b4 { display: none; }
     .covers-grid { grid-template-columns: repeat(6, 1fr); grid-auto-rows: calc(100vw / 6); }
   }
 

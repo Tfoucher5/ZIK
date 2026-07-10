@@ -36,10 +36,10 @@ export async function GET() {
       publicPlaylists: publicPlaylists ?? 0,
       gamesMonth: gamesMonth ?? 0,
     };
-    _cacheExp = Date.now() + 5 * 60_000;
+    _cacheExp = Date.now() + 60_000;
     return json(_cache, {
       headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
       },
     });
   } catch {

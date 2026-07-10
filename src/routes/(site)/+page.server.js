@@ -7,7 +7,9 @@ export async function load({ fetch }) {
 
   const [roomsData, statsData, eloData] = await Promise.all([
     roomsRes.json().catch(() => ({ rooms: [], totalOnline: 0 })),
-    statsRes.json().catch(() => ({ publicPlaylists: 0, gamesMonth: 0 })),
+    statsRes
+      .json()
+      .catch(() => ({ users: 0, publicPlaylists: 0, gamesMonth: 0 })),
     eloRes.json().catch(() => []),
   ]);
 
@@ -15,6 +17,7 @@ export async function load({ fetch }) {
     rooms: roomsData.rooms ?? [],
     totalOnline: roomsData.totalOnline ?? 0,
     globalStats: {
+      users: statsData.users ?? 0,
       publicPlaylists: statsData.publicPlaylists ?? 0,
       gamesMonth: statsData.gamesMonth ?? 0,
     },
