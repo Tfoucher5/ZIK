@@ -41,7 +41,7 @@
   });
 
   let eloLb = $state(data.eloLb ?? []);
-  let globalStats = $state(data.globalStats ?? { users: 0, publicPlaylists: 0, gamesMonth: 0 });
+  let globalStats = $state(data.globalStats ?? { users: 0, publicRooms: 0, publicPlaylists: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
   let guestUsername = $state("");
   let pendingRoom = $state(null);
@@ -93,6 +93,7 @@
         const d = await r.json();
         globalStats = {
           users: d.users ?? 0,
+          publicRooms: d.publicRooms ?? 0,
           publicPlaylists: d.publicPlaylists ?? 0,
           gamesMonth: d.gamesMonth ?? 0,
         };
@@ -279,6 +280,7 @@
   playlistCount={globalStats.publicPlaylists}
   gamesMonth={globalStats.gamesMonth}
   userCount={globalStats.users}
+  roomCount={globalStats.publicRooms}
 >
   <button class="btn-accent" onclick={() => goto('/rooms')}>Jouer maintenant →</button>
   <button class="btn-ghost" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Explorer les rooms</button>
