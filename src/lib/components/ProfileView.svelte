@@ -2,6 +2,8 @@
   import { dicebear } from '$lib/utils.js';
   import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
   import InviteModal from '$lib/components/InviteModal.svelte';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {} } = $props();
 
@@ -344,6 +346,9 @@
             </button>
           {/each}
         </nav>
+      </div>
+      <div class="rail-ad">
+        <AdSlot adSlot={AD_SLOTS.profileRail} variant="fill" />
       </div>
     </aside>
 
@@ -710,6 +715,9 @@
   .rail-link:hover { color: var(--text); background: rgb(var(--c-glass) / 0.03); }
   .rail-link.active { color: var(--accent); border-left-color: var(--accent); background: rgb(var(--accent-rgb) / 0.07); }
   .rail-link.active .n { color: var(--accent); }
+  .rail-ad { margin-top: 16px; height: 288px; }
+  .rail-ad:not(:has(:global(ins))),
+  .rail-ad:has(:global(ins[data-ad-status='unfilled'])) { display: none; }
 
   .program { display: flex; flex-direction: column; gap: 52px; min-width: 0; }
   .prog-block { opacity: 0; transform: translateY(18px); transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1); }

@@ -537,6 +537,8 @@
       </div>
     </section>
 
+    <AdSlot adSlot={AD_SLOTS.content} />
+
     <!-- ── QCM MULTIJOUEUR ── -->
     <section>
       <h2 id="qcm">Mode QCM multijoueur</h2>

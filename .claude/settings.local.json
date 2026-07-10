@@ -73,7 +73,9 @@
       "Bash(npm run *)",
       "Bash(npx -y http-server -p 4173 -c-1 --silent)",
       "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" log --oneline -15 feat/refonte-graphique)",
-      "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff --stat master...feat/refonte-graphique)"
+      "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff --stat master...feat/refonte-graphique)",
+      "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff --stat)",
+      "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff src/lib/components/AdSlot.svelte)"
     ]
   }
 }

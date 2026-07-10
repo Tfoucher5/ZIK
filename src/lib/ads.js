@@ -6,4 +6,7 @@ export const AD_SLOTS = {
   content: "7418105373",
   gameLobby: "1352189238",
   gameOver: "1487920606",
+  roomsTile: "9876404873",
+  homeCard: "8434341015",
+  profileRail: "7250241535",
 };

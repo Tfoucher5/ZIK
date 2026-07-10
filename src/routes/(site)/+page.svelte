@@ -34,6 +34,11 @@
   let officialClassicRooms = $derived(rooms.filter(r => r.game_mode !== 'qcm'));
   let activeClassicRooms = $derived(officialClassicRooms.filter(r => r.online > 0));
   let waitingClassicRooms = $derived(officialClassicRooms.filter(r => !r.online || r.online === 0));
+  let collageCards = $derived.by(() => {
+    const cards = [...activeClassicRooms, ...waitingClassicRooms].slice(0, AD_SLOTS.homeCard ? 9 : 10);
+    if (AD_SLOTS.homeCard && cards.length >= 4) cards.splice(4, 0, { id: '__ad__', isAd: true });
+    return cards;
+  });
 
   let eloLb = $state(data.eloLb ?? []);
   let globalStats = $state(data.globalStats ?? { publicPlaylists: 0, gamesMonth: 0 });
@@ -295,7 +300,16 @@
 
   {#if officialClassicRooms.length > 0}
     <div class="collage-grid">
-      {#each [...activeClassicRooms, ...waitingClassicRooms].slice(0, 10) as room, i (room.id)}
+      {#each collageCards as room, i (room.id)}
+        {#if room.isAd}
+          <div
+            class="cc cc-ad"
+            style="--rot:{COLLAGE_ROTS[i % COLLAGE_ROTS.length]}deg; --ty:{COLLAGE_TY[i % COLLAGE_TY.length]}px"
+            use:reveal={i * 50}
+          >
+            <AdSlot adSlot={AD_SLOTS.homeCard} variant="fill" />
+          </div>
+        {:else}
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
         <div
           class="cc"
@@ -320,6 +334,7 @@
             </div>
           </div>
         </div>
+        {/if}
       {/each}
     </div>
   {:else}
@@ -617,6 +632,14 @@
   .cc--live:hover {
     box-shadow: 0 0 0 2px var(--accent), 6px 14px 36px rgb(var(--accent-rgb) / 0.25);
   }
+  .cc-ad { cursor: default; aspect-ratio: 4 / 5; }
+  .cc-ad:hover {
+    transform: rotate(var(--rot, 0deg)) translateY(var(--ty, 0px));
+    z-index: 1;
+    box-shadow: 4px 8px 24px rgba(0,0,0,0.6);
+  }
+  .cc-ad:not(:has(:global(ins))),
+  .cc-ad:has(:global(ins[data-ad-status='unfilled'])) { display: none; }
 
   .cc-img {
     width: 100%;

@@ -60,7 +60,7 @@
 
   const patchworkChunks = $derived.by(() => {
     const chunks = [];
-    for (let i = 0; i < visibleRooms.length; i += 8) chunks.push(visibleRooms.slice(i, i + 8));
+    for (let i = 0; i < visibleRooms.length; i += 7) chunks.push(visibleRooms.slice(i, i + 7));
     return chunks;
   });
 
@@ -76,6 +76,9 @@
     { cls: 'pw-g', cgCls: 'cg-2x2', count: 4,  maxPl: 0, showDesc: false },
     { cls: 'pw-h', cgCls: 'cg-2x2', count: 4,  maxPl: 0, showDesc: false },
   ];
+
+  // Case réservée à la pub-tuile, différente selon la disposition (pv0..pv3)
+  const AD_CELLS = ['pw-e', 'pw-g', 'pw-b', 'pw-h'];
 
   function fillCovers(covers, n) {
     if (!covers?.length) return Array(n).fill(null);
@@ -383,13 +386,21 @@
       </div>
     {:else}
 
-      <!-- Patchwork — un bloc de 8 par chunk, se répète pour toutes les rooms -->
+      <!-- Patchwork — 7 rooms + 1 pub-tuile par chunk, 4 dispositions en rotation -->
       {#each patchworkChunks as chunk, ci (ci)}
-        <div class="patchwork">
+        {@const adCell = AD_CELLS[ci % AD_CELLS.length]}
+        {@const adIdx = SLOT_CONFIGS.findIndex(c => c.cls === adCell)}
+        <div class="patchwork pv{ci % AD_CELLS.length}">
           {#each SLOT_CONFIGS as cfg, i (i)}
-            {#if chunk[i]}
-              {@const r = chunk[i]}
-              {@const gi = ci * 8 + i}
+            {#if cfg.cls === adCell}
+              <div class="pw-ad {cfg.cls}">
+                <AdSlot adSlot={AD_SLOTS.roomsTile} variant="fill" />
+              </div>
+            {:else}
+              {@const ri = i < adIdx ? i : i - 1}
+              {#if chunk[ri]}
+              {@const r = chunk[ri]}
+              {@const gi = ci * 7 + ri}
               <div
                 class="pw-room {cfg.cls} {r.online > 0 ? 'is-live' : ''}"
                 role="button" tabindex="0"
@@ -468,8 +479,9 @@
                 </div>
 
               </div>
-            {:else}
-              <div class="pw-empty {cfg.cls}"></div>
+              {:else}
+                <div class="pw-empty {cfg.cls}"></div>
+              {/if}
             {/if}
           {/each}
         </div>
@@ -866,6 +878,39 @@
   .pw-g { grid-column: 3;   grid-row: 3; }
   .pw-h { grid-column: 4;   grid-row: 3; }
 
+  /* pv1 — grande tuile à droite */
+  .pv1 { grid-template-columns: 1fr 1fr 1.4fr 2fr; }
+  .pv1 .pw-c { grid-column: 1/3; grid-row: 1; }
+  .pv1 .pw-b { grid-column: 3;   grid-row: 1; }
+  .pv1 .pw-a { grid-column: 4;   grid-row: 1/3; }
+  .pv1 .pw-e { grid-column: 1;   grid-row: 2; }
+  .pv1 .pw-d { grid-column: 2/4; grid-row: 2; }
+  .pv1 .pw-g { grid-column: 1;   grid-row: 3; }
+  .pv1 .pw-f { grid-column: 2/4; grid-row: 3; }
+  .pv1 .pw-h { grid-column: 4;   grid-row: 3; }
+
+  /* pv2 — grande tuile au centre */
+  .pv2 { grid-template-columns: 1fr 2fr 1.4fr 1fr; }
+  .pv2 .pw-b { grid-column: 1;   grid-row: 1; }
+  .pv2 .pw-a { grid-column: 2;   grid-row: 1/3; }
+  .pv2 .pw-c { grid-column: 3/5; grid-row: 1; }
+  .pv2 .pw-e { grid-column: 1;   grid-row: 2; }
+  .pv2 .pw-d { grid-column: 3/5; grid-row: 2; }
+  .pv2 .pw-f { grid-column: 1/3; grid-row: 3; }
+  .pv2 .pw-g { grid-column: 3;   grid-row: 3; }
+  .pv2 .pw-h { grid-column: 4;   grid-row: 3; }
+
+  /* pv3 — grande tuile en bas à droite, rangée du milieu plus haute */
+  .pv3 { grid-template-columns: 1fr 1fr 1.4fr 2fr; grid-template-rows: 220px 280px 220px; }
+  .pv3 .pw-c { grid-column: 1/3; grid-row: 1; }
+  .pv3 .pw-g { grid-column: 3;   grid-row: 1; }
+  .pv3 .pw-b { grid-column: 4;   grid-row: 1; }
+  .pv3 .pw-d { grid-column: 1/3; grid-row: 2; }
+  .pv3 .pw-h { grid-column: 3;   grid-row: 2; }
+  .pv3 .pw-a { grid-column: 4;   grid-row: 2/4; }
+  .pv3 .pw-f { grid-column: 1/3; grid-row: 3; }
+  .pv3 .pw-e { grid-column: 3;   grid-row: 3; }
+
   .pw-room {
     position: relative;
     overflow: hidden;
@@ -877,6 +922,7 @@
     z-index: 1;
   }
   .pw-empty { background: #0a0a0a; opacity: 0.4; }
+  .pw-ad { background: #0a0a0a; position: relative; }
 
   .patchwork:has(.pw-room:hover) .pw-room:not(:hover) { filter: brightness(0.45) saturate(0.6); }
   .pw-room:hover {
@@ -1507,6 +1553,9 @@
     .patchwork:has(.pw-room:hover) .pw-room:not(:hover) { filter: none; }
     .pw-room:hover { filter: none; }
     .pw-empty { display: none; }
+    .pw-ad { width: 100%; height: 250px; }
+    .pw-ad:not(:has(:global(ins))),
+    .pw-ad:has(:global(ins[data-ad-status='unfilled'])) { display: none; }
     .pw-cover-empty {
       position: relative !important; inset: unset !important;
       flex-shrink: 0; width: 110px; align-self: stretch;
