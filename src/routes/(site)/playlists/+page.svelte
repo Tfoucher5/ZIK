@@ -41,6 +41,12 @@
   let editorOpen   = $state(false);
   let editorPl     = $state(null);
   let editorTracks = $state([]);
+  let trackSearch  = $state('');
+  const shownTracks = $derived.by(() => {
+    const q = trackSearch.trim().toLowerCase();
+    if (!q) return editorTracks;
+    return editorTracks.filter(t => `${t.artist} ${t.title}`.toLowerCase().includes(q));
+  });
 
   // Éditeur de réponses par track
   let answersModalOpen = $state(false);
@@ -182,6 +188,7 @@
   async function openEditor(pl) {
     editorPl     = pl;
     editorTracks = [];
+    trackSearch  = '';
     editorOpen   = true;
     await loadEditorTracks();
   }
@@ -488,14 +495,19 @@
       <div class="pl-tracks-area">
         <div class="pl-tracks-head">
           <span class="pl-tracks-lbl">Titres dans la playlist — {editorTracks.length}</span>
+          {#if editorTracks.length > 0}
+            <input type="search" class="pl-tracks-search" bind:value={trackSearch} placeholder="🔍 Chercher un titre..." />
+          {/if}
         </div>
         {#if !editorTracks.length}
           <EmptyState icon="🎵" title="Aucun titre" description="Ajoute des titres via les onglets ci-dessus." />
+        {:else if !shownTracks.length}
+          <EmptyState icon="🔍" title="Aucun résultat" description="Aucun titre ne correspond à « {trackSearch} »." />
         {:else}
-          {#each editorTracks as t, i (t.id)}
+          {#each shownTracks as t (t.id)}
             <TrackRow
               track={t}
-              index={i + 1}
+              index={editorTracks.indexOf(t) + 1}
               onRemove={() => removeTrack(t.id)}
               onEditAnswers={() => openAnswersEditor(t)}
             />
@@ -652,14 +664,22 @@
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="overlay" role="dialog" aria-modal="true" onclick={e => { if (e.target === e.currentTarget) answersModalOpen = false; }}>
-  <div class="modal modal-lg">
-    <button class="close-btn" onclick={() => answersModalOpen = false}>&#x2715;</button>
-    <h2>Modifier les réponses</h2>
-    <p class="mdesc">
-      <strong>{answersTrack.artist} — {answersTrack.title}</strong><br>
-      Corrige l'artiste, les feats ou le titre attendus pour cette track.
-    </p>
+  <div class="modal modal-lg answers-modal">
+    <div class="ans-head">
+      {#if answersTrack.cover_url}
+        <img class="ans-cover" src={answersTrack.cover_url} alt="" loading="lazy" />
+      {:else}
+        <div class="ans-cover ans-cover-empty">🎵</div>
+      {/if}
+      <div class="ans-head-info">
+        <span class="ans-eyebrow">Modifier les réponses</span>
+        <div class="ans-track">{answersTrack.artist} — {answersTrack.title}</div>
+        <div class="ans-sub">Corrige l'artiste, les feats ou le titre attendus pour ce titre.</div>
+      </div>
+      <button class="close-btn" onclick={() => answersModalOpen = false}>&#x2715;</button>
+    </div>
 
+    <div class="ans-body">
     <div class="answer-field">
       <label class="answer-label">Artiste principal</label>
       <input type="text" bind:value={customArtist} class="answer-value-input" placeholder="Artiste principal…" maxlength="100">
@@ -696,8 +716,9 @@
       {/each}
       <button class="btn-ghost sm" onclick={() => { extraAnswers = [...extraAnswers, { typeId: 3, value: '' }]; }}>+ Ajouter Film / Série…</button>
     </div>
+    </div>
 
-    <div class="modal-actions">
+    <div class="modal-actions ans-actions">
       <button class="btn-ghost" onclick={() => answersModalOpen = false}>Annuler</button>
       <button class="btn-accent" onclick={saveAnswers} disabled={answersSaving}>
         {answersSaving ? 'Enregistrement…' : 'Enregistrer'}
@@ -953,7 +974,24 @@
   padding: 12px 0 8px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
+.pl-tracks-search {
+  background: rgb(var(--c-glass) / 0.04);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  width: min(240px, 100%);
+}
+.pl-tracks-search:focus { border-color: rgb(var(--accent-rgb) / 0.4); }
 .pl-tracks-lbl {
   font-size: 0.58rem;
   font-weight: 700;
@@ -1104,6 +1142,70 @@
 .answer-value-input:focus {
   border-color: rgb(var(--accent-rgb) / 0.4);
   box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08);
+}
+
+/* ── Modale réponses (crayon) ────────────────────────────────────────────────── */
+.answers-modal {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: min(86vh, 720px);
+  overflow: hidden;
+}
+.ans-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 52px 14px 20px;
+  border-bottom: 2px solid rgb(var(--accent-rgb) / 0.18);
+  flex-shrink: 0;
+}
+.ans-cover {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.ans-cover-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 1px solid var(--border);
+}
+.ans-head-info { min-width: 0; }
+.ans-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.55rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(var(--accent-rgb) / 0.7);
+  display: block;
+  margin-bottom: 3px;
+}
+.ans-track {
+  font-weight: 700;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ans-sub { font-size: 0.72rem; color: var(--dim); margin-top: 2px; }
+.ans-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 20px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-rgb) / 0.35) transparent;
+}
+.ans-actions {
+  margin: 0;
+  padding: 12px 20px;
+  flex-shrink: 0;
 }
 
 /* ── Room launch modal — identité v3 (verre + liseré) ────────────────────────── */
@@ -1412,6 +1514,8 @@
   .pl-split { grid-template-columns: 1fr; }
   .pl-left { position: static; height: auto; max-height: none; }
   .pl-right { position: static; height: auto; }
+  .pl-item { padding: 16px; gap: 12px; }
+  .pl-tracks-head { padding: 16px 0 10px; }
   .mobile-hidden { display: none; }
   .pl-back-mobile {
     display: flex;
@@ -1432,7 +1536,20 @@
     transition: color 0.12s;
   }
   .pl-back-mobile:hover { color: var(--text); }
+  /* Titre de la playlist au-dessus des boutons, jamais masqué */
+  .pl-editor-head { flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 16px; }
+  .pl-editor-title { white-space: normal; overflow: visible; }
   .pl-editor-acts { flex-wrap: wrap; }
   .modal-xl { padding: 24px 18px; }
+
+  /* Modale réponses : plein écran confortable, une ligne par champ */
+  .answers-modal { max-height: 92vh; }
+  .ans-head { padding: 14px 48px 12px 14px; gap: 10px; }
+  .ans-cover { width: 44px; height: 44px; }
+  .ans-sub { display: none; }
+  .ans-body { padding: 6px 14px 12px; }
+  .ans-actions { padding: 10px 14px; }
+  .answer-row { flex-wrap: wrap; }
+  .answer-type-select { flex: 1 1 100%; }
 }
 </style>

@@ -1246,21 +1246,24 @@
 
   @media (max-width: 600px) {
     .pw-head { padding: 0 16px; }
-    .collage-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px 16px 20px; }
+    .collage-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 14px 16px 28px; }
     .cc { --rot: 0deg; --ty: 0px; }
-    .pw-cta-wrap { padding: 24px 16px 0; }
+    .pw-cta-wrap { padding: 32px 16px 0; }
     .pw-cta { width: 100%; text-align: center; }
-    .features { padding: 40px 16px; }
-    .feat-grid { grid-template-columns: 1fr 1fr; }
+    .features { padding: 60px 16px; }
+    .feat-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
     .feat-name { font-size: 1.1rem; }
-    .chart { padding: 40px 16px; }
-    .chart-row { grid-template-columns: 40px 20px 28px 1fr 80px; gap: 10px; }
+    .chart { padding: 60px 16px; }
+    .chart-row { grid-template-columns: 40px 20px 28px 1fr 80px; gap: 10px; padding: 18px 0; }
     .chart-avatar { width: 28px; height: 28px; }
-    .ticket-section { padding: 40px 16px; }
+    .ticket-section { padding: 60px 16px; }
     .ticket::before { display: none; }
     .ticket-main { padding: 20px; }
     .stub { display: none; }
-    .faq-section { padding: 40px 16px; }
+    .salon-cta { padding: 60px 24px; }
+    .faq-section { padding: 60px 16px; }
+    .faq-list { gap: 10px; }
+    .faq-a { line-height: 1.75; }
   }
 
   @media (max-width: 380px) {

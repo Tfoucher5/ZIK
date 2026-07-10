@@ -725,10 +725,16 @@ button {
   .footer-columns {
     grid-template-columns: 1fr 1fr;
   }
+  .footer-col {
+    padding: 26px 20px;
+  }
+  .footer-col-links {
+    gap: 12px;
+  }
   .footer-bottom {
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 8px;
   }
 }
 @media (max-width: 768px) {

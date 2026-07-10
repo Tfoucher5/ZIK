@@ -390,8 +390,28 @@
   .hublot {
     position: absolute; top: 14%; left: 50%; transform: translateX(-50%);
     width: 38%; aspect-ratio: 1; border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #131313, #0a0a0a 75%);
-    border: 4px solid #262626; box-shadow: inset 0 0 24px #000;
+    background: radial-gradient(circle at 50% 42%, rgb(var(--accent-rgb) / 0.55), rgb(var(--accent-rgb) / 0.16) 52%, #0a0a0a 80%);
+    border: 4px solid #262626;
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65), 0 0 26px rgb(var(--accent-rgb) / 0.22);
+    animation: hublot-pulse 1.9s ease-in-out infinite;
+  }
+  /* faisceau : la lumière du club traverse le hublot, orientée vers le bas/extérieur */
+  .hublot::after {
+    content: ""; position: absolute; top: 84%; left: 50%;
+    width: 230%; height: 340%;
+    background: linear-gradient(to bottom, rgb(var(--accent-rgb) / 0.16), transparent 72%);
+    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+    pointer-events: none;
+    filter: blur(4px);
+    transform-origin: top center;
+  }
+  .door.l .hublot::after { transform: translateX(-50%) rotate(-9deg); }
+  .door.r .hublot::after { transform: translateX(-50%) rotate(9deg); }
+  @keyframes hublot-pulse {
+    0%, 100% { box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65), 0 0 20px rgb(var(--accent-rgb) / 0.18); }
+    12% { box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65), 0 0 42px rgb(var(--accent-rgb) / 0.5); }
+    24% { box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65), 0 0 24px rgb(var(--accent-rgb) / 0.24); }
+    36% { box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65), 0 0 36px rgb(var(--accent-rgb) / 0.4); }
   }
   .door .bar {
     position: absolute; top: 52%; left: 12%; right: 12%; height: 4.5%;
@@ -433,8 +453,12 @@
     display: flex; flex-direction: column; justify-content: center;
     padding: 40px clamp(24px, 3vw, 48px);
     box-shadow: -40px 0 90px rgba(0, 0, 0, 0.6);
+    /* le tampon scale(3) déborde en largeur ; et jamais de scrollbar visible sur le login */
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
   }
+  .checkpoint::-webkit-scrollbar { display: none; }
   .gl-close {
     position: absolute; top: 14px; right: 18px; background: none; border: none;
     color: var(--dim); font-size: 1.15rem; cursor: pointer; z-index: 5; line-height: 1; padding: 6px;
@@ -587,17 +611,30 @@
     .street { display: none; }
     .checkpoint { justify-content: flex-start; padding-top: 56px; padding-bottom: 40px; border-left: none; }
   }
+  /* Hauteurs réduites : on compresse pour que tout tienne sans scroll */
   @media (max-height: 760px) {
-    .checkpoint { justify-content: flex-start; padding-top: 48px; padding-bottom: 32px; }
+    .checkpoint { justify-content: flex-start; padding-top: 44px; padding-bottom: 24px; }
+    .gl-title { font-size: clamp(28px, 3vw, 40px); }
+    .gl-sub { margin: 8px 0 14px; }
+    .board { padding: 22px 20px 18px; }
+    .entries { display: none; }
+    .field { margin-bottom: 10px; }
+    .gl-switch { margin-top: 12px; }
+  }
+  @media (max-height: 620px) {
+    .youline { display: none; }
+    .oauth { margin-bottom: 10px; }
+    .submit { padding: 11px; }
   }
 
   /* ── Animations désactivées ── */
   @media (prefers-reduced-motion: reduce) {
-    .neon, .doorlight, .doors { animation: none !important; }
+    .neon, .doorlight, .doors, .hublot { animation: none !important; }
     .door, .stamp { transition: none !important; }
   }
   :global(.no-animations) .neon,
   :global(.no-animations) .doorlight,
+  :global(.no-animations) .hublot,
   :global(.no-animations) .doors { animation: none !important; }
   :global(.no-animations) .door,
   :global(.no-animations) .stamp { transition: none !important; }

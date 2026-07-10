@@ -3,6 +3,7 @@ import { getAdminClient } from "$lib/server/config.js";
 import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
 import { roomGames } from "$lib/server/state.js";
 import { backfillCovers } from "$lib/server/services/coverBackfill.js";
+import { seededShuffle } from "$lib/utils.js";
 
 export async function GET({ request }) {
   const { user, token } = await requireAuth(request);
@@ -82,9 +83,10 @@ export async function GET({ request }) {
 
   const response = result.map((r) => ({
     ...r,
-    covers: [
-      ...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])])),
-    ].slice(0, 144),
+    covers: seededShuffle(
+      [...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])]))],
+      r.id,
+    ).slice(0, 144),
   }));
 
   // Backfill en arrière-plan pour les playlists sans cover_url en BDD

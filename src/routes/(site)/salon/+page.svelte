@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
+  import AuthModal from '$lib/components/AuthModal.svelte';
 
   const salonJsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -25,6 +26,8 @@
 
   let user      = $state(null);
   let authReady = $state(false);
+  let authOpen  = $state(false);
+  let authView  = $state('login');
 
   // Paramètres du salon
   let maxRounds          = $state(10);
@@ -179,7 +182,7 @@
       </p>
       <a href="/salon/play" class="btn-salon-create salon-guest-join">Rejoindre un salon →</a>
       <p class="salon-guest-sub">Pour <b>créer</b> un salon en revanche, il faut être connecté.</p>
-      <a href="/" class="salon-join-link">Se connecter →</a>
+      <button type="button" class="salon-join-link" onclick={() => { authView = 'login'; authOpen = true; }}>Se connecter →</button>
     </div>
 
   {:else}
@@ -346,3 +349,5 @@
     </div>
   </div>
 {/if}
+
+<AuthModal {sb} open={authOpen} bind:view={authView} onClose={() => (authOpen = false)} onSuccess={() => (authOpen = false)} />

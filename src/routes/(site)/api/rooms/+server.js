@@ -6,6 +6,7 @@ import {
   userClient,
   checkRateLimit,
 } from "$lib/server/middleware/auth.js";
+import { seededShuffle } from "$lib/utils.js";
 
 export async function GET({ request }) {
   const query = getAdminClient()
@@ -83,7 +84,7 @@ export async function GET({ request }) {
   if (allPids.length > 0) {
     const { data: tc } = await getAdminClient().rpc("get_covers_by_playlists", {
       pids: allPids,
-      max_per_playlist: 9,
+      max_per_playlist: 27,
     });
     for (const [pid, covers] of Object.entries(tc || {})) {
       coverMap[pid] = new Set(covers);
@@ -93,9 +94,14 @@ export async function GET({ request }) {
   return json(
     result.map((r) => ({
       ...r,
-      covers: [
-        ...new Set(r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])])),
-      ].slice(0, 9),
+      covers: seededShuffle(
+        [
+          ...new Set(
+            r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])]),
+          ),
+        ],
+        r.id,
+      ).slice(0, 9),
     })),
   );
 }

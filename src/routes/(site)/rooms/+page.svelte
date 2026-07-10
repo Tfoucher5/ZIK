@@ -48,14 +48,15 @@
 
   const hasActiveFilters = $derived(filterAutoStart || filterActive || filterQcm || filterClassic || filterOfficial);
 
-  let visibleCount = $state(24);
+  // Multiple de 7 : chaque patchwork (7 rooms + 1 pub) reste complet tant qu'il y a des rooms à charger
+  let visibleCount = $state(21);
   const visibleRooms = $derived(filteredPublic.slice(0, visibleCount));
   const hasMore      = $derived(visibleCount < filteredPublic.length);
 
   $effect(() => {
     // Reset pagination quand les filtres/search changent
     pubSearch; filterAutoStart; filterActive; filterQcm; filterClassic; filterOfficial;
-    visibleCount = 24;
+    visibleCount = 21;
   });
 
   const patchworkChunks = $derived.by(() => {
@@ -492,7 +493,7 @@
         <div class="rp-end">Aucune room ne correspond à ta recherche.</div>
       {:else if hasMore}
         <div class="rp-loadmore">
-          <LoadMore hasMore={true} loading={false} onLoad={() => visibleCount += 24} />
+          <LoadMore hasMore={true} loading={false} onLoad={() => visibleCount += 21} />
         </div>
       {:else}
         <div class="rp-end">{filteredPublic.length} room{filteredPublic.length > 1 ? 's' : ''} · Fin de la liste</div>
@@ -571,14 +572,14 @@
                 onclick={() => selectedMineIdx = ti}
                 type="button"
               >
+                <div class="mine-stub">
+                  <span class="mine-snum">{String(ti + 1).padStart(2, '0')}</span>
+                  <span class="mine-slabel">ZIK</span>
+                </div>
                 <div class="mine-perf">
                   <div class="mine-punch mine-punch-t"></div>
                   <div class="mine-pline"></div>
                   <div class="mine-punch mine-punch-b"></div>
-                </div>
-                <div class="mine-stub">
-                  <span class="mine-snum">{String(ti + 1).padStart(2, '0')}</span>
-                  <span class="mine-slabel">ZIK</span>
                 </div>
                 <div class="mine-tbody">
                   <div class="mine-tname">
@@ -594,11 +595,11 @@
             {/each}
           </div>
           <button class="mine-add-btn" onclick={openCreate} type="button">
+            <div class="mine-stub mine-add-stub"><span class="mine-add-plus">+</span></div>
             <div class="mine-perf">
               <div class="mine-punch mine-punch-t"></div>
               <div class="mine-pline"></div>
             </div>
-            <div class="mine-stub mine-add-stub"><span class="mine-add-plus">+</span></div>
             <div class="mine-tbody mine-add-body">
               <span class="mine-add-txt">Nouvelle room</span>
             </div>
@@ -1086,22 +1087,19 @@
     font-family: inherit; font-weight: 400; letter-spacing: 0.04em; text-transform: none;
   }
 
-  /* Setlist playlists */
+  /* Setlist playlists — pas de lignes de séparation, min-height:0 pour ne jamais pousser le bouton hors tuile */
   .pwh-setlist {
     flex: 1;
+    min-height: 0;
     display: flex; flex-direction: column;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    margin-top: 12px;
-    padding-top: 10px;
+    margin-top: 10px;
     gap: 0;
     overflow: hidden;
   }
   .pwh-setrow {
     display: flex; align-items: baseline; gap: 8px;
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 4px 0;
   }
-  .pwh-setrow:last-child { border-bottom: none; }
   .pwh-setn {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase;
@@ -1121,12 +1119,11 @@
     padding-top: 6px;
   }
 
-  /* Pied : badges + bouton */
+  /* Pied : badges + bouton — jamais rogné */
   .pwh-foot {
     display: flex; align-items: center; gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    margin-top: 12px;
+    padding-top: 10px;
+    flex-shrink: 0;
   }
   .pwh-badges { display: flex; gap: 6px; align-items: center; flex: 1; flex-wrap: wrap; }
 
@@ -1138,14 +1135,13 @@
 
   /* ── Slots 220px : compact ── */
   .pw-d .pw-hover, .pw-f .pw-hover { padding: 12px 14px; }
-  .pw-d .pwh-setlist, .pw-f .pwh-setlist { margin-top: 8px; padding-top: 8px; }
-  .pw-d .pwh-foot, .pw-f .pwh-foot { padding-top: 8px; margin-top: 8px; }
+  .pw-d .pwh-setlist, .pw-f .pwh-setlist { margin-top: 6px; }
+  .pw-d .pwh-foot, .pw-f .pwh-foot { padding-top: 6px; }
   .pw-d .pwh-setrow, .pw-f .pwh-setrow { padding: 3px 0; }
   .pw-d .pwh-name, .pw-f .pwh-name { font-size: clamp(1rem, 1.8vw, 1.4rem); }
 
   /* pw-f large : setlist en 2 colonnes */
   .pw-f .pwh-setlist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
-  .pw-f .pwh-setrow { border-bottom: none; }
 
   /* Slots ultra-petits 1fr × 220px : on cache la setlist */
   .pw-e .pw-hover, .pw-g .pw-hover, .pw-h .pw-hover { padding: 10px 12px; }
@@ -1215,7 +1211,8 @@
   .mine-pmeta {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase;
-    color: rgba(255, 255, 255, .35); margin-top: 10px;
+    color: rgba(255, 255, 255, .65); margin-top: 10px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .9);
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
   }
   .mine-pdot { color: rgba(255, 255, 255, .14); }
@@ -1231,17 +1228,17 @@
   .mine-pedit-btn {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
-    background: none; border: 1px solid rgba(255, 255, 255, .18); color: rgba(255, 255, 255, .4);
+    background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .35); color: rgba(255, 255, 255, .85);
     padding: 11px 20px; cursor: pointer; transition: all .15s;
   }
-  .mine-pedit-btn:hover { border-color: rgba(255, 255, 255, .5); color: #fff; }
+  .mine-pedit-btn:hover { border-color: rgba(255, 255, 255, .6); color: #fff; }
   .mine-pdel-btn {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
-    background: none; border: 1px solid rgba(248,113,113,.2); color: var(--danger);
+    background: rgba(0, 0, 0, .55); border: 1px solid rgba(248,113,113,.45); color: var(--danger);
     padding: 11px 20px; cursor: pointer; transition: all .15s; margin-left: auto;
   }
-  .mine-pdel-btn:hover { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.4); }
+  .mine-pdel-btn:hover { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.6); }
 
   /* ── Index tickets (gauche desktop) ── */
   .mine-idx {
@@ -1307,7 +1304,6 @@
     width: 52px; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 4px; background: #0a0a0a;
-    border-right: 1px solid rgba(255, 255, 255, .07);
   }
   .mine-snum {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1426,7 +1422,7 @@
     display: grid; grid-template-columns: 1fr 1fr;
     overflow-y: auto; flex: 1; min-height: 0;
   }
-  .m2-col { padding: 16px 18px; overflow-y: auto; }
+  .m2-col { padding: 16px 18px; }
   .m2-col:first-child { border-right: 1px solid rgb(var(--c-glass) / 0.07); }
   .m2-col-pl { }
   .m2-col-label {
@@ -1522,12 +1518,12 @@
 
   /* ── Mobile ── */
   @media (max-width: 768px) {
-    .rp-head { padding: 0 16px; min-height: 60px; }
+    .rp-head { padding: 0 16px; min-height: 64px; }
     .rp-head h1 { font-size: 2rem; }
     .rp-toolbar { padding: 0 16px; flex-wrap: wrap; }
     .rp-search { width: 160px; }
-    .rp-chips { padding: 10px 16px; gap: 6px; }
-    .chip { font-size: 0.68rem; padding: 6px 12px; }
+    .rp-chips { padding: 12px 16px; gap: 8px; }
+    .chip { font-size: 0.68rem; padding: 7px 13px; }
 
     .patchwork { display: flex; flex-direction: column; gap: 0; background: transparent; }
     .pw-a,.pw-b,.pw-c,.pw-d,.pw-e,.pw-f,.pw-g,.pw-h { grid-column: unset; grid-row: unset; }
@@ -1545,7 +1541,7 @@
     .pw-grad, .pw-dim { display: none; }
     .pw-info {
       position: relative !important; inset: unset !important;
-      flex: 1; padding: 10px 14px;
+      flex: 1; padding: 14px 16px;
       background: var(--bg, #080808);
       pointer-events: all;
     }
@@ -1568,7 +1564,9 @@
 
   @media (max-width: 700px) {
     .mine-wrap { flex-direction: column; height: auto; }
-    .mine-panel { order: 1; height: 300px; width: 100%; }
+    /* height auto : le titre + les boutons restent toujours visibles, le panneau grandit avec le contenu */
+    .mine-panel { order: 1; height: auto; min-height: 300px; width: 100%; }
+    .mine-pcontent { height: auto; gap: 40px; padding: 16px; }
     .mine-g1 {
       background: linear-gradient(to top,
         rgba(0,0,0,.9) 0%, rgba(0,0,0,.55) 22%, rgba(0,0,0,.08) 45%, rgba(0,0,0,0) 60%);

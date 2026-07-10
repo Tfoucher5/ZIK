@@ -1282,7 +1282,7 @@
   @media (max-width: 768px) {
     .doc-root {
       grid-template-columns: 1fr;
-      padding: 24px 16px;
+      padding: 36px 16px;
     }
 
     .doc-sidebar {

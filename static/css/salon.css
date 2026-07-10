@@ -688,11 +688,15 @@ a {
 }
 .salon-join-link {
   margin-left: auto;
+  background: none;
+  border: 0;
   color: var(--mid);
+  font: inherit;
   font-size: 0.8rem;
   text-decoration: none;
   border-bottom: 1px dashed var(--dim);
-  padding-bottom: 1px;
+  padding: 0 0 1px;
+  cursor: pointer;
   transition: color 0.15s;
 }
 .salon-join-link:hover {

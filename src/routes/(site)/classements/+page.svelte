@@ -481,11 +481,12 @@
     min-height: 240px;
   }
   .champ-vinyl { position: relative; height: 100%; min-height: 240px; }
+  /* Disque de diamant pour le N°1 */
   .disc {
     position: absolute; left: -170px; top: 50%; transform: translateY(-50%);
     width: 400px; height: 400px; border-radius: 50%;
-    background: repeating-radial-gradient(circle at 50% 50%, #181818 0 1.5px, #0d0d0d 1.5px 3.8px);
-    box-shadow: 0 0 0 1px rgb(var(--c-glass) / 0.09), 30px 0 80px rgba(0, 0, 0, 0.7);
+    background: repeating-radial-gradient(circle at 50% 50%, #a8d8ec 0 1.5px, #4a7b93 1.5px 3.8px);
+    box-shadow: 0 0 0 1px rgba(168, 216, 236, 0.4), 30px 0 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(125, 200, 235, 0.18);
     animation: disc-spin 14s linear infinite;
   }
   @keyframes disc-spin { to { transform: translateY(-50%) rotate(360deg); } }
@@ -550,6 +551,15 @@
     width: 76px; height: 76px; border-radius: 50%; flex-shrink: 0; position: relative;
     background: repeating-radial-gradient(circle at 50% 50%, #181818 0 1.2px, #0d0d0d 1.2px 3px);
     box-shadow: 0 0 0 1px rgb(var(--c-glass) / 0.09);
+  }
+  /* Disques platine (2e) et or (3e) */
+  .cert-card.plat .cert-mini {
+    background: repeating-radial-gradient(circle at 50% 50%, #dbe1ea 0 1.2px, #97a1b1 1.2px 3px);
+    box-shadow: 0 0 0 1px rgba(219, 225, 234, 0.4);
+  }
+  .cert-card.gold .cert-mini {
+    background: repeating-radial-gradient(circle at 50% 50%, #f0d488 0 1.2px, #a8842a 1.2px 3px);
+    box-shadow: 0 0 0 1px rgba(240, 212, 136, 0.4);
   }
   .cert-mini i {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -735,13 +745,13 @@
     .champ-meta { font-size: 0.7rem; letter-spacing: 0.16em; }
     .champ-val { padding: 0 16px 18px; }
     .champ-num { font-size: 42px; -webkit-text-stroke-width: 2px; }
-    .cert-card { padding: 12px 14px; gap: 12px; }
+    .cert-card { padding: 14px 16px; gap: 14px; }
     .cert-mini { width: 56px; height: 56px; }
     .cert-rank { font-size: 2rem; }
     .cert-name { font-size: 1.2rem; }
     .cert-val { font-size: 1.4rem; }
     .chart-head span { display: none; }
-    .row { grid-template-columns: 40px 1fr 90px; gap: 10px; padding: 10px 2px; }
+    .row { grid-template-columns: 40px 1fr 90px; gap: 12px; padding: 13px 2px; }
     .row-games { display: none; }
     .row-rank { font-size: 1.5rem; -webkit-text-stroke-width: 1px; }
     .row-av { width: 32px; height: 32px; }
