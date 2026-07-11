@@ -520,6 +520,8 @@ async function startNextRound(code, io) {
     }
   } catch (err) {
     console.error(`Salon skip "${track.title}":`, err.message);
+    // Titre sans source : on ne consomme pas la manche, on passe au titre suivant
+    game.currentRound--;
     startNextRound(code, io);
   }
 }

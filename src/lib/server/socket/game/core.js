@@ -401,6 +401,8 @@ async function startNextRound(roomId, io) {
     }
   } catch (err) {
     console.error(`Skip "${game.currentTrack?.title}":`, err.message);
+    // Titre sans source audio : on ne consomme pas la manche, on passe au titre suivant
+    game.currentRound--;
     startNextRound(roomId, io);
   }
 }
