@@ -158,7 +158,7 @@
 <div class="salon-blob b2"></div>
 
 <div class="salon-setup">
-  <button class="salon-back" onclick={() => history.back()}>← Retour</button>
+  <a class="salon-back" href="/">← Accueil du site</a>
 
   <div class="salon-hero">
     <div class="salon-hero-kicker">Mode soirée — TV + smartphones</div>

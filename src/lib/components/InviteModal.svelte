@@ -18,7 +18,7 @@
       const q = search.trim().toLowerCase();
       list = list.filter((r) => r.name?.toLowerCase().includes(q));
     }
-    return list.slice(0, 15);
+    return list.slice(0, 16);
   });
 
   async function getToken() {
@@ -71,97 +71,146 @@
   }
 </script>
 
-<Modal {open} {onClose} maxWidth="480px">
+<Modal {open} {onClose} maxWidth="640px">
   <h3 class="im-title">Inviter <b>{targetName}</b> à jouer</h3>
 
   {#if loading}
     <p class="im-dim">Chargement des rooms…</p>
   {:else}
-    {#if myRoom}
-      <div class="im-label">Ta room actuelle</div>
-      <div class="im-row im-current">
-        <span class="im-name">🎧 {myRoom.roomName}</span>
-        <button class="im-btn accent" onclick={() => invite(myRoom.roomId)} disabled={sendingCode !== null}>Inviter</button>
-      </div>
-    {/if}
+    <div class="im-scroll">
+      {#if myRoom}
+        <div class="im-label">Ta room actuelle</div>
+        <button class="im-card im-current" onclick={() => invite(myRoom.roomId)} disabled={sendingCode !== null}>
+          <span class="im-name">🎧 {myRoom.roomName}</span>
+          <span class="im-go accent">Inviter →</span>
+        </button>
+      {/if}
 
-    {#if myRooms.length}
-      <div class="im-label">Tes rooms</div>
-      {#each myRooms as r (r.code)}
-        <div class="im-row">
-          <span class="im-name">{r.emoji || '🎵'} {r.name}</span>
-          <span class="im-mode">{r.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
-          <button class="im-btn" onclick={() => invite(r.code)} disabled={sendingCode !== null}>Inviter</button>
+      {#if myRooms.length}
+        <div class="im-label">Tes rooms</div>
+        <div class="im-grid">
+          {#each myRooms as r (r.code)}
+            <button class="im-card" onclick={() => invite(r.code)} disabled={sendingCode !== null}>
+              <span class="im-name">{r.emoji || '🎵'} {r.name}</span>
+              <span class="im-meta">
+                <span class="im-mode">{r.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
+                <span class="im-go">Inviter →</span>
+              </span>
+            </button>
+          {/each}
         </div>
-      {/each}
-    {/if}
+      {/if}
 
-    <div class="im-label">Rooms publiques</div>
-    <input class="im-search" type="text" placeholder="Rechercher une room…" bind:value={search} />
-    {#if filteredPublic.length}
-      <div class="im-list">
-        {#each filteredPublic as r (r.code)}
-          <div class="im-row">
-            <span class="im-name">{r.emoji || '🎵'} {r.name}</span>
-            <span class="im-mode">{r.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
-            <button class="im-btn" onclick={() => invite(r.code)} disabled={sendingCode !== null}>Inviter</button>
-          </div>
-        {/each}
-      </div>
-    {:else}
-      <p class="im-dim">Aucune room trouvée.</p>
-    {/if}
+      <div class="im-label">Rooms publiques</div>
+      <input class="im-search" type="text" placeholder="Rechercher une room…" bind:value={search} />
+      {#if filteredPublic.length}
+        <div class="im-grid">
+          {#each filteredPublic as r (r.code)}
+            <button class="im-card" onclick={() => invite(r.code)} disabled={sendingCode !== null}>
+              <span class="im-name">{r.emoji || '🎵'} {r.name}</span>
+              <span class="im-meta">
+                <span class="im-mode">{r.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
+                <span class="im-go">Inviter →</span>
+              </span>
+            </button>
+          {/each}
+        </div>
+      {:else}
+        <p class="im-dim">Aucune room trouvée.</p>
+      {/if}
+    </div>
   {/if}
 </Modal>
 
 <style>
   .im-title {
     font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1.5rem;
-    text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 12px;
   }
   .im-title b { color: var(--accent); }
+
+  .im-scroll {
+    max-height: min(58vh, 480px);
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--c-glass) / 0.18) transparent;
+  }
+  .im-scroll::-webkit-scrollbar { width: 5px; }
+  .im-scroll::-webkit-scrollbar-track { background: transparent; }
+  .im-scroll::-webkit-scrollbar-thumb {
+    background: rgb(var(--c-glass) / 0.18);
+    border-radius: 99px;
+  }
+  .im-scroll::-webkit-scrollbar-thumb:hover { background: rgb(var(--c-glass) / 0.3); }
 
   .im-label {
     font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.62rem;
     letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim);
     margin: 16px 0 8px;
   }
+  .im-label:first-child { margin-top: 0; }
 
   .im-search {
-    width: 100%; padding: 9px 14px; margin-bottom: 8px;
+    width: 100%; padding: 9px 14px; margin-bottom: 10px;
     background: rgb(var(--c-glass) / 0.04); border: 1px solid var(--border2);
     border-radius: 99px; color: var(--text); font-size: 0.82rem; outline: none;
   }
   .im-search:focus { border-color: rgb(var(--accent-rgb) / 0.6); }
 
-  .im-list { max-height: 220px; overflow-y: auto; }
-
-  .im-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 4px; border-bottom: 1px solid var(--border);
+  .im-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
-  .im-row:last-child { border-bottom: none; }
+
+  .im-card {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 11px 13px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: rgb(var(--c-glass) / 0.03);
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    min-width: 0;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .im-card:hover {
+    border-color: rgb(var(--accent-rgb) / 0.55);
+    background: rgb(var(--accent-rgb) / 0.05);
+  }
+  .im-card:hover .im-go { color: var(--accent); }
+  .im-card:disabled { opacity: 0.55; cursor: default; }
+
   .im-current {
-    border: 1px solid rgb(var(--accent-rgb) / 0.4); border-radius: var(--radius);
-    padding: 10px 14px; background: rgb(var(--accent-rgb) / 0.06);
+    width: 100%;
+    flex-direction: row; align-items: center; justify-content: space-between;
+    border-color: rgb(var(--accent-rgb) / 0.4);
+    background: rgb(var(--accent-rgb) / 0.06);
   }
 
-  .im-name { flex: 1; min-width: 0; font-size: 0.86rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .im-name {
+    font-size: 0.86rem; font-weight: 600; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .im-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .im-mode {
-    font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.6rem;
-    letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); flex-shrink: 0;
+    font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
   }
-
-  .im-btn {
-    font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.64rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 5px 14px; border-radius: 99px; cursor: pointer; flex-shrink: 0;
-    border: 1.5px solid var(--border2); background: none; color: var(--mid);
-    transition: all 0.15s;
+  .im-go {
+    font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
+    transition: color 0.15s; flex-shrink: 0;
   }
-  .im-btn:hover { color: var(--text); border-color: rgb(var(--c-glass) / 0.4); }
-  .im-btn.accent { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }
-  .im-btn:disabled { opacity: 0.55; cursor: default; }
+  .im-go.accent { color: var(--accent); }
 
   .im-dim { color: var(--dim); font-size: 0.8rem; padding: 6px 0; }
+
+  @media (max-width: 560px) {
+    .im-grid { grid-template-columns: 1fr; }
+    .im-scroll { max-height: 62vh; }
+  }
 </style>

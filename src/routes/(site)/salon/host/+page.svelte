@@ -22,6 +22,7 @@
   let autoNextSec   = $state(0);
   let autoNextTimer = null;
   let currentPhrase = $state('');
+  let volume        = $state(100);
 
   /** @type {HostCenter} */
   let hostCenter;
@@ -45,6 +46,12 @@
 
   function qrUrl(size = 200) {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent('https://www.zik-music.fr/salon/play?code=' + code)}&bgcolor=ffffff&color=000000`;
+  }
+
+  function applyVolume(v) {
+    volume = v;
+    localStorage.setItem('zik_salon_vol', String(v));
+    hostCenter?.setVolume(v);
   }
 
   function startAutoNextCountdown(s) {
@@ -147,6 +154,9 @@
     const params = new URLSearchParams(window.location.search);
     code = params.get('code')?.toUpperCase() || '';
     if (!code) { window.location.href = '/salon'; return; }
+    const savedVol = parseInt(localStorage.getItem('zik_salon_vol') ?? '100');
+    volume = Number.isNaN(savedVol) ? 100 : savedVol;
+    hostCenter?.setVolume(volume);
     connectSocket(code);
   });
 
@@ -168,6 +178,7 @@
 
   <!-- Header -->
   <header class="salon-host-header">
+    <a class="salon-host-home" href="/" title="Retour à l'accueil du site" aria-label="Retour à l'accueil du site">⌂</a>
     <div class="salon-host-brand">ZIK <span>Salon</span></div>
     <div class="salon-host-code">
       <img class="salon-host-qr-sm" src={qrUrl(100)} alt="QR" width="46" height="46">
@@ -185,6 +196,21 @@
       {#if phase === 'round' || phase === 'summary'}
         <div class="salon-host-round">Manche <b>{round} / {total}</b></div>
       {/if}
+      <div class="salon-host-vol" title="Volume de la musique">
+        <button
+          class="salon-host-vol-btn"
+          aria-label={volume === 0 ? 'Réactiver le son' : 'Couper le son'}
+          onclick={() => applyVolume(volume === 0 ? 100 : 0)}
+        >{volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}</button>
+        <input
+          class="salon-host-vol-range"
+          type="range" min="0" max="100" step="5"
+          value={volume}
+          aria-label="Volume"
+          oninput={(e) => applyVolume(parseInt(e.target.value))}
+          style="--vol:{volume}%"
+        />
+      </div>
       <div class="salon-host-players-pill">
         <i></i>{players.length} joueur{players.length !== 1 ? 's' : ''}
       </div>

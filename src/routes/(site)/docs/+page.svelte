@@ -15,6 +15,7 @@
     { id: 'playlists', label: 'Playlists' },
     { id: 'rooms', label: 'Rooms' },
     { id: 'compte', label: 'Compte & Profil' },
+    { id: 'amis', label: 'Amis & invitations' },
     { id: 'classement', label: 'Classements' },
     { id: 'faq', label: 'FAQ' },
   ];
@@ -471,6 +472,7 @@
         <li><strong>Classement joueurs :</strong> Affiché avec des icônes selon le score — 🎤 (top 1), 🎸 (top 2-3), 🎵 (autres) — et mis à jour en direct</li>
         <li><strong>Révélation :</strong> La réponse s'affiche avec animation après la fin de chaque manche</li>
         <li><strong>Podium final :</strong> Top 3 animé à la fin de la partie</li>
+        <li><strong>Volume :</strong> Une barre de volume dans l'en-tête permet de régler ou couper le son de la musique sans toucher au player YouTube (réglage conservé entre les sessions)</li>
       </ul>
 
       <h3>L'interface joueur (téléphone)</h3>
@@ -769,6 +771,42 @@
       </div>
     </section>
 
+    <!-- ── AMIS & INVITATIONS ── -->
+    <section>
+      <h2 id="amis">Amis &amp; invitations</h2>
+
+      <h3>Abonnements et amis</h3>
+      <p>
+        ZIK propose deux types de relations entre joueurs (compte requis) :
+      </p>
+      <ul class="doc-list">
+        <li><strong>Suivre un joueur :</strong> comme un abonnement, sans confirmation. Vous suivez son activité depuis son profil public.</li>
+        <li><strong>Ami :</strong> relation confirmée des deux côtés. Vous envoyez une demande, la personne l'accepte (ou la refuse) depuis son profil ou ses notifications.</li>
+      </ul>
+
+      <h3>Ajouter un ami</h3>
+      <ul class="doc-list">
+        <li><strong>Depuis un profil :</strong> ouvrez le profil public d'un joueur et cliquez sur "Demander en ami".</li>
+        <li><strong>Pendant une partie :</strong> dans le classement à gauche de l'écran de jeu, ouvrez le menu <strong>⋯</strong> à côté d'un joueur et choisissez "Ajouter en ami". Si vous vous êtes demandés mutuellement, l'amitié est validée automatiquement.</li>
+      </ul>
+
+      <h3>Inviter des amis à jouer</h3>
+      <ul class="doc-list">
+        <li><strong>Depuis une partie :</strong> le bouton <strong>👋</strong> en haut de l'écran de jeu ouvre votre liste d'amis — un clic sur "Inviter" leur envoie une invitation pour la room où vous jouez.</li>
+        <li><strong>Depuis un profil :</strong> le bouton "Inviter à jouer" sur le profil d'un ami vous laisse choisir la room de destination (votre room actuelle, vos rooms ou une room publique).</li>
+      </ul>
+      <p>
+        L'ami invité reçoit une <strong>notification</strong> (cloche en haut du site) avec le nom de la room et son mode de jeu : un clic et il vous rejoint. Les invitations sont réservées aux amis confirmés.
+      </p>
+
+      <div class="doc-tip">
+        <span class="doc-tip-icon">💡</span>
+        <div>
+          <strong>Classement entre amis :</strong> la page <a href="/classements">Classements</a> propose un onglet Amis pour comparer votre ELO uniquement avec vos amis.
+        </div>
+      </div>
+    </section>
+
     <!-- ── CLASSEMENTS ── -->
     <section>
       <h2 id="classement">Classements</h2>
@@ -934,7 +972,7 @@
     gap: 0;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px clamp(16px, 4vw, 60px);
+    padding: calc(var(--nav-h) + 32px) clamp(16px, 4vw, 60px) 40px;
     min-height: 100vh;
     align-items: start;
   }
@@ -1282,7 +1320,7 @@
   @media (max-width: 768px) {
     .doc-root {
       grid-template-columns: 1fr;
-      padding: 36px 16px;
+      padding: calc(var(--nav-h) + 24px) 16px 36px;
     }
 
     .doc-sidebar {

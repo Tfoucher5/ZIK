@@ -8,7 +8,7 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Politique de confidentialit&eacute;</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juillet 2026</p>
 
   <section>
     <h2>1. Responsable du traitement</h2>
@@ -23,6 +23,8 @@
       <li>Avatar (g&eacute;n&eacute;r&eacute; automatiquement via DiceBear ou t&eacute;l&eacute;vers&eacute; par l&rsquo;utilisateur)</li>
       <li>Scores de parties et statistiques de jeu (points ELO, nombre de parties, meilleurs scores)</li>
       <li>Playlists et rooms cr&eacute;&eacute;es par l&rsquo;utilisateur</li>
+      <li>Relations sociales entre comptes&nbsp;: abonnements et liens d&rsquo;amiti&eacute; (demandes envoy&eacute;es, accept&eacute;es ou refus&eacute;es)</li>
+      <li>Notifications internes li&eacute;es &agrave; ces fonctionnalit&eacute;s (demandes d&rsquo;amis, invitations &agrave; rejoindre une room)</li>
       <li>Pr&eacute;f&eacute;rence de confidentialit&eacute; du profil (public ou priv&eacute;)</li>
     </ul>
     <p>En mode invit&eacute;, aucune donn&eacute;e personnelle n&rsquo;est enregistr&eacute;e de fa&ccedil;on permanente en base de donn&eacute;es. Seul un pseudo temporaire est utilis&eacute; le temps de la session de jeu.</p>
@@ -38,6 +40,7 @@
       <li>Calculer et afficher les classements ELO et hebdomadaires</li>
       <li>Sauvegarder vos playlists et rooms personnalis&eacute;es</li>
       <li>Afficher les statistiques de jeu sur votre profil</li>
+      <li>Faire fonctionner les fonctionnalit&eacute;s sociales&nbsp;: abonnements, amis, invitations &agrave; jouer et notifications associ&eacute;es</li>
     </ul>
     <p>Vos donn&eacute;es ne sont <strong>jamais vendues</strong> &agrave; des tiers, ni utilis&eacute;es &agrave; des fins publicitaires.</p>
   </section>

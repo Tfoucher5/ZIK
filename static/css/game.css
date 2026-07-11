@@ -800,6 +800,17 @@ a {
   color: var(--dim);
   margin-top: 2px;
 }
+.g-deck-idle {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(1.2rem, 3.4vh, 1.7rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(var(--c-glass) / 0.25);
+}
+.g-deck-idle span {
+  color: var(--accent);
+}
 .g-deck-cover {
   position: absolute;
   inset: 0;
@@ -2089,6 +2100,13 @@ a {
     height: 60vh;
     border-radius: 16px 16px 0 0;
     border-bottom: none;
+  }
+  .g-deck-clock .t {
+    font-size: clamp(1rem, 5.4vw, 1.5rem);
+  }
+  .g-deck-clock .l {
+    font-size: 0.48rem;
+    letter-spacing: 0.26em;
   }
 }
 

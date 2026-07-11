@@ -31,11 +31,12 @@
   let roomCodeErr = $state("");
   let roomCodeLoading = $state(false);
 
-  let officialClassicRooms = $derived(rooms.filter(r => r.game_mode !== 'qcm'));
-  let activeClassicRooms = $derived(officialClassicRooms.filter(r => r.online > 0));
-  let waitingClassicRooms = $derived(officialClassicRooms.filter(r => !r.online || r.online === 0));
+  let roomsTab = $state('classic');
+  let liveRooms = $derived([...rooms.filter(r => r.online > 0)].sort((a, b) => b.online - a.online));
+  let tabRooms = $derived(rooms.filter(r => roomsTab === 'qcm' ? r.game_mode === 'qcm' : r.game_mode !== 'qcm'));
   let collageCards = $derived.by(() => {
-    const cards = [...activeClassicRooms, ...waitingClassicRooms].slice(0, AD_SLOTS.homeCard ? 9 : 10);
+    const sorted = [...tabRooms].sort((a, b) => (b.online || 0) - (a.online || 0));
+    const cards = sorted.slice(0, AD_SLOTS.homeCard ? 9 : 10);
     if (AD_SLOTS.homeCard && cards.length >= 4) cards.splice(4, 0, { id: '__ad__', isAd: true });
     return cards;
   });
@@ -282,8 +283,8 @@
   userCount={globalStats.users}
   roomCount={globalStats.publicRooms}
 >
-  <button class="btn-accent" onclick={() => goto('/rooms')}>Jouer maintenant →</button>
-  <button class="btn-ghost" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Explorer les rooms</button>
+  <button class="btn-accent" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer maintenant →</button>
+  <button class="btn-ghost" onclick={() => goto('/rooms')}>Explorer les rooms</button>
   <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="btn-discord">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path fill-rule="evenodd" clip-rule="evenodd" fill="white" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942.0209-.0406.0098-.0895-.0321-.1112a13.201 13.201 0 0 1-1.8735-.8914.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
@@ -309,16 +310,47 @@
 
 <!-- ══════════════════════════════ COLLAGE — ROOMS ══════════════════════════════ -->
 <section class="poster-wall" id="rooms">
+
+  {#if liveRooms.length > 0}
+    <div class="live-strip">
+      <div class="live-strip-head">
+        <h2 class="live-strip-title"><span class="live-strip-dot"></span>En direct</h2>
+        <span class="live-strip-sub">{totalOnline} joueur{totalOnline > 1 ? 's' : ''} en ligne — rejoins une partie en cours</span>
+      </div>
+      <div class="live-strip-row">
+        {#each liveRooms.slice(0, 6) as room, i (room.id)}
+          <button
+            class="live-card"
+            class:featured={i === 0}
+            onclick={() => joinRoom(room.id, room.game_mode)}
+          >
+            <div class="live-card-img" style="background-image:url('{room.cover_url ?? POSTER_COVERS[i % POSTER_COVERS.length]}')"></div>
+            <div class="live-card-body">
+              <span class="live-card-mode">{room.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
+              <span class="live-card-name">{room.emoji} {room.name}</span>
+              <span class="live-card-count"><i></i>{room.online} joueur{room.online > 1 ? 's' : ''} en jeu</span>
+            </div>
+            <span class="live-card-join">Rejoindre →</span>
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
   <div class="pw-head">
     <div class="pw-head-left">
       <h2 class="pw-title">Rooms <em>officielles</em></h2>
-      {#if totalOnline > 0}
+      {#if totalOnline > 0 && liveRooms.length === 0}
         <span class="pw-live">● {totalOnline} en ligne</span>
       {/if}
     </div>
+    <div class="pw-tabs" role="tablist" aria-label="Mode de jeu">
+      <button role="tab" aria-selected={roomsTab === 'classic'} class:active={roomsTab === 'classic'} onclick={() => roomsTab = 'classic'}>Classique</button>
+      <button role="tab" aria-selected={roomsTab === 'qcm'} class:active={roomsTab === 'qcm'} onclick={() => roomsTab = 'qcm'}>QCM</button>
+    </div>
   </div>
 
-  {#if officialClassicRooms.length > 0}
+  {#if tabRooms.length > 0}
     <div class="collage-grid">
       {#each collageCards as room, i (room.id)}
         {#if room.isAd}
@@ -347,7 +379,7 @@
             {/if}
           </div>
           <div class="cc-info">
-            <span class="cc-mode">Classique</span>
+            <span class="cc-mode">{room.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
             <div class="cc-name">{room.emoji} {room.name}</div>
             <div class="cc-status" class:cc-status--live={room.online > 0}>
               {room.online > 0 ? `${room.online} joueur${room.online > 1 ? 's' : ''}` : 'Disponible'}
@@ -358,7 +390,7 @@
       {/each}
     </div>
   {:else}
-    <div class="collage-empty"><p>Chargement des rooms…</p></div>
+    <div class="collage-empty"><p>{rooms.length === 0 ? 'Chargement des rooms…' : 'Aucune room dans ce mode pour le moment.'}</p></div>
   {/if}
 
   <div class="pw-cta-wrap">
@@ -460,8 +492,8 @@
           oninput={(e) => { roomCodeVal = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
           onkeypress={(e) => { if (e.key === 'Enter') joinByCode(); }}
         />
-        <button class="ticket-go" onclick={joinByCode} disabled={roomCodeLoading}>
-          {roomCodeLoading ? '…' : '→'}
+        <button class="ticket-go" onclick={joinByCode} disabled={roomCodeLoading} aria-label="Rejoindre la room">
+          {#if roomCodeLoading}…{:else}<span class="ticket-go-label">Rejoindre</span> →{/if}
         </button>
       </div>
       {#if roomCodeErr}<p class="ticket-err">{roomCodeErr}</p>{/if}
@@ -587,6 +619,180 @@
     background: var(--bg);
     position: relative;
   }
+
+  /* ── Live strip — rooms en cours ── */
+  .live-strip {
+    margin: 0 48px 56px;
+    border: 1px solid rgb(var(--accent-rgb) / 0.3);
+    background:
+      radial-gradient(ellipse at 0% 0%, rgb(var(--accent-rgb) / 0.08) 0%, transparent 55%),
+      var(--bg2);
+    padding: 24px 24px 28px;
+    position: relative;
+  }
+  .live-strip::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent);
+  }
+  .live-strip-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .live-strip-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .live-strip-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: live-pulse 1.6s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes live-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgb(var(--accent-rgb) / 0.5); }
+    50%      { box-shadow: 0 0 0 8px rgb(var(--accent-rgb) / 0); }
+  }
+  .live-strip-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+  }
+  .live-strip-row {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+  .live-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px 12px 12px;
+    background: rgb(var(--c-glass) / 0.04);
+    border: 1px solid rgb(var(--accent-rgb) / 0.35);
+    cursor: pointer;
+    flex-shrink: 0;
+    min-width: 260px;
+    text-align: left;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  }
+  .live-card:hover {
+    border-color: var(--accent);
+    background: rgb(var(--accent-rgb) / 0.07);
+    transform: translateY(-3px);
+  }
+  .live-card.featured {
+    border-width: 2px;
+    border-color: var(--accent);
+    background: rgb(var(--accent-rgb) / 0.06);
+    min-width: 300px;
+  }
+  .live-card-img {
+    width: 58px; height: 58px;
+    background: #222;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+  }
+  .live-card.featured .live-card-img { width: 72px; height: 72px; }
+  .live-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .live-card-mode {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.52rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--dim);
+  }
+  .live-card-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .live-card.featured .live-card-name { font-size: 1.3rem; }
+  .live-card-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .live-card-count i {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+  .live-card-join {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--on-accent);
+    background: var(--accent);
+    padding: 7px 14px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* ── Onglets Classique / QCM ── */
+  .pw-tabs {
+    display: inline-flex;
+    border: 1px solid rgb(var(--c-glass) / 0.18);
+  }
+  .pw-tabs button {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: 10px 26px;
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .pw-tabs button.active {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .pw-tabs button:not(.active):hover { color: var(--text); }
   .pw-head {
     display: flex;
     align-items: baseline;
@@ -1099,6 +1305,7 @@
     transition: opacity 0.15s;
   }
   .ticket-go:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ticket-go-label { display: none; }
   .ticket-err { font-size: 0.72rem; color: var(--danger); margin-top: 6px; }
 
   /* ════════════════════════════ MODE SALON CTA ════════════════════════════ */
@@ -1236,6 +1443,7 @@
   /* ════════════════════════════ RESPONSIVE ════════════════════════════ */
   @media (max-width: 900px) {
     .pw-head { padding: 0 24px; }
+    .live-strip { margin: 0 24px 44px; padding: 20px 16px 22px; }
     .collage-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px 24px 24px; }
     .pw-cta-wrap { padding: 28px 24px 0; }
     .features { padding: 48px 24px; }
@@ -1248,6 +1456,10 @@
 
   @media (max-width: 600px) {
     .pw-head { padding: 0 16px; }
+    .live-strip { margin: 0 16px 40px; }
+    .live-card, .live-card.featured { min-width: min(86vw, 320px); }
+    .pw-tabs { width: 100%; }
+    .pw-tabs button { flex: 1; padding: 12px 0; }
     .collage-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 14px 16px 28px; }
     .cc { --rot: 0deg; --ty: 0px; }
     .pw-cta-wrap { padding: 32px 16px 0; }
@@ -1262,6 +1474,10 @@
     .ticket::before { display: none; }
     .ticket-main { padding: 20px; }
     .stub { display: none; }
+    .ticket-row { flex-direction: column; gap: 10px; }
+    .ticket-input { border-right: 1px solid rgb(var(--c-glass) / 0.12); text-align: center; }
+    .ticket-go { padding: 14px 20px; }
+    .ticket-go-label { display: inline; }
     .salon-cta { padding: 60px 24px; }
     .faq-section { padding: 60px 16px; }
     .faq-list { gap: 10px; }

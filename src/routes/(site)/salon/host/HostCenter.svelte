@@ -66,6 +66,15 @@
   let ytPlayer;
   let currentStartSecs = 0;
   let _metaGuardInterval = null;
+  let _volume = 100;
+
+  export function setVolume(v) {
+    _volume = v;
+    try {
+      if (v === 0) ytPlayer?.mute?.();
+      else { ytPlayer?.unMute?.(); ytPlayer?.setVolume?.(v); }
+    } catch { /* YT pas prêt */ }
+  }
 
   const _FAKE_META = { title: '♪ ♪ ♪', artist: '???', album: 'ZIK — Blind Test', artwork: [{ src: '/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' }] };
 
@@ -108,9 +117,10 @@
           height: '100%', width: '100%', videoId,
           playerVars: { autoplay: 1, controls: 1, enablejsapi: 1, start: startSeconds, rel: 0, modestbranding: 1 },
           events: {
-            onReady: (e) => e.target.playVideo(),
+            onReady: (e) => { setVolume(_volume); e.target.playVideo(); },
             onStateChange: (e) => {
               if (e.data === 1 /* PLAYING */) {
+                setVolume(_volume);
                 startMediaGuard();
                 onMusicReady?.();
               }

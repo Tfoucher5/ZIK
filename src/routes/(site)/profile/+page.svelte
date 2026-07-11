@@ -183,8 +183,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  padding-top: var(--nav-h);
+  min-height: calc(100vh - var(--nav-h) * 2);
+  padding: 48px 24px 96px;
   text-align: center;
 }
 .profile-auth-msg {

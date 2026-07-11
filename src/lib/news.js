@@ -3,48 +3,23 @@
 
 export const NEWS = [
   {
-    date: "2026-07-07",
-    version: "2.10.0",
+    date: "2026-07-11",
+    version: "3.0.0",
     tag: "Nouveauté",
-    title: "Amis et abonnements",
+    title: "ZIK v3 — Nouvelle interface",
     items: [
-      "Deux façons de te connecter aux autres joueurs : suivre un profil (comme un abonnement, sans confirmation) ou envoyer une demande d'ami.",
-      "Une amitié se confirme des deux côtés : la personne doit accepter ta demande.",
-      "Retrouve tes demandes d'amis reçues directement sur ton profil, pour les accepter ou les refuser.",
-    ],
-  },
-  {
-    date: "2026-07-07",
-    version: "2.9.0",
-    tag: "Nouveauté",
-    title: "Mot de passe oublié",
-    items: [
-      "Un lien « Mot de passe oublié ? » est disponible sur la fenêtre de connexion.",
-      "Saisis ton email pour recevoir un lien de réinitialisation, puis choisis un nouveau mot de passe.",
-    ],
-  },
-  {
-    date: "2026-06-29",
-    version: "2.8.0",
-    tag: "Amélioration",
-    title: "Corrections UI, rooms améliorées et Bot Discord",
-    items: [
-      "La popup de connexion s'affiche correctement sur tous les thèmes (texte invisible corrigé).",
-      "Le champ description d'une room est maintenant un textarea : plus facile de voir et modifier un texte long.",
-      "Le sélecteur de playlists dans les rooms a été retravaillé visuellement.",
-      "Mode Salon : la liste des playlists occupe désormais toute la hauteur disponible dans la fenêtre de configuration.",
-      "Onglets ELO/Score sur la page Classements : espacement corrigé.",
-      "Le bouton filtre « Semaine / Mois / Année » ne déborde plus sur petits écrans.",
-      "Mentions légales, CGU et Politique de confidentialité mis à jour pour inclure le Bot Discord ZIK.",
-    ],
-  },
-  {
-    date: "2026-06-15",
-    version: "2.7.1",
-    tag: "Correctif",
-    title: "Liaison Discord : bouton mis à jour en temps réel",
-    items: [
-      "Le bouton « Lier mon compte Discord » se rafraîchit maintenant immédiatement après la liaison, sans avoir à recharger la page.",
+      "Refonte graphique complète du site : accueil, rooms, classements, playlists, profil, connexion, documentation et Mode Salon (nouvelle ambiance scène de festival côté hôte).",
+      "Amis et abonnements : suis un profil librement ou envoie une demande d'ami (confirmée des deux côtés). Les demandes reçues s'acceptent depuis ton profil ou tes notifications.",
+      "Ajoute un joueur en ami directement pendant une partie (menu ⋯ du classement) et invite tes amis dans ta room en un clic (bouton 👋 en haut de l'écran de jeu).",
+      "Page d'accueil : les rooms avec des joueurs en ligne sont mises en avant dans une section « En direct », et des onglets Classique / QCM permettent de choisir son mode.",
+      "La synchronisation de la musique entre joueurs a été renforcée : reprise au bon endroit après reconnexion et recalage automatique en cas de dérive.",
+      "Mode Salon : barre de volume directement dans l'en-tête de l'écran hôte, et boutons de retour vers l'accueil sur toutes les pages Salon.",
+      "Mot de passe oublié : un lien sur la fenêtre de connexion permet de recevoir un email de réinitialisation.",
+      "En jeu sur mobile : le chrono du disque est plus lisible et n'apparaît plus avant le début de la partie.",
+      "La fenêtre d'invitation d'un ami affiche les rooms en grille compacte, bien plus lisible sur PC comme sur mobile.",
+      "Rooms améliorées : description en textarea, sélecteur de playlists retravaillé, et liaison Discord rafraîchie sans recharger la page.",
+      "Divers correctifs : bouton Retour cliquable sur la Documentation, saisie du code room plus confortable sur mobile, page Profil hors connexion mieux espacée.",
+      "Documentation enrichie (section Amis & invitations) et fichiers légaux mis à jour (fonctionnalités sociales, Bot Discord, publicité).",
     ],
   },
   {

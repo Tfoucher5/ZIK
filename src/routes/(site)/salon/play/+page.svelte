@@ -262,6 +262,7 @@
 <div class="salon-blob b2"></div>
 
 {#if !joined}
+  <a class="salon-back salon-play-backlink" href="/salon">← Retour</a>
   <JoinForm
     bind:codeInput
     bind:usernameInput

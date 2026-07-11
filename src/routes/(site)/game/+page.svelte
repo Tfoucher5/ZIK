@@ -5,7 +5,13 @@
   import ReportModal from '$lib/components/ReportModal.svelte';
   import AchievementToast from '$lib/components/AchievementToast.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
+  import Modal from '$lib/components/Modal.svelte';
   import { AD_SLOTS } from '$lib/ads.js';
+  import { createSupabaseClient } from '$lib/supabase.js';
+  import { dicebear } from '$lib/utils.js';
+
+  let { data } = $props();
+  const sb = createSupabaseClient(data.env?.supabaseUrl, data.env?.supabaseAnonKey);
 
   // URL params — read once on mount
   let ROOM_ID  = 'pop';
@@ -73,6 +79,75 @@
     reportType = 'bug';
     reportOpen = true;
   }
+
+  // ── Inviter ses amis dans la room courante ──
+  let canInviteFriends = $state(false);
+  let inviteOpen      = $state(false);
+  let friendsList     = $state([]);
+  let friendsLoading  = $state(false);
+  let invitedIds      = $state([]);
+  let invitingId      = $state(null);
+
+  async function openInviteFriends() {
+    inviteOpen = true;
+    friendsLoading = true;
+    invitedIds = [];
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const r = await fetch(`/api/social/${USER_ID}`, { headers: { Authorization: `Bearer ${token}` } });
+      const d = await r.json();
+      friendsList = d.friends || [];
+    } catch {
+      friendsList = [];
+    }
+    friendsLoading = false;
+  }
+
+  async function inviteFriend(f) {
+    if (invitingId) return;
+    invitingId = f.id;
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const r = await fetch('/api/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetId: f.id, roomId: ROOM_ID }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      invitedIds = [...invitedIds, f.id];
+    } catch (e) {
+      showFeedback(e.message, 'cold');
+    }
+    invitingId = null;
+  }
+
+  let _friendSending = false;
+  async function addFriend(p) {
+    openMenuFor = null;
+    if (_friendSending || !sb) return;
+    _friendSending = true;
+    try {
+      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      if (!token) throw new Error('Connecte-toi pour ajouter des amis.');
+      const r = await fetch('/api/friend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetId: p.userId, action: 'request' }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      showFeedback(
+        d.friendStatus === 'friends'
+          ? `\u{1F91D} Vous êtes amis avec ${p.name} !`
+          : `✅ Demande d'ami envoyée à ${p.name}`,
+        'good'
+      );
+    } catch (e) {
+      showFeedback(e.message, 'cold');
+    }
+    _friendSending = false;
+  }
   let isAdmin     = $state(false);
   let autoStart   = $state(false);
   let hasOwner    = $state(false);
@@ -101,6 +176,8 @@
   let _adminPaused   = false;
   let _usingIframe   = false;
   let _metaGuardInterval = null;
+  let _syncAnchor    = null; // timestamp (ms) où la lecture était à startSeconds — référence commune
+  let _driftInterval = null;
 
   // Chat
   let chatOpen     = $state(false);
@@ -243,10 +320,16 @@
                 socket.emit('player_ready');
                 _syncPaused = true;
                 ytPlayer.pauseVideo();
+              } else if (_syncAnchor !== null && _lastVideo && ytPlayer?.getCurrentTime) {
+                // Arrivée en cours de round : on recale direct sur la référence
+                const expected = _lastVideo.startSeconds + (Date.now() - _syncAnchor) / 1000;
+                if (Math.abs(ytPlayer.getCurrentTime() - expected) > 2) ytPlayer.seekTo(expected, true);
               }
             }
             if (!_syncPaused && !_adminPaused && _roundActive && _lastVideo && (e.data === window.YT.PlayerState.ENDED || e.data === window.YT.PlayerState.PAUSED)) {
-              const elapsed = (Date.now() - _lastVideo.startedAt) / 1000;
+              const elapsed = _syncAnchor !== null
+                ? (Date.now() - _syncAnchor) / 1000
+                : (Date.now() - _lastVideo.startedAt) / 1000;
               loadVideo(_lastVideo.videoId, _lastVideo.startSeconds + elapsed);
             }
           }
@@ -330,20 +413,59 @@
     }
     audio.onloadedmetadata = () => {
       audio.currentTime = startSeconds;
-      audio.play().catch(() => {
-        const resume = () => {
-          audio.play().catch(() => {});
-          document.removeEventListener('pointerdown', resume, true);
-          document.removeEventListener('keydown',     resume, true);
-        };
-        document.addEventListener('pointerdown', resume, true);
-        document.addEventListener('keydown',     resume, true);
-      });
+      // La lecture démarre au signal round_start_sync (tous les joueurs en même temps).
+      // Si le signal est déjà passé (reconnexion), on démarre direct au bon endroit.
+      if (_syncAnchor !== null) playSyncedAudio();
     };
     audio.onended = () => {
       if (_roundActive) { audio.currentTime = 0; audio.play().catch(() => {}); }
     };
     audio.load();
+  }
+
+  // Position attendue dans l'extrait selon l'horloge de synchro (gère la boucle audio)
+  function syncedPos(duration = null) {
+    if (!_lastVideo) return 0;
+    const elapsed = _syncAnchor !== null ? (Date.now() - _syncAnchor) / 1000 : 0;
+    let pos = _lastVideo.startSeconds + elapsed;
+    if (duration && pos >= duration) pos = (pos - duration) % duration;
+    return pos;
+  }
+
+  function playSyncedAudio() {
+    const audio = browser ? document.getElementById('previewAudio') : null;
+    if (!audio || !_lastVideo) return;
+    if (audio.readyState >= 1) audio.currentTime = syncedPos(audio.duration || null);
+    audio.play().catch(() => {
+      const resume = () => {
+        audio.currentTime = syncedPos(audio.duration || null);
+        audio.play().catch(() => {});
+        document.removeEventListener('pointerdown', resume, true);
+        document.removeEventListener('keydown',     resume, true);
+      };
+      document.addEventListener('pointerdown', resume, true);
+      document.addEventListener('keydown',     resume, true);
+    });
+  }
+
+  // Correction de dérive : recale la lecture si elle s'écarte de plus de 2s de la référence
+  function startDriftGuard() {
+    clearInterval(_driftInterval);
+    _driftInterval = setInterval(() => {
+      if (!_roundActive || _syncAnchor === null || _syncPaused || _adminPaused || !_lastVideo) return;
+      if (_usingIframe) {
+        if (ytPlayer?.getPlayerState?.() === 1 && ytPlayer?.getCurrentTime) {
+          const expected = _lastVideo.startSeconds + (Date.now() - _syncAnchor) / 1000;
+          if (Math.abs(ytPlayer.getCurrentTime() - expected) > 2) ytPlayer.seekTo(expected, true);
+        }
+      } else {
+        const audio = document.getElementById('previewAudio');
+        if (audio && !audio.paused && audio.duration) {
+          const expected = syncedPos(audio.duration);
+          if (Math.abs(audio.currentTime - expected) > 2) audio.currentTime = expected;
+        }
+      }
+    }, 5000);
   }
 
   function stopVideo() {
@@ -467,9 +589,11 @@
     USER_ID  = P.get('userId')   || sessionStorage.getItem('zik_uid')   || null;
     IS_GUEST = P.get('isGuest') === '1' || !USER_ID;
     gameMode = P.get('gameMode') || 'classic';
+    canInviteFriends = !IS_GUEST && !!USER_ID && !!sb;
 
     volValue = savedVol();
     setTimeout(() => document.getElementById('volSlider')?.style.setProperty('--vol', volValue + '%'), 50);
+    startDriftGuard();
 
     // Load socket.io dynamically
     const { io } = await import('socket.io-client');
@@ -541,6 +665,7 @@
       _waitingForSync = true;
       syncWaiting = true;
       syncReady = 0; syncTotal = 0;
+      _syncAnchor = null;
       _lastVideo = { videoId: data.videoId, startSeconds: data.startSeconds, startedAt: Date.now() };
       if (data.audioUrl) {
         _usingIframe = false;
@@ -550,15 +675,20 @@
         loadVideo(data.videoId, data.startSeconds);
       }
     });
-    socket.on('round_start_sync', () => {
+    socket.on('round_start_sync', (data) => {
+      const elapsed = data?.elapsed || 0;
+      _syncAnchor = Date.now() - elapsed * 1000;
       _waitingForSync = false;
       syncWaiting = false;
       guessDisabled = false;
       _syncPaused = false;
       if (_usingIframe) {
+        if (ytPlayer?.seekTo && _lastVideo) ytPlayer.seekTo(_lastVideo.startSeconds + elapsed, true);
         if (ytPlayer?.unMute) ytPlayer.unMute();
         if (ytPlayer?.setVolume) ytPlayer.setVolume(savedVol());
         if (ytPlayer?.playVideo) ytPlayer.playVideo();
+      } else {
+        playSyncedAudio();
       }
       tick().then(() => document.getElementById('guessInput')?.focus());
     });
@@ -610,12 +740,12 @@
       summaryShow = true;
       summaryReason = data.reason;
       summaryFinder = data.totalFound > 0 ? `\u{1F3C6} 1er : ${data.firstFinder} \u2014 ${data.totalFound} joueur(s) ont tout trouv\u00e9` : '\u274C Personne n\u2019a trouv\u00e9';
-      _roundActive = false; _waitingForSync = false; syncWaiting = false; guessDisabled = true; stopVideo(); timerPct = 0; deckSpin = false;
+      _roundActive = false; _waitingForSync = false; syncWaiting = false; _syncAnchor = null; guessDisabled = true; stopVideo(); timerPct = 0; deckSpin = false;
       stopMediaGuard();
       history = [data, ...history];
     });
     socket.on('game_over', scores => {
-      _roundActive = false; stopVideo();
+      _roundActive = false; _syncAnchor = null; stopVideo();
       stopMediaGuard();
       guessDisabled = true; timerPct = 0; deckSpin = false; summaryShow = false;
       gameoverScores = scores;
@@ -684,6 +814,7 @@
     clearTimeout(feedTimer);
     clearTimeout(_roundLoadingTimer);
     clearInterval(countdownInterval);
+    clearInterval(_driftInterval);
     _revealTimers.forEach(clearTimeout);
   });
 </script>
@@ -692,7 +823,7 @@
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=2.8.0">
+  <link rel="stylesheet" href="/css/game.css?v=3.0.0">
 </svelte:head>
 
 {#if showDcBanner}
@@ -724,6 +855,9 @@
         &#x1F4AC;
         {#if chatUnread > 0}<span class="g-chat-badge">{chatUnread > 9 ? '9+' : chatUnread}</span>{/if}
       </button>
+      {#if canInviteFriends}
+        <button class="g-bug-btn" onclick={openInviteFriends} title="Inviter des amis dans cette room">👋</button>
+      {/if}
       <button class="g-bug-btn" onclick={openBugReport} title="Signaler un bug">🐛</button>
       <div class="g-vol">
         <span class="g-vol-label">VOL</span>
@@ -760,6 +894,9 @@
                   {#if openMenuFor === p.name}
                     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                     <div class="g-dropdown" role="menu" tabindex="-1" onclick={e => e.stopPropagation()}>
+                      {#if !IS_GUEST && USER_ID && p.userId && !p.isGuest}
+                        <button class="g-dd-item" onclick={() => addFriend(p)}>👋 Ajouter en ami</button>
+                      {/if}
                       <button class="g-dd-item" onclick={() => openUserReport(p)}>🚨 Signaler ce joueur</button>
                     </div>
                   {/if}
@@ -787,11 +924,13 @@
           <div class="g-deck-label">
             {#if showCover && coverSrc}
               <img class="g-deck-cover" src={coverSrc} alt="Pochette">
-            {:else}
+            {:else if timerSecs !== null}
               <div class="g-deck-clock">
-                <div class="t" class:warn={timerSecs !== null && timerPct < 30}>{clockStr}</div>
+                <div class="t" class:warn={timerPct < 30}>{clockStr}</div>
                 <div class="l">Restant</div>
               </div>
+            {:else}
+              <div class="g-deck-idle">ZIK<span>.</span></div>
             {/if}
           </div>
         </div>
@@ -1186,6 +1325,37 @@
   reporterName={USERNAME}
 />
 
+<!-- Inviter des amis dans la room courante -->
+<Modal open={inviteOpen} onClose={() => inviteOpen = false} maxWidth="440px">
+  <h3 class="gi-title">Inviter des amis</h3>
+  <p class="gi-sub">Ils recevront une invitation pour <b>{roomLabel || ROOM_ID}</b>.</p>
+
+  {#if friendsLoading}
+    <p class="gi-dim">Chargement de tes amis…</p>
+  {:else if friendsList.length === 0}
+    <p class="gi-dim">Tu n'as pas encore d'amis sur ZIK. Ajoute des joueurs depuis leur profil ou le menu ⋯ du classement.</p>
+  {:else}
+    <div class="gi-list">
+      {#each friendsList as f (f.id)}
+        <div class="gi-row">
+          <img class="gi-av" src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34" loading="lazy" />
+          <div class="gi-info">
+            <span class="gi-name">{f.username}</span>
+            <span class="gi-elo">{f.elo} ELO</span>
+          </div>
+          {#if invitedIds.includes(f.id)}
+            <span class="gi-sent">✓ Envoyée</span>
+          {:else}
+            <button class="gi-btn" onclick={() => inviteFriend(f)} disabled={invitingId !== null}>
+              {invitingId === f.id ? '…' : 'Inviter'}
+            </button>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  {/if}
+</Modal>
+
 <!-- Fermeture dropdown au clic extérieur -->
 {#if openMenuFor}
   <div aria-hidden="true" style="position:fixed;inset:0;z-index:98" onclick={() => { openMenuFor = null; }}></div>
@@ -1198,6 +1368,99 @@
 <div id="yt-player" style="position:fixed;bottom:-1px;left:-1px;width:1px;height:1px;overflow:hidden;pointer-events:none"></div>
 
 <style>
+.gi-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+.gi-sub {
+  font-size: 0.8rem;
+  color: var(--mid);
+  margin-bottom: 16px;
+}
+.gi-sub b { color: var(--accent); }
+.gi-dim { color: var(--dim); font-size: 0.82rem; padding: 6px 0; }
+.gi-list {
+  max-height: min(50vh, 380px);
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--c-glass) / 0.18) transparent;
+}
+.gi-list::-webkit-scrollbar { width: 5px; }
+.gi-list::-webkit-scrollbar-track { background: transparent; }
+.gi-list::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-glass) / 0.18);
+  border-radius: 99px;
+}
+.gi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.gi-row:last-child { border-bottom: none; }
+.gi-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgb(var(--c-glass) / 0.06);
+  flex-shrink: 0;
+}
+.gi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.gi-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gi-elo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.gi-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 99px;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 1.5px solid rgb(var(--accent-rgb) / 0.5);
+  background: rgb(var(--accent-rgb) / 0.08);
+  color: var(--accent);
+  transition: background 0.15s, border-color 0.15s;
+}
+.gi-btn:hover { border-color: var(--accent); background: rgb(var(--accent-rgb) / 0.15); }
+.gi-btn:disabled { opacity: 0.55; cursor: default; }
+.gi-sent {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--success);
+  flex-shrink: 0;
+}
+
 .g-go-share {
   background: none;
   border: 1px solid rgb(var(--accent-rgb) / 0.45);

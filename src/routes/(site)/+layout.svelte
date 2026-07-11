@@ -135,8 +135,8 @@
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Spotify/Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png">
 
-  <link rel="stylesheet" href="/css/base.css?v=2.1.1">
-  <link rel="stylesheet" href="/css/animations.css?v=2.1.1">
+  <link rel="stylesheet" href="/css/base.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
 </svelte:head>
 
 {#if !isGame}
@@ -222,7 +222,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v2.10.0</span>
+    <span class="footer-version-tag">v3.0.0</span>
   </div>
 </footer>
 {/if}
