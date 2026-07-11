@@ -55,6 +55,14 @@
     feedbackTimer = setTimeout(() => { feedback = null; }, 2200);
   }
 
+  function hue(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return h;
+  }
+
+  let myRank = $derived(scores.findIndex(s => s.username === username) + 1);
+
   function submitGuess() {
     if (allFound || !guess.trim()) return;
     socket.emit('salon_submit_guess', { guess: guess.trim() });
@@ -250,7 +258,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </svelte:head>
 
+<div class="salon-blob b1"></div>
+<div class="salon-blob b2"></div>
+
 {#if !joined}
+  <a class="salon-back salon-play-backlink" href="/salon">← Retour</a>
   <JoinForm
     bind:codeInput
     bind:usernameInput
@@ -262,8 +274,12 @@
   <div class="salon-play">
 
     <header class="salon-play-header">
-      <span class="salon-play-name">{username} · Salon {code}</span>
-      <span class="salon-play-score">{myScore} pts</span>
+      <span class="salon-play-av" style="--h:{hue(username)}">{username[0]?.toUpperCase() ?? '?'}</span>
+      <div>
+        <div class="salon-play-name">{username}</div>
+        <div class="salon-play-salon">Salon {code}</div>
+      </div>
+      <div class="salon-play-score">{myScore}<small>points</small></div>
     </header>
 
     <div class="salon-play-body">
@@ -291,6 +307,12 @@
           onSubmitGuess={submitGuess}
           onSubmitChoice={submitChoice}
         />
+
+        {#if myRank > 0 && scores.length > 1}
+          <div class="salon-me-rank">
+            <b>{myRank}{myRank === 1 ? 'er' : 'e'}</b> sur {scores.length}
+          </div>
+        {/if}
 
       {:else if phase === 'summary' || phase === 'gameover'}
         <SummaryView

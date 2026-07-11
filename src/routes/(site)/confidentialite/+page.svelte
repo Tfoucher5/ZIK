@@ -8,7 +8,7 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Politique de confidentialit&eacute;</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juillet 2026</p>
 
   <section>
     <h2>1. Responsable du traitement</h2>
@@ -23,6 +23,8 @@
       <li>Avatar (g&eacute;n&eacute;r&eacute; automatiquement via DiceBear ou t&eacute;l&eacute;vers&eacute; par l&rsquo;utilisateur)</li>
       <li>Scores de parties et statistiques de jeu (points ELO, nombre de parties, meilleurs scores)</li>
       <li>Playlists et rooms cr&eacute;&eacute;es par l&rsquo;utilisateur</li>
+      <li>Relations sociales entre comptes&nbsp;: abonnements et liens d&rsquo;amiti&eacute; (demandes envoy&eacute;es, accept&eacute;es ou refus&eacute;es)</li>
+      <li>Notifications internes li&eacute;es &agrave; ces fonctionnalit&eacute;s (demandes d&rsquo;amis, invitations &agrave; rejoindre une room)</li>
       <li>Pr&eacute;f&eacute;rence de confidentialit&eacute; du profil (public ou priv&eacute;)</li>
     </ul>
     <p>En mode invit&eacute;, aucune donn&eacute;e personnelle n&rsquo;est enregistr&eacute;e de fa&ccedil;on permanente en base de donn&eacute;es. Seul un pseudo temporaire est utilis&eacute; le temps de la session de jeu.</p>
@@ -38,6 +40,7 @@
       <li>Calculer et afficher les classements ELO et hebdomadaires</li>
       <li>Sauvegarder vos playlists et rooms personnalis&eacute;es</li>
       <li>Afficher les statistiques de jeu sur votre profil</li>
+      <li>Faire fonctionner les fonctionnalit&eacute;s sociales&nbsp;: abonnements, amis, invitations &agrave; jouer et notifications associ&eacute;es</li>
     </ul>
     <p>Vos donn&eacute;es ne sont <strong>jamais vendues</strong> &agrave; des tiers, ni utilis&eacute;es &agrave; des fins publicitaires.</p>
   </section>
@@ -58,7 +61,15 @@
       <li>Votre pseudo d&rsquo;invit&eacute; pour pr&eacute;remplir le formulaire de jeu lors d&rsquo;une prochaine visite</li>
       <li>En Mode Salon&nbsp;: le code salon et le pseudo saisis lors de votre derni&egrave;re session, pour pr&eacute;remplir le formulaire. Ces donn&eacute;es restent exclusivement sur votre appareil et ne sont jamais transmises &agrave; nos serveurs.</li>
     </ul>
-    <p><strong>Aucun cookie de tracking, de publicit&eacute; ou d&rsquo;analyse tiers n&rsquo;est utilis&eacute; sur ZIK.</strong></p>
+    <p>
+      <strong>Publicit&eacute; (Google AdSense)&nbsp;:</strong> ZIK affiche des annonces via Google AdSense.
+      Google et ses partenaires peuvent d&eacute;poser des cookies publicitaires <strong>uniquement avec votre consentement</strong>,
+      recueilli via la banni&egrave;re de consentement (CMP certifi&eacute;e TCF) affich&eacute;e lors de votre premi&egrave;re visite.
+      Vous pouvez modifier votre choix &agrave; tout moment. En cas de refus, des annonces non personnalis&eacute;es
+      peuvent &ecirc;tre affich&eacute;es. Consultez les
+      <a href="https://policies.google.com/technologies/ads?hl=fr" target="_blank" rel="noopener noreferrer">r&egrave;gles publicitaires de Google</a>.
+    </p>
+    <p>Aucun autre cookie de tracking ou d&rsquo;analyse tiers n&rsquo;est utilis&eacute; sur ZIK.</p>
   </section>
 
   <section>
@@ -71,6 +82,7 @@
       <li><strong>DiceBear</strong> &mdash; g&eacute;n&eacute;ration d&rsquo;avatars via URL (aucune donn&eacute;e personnelle envoy&eacute;e)</li>
       <li><strong>api.qrserver.com</strong> &mdash; g&eacute;n&eacute;ration du QR code en Mode Salon (le code salon est envoy&eacute; sous forme d&rsquo;URL uniquement)</li>
       <li><strong>Discord</strong> &mdash; le bot Discord ZIK acc&egrave;de &agrave; votre identifiant Discord uniquement lors d&rsquo;une liaison volontaire de compte (commande <code>/link</code>). Cet identifiant est stock&eacute; dans la base Supabase exclusivement pour associ&eacute; votre compte ZIK &agrave; votre compte Discord et afficher vos stats depuis Discord. Il n&rsquo;est pas partag&eacute; avec des tiers.</li>
+      <li><strong>Google AdSense</strong> (Google LLC) &mdash; affichage d&rsquo;annonces publicitaires sur certaines pages. Soumis &agrave; votre consentement via la banni&egrave;re pr&eacute;vue &agrave; cet effet.</li>
     </ul>
   </section>
 
@@ -118,7 +130,7 @@
   padding: calc(var(--nav-h) + 32px) 24px 80px;
 }
 .legal-page h1 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -127,7 +139,7 @@
 .legal-date { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
 .legal-page section { margin-bottom: 32px; }
 .legal-page h2 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 10px;

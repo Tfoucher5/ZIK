@@ -26,7 +26,7 @@
     <meta name="apple-mobile-web-app-title" content="Zik-Music.fr" />
     <meta
       name="theme-color"
-      content="#0f0a1e"
+      content="#080808"
       media="(prefers-color-scheme: dark)"
     />
     <meta
@@ -35,28 +35,45 @@
       media="(prefers-color-scheme: light)"
     />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Fonts async (non-render-blocking) — display=swap évite le FOIT -->
+    <link rel="preconnect" href="https://e-cdns-images.dzcdn.net" crossorigin />
+    <link rel="dns-prefetch" href="https://api.deezer.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@300;400;500&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media = 'all'"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/barlow-400-latin.woff2"
+      crossorigin
     />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@300;400;500&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
-    <link rel="stylesheet" href="/css/theme.css" />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/barlow-condensed-800-latin.woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/css/fonts.css?v=3.0.0" />
+    <link rel="stylesheet" href="/css/theme.css?v=3.0.0" />
     %sveltekit.head%
     <!-- Theme / animation preference (inline to avoid FOUC) -->
     <script>
       (function () {
         var t = localStorage.getItem("zik_theme") || "dark";
         document.documentElement.setAttribute("data-theme", t);
+        var bgs = {
+          dark: "#080808",
+          light: "#e8edf8",
+          violet: "#0c0814",
+          ocean: "#050b13",
+          sunset: "#140806",
+          emeraude: "#04100a",
+        };
+        if (bgs[t]) {
+          document
+            .querySelectorAll('meta[name="theme-color"]')
+            .forEach(function (m) {
+              m.content = bgs[t];
+            });
+        }
         // Legacy: migrate zik_dark → zik_theme
         if (!localStorage.getItem("zik_theme")) {
           var d = localStorage.getItem("zik_dark");

@@ -41,7 +41,7 @@
   gap: 12px;
   padding: 12px 18px;
   border-radius: 14px;
-  background: rgba(17, 17, 27, 0.95);
+  background: var(--modal-bg);
   border: 1px solid rgba(124, 58, 237, 0.4);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   animation: ach-slide-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
@@ -68,12 +68,12 @@
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #a78bfa;
+  color: var(--accent);
   font-weight: 700;
 }
 
 .ach-toast-name {
-  color: #fff;
+  color: var(--text);
   font-weight: 700;
   font-size: 0.98rem;
   display: flex;
@@ -95,7 +95,7 @@
 .ach-toast-rarity {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--mid);
   white-space: nowrap;
 }
 .ach-toast--rare .ach-toast-rarity      { color: #93c5fd; }

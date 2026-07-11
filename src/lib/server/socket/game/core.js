@@ -847,8 +847,12 @@ export function register(io) {
       ) {
         socket.emit("start_round", room.game.lastRoundData);
         if (room.game.isActive && !room.game.isPaused) {
-          // Round déjà synchro — le nouveau joueur peut jouer immédiatement
-          socket.emit("round_start_sync");
+          // Round déjà synchro — le nouveau joueur reprend au bon endroit de l'extrait
+          socket.emit("round_start_sync", {
+            elapsed: room.game.startTime
+              ? (Date.now() - room.game.startTime) / 1000
+              : 0,
+          });
         }
         // Si isSyncWaiting, le client émettra player_ready quand YouTube sera prêt
       } else if (autoStart && !room.game.isActive && !room.game.isSyncWaiting) {

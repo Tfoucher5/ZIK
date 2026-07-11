@@ -1,8 +1,7 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
-  import ProfileStats from '$lib/components/ProfileStats.svelte';
-  import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
+  import ProfileView from '$lib/components/ProfileView.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import { toast } from '$lib/toast.svelte.js';
 
@@ -12,10 +11,9 @@
   const user      = $derived(_ctx.user);
   const authReady = $derived(_ctx.authReady);
 
-  let profile     = $state(null);
-  let stats       = $state(null);
-  let loading     = $state(true);
-  let activeTab   = $state('stats');
+  let profile = $state(null);
+  let stats   = $state(null);
+  let loading = $state(true);
 
   // Edit modal
   let editOpen      = $state(false);
@@ -24,21 +22,6 @@
   let editError     = $state('');
   let editLoading   = $state(false);
   let avatarPreview = $state('');
-
-  const name   = $derived(profile?.username || user?.email?.split('@')[0] || 'Joueur');
-  const avatar = $derived(profile?.avatar_url || dicebear(name));
-
-  function fmtSince(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  }
-
-  function xpForLevel(lvl) { return Math.round(50 * Math.pow(Math.max(0, lvl - 1), 2.5)); }
-  function xpForNextLevel(lvl) { return Math.round(50 * Math.pow(lvl, 2.5)); }
-  function xpPct(xp, level) {
-    const min = xpForLevel(level), max = xpForNextLevel(level);
-    return Math.min(100, Math.round(((xp - min) / (max - min)) * 100));
-  }
 
   onMount(async () => {
     if (!sb) { loading = false; return; }
@@ -94,12 +77,12 @@
     const avatar_url = editAvatarUrl.trim();
     if (!username) { editError = 'Le pseudo est requis.'; return; }
     if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
-      editError = 'Pseudo invalide (3-20 caract\u00e8res, lettres/chiffres/_/-).'; return;
+      editError = 'Pseudo invalide (3-20 caractères, lettres/chiffres/_/-).'; return;
     }
     const old = profile?.username;
     if (username !== old) {
       const { data: exists } = await sb.from('profiles').select('id').eq('username', username).maybeSingle();
-      if (exists) { editError = 'Ce pseudo est d\u00e9j\u00e0 pris.'; return; }
+      if (exists) { editError = 'Ce pseudo est déjà pris.'; return; }
     }
     editLoading = true;
     try {
@@ -120,7 +103,7 @@
         sessionStorage.setItem('zik_uname', username);
       }
       editOpen = false;
-      toast('Profil mis \u00e0 jour\u00a0!', 'success');
+      toast('Profil mis à jour !', 'success');
     } catch (e) {
       editError = e.message;
     } finally {
@@ -146,56 +129,8 @@
       <button class="btn-accent" onclick={() => openAuthModal('login')} style="margin-top:16px">Se connecter</button>
     </div>
   </div>
-{:else}
-  <div class="profile-back-row">
-    <button class="btn-back" onclick={() => history.back()}>Retour</button>
-  </div>
-  <div class="profile-hero">
-    <div class="hero-bg">
-      <div class="aurora-blob aurora-blob-1" style="opacity:0.5"></div>
-      <div class="aurora-blob aurora-blob-2" style="opacity:0.3"></div>
-    </div>
-    <div class="profile-hero-inner">
-      <div class="profile-avatar-wrap">
-        <img src={avatar} alt="" class="profile-avatar-big">
-        <button class="profile-avatar-edit" onclick={openEdit} title="Changer l'avatar">&#x270E;</button>
-      </div>
-      <div class="profile-hero-info">
-        <div class="profile-username">{name}</div>
-        <div class="profile-hero-meta">
-          <span class="profile-elo-badge">ELO {profile?.elo ?? '—'}</span>
-          {#if stats?.topPercent}
-            <span class="profile-top-badge">&#x1F3C6; Top {stats.topPercent}%</span>
-          {/if}
-        </div>
-        {#if profile?.created_at}
-          <div class="profile-since">Membre depuis {fmtSince(profile.created_at)}</div>
-        {/if}
-        {#if profile}
-          <div class="profile-xp-row">
-            <div class="profile-xp-level">Niveau {profile.level ?? 1}</div>
-            <div class="profile-xp-bar">
-              <div class="profile-xp-fill" style="width:{xpPct(profile.xp ?? 0, profile.level ?? 1)}%"></div>
-            </div>
-            <div class="profile-xp-caption">{profile.xp ?? 0} / {xpForNextLevel(profile.level ?? 1)} XP</div>
-          </div>
-        {/if}
-      </div>
-      <button class="btn-ghost sm" onclick={openEdit}>Modifier le profil</button>
-    </div>
-  </div>
-
-  {#if profile}
-    <div class="profile-tabs" role="tablist" aria-label="Sections du profil">
-      <button class="profile-tab" class:active={activeTab === 'stats'} role="tab" aria-selected={activeTab === 'stats'} onclick={() => activeTab = 'stats'}>📊 Statistiques</button>
-      <button class="profile-tab" class:active={activeTab === 'succes'} role="tab" aria-selected={activeTab === 'succes'} onclick={() => activeTab = 'succes'}>🏅 Succès</button>
-    </div>
-    {#if activeTab === 'stats'}
-      <ProfileStats {profile} {stats} />
-    {:else}
-      <AchievementsPanel {sb} userId={user.id} />
-    {/if}
-  {/if}
+{:else if profile}
+  <ProfileView {profile} {stats} {sb} userId={user.id} viewerId={user.id} editable onEdit={openEdit} />
 {/if}
 </div>
 
@@ -238,7 +173,6 @@
 <Toast />
 
 <style>
-/* -- Profile page -- */
 .pl-loading {
   padding: 48px 16px;
   text-align: center;
@@ -249,8 +183,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  padding-top: var(--nav-h);
+  min-height: calc(100vh - var(--nav-h) * 2);
+  padding: 48px 24px 96px;
   text-align: center;
 }
 .profile-auth-msg {
@@ -259,144 +193,11 @@
   align-items: center;
   gap: 8px;
 }
-
 #profile-page {
   padding-top: var(--nav-h);
   flex: 1;
 }
 
-/* -- Onglets profil -- */
-.profile-tabs {
-  display: flex;
-  gap: 8px;
-  max-width: 980px;
-  margin: 20px auto 0;
-  padding: 0 clamp(16px, 5vw, 60px);
-  border-bottom: 1px solid var(--border);
-}
-.profile-tab {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--dim);
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.profile-tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-.profile-tab:hover:not(.active) { color: var(--text); }
-
-/* -- Bouton retour -- */
-.profile-back-row {
-  padding: 14px clamp(16px, 5vw, 60px) 0;
-}
-
-/* -- Hero -- */
-.profile-hero {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.06) 0%, transparent 60%);
-  border-bottom: 1px solid var(--border);
-  padding: 36px clamp(16px, 5vw, 60px) 28px;
-}
-.profile-hero-inner {
-  position: relative;
-  z-index: 1;
-  max-width: 980px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.profile-avatar-wrap { position: relative; flex-shrink: 0; }
-.profile-avatar-big {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgb(var(--accent-rgb) / 0.35);
-  background: var(--surface);
-}
-.profile-avatar-edit {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #000;
-  border: 2px solid var(--bg);
-  font-size: 0.72rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.profile-hero-info { flex: 1; min-width: 0; }
-.profile-username {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 1.9rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-.profile-hero-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-.profile-elo-badge {
-  font-size: 0.82rem;
-  color: var(--accent);
-  font-weight: 600;
-}
-.profile-top-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgb(var(--accent-rgb) / 0.1);
-  border: 1px solid rgb(var(--accent-rgb) / 0.25);
-  border-radius: 99px;
-  padding: 2px 10px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-.profile-since {
-  font-size: 0.78rem;
-  color: var(--dim);
-  margin-top: 3px;
-}
-.profile-xp-row { margin-top: 12px; max-width: 300px; display: flex; flex-direction: column; gap: 5px; }
-.profile-xp-level {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text);
-}
-.profile-xp-bar {
-  background: rgb(var(--c-glass) / 0.08);
-  border-radius: 99px;
-  height: 6px;
-}
-.profile-xp-fill {
-  background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.6s ease;
-}
-.profile-xp-caption {
-  font-size: 0.68rem;
-  color: var(--dim);
-}
 /* -- Modal edition -- */
 .avatar-preview-wrap {
   display: flex;
@@ -426,7 +227,7 @@
 /* -- Overlay + Modal -- */
 .overlay {
   position: fixed; inset: 0; z-index: 400;
-  background: rgba(0,0,0,0.6);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
@@ -439,7 +240,7 @@
   width: 100%; max-width: 440px;
 }
 .modal h2 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.1rem; font-weight: 800; margin-bottom: 16px;
 }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -459,22 +260,4 @@
   box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08);
 }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-@media (max-width: 700px) {
-  .profile-hero-inner {
-    flex-wrap: nowrap;
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .profile-avatar-big { width: 68px; height: 68px; }
-  .profile-hero-info { min-width: 0; overflow: hidden; }
-  .profile-username {
-    font-size: 1.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .profile-hero-inner > .btn-ghost { flex-shrink: 0; align-self: flex-start; margin-top: 4px; }
-  .profile-xp-row { max-width: 100%; }
-}
 </style>

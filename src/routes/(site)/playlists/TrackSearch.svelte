@@ -203,7 +203,7 @@
   <div class="search-results">
     {#each searchResults as t, i (t.external_id || i)}
       <div class="track-row">
-        {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="">{/if}
+        {#if t.cover_url}<img class="track-cover" src={t.cover_url} alt="" loading="lazy" decoding="async">{/if}
         <div class="track-info">
           <div class="track-title">{t.title}</div>
           <div class="track-artist">{t.artist}</div>
@@ -222,7 +222,7 @@
 {:else if editorTab === 'import-spotify'}
 <div class="tab-pane">
   {#if !spotifyClientId}
-    <p class="import-hint" style="color:#f87171">Spotify non configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> dans ton fichier <code>.env</code>.</p>
+    <p class="import-hint" style="color:var(--danger)">Spotify non configuré. Ajoute <code>SPOTIFY_CLIENT_ID</code> dans ton fichier <code>.env</code>.</p>
   {:else if !spConnected}
     <p class="import-hint">Connecte ton compte Spotify pour importer tes playlists (publiques et privées).</p>
     <button class="btn-spotify" onclick={connectSpotify}>Connecter Spotify</button>
@@ -302,31 +302,32 @@
 <style>
 .editor-tabs {
   display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  margin: 14px 20px 0;
+  border: 1px solid var(--border2);
+  flex-shrink: 0;
 }
 .etab {
   background: transparent;
-  border: 1px solid var(--border);
-  color: var(--mid);
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  font-family: inherit;
+  border: none;
+  border-right: 1px solid var(--border2);
+  color: var(--dim);
+  padding: 9px 14px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  flex: 1;
+  text-align: center;
+  transition: color 0.12s, background 0.12s;
 }
-.etab:hover {
-  color: var(--text);
-  border-color: rgb(var(--c-glass) / 0.2);
-}
-.etab.active {
-  color: var(--accent);
-  border-color: rgb(var(--accent-rgb) / 0.3);
-  background: rgb(var(--accent-rgb) / 0.07);
-}
+.etab:last-child { border-right: none; }
+.etab:hover { color: var(--text); background: rgb(var(--c-glass) / 0.02); }
+.etab.active { color: var(--accent); background: rgb(var(--accent-rgb) / 0.06); }
+
+.tab-pane { padding: 14px 20px; }
+
 .search-bar {
   display: flex;
   gap: 8px;
@@ -338,151 +339,113 @@
   flex: 1;
   min-width: 180px;
 }
-.search-source-toggle {
-  display: flex;
-  gap: 4px;
-}
+.search-source-toggle { display: flex; }
 .src-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--mid);
-  padding: 7px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-right: none;
+  color: var(--dim);
+  padding: 6px 12px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
-.src-btn.active {
-  color: var(--accent);
-  border-color: rgb(var(--accent-rgb) / 0.3);
-  background: rgb(var(--accent-rgb) / 0.07);
-}
+.src-btn:last-child { border-right: 1px solid var(--border2); }
+.src-btn.active { color: var(--accent); border-color: var(--accent); background: rgb(var(--accent-rgb) / 0.06); }
+
 .search-results {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 280px;
+  gap: 4px;
+  max-height: 260px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-rgb) / 0.35) transparent;
 }
+.search-results::-webkit-scrollbar { width: 3px; }
+.search-results::-webkit-scrollbar-track { background: transparent; }
+.search-results::-webkit-scrollbar-thumb { background: rgb(var(--accent-rgb) / 0.35); }
+
 .track-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgb(var(--c-glass) / 0.03);
-  border: 1px solid var(--border);
-  transition: border-color 0.15s;
+  padding: 8px 10px;
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
 }
-.track-row:hover {
-  border-color: rgb(var(--c-glass) / 0.15);
-}
+.track-row:hover { background: rgb(var(--c-glass) / 0.02); }
 .track-cover {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
   object-fit: cover;
-  background: rgb(var(--c-glass) / 0.05);
+  background: var(--border);
   flex-shrink: 0;
 }
-.track-info {
-  flex: 1;
-  min-width: 0;
-}
+.track-info { flex: 1; min-width: 0; }
 .track-title {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .track-artist {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--mid);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .track-source {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   color: var(--dim);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   flex-shrink: 0;
 }
 .track-add-btn {
-  background: rgb(var(--accent-rgb) / 0.1);
-  border: 1px solid rgb(var(--accent-rgb) / 0.2);
-  color: var(--accent);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--mid);
+  padding: 5px 10px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: border-color 0.12s, color 0.12s;
 }
-.track-add-btn:hover {
-  background: rgb(var(--accent-rgb) / 0.2);
-}
-.track-add-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.track-add-btn.added {
-  background: rgba(74, 222, 128, 0.1);
-  border-color: rgba(74, 222, 128, 0.2);
-  color: var(--success);
-}
-.import-hint {
-  font-size: 0.84rem;
-  color: var(--mid);
-  margin-bottom: 14px;
-}
-.import-preview {
-  margin-top: 14px;
-}
+.track-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.track-add-btn:disabled { opacity: 0.4; cursor: default; }
+.track-add-btn.added { border-color: var(--success); color: var(--success); }
+
+.import-hint { font-size: 0.82rem; color: var(--mid); margin-bottom: 14px; }
+.import-preview { margin-top: 14px; }
 .import-preview-header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-  padding: 14px;
-  background: rgb(var(--c-glass) / 0.04);
+  padding: 12px 14px;
+  background: rgb(var(--c-glass) / 0.02);
   border: 1px solid var(--border);
-  border-radius: 10px;
 }
-.import-preview-cover {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: var(--surface);
-}
-.import-preview-name {
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 700;
-}
-.import-preview-count {
-  font-size: 0.78rem;
-  color: var(--mid);
-  margin-top: 2px;
-}
-.import-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-.manual-form {
-  max-width: 520px;
-}
-.pl-form-row {
-  display: flex;
-  gap: 12px;
-}
+.import-preview-cover { width: 44px; height: 44px; object-fit: cover; background: var(--border); flex-shrink: 0; }
+.import-preview-name { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 1rem; text-transform: uppercase; }
+.import-preview-count { font-size: 0.72rem; color: var(--mid); margin-top: 2px; }
+.import-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+.manual-form { max-width: 520px; }
+.pl-form-row { display: flex; gap: 12px; }
+
 .btn-spotify {
   display: inline-flex;
   align-items: center;
@@ -490,54 +453,39 @@
   background: #1db954;
   color: #000;
   font-weight: 700;
-  font-size: 0.88rem;
-  padding: 10px 20px;
-  border-radius: 50px;
+  font-size: 0.82rem;
+  padding: 9px 18px;
   border: none;
   cursor: pointer;
   transition: opacity 0.2s;
 }
-.btn-spotify:hover {
-  opacity: 0.85;
-}
+.btn-spotify:hover { opacity: 0.85; }
+
 .spotify-connected-bar {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(29, 185, 84, 0.1);
-  border: 1px solid rgba(29, 185, 84, 0.3);
-  border-radius: 10px;
+  background: rgba(29, 185, 84, 0.08);
+  border: 1px solid rgba(29, 185, 84, 0.25);
   padding: 8px 14px;
   margin-bottom: 10px;
-  font-size: 0.83rem;
+  font-size: 0.8rem;
 }
-.spotify-connected-label {
-  color: #1db954;
-  font-weight: 600;
-  flex: 1;
-}
+.spotify-connected-label { color: #1db954; font-weight: 600; flex: 1; }
+
 .btn-link-sm {
   background: none;
   border: none;
   color: var(--dim);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
 }
-.btn-link-sm:hover {
-  color: var(--fg);
-}
+.btn-link-sm:hover { color: var(--text); }
+
 @media (max-width: 600px) {
-  .pl-form-row {
-    flex-direction: column;
-  }
-  .editor-tabs {
-    gap: 4px;
-  }
-  .etab {
-    font-size: 0.72rem;
-    padding: 6px 10px;
-  }
+  .pl-form-row { flex-direction: column; }
+  .etab { font-size: 0.64rem; padding: 8px 10px; }
 }
 </style>

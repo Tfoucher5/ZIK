@@ -1,38 +1,22 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
+import { supabase, getAdminClient } from "$lib/server/config.js";
 import { roomGames } from "$lib/server/state.js";
 import {
   requireAuth,
-  verifyToken,
   userClient,
   checkRateLimit,
 } from "$lib/server/middleware/auth.js";
+import { seededShuffle } from "$lib/utils.js";
 
 export async function GET({ request }) {
-  const token = request.headers.get("authorization")?.slice(7);
-  let isSuperAdmin = false;
-
-  if (token) {
-    const user = await verifyToken(token);
-    if (user) {
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      isSuperAdmin = p?.role === "super_admin";
-    }
-  }
-
-  let query = supabase
+  const query = getAdminClient()
     .from("rooms")
     .select(
       "id, code, name, emoji, description, is_public, is_official, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, owner_id, playlist_id, profiles!owner_id(username, avatar_url), custom_playlists!playlist_id(track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
     )
+    .eq("is_public", true)
     .order("last_active_at", { ascending: false })
-    .limit(50);
-
-  if (!isSuperAdmin) query = query.eq("is_public", true);
+    .limit(200);
 
   const { data, error } = await query;
   if (error) return json({ error: error.message }, { status: 400 });
@@ -95,7 +79,31 @@ export async function GET({ request }) {
     };
   });
 
-  return json(result);
+  const allPids = [...new Set(result.flatMap((r) => r.playlist_ids))];
+  let coverMap = {};
+  if (allPids.length > 0) {
+    const { data: tc } = await getAdminClient().rpc("get_covers_by_playlists", {
+      pids: allPids,
+      max_per_playlist: 27,
+    });
+    for (const [pid, covers] of Object.entries(tc || {})) {
+      coverMap[pid] = new Set(covers);
+    }
+  }
+
+  return json(
+    result.map((r) => ({
+      ...r,
+      covers: seededShuffle(
+        [
+          ...new Set(
+            r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])]),
+          ),
+        ],
+        r.id,
+      ).slice(0, 9),
+    })),
+  );
 }
 
 export async function POST({ request }) {

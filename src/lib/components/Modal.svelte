@@ -1,5 +1,5 @@
 <script>
-  let { open, onClose, maxWidth = '440px', boxBg = 'rgba(20, 20, 35, 0.98)', closeBtnColor = 'rgba(255,255,255,0.5)', children } = $props();
+  let { open, onClose, maxWidth = '440px', boxBg = 'var(--modal-bg)', closeBtnColor = 'rgb(var(--c-glass) / 0.5)', children } = $props();
 </script>
 
 {#if open}
@@ -30,7 +30,7 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: var(--overlay);
     backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
@@ -45,7 +45,7 @@
     padding: 32px;
     position: relative;
     box-shadow: 0 16px 60px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgb(var(--c-glass) / 0.08);
     animation: modal-in 0.18s ease;
   }
   .modal-close {

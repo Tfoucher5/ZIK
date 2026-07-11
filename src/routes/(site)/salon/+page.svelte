@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
+  import AuthModal from '$lib/components/AuthModal.svelte';
 
   const salonJsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -25,6 +26,8 @@
 
   let user      = $state(null);
   let authReady = $state(false);
+  let authOpen  = $state(false);
+  let authView  = $state('login');
 
   // Paramètres du salon
   let maxRounds          = $state(10);
@@ -151,19 +154,35 @@
   <script type="application/ld+json">{@html salonJsonLd}</script>
 </svelte:head>
 
-<div class="salon-setup">
-  <button class="salon-back" onclick={() => history.back()}>← Retour</button>
+<div class="salon-blob b1"></div>
+<div class="salon-blob b2"></div>
 
-  <h1 class="salon-setup-logo">ZIK <span>Salon</span></h1>
-  <p class="salon-setup-sub">Mode soirée — comme Kahoot, depuis la TV</p>
+<div class="salon-setup">
+  <a class="salon-back" href="/">← Accueil du site</a>
+
+  <div class="salon-hero">
+    <div class="salon-hero-kicker">Mode soirée — TV + smartphones</div>
+    <h1 class="salon-setup-logo">ZIK <span>Salon</span></h1>
+    <p class="salon-setup-sub">La TV diffuse, les téléphones répondent. Comme Kahoot, avec ta musique.</p>
+    <div class="salon-hero-steps">
+      <span class="salon-hero-step"><i>1</i>Configure</span>
+      <span class="salon-hero-step"><i>2</i>Partage le code</span>
+      <span class="salon-hero-step"><i>3</i>Jouez !</span>
+    </div>
+  </div>
 
   {#if !authReady}
     <div class="salon-card" style="text-align:center;color:var(--mid)">Chargement…</div>
 
   {:else if !user}
-    <div class="salon-card" style="text-align:center">
-      <p style="margin-bottom:16px;color:var(--mid)">Connecte-toi pour créer un salon.</p>
-      <a href="/" class="btn-salon-create" style="display:inline-block;text-decoration:none">Retour à l'accueil</a>
+    <div class="salon-card salon-card-guest">
+      <p class="salon-guest-txt">
+        Tu es invité à une soirée ? Rejoins le salon avec le code de l'hôte —
+        <b>pas besoin de compte</b>.
+      </p>
+      <a href="/salon/play" class="btn-salon-create salon-guest-join">Rejoindre un salon →</a>
+      <p class="salon-guest-sub">Pour <b>créer</b> un salon en revanche, il faut être connecté.</p>
+      <button type="button" class="salon-join-link" onclick={() => { authView = 'login'; authOpen = true; }}>Se connecter →</button>
     </div>
 
   {:else}
@@ -171,12 +190,13 @@
 
       <!-- Colonne gauche : paramètres -->
       <div class="salon-card salon-card-params">
-        <h2>⚙️ Paramètres</h2>
+        <div class="salon-card-kicker"><b>01</b> Paramètres</div>
 
         <div class="salon-field">
           <label>Nombre de manches</label>
           <div class="salon-range-row">
-            <input type="range" min="5" max="20" step="1" bind:value={maxRounds}>
+            <input type="range" min="5" max="20" step="1" bind:value={maxRounds}
+              style="--p:{((maxRounds - 5) / 15) * 100}%">
             <input type="number" min="5" max="20" step="1" class="salon-range-num" bind:value={maxRounds}
               onchange={() => maxRounds = clamp(maxRounds, 5, 20)}>
           </div>
@@ -185,7 +205,8 @@
         <div class="salon-field">
           <label>Durée par manche</label>
           <div class="salon-range-row">
-            <input type="range" min="15" max="60" step="5" bind:value={roundDuration}>
+            <input type="range" min="15" max="60" step="5" bind:value={roundDuration}
+              style="--p:{((roundDuration - 15) / 45) * 100}%">
             <input type="number" min="15" max="60" step="5" class="salon-range-num" bind:value={roundDuration}
               onchange={() => roundDuration = clamp(roundDuration, 15, 60)}>
             <span class="salon-range-unit">s</span>
@@ -199,12 +220,14 @@
           <div class="salon-mode-btns">
             <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
             <div class="salon-mode-btn {answerMode === 'free' ? 'selected' : ''}" onclick={() => answerMode = 'free'}>
+              <span class="salon-mode-led"></span>
               <span class="mode-icon">⌨️</span>
               <div class="mode-name">Texte libre</div>
               <div class="mode-desc">Pur savoir, aucun hasard</div>
             </div>
             <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
             <div class="salon-mode-btn {answerMode === 'multiple' ? 'selected' : ''}" onclick={() => answerMode = 'multiple'}>
+              <span class="salon-mode-led"></span>
               <span class="mode-icon">🎯</span>
               <div class="mode-name">Choix multiples</div>
               <div class="mode-desc">4 options, une seule bonne</div>
@@ -229,7 +252,8 @@
           <div class="salon-field">
             <label>Durée d'affichage de la réponse</label>
             <div class="salon-range-row">
-              <input type="range" min="3" max="15" step="1" bind:value={showAnswerDuration}>
+              <input type="range" min="3" max="15" step="1" bind:value={showAnswerDuration}
+                style="--p:{((showAnswerDuration - 3) / 12) * 100}%">
               <input type="number" min="3" max="15" step="1" class="salon-range-num" bind:value={showAnswerDuration}
                 onchange={() => showAnswerDuration = clamp(showAnswerDuration, 3, 15)}>
               <span class="salon-range-unit">s</span>
@@ -240,7 +264,7 @@
 
       <!-- Colonne droite : sélection playlists (multi) -->
       <div class="salon-card salon-card-playlist">
-        <h2>🎵 Playlists</h2>
+        <div class="salon-card-kicker"><b>02</b> Playlists</div>
 
         {#if allPlaylists.length === 0}
           <p style="font-size:.85rem;color:var(--mid)">
@@ -292,9 +316,7 @@
                   {#if pl.trackCount}
                     <span class="salon-playlist-count">{pl.trackCount} titres</span>
                   {/if}
-                  {#if isSelected}
-                    <span class="salon-playlist-check">✓</span>
-                  {/if}
+                  <span class="salon-playlist-check"></span>
                 </div>
               {/each}
             {/if}
@@ -307,12 +329,25 @@
     {#if error}
       <p class="salon-error" style="margin-top:12px">{error}</p>
     {/if}
-
-    <div class="salon-setup-actions">
-      <button class="btn-salon-create" onclick={createSalon} disabled={creating || selectedIds.length === 0}>
-        {creating ? 'Création…' : '🛋️ Créer le salon'}
-      </button>
-      <a href="/salon/play" class="salon-join-link">Pas l'hôte ? Rejoindre un salon →</a>
-    </div>
   {/if}
 </div>
+
+{#if authReady && user}
+  <div class="salon-actionbar">
+    <div class="salon-actionbar-in">
+      <div class="salon-recap">
+        <div><div class="n">{selectedIds.length}</div><div class="l">Playlist{selectedIds.length > 1 ? 's' : ''}</div></div>
+        <div class="sep"></div>
+        <div><div class="n">{totalTrackCount}</div><div class="l">Titres</div></div>
+        <div class="sep"></div>
+        <div><div class="n">{maxRounds}</div><div class="l">Manches</div></div>
+      </div>
+      <a href="/salon/play" class="salon-join-link">Pas l'hôte ? Rejoindre un salon →</a>
+      <button class="btn-salon-create" onclick={createSalon} disabled={creating || selectedIds.length === 0}>
+        {creating ? 'Création…' : 'Créer le salon →'}
+      </button>
+    </div>
+  </div>
+{/if}
+
+<AuthModal {sb} open={authOpen} bind:view={authView} onClose={() => (authOpen = false)} onSuccess={() => (authOpen = false)} />

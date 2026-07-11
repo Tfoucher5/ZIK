@@ -235,7 +235,7 @@
     margin-bottom: 16px;
   }
   .room-title {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: clamp(2rem, 5vw, 3.2rem);
     font-weight: 800;
     letter-spacing: -1px;
@@ -255,8 +255,8 @@
     flex-wrap: wrap;
   }
   .room-meta-chip {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(var(--c-glass) / 0.06);
+    border: 1px solid rgb(var(--c-glass) / 0.1);
     border-radius: 50px;
     padding: 4px 12px;
     font-size: 0.78rem;
@@ -270,8 +270,8 @@
     padding: 0 clamp(16px, 5vw, 80px) 48px;
   }
   .room-join-card {
-    background: var(--surface, rgba(255,255,255,0.04));
-    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    background: var(--surface, rgb(var(--c-glass) / 0.04));
+    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
     border-radius: 20px;
     padding: 32px;
     width: 100%;
@@ -279,7 +279,7 @@
     text-align: center;
   }
   .room-join-title {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 20px;
@@ -296,13 +296,13 @@
   }
   .btn-room-join {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent, #3ecfff), var(--accent2, #a78bfa));
+    background: var(--accent);
     border: none;
-    color: #0a0d1a;
+    color: var(--on-accent);
     font-size: 1rem;
     font-weight: 700;
     padding: 13px;
-    border-radius: 12px;
+    border-radius: 3px;
     cursor: pointer;
     font-family: inherit;
     transition: opacity 0.15s, filter 0.15s;
@@ -318,8 +318,8 @@
   }
   .room-guest-input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    background: rgb(var(--c-glass) / 0.05);
+    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
     border-radius: 10px;
     color: var(--text, #f1f5f9);
     font-size: 0.95rem;
@@ -330,18 +330,18 @@
     box-sizing: border-box;
   }
   .room-guest-input:focus {
-    border-color: var(--accent, #3ecfff);
-    box-shadow: 0 0 0 3px rgba(62, 207, 255, 0.15);
+    border-color: rgb(var(--accent-rgb) / 0.45);
+    box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.1);
   }
   .room-guest-error {
     font-size: 0.78rem;
-    color: #f87171;
+    color: var(--danger);
     margin: 0;
   }
   .btn-room-guest {
     width: 100%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgb(var(--c-glass) / 0.06);
+    border: 1px solid rgb(var(--c-glass) / 0.12);
     color: var(--text, #f1f5f9);
     font-size: 0.9rem;
     font-weight: 600;
@@ -351,7 +351,7 @@
     font-family: inherit;
     transition: background 0.15s;
   }
-  .btn-room-guest:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+  .btn-room-guest:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.1); }
   .btn-room-guest:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .room-back-link {
@@ -371,7 +371,7 @@
     padding: 0 clamp(16px, 5vw, 80px) 80px;
   }
   .room-seo-block h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 16px;
@@ -390,7 +390,7 @@
     line-height: 1.6;
   }
   .room-seo-block a {
-    color: var(--accent, #3ecfff);
+    color: var(--accent, #ff00ff);
     text-decoration: none;
   }
   .room-seo-block a:hover { text-decoration: underline; }

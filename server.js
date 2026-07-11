@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import compression from "compression";
 import { execFile as _execFile } from "child_process";
 import { promisify as _promisify } from "util";
 import { join as _join } from "path";
@@ -11,6 +12,7 @@ const { handler } = await import("./build/handler.js");
 
 import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon.js";
+import { registerPresence } from "./src/lib/server/socket/presence.js";
 import {
   preloadAllPlaylists,
   runPreviewRefreshCron,
@@ -73,7 +75,14 @@ async function autoUpdateYtDlp() {
   }
 }
 
-const server = createServer(handler);
+const compress = compression({ threshold: 1024 });
+const IMMUTABLE_RE = /^\/(css|fonts|favicon)\//;
+const server = createServer((req, res) => {
+  if (IMMUTABLE_RE.test(req.url)) {
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  }
+  compress(req, res, () => handler(req, res));
+});
 
 const io = new Server(server, {
   transports: ["websocket", "polling"],
@@ -84,6 +93,7 @@ const io = new Server(server, {
 globalThis.__zik_io = io;
 register(io);
 registerSalon(io);
+registerPresence(io);
 preloadAllPlaylists();
 autoUpdateYtDlp();
 setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h

@@ -219,8 +219,8 @@
         position: absolute;
         inset: 0;
         background-image:
-            linear-gradient(rgba(255,255,255,0.014) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.014) 1px, transparent 1px);
+            linear-gradient(rgb(var(--c-glass) / 0.014) 1px, transparent 1px),
+            linear-gradient(90deg, rgb(var(--c-glass) / 0.014) 1px, transparent 1px);
         background-size: 44px 44px;
         mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
     }
@@ -231,12 +231,12 @@
         z-index: 1;
         width: min(640px, 100%);
         border-radius: 22px;
-        border: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid rgb(var(--c-glass) / 0.08);
         background: rgba(10, 15, 30, 0.72);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         box-shadow:
-            0 0 0 1px rgba(255,255,255,0.04) inset,
+            0 0 0 1px rgb(var(--c-glass) / 0.04) inset,
             0 24px 64px rgba(0,0,0,0.5),
             0 0 80px var(--glow);
         overflow: hidden;
@@ -261,8 +261,8 @@
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        border: 1px solid rgba(255,255,255,0.1);
-        background: rgba(255,255,255,0.05);
+        border: 1px solid rgb(var(--c-glass) / 0.1);
+        background: rgb(var(--c-glass) / 0.05);
         color: #94a3b8;
     }
 
@@ -321,7 +321,7 @@
         font-weight: 800;
         letter-spacing: -0.04em;
         color: #f1f5f9;
-        font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+        font-family: 'Barlow Condensed', system-ui, sans-serif;
     }
 
     .desc {
@@ -336,7 +336,7 @@
     .console {
         margin: 0 2rem 1.6rem;
         border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.07);
+        border: 1px solid rgb(var(--c-glass) / 0.07);
         background: rgba(0,0,0,0.3);
         overflow: hidden;
     }
@@ -346,8 +346,8 @@
         align-items: center;
         gap: 0.4rem;
         padding: 0.6rem 0.9rem;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        background: rgba(255,255,255,0.02);
+        border-bottom: 1px solid rgb(var(--c-glass) / 0.06);
+        background: rgb(var(--c-glass) / 0.02);
     }
 
     .dot {
@@ -389,7 +389,7 @@
     /* ── Footer actions ── */
     .card-footer {
         padding: 1.2rem 2rem 2rem;
-        border-top: 1px solid rgba(255,255,255,0.05);
+        border-top: 1px solid rgb(var(--c-glass) / 0.05);
         display: flex;
         gap: 0.75rem;
         flex-wrap: wrap;
@@ -425,15 +425,15 @@
     }
 
     .btn-ghost {
-        background: rgba(255,255,255,0.04);
+        background: rgb(var(--c-glass) / 0.04);
         color: #94a3b8;
-        border: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid rgb(var(--c-glass) / 0.08);
     }
 
     .btn-ghost:hover {
-        background: rgba(255,255,255,0.07);
+        background: rgb(var(--c-glass) / 0.07);
         color: #f1f5f9;
-        border-color: rgba(255,255,255,0.14);
+        border-color: rgb(var(--c-glass) / 0.14);
     }
 
     @media (max-width: 480px) {

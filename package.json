@@ -1,11 +1,11 @@
 {
   "name": "zik-music.fr",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "description": "Blind Test Multijoueur",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "node scripts/ensure-ytdlp.mjs && vite build",
+    "build": "node scripts/ensure-ytdlp.mjs && vite build && node scripts/minify-css.mjs",
     "start": "node server.js",
     "preview": "vite preview",
     "lint": "eslint . && prettier --check .",
@@ -15,6 +15,7 @@
     "@supabase/supabase-js": "^2.108.1",
     "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.60.1",
+    "compression": "^1.8.1",
     "dotenv": "^17.4.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^8.0.5",
@@ -27,6 +28,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/compression": "^1.8.1",
+    "esbuild": "^0.28.1",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.19.0",

@@ -72,7 +72,7 @@
 .ann-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -81,7 +81,7 @@
   padding: 16px;
 }
 .ann-modal {
-  background: var(--surface);
+  background: var(--modal-bg);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 28px 28px 24px;
@@ -158,7 +158,7 @@
 }
 .ann-btn-close {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   border-radius: 8px;
   padding: 9px 20px;

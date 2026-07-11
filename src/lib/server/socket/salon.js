@@ -8,11 +8,12 @@ import { supabase } from "../config.js";
 import { userClient } from "../middleware/auth.js";
 import { salonRooms } from "../state.js";
 import {
-  buildTrack,
+  buildTrackFromRow,
   calcSpeedBonus,
   cleanString,
   displayString,
   refreshExpiredPreviews,
+  TRACK_ROW_SELECT,
 } from "../services/playlist.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -41,28 +42,12 @@ async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {
     const { data: rows } = await client
       .from("custom_playlist_tracks")
-      .select(
-        "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name))",
-      )
+      .select(TRACK_ROW_SELECT)
       .eq("playlist_id", playlistId)
       .order("position");
     if (rows?.length) {
       await refreshExpiredPreviews(rows);
-      return rows.map((t) =>
-        buildTrack({
-          artist: t.artist,
-          title: t.title,
-          cover: t.cover_url,
-          preview_url: t.preview_url,
-          custom_artist: t.custom_artist || null,
-          custom_title: t.custom_title || null,
-          custom_feats: t.custom_feats || null,
-          extraAnswers: (t.track_answers || []).map((a) => ({
-            label: a.answer_types?.name || "",
-            value: a.value,
-          })),
-        }),
-      );
+      return rows.map(buildTrackFromRow);
     }
   } catch {
     // ignore
@@ -412,6 +397,23 @@ function endRound(code, reason, io) {
   }
 }
 
+async function searchTrackVideo(track, roundDuration) {
+  const artist = track.mainArtist || track.artist;
+  const results = await YouTube.search(`${artist} - ${track.title}`, {
+    type: "video",
+    limit: 5,
+  });
+  if (!results.length) throw new Error("No video");
+  const video =
+    results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
+  const durationSec = Math.round((video.duration || 0) / 1000);
+  const safeStart = Math.max(
+    0,
+    Math.floor(Math.random() * Math.max(1, durationSec - roundDuration - 10)),
+  );
+  return { video, safeStart };
+}
+
 async function startNextRound(code, io) {
   const salon = salonRooms[code];
   if (!salon) return;
@@ -440,21 +442,25 @@ async function startNextRound(code, io) {
   const track = game.currentTrack;
 
   try {
-    const artist = track.mainArtist || track.artist;
-    const results = await YouTube.search(`${artist} - ${track.title}`, {
-      type: "video",
-      limit: 5,
-    });
-    if (!results.length) throw new Error("No video");
-
-    const video =
-      results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
-    const duration = salon.settings.roundDuration;
-    const durationSec = Math.round((video.duration || 0) / 1000);
-    const safeStart = Math.max(
-      0,
-      Math.floor(Math.random() * Math.max(1, durationSec - duration - 10)),
-    );
+    let video, safeStart;
+    if (game.prefetchedRound?.track === track) {
+      ({ video, safeStart } = game.prefetchedRound);
+      game.prefetchedRound = null;
+    }
+    if (!video && game._prefetchPromise) {
+      await game._prefetchPromise.catch(() => {});
+      game._prefetchPromise = null;
+      if (game.prefetchedRound?.track === track) {
+        ({ video, safeStart } = game.prefetchedRound);
+        game.prefetchedRound = null;
+      }
+    }
+    if (!video) {
+      ({ video, safeStart } = await searchTrackVideo(
+        track,
+        salon.settings.roundDuration,
+      ));
+    }
 
     game.phase = "round";
     game.timerActive = false;
@@ -499,6 +505,19 @@ async function startNextRound(code, io) {
 
     // Wait for host to signal music is playing (max 5s fallback)
     game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
+
+    // Précharger la recherche YouTube du round suivant pendant celui-ci
+    const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
+    if (nextTrack) {
+      game._prefetchPromise = searchTrackVideo(
+        nextTrack,
+        salon.settings.roundDuration,
+      )
+        .then((r) => {
+          game.prefetchedRound = { track: nextTrack, ...r };
+        })
+        .catch(() => {});
+    }
   } catch (err) {
     console.error(`Salon skip "${track.title}":`, err.message);
     startNextRound(code, io);

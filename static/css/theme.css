@@ -12,10 +12,10 @@
 
 /* ── Variables fixes (indépendantes du thème) ───────────────────────────── */
 :root {
-  --nav-h: 62px;
-  --r: 14px;
-  --radius: 16px;
-  --radius-sm: 10px;
+  --nav-h: 68px;
+  --r: 5px;
+  --radius: 5px;
+  --radius-sm: 3px;
 
   /* Couleurs sémantiques figées */
   --silver: #94a3b8;
@@ -29,8 +29,9 @@
 :root,
 html[data-theme="dark"] {
   /* Fonds */
-  --bg: #070b10;
-  --bg2: #0c1018;
+  --bg: #080808;
+  --bg-rgb: 8 8 8;
+  --bg2: #0f0f0f;
 
   /* Verre (RGB sans alpha — utilisé avec rgb(var(--c-glass) / opacité)) */
   --c-glass: 255 255 255;
@@ -39,32 +40,38 @@ html[data-theme="dark"] {
   --surface: rgb(var(--c-glass) / 0.04);
   --surface2: rgb(var(--c-glass) / 0.07);
   --surface3: rgb(var(--c-glass) / 0.11);
-  --border: rgb(var(--c-glass) / 0.08);
-  --border2: rgb(var(--c-glass) / 0.15);
+  --border: rgba(255, 255, 255, 0.1);
+  --border2: rgba(255, 255, 255, 0.18);
 
   /* Accents */
-  --accent: #3ecfff;
-  --accent2: #a78bfa;
-  --accent3: #c084fc;
-  --accent-rgb: 62 207 255;
-  --accent2-rgb: 167 139 250;
+  --accent: #ff00ff;
+  --accent2: #cc00cc;
+  --accent3: #ff33ff;
+  --accent-rgb: 255 0 255;
+  --accent2-rgb: 204 0 204;
 
   /* États */
   --success: #4ade80;
   --danger: #f87171;
   --warn: #fbbf24;
   --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
 
   /* Texte */
-  --text: #eef0f5;
+  --text: #fafafa;
   --mid: #8896aa;
   --dim: #4a5568;
 
   /* Navigation */
-  --nav-bg: rgba(7, 11, 16, 0.85);
+  --nav-bg: rgba(8, 8, 8, 0.92);
+
+  /* Modales */
+  --overlay: rgba(0, 0, 0, 0.55);
+  --modal-bg: #14141f;
+  --on-accent: #000;
 
   /* Glows */
-  --glow-purple: rgba(168, 85, 247, 0.35);
+  --glow-purple: rgba(255, 0, 255, 0.3);
   --glow-green: rgba(74, 222, 128, 0.35);
   --glow-red: rgba(248, 113, 113, 0.35);
   --glow-yellow: rgba(251, 191, 36, 0.35);
@@ -73,6 +80,7 @@ html[data-theme="dark"] {
 /* ── Thème clair ────────────────────────────────────────────────────────── */
 html[data-theme="light"] {
   --bg: #e8edf8;
+  --bg-rgb: 232 237 248;
   --bg2: #d8e0f0;
   --c-glass: 0 0 0;
   /* Surfaces et bordures renforcées pour être visibles sur fond clair */
@@ -90,10 +98,14 @@ html[data-theme="light"] {
   --danger: #dc2626;
   --warn: #d97706;
   --gold: #d97706;
+  --gold-rgb: 217 119 6;
   --text: #0f172a;
   --mid: #475569;
   --dim: #94a3b8;
   --nav-bg: rgba(244, 246, 251, 0.92);
+  --overlay: rgba(15, 23, 42, 0.45);
+  --modal-bg: #f4f6fb;
+  --on-accent: #000;
   --glow-purple: rgba(124, 58, 237, 0.25);
   --glow-green: rgba(22, 163, 74, 0.25);
   --glow-red: rgba(220, 38, 38, 0.25);
@@ -103,6 +115,7 @@ html[data-theme="light"] {
 /* ── Thème violet ───────────────────────────────────────────────────────── */
 html[data-theme="violet"] {
   --bg: #0c0814;
+  --bg-rgb: 12 8 20;
   --bg2: #130d22;
   --c-glass: 255 255 255;
   --accent: #a78bfa;
@@ -114,11 +127,102 @@ html[data-theme="violet"] {
   --danger: #f87171;
   --warn: #fbbf24;
   --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
   --text: #f0eeff;
   --mid: #9d8dc4;
   --dim: #5b4d8a;
   --nav-bg: rgba(12, 8, 20, 0.88);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --modal-bg: #16102a;
+  --on-accent: #000;
   --glow-purple: rgba(167, 139, 250, 0.4);
+  --glow-green: rgba(74, 222, 128, 0.35);
+  --glow-red: rgba(248, 113, 113, 0.35);
+  --glow-yellow: rgba(251, 191, 36, 0.35);
+}
+
+/* ── Thème océan ────────────────────────────────────────────────────────── */
+html[data-theme="ocean"] {
+  --bg: #050b13;
+  --bg-rgb: 5 11 19;
+  --bg2: #0a1420;
+  --c-glass: 255 255 255;
+  --accent: #22d3ee;
+  --accent2: #0ea5e9;
+  --accent3: #67e8f9;
+  --accent-rgb: 34 211 238;
+  --accent2-rgb: 14 165 233;
+  --success: #4ade80;
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
+  --text: #eef7fd;
+  --mid: #8ba7bd;
+  --dim: #4a627a;
+  --nav-bg: rgba(5, 11, 19, 0.92);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --modal-bg: #0d1a29;
+  --on-accent: #000;
+  --glow-purple: rgba(34, 211, 238, 0.3);
+  --glow-green: rgba(74, 222, 128, 0.35);
+  --glow-red: rgba(248, 113, 113, 0.35);
+  --glow-yellow: rgba(251, 191, 36, 0.35);
+}
+
+/* ── Thème sunset ───────────────────────────────────────────────────────── */
+html[data-theme="sunset"] {
+  --bg: #140806;
+  --bg-rgb: 20 8 6;
+  --bg2: #1e0e0a;
+  --c-glass: 255 245 235;
+  --accent: #fb923c;
+  --accent2: #f43f5e;
+  --accent3: #fdba74;
+  --accent-rgb: 251 146 60;
+  --accent2-rgb: 244 63 94;
+  --success: #4ade80;
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
+  --text: #fdf3ec;
+  --mid: #b59787;
+  --dim: #6e5347;
+  --nav-bg: rgba(20, 8, 6, 0.92);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --modal-bg: #241310;
+  --on-accent: #000;
+  --glow-purple: rgba(251, 146, 60, 0.3);
+  --glow-green: rgba(74, 222, 128, 0.35);
+  --glow-red: rgba(248, 113, 113, 0.35);
+  --glow-yellow: rgba(251, 191, 36, 0.35);
+}
+
+/* ── Thème émeraude ─────────────────────────────────────────────────────── */
+html[data-theme="emeraude"] {
+  --bg: #04100a;
+  --bg-rgb: 4 16 10;
+  --bg2: #081a11;
+  --c-glass: 236 253 245;
+  --accent: #34d399;
+  --accent2: #a3e635;
+  --accent3: #6ee7b7;
+  --accent-rgb: 52 211 153;
+  --accent2-rgb: 163 230 53;
+  --success: #4ade80;
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --gold: #fbbf24;
+  --gold-rgb: 251 191 36;
+  --text: #ecfdf5;
+  --mid: #8aab9b;
+  --dim: #48644f;
+  --nav-bg: rgba(4, 16, 10, 0.92);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --modal-bg: #0a2015;
+  --on-accent: #000;
+  --glow-purple: rgba(52, 211, 153, 0.3);
   --glow-green: rgba(74, 222, 128, 0.35);
   --glow-red: rgba(248, 113, 113, 0.35);
   --glow-yellow: rgba(251, 191, 36, 0.35);
@@ -129,18 +233,8 @@ html[data-theme="violet"] {
    Bat toute règle :global(body) ou body { } d'un composant Svelte (0,0,1).
    Garantit que le fond ET la couleur suivent le thème sur TOUTES les pages. */
 
-html[data-theme="dark"] body,
+html[data-theme] body,
 html:not([data-theme]) body {
-  background-color: var(--bg);
-  color: var(--text);
-}
-
-html[data-theme="light"] body {
-  background-color: var(--bg);
-  color: var(--text);
-}
-
-html[data-theme="violet"] body {
   background-color: var(--bg);
   color: var(--text);
 }
@@ -154,8 +248,11 @@ html[data-theme="light"] .hero-mockup {
     0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
-html[data-theme="violet"] .hero-mockup {
-  background: rgba(19, 13, 34, 0.95);
+html[data-theme="violet"] .hero-mockup,
+html[data-theme="ocean"] .hero-mockup,
+html[data-theme="sunset"] .hero-mockup,
+html[data-theme="emeraude"] .hero-mockup {
+  background: var(--bg2);
 }
 
 /* ── Animations désactivées ─────────────────────────────────────────────── */

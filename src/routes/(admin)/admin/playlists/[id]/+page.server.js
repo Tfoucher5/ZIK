@@ -24,7 +24,7 @@ export async function load({ params }) {
     sb
       .from("custom_playlist_tracks")
       .select(
-        "id, playlist_id, artist, title, preview_url, cover_url, source, position, created_at, custom_artist, custom_title, custom_feats",
+        "id, playlist_id, artist, title, preview_url, cover_url, source, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, preview_url, cover_url, source)",
       )
       .eq("playlist_id", params.id)
       .order("position", { ascending: true }),
@@ -35,7 +35,9 @@ export async function load({ params }) {
 
   return {
     playlist: playlistRes.data,
-    tracks: tracksRes.data ?? [],
+    tracks: (tracksRes.data ?? []).map(({ tracks: meta, ...rest }) =>
+      meta ? { ...rest, ...meta, id: rest.id } : rest,
+    ),
   };
 }
 
@@ -47,9 +49,10 @@ export const actions = {
     const sb = getAdminClient();
     const { data: track } = await sb
       .from("custom_playlist_tracks")
-      .select("artist, title")
+      .select("artist, title, tracks(artist, title)")
       .eq("id", trackId)
       .single();
+    const trackMeta = track?.tracks || track;
     const { error: err } = await sb
       .from("custom_playlist_tracks")
       .delete()
@@ -57,8 +60,8 @@ export const actions = {
     if (err) return { success: false, error: err.message };
     await logAdminAction(adminUser.id, "delete_track", params.id, "playlist", {
       track_id: trackId,
-      artist: track?.artist,
-      title: track?.title,
+      artist: trackMeta?.artist,
+      title: trackMeta?.title,
     });
     return { success: true };
   },

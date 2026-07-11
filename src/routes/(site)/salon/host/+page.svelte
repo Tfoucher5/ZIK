@@ -22,6 +22,7 @@
   let autoNextSec   = $state(0);
   let autoNextTimer = null;
   let currentPhrase = $state('');
+  let volume        = $state(100);
 
   /** @type {HostCenter} */
   let hostCenter;
@@ -45,6 +46,12 @@
 
   function qrUrl(size = 200) {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent('https://www.zik-music.fr/salon/play?code=' + code)}&bgcolor=ffffff&color=000000`;
+  }
+
+  function applyVolume(v) {
+    volume = v;
+    localStorage.setItem('zik_salon_vol', String(v));
+    hostCenter?.setVolume(v);
   }
 
   function startAutoNextCountdown(s) {
@@ -147,6 +154,9 @@
     const params = new URLSearchParams(window.location.search);
     code = params.get('code')?.toUpperCase() || '';
     if (!code) { window.location.href = '/salon'; return; }
+    const savedVol = parseInt(localStorage.getItem('zik_salon_vol') ?? '100');
+    volume = Number.isNaN(savedVol) ? 100 : savedVol;
+    hostCenter?.setVolume(volume);
     connectSocket(code);
   });
 
@@ -161,25 +171,49 @@
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
+<div class="salon-blob b1"></div>
+<div class="salon-blob b2"></div>
+
 <div class="salon-host">
 
   <!-- Header -->
   <header class="salon-host-header">
+    <a class="salon-host-home" href="/" title="Retour à l'accueil du site" aria-label="Retour à l'accueil du site">⌂</a>
+    <div class="salon-host-brand">ZIK <span>Salon</span></div>
     <div class="salon-host-code">
-      <img class="salon-host-qr-sm" src={qrUrl(80)} alt="QR" width="40" height="40">
+      <img class="salon-host-qr-sm" src={qrUrl(100)} alt="QR" width="46" height="46">
       <div>
-        <div class="salon-code-label">Code</div>
-        <div class="salon-code-val">{code}</div>
+        <div class="salon-code-label">Rejoindre</div>
+        <div class="salon-code-chars">
+          {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
+        </div>
       </div>
     </div>
     <div class="salon-host-url-full">
-      zik-music.fr/salon/play?code=<strong style="color:var(--accent2)">{code}</strong>
+      zik-music.fr/salon/play<br><span>→ entre le code sur ton tel</span>
     </div>
-    {#if phase === 'round'}
-      <div class="salon-host-round">Manche <strong>{round} / {total}</strong></div>
-    {/if}
-    <div style="font-size:.8rem;color:var(--mid)">
-      {players.length} joueur{players.length !== 1 ? 's' : ''}
+    <div class="salon-host-header-right">
+      {#if phase === 'round' || phase === 'summary'}
+        <div class="salon-host-round">Manche <b>{round} / {total}</b></div>
+      {/if}
+      <div class="salon-host-vol" title="Volume de la musique">
+        <button
+          class="salon-host-vol-btn"
+          aria-label={volume === 0 ? 'Réactiver le son' : 'Couper le son'}
+          onclick={() => applyVolume(volume === 0 ? 100 : 0)}
+        >{volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}</button>
+        <input
+          class="salon-host-vol-range"
+          type="range" min="0" max="100" step="5"
+          value={volume}
+          aria-label="Volume"
+          oninput={(e) => applyVolume(parseInt(e.target.value))}
+          style="--vol:{volume}%"
+        />
+      </div>
+      <div class="salon-host-players-pill">
+        <i></i>{players.length} joueur{players.length !== 1 ? 's' : ''}
+      </div>
     </div>
   </header>
 
@@ -204,7 +238,13 @@
       onMusicReady={() => socket?.emit('salon_music_ready')}
     />
 
-    <PlayerSidebar {players} {phase} answerMode={settings.answerMode || 'free'} />
+    <PlayerSidebar
+      players={phase === 'gameover'
+        ? players.filter(p => !finalScores.slice(0, 3).some(s => s.username === p.username))
+        : players}
+      {phase}
+      answerMode={settings.answerMode || 'free'}
+    />
 
   </div>
 

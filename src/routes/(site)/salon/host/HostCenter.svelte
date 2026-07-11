@@ -10,8 +10,22 @@
     onRestart, onNewSalon, onMusicReady,
   } = $props();
 
-  const medals = ['🥇', '🥈', '🥉'];
   const VIS_BARS = Array.from({ length: 18 }, (_, i) => i);
+  const SIDE_BARS = Array.from({ length: 6 }, (_, i) => i);
+  const TRUSS_LIGHTS = Array.from({ length: 10 }, (_, i) => i);
+
+  function hue(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return h;
+  }
+
+  // Podium : [2e, 1er, 3e] avec l'étape de reveal associée
+  let podiumSlots = $derived([
+    { p: finalScores[1], pos: 2, step: 2, medal: '🥈' },
+    { p: finalScores[0], pos: 1, step: 3, medal: '🥇' },
+    { p: finalScores[2], pos: 3, step: 1, medal: '🥉' },
+  ]);
 
   // ─── Podium reveal ─────────────────────────────────────────────────────────
   let revealStep = $state(0);
@@ -52,6 +66,15 @@
   let ytPlayer;
   let currentStartSecs = 0;
   let _metaGuardInterval = null;
+  let _volume = 100;
+
+  export function setVolume(v) {
+    _volume = v;
+    try {
+      if (v === 0) ytPlayer?.mute?.();
+      else { ytPlayer?.unMute?.(); ytPlayer?.setVolume?.(v); }
+    } catch { /* YT pas prêt */ }
+  }
 
   const _FAKE_META = { title: '♪ ♪ ♪', artist: '???', album: 'ZIK — Blind Test', artwork: [{ src: '/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' }] };
 
@@ -94,9 +117,10 @@
           height: '100%', width: '100%', videoId,
           playerVars: { autoplay: 1, controls: 1, enablejsapi: 1, start: startSeconds, rel: 0, modestbranding: 1 },
           events: {
-            onReady: (e) => e.target.playVideo(),
+            onReady: (e) => { setVolume(_volume); e.target.playVideo(); },
             onStateChange: (e) => {
               if (e.data === 1 /* PLAYING */) {
+                setVolume(_volume);
                 startMediaGuard();
                 onMusicReady?.();
               }
@@ -125,187 +149,222 @@
   onDestroy(() => { if (ytPlayer?.destroy) ytPlayer.destroy(); stopMediaGuard(); _revealTimers.forEach(clearTimeout); });
 </script>
 
-<div class="salon-host-center" class:phase-summary={phase === 'summary' || phase === 'gameover'}>
+<div class="salon-host-center">
 
-  <!-- Stage: 3 overlapping absolute panels -->
-  <div class="salon-host-stage">
+  <!-- Scène de festival ZIK : truss, faisceaux, 3 écrans, plancher -->
+  <div
+    class="salon-host-stage"
+    class:warn={phase === 'round' && timerPct() < 40 && timerPct() >= 20}
+    class:danger={phase === 'round' && timerPct() < 20}
+  >
 
-    <!-- Lobby panel -->
-    <div class="salon-panel" class:active={phase === 'lobby' || phase === 'starting'}>
-      <div class="salon-lobby">
-        <div class="salon-lobby-qr-wrap">
-          <img src={qrUrl(260)} alt="QR code" width="260" height="260" class="salon-lobby-qr">
-        </div>
-        <div class="salon-lobby-code">{code}</div>
-        <div class="salon-lobby-url">zik-music.fr/salon/play?code={code}</div>
-        <div class="salon-lobby-count">
-          <span class="salon-player-count">{players.length}</span>
-          <span class="salon-lobby-title">joueur{players.length !== 1 ? 's' : ''} connecté{players.length !== 1 ? 's' : ''}</span>
+    <div class="fest-truss" aria-hidden="true">
+      {#each TRUSS_LIGHTS as i (i)}<i style="--i:{i}"></i>{/each}
+    </div>
+    <div class="fest-beams" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="fest-row">
+
+      <!-- Écran latéral gauche : rediffusion -->
+      <div class="fest-side fest-side-l">
+        <div class="fest-screen">
+          {#if phase === 'summary' && roundEnd?.cover}
+            <img src={roundEnd.cover} alt="" class="fest-side-cover">
+          {:else}
+            <div class="fest-side-eq" aria-hidden="true">
+              {#each SIDE_BARS as i (i)}<i></i>{/each}
+            </div>
+          {/if}
         </div>
       </div>
-    </div>
 
-    <!-- Round panel -->
-    <div class="salon-panel" class:active={phase === 'round'}>
-      <div class="salon-round-stage">
-        <div class="salon-big-timer {timerPct() < 20 ? 'danger' : timerPct() < 40 ? 'warn' : 'ok'}">{timerVal}</div>
-        <div class="salon-phrase">{currentPhrase}</div>
-        <div class="salon-visualizer">
-          {#each VIS_BARS as i (i)}<div class="salon-vis-bar"></div>{/each}
-        </div>
-        {#if players.some(p => p.foundThisRound)}
-          <div class="salon-finders">
-            {#each players.filter(p => p.foundThisRound) as p (p.username)}
-              <span class="salon-finder-chip">✓ {p.username}</span>
-            {/each}
-          </div>
-        {/if}
+      <!-- Enceintes gauches -->
+      <div class="fest-speaker" aria-hidden="true"><i></i><i></i></div>
 
-        {#if answerMode === 'multiple' && choices && timerVal > 0}
-          <div class="salon-choices salon-host-choices">
-            {#each choices as choice, i (i)}
-              <div class="salon-choice-btn c{i}">
-                <span class="choice-shape"></span>
-                <span class="choice-text">{choice}</span>
+      <!-- Écran principal : le player vidéo vit ici en permanence -->
+      <div class="fest-main">
+        <div class="fest-screen fest-main-screen">
+          <span class="fest-tag" class:live={phase === 'round'}>
+            <i></i>{phase === 'summary' || phase === 'gameover' ? 'Replay' : phase === 'round' ? 'On air' : 'Backstage'}
+          </span>
+
+          <div id="salon-yt-player"></div>
+
+          <!-- Lobby sur l'écran -->
+          <div class="fest-content" class:active={phase === 'lobby' || phase === 'starting'}>
+            <div class="fest-lobby">
+              <div class="salon-lobby-qr-wrap">
+                <img src={qrUrl(260)} alt="QR code" width="260" height="260" class="salon-lobby-qr">
               </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    <!-- Video panel: ALWAYS in DOM so YT iframe stays alive between rounds -->
-    <div class="salon-panel" class:active={phase === 'summary' || phase === 'gameover'}>
-      <div id="salon-yt-player"></div>
-    </div>
-
-  </div>
-
-  <!-- Info area below stage -->
-  <div class="salon-host-info">
-
-    {#if phase === 'summary' && roundEnd}
-      <div class="salon-host-summary-layout">
-
-        <!-- Left: track answer -->
-        <div class="salon-summary">
-          {#if roundEnd.cover}
-            <img src={roundEnd.cover} alt="" class="salon-summary-cover">
-          {/if}
-          <div class="salon-summary-reason">{roundEnd.reason}</div>
-          <div class="salon-summary-answer">{roundEnd.answer}</div>
-          {#if roundEnd.featArtists?.length}
-            <div style="font-size:.8rem;color:var(--mid);margin-top:4px">feat. {roundEnd.featArtists.join(', ')}</div>
-          {/if}
-          {#if roundEnd.firstFinder}
-            <div class="salon-summary-first">🏆 Premier : {roundEnd.firstFinder}</div>
-          {/if}
-        </div>
-
-        <!-- Right: leaderboard -->
-        <div class="salon-host-scores-col">
-          <div class="salon-host-round-label">
-            Manche {round} <span class="salon-host-round-of">/ {total}</span>
-          </div>
-          <div class="salon-scores-table">
-            {#each (roundEnd.scores || players) as p, i (p.username)}
-              <div class="salon-scores-row {i < 3 ? 'top' : ''}">
-                <div class="salon-scores-medal">{medals[i] || `#${i+1}`}</div>
-                <div class="salon-scores-name">{p.username}</div>
-                <div class="salon-scores-pts">
-                  {p.score} pts
-                  {#if p.delta > 0}<span class="salon-score-delta">+{p.delta}</span>{/if}
+              <div class="fest-lobby-info">
+                <div class="salon-code-label">Rejoindre</div>
+                <div class="salon-lobby-code">
+                  {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
+                </div>
+                <div class="salon-lobby-url">zik-music.fr/salon/play?code={code}</div>
+                <div class="salon-lobby-count">
+                  <span class="salon-player-count">{players.length}</span>
+                  <span class="salon-lobby-title">joueur{players.length !== 1 ? 's' : ''} connecté{players.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
-            {/each}
-          </div>
-        </div>
-
-      </div>
-
-    {:else if phase === 'gameover'}
-      <div class="salon-gameover">
-        <h2>🏆 Classement Final</h2>
-
-        <!-- Podium top 3 -->
-        <div class="salon-go-podium">
-
-          <!-- 2nd place — left -->
-          <div class="salon-go-slot pos-2">
-            {#if finalScores[1]}
-              <div class="salon-go-player" class:salon-go-revealed={revealStep >= 2}>
-                <div class="salon-go-avatar">{finalScores[1].username[0]?.toUpperCase() ?? '?'}</div>
-                <div class="salon-go-name">{finalScores[1].username}</div>
-                <div class="salon-go-score">{finalScores[1].score} pts</div>
-              </div>
-            {:else}
-              <div class="salon-go-player salon-go-placeholder salon-go-revealed">
-                <div class="salon-go-avatar empty">?</div>
-                <div class="salon-go-name">&mdash;</div>
-              </div>
-            {/if}
-            <div class="salon-go-block pos-2">🥈</div>
+            </div>
           </div>
 
-          <!-- 1st place — center -->
-          <div class="salon-go-slot pos-1">
-            {#if finalScores[0]}
-              <div class="salon-go-player" class:salon-go-revealed={revealStep >= 3}>
-                <div class="salon-go-avatar gold">{finalScores[0].username[0]?.toUpperCase() ?? '?'}</div>
-                <div class="salon-go-name">{finalScores[0].username}</div>
-                <div class="salon-go-score">{finalScores[0].score} pts</div>
+          <!-- Visuels VJ pendant la manche -->
+          <div class="fest-content" class:active={phase === 'round'}>
+            <div class="salon-visualizer">
+              {#each VIS_BARS as i (i)}<div class="salon-vis-bar"></div>{/each}
+            </div>
+            <div class="salon-notes" aria-hidden="true">
+              <span>♪</span><span>♫</span><span>♪</span><span>♩</span><span>♫</span><span>♪</span>
+            </div>
+            <div class="fest-round">
+              <div class="salon-deck" style="--t:{timerPct() / 100}">
+                <div class="salon-deck-ring"></div>
+                <div class="salon-deck-vinyl"></div>
+                <div class="salon-deck-core">
+                  <div class="salon-deck-time">{timerVal}</div>
+                  <div class="salon-deck-sub">sec</div>
+                </div>
               </div>
-            {:else}
-              <div class="salon-go-player salon-go-placeholder salon-go-revealed">
-                <div class="salon-go-avatar empty">?</div>
-                <div class="salon-go-name">&mdash;</div>
+              <div class="fest-round-txt">
+                <div class="salon-phrase">{currentPhrase}</div>
+                <div class="salon-answered">
+                  <b>{players.filter(p => p.answeredThisRound || p.foundThisRound).length}</b> / {players.length} ont répondu
+                </div>
+                {#if players.some(p => p.foundThisRound)}
+                  <div class="salon-finders">
+                    {#each players.filter(p => p.foundThisRound) as p (p.username)}
+                      <span class="salon-finder-chip">✓ {p.username}</span>
+                    {/each}
+                  </div>
+                {/if}
               </div>
-            {/if}
-            <div class="salon-go-block pos-1">🥇</div>
+            </div>
           </div>
 
-          <!-- 3rd place — right -->
-          <div class="salon-go-slot pos-3">
-            {#if finalScores[2]}
-              <div class="salon-go-player" class:salon-go-revealed={revealStep >= 1}>
-                <div class="salon-go-avatar">{finalScores[2].username[0]?.toUpperCase() ?? '?'}</div>
-                <div class="salon-go-name">{finalScores[2].username}</div>
-                <div class="salon-go-score">{finalScores[2].score} pts</div>
+          <!-- Game over sur l'écran -->
+          <div class="fest-content" class:active={phase === 'gameover'}>
+            <div class="fest-go">
+              <div class="fest-go-kicker">Partie terminée</div>
+              <h2 class="fest-go-title">🏆 {finalScores[0]?.username ?? '—'} gagne !</h2>
+              {#if finalScores.length > 3}
+                <div class="fest-go-rest">
+                  {#each finalScores.slice(3) as p, i (p.username)}
+                    <div class="lb-row" style="--i:{i}">
+                      <span class="lb-rank">{String(i + 4).padStart(2, '0')}</span>
+                      <span class="lb-name">{p.username}</span>
+                      <span class="lb-pts">{p.score}</span>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+              <div class="salon-gameover-actions">
+                <button class="btn-salon-start" onclick={onRestart}>🔄 Rejouer</button>
+                <button class="btn-salon-next" onclick={onNewSalon}>Nouveau salon</button>
               </div>
-            {:else}
-              <div class="salon-go-player salon-go-placeholder salon-go-revealed">
-                <div class="salon-go-avatar empty">?</div>
-                <div class="salon-go-name">&mdash;</div>
-              </div>
-            {/if}
-            <div class="salon-go-block pos-3">🥉</div>
+            </div>
           </div>
 
-        </div>
-
-        <!-- Rest: rank 4+ -->
-        {#if finalScores.length > 3}
-          <div class="salon-go-rest">
-            {#each finalScores.slice(3) as p, i (p.username)}
-              <div class="salon-scores-row">
-                <div class="salon-scores-medal">#{i + 4}</div>
-                <div class="salon-scores-name">{p.username}</div>
-                <div class="salon-scores-pts">{p.score} pts</div>
+          <!-- Reveal : lower third broadcast sur l'écran -->
+          {#if phase === 'summary' && roundEnd}
+            <div class="salon-lower-third">
+              {#if roundEnd.cover}
+                <img src={roundEnd.cover} alt="" class="lt-cover">
+              {/if}
+              <div class="lt-txt">
+                <div class="lt-kicker">{roundEnd.reason} — Manche {round} / {total}</div>
+                <div class="lt-answer">{roundEnd.answer}</div>
+                {#if roundEnd.featArtists?.length}
+                  <div class="lt-feat">feat. {roundEnd.featArtists.join(', ')}</div>
+                {/if}
               </div>
-            {/each}
-          </div>
-        {/if}
-
-        <div class="salon-gameover-actions">
-          <button class="btn-salon-start" onclick={onRestart}>🔄 Rejouer</button>
-          <button class="btn-salon-next" onclick={onNewSalon}>Nouveau salon</button>
+              {#if roundEnd.firstFinder}
+                <div class="lt-first">🏆 {roundEnd.firstFinder}</div>
+              {/if}
+            </div>
+          {/if}
         </div>
       </div>
 
-    {:else}
-      <div class="salon-info-placeholder"></div>
+      <!-- Enceintes droites -->
+      <div class="fest-speaker" aria-hidden="true"><i></i><i></i></div>
+
+      <!-- Écran latéral droit : chrono géant / classement -->
+      <div class="fest-side fest-side-r">
+        <div class="fest-screen">
+          {#if phase === 'summary' && roundEnd}
+            <div class="fest-side-lb">
+              <div class="lb-kicker">Classement</div>
+              {#each (roundEnd.scores || players).slice(0, 5) as p, i (p.username)}
+                <div class="lb-row" class:first={i === 0} style="--i:{i}">
+                  <span class="lb-rank">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="lb-name">{p.username}</span>
+                  <span class="lb-pts">
+                    {p.score}
+                    {#if p.delta > 0}<b>+{p.delta}</b>{/if}
+                  </span>
+                </div>
+              {/each}
+            </div>
+          {:else if phase === 'round'}
+            <div class="fest-side-timer">
+              <b>{timerVal}</b>
+              <span>sec</span>
+            </div>
+          {:else}
+            <div class="fest-side-eq" aria-hidden="true">
+              {#each SIDE_BARS as i (i)}<i></i>{/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- QCM sur le devant de scène -->
+    {#if phase === 'round' && answerMode === 'multiple' && choices && timerVal > 0}
+      <div class="salon-choices salon-host-choices">
+        {#each choices as choice, i (i)}
+          <div class="salon-choice-btn c{i}">
+            <span class="choice-shape"></span>
+            <span class="choice-text">{choice}</span>
+          </div>
+        {/each}
+      </div>
     {/if}
 
+    <!-- Podium sur la scène : les gagnants y montent, personnages bras levés -->
+    {#if phase === 'gameover'}
+      <div class="fest-podium">
+        {#each podiumSlots as slot (slot.pos)}
+          <div class="fest-podium-slot">
+            {#if slot.p}
+              <div
+                class="fest-podium-p"
+                class:revealed={revealStep >= slot.step}
+                style="--h:{hue(slot.p.username)}"
+              >
+                <span class="crowd-name">{slot.p.username}</span>
+                <span class="crowd-pts">{slot.p.score}<small>pt</small></span>
+                <div class="crowd-fig">
+                  <i class="crowd-arm l"></i>
+                  <i class="crowd-arm r"></i>
+                  <i class="crowd-head"></i>
+                  <i class="crowd-torso"></i>
+                </div>
+              </div>
+            {/if}
+            <div class="fest-podium-block pos-{slot.pos}">{slot.medal}</div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+
+    <!-- Devant de scène -->
+    <div class="fest-stagefront" aria-hidden="true">
+      <span>ZIK Festival</span>
+    </div>
   </div>
 
 </div>

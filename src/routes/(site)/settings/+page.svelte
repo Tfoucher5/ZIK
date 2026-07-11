@@ -118,15 +118,20 @@
   }
 
   const THEMES = [
-    { id: 'dark',   label: 'Sombre',  bg: '#070b10', accent: '#3ecfff' },
-    { id: 'light',  label: 'Clair',   bg: '#f4f6fb', accent: '#0ea5e9' },
-    { id: 'violet', label: 'Violet',  bg: '#0c0814', accent: '#a78bfa' },
+    { id: 'dark',     label: 'Sombre',   bg: '#080808', accent: '#ff00ff' },
+    { id: 'light',    label: 'Clair',    bg: '#e8edf8', accent: '#0ea5e9' },
+    { id: 'violet',   label: 'Violet',   bg: '#0c0814', accent: '#a78bfa' },
+    { id: 'ocean',    label: 'Océan',    bg: '#050b13', accent: '#22d3ee' },
+    { id: 'sunset',   label: 'Sunset',   bg: '#140806', accent: '#fb923c' },
+    { id: 'emeraude', label: 'Émeraude', bg: '#04100a', accent: '#34d399' },
   ];
 
   function setTheme(t) {
     activeTheme = t;
     localStorage.setItem('zik_theme', t);
     document.documentElement.setAttribute('data-theme', t);
+    const bg = THEMES.find((th) => th.id === t)?.bg;
+    if (bg) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = bg; });
   }
 
   onMount(() => {
@@ -228,7 +233,7 @@
           <div class="settings-row-desc">Choisis l&apos;apparence de l&apos;interface.</div>
         </div>
         <div class="theme-picker">
-          {#each THEMES as theme}
+          {#each THEMES as theme (theme.id)}
             <button
               class="theme-swatch {activeTheme === theme.id ? 'active' : ''}"
               style="--swatch-bg:{theme.bg};--swatch-accent:{theme.accent}"
@@ -425,7 +430,7 @@
 }
 .settings-back:hover { color: var(--text); }
 .settings-title {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -478,7 +483,7 @@
 
 /* -- Theme picker -- */
 .settings-row-theme { align-items: flex-start; flex-wrap: wrap; gap: 16px; }
-.theme-picker { display: flex; gap: 10px; flex-shrink: 0; }
+.theme-picker { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
 .theme-swatch {
   display: flex;
   flex-direction: column;
@@ -580,14 +585,14 @@
 .btn-unlink {
   padding: 6px 14px;
   background: transparent;
-  border: 1px solid var(--clr-border, rgba(255,255,255,0.12));
-  color: var(--clr-text, #fff);
+  border: 1px solid var(--clr-border, rgb(var(--c-glass) / 0.12));
+  color: var(--text);
   border-radius: 6px;
   font-size: 0.85rem;
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-unlink:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+.btn-unlink:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.08); }
 .btn-unlink:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* -- Danger zone -- */
@@ -608,7 +613,7 @@
 
 /* -- Delete modal -- */
 .delete-modal-title {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.25rem; font-weight: 800;
   color: var(--danger); margin-bottom: 12px;
 }

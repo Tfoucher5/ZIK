@@ -1,5 +1,7 @@
 <script>
   import { onMount } from 'svelte';
+  import AdSlot from '$lib/components/AdSlot.svelte';
+  import { AD_SLOTS } from '$lib/ads.js';
 
   let activeSection = $state('decouverte');
 
@@ -13,6 +15,7 @@
     { id: 'playlists', label: 'Playlists' },
     { id: 'rooms', label: 'Rooms' },
     { id: 'compte', label: 'Compte & Profil' },
+    { id: 'amis', label: 'Amis & invitations' },
     { id: 'classement', label: 'Classements' },
     { id: 'faq', label: 'FAQ' },
   ];
@@ -469,6 +472,7 @@
         <li><strong>Classement joueurs :</strong> Affiché avec des icônes selon le score — 🎤 (top 1), 🎸 (top 2-3), 🎵 (autres) — et mis à jour en direct</li>
         <li><strong>Révélation :</strong> La réponse s'affiche avec animation après la fin de chaque manche</li>
         <li><strong>Podium final :</strong> Top 3 animé à la fin de la partie</li>
+        <li><strong>Volume :</strong> Une barre de volume dans l'en-tête permet de régler ou couper le son de la musique sans toucher au player YouTube (réglage conservé entre les sessions)</li>
       </ul>
 
       <h3>L'interface joueur (téléphone)</h3>
@@ -534,6 +538,8 @@
         </div>
       </div>
     </section>
+
+    <AdSlot adSlot={AD_SLOTS.content} />
 
     <!-- ── QCM MULTIJOUEUR ── -->
     <section>
@@ -765,6 +771,42 @@
       </div>
     </section>
 
+    <!-- ── AMIS & INVITATIONS ── -->
+    <section>
+      <h2 id="amis">Amis &amp; invitations</h2>
+
+      <h3>Abonnements et amis</h3>
+      <p>
+        ZIK propose deux types de relations entre joueurs (compte requis) :
+      </p>
+      <ul class="doc-list">
+        <li><strong>Suivre un joueur :</strong> comme un abonnement, sans confirmation. Vous suivez son activité depuis son profil public.</li>
+        <li><strong>Ami :</strong> relation confirmée des deux côtés. Vous envoyez une demande, la personne l'accepte (ou la refuse) depuis son profil ou ses notifications.</li>
+      </ul>
+
+      <h3>Ajouter un ami</h3>
+      <ul class="doc-list">
+        <li><strong>Depuis un profil :</strong> ouvrez le profil public d'un joueur et cliquez sur "Demander en ami".</li>
+        <li><strong>Pendant une partie :</strong> dans le classement à gauche de l'écran de jeu, ouvrez le menu <strong>⋯</strong> à côté d'un joueur et choisissez "Ajouter en ami". Si vous vous êtes demandés mutuellement, l'amitié est validée automatiquement.</li>
+      </ul>
+
+      <h3>Inviter des amis à jouer</h3>
+      <ul class="doc-list">
+        <li><strong>Depuis une partie :</strong> le bouton <strong>👋</strong> en haut de l'écran de jeu ouvre votre liste d'amis — un clic sur "Inviter" leur envoie une invitation pour la room où vous jouez.</li>
+        <li><strong>Depuis un profil :</strong> le bouton "Inviter à jouer" sur le profil d'un ami vous laisse choisir la room de destination (votre room actuelle, vos rooms ou une room publique).</li>
+      </ul>
+      <p>
+        L'ami invité reçoit une <strong>notification</strong> (cloche en haut du site) avec le nom de la room et son mode de jeu : un clic et il vous rejoint. Les invitations sont réservées aux amis confirmés.
+      </p>
+
+      <div class="doc-tip">
+        <span class="doc-tip-icon">💡</span>
+        <div>
+          <strong>Classement entre amis :</strong> la page <a href="/classements">Classements</a> propose un onglet Amis pour comparer votre ELO uniquement avec vos amis.
+        </div>
+      </div>
+    </section>
+
     <!-- ── CLASSEMENTS ── -->
     <section>
       <h2 id="classement">Classements</h2>
@@ -917,6 +959,8 @@
     <div class="doc-footer-note">
       <p>Documentation mise &agrave; jour &mdash; avril 2026. Une question non couverte&nbsp;? Utilisez le <strong>formulaire de contact</strong> dans le footer ou ouvrez une <a href="https://github.com/Tfoucher5/ZIK/issues" target="_blank" rel="noopener noreferrer">issue GitHub</a>.</p>
     </div>
+
+    <AdSlot adSlot={AD_SLOTS.content} />
   </main>
 </div>
 
@@ -928,7 +972,7 @@
     gap: 0;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px clamp(16px, 4vw, 60px);
+    padding: calc(var(--nav-h) + 32px) clamp(16px, 4vw, 60px) 40px;
     min-height: 100vh;
     align-items: start;
   }
@@ -965,12 +1009,12 @@
 
   .doc-sidebar nav ul li a:hover {
     color: var(--text, #fff);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgb(var(--c-glass) / 0.05);
   }
 
   .doc-sidebar nav ul li a.active {
     color: var(--accent, #7c3aed);
-    background: rgba(124, 58, 237, 0.1);
+    background: rgb(var(--accent-rgb) / 0.1);
     font-weight: 600;
   }
 
@@ -978,7 +1022,7 @@
   .doc-content {
     min-width: 0;
     padding-left: 40px;
-    border-left: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-left: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
   }
 
   /* ── Bouton retour ── */
@@ -1005,12 +1049,12 @@
   }
 
   .breadcrumb-sep {
-    color: var(--border, rgba(255,255,255,0.2));
+    color: var(--border, rgb(var(--c-glass) / 0.2));
   }
 
   /* ── Titres ── */
   .doc-title {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     font-weight: 800;
     letter-spacing: -1px;
@@ -1030,7 +1074,7 @@
   .doc-content section {
     margin-bottom: 64px;
     padding-bottom: 64px;
-    border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
+    border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.06));
   }
 
   .doc-content section:last-of-type {
@@ -1038,7 +1082,7 @@
   }
 
   .doc-content h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.6rem;
     font-weight: 800;
     color: var(--text, #fff);
@@ -1076,8 +1120,8 @@
   .doc-content code {
     font-family: monospace;
     font-size: 0.82rem;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgb(var(--c-glass) / 0.07);
+    border: 1px solid rgb(var(--c-glass) / 0.1);
     padding: 2px 6px;
     border-radius: 4px;
     color: var(--text, #fff);
@@ -1121,18 +1165,18 @@
   }
 
   .doc-table th {
-    background: rgba(255,255,255,0.07);
+    background: rgb(var(--c-glass) / 0.07);
     color: var(--text, #fff);
     font-weight: 700;
     text-align: left;
     padding: 10px 14px;
-    border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+    border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.1));
   }
 
   .doc-table td {
     color: var(--mid, #ccc);
     padding: 10px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgb(var(--c-glass) / 0.04);
   }
 
   .doc-table tr:last-child td {
@@ -1140,7 +1184,7 @@
   }
 
   .doc-table tr:hover td {
-    background: rgba(255,255,255,0.02);
+    background: rgb(var(--c-glass) / 0.02);
   }
 
   /* ── Tip & Warn boxes ── */
@@ -1157,8 +1201,8 @@
   }
 
   .doc-tip {
-    background: rgba(124, 58, 237, 0.1);
-    border: 1px solid rgba(124, 58, 237, 0.25);
+    background: rgb(var(--accent-rgb) / 0.1);
+    border: 1px solid rgb(var(--accent-rgb) / 0.25);
     color: var(--mid, #ccc);
   }
 
@@ -1190,7 +1234,7 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     background: var(--accent, #7c3aed);
-    color: #fff;
+    color: var(--on-accent);
     border-radius: 4px;
     padding: 2px 7px;
     vertical-align: middle;
@@ -1206,10 +1250,10 @@
   }
 
   .faq-item {
-    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
     border-radius: 10px;
     overflow: hidden;
-    background: rgba(255,255,255,0.02);
+    background: rgb(var(--c-glass) / 0.02);
   }
 
   .faq-item summary {
@@ -1243,12 +1287,12 @@
   }
 
   .faq-item summary:hover {
-    background: rgba(255,255,255,0.03);
+    background: rgb(var(--c-glass) / 0.03);
   }
 
   .faq-body {
     padding: 0 18px 16px;
-    border-top: 1px solid var(--border, rgba(255,255,255,0.06));
+    border-top: 1px solid var(--border, rgb(var(--c-glass) / 0.06));
   }
 
   .faq-body p {
@@ -1262,7 +1306,7 @@
   .doc-footer-note {
     margin-top: 48px;
     padding-top: 24px;
-    border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-top: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
     font-size: 0.8rem;
     color: var(--dim, #888);
     text-align: center;
@@ -1276,7 +1320,7 @@
   @media (max-width: 768px) {
     .doc-root {
       grid-template-columns: 1fr;
-      padding: 24px 16px;
+      padding: calc(var(--nav-h) + 24px) 16px 36px;
     }
 
     .doc-sidebar {

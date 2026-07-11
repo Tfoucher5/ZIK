@@ -32,6 +32,7 @@ function buildModeStats(rows, roomMap) {
   });
 
   const wins = rows.filter((r) => r.rank === 1).length;
+  const podiums = rows.filter((r) => r.rank && r.rank <= 3).length;
   const scores = rows.map((r) => r.score);
   const totalScore = scores.reduce((a, b) => a + b, 0);
   const bestScore = scores.length ? Math.max(...scores) : 0;
@@ -64,6 +65,7 @@ function buildModeStats(rows, roomMap) {
     recentGames,
     scoreByRoomType,
     winRate: { wins, total: rows.length },
+    podiums,
     totalScore,
     bestScore,
     worstScore,
@@ -114,16 +116,19 @@ export async function GET({ params, url }) {
     const classic = buildModeStats(classicRows, roomMap);
     const qcm = buildModeStats(qcmRows, roomMap);
 
-    // Top % classement
+    // Classement : rang réel + top %
     const aboveCount = aboveRes.count ?? 0;
     const totalCount = totalRes.count ?? 1;
     const topPercent = Math.max(1, Math.ceil((aboveCount / totalCount) * 100));
+    const rank = aboveCount + 1;
 
     // Champs historiques (mode classique) conservés pour compatibilité
     return json({
       ...classic,
       qcm,
       topPercent,
+      rank,
+      totalPlayers: totalCount,
     });
   } catch (e) {
     return json({ error: e.message }, { status: 500 });

@@ -19,16 +19,16 @@
   .load-more-btn {
     padding: 10px 28px;
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.15);
+    border: 1px solid rgb(var(--c-glass) / 0.15);
     background: transparent;
-    color: rgba(255,255,255,0.7);
+    color: rgb(var(--c-glass) / 0.7);
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.15s;
   }
   .load-more-btn:hover:not(:disabled) {
-    border-color: rgba(62,207,255,0.4);
-    color: #3ecfff;
+    border-color: rgb(var(--accent-rgb) / 0.4);
+    color: var(--accent);
   }
   .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

@@ -23,18 +23,39 @@ export async function GET() {
     if (!base) {
       const { data, error } = await supabase
         .from("rooms")
-        .select("code, name, emoji, description, game_mode, is_official")
+        .select(
+          "code, name, emoji, description, game_mode, is_official, playlist_id",
+        )
         .eq("is_official", true)
         .order("created_at");
       if (error) throw error;
+
+      const playlistIds = (data || [])
+        .filter((r) => r.playlist_id)
+        .map((r) => r.playlist_id);
+      let coverMap = {};
+      if (playlistIds.length > 0) {
+        const { data: tracks } = await supabase
+          .from("custom_playlist_tracks")
+          .select("playlist_id, cover_url, tracks(cover_url)")
+          .in("playlist_id", playlistIds)
+          .order("position");
+        for (const t of tracks || []) {
+          const cover = t.tracks?.cover_url || t.cover_url;
+          if (cover && !coverMap[t.playlist_id])
+            coverMap[t.playlist_id] = cover;
+        }
+      }
+
       base = (data || []).map((r) => ({
         id: r.code,
         name: r.name,
         emoji: r.emoji,
         description: r.description || "",
         game_mode: r.game_mode || "classic",
+        cover_url: coverMap[r.playlist_id] || null,
         color: "var(--accent)",
-        gradient: "linear-gradient(135deg,rgba(62,207,255,.12),transparent)",
+        gradient: "linear-gradient(135deg,rgba(255,0,255,.08),transparent)",
       }));
       _cache.set(base);
     }
@@ -57,7 +78,14 @@ export async function GET() {
       0,
     );
 
-    return json({ rooms: result, totalOnline });
+    return json(
+      { rooms: result, totalOnline },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (e) {
     return json({ error: e.message }, { status: 500 });
   }

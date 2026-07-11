@@ -148,20 +148,20 @@
     margin-bottom: 20px;
   }
   .vs-logo-zik {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.5rem;
     font-weight: 900;
     color: var(--accent);
   }
   .vs-separator { font-size: 1rem; font-weight: 700; color: var(--dim); }
   .vs-logo-other {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.5rem;
     font-weight: 900;
     color: var(--mid);
   }
   .vs-article h1 {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: clamp(1.5rem, 3vw, 2.2rem);
     font-weight: 900;
     letter-spacing: -1px;
@@ -176,7 +176,7 @@
   }
   .vs-section:last-of-type { border-bottom: none; }
   .vs-section h2 {
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.15rem;
     font-weight: 800;
     margin-bottom: 14px;
@@ -217,7 +217,7 @@
     background: var(--accent);
     color: #000;
     font-weight: 800;
-    font-family: "Bricolage Grotesque", sans-serif;
+    font-family: "Barlow Condensed", sans-serif;
     padding: 12px 28px;
     border-radius: 10px;
     font-size: 0.92rem;

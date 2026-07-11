@@ -8,7 +8,7 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Conditions G&eacute;n&eacute;rales d&apos;Utilisation</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juillet 2026</p>
 
   <section>
     <h2>1. Pr&eacute;sentation du service</h2>
@@ -25,6 +25,7 @@
       <li>Cr&eacute;er des playlists et des rooms personnalis&eacute;es</li>
       <li>Figurer dans les classements ELO et hebdomadaires</li>
       <li>Acc&eacute;der aux profils publics des autres joueurs</li>
+      <li>Utiliser les fonctionnalit&eacute;s sociales&nbsp;: abonnements, demandes d&rsquo;amis et invitations &agrave; jouer</li>
     </ul>
     <p>L&rsquo;utilisateur doit avoir au moins <strong>13&nbsp;ans</strong> pour cr&eacute;er un compte. En cr&eacute;&eacute;ant un compte, l&rsquo;utilisateur d&eacute;clare avoir l&rsquo;&acirc;ge requis.</p>
     <p>L&rsquo;acc&egrave;s au service peut &ecirc;tre suspendu temporairement pour maintenance ou en cas de comportement contraire aux pr&eacute;sentes CGU.</p>
@@ -51,6 +52,7 @@
       <li>Ne pas utiliser de pseudonymes offensants, discriminatoires ou contraires aux bonnes m&oelig;urs</li>
       <li>Ne pas tenter de contourner les m&eacute;canismes de jeu (triche, bots, exploitation de failles)</li>
       <li>Ne pas perturber l&rsquo;exp&eacute;rience des autres joueurs (flooding, spam de r&eacute;ponses, etc.)</li>
+      <li>Ne pas abuser des fonctionnalit&eacute;s sociales (spam de demandes d&rsquo;amis ou d&rsquo;invitations, harc&egrave;lement)</li>
       <li>Ne pas usurper l&rsquo;identit&eacute; d&rsquo;un autre utilisateur</li>
     </ul>
     <p>Tout manquement &agrave; ces r&egrave;gles peut entra&icirc;ner la suppression du compte sans pr&eacute;avis.</p>
@@ -86,7 +88,7 @@
   padding: calc(var(--nav-h) + 32px) 24px 80px;
 }
 .legal-page h1 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -95,7 +97,7 @@
 .legal-date { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
 .legal-page section { margin-bottom: 32px; }
 .legal-page h2 {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 10px;

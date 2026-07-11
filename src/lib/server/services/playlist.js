@@ -118,6 +118,33 @@ export function buildTrack({
   };
 }
 
+// Métadonnées canoniques d'une ligne de liaison : catalogue `tracks` joint,
+// fallback sur les anciennes colonnes pour les lignes créées avant l'étape 2
+// de la migration (retiré à l'étape 3).
+export function trackMeta(row) {
+  return row.tracks || row;
+}
+
+export function buildTrackFromRow(row) {
+  const meta = trackMeta(row);
+  return buildTrack({
+    artist: meta.artist,
+    title: meta.title,
+    cover: meta.cover_url,
+    preview_url: meta.preview_url,
+    custom_artist: row.custom_artist || null,
+    custom_title: row.custom_title || null,
+    custom_feats: row.custom_feats || null,
+    extraAnswers: (row.track_answers || []).map((a) => ({
+      label: a.answer_types?.name || "",
+      value: a.value,
+    })),
+  });
+}
+
+export const TRACK_ROW_SELECT =
+  "id, position, custom_artist, custom_title, custom_feats, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, tracks(id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at), track_answers(value, answer_types(name))";
+
 export function calcSpeedBonus(timeTaken) {
   if (timeTaken < 10) return 2;
   if (timeTaken < 20) return 1;
@@ -147,34 +174,45 @@ const PREVIEW_REFRESH_MARGIN_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours de marge
 const PREVIEW_PERMANENT_EXPIRY = "2099-01-01T00:00:00.000Z"; // iTunes & URLs sans token
 const REFRESH_CONCURRENCY = 8;
 
+// Reçoit des lignes de liaison jointes (row.tracks) ou des lignes brutes du
+// catalogue enveloppées ({ tracks: row }). Déduplique par titre canonique :
+// 1 update par titre, quel que soit le nombre de playlists qui le contiennent.
 export async function refreshExpiredPreviews(trackRows) {
   const now = Date.now();
 
-  const toRefresh = trackRows.filter((t) => {
-    if (!t.preview_url) return false;
-    const expiresAt = t.preview_expires_at
-      ? new Date(t.preview_expires_at).getTime()
-      : (parseExpFromUrl(t.preview_url) ?? 0) * 1000;
-    return expiresAt < now + PREVIEW_REFRESH_MARGIN_MS;
-  });
+  const targets = new Map();
+  for (const row of trackRows) {
+    const meta = trackMeta(row);
+    if (!meta.preview_url) continue;
+    const expiresAt = meta.preview_expires_at
+      ? new Date(meta.preview_expires_at).getTime()
+      : (parseExpFromUrl(meta.preview_url) ?? 0) * 1000;
+    if (expiresAt >= now + PREVIEW_REFRESH_MARGIN_MS) continue;
 
+    const table = row.tracks ? "tracks" : "custom_playlist_tracks";
+    const key = `${table}:${meta.id}`;
+    if (!targets.has(key)) targets.set(key, { table, meta, row, metas: [] });
+    targets.get(key).metas.push(meta);
+  }
+
+  const toRefresh = [...targets.values()];
   if (!toRefresh.length) return;
 
-  console.log(`Refresh preview_url: ${toRefresh.length} tracks expirées...`);
+  console.log(`Refresh preview_url: ${toRefresh.length} titres expirés...`);
   let updated = 0;
 
   for (let i = 0; i < toRefresh.length; i += REFRESH_CONCURRENCY) {
     const batch = toRefresh.slice(i, i + REFRESH_CONCURRENCY);
     await Promise.allSettled(
-      batch.map(async (t) => {
+      batch.map(async ({ table, meta, row, metas }) => {
         try {
-          let freshUrl = t.external_id
-            ? await fetchDeezerTrackPreview(t.external_id)
+          let freshUrl = meta.external_id
+            ? await fetchDeezerTrackPreview(meta.external_id)
             : null;
 
           if (!freshUrl) {
-            const artist = t.custom_artist || t.artist;
-            const title = t.custom_title || t.title;
+            const artist = row.custom_artist || meta.artist;
+            const title = row.custom_title || meta.title;
             freshUrl = await iTunesPreviewSearch(artist, title);
           }
 
@@ -182,15 +220,15 @@ export async function refreshExpiredPreviews(trackRows) {
 
           const exp = parseExpFromUrl(freshUrl);
           await getAdminClient()
-            .from("custom_playlist_tracks")
+            .from(table)
             .update({
               preview_url: freshUrl,
               preview_expires_at: exp
                 ? new Date(exp * 1000).toISOString()
                 : PREVIEW_PERMANENT_EXPIRY,
             })
-            .eq("id", t.id);
-          t.preview_url = freshUrl;
+            .eq("id", meta.id);
+          for (const m of metas) m.preview_url = freshUrl;
           updated++;
         } catch {
           /* skip */
@@ -200,7 +238,7 @@ export async function refreshExpiredPreviews(trackRows) {
   }
 
   console.log(
-    `Refresh terminé: ${updated}/${toRefresh.length} tracks mises à jour`,
+    `Refresh terminé: ${updated}/${toRefresh.length} titres mis à jour`,
   );
 }
 
@@ -212,10 +250,8 @@ export async function runPreviewRefreshCron() {
   ).toISOString();
   try {
     const { data: rows, error } = await getAdminClient()
-      .from("custom_playlist_tracks")
-      .select(
-        "id, artist, title, preview_url, preview_expires_at, external_id, custom_artist, custom_title",
-      )
+      .from("tracks")
+      .select("id, artist, title, preview_url, preview_expires_at, external_id")
       .not("preview_url", "is", null)
       .or(
         `preview_expires_at.lt.${threshold},and(preview_expires_at.is.null,preview_url.ilike.%hdnea%)`,
@@ -227,7 +263,7 @@ export async function runPreviewRefreshCron() {
       return;
     }
 
-    await refreshExpiredPreviews(rows);
+    await refreshExpiredPreviews(rows.map((t) => ({ tracks: t })));
 
     // Vider le cache pour que les rooms rechargent les URLs fraîches
     Object.keys(playlistCache).forEach((k) => delete playlistCache[k]);
@@ -271,31 +307,13 @@ export async function loadPlaylist(roomId) {
       const playlistIds = links.map((l) => l.playlist_id);
       const { data: trackRows } = await supabase
         .from("custom_playlist_tracks")
-        .select(
-          "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name))",
-        )
+        .select(TRACK_ROW_SELECT)
         .in("playlist_id", playlistIds)
         .order("position");
 
       if (trackRows?.length >= 3) {
         await refreshExpiredPreviews(trackRows);
-        const tracks = dedup(
-          trackRows.map((t) =>
-            buildTrack({
-              artist: t.artist,
-              title: t.title,
-              cover: t.cover_url,
-              preview_url: t.preview_url,
-              custom_artist: t.custom_artist || null,
-              custom_title: t.custom_title || null,
-              custom_feats: t.custom_feats || null,
-              extraAnswers: (t.track_answers || []).map((a) => ({
-                label: a.answer_types?.name || "",
-                value: a.value,
-              })),
-            }),
-          ),
-        );
+        const tracks = dedup(trackRows.map(buildTrackFromRow));
         playlistCache[roomId] = tracks;
         console.log(
           `Room DB "${roomId}": ${tracks.length} titres chargés (${playlistIds.length} playlist(s))`,
@@ -312,30 +330,12 @@ export async function loadPlaylist(roomId) {
     try {
       const { data: trackRows } = await supabase
         .from("custom_playlist_tracks")
-        .select(
-          "id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name))",
-        )
+        .select(TRACK_ROW_SELECT)
         .eq("playlist_id", dbRoom.playlist_id)
         .order("position");
       if (trackRows?.length >= 3) {
         await refreshExpiredPreviews(trackRows);
-        const tracks = dedup(
-          trackRows.map((t) =>
-            buildTrack({
-              artist: t.artist,
-              title: t.title,
-              cover: t.cover_url,
-              preview_url: t.preview_url,
-              custom_artist: t.custom_artist || null,
-              custom_title: t.custom_title || null,
-              custom_feats: t.custom_feats || null,
-              extraAnswers: (t.track_answers || []).map((a) => ({
-                label: a.answer_types?.name || "",
-                value: a.value,
-              })),
-            }),
-          ),
-        );
+        const tracks = dedup(trackRows.map(buildTrackFromRow));
         playlistCache[roomId] = tracks;
         console.log(
           `Room DB "${roomId}": ${tracks.length} titres chargés (legacy)`,

@@ -25,17 +25,17 @@
   .tab {
     padding: 8px 18px;
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgb(var(--c-glass) / 0.1);
     background: transparent;
-    color: rgba(255,255,255,0.6);
+    color: rgb(var(--c-glass) / 0.6);
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .tab:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+  .tab:hover { border-color: rgb(var(--c-glass) / 0.3); color: var(--text); }
   .tab.active {
-    background: rgba(62, 207, 255, 0.15);
-    border-color: rgba(62, 207, 255, 0.5);
-    color: #3ecfff;
+    background: rgb(var(--accent-rgb) / 0.12);
+    border-color: rgb(var(--accent-rgb) / 0.45);
+    color: var(--accent);
   }
 </style>
