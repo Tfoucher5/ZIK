@@ -28,12 +28,12 @@ Choix techniques :
 
 ### Ligne héro — 4 StatCards avec delta vs les 7 jours précédents (↗ +12 %)
 
-| Carte | Source |
-|---|---|
-| Visiteurs 7j | API Umami |
-| Nouveaux inscrits 7j | `profiles.created_at` |
+| Carte                                            | Source                              |
+| ------------------------------------------------ | ----------------------------------- |
+| Visiteurs 7j                                     | API Umami                           |
+| Nouveaux inscrits 7j                             | `profiles.created_at`               |
 | Joueurs actifs 7j (DAU distinct, invités inclus) | `game_players` × `games.started_at` |
-| Parties 7j | `games` |
+| Parties 7j                                       | `games`                             |
 
 ### Courbe principale
 
@@ -68,15 +68,15 @@ Reports en attente, erreurs 24h, rooms live, uptime, toggle maintenance — l'ex
 
 ### Composants (`src/lib/admin/`)
 
-| Composant | Rôle |
-|---|---|
-| `StatCard` | chiffre + label + delta coloré + sparkline optionnelle |
-| `TrendChart` | courbe SVG multi-séries, tooltip, sélecteur de période |
-| `Sparkline` | mini-courbe SVG inline |
-| `AdminTable` | table triable par colonnes + pagination |
-| `SearchInput` | recherche avec debounce |
-| `ActionMenu` | menu kebab par ligne avec confirmation inline |
-| `Badge` | pastilles statut/compteur |
+| Composant     | Rôle                                                   |
+| ------------- | ------------------------------------------------------ |
+| `StatCard`    | chiffre + label + delta coloré + sparkline optionnelle |
+| `TrendChart`  | courbe SVG multi-séries, tooltip, sélecteur de période |
+| `Sparkline`   | mini-courbe SVG inline                                 |
+| `AdminTable`  | table triable par colonnes + pagination                |
+| `SearchInput` | recherche avec debounce                                |
+| `ActionMenu`  | menu kebab par ligne avec confirmation inline          |
+| `Badge`       | pastilles statut/compteur                              |
 
 Restyle de toutes les pages admin avec ces composants.
 

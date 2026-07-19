@@ -25,9 +25,11 @@
 ### Task 1 : Migration SQL — RPC de séries et métriques
 
 **Files:**
+
 - Create: `supabase/migrations/20260719_admin_growth_stats.sql`
 
 **Interfaces:**
+
 - Produces (RPC PostgREST, appelées via `sb.rpc(name, args)`) :
   - `admin_signups_per_day(p_days int)` → `TABLE(day date, n int)` — série complète, jours à 0 inclus
   - `admin_active_players_per_day(p_days int)` → `TABLE(day date, n int)` — joueurs distincts (invités inclus) par jour
@@ -148,10 +150,12 @@ git commit -m "feat(admin): RPC SQL séries croissance (signups, actifs, parties
 ### Task 2 : Utilitaires stats purs (TDD)
 
 **Files:**
+
 - Create: `src/lib/admin/stats-utils.js`
 - Test: `src/lib/admin/__tests__/stats-utils.test.js`
 
 **Interfaces:**
+
 - Produces :
   - `sumWindow(series, n, offset = 0)` → somme des `n` derniers points (en sautant `offset` points depuis la fin). `series` = `[{ day, n }]` ou `[{ x, y }]` (clé numérique détectée : `n` sinon `y`).
   - `computeDelta(current, previous)` → `{ pct: number|null, dir: 'up'|'down'|'flat' }` ; `pct` arrondi entier, `null` si `previous === 0`.
@@ -174,7 +178,15 @@ describe("sumWindow", () => {
     expect(sumWindow(serie([1, 2, 3, 4]), 2, 2)).toBe(3);
   });
   it("accepte le format Umami {x,y}", () => {
-    expect(sumWindow([{ x: "a", y: 5 }, { x: "b", y: 6 }], 2)).toBe(11);
+    expect(
+      sumWindow(
+        [
+          { x: "a", y: 5 },
+          { x: "b", y: 6 },
+        ],
+        2,
+      ),
+    ).toBe(11);
   });
   it("série plus courte que la fenêtre → somme ce qui existe", () => {
     expect(sumWindow(serie([3]), 7)).toBe(3);
@@ -216,7 +228,9 @@ const val = (p) => (typeof p.n === "number" ? p.n : (p.y ?? 0));
 
 export function sumWindow(series, n, offset = 0) {
   const end = series.length - offset;
-  return series.slice(Math.max(0, end - n), end).reduce((s, p) => s + val(p), 0);
+  return series
+    .slice(Math.max(0, end - n), end)
+    .reduce((s, p) => s + val(p), 0);
 }
 
 export function computeDelta(current, previous) {
@@ -244,9 +258,11 @@ git commit -m "feat(admin): utilitaires stats (fenêtres, deltas, pourcentages) 
 ### Task 3 : Client Umami serveur
 
 **Files:**
+
 - Create: `src/lib/server/umami.js`
 
 **Interfaces:**
+
 - Consumes : env `UMAMI_API_URL`, `UMAMI_WEBSITE_ID`, `UMAMI_USER`, `UMAMI_PASS`.
 - Produces :
   - `isUmamiConfigured()` → bool
@@ -308,10 +324,20 @@ export async function getUmamiData(days) {
   const start14 = now - 14 * DAY;
   try {
     const [series, statsNow, statsPrev, referrers, pages] = await Promise.all([
-      api("/pageviews", { startAt: start, endAt: now, unit: "day", timezone: "Europe/Paris" }),
+      api("/pageviews", {
+        startAt: start,
+        endAt: now,
+        unit: "day",
+        timezone: "Europe/Paris",
+      }),
       api("/stats", { startAt: start7, endAt: now }),
       api("/stats", { startAt: start14, endAt: start7 }),
-      api("/metrics", { startAt: start7, endAt: now, type: "referrer", limit: 8 }),
+      api("/metrics", {
+        startAt: start7,
+        endAt: now,
+        type: "referrer",
+        limit: 8,
+      }),
       api("/metrics", { startAt: start7, endAt: now, type: "url", limit: 8 }),
     ]);
     const num = (v) => (typeof v === "object" ? (v?.value ?? 0) : (v ?? 0));
@@ -350,23 +376,37 @@ git commit -m "feat(admin): client API Umami serveur (login, stats, séries, ré
 ### Task 4 : Endpoint agrégateur `/api/admin/stats`
 
 **Files:**
+
 - Create: `src/routes/(site)/api/admin/stats/+server.js`
 
 **Interfaces:**
+
 - Consumes : RPC Task 1, `getUmamiData` Task 3, `sumWindow`/`computeDelta`/`toPercent` Task 2, `verifyToken` + `getAdminClient` (existants).
 - Produces : `GET /api/admin/stats?token=...&days=30|60|90` →
 
 ```json
 {
-  "series": { "visitors": [{"x":"2026-07-19","y":12}], "signups": [{"day":"2026-07-19","n":3}], "players": [{"day":"2026-07-19","n":9}] },
-  "hero": {
-    "visitors7d":  { "value": 240, "delta": { "pct": 20, "dir": "up" } },
-    "signups7d":   { "value": 12,  "delta": { "pct": -8, "dir": "down" } },
-    "players7d":   { "value": 90,  "delta": { "pct": 4,  "dir": "up" } },
-    "games7d":     { "value": 55,  "delta": { "pct": 0,  "dir": "flat" } }
+  "series": {
+    "visitors": [{ "x": "2026-07-19", "y": 12 }],
+    "signups": [{ "day": "2026-07-19", "n": 3 }],
+    "players": [{ "day": "2026-07-19", "n": 9 }]
   },
-  "traffic": { "referrers": [{"x":"google.com","y":80}], "pages": [{"x":"/","y":150}], "available": true },
-  "kpis": { "conversionPct": 5, "guestPct": 60, "retention": { "cohort": 10, "retained": 4, "pct": 40 } }
+  "hero": {
+    "visitors7d": { "value": 240, "delta": { "pct": 20, "dir": "up" } },
+    "signups7d": { "value": 12, "delta": { "pct": -8, "dir": "down" } },
+    "players7d": { "value": 90, "delta": { "pct": 4, "dir": "up" } },
+    "games7d": { "value": 55, "delta": { "pct": 0, "dir": "flat" } }
+  },
+  "traffic": {
+    "referrers": [{ "x": "google.com", "y": 80 }],
+    "pages": [{ "x": "/", "y": 150 }],
+    "available": true
+  },
+  "kpis": {
+    "conversionPct": 5,
+    "guestPct": 60,
+    "retention": { "cohort": 10, "retained": 4, "pct": 40 }
+  }
 }
 ```
 
@@ -433,7 +473,10 @@ export async function GET({ url }) {
     },
     hero: {
       visitors7d: umami
-        ? { value: umami.visitors7d, delta: computeDelta(umami.visitors7d, umami.visitors7dPrev) }
+        ? {
+            value: umami.visitors7d,
+            delta: computeDelta(umami.visitors7d, umami.visitors7dPrev),
+          }
         : { value: null, delta: null },
       signups7d: stat(signupsSerie),
       players7d: stat(s(players)),
@@ -447,7 +490,11 @@ export async function GET({ url }) {
     kpis: {
       conversionPct: umami ? toPercent(signups7d, umami.visitors7d) : null,
       guestPct: toPercent(guests, guests + logged),
-      retention: { cohort: cohort_size, retained, pct: toPercent(retained, cohort_size) },
+      retention: {
+        cohort: cohort_size,
+        retained,
+        pct: toPercent(retained, cohort_size),
+      },
     },
   };
 
@@ -476,11 +523,13 @@ git commit -m "feat(admin): endpoint /api/admin/stats (RPC + Umami, cache 5 min)
 ### Task 5 : Composants SVG — StatCard, Sparkline, TrendChart
 
 **Files:**
+
 - Create: `src/lib/admin/StatCard.svelte`
 - Create: `src/lib/admin/Sparkline.svelte`
 - Create: `src/lib/admin/TrendChart.svelte`
 
 **Interfaces:**
+
 - Consumes : format deltas de Task 4 (`{ pct, dir }`).
 - Produces :
   - `StatCard` props : `{ label, value, delta = null, spark = [] }` (`spark` = tableau de nombres)
@@ -665,10 +714,12 @@ git commit -m "feat(admin): composants SVG StatCard, Sparkline, TrendChart"
 ### Task 6 : Réécriture du dashboard
 
 **Files:**
+
 - Modify: `src/routes/(admin)/admin/dashboard/+page.svelte` (réécriture complète)
 - Modify: `src/routes/(admin)/admin/dashboard/+page.server.js` (le `load` ne garde que ops + maintenance)
 
 **Interfaces:**
+
 - Consumes : `GET /api/admin/stats` (Task 4), composants (Task 5), contexte `adminToken` du layout admin, action `?/maintenance` existante (inchangée), SSE `/api/admin/live` existant.
 
 - [ ] **Step 1 : Alléger le `load`** — dans `+page.server.js`, supprimer du `Promise.allSettled` les requêtes désormais servies par `/api/admin/stats` (totalUsers, gamesToday, activeUsers7d, officialPlaylists et le RPC `count_active_players_7d`) ; garder `publicRooms`, `pendingReports`, uptime, maintenance. L'action `?/maintenance` reste identique.
@@ -678,8 +729,14 @@ git commit -m "feat(admin): composants SVG StatCard, Sparkline, TrendChart"
 export async function load() {
   const sb = getAdminClient();
   const results = await Promise.allSettled([
-    sb.from("rooms").select("*", { count: "exact", head: true }).eq("is_public", true),
-    sb.from("reports").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    sb
+      .from("rooms")
+      .select("*", { count: "exact", head: true })
+      .eq("is_public", true),
+    sb
+      .from("reports")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending"),
   ]);
   const getCount = (r) => (r.status === "fulfilled" ? (r.value.count ?? 0) : 0);
   const [publicRooms, pendingReports] = results.map(getCount);
@@ -689,7 +746,10 @@ export async function load() {
   const m = Math.floor((uptimeSeconds % 3600) / 60);
   const uptime = `${String(h).padStart(2, "0")}h${String(m).padStart(2, "0")}`;
 
-  return { maintenance: await getMaintenance(), ops: { publicRooms, pendingReports, uptime } };
+  return {
+    maintenance: await getMaintenance(),
+    ops: { publicRooms, pendingReports, uptime },
+  };
 }
 ```
 
@@ -818,32 +878,130 @@ export async function load() {
   --adm-green: #3ddc84;
   --adm-amber: #ffb300;
   --adm-red: #ff5470;
-  display: flex; flex-direction: column; gap: 20px;
-  font-family: 'Bricolage Grotesque', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: "Bricolage Grotesque", sans-serif;
   color: var(--adm-text);
 }
-.dash-head { display: flex; align-items: center; justify-content: space-between; }
-.dash-head h1 { font-size: 1.5rem; font-weight: 800; }
-.period { display: flex; gap: 4px; background: var(--adm-glass); border: 1px solid var(--adm-border); border-radius: 10px; padding: 3px; }
-.period button { background: none; border: none; color: var(--adm-muted); padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
-.period button.active { background: var(--adm-panel); color: var(--adm-text); }
-.hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-.panel { background: var(--adm-glass); border: 1px solid var(--adm-border); border-radius: 14px; padding: 18px 20px; }
-.panel h2 { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--adm-muted); margin-bottom: 12px; }
-.secondary { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
-.bar-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85rem; border-bottom: 1px solid var(--adm-border); }
-.bar-row:last-child { border-bottom: none; }
-.bar-label { color: var(--adm-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar-value { font-family: 'JetBrains Mono', monospace; color: var(--adm-muted); }
-.kpi { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; font-size: 0.9rem; }
-.kpi b { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; }
-.kpi small { color: var(--adm-muted); }
-.ops { display: flex; gap: 14px; flex-wrap: wrap; }
-.ops-item { display: flex; gap: 8px; align-items: baseline; background: var(--adm-glass); border: 1px solid var(--adm-border); border-radius: 10px; padding: 10px 16px; font-size: 0.85rem; color: var(--adm-muted); }
-.ops-item b { color: var(--adm-text); font-family: 'JetBrains Mono', monospace; }
-.ops-item b.warn { color: var(--adm-amber); }
-.ops-item.link { color: var(--adm-accent); }
-.empty { color: var(--adm-muted); font-size: 0.85rem; }
+.dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dash-head h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.period {
+  display: flex;
+  gap: 4px;
+  background: var(--adm-glass);
+  border: 1px solid var(--adm-border);
+  border-radius: 10px;
+  padding: 3px;
+}
+.period button {
+  background: none;
+  border: none;
+  color: var(--adm-muted);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.period button.active {
+  background: var(--adm-panel);
+  color: var(--adm-text);
+}
+.hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.panel {
+  background: var(--adm-glass);
+  border: 1px solid var(--adm-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.panel h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+  margin-bottom: 12px;
+}
+.secondary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.bar-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--adm-border);
+}
+.bar-row:last-child {
+  border-bottom: none;
+}
+.bar-label {
+  color: var(--adm-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-value {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--adm-muted);
+}
+.kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 0.9rem;
+}
+.kpi b {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+}
+.kpi small {
+  color: var(--adm-muted);
+}
+.ops {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ops-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  background: var(--adm-glass);
+  border: 1px solid var(--adm-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  color: var(--adm-muted);
+}
+.ops-item b {
+  color: var(--adm-text);
+  font-family: "JetBrains Mono", monospace;
+}
+.ops-item b.warn {
+  color: var(--adm-amber);
+}
+.ops-item.link {
+  color: var(--adm-accent);
+}
+.empty {
+  color: var(--adm-muted);
+  font-size: 0.85rem;
+}
 ```
 
 Conserver aussi les styles du formulaire maintenance existant (adaptés aux variables `--adm-*`).
@@ -869,6 +1027,7 @@ git commit -m "feat(admin): dashboard croissance (StatCards, courbe multi-série
 ### Task 7 : Finalisation — version, PR
 
 **Files:**
+
 - Modify: `package.json` (version)
 
 - [ ] **Step 1 : Bump version** — `package.json` : `"version": "3.1.0"`. Vérifier avec `grep -r "3\.0\.0" src static --include="*.svelte" --include="*.html" -l` s'il y a des versions affichées à bumper (les `?v=3.0.0` des CSS statiques ne bougent PAS : aucun CSS statique modifié).
