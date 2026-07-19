@@ -1,5 +1,6 @@
 // Client API Umami self-host : login → token Bearer, re-login sur 401.
 let _token = null;
+let _loginPromise = null;
 
 const cfg = () => ({
   url: process.env.UMAMI_API_URL,
@@ -14,14 +15,19 @@ export function isUmamiConfigured() {
 }
 
 async function login() {
-  const c = cfg();
-  const r = await fetch(`${c.url}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: c.user, password: c.pass }),
+  _loginPromise ??= (async () => {
+    const c = cfg();
+    const r = await fetch(`${c.url}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: c.user, password: c.pass }),
+    });
+    if (!r.ok) throw new Error(`Umami login ${r.status}`);
+    _token = (await r.json()).token;
+  })().finally(() => {
+    _loginPromise = null;
   });
-  if (!r.ok) throw new Error(`Umami login ${r.status}`);
-  _token = (await r.json()).token;
+  return _loginPromise;
 }
 
 async function api(path, params) {
