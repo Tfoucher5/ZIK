@@ -24,6 +24,10 @@ describe("sumWindow", () => {
   it("série plus courte que la fenêtre → somme ce qui existe", () => {
     expect(sumWindow(serie([3]), 7)).toBe(3);
   });
+  it("offset plus grand que la série → 0", () => {
+    expect(sumWindow(serie([1, 2, 3, 4]), 2, 5)).toBe(0);
+    expect(sumWindow(serie([1, 2, 3, 4]), 2, 6)).toBe(0);
+  });
 });
 
 describe("computeDelta", () => {

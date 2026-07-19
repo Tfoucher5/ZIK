@@ -1,7 +1,7 @@
 const val = (p) => (typeof p.n === "number" ? p.n : (p.y ?? 0));
 
 export function sumWindow(series, n, offset = 0) {
-  const end = series.length - offset;
+  const end = Math.max(0, series.length - offset);
   return series
     .slice(Math.max(0, end - n), end)
     .reduce((s, p) => s + val(p), 0);
