@@ -25,7 +25,7 @@
 <div class="chart">
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <svg viewBox="0 0 {W} {H}" onmousemove={onMove} onmouseleave={() => (hoverIdx = null)}>
-    {#each yTicks as t (t)}
+    {#each yTicks as t, i (i)}
       <line x1={PAD.l} x2={W - PAD.r} y1={py(t)} y2={py(t)} class="grid" />
       <text x={PAD.l - 8} y={py(t) + 4} class="tick" text-anchor="end">{t}</text>
     {/each}
