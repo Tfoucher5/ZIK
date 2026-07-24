@@ -37,11 +37,11 @@ export async function GET() {
       if (playlistIds.length > 0) {
         const { data: tracks } = await supabase
           .from("custom_playlist_tracks")
-          .select("playlist_id, cover_url, tracks(cover_url)")
+          .select("playlist_id, tracks(cover_url)")
           .in("playlist_id", playlistIds)
           .order("position");
         for (const t of tracks || []) {
-          const cover = t.tracks?.cover_url || t.cover_url;
+          const cover = t.tracks?.cover_url;
           if (cover && !coverMap[t.playlist_id])
             coverMap[t.playlist_id] = cover;
         }

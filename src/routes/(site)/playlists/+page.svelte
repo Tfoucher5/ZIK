@@ -193,11 +193,9 @@
     await loadEditorTracks();
   }
 
-  // Métadonnées canoniques du catalogue `tracks` aplaties sur la ligne de liaison
-  // (fallback anciennes colonnes pour les lignes d'avant migration).
+  // Métadonnées canoniques du catalogue `tracks` aplaties sur la ligne de liaison.
   function flattenTrackRow(row) {
     const { tracks: meta, ...rest } = row;
-    if (!meta) return rest;
     return {
       ...rest,
       track_id: meta.id,
@@ -240,15 +238,8 @@
     return body.ids;
   }
 
-  // Les anciennes colonnes (artist, title, …) sont encore remplies pendant la
-  // transition de migration (NOT NULL + rollback possible) — retirées en étape 3.
-  function linkRow(t, trackId, position) {
-    return {
-      playlist_id: editorPl.id, track_id: trackId, position,
-      artist: t.artist, title: t.title,
-      preview_url: t.preview_url || null, cover_url: t.cover_url || null,
-      source: t.source || 'manual', external_id: t.external_id || null,
-    };
+  function linkRow(trackId, position) {
+    return { playlist_id: editorPl.id, track_id: trackId, position };
   }
 
   async function addTrack(trackData) {
@@ -263,7 +254,7 @@
         return false;
       }
       const { data, error } = await sb.from('custom_playlist_tracks')
-        .insert(linkRow(trackData, trackId, editorTracks.length))
+        .insert(linkRow(trackId, editorTracks.length))
         .select('*, tracks(*)').single();
       if (error) throw new Error(error.message);
       editorTracks = [...editorTracks, flattenTrackRow(data)];
@@ -283,7 +274,7 @@
       newTracks.forEach((t, i) => {
         if (linkedIds[ids[i]]) return;
         linkedIds[ids[i]] = true;
-        rows.push(linkRow(t, ids[i], editorTracks.length + rows.length));
+        rows.push(linkRow(ids[i], editorTracks.length + rows.length));
       });
       if (!rows.length) return { added: 0 };
       const { data, error } = await sb.from('custom_playlist_tracks').insert(rows).select('*, tracks(*)');

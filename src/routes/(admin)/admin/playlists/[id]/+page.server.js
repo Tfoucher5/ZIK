@@ -24,7 +24,7 @@ export async function load({ params }) {
     sb
       .from("custom_playlist_tracks")
       .select(
-        "id, playlist_id, artist, title, preview_url, cover_url, source, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, preview_url, cover_url, source)",
+        "id, playlist_id, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, preview_url, cover_url, source)",
       )
       .eq("playlist_id", params.id)
       .order("position", { ascending: true }),
@@ -35,9 +35,11 @@ export async function load({ params }) {
 
   return {
     playlist: playlistRes.data,
-    tracks: (tracksRes.data ?? []).map(({ tracks: meta, ...rest }) =>
-      meta ? { ...rest, ...meta, id: rest.id } : rest,
-    ),
+    tracks: (tracksRes.data ?? []).map(({ tracks: meta, ...rest }) => ({
+      ...rest,
+      ...meta,
+      id: rest.id,
+    })),
   };
 }
 
@@ -49,10 +51,10 @@ export const actions = {
     const sb = getAdminClient();
     const { data: track } = await sb
       .from("custom_playlist_tracks")
-      .select("artist, title, tracks(artist, title)")
+      .select("tracks(artist, title)")
       .eq("id", trackId)
       .single();
-    const trackMeta = track?.tracks || track;
+    const trackMeta = track?.tracks;
     const { error: err } = await sb
       .from("custom_playlist_tracks")
       .delete()

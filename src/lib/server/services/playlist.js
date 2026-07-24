@@ -118,11 +118,9 @@ export function buildTrack({
   };
 }
 
-// Métadonnées canoniques d'une ligne de liaison : catalogue `tracks` joint,
-// fallback sur les anciennes colonnes pour les lignes créées avant l'étape 2
-// de la migration (retiré à l'étape 3).
+// Métadonnées canoniques d'une ligne de liaison : catalogue `tracks` joint.
 export function trackMeta(row) {
-  return row.tracks || row;
+  return row.tracks;
 }
 
 export function buildTrackFromRow(row) {
@@ -143,7 +141,7 @@ export function buildTrackFromRow(row) {
 }
 
 export const TRACK_ROW_SELECT =
-  "id, position, custom_artist, custom_title, custom_feats, artist, title, cover_url, preview_url, external_id, source, preview_expires_at, tracks(id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at), track_answers(value, answer_types(name))";
+  "id, position, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at), track_answers(value, answer_types(name))";
 
 export function calcSpeedBonus(timeTaken) {
   if (timeTaken < 10) return 2;
@@ -189,9 +187,8 @@ export async function refreshExpiredPreviews(trackRows) {
       : (parseExpFromUrl(meta.preview_url) ?? 0) * 1000;
     if (expiresAt >= now + PREVIEW_REFRESH_MARGIN_MS) continue;
 
-    const table = row.tracks ? "tracks" : "custom_playlist_tracks";
-    const key = `${table}:${meta.id}`;
-    if (!targets.has(key)) targets.set(key, { table, meta, row, metas: [] });
+    const key = meta.id;
+    if (!targets.has(key)) targets.set(key, { meta, row, metas: [] });
     targets.get(key).metas.push(meta);
   }
 
@@ -204,7 +201,7 @@ export async function refreshExpiredPreviews(trackRows) {
   for (let i = 0; i < toRefresh.length; i += REFRESH_CONCURRENCY) {
     const batch = toRefresh.slice(i, i + REFRESH_CONCURRENCY);
     await Promise.allSettled(
-      batch.map(async ({ table, meta, row, metas }) => {
+      batch.map(async ({ meta, row, metas }) => {
         try {
           let freshUrl = meta.external_id
             ? await fetchDeezerTrackPreview(meta.external_id)
@@ -220,7 +217,7 @@ export async function refreshExpiredPreviews(trackRows) {
 
           const exp = parseExpFromUrl(freshUrl);
           await getAdminClient()
-            .from(table)
+            .from("tracks")
             .update({
               preview_url: freshUrl,
               preview_expires_at: exp
