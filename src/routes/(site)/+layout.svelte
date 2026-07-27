@@ -116,6 +116,7 @@
   <meta name="author" content="ZIK">
   <meta name="theme-color" content="#7c3aed">
   <meta name="format-detection" content="telephone=no">
+  <meta name="google-adsense-account" content="ca-pub-6495356963886902">
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="ZIK">
