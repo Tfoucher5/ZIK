@@ -1,5 +1,9 @@
 import { getAdminClient } from "$lib/server/config.js";
-import { refreshZiklePool, getOrCreateDailySong, getDayNumber } from "$lib/server/services/zikle.js";
+import {
+  refreshZiklePool,
+  getOrCreateDailySong,
+  getDayNumber,
+} from "$lib/server/services/zikle.js";
 
 export async function load() {
   const sb = getAdminClient();

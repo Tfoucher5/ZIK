@@ -79,7 +79,14 @@ describe("escapeIlike", () => {
 
 describe("dedupById", () => {
   it("garde la première occurrence de chaque id", () => {
-    const rows = [{ id: "1", n: "a" }, { id: "2", n: "b" }, { id: "1", n: "c" }];
-    expect(dedupById(rows)).toEqual([{ id: "1", n: "a" }, { id: "2", n: "b" }]);
+    const rows = [
+      { id: "1", n: "a" },
+      { id: "2", n: "b" },
+      { id: "1", n: "c" },
+    ];
+    expect(dedupById(rows)).toEqual([
+      { id: "1", n: "a" },
+      { id: "2", n: "b" },
+    ]);
   });
 });

@@ -7,7 +7,9 @@ export function durationForAttempt(attemptIndex) {
 }
 
 export function todayParis(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(date);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(
+    date,
+  );
 }
 
 function addDaysStr(dateStr, delta) {
@@ -28,8 +30,12 @@ export function computeStreak(results, today = todayParis()) {
 }
 
 export function buildShareGrid(dayNumber, guesses, correctTrackId, won) {
-  const squares = guesses.map((g) => (g === correctTrackId ? "🟩" : "🟥")).join("");
-  const result = won ? `${guesses.length}/${MAX_ATTEMPTS}` : `X/${MAX_ATTEMPTS}`;
+  const squares = guesses
+    .map((g) => (g === correctTrackId ? "🟩" : "🟥"))
+    .join("");
+  const result = won
+    ? `${guesses.length}/${MAX_ATTEMPTS}`
+    : `X/${MAX_ATTEMPTS}`;
   return `Zikle #${dayNumber} 🎧 ${result}\n\n${squares}\n\nhttps://www.zik-music.fr/zikle`;
 }
 

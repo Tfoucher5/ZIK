@@ -24,7 +24,11 @@ export async function POST({ request }) {
   if (date !== today) {
     const token = request.headers.get("authorization")?.slice(7);
     const user = token ? await verifyToken(token) : null;
-    if (!user) return json({ error: "Connexion requise pour les archives" }, { status: 401 });
+    if (!user)
+      return json(
+        { error: "Connexion requise pour les archives" },
+        { status: 401 },
+      );
   }
 
   const sb = getAdminClient();
@@ -33,7 +37,8 @@ export async function POST({ request }) {
     .select("track_id")
     .eq("date", date)
     .single();
-  if (error || !data) return json({ error: "Aucune chanson pour cette date" }, { status: 404 });
+  if (error || !data)
+    return json({ error: "Aucune chanson pour cette date" }, { status: 404 });
 
   return json({ correct: data.track_id === trackId });
 }
