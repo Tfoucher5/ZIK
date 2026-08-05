@@ -120,7 +120,8 @@
             </span>
             {#if done}
               <span class="za-badge" class:za-badge-win={done.won}>
-                {done.won ? `${done.attempts}/${MAX_ATTEMPTS}` : `X/${MAX_ATTEMPTS}`}
+                <span class="za-badge-icon">{done.won ? "✓" : "✗"}</span>
+                <span class="za-badge-score">{done.won ? `${done.attempts}/${MAX_ATTEMPTS}` : `X/${MAX_ATTEMPTS}`}</span>
               </span>
             {/if}
             <span class="za-date">{prettyDate(day.date)}</span>
@@ -331,28 +332,47 @@
     transform: scaleY(1.15);
   }
 
-  /* Jour déjà terminé : la ligne reste lisible mais se distingue au premier coup d'œil */
+  /* Jour déjà terminé */
   .za-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-weight: 700;
-    font-size: 0.7rem;
-    padding: 3px 7px;
-    background: rgb(248 113 113 / 0.15);
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    background: rgb(248 113 113 / 0.2);
     color: var(--danger);
     white-space: nowrap;
+    border: 1px solid rgb(248 113 113 / 0.4);
+  }
+  .za-badge-icon {
+    font-size: 0.85rem;
+    font-family: inherit;
+  }
+  .za-badge-score {
+    font-family: inherit;
   }
   .za-badge-win {
-    background: rgb(var(--accent-rgb) / 0.18);
+    background: rgb(var(--accent-rgb) / 0.2);
     color: var(--accent);
+    border-color: rgb(var(--accent-rgb) / 0.4);
   }
   .za-done {
+    background: rgb(248 113 113 / 0.06);
     border-left-color: var(--danger);
+    border-left-width: 4px;
   }
   .za-done-win {
+    background: rgb(var(--accent-rgb) / 0.06);
     border-left-color: var(--accent);
+    border-left-width: 4px;
   }
   .za-done .za-wave span {
-    background: rgb(var(--c-glass) / 0.07);
+    background: rgb(248 113 113 / 0.35);
+  }
+  .za-done-win .za-wave span {
+    background: rgb(var(--accent-rgb) / 0.35);
   }
 
   .za-date {
