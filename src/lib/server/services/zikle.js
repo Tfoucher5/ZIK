@@ -1,3 +1,5 @@
+export { todayParis } from "$lib/zikle/shared.js";
+
 import { getFetch } from "./fetch.js";
 import { parseExpFromUrl } from "./deezer.js";
 
