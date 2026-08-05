@@ -12,7 +12,11 @@ export async function load() {
     .limit(200);
   if (error) return { days: [] };
 
-  const total = data.length;
+  const { count } = await sb
+    .from("daily_songs")
+    .select("id", { count: "exact", head: true })
+    .lt("date", today);
+  const total = count ?? 0;
   const days = data.map((row, i) => ({ date: row.date, dayNumber: total - i }));
   return { days };
 }
