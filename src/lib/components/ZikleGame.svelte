@@ -6,6 +6,7 @@
     durationForAttempt,
     computeStreak,
     buildShareGrid,
+    waveformForDate,
   } from "$lib/zikle/shared.js";
 
   let { date, dayNumber, previewUrl } = $props();
@@ -20,21 +21,7 @@
   const BARS = 72;
   const rowIndices = Array.from({ length: MAX_ATTEMPTS }, (_, i) => i);
 
-  // Forme d'onde déterministe dérivée de la date : même dessin pour tous les
-  // joueurs d'un même jour, sans dépendre d'une analyse audio (cross-origin).
-  const bars = (() => {
-    let seed = 0;
-    for (const c of date) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
-    const rand = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 4294967296;
-    };
-    return Array.from({ length: BARS }, (_, i) => {
-      const env = Math.sin((i / BARS) * Math.PI) * 0.5 + 0.5;
-      const beat = i % 8 === 0 ? 0.3 : 0;
-      return Math.min(1, 0.18 + (rand() * 0.62 + beat) * env);
-    });
-  })();
+  const bars = waveformForDate(date, BARS);
 
   let audioEl;
   let query = $state("");

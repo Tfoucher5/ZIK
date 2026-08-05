@@ -39,6 +39,23 @@ export function buildShareGrid(dayNumber, guesses, correctTrackId, won) {
   return `Zikle #${dayNumber} 🎧 ${result}\n\n${squares}\n\nhttps://www.zik-music.fr/zikle`;
 }
 
+// Forme d'onde déterministe dérivée de la date : le même jour donne toujours le
+// même dessin pour tous les joueurs, sans analyser l'audio (cross-origin).
+// Partagée entre le jeu et la liste des archives.
+export function waveformForDate(dateStr, count = 72) {
+  let seed = 0;
+  for (const c of dateStr) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  return Array.from({ length: count }, (_, i) => {
+    const env = Math.sin((i / count) * Math.PI) * 0.5 + 0.5;
+    const beat = i % 8 === 0 ? 0.3 : 0;
+    return Math.min(1, 0.18 + (rand() * 0.62 + beat) * env);
+  });
+}
+
 export function escapeIlike(q) {
   return q.replace(/[%_]/g, (c) => `\\${c}`);
 }
