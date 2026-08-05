@@ -1,10 +1,13 @@
-import { supabase } from "$lib/server/config.js";
+import { supabase, getAdminClient } from "$lib/server/config.js";
+import { todayParis } from "$lib/zikle/shared.js";
 
 const SITE = "https://www.zik-music.fr";
 
 const STATIC_PAGES = [
   { loc: "/", changefreq: "daily", priority: "1.0" },
   { loc: "/rooms", changefreq: "hourly", priority: "0.9" },
+  { loc: "/zikle", changefreq: "daily", priority: "0.9" },
+  { loc: "/zikle/archives", changefreq: "daily", priority: "0.6" },
   { loc: "/playlists", changefreq: "weekly", priority: "0.7" },
   { loc: "/classements", changefreq: "daily", priority: "0.7" },
   { loc: "/salon", changefreq: "monthly", priority: "0.7" },
@@ -41,6 +44,31 @@ export async function GET() {
         lastmod: room.updated_at ? room.updated_at.slice(0, 10) : undefined,
       });
     }
+  }
+
+  // Archives Zikle : une page indexable par jour PASSÉ. La date du jour est
+  // exclue car /zikle/archives/[date] redirige vers /zikle pour aujourd'hui.
+  // `daily_songs` n'a pas de policy publique d'où le client admin ; on ne lit
+  // que la date, jamais le titre (ce serait un spoiler).
+  // Isolé : le sitemap ne doit pas tomber si cette section échoue.
+  try {
+    const { data: days } = await getAdminClient()
+      .from("daily_songs")
+      .select("date")
+      .lt("date", todayParis())
+      .order("date", { ascending: false })
+      .limit(365);
+
+    for (const day of days ?? []) {
+      urls.push({
+        loc: `/zikle/archives/${day.date}`,
+        changefreq: "yearly",
+        priority: "0.4",
+        lastmod: day.date,
+      });
+    }
+  } catch (e) {
+    console.error("[sitemap] archives Zikle:", e.message);
   }
 
   const today = new Date().toISOString().slice(0, 10);

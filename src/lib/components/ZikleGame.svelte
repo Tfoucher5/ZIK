@@ -18,6 +18,7 @@
   const authReady = $derived(_ctx.authReady);
 
   const STORAGE_KEY = "zikle_history"; // { [date]: { attempts: string[], won: boolean } }
+  const SKIP = "__skip__"; // marqueur d'un tour passé, stocké parmi les guesses
   const TOTAL = SNIPPET_DURATIONS[SNIPPET_DURATIONS.length - 1]; // 16s
   const BARS = 72;
   const rowIndices = Array.from({ length: MAX_ATTEMPTS }, (_, i) => i);
@@ -73,9 +74,7 @@
   // on les restaure depuis le localStorage quand ils existent, sinon on affiche
   // au moins « Passé » pour les tours sautés.
   function restoreLabels(attemptIds, saved) {
-    return attemptIds.map(
-      (id, i) => saved?.[i] || (id === "__skip__" ? "Passé" : "Essai joué"),
-    );
+    return attemptIds.map((id, i) => (id === SKIP ? "" : (saved?.[i] ?? "")));
   }
 
   async function computeAndSetStreak() {
@@ -210,6 +209,31 @@
     errorMsg = "Cet extrait n'a pas pu être chargé, réessaie plus tard.";
   }
 
+  // ── Volume (mémorisé d'une partie à l'autre) ───────────────────────────────
+  const VOLUME_KEY = "zikle_volume";
+  let volume = $state(0.8);
+  let muted = $state(false);
+
+  onMount(() => {
+    const saved = parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
+    if (Number.isFinite(saved) && saved >= 0 && saved <= 1) volume = saved;
+  });
+
+  // S'applique aussi quand l'element audio arrive après coup.
+  $effect(() => {
+    if (audioEl) audioEl.volume = muted ? 0 : volume;
+  });
+
+  function onVolumeInput(e) {
+    volume = Number(e.currentTarget.value);
+    if (volume > 0) muted = false;
+    localStorage.setItem(VOLUME_KEY, String(volume));
+  }
+
+  function toggleMute() {
+    muted = !muted;
+  }
+
   // ── Recherche ──────────────────────────────────────────────────────────────
   let searchTimer;
   function onQueryInput() {
@@ -289,8 +313,8 @@
   async function skipAttempt() {
     if (finished) return;
     const rowIdx = attempts.length;
-    attempts = [...attempts, "__skip__"];
-    attemptLabels = [...attemptLabels, "Passé"];
+    attempts = [...attempts, SKIP];
+    attemptLabels = [...attemptLabels, ""];
     if (attempts.length >= MAX_ATTEMPTS) {
       await endRound(false);
     } else {
@@ -361,21 +385,33 @@
     {#each rowIndices as i (i)}
       {@const filled = i < attempts.length}
       {@const isWin = finished && won && i === attempts.length - 1}
+      {@const isSkip = filled && attempts[i] === SKIP}
       {@const isCurrent = i === attempts.length && !finished}
       <li
         class="zk-row"
-        class:zk-row-filled={filled && !isWin}
+        class:zk-row-filled={filled && !isWin && !isSkip}
+        class:zk-row-skip={isSkip}
         class:zk-row-win={isWin}
         class:zk-row-current={isCurrent}
         class:zk-row-shake={shakeRow === i}
         style="--i: {i}"
       >
         <span class="zk-row-n">{i + 1}</span>
-        <span class="zk-row-label">
-          {#if filled}{attemptLabels[i] || "—"}{/if}
+        <span class="zk-row-body">
+          {#if isWin}
+            <span class="zk-row-state zk-state-win">Trouvé</span>
+            <span class="zk-row-label">{attemptLabels[i]}</span>
+          {:else if isSkip}
+            <span class="zk-row-state zk-state-skip">Passé</span>
+          {:else if filled}
+            <span class="zk-row-state zk-state-wrong">Raté</span>
+            <span class="zk-row-label">{attemptLabels[i] || "Proposition oubliée"}</span>
+          {:else if isCurrent}
+            <span class="zk-row-state zk-state-now">À toi</span>
+          {/if}
         </span>
         <span class="zk-row-mark" aria-hidden="true">
-          {#if isWin}✓{:else if filled}✕{/if}
+          {#if isWin}✓{:else if isSkip}⤼{:else if filled}✕{/if}
         </span>
       </li>
     {/each}
@@ -423,6 +459,28 @@
       <span class="zk-play-dur">{unlocked}s</span>
     </button>
 
+    <div class="zk-volume">
+      <button
+        class="zk-vol-btn"
+        onclick={toggleMute}
+        aria-label={muted || volume === 0 ? "Réactiver le son" : "Couper le son"}
+      >
+        {muted || volume === 0 ? "🔇" : volume < 0.45 ? "🔉" : "🔊"}
+      </button>
+      <input
+        class="zk-vol-slider"
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        value={volume}
+        oninput={onVolumeInput}
+        aria-label="Volume"
+        style="--fill: {(muted ? 0 : volume) * 100}%"
+      />
+      <span class="zk-vol-val">{Math.round((muted ? 0 : volume) * 100)}</span>
+    </div>
+
     <!-- Saisie -->
     <div class="zk-input-row">
       <div class="zk-search">
@@ -450,6 +508,11 @@
       </div>
       <button class="zk-skip" onclick={skipAttempt}>Passer</button>
     </div>
+
+    <p class="zk-source">
+      Les titres sont tirés du top Deezer — que des morceaux qui ont marché.
+      <a href="/docs#zikle">Comment ça marche</a>
+    </p>
   {:else}
     <!-- Résultat -->
     <div class="zk-result">
@@ -583,7 +646,7 @@
   }
   .zk-row {
     display: grid;
-    grid-template-columns: 30px 1fr 26px;
+    grid-template-columns: 30px minmax(0, 1fr) 26px;
     align-items: center;
     gap: 10px;
     height: clamp(38px, 6vh, 52px);
@@ -602,7 +665,42 @@
     font-size: 0.72rem;
     color: var(--dim);
   }
+  /* Corps de ligne : une étiquette d'état + éventuellement ce qui a été proposé */
+  .zk-row-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    text-align: left;
+  }
+  .zk-row-state {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    font-family: var(--zk-cond);
+    font-weight: 900;
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .zk-state-win {
+    background: rgb(var(--accent-rgb) / 0.2);
+    color: var(--accent);
+  }
+  .zk-state-wrong {
+    background: rgb(248 113 113 / 0.16);
+    color: var(--danger);
+  }
+  .zk-state-skip {
+    background: rgb(var(--c-glass) / 0.08);
+    color: var(--mid);
+  }
+  .zk-state-now {
+    background: transparent;
+    color: var(--accent);
+    padding-left: 0;
+  }
   .zk-row-label {
+    min-width: 0;
     font-family: var(--zk-cond);
     font-weight: 700;
     font-size: 0.86rem;
@@ -612,7 +710,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: left;
   }
   .zk-row-mark {
     font-family: var(--zk-mono);
@@ -637,6 +734,13 @@
   }
   .zk-row-filled .zk-row-mark {
     color: var(--danger);
+  }
+  .zk-row-skip {
+    border-left-color: var(--dim);
+    background: rgb(var(--c-glass) / 0.03);
+  }
+  .zk-row-skip .zk-row-mark {
+    color: var(--dim);
   }
   .zk-row-win {
     border-color: var(--accent);
@@ -834,6 +938,72 @@
     opacity: 0.72;
   }
 
+  /* ── Volume ── */
+  .zk-volume {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: zk-in 0.5s 0.5s ease both;
+  }
+  .zk-vol-btn {
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.98rem;
+    line-height: 1;
+    cursor: pointer;
+    filter: grayscale(1);
+    opacity: 0.7;
+    transition: opacity 0.15s;
+  }
+  .zk-vol-btn:hover {
+    opacity: 1;
+  }
+  .zk-vol-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    border-radius: 0;
+    background: linear-gradient(
+      to right,
+      var(--accent) 0 var(--fill),
+      rgb(var(--c-glass) / 0.12) var(--fill) 100%
+    );
+    outline: none;
+    cursor: pointer;
+  }
+  .zk-vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    background: var(--text);
+    border: none;
+    cursor: pointer;
+  }
+  .zk-vol-slider::-moz-range-thumb {
+    width: 13px;
+    height: 13px;
+    background: var(--text);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+  }
+  .zk-vol-slider:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .zk-vol-val {
+    font-family: var(--zk-mono);
+    font-size: 0.68rem;
+    color: var(--dim);
+    width: 22px;
+    text-align: right;
+  }
+
   /* ── Saisie ── */
   .zk-input-row {
     display: flex;
@@ -944,6 +1114,23 @@
     background: rgb(var(--c-glass) / 0.06);
     color: var(--text);
     border-color: var(--text);
+  }
+
+  .zk-source {
+    margin: 0;
+    text-align: center;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: var(--dim);
+    animation: zk-in 0.5s 0.6s ease both;
+  }
+  .zk-source a {
+    color: var(--mid);
+    border-bottom: 1px solid var(--border2);
+    transition: color 0.15s;
+  }
+  .zk-source a:hover {
+    color: var(--accent);
   }
 
   .zk-error {

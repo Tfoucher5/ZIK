@@ -10,6 +10,7 @@
     { id: 'rejoindre', label: 'Rejoindre une partie' },
     { id: 'jouer', label: 'Comment jouer' },
     { id: 'points', label: 'Système de points' },
+    { id: 'zikle', label: 'Zikle — chanson du jour' },
     { id: 'salon', label: 'Mode Salon' },
     { id: 'qcm', label: 'Mode QCM multijoueur' },
     { id: 'playlists', label: 'Playlists' },
@@ -57,6 +58,9 @@
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
+      { "@type": "Question", "name": "Qu'est-ce que Zikle ?", "acceptedAnswer": { "@type": "Answer", "text": "Zikle est le jeu quotidien de ZIK : une seule chanson par jour, la même pour tous les joueurs, à deviner en 6 essais maximum. L'extrait audio s'allonge à chaque erreur (1s, 2s, 4s, 7s, 11s puis 16s). Il se joue seul, gratuitement et sans compte, avec un nouveau titre chaque jour à minuit heure de Paris." } },
+      { "@type": "Question", "name": "Faut-il un compte pour jouer à Zikle ?", "acceptedAnswer": { "@type": "Answer", "text": "Non pour le Zikle du jour, accessible librement sans inscription. Un compte gratuit est nécessaire uniquement pour rejouer les journées passées dans les archives, apparaître au classement du jour et conserver durablement sa série. Sans compte, la progression reste stockée dans le navigateur utilisé." } },
+      { "@type": "Question", "name": "D'où viennent les chansons de Zikle ?", "acceptedAnswer": { "@type": "Answer", "text": "Les titres sont tirés du top Deezer, rafraîchi automatiquement chaque semaine : uniquement des morceaux populaires, jamais des titres obscurs. Un même titre ne peut pas revenir avant 365 jours, ce qui évite toute répétition sur une année." } },
       { "@type": "Question", "name": "Faut-il un compte pour jouer au blind test sur ZIK ?", "acceptedAnswer": { "@type": "Answer", "text": "Non, le mode invité permet de jouer immédiatement sans inscription, juste avec un pseudo. Créer un compte gratuit vous donne accès au classement ELO, aux statistiques personnelles et aux playlists personnalisées." } },
       { "@type": "Question", "name": "Comment rejoindre une partie de blind test en ligne sur ZIK ?", "acceptedAnswer": { "@type": "Answer", "text": "Deux façons : rejoindre une room officielle depuis la page d'accueil en cliquant sur JOUER, ou entrer un code de room partagé par un ami. Aucune installation requise, tout se passe dans le navigateur." } },
       { "@type": "Question", "name": "Comment fonctionne le système de points au blind test ZIK ?", "acceptedAnswer": { "@type": "Answer", "text": "En mode texte libre : Artiste trouvé = 1 pt + bonus vitesse, Titre trouvé = 1 pt + bonus vitesse. Le bonus vitesse va de +3 pts en moins de 3 secondes à 0 pt après 18 secondes. En Mode Salon QCM : entre 1 000 pts (réponse immédiate) et 200 pts (dernière seconde), selon la rapidité." } },
@@ -404,6 +408,49 @@
       <p>
         Un tableau de scores s'affiche en temps réel dans la room, mis à jour après chaque validation. Le joueur avec le plus de points en tête de liste est celui qui a répondu le plus vite et le plus souvent correctement. En Mode Salon, le classement est affiché sur l'écran hôte entre chaque manche.
       </p>
+    </section>
+
+    <!-- ── ZIKLE ── -->
+    <section>
+      <h2 id="zikle">Zikle — la chanson du jour</h2>
+
+      <h3>Le principe</h3>
+      <p>
+        <a href="/zikle">Zikle</a> est un jeu solo quotidien : <strong>un seul titre par jour</strong>, le même pour tout le monde, à deviner en <strong>6 essais maximum</strong>. Vous démarrez avec 1 seconde d'extrait ; à chaque essai raté ou passé, la fenêtre d'écoute s'agrandit — 1s, 2s, 4s, 7s, 11s, puis 16s. Plus vous trouvez tôt, meilleur est votre score.
+      </p>
+      <p>
+        Aucun compte n'est nécessaire pour jouer le Zikle du jour. Un nouveau titre tombe chaque jour à minuit (heure de Paris).
+      </p>
+
+      <h3>D'où viennent les titres ?</h3>
+      <p>
+        Les titres proviennent du <strong>top Deezer</strong>, rafraîchi automatiquement chaque semaine. Ce ne sont donc que des morceaux qui ont réellement marché — pas de titres obscurs impossibles à reconnaître. Un même titre ne peut pas revenir avant <strong>365 jours</strong>, ce qui garantit qu'un joueur régulier ne retombera jamais deux fois sur la même chanson dans l'année.
+      </p>
+
+      <h3>Trouver la réponse</h3>
+      <ol class="doc-list">
+        <li>Cliquez sur <strong>Écouter</strong> pour lancer l'extrait débloqué (réglez le volume avec le curseur juste en dessous)</li>
+        <li>Tapez un titre ou un artiste : une liste de suggestions apparaît, navigable au clavier (flèches, Entrée, Échap)</li>
+        <li>Validez une suggestion pour proposer, ou cliquez sur <strong>Passer</strong> pour débloquer la suite sans proposer</li>
+        <li>Chaque ligne indique son état : <strong>Trouvé</strong>, <strong>Raté</strong> (avec la proposition faite) ou <strong>Passé</strong></li>
+      </ol>
+
+      <h3>Série, classement et partage</h3>
+      <p>
+        Votre <strong>série</strong> compte les jours gagnés d'affilée. En fin de partie, un <strong>classement du jour</strong> affiche les joueurs connectés ayant trouvé, triés par nombre d'essais puis par rapidité. Le bouton <strong>Partager</strong> copie une grille d'emojis sans spoiler : elle montre en combien d'essais et sur quelle durée d'extrait vous avez trouvé.
+      </p>
+
+      <h3>Archives</h3>
+      <p>
+        Les <a href="/zikle/archives">archives</a> regroupent tous les jours passés. Les rejouer demande un <strong>compte gratuit</strong> — le Zikle du jour, lui, reste toujours libre d'accès. Les jours déjà terminés y apparaissent avec votre score.
+      </p>
+
+      <div class="doc-tip">
+        <span class="doc-tip-icon">💡</span>
+        <div>
+          <strong>Connectez-vous pour garder vos stats :</strong> sans compte, votre série et votre historique ne vivent que dans le navigateur utilisé (ils disparaissent si vous videz son cache). Avec un compte, tout est conservé, vous apparaissez au classement et vous gagnez de l'XP à chaque victoire.
+        </div>
+      </div>
     </section>
 
     <!-- ── SALON ── -->
@@ -850,6 +897,33 @@
       <p>Réponses aux questions les plus fréquentes.</p>
 
       <div class="faq-list">
+        <details class="faq-item">
+          <summary>Qu'est-ce que Zikle ?</summary>
+          <div class="faq-body">
+            <p>
+              Zikle est le jeu quotidien de ZIK : une seule chanson par jour, la même pour tous les joueurs, à deviner en 6 essais maximum à partir d'un extrait audio qui s'allonge à chaque erreur (1s, 2s, 4s, 7s, 11s, 16s). Il se joue seul, sans compte, et un nouveau titre tombe chaque jour à minuit heure de Paris. Voir <a href="/zikle">la page du jeu</a>.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Faut-il un compte pour jouer à Zikle ?</summary>
+          <div class="faq-body">
+            <p>
+              Non pour le Zikle du jour : il est accessible librement, sans inscription. Un compte gratuit est en revanche nécessaire pour rejouer les journées passées dans les <a href="/zikle/archives">archives</a>, apparaître au classement du jour et conserver durablement sa série. Sans compte, la progression est stockée uniquement dans le navigateur utilisé.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>D'où viennent les chansons de Zikle ?</summary>
+          <div class="faq-body">
+            <p>
+              Les titres sont tirés du top Deezer, rafraîchi automatiquement chaque semaine : ce sont donc uniquement des morceaux populaires, pas des titres obscurs. Un même titre ne peut pas être rejoué avant 365 jours, ce qui évite toute répétition sur une année.
+            </p>
+          </div>
+        </details>
+
         <details class="faq-item">
           <summary>Pourquoi ma réponse n'est pas acceptée alors qu'elle est correcte ?</summary>
           <div class="faq-body">

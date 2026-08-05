@@ -9,3 +9,6 @@ Disallow: /salon/host
 Disallow: /salon/play
 
 Sitemap: https://www.zik-music.fr/sitemap.xml
+
+# Description du site pour les agents et modèles de langage
+# https://www.zik-music.fr/llms.txt

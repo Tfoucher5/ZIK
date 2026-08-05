@@ -1,0 +1,42 @@
+# ZIK
+
+> Blind test musical multijoueur en ligne, gratuit et en français. Jouable dans le navigateur, sans installation et sans inscription obligatoire.
+
+ZIK propose plusieurs façons de jouer :
+
+- **Rooms multijoueur** — parties en temps réel, en saisie libre (artiste + titre) ou en QCM. Classement ELO pour les joueurs inscrits.
+- **Zikle** — jeu quotidien solo : une seule chanson par jour, la même pour tout le monde, à deviner en 6 essais. L'extrait audio s'allonge à chaque erreur (1s, 2s, 4s, 7s, 11s, 16s). Sans compte.
+- **Mode Salon** — blind test façon Kahoot pour soirées et salles de classe : l'hôte projette sur TV, les joueurs répondent sur leur téléphone via un QR code.
+- **Playlists** — création de playlists personnalisées, import depuis Deezer.
+
+## Pages principales
+
+- [Accueil](https://www.zik-music.fr/) : présentation et accès rapide aux rooms en direct.
+- [Zikle](https://www.zik-music.fr/zikle) : la chanson du jour, 6 essais, sans compte. Nouveau titre chaque jour à minuit (heure de Paris).
+- [Archives Zikle](https://www.zik-music.fr/zikle/archives) : rejouer les journées passées (compte gratuit requis).
+- [Rooms](https://www.zik-music.fr/rooms) : liste des salles de blind test multijoueur.
+- [Playlists](https://www.zik-music.fr/playlists) : playlists officielles et personnalisées.
+- [Classements](https://www.zik-music.fr/classements) : classement ELO et classement hebdomadaire.
+- [Mode Salon](https://www.zik-music.fr/salon) : blind test sur grand écran pour un groupe.
+- [Documentation](https://www.zik-music.fr/docs) : règles complètes, système de points, FAQ.
+- [Nouveautés](https://www.zik-music.fr/nouveautes) : journal des mises à jour.
+
+## Fonctionnement de Zikle
+
+- Un titre par jour, identique pour tous les joueurs, renouvelé à minuit heure de Paris.
+- 6 essais maximum. Chaque essai raté ou passé allonge l'extrait écoutable : 1s, 2s, 4s, 7s, 11s, 16s.
+- Les titres proviennent du top Deezer, rafraîchi chaque semaine : uniquement des morceaux populaires.
+- Un même titre ne peut pas revenir avant 365 jours.
+- Le Zikle du jour est jouable sans compte. Les archives demandent un compte gratuit.
+- Résultat partageable sous forme de grille d'emojis, sans révéler le titre.
+
+## À propos
+
+- Éditeur : Theo Foucher. Site en français, audience principalement francophone.
+- Les extraits audio proviennent des previews publiques Deezer (30 secondes maximum).
+- Gratuit, financé par la publicité. Aucune installation requise.
+
+## Notes pour les agents et modèles
+
+- Les pages `/game`, `/salon/host`, `/salon/play`, `/profile` et `/settings` sont des interfaces de jeu ou privées : elles ne sont pas indexées et n'ont pas d'intérêt documentaire.
+- Ne pas publier la réponse du Zikle en cours : elle n'est volontairement pas exposée avant la fin d'une partie.
