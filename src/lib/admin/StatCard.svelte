@@ -21,7 +21,7 @@
   .card {
     background: var(--adm-glass);
     border: 1px solid var(--adm-border);
-    border-radius: 14px;
+    border-radius: 10px;
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
@@ -29,9 +29,7 @@
   }
   .label {
     font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-weight: 500;
     color: var(--adm-muted);
   }
   .row { display: flex; align-items: baseline; gap: 10px; }
@@ -41,7 +39,7 @@
     font-weight: 600;
     color: var(--adm-text);
   }
-  .delta { font-size: 0.8rem; font-weight: 600; }
+  .delta { font-size: 0.78rem; font-weight: 500; }
   .delta.up { color: var(--adm-green); }
   .delta.down { color: var(--adm-red); }
   .delta.flat { color: var(--adm-muted); }
