@@ -179,6 +179,7 @@
         <a href="/rooms">Rooms</a>
         <a href="/playlists">Playlists</a>
         <a href="/classements">Classements</a>
+        <a href="/zikle">Zikle</a>
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Documentation</a>
         <a href="/nouveautes">Nouveautés</a>
