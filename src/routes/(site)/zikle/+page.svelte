@@ -16,12 +16,55 @@
   <meta property="og:image" content="https://www.zik-music.fr/og.png" />
 </svelte:head>
 
-<div class="zikle-page">
-  <h1>Zikle {data.dayNumber ? `#${data.dayNumber}` : ""}</h1>
+<main class="zikle-page">
+  <div class="zikle-glow" aria-hidden="true"></div>
 
   {#if !data.date}
-    <p>Pas de chanson disponible aujourd'hui, reviens un peu plus tard 🙏</p>
+    <p class="zikle-empty">Pas de chanson aujourd'hui. Reviens un peu plus tard.</p>
   {:else}
     <ZikleGame date={data.date} dayNumber={data.dayNumber} previewUrl={data.previewUrl} />
   {/if}
-</div>
+</main>
+
+<style>
+  /* Une seule zone plein écran : la scène est centrée dans le viewport,
+     sans en-tête empilé au-dessus (sinon le jeu est poussé hors de l'écran). */
+  .zikle-page {
+    position: relative;
+    /* La nav est fixe : on réserve sa hauteur sans dépasser le viewport,
+       sinon la page défile dès qu'on interagit. */
+    min-height: calc(100dvh - var(--nav-h));
+    margin-top: var(--nav-h);
+    padding: 32px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .zikle-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(120vw, 900px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgb(var(--accent-rgb) / 0.09), transparent 62%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .zikle-empty {
+    color: var(--mid);
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 768px) {
+    .zikle-page {
+      /* Laisse la place à la bottom-nav mobile */
+      padding-bottom: 64px;
+    }
+  }
+</style>
