@@ -412,7 +412,7 @@
 
     <!-- ── ZIKLE ── -->
     <section>
-      <h2 id="zikle">Zikle — la chanson du jour</h2>
+      <h2 id="zikle">Zikle - la chanson du jour</h2>
 
       <h3>Le principe</h3>
       <p>

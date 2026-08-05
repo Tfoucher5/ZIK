@@ -75,7 +75,17 @@
       "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" log --oneline -15 feat/refonte-graphique)",
       "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff --stat master...feat/refonte-graphique)",
       "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff --stat)",
-      "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff src/lib/components/AdSlot.svelte)"
+      "Bash(git -C \"C:\\\\Users\\\\Teamr\\\\Desktop\\\\ZIK\" diff src/lib/components/AdSlot.svelte)",
+      "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" 4cc75dd HEAD)",
+      "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" 1b9bc68 HEAD)",
+      "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" 1197249 HEAD)",
+      "Bash(timeout 30 npx vite dev --port 5199)",
+      "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" 824935e HEAD)",
+      "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" c38eae0 HEAD)",
+      "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" 8828ea9 HEAD)",
+      "mcp__plugin_supabase_supabase__list_projects",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "mcp__plugin_supabase_supabase__list_migrations"
     ]
   }
 }
