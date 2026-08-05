@@ -3,6 +3,22 @@
 
 export const NEWS = [
   {
+    date: "2026-08-05",
+    version: "3.2.0",
+    tag: "Nouveauté",
+    title: "Zikle — la chanson du jour",
+    items: [
+      "Nouveau jeu quotidien solo : une seule chanson par jour, la même pour tout le monde, à deviner en 6 essais. L'extrait démarre à 1 seconde et s'allonge à chaque erreur (1s, 2s, 4s, 7s, 11s, 16s).",
+      "Jouable sans compte : le Zikle du jour est accessible librement, comme le reste du site en mode invité.",
+      "Les titres sont tirés du top Deezer, rafraîchi chaque semaine — que des morceaux qui ont marché, et jamais deux fois le même titre avant 365 jours.",
+      "Chaque essai indique clairement son état : trouvé, raté (avec la proposition faite) ou passé.",
+      "Réglage du volume directement sous le lecteur, mémorisé d'une partie à l'autre.",
+      "Série de jours gagnés d'affilée, classement du jour pour les joueurs connectés, et partage d'une grille d'emojis sans spoiler.",
+      "Archives : rejoue les journées passées avec un compte gratuit. Les jours déjà terminés y affichent ton score.",
+      "Zikle est accessible depuis la navigation du site, en haut sur ordinateur et dans la barre du bas sur mobile.",
+    ],
+  },
+  {
     date: "2026-07-11",
     version: "3.0.0",
     tag: "Nouveauté",
