@@ -12,6 +12,7 @@
   const _ctx = getContext("zik");
   const sb = _ctx.sb;
   const user = $derived(_ctx.user);
+  const authReady = $derived(_ctx.authReady);
 
   const STORAGE_KEY = "zikle_history"; // { [date]: { attempts: string[], won: boolean } }
 
@@ -27,6 +28,8 @@
   let startedAt = $state(0);
   let shareCopied = $state(false);
   let leaderboard = $state([]);
+  let errorMsg = $state("");
+  let authInitDone = false;
 
   function loadGuestHistory() {
     try {
@@ -57,30 +60,73 @@
     }
   }
 
+  async function fetchRevealAndLeaderboard(attemptIds, isWon) {
+    const solveTime = Math.round((Date.now() - startedAt) / 1000);
+    const res = await fetch("/api/zikle/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(await authHeader()) },
+      body: JSON.stringify({
+        date,
+        attempts: attemptIds.length,
+        won: isWon,
+        solve_time_seconds: solveTime,
+        guesses: attemptIds,
+      }),
+    });
+    if (!res.ok) {
+      errorMsg = "Impossible de récupérer le résultat, réessaie plus tard.";
+      return;
+    }
+    const payload = await res.json();
+    reveal = payload.track;
+
+    const lbRes = await fetch(`/api/zikle/leaderboard?date=${date}`);
+    leaderboard = lbRes.ok ? await lbRes.json() : [];
+  }
+
+  // Ne décide invité vs connecté qu'une fois authReady vrai : tant que le parent
+  // n'a pas résolu la session (cf. (site)/+layout.svelte), `user` vaut toujours
+  // null même pour un connecté, ce qui écraserait son état avec le localStorage invité.
+  async function initFromAuthState(isGuest) {
+    if (isGuest) {
+      const history = loadGuestHistory();
+      const todays = history[date];
+      if (todays) {
+        finished = true;
+        won = todays.won;
+        attempts = todays.attempts;
+        await fetchRevealAndLeaderboard(todays.attempts, todays.won);
+      }
+    }
+    await computeAndSetStreak();
+  }
+
   onMount(() => {
     startedAt = Date.now();
-    const history = loadGuestHistory();
-    const todays = history[date];
-    if (todays && !user) {
-      finished = true;
-      won = todays.won;
-      attempts = todays.attempts;
-    }
-    computeAndSetStreak();
   });
 
+  $effect(() => {
+    if (!authReady || authInitDone) return;
+    authInitDone = true;
+    const isGuest = !user;
+    initFromAuthState(isGuest);
+  });
+
+  let stopListener;
   function playSnippet() {
     if (!audioEl) return;
+    if (stopListener) audioEl.removeEventListener("timeupdate", stopListener);
     const dur = durationForAttempt(attempts.length);
     audioEl.currentTime = 0;
     audioEl.play();
-    const stop = () => {
+    stopListener = () => {
       if (audioEl.currentTime >= dur) {
         audioEl.pause();
-        audioEl.removeEventListener("timeupdate", stop);
+        audioEl.removeEventListener("timeupdate", stopListener);
+        stopListener = null;
       }
     };
-    audioEl.addEventListener("timeupdate", stop);
+    audioEl.addEventListener("timeupdate", stopListener);
   }
 
   let searchTimer;
@@ -105,11 +151,16 @@
 
   async function submitGuess(track) {
     if (finished) return;
+    errorMsg = "";
     const res = await fetch("/api/zikle/guess", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeader()) },
       body: JSON.stringify({ date, track_id: track.id }),
     });
+    if (!res.ok) {
+      errorMsg = "Erreur serveur, cet essai n'a pas été compté — réessaie.";
+      return;
+    }
     const { correct } = await res.json();
     attempts = [...attempts, track.id];
     attemptLabels = [...attemptLabels, `${track.artist} - ${track.title}`];
@@ -133,24 +184,8 @@
   async function endRound(isWon) {
     finished = true;
     won = isWon;
-    const solveTime = Math.round((Date.now() - startedAt) / 1000);
 
-    const res = await fetch("/api/zikle/complete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...(await authHeader()) },
-      body: JSON.stringify({
-        date,
-        attempts: attempts.length,
-        won: isWon,
-        solve_time_seconds: solveTime,
-        guesses: attempts,
-      }),
-    });
-    const payload = await res.json();
-    reveal = payload.track;
-
-    const lbRes = await fetch(`/api/zikle/leaderboard?date=${date}`);
-    leaderboard = lbRes.ok ? await lbRes.json() : [];
+    await fetchRevealAndLeaderboard(attempts, isWon);
 
     if (!user) saveGuestResult(date, attempts, isWon);
     await computeAndSetStreak();
@@ -172,6 +207,10 @@
 
 {#if streak > 0}
   <p class="zikle-streak">🔥 Série : {streak} jour{streak > 1 ? "s" : ""}</p>
+{/if}
+
+{#if errorMsg}
+  <p class="zikle-error">{errorMsg}</p>
 {/if}
 
 {#if !finished}
