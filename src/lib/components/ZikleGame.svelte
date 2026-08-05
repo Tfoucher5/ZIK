@@ -97,6 +97,18 @@
         attempts = todays.attempts;
         await fetchRevealAndLeaderboard(todays.attempts, todays.won);
       }
+    } else {
+      const { data: existing } = await sb
+        .from("daily_results")
+        .select("attempts, won, guesses")
+        .eq("date", date)
+        .maybeSingle();
+      if (existing) {
+        finished = true;
+        won = existing.won;
+        attempts = existing.guesses;
+        await fetchRevealAndLeaderboard(existing.guesses, existing.won);
+      }
     }
     await computeAndSetStreak();
   }
