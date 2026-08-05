@@ -350,11 +350,19 @@ img {
 @media (max-width: 768px) {
   #bottom-nav {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
   main,
   .page-content {
     padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  }
+}
+/* 6 entrées : on resserre le libellé pour éviter la troncature sur petit écran */
+@media (max-width: 420px) {
+  .bottom-nav-item {
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+    padding: 6px 2px;
   }
 }
 

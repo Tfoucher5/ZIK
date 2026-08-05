@@ -1,23 +1,63 @@
 <script>
   import { getContext } from "svelte";
-  import { waveformForDate } from "$lib/zikle/shared.js";
+  import { MAX_ATTEMPTS, waveformForDate } from "$lib/zikle/shared.js";
 
   let { data } = $props();
 
   const _ctx = getContext("zik");
+  const sb = _ctx.sb;
   const user = $derived(_ctx.user);
   const authReady = $derived(_ctx.authReady);
   const openAuthModal = _ctx.openAuthModal;
 
   const MINI_BARS = 72;
+  const STORAGE_KEY = "zikle_history";
   const dateFmt = new Intl.DateTimeFormat("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
+  // date -> { won, attempts } pour les jours déjà terminés
+  let played = $state({});
+  let loadedFor = null;
+
   function prettyDate(d) {
     return dateFmt.format(new Date(`${d}T12:00:00Z`));
+  }
+
+  // Comme pour le jeu, on attend authReady : avant, `user` vaut toujours null
+  // et on lirait l'historique invité pour un compte connecté.
+  $effect(() => {
+    if (!authReady) return;
+    const key = user ? user.id : "guest";
+    if (loadedFor === key) return;
+    loadedFor = key;
+    loadPlayed();
+  });
+
+  async function loadPlayed() {
+    if (user) {
+      const { data: rows } = await sb
+        .from("daily_results")
+        .select("date, won, attempts")
+        .limit(500);
+      played = Object.fromEntries(
+        (rows || []).map((r) => [r.date, { won: r.won, attempts: r.attempts }]),
+      );
+      return;
+    }
+    try {
+      const hist = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      played = Object.fromEntries(
+        Object.entries(hist).map(([d, v]) => [
+          d,
+          { won: v.won, attempts: v.attempts?.length ?? 0 },
+        ]),
+      );
+    } catch {
+      played = {};
+    }
   }
 </script>
 
@@ -64,16 +104,27 @@
   {:else}
     <ol class="za-list">
       {#each data.days as day, i (day.date)}
+        {@const done = played[day.date]}
         <li style="--i: {Math.min(i, 14)}">
-          <a class="za-item" href="/zikle/archives/{day.date}">
+          <a
+            class="za-item"
+            class:za-done={done}
+            class:za-done-win={done?.won}
+            href="/zikle/archives/{day.date}"
+          >
             <span class="za-n">#{day.dayNumber}</span>
             <span class="za-wave" aria-hidden="true">
               {#each waveformForDate(day.date, MINI_BARS) as h, b (b)}
                 <span style="--h: {h}; --b: {b}"></span>
               {/each}
             </span>
+            {#if done}
+              <span class="za-badge" class:za-badge-win={done.won}>
+                {done.won ? `${done.attempts}/${MAX_ATTEMPTS}` : `X/${MAX_ATTEMPTS}`}
+              </span>
+            {/if}
             <span class="za-date">{prettyDate(day.date)}</span>
-            <span class="za-go" aria-hidden="true">→</span>
+            <span class="za-go" aria-hidden="true">{done ? "↻" : "→"}</span>
           </a>
         </li>
       {/each}
@@ -223,7 +274,7 @@
 
   .za-item {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto auto;
     align-items: center;
     gap: 18px;
     padding: 14px 18px;
@@ -278,6 +329,30 @@
   .za-item:hover .za-wave span {
     background: rgb(var(--accent-rgb) / 0.6);
     transform: scaleY(1.15);
+  }
+
+  /* Jour déjà terminé : la ligne reste lisible mais se distingue au premier coup d'œil */
+  .za-badge {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 3px 7px;
+    background: rgb(248 113 113 / 0.15);
+    color: var(--danger);
+    white-space: nowrap;
+  }
+  .za-badge-win {
+    background: rgb(var(--accent-rgb) / 0.18);
+    color: var(--accent);
+  }
+  .za-done {
+    border-left-color: var(--danger);
+  }
+  .za-done-win {
+    border-left-color: var(--accent);
+  }
+  .za-done .za-wave span {
+    background: rgb(var(--c-glass) / 0.07);
   }
 
   .za-date {
@@ -370,8 +445,8 @@
 
   @media (max-width: 620px) {
     .za-item {
-      grid-template-columns: auto 1fr auto;
-      gap: 12px;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 10px;
       padding: 12px 14px;
     }
     /* L'onde passe en pleine largeur sous l'en-tête de ligne sur petit écran. */

@@ -17,6 +17,7 @@
     if (path.startsWith('/rooms')) return 'rooms';
     if (path.startsWith('/playlists')) return 'playlists';
     if (path.startsWith('/classements')) return 'classements';
+    if (path.startsWith('/zikle')) return 'zikle';
     if (path.startsWith('/salon')) return 'salon';
     if (path.startsWith('/docs')) return 'docs';
     if (path.startsWith('/profile') || path.startsWith('/user')) return 'profile';
@@ -36,6 +37,10 @@
 
   <div class="nav-links">
     <a href="/rooms"        class="nav-link" class:active={activeSection === 'rooms'}>Rooms</a>
+    <span class="nav-sep" aria-hidden="true">·</span>
+    <a href="/zikle"       class="nav-link nav-link-zikle" class:active={activeSection === 'zikle'}>
+      Zikle<span class="nav-zikle-dot" aria-hidden="true"></span>
+    </a>
     <span class="nav-sep" aria-hidden="true">·</span>
     <a href="/playlists"   class="nav-link" class:active={activeSection === 'playlists'}>Playlists</a>
     <span class="nav-sep" aria-hidden="true">·</span>
@@ -63,6 +68,7 @@
           <a href="/settings" class="nav-dd-item">Param&egrave;tres</a>
           <hr class="nav-dd-sep nav-dd-mobile-only">
           <a href="/rooms"        class="nav-dd-item nav-dd-mobile-only">Rooms</a>
+          <a href="/zikle"       class="nav-dd-item nav-dd-mobile-only">Zikle</a>
           <a href="/playlists"   class="nav-dd-item nav-dd-mobile-only">Playlists</a>
           <a href="/classements" class="nav-dd-item nav-dd-mobile-only">Classements</a>
           <a href="/salon"       class="nav-dd-item nav-dd-mobile-only">Mode Salon</a>
@@ -95,6 +101,10 @@
     <span class="bn-home-inner">
       <svg viewBox="0 0 24 24"><polyline points="22 12 12 2 2 12"/><path d="M5 12v7a1 1 0 001 1h4v-4h4v4h4a1 1 0 001-1v-7"/></svg>
     </span>
+  </a>
+  <a href="/zikle" class="bottom-nav-item" class:active={activeSection === 'zikle'}>
+    <svg viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11h2"/></svg>
+    Zikle
   </a>
   <a href="/salon" class="bottom-nav-item" class:active={activeSection === 'salon'}>
     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>

@@ -6,6 +6,7 @@
     durationForAttempt,
     computeStreak,
     buildShareGrid,
+    buildShareSquares,
     waveformForDate,
   } from "$lib/zikle/shared.js";
 
@@ -45,6 +46,14 @@
 
   const unlocked = $derived(finished ? TOTAL : durationForAttempt(attempts.length));
   const unlockedRatio = $derived(unlocked / TOTAL);
+
+  // Le classement peut grandir : on n'en affiche qu'une tranche fixe et on
+  // résume le reste, pour que la mise en page ne bouge pas.
+  const LB_VISIBLE = 5;
+  const myUsername = $derived(_ctx.user?.profile?.username ?? null);
+  const myRank = $derived(
+    myUsername ? leaderboard.findIndex((r) => r.username === myUsername) + 1 : 0,
+  );
 
   function loadGuestHistory() {
     try {
@@ -301,13 +310,23 @@
     await computeAndSetStreak();
   }
 
+  const shareSquares = $derived(
+    buildShareSquares(attempts, won ? attempts.at(-1) : "", won),
+  );
+
   async function share() {
-    const text = buildShareGrid(dayNumber, attempts, won ? attempts.at(-1) : "", won);
+    const text = buildShareGrid(
+      dayNumber,
+      attempts,
+      won ? attempts.at(-1) : "",
+      won,
+      { streak },
+    );
     if (navigator.share) {
       try {
         await navigator.share({ text });
       } catch {
-        /* partage annulé */
+        /* partage annulé par l'utilisateur */
       }
       return;
     }
@@ -457,18 +476,48 @@
       </div>
     </div>
 
+    <!-- Aperçu de ce qui sera partagé : on voit sa performance avant d'envoyer. -->
+    <div class="zk-card">
+      <div class="zk-card-head">
+        <span class="zk-card-title">Zikle <b>#{dayNumber}</b></span>
+        <span class="zk-card-score" class:zk-card-score-win={won}>
+          {won ? `${attempts.length}/${MAX_ATTEMPTS}` : `X/${MAX_ATTEMPTS}`}
+        </span>
+      </div>
+      <div class="zk-card-squares">
+        {#each shareSquares as sq, i (i)}
+          <span style="--i: {i}">{sq}</span>
+        {/each}
+      </div>
+      <p class="zk-card-line">
+        {won
+          ? `Trouvé en ${durationForAttempt(attempts.length - 1)}s d'extrait`
+          : `Pas trouvé en ${TOTAL}s`}
+        {#if streak > 1}<span class="zk-card-streak">· Série de {streak} jours</span>{/if}
+      </p>
+    </div>
+
     {#if leaderboard.length}
       <div class="zk-lb">
-        <h3 class="zk-lb-title">Classement du jour</h3>
+        <h3 class="zk-lb-title">
+          Classement du jour
+          <span class="zk-lb-total">{leaderboard.length}{leaderboard.length >= 20 ? "+" : ""}</span>
+        </h3>
         <ol class="zk-lb-list">
-          {#each leaderboard.slice(0, 5) as row, i (row.username)}
-            <li>
+          {#each leaderboard.slice(0, LB_VISIBLE) as row, i (row.username)}
+            <li class:zk-lb-me={user && row.username === myUsername}>
               <span class="zk-lb-rank">{i + 1}</span>
               <span class="zk-lb-name">{row.username}</span>
               <span class="zk-lb-score">{row.attempts}/{MAX_ATTEMPTS}</span>
             </li>
           {/each}
         </ol>
+        {#if leaderboard.length > LB_VISIBLE}
+          <p class="zk-lb-more">
+            +{leaderboard.length - LB_VISIBLE} autre{leaderboard.length - LB_VISIBLE > 1 ? "s" : ""}
+            {#if myRank > LB_VISIBLE}<span class="zk-lb-myrank">· toi {myRank}<sup>e</sup></span>{/if}
+          </p>
+        {/if}
       </div>
     {/if}
   {/if}
@@ -1035,10 +1084,84 @@
   }
 
   /* ── Classement ── */
+  /* ── Carte de partage ── */
+  .zk-card {
+    padding: 16px 18px;
+    background: rgb(var(--c-glass) / 0.03);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    animation: zk-in 0.5s 0.18s ease both;
+  }
+  .zk-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .zk-card-title {
+    font-family: var(--zk-cond);
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .zk-card-title b {
+    font-family: var(--zk-mono);
+    letter-spacing: 0;
+    color: var(--text);
+  }
+  .zk-card-score {
+    font-family: var(--zk-mono);
+    font-weight: 700;
+    font-size: 0.94rem;
+    color: var(--danger);
+  }
+  .zk-card-score-win {
+    color: var(--accent);
+  }
+  .zk-card-squares {
+    display: flex;
+    gap: 6px;
+    font-size: clamp(1.2rem, 4.6vw, 1.6rem);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .zk-card-squares span {
+    animation: zk-sq 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.25s + var(--i) * 0.07s);
+  }
+  .zk-card-line {
+    margin: 0;
+    font-family: var(--zk-cond);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+  .zk-card-streak {
+    color: var(--accent);
+  }
+  @keyframes zk-sq {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   .zk-lb {
-    animation: zk-in 0.5s 0.2s ease both;
+    animation: zk-in 0.5s 0.28s ease both;
   }
   .zk-lb-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0 0 8px;
     font-family: var(--zk-cond);
     font-weight: 700;
@@ -1046,6 +1169,12 @@
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--dim);
+  }
+  .zk-lb-total {
+    font-family: var(--zk-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0;
+    color: var(--accent);
   }
   .zk-lb-list {
     list-style: none;
@@ -1056,11 +1185,16 @@
   }
   .zk-lb-list li {
     display: grid;
-    grid-template-columns: 22px 1fr auto;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
     padding: 7px 10px;
     border-bottom: 1px solid var(--border);
+  }
+  .zk-lb-me {
+    background: rgb(var(--accent-rgb) / 0.08);
+    border-left: 2px solid var(--accent);
+    padding-left: 8px;
   }
   .zk-lb-rank,
   .zk-lb-score {
@@ -1068,7 +1202,10 @@
     font-size: 0.74rem;
     color: var(--dim);
   }
+  /* minmax(0,1fr) + min-width:0 : sans ça l'ellipse ne coupe pas dans une grille
+     et un pseudo très long ferait déborder la carte. */
   .zk-lb-name {
+    min-width: 0;
     font-family: var(--zk-cond);
     font-weight: 700;
     font-size: 0.86rem;
@@ -1078,6 +1215,18 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .zk-lb-more {
+    margin: 8px 0 0;
+    font-family: var(--zk-cond);
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .zk-lb-myrank {
+    color: var(--accent);
   }
 
   /* ═══ Animations ═══ */
@@ -1211,6 +1360,8 @@
     .zk-suggestions,
     .zk-result,
     .zk-result-art img,
+    .zk-card,
+    .zk-card-squares span,
     .zk-lb,
     .zk-error,
     .zk-eq i,

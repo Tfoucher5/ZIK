@@ -57,17 +57,39 @@ describe("computeStreak", () => {
 });
 
 describe("buildShareGrid", () => {
+  // Les track_id sont des UUID : on vérifie que l'identifiant exact n'apparaît
+  // pas, plutôt qu'une lettre isolée (qui se retrouve fatalement dans le texte).
+  const ID_A = "11111111-1111-4111-8111-111111111111";
+  const ID_B = "22222222-2222-4222-8222-222222222222";
+  const ID_OK = "33333333-3333-4333-8333-333333333333";
+
   it("victoire au 3e essai", () => {
-    const txt = buildShareGrid(47, ["a", "b", "d"], "d", true);
+    const txt = buildShareGrid(47, [ID_A, ID_B, ID_OK], ID_OK, true);
     expect(txt).toContain("Zikle #47");
     expect(txt).toContain("3/6");
-    expect(txt).toContain("🟥🟥🟩");
-    expect(txt).not.toContain("d"); // pas de fuite du track_id/titre
+    expect(txt).toContain("🟥🟥🟩⬛⬛⬛");
+    expect(txt).toContain("4s"); // 3e essai → palier de 4 s
+    for (const id of [ID_A, ID_B, ID_OK]) expect(txt).not.toContain(id);
   });
-  it("défaite", () => {
-    const txt = buildShareGrid(47, ["a", "b", "c", "d", "e", "f"], "z", false);
+
+  it("défaite : six carrés rouges, aucune case neutre", () => {
+    const guesses = Array.from({ length: 6 }, (_, i) => `${ID_A}-${i}`);
+    const txt = buildShareGrid(47, guesses, ID_OK, false);
     expect(txt).toContain("X/6");
     expect(txt).toContain("🟥🟥🟥🟥🟥🟥");
+    expect(txt).toContain("16s");
+  });
+
+  it("mentionne la série seulement au-delà d'un jour", () => {
+    const args = [47, [ID_OK], ID_OK, true];
+    expect(buildShareGrid(...args, { streak: 4 })).toContain("Série de 4 jours");
+    expect(buildShareGrid(...args, { streak: 1 })).not.toContain("Série");
+    expect(buildShareGrid(...args)).not.toContain("Série");
+  });
+
+  it("un abandon complet reste lisible", () => {
+    const txt = buildShareGrid(47, [], ID_OK, false);
+    expect(txt).toContain("⬛⬛⬛⬛⬛⬛");
   });
 });
 

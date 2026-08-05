@@ -29,14 +29,40 @@ export function computeStreak(results, today = todayParis()) {
   return streak;
 }
 
-export function buildShareGrid(dayNumber, guesses, correctTrackId, won) {
-  const squares = guesses
-    .map((g) => (g === correctTrackId ? "🟩" : "🟥"))
-    .join("");
+// Grille emoji : un carré par essai possible. Les essais non joués restent
+// neutres, pour qu'on lise d'un coup d'œil la rapidité sans révéler le titre.
+export function buildShareSquares(guesses, correctTrackId, won) {
+  return Array.from({ length: MAX_ATTEMPTS }, (_, i) => {
+    if (i >= guesses.length) return "⬛";
+    if (won && i === guesses.length - 1) return "🟩";
+    return guesses[i] === correctTrackId ? "🟩" : "🟥";
+  }).join("");
+}
+
+export function buildShareGrid(
+  dayNumber,
+  guesses,
+  correctTrackId,
+  won,
+  { streak = 0 } = {},
+) {
+  const squares = buildShareSquares(guesses, correctTrackId, won);
   const result = won
     ? `${guesses.length}/${MAX_ATTEMPTS}`
     : `X/${MAX_ATTEMPTS}`;
-  return `Zikle #${dayNumber} 🎧 ${result}\n\n${squares}\n\nhttps://www.zik-music.fr/zikle`;
+  // Secondes d'extrait qu'il a fallu écouter : c'est la mécanique du jeu,
+  // et c'est plus parlant que le seul nombre d'essais.
+  const seconds = won
+    ? durationForAttempt(guesses.length - 1)
+    : SNIPPET_DURATIONS[MAX_ATTEMPTS - 1];
+  const lines = [
+    `Zikle #${dayNumber} · ${result}`,
+    squares,
+    won ? `Trouvé en ${seconds}s d'extrait` : `Pas trouvé en ${seconds}s`,
+  ];
+  if (streak > 1) lines.push(`Série de ${streak} jours`);
+  lines.push("", "https://www.zik-music.fr/zikle");
+  return lines.join("\n");
 }
 
 // Forme d'onde déterministe dérivée de la date : le même jour donne toujours le
