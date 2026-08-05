@@ -82,7 +82,9 @@ describe("buildShareGrid", () => {
 
   it("mentionne la série seulement au-delà d'un jour", () => {
     const args = [47, [ID_OK], ID_OK, true];
-    expect(buildShareGrid(...args, { streak: 4 })).toContain("Série de 4 jours");
+    expect(buildShareGrid(...args, { streak: 4 })).toContain(
+      "Série de 4 jours",
+    );
     expect(buildShareGrid(...args, { streak: 1 })).not.toContain("Série");
     expect(buildShareGrid(...args)).not.toContain("Série");
   });

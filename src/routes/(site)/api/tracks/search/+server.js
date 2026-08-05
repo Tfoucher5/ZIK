@@ -13,12 +13,25 @@ export async function GET({ request, url }) {
   const sb = getAdminClient();
   const pattern = `%${escapeIlike(q)}%`;
   const [byArtist, byTitle] = await Promise.all([
-    sb.from("tracks").select("id, artist, title, cover_url").ilike("artist", pattern).limit(8),
-    sb.from("tracks").select("id, artist, title, cover_url").ilike("title", pattern).limit(8),
+    sb
+      .from("tracks")
+      .select("id, artist, title, cover_url")
+      .ilike("artist", pattern)
+      .limit(8),
+    sb
+      .from("tracks")
+      .select("id, artist, title, cover_url")
+      .ilike("title", pattern)
+      .limit(8),
   ]);
-  if (byArtist.error) return json({ error: byArtist.error.message }, { status: 400 });
-  if (byTitle.error) return json({ error: byTitle.error.message }, { status: 400 });
+  if (byArtist.error)
+    return json({ error: byArtist.error.message }, { status: 400 });
+  if (byTitle.error)
+    return json({ error: byTitle.error.message }, { status: 400 });
 
-  const merged = dedupById([...(byArtist.data || []), ...(byTitle.data || [])]).slice(0, 8);
+  const merged = dedupById([
+    ...(byArtist.data || []),
+    ...(byTitle.data || []),
+  ]).slice(0, 8);
   return json(merged);
 }
