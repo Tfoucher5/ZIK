@@ -32,43 +32,32 @@ a {
 }
 
 /* ── Aurora blobs partagés ─────────────────────────────────────────────── */
+/* Pas d'animation : filter: blur animé force un repaint GPU à 60fps → chaleur mobile. */
 .salon-blob {
   position: fixed;
   border-radius: 50%;
-  filter: blur(110px);
-  opacity: 0.45;
+  filter: blur(60px);
+  opacity: 0.5;
   pointer-events: none;
   z-index: 0;
 }
 .salon-blob.b1 {
-  width: 560px;
-  height: 560px;
-  left: -180px;
-  top: -200px;
+  width: 700px;
+  height: 700px;
+  left: -250px;
+  top: -280px;
   background: radial-gradient(
     circle,
     rgb(var(--accent-rgb) / 0.32),
     transparent 65%
   );
-  animation: salon-drift1 20s ease-in-out infinite alternate;
 }
 .salon-blob.b2 {
-  width: 600px;
-  height: 600px;
-  right: -220px;
-  bottom: -220px;
+  width: 750px;
+  height: 750px;
+  right: -280px;
+  bottom: -280px;
   background: radial-gradient(circle, rgba(114, 38, 255, 0.3), transparent 65%);
-  animation: salon-drift2 24s ease-in-out infinite alternate;
-}
-@keyframes salon-drift1 {
-  to {
-    transform: translate(70px, 50px) scale(1.08);
-  }
-}
-@keyframes salon-drift2 {
-  to {
-    transform: translate(-60px, -60px) scale(0.94);
-  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -3328,4 +3317,51 @@ html.no-animations *::before,
 html.no-animations *::after {
   animation: none !important;
   transition: none !important;
+}
+
+/* ── Perf mobile & accessibilité ─────────────────────────────────────────
+   Sur iOS/Android, backdrop-filter et les animations infinies sont très
+   coûteux en GPU → chauffe et lag. On les coupe sur mobile.              */
+@media (max-width: 768px) {
+  /* backdrop-filter : remplacé par un fond opaque — coût GPU ÷ 10 */
+  .salon-card,
+  .salon-actionbar,
+  .salon-host-header,
+  .salon-host-footer,
+  .salon-lower-third,
+  .salon-join-card,
+  .salon-play-header,
+  .salon-feedback-inner,
+  .salon-deck-core,
+  .fest-tag {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* filter: blur sur les blobs : coûteux même statique sur mobile */
+  .salon-blob {
+    filter: none;
+  }
+
+  /* Ralentir les animations courtes et répétitives */
+  .fest-woofer {
+    animation-duration: 1.5s;
+  }
+  .fest-side-eq i,
+  .salon-viz i {
+    animation-duration: 2s !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .salon-blob,
+  .fest-woofer,
+  .fest-side-eq i,
+  .salon-viz i,
+  .fest-light,
+  .fest-beams i,
+  .salon-note,
+  .salon-qr-float {
+    animation: none !important;
+  }
 }
