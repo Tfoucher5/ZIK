@@ -16,11 +16,21 @@ export async function GET({ request, url }) {
   // beaucoup de feats (ex. "Tiakola" dans "Gazo (feat. Tiakola)") pouvait noyer
   // le morceau exact hors des 8 résultats bruts.
   const [byArtist, byTitle] = await Promise.all([
-    sb.from("tracks").select("id, artist, title, cover_url").ilike("artist", pattern).limit(40),
-    sb.from("tracks").select("id, artist, title, cover_url").ilike("title", pattern).limit(40),
+    sb
+      .from("tracks")
+      .select("id, artist, title, cover_url")
+      .ilike("artist", pattern)
+      .limit(40),
+    sb
+      .from("tracks")
+      .select("id, artist, title, cover_url")
+      .ilike("title", pattern)
+      .limit(40),
   ]);
-  if (byArtist.error) return json({ error: byArtist.error.message }, { status: 400 });
-  if (byTitle.error) return json({ error: byTitle.error.message }, { status: 400 });
+  if (byArtist.error)
+    return json({ error: byArtist.error.message }, { status: 400 });
+  if (byTitle.error)
+    return json({ error: byTitle.error.message }, { status: 400 });
 
   const qLower = q.toLowerCase();
   const rank = (t) => {
@@ -38,7 +48,9 @@ export async function GET({ request, url }) {
   const merged = dedupById([...(byArtist.data || []), ...(byTitle.data || [])])
     .sort(
       (a, b) =>
-        rank(a) - rank(b) || a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title),
+        rank(a) - rank(b) ||
+        a.artist.localeCompare(b.artist) ||
+        a.title.localeCompare(b.title),
     )
     .slice(0, 20);
   return json(merged);
