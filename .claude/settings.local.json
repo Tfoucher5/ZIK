@@ -85,7 +85,8 @@
       "Bash(bash \"C:/Users/Teamr/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" 8828ea9 HEAD)",
       "mcp__plugin_supabase_supabase__list_projects",
       "mcp__plugin_supabase_supabase__list_tables",
-      "mcp__plugin_supabase_supabase__list_migrations"
+      "mcp__plugin_supabase_supabase__list_migrations",
+      "Bash(node -e ' *)"
     ]
   }
 }
