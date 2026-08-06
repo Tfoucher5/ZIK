@@ -27,19 +27,21 @@ export function mapDeezerChartTracks(json) {
     });
 }
 
-export async function refreshZiklePool(sb) {
-  const { data: latest } = await sb
-    .from("zikle_pool")
-    .select("added_at")
-    .order("added_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+export async function refreshZiklePool(sb, force = false) {
+  if (!force) {
+    const { data: latest } = await sb
+      .from("zikle_pool")
+      .select("added_at")
+      .order("added_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  if (
-    latest &&
-    Date.now() - new Date(latest.added_at).getTime() < REFRESH_INTERVAL_MS
-  ) {
-    return { refreshed: false, added: 0 };
+    if (
+      latest &&
+      Date.now() - new Date(latest.added_at).getTime() < REFRESH_INTERVAL_MS
+    ) {
+      return { refreshed: false, added: 0 };
+    }
   }
 
   const fetchFn = await getFetch();

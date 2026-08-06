@@ -29,24 +29,33 @@
   }
 </script>
 
-<div class="users-page">
-  <div class="users-header">
-    <span class="page-title">// USER_DATABASE</span>
-    <span class="page-sub">{data.total} enregistrements</span>
+<div class="zk">
+  <div class="zk-head">
+    <h1>Utilisateurs</h1>
+    <span class="zk-date">{data.total} enregistrements</span>
   </div>
 
-  <div class="users-toolbar">
+  <div class="toolbar">
     <input
       class="search-input"
       type="text"
-      placeholder="> SEARCH_USERNAME..."
+      placeholder="Rechercher un pseudo…"
       value={searchInput}
       oninput={onSearch}
     >
     <div class="sort-btns">
-      {#each [['elo','ELO'],['level','LVL'],['games_played','GAMES'],['created_at','DATE']] as [key, label]}
+      {#each [['', 'Tous'], ['user', 'Users'], ['super_admin', 'Admins']] as [key, label] (key)}
         <button
-          class="sort-btn"
+          class="chip"
+          class:active={data.role === key}
+          onclick={() => setParam('role', key)}
+        >{label}</button>
+      {/each}
+    </div>
+    <div class="sort-btns">
+      {#each [['elo','ELO'],['level','Niveau'],['games_played','Parties'],['created_at','Date']] as [key, label] (key)}
+        <button
+          class="chip"
           class:active={data.sort === key}
           onclick={() => setParam('sort', key)}
         >{label}</button>
@@ -54,143 +63,159 @@
     </div>
   </div>
 
-  {#if data.error}
-    <div class="err">[ERROR] {data.error}</div>
-  {:else}
-    <div class="users-table-wrap">
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>USER</th>
-            <th>ROLE</th>
-            <th>ELO</th>
-            <th>LVL</th>
-            <th>GAMES</th>
-            <th>JOINED</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each data.users as u (u.id)}
-            <tr class:super={u.role === 'super_admin'}>
-              <td class="td-user">
-                <img src={u.avatar_url || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${u.username}`} alt="" width="24" height="24" class="u-avatar">
-                <span class="u-name">{u.username}</span>
-              </td>
-              <td><span class="role-badge role-{u.role}">{u.role === 'super_admin' ? 'ROOT' : 'USER'}</span></td>
-              <td class="td-num">{u.elo}</td>
-              <td class="td-num">{u.level}</td>
-              <td class="td-num">{u.games_played}</td>
-              <td class="td-date">{fmt(u.created_at)}</td>
-              <td><a href="/admin/users/{u.id}" class="btn-view">OPEN →</a></td>
+  <div class="panel">
+    {#if data.error}
+      <div class="alert alert-err">{data.error}</div>
+    {:else}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Rôle</th>
+              <th>ELO</th>
+              <th>Niveau</th>
+              <th>Parties</th>
+              <th>Inscrit</th>
+              <th></th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
-
-    {#if totalPages > 1}
-      <div class="pagination">
-        <button disabled={data.page <= 1} onclick={() => setParam('page', String(data.page - 1))}>◀ PREV</button>
-        <span>{data.page} / {totalPages}</span>
-        <button disabled={data.page >= totalPages} onclick={() => setParam('page', String(data.page + 1))}>NEXT ▶</button>
+          </thead>
+          <tbody>
+            {#each data.users as u (u.id)}
+              <tr>
+                <td class="td-user">
+                  <img src={u.avatar_url || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${u.username}`} alt="" width="26" height="26" class="avatar">
+                  <span class="td-strong">{u.username}</span>
+                </td>
+                <td><span class="tag" class:tag-amber={u.role === 'super_admin'}>{u.role === 'super_admin' ? 'Admin' : 'User'}</span></td>
+                <td class="td-num">{u.elo}</td>
+                <td class="td-num">{u.level}</td>
+                <td class="td-num">{u.games_played}</td>
+                <td class="td-dim">{fmt(u.created_at)}</td>
+                <td class="td-actions"><a href="/admin/users/{u.id}" class="link">Ouvrir →</a></td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
       </div>
+
+      {#if totalPages > 1}
+        <div class="pagination">
+          <button class="btn" disabled={data.page <= 1} onclick={() => setParam('page', String(data.page - 1))}>◀ Précédent</button>
+          <span class="page-count">{data.page} / {totalPages}</span>
+          <button class="btn" disabled={data.page >= totalPages} onclick={() => setParam('page', String(data.page + 1))}>Suivant ▶</button>
+        </div>
+      {/if}
     {/if}
-  {/if}
+  </div>
 </div>
 
 <style>
-.users-page { display: flex; flex-direction: column; gap: 20px; }
-.users-header { display: flex; align-items: baseline; gap: 16px; }
-.page-title { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.1em; }
-.page-sub { font-size: 0.72rem; color: rgba(0,255,65,0.4); }
+  .zk {
+    --c-panel: #13161e;
+    --c-border: rgba(255, 255, 255, 0.07);
+    --c-text: #e2e8f0;
+    --c-muted: #6b7280;
+    --c-red: #ef4444;
+    --c-amber: #f59e0b;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--c-text);
+  }
 
-.users-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.search-input {
-  background: rgba(0,255,65,0.04);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: #00ff41;
-  font-family: inherit;
-  font-size: 0.82rem;
-  padding: 8px 14px;
-  outline: none;
-  min-width: 240px;
-}
-.search-input::placeholder { color: rgba(0,255,65,0.25); }
-.search-input:focus { border-color: rgba(0,255,65,0.5); }
+  .zk-head { display: flex; align-items: baseline; gap: 12px; }
+  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+  .zk-date { font-size: 0.78rem; color: var(--c-muted); }
 
-.sort-btns { display: flex; gap: 4px; }
-.sort-btn {
-  background: transparent;
-  border: 1px solid rgba(0,255,65,0.15);
-  border-radius: 3px;
-  color: rgba(0,255,65,0.4);
-  font-family: inherit;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.sort-btn:hover, .sort-btn.active { background: rgba(0,255,65,0.1); color: #00ff41; border-color: rgba(0,255,65,0.4); }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.84rem;
+    padding: 8px 12px;
+    outline: none;
+    min-width: 220px;
+    flex: 1;
+  }
+  .search-input::placeholder { color: var(--c-muted); }
+  .search-input:focus { border-color: rgba(255, 255, 255, 0.2); }
 
-.users-table-wrap { overflow-x: auto; }
-.users-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-.users-table th {
-  text-align: left;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: rgba(0,255,65,0.4);
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0,255,65,0.15);
-}
-.users-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(0,255,65,0.06);
-  color: rgba(0,255,65,0.8);
-}
-.users-table tr:hover td { background: rgba(0,255,65,0.03); }
-.users-table tr.super td { color: #ffb300; }
+  .sort-btns { display: flex; gap: 4px; }
+  .chip {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .chip:hover, .chip.active { background: rgba(255, 255, 255, 0.05); color: var(--c-text); border-color: rgba(255, 255, 255, 0.15); }
 
-.td-user { display: flex; align-items: center; gap: 8px; }
-.u-avatar { border-radius: 3px; flex-shrink: 0; }
-.u-name { font-weight: 600; }
-.td-num { font-variant-numeric: tabular-nums; }
-.td-date { color: rgba(0,255,65,0.35); font-size: 0.72rem; }
+  .panel {
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-.role-badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 2px 7px;
-  border-radius: 2px;
-}
-.role-badge.role-super_admin { background: rgba(255,179,0,0.15); color: #ffb300; border: 1px solid rgba(255,179,0,0.3); }
-.role-badge.role-user { background: rgba(0,255,65,0.08); color: rgba(0,255,65,0.5); border: 1px solid rgba(0,255,65,0.15); }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-view {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: rgba(0,255,65,0.4);
-  letter-spacing: 0.05em;
-  transition: color 0.1s;
-}
-.btn-view:hover { color: #00ff41; }
+  .link { font-size: 0.8rem; color: var(--c-muted); transition: color 0.15s; }
+  .link:hover { color: var(--c-text); }
 
-.pagination { display: flex; align-items: center; gap: 16px; font-size: 0.75rem; }
-.pagination button {
-  background: rgba(0,255,65,0.06);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: #00ff41;
-  font-family: inherit;
-  font-size: 0.72rem;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-.pagination button:disabled { opacity: 0.25; cursor: not-allowed; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--c-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
-.err { color: #ff4444; font-size: 0.82rem; }
+  .td-user { display: flex; align-items: center; gap: 8px; }
+  .avatar { border-radius: 6px; flex-shrink: 0; }
+  .td-strong { font-weight: 500; }
+  .td-num { font-family: 'JetBrains Mono', monospace; }
+  .td-dim { color: var(--c-muted); font-size: 0.8rem; }
+  .td-actions { text-align: right; }
+
+  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); }
+  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
+
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .page-count { font-size: 0.8rem; color: var(--c-muted); }
+
+  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
+  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
 </style>

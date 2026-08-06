@@ -8,6 +8,8 @@ export async function load({ url }) {
   const sortParam = url.searchParams.get("sort");
   const sort = ALLOWED_SORT.includes(sortParam) ? sortParam : "elo";
   const order = url.searchParams.get("order") === "asc" ? "asc" : "desc";
+  const roleParam = url.searchParams.get("role");
+  const role = ["user", "super_admin"].includes(roleParam) ? roleParam : "";
   const PAGE_SIZE = 50;
 
   let query = sb
@@ -20,6 +22,7 @@ export async function load({ url }) {
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
   if (q) query = query.ilike("username", `%${q}%`);
+  if (role) query = query.eq("role", role);
 
   const { data: users, count, error } = await query;
 
@@ -31,6 +34,7 @@ export async function load({ url }) {
     q,
     sort,
     order,
+    role,
     error: error?.message || null,
   };
 }

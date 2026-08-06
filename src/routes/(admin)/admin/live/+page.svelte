@@ -75,10 +75,10 @@
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (data.success) showMsg(`[OK] ${action} → ${roomId}`);
-      else showMsg(`[FAIL] ${action} non applicable`, false);
+      if (data.success) showMsg(`${action} → ${roomId}`);
+      else showMsg(`${action} non applicable`, false);
     } catch {
-      showMsg('[ERROR] Requête échouée', false);
+      showMsg('Requête échouée', false);
     }
   }
 
@@ -88,24 +88,24 @@
   }
 </script>
 
-<div class="live-page">
-  <div class="page-header">
-    <span class="page-title">// LIVE_CONTROL</span>
+<div class="zk">
+  <div class="zk-head">
+    <h1>Live</h1>
     <span class="sse-dot" class:ok={sseStatus === 'ok'} class:err={sseStatus === 'error'}></span>
-    <span class="sse-label">{sseStatus === 'ok' ? 'CONNECTED' : sseStatus === 'error' ? 'ERROR' : 'CONNECTING...'}</span>
-    <span class="page-sub">{rooms.length} room(s) active(s)</span>
+    <span class="sse-label">{sseStatus === 'ok' ? 'Connecté' : sseStatus === 'error' ? 'Erreur' : 'Connexion…'}</span>
+    <span class="zk-date">{rooms.length} room(s) active(s)</span>
   </div>
 
   {#if actionMsg}
-    <div class="action-msg" class:ok={actionMsg.ok} class:err={!actionMsg.ok}>{actionMsg.text}</div>
+    <div class="alert" class:alert-ok={actionMsg.ok} class:alert-err={!actionMsg.ok}>{actionMsg.text}</div>
   {/if}
 
   <div class="layout">
     <!-- Liste rooms -->
-    <div class="room-list">
-      <div class="list-title">// ROOMS</div>
+    <div class="panel room-list">
+      <div class="panel-label">Rooms</div>
       {#if rooms.length === 0}
-        <div class="empty">Aucune room active.</div>
+        <p class="hint">Aucune room active.</p>
       {:else}
         {#each rooms as r (r.roomId)}
           <button
@@ -115,7 +115,7 @@
           >
             <span class="ri-id">{r.roomId}</span>
             <span class="ri-meta">
-              {r.playerCount}p · {r.isActive ? `R${r.currentRound}/${r.maxRounds}` : 'LOBBY'}
+              {r.playerCount}p · {r.isActive ? `R${r.currentRound}/${r.maxRounds}` : 'Lobby'}
               {#if r.isPaused}<span class="badge-paused">⏸</span>{/if}
               {#if r.adminBlocked}<span class="badge-blocked">🔒</span>{/if}
             </span>
@@ -125,33 +125,33 @@
     </div>
 
     <!-- Détail room sélectionnée -->
-    <div class="room-detail">
+    <div class="panel room-detail">
       {#if !selectedRoom}
         <div class="no-select">← Sélectionner une room</div>
       {:else}
         <div class="detail-header">
-          <span class="detail-id">// {selectedRoom.roomId}</span>
+          <span class="detail-id">{selectedRoom.roomId}</span>
           <div class="detail-actions">
             {#if selectedRoom.isActive && !selectedRoom.isPaused}
-              <button class="act-btn act-pause" onclick={() => doAction(selectedRoom.roomId, 'pause')}>⏸ PAUSE</button>
+              <button class="btn" onclick={() => doAction(selectedRoom.roomId, 'pause')}>⏸ Pause</button>
             {/if}
             {#if selectedRoom.isPaused}
-              <button class="act-btn act-resume" onclick={() => doAction(selectedRoom.roomId, 'resume')}>▶ RESUME</button>
+              <button class="btn btn-ok" onclick={() => doAction(selectedRoom.roomId, 'resume')}>▶ Reprendre</button>
             {/if}
             {#if selectedRoom.isActive}
-              <button class="act-btn act-skip" onclick={() => doAction(selectedRoom.roomId, 'skip_round')}>⏭ SKIP ROUND</button>
+              <button class="btn" onclick={() => doAction(selectedRoom.roomId, 'skip_round')}>⏭ Passer le round</button>
             {/if}
-            <button class="act-btn act-end" onclick={() => doAction(selectedRoom.roomId, 'end_game')}>■ END GAME</button>
+            <button class="btn btn-danger" onclick={() => doAction(selectedRoom.roomId, 'end_game')}>■ Terminer</button>
             {#if !selectedRoom.adminBlocked}
-              <button class="act-btn act-block" onclick={() => doAction(selectedRoom.roomId, 'block')}>🔒 LOCK</button>
+              <button class="btn btn-amber" onclick={() => doAction(selectedRoom.roomId, 'block')}>🔒 Verrouiller</button>
             {:else}
-              <button class="act-btn act-unblock" onclick={() => doAction(selectedRoom.roomId, 'unblock')}>🔓 UNLOCK</button>
+              <button class="btn btn-ok" onclick={() => doAction(selectedRoom.roomId, 'unblock')}>🔓 Déverrouiller</button>
             {/if}
             {#if !confirmClose}
-              <button class="act-btn act-close" onclick={() => confirmClose = true}>✕ CLOSE ROOM</button>
+              <button class="btn btn-danger" onclick={() => confirmClose = true}>✕ Fermer la room</button>
             {:else}
-              <button class="act-btn act-close-confirm" onclick={() => { doAction(selectedRoom.roomId, 'close_room'); confirmClose = false; selected = null; }}>CONFIRM CLOSE</button>
-              <button class="act-btn act-ghost" onclick={() => confirmClose = false}>CANCEL</button>
+              <button class="btn btn-danger" onclick={() => { doAction(selectedRoom.roomId, 'close_room'); confirmClose = false; selected = null; }}>Confirmer la fermeture</button>
+              <button class="btn" onclick={() => confirmClose = false}>Annuler</button>
             {/if}
           </div>
         </div>
@@ -160,19 +160,19 @@
         <div class="round-state">
           {#if selectedRoom.isActive}
             <div class="rs-row">
-              <span class="rs-label">ROUND</span>
+              <span class="rs-label">Round</span>
               <span class="rs-val">{selectedRoom.currentRound} / {selectedRoom.maxRounds}</span>
             </div>
             {#if selectedRoom.isPaused}
-              <div class="rs-row"><span class="rs-label badge-paused-lg">⏸ PAUSED</span></div>
+              <div class="rs-row"><span class="tag tag-amber">⏸ En pause</span></div>
             {:else if selectedRoom.isSyncWaiting}
               <div class="rs-row">
-                <span class="rs-label">SYNC</span>
+                <span class="rs-label">Sync</span>
                 <span class="rs-val">En attente ({selectedRoom.readyCount} prêts)</span>
               </div>
             {:else}
               <div class="rs-row">
-                <span class="rs-label">TIMER</span>
+                <span class="rs-label">Timer</span>
                 <span class="rs-val">{selectedRoom.timer}s</span>
               </div>
               <div class="timer-bar">
@@ -180,75 +180,76 @@
               </div>
             {/if}
             {#if selectedRoom.currentTrack}
-              <div class="rs-row rs-track">
-                <span class="rs-label">TRACK</span>
+              <div class="rs-row">
+                <span class="rs-label">Track</span>
                 <span class="rs-track-val">{selectedRoom.currentTrack.artist} — {selectedRoom.currentTrack.title}</span>
               </div>
             {/if}
           {:else}
-            <div class="rs-row"><span class="rs-label">ÉTAT</span><span class="rs-val rs-lobby">LOBBY</span></div>
+            <div class="rs-row"><span class="rs-label">État</span><span class="rs-val td-dim">Lobby</span></div>
           {/if}
         </div>
 
-        <!-- Tableau joueurs -->
         <!-- Annonce -->
-        <div class="announce-zone">
-          <div class="section-title">// ANNOUNCE</div>
-          <div class="announce-row">
+        <div class="section">
+          <div class="panel-label">Annonce</div>
+          <div class="row-input">
             <input
-              class="announce-input"
+              class="field-input"
               type="text"
               maxlength="200"
-              placeholder="> Message affiché sur les écrans..."
+              placeholder="Message affiché sur les écrans…"
               bind:value={announceText}
               onkeydown={(e) => { if (e.key === 'Enter' && announceText.trim()) { doAction(selectedRoom.roomId, 'announce', null, announceText); announceText = ''; } }}
             />
             <button
-              class="act-btn act-announce"
+              class="btn btn-amber"
               disabled={!announceText.trim()}
               onclick={() => { doAction(selectedRoom.roomId, 'announce', null, announceText); announceText = ''; }}
-            >SEND</button>
+            >Envoyer</button>
           </div>
         </div>
 
-        <div class="section-title">// PLAYERS ({selectedRoom.playerCount})</div>
-        {#if selectedRoom.players.length === 0}
-          <div class="empty">Aucun joueur.</div>
-        {:else}
-          <table class="adm-table">
-            <thead>
-              <tr>
-                <th>USERNAME</th>
-                <th>SCORE</th>
-                <th>ARTIST</th>
-                <th>TITLE</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each selectedRoom.players as p (p.name)}
-                <tr>
-                  <td class="td-name">{p.name}</td>
-                  <td class="td-score">{p.score}</td>
-                  <td class="td-found">{p.foundArtist ? '✓' : '✗'}</td>
-                  <td class="td-found">{p.foundTitle ? '✓' : '✗'}</td>
-                  <td>
-                    <button
-                      class="btn-kick"
-                      onclick={() => doAction(selectedRoom.roomId, 'kick', p.name)}
-                    >KICK</button>
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        {/if}
+        <div class="section">
+          <div class="panel-label">Joueurs ({selectedRoom.playerCount})</div>
+          {#if selectedRoom.players.length === 0}
+            <p class="hint">Aucun joueur.</p>
+          {:else}
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Pseudo</th>
+                    <th>Score</th>
+                    <th>Artiste</th>
+                    <th>Titre</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each selectedRoom.players as p (p.name)}
+                    <tr>
+                      <td class="td-strong">{p.name}</td>
+                      <td class="td-num">{p.score}</td>
+                      <td class:found={p.foundArtist}>{p.foundArtist ? '✓' : '✗'}</td>
+                      <td class:found={p.foundTitle}>{p.foundTitle ? '✓' : '✗'}</td>
+                      <td class="td-actions">
+                        <button class="link link-danger" onclick={() => doAction(selectedRoom.roomId, 'kick', p.name)}>Exclure</button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+        </div>
+
         <!-- Chat en direct -->
-        <div class="chat-zone">
-          <div class="section-title">// CHAT ({selectedRoom.chatMessages?.length ?? 0})</div>
+        <div class="section">
+          <div class="panel-label">Chat ({selectedRoom.chatMessages?.length ?? 0})</div>
           <div class="chat-box" bind:this={chatBoxEl}>
             {#if !selectedRoom.chatMessages?.length}
-              <div class="empty" style="padding:0">Aucun message pour l'instant.</div>
+              <p class="hint">Aucun message pour l'instant.</p>
             {:else}
               {#each selectedRoom.chatMessages as m (m.ts + m.name)}
                 <div class="chat-msg" class:chat-admin={m.name.endsWith(' - admin')}>
@@ -260,20 +261,20 @@
               {/each}
             {/if}
           </div>
-          <div class="announce-row">
+          <div class="row-input">
             <input
-              class="announce-input"
+              class="field-input"
               type="text"
               maxlength="120"
-              placeholder="> Message dans le chat de la room..."
+              placeholder="Message dans le chat de la room…"
               bind:value={chatInput}
               onkeydown={(e) => { if (e.key === 'Enter') sendAdminChat(); }}
             />
             <button
-              class="act-btn act-chat"
+              class="btn btn-primary"
               disabled={!chatInput.trim()}
               onclick={sendAdminChat}
-            >SEND</button>
+            >Envoyer</button>
           </div>
         </div>
       {/if}
@@ -282,215 +283,188 @@
 </div>
 
 <style>
-.live-page { display: flex; flex-direction: column; gap: 16px; }
+  .zk {
+    --c-panel: #13161e;
+    --c-border: rgba(255, 255, 255, 0.07);
+    --c-text: #e2e8f0;
+    --c-muted: #6b7280;
+    --c-green: #22c55e;
+    --c-red: #ef4444;
+    --c-amber: #f59e0b;
+    --c-indigo: #6366f1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--c-text);
+  }
 
-.page-header { display: flex; align-items: center; gap: 12px; }
-.page-title { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.1em; }
-.page-sub { font-size: 0.72rem; color: rgba(0,255,65,0.4); margin-left: 4px; }
+  .zk-head { display: flex; align-items: center; gap: 10px; }
+  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+  .zk-date { font-size: 0.78rem; color: var(--c-muted); margin-left: 4px; }
 
-.sse-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: rgba(0,255,65,0.2);
-  flex-shrink: 0;
-}
-.sse-dot.ok { background: #00ff41; box-shadow: 0 0 6px #00ff41; animation: pulse 2s infinite; }
-.sse-dot.err { background: #ff4444; box-shadow: 0 0 6px #ff4444; }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-.sse-label { font-size: 0.65rem; letter-spacing: 0.1em; color: rgba(0,255,65,0.4); }
+  .sse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-muted); flex-shrink: 0; }
+  .sse-dot.ok { background: var(--c-green); box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); animation: pulse 2s infinite; }
+  .sse-dot.err { background: var(--c-red); box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .sse-label { font-size: 0.75rem; color: var(--c-muted); }
 
-.action-msg {
-  font-size: 0.8rem;
-  padding: 6px 12px;
-  border-radius: 3px;
-  border: 1px solid rgba(0,255,65,0.2);
-  color: rgba(0,255,65,0.7);
-  background: rgba(0,255,65,0.04);
-}
-.action-msg.ok { color: #00ff41; border-color: rgba(0,255,65,0.4); }
-.action-msg.err { color: #ff4444; border-color: rgba(255,68,68,0.4); background: rgba(255,68,68,0.04); }
+  .panel {
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel-label { font-size: 0.82rem; font-weight: 600; color: var(--c-text); }
 
-.layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; min-height: 400px; }
+  .layout { display: grid; grid-template-columns: 220px 1fr; gap: 12px; min-height: 400px; }
 
-/* Liste */
-.room-list {
-  border: 1px solid rgba(0,255,65,0.12);
-  border-radius: 4px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.list-title { font-size: 0.65rem; letter-spacing: 0.1em; color: rgba(0,255,65,0.4); margin-bottom: 8px; }
-.room-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: transparent;
-  border: 1px solid rgba(0,255,65,0.08);
-  border-radius: 3px;
-  color: rgba(0,255,65,0.6);
-  font-family: inherit;
-  font-size: 0.75rem;
-  padding: 8px 10px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.1s;
-  width: 100%;
-}
-.room-item:hover { border-color: rgba(0,255,65,0.3); color: #00ff41; background: rgba(0,255,65,0.04); }
-.room-item.selected { border-color: rgba(0,255,65,0.5); color: #00ff41; background: rgba(0,255,65,0.06); }
-.ri-id { font-weight: 700; letter-spacing: 0.05em; }
-.ri-meta { font-size: 0.65rem; color: rgba(0,255,65,0.4); }
-.room-item.selected .ri-meta { color: rgba(0,255,65,0.6); }
-.badge-paused { color: #ffb300; font-size: 0.7rem; }
-.badge-blocked { font-size: 0.7rem; }
-.empty { font-size: 0.78rem; color: rgba(0,255,65,0.3); padding: 8px 0; }
+  .room-list { gap: 6px; }
+  .room-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    color: var(--c-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    padding: 8px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    width: 100%;
+  }
+  .room-item:hover { border-color: rgba(255, 255, 255, 0.2); color: var(--c-text); background: rgba(255, 255, 255, 0.03); }
+  .room-item.selected { border-color: rgba(99, 102, 241, 0.4); color: var(--c-text); background: rgba(99, 102, 241, 0.06); }
+  .ri-id { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .ri-meta { font-size: 0.7rem; color: var(--c-muted); }
+  .badge-paused { color: var(--c-amber); font-size: 0.75rem; }
+  .badge-blocked { font-size: 0.75rem; }
 
-/* Détail */
-.room-detail {
-  border: 1px solid rgba(0,255,65,0.12);
-  border-radius: 4px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.no-select { font-size: 0.8rem; color: rgba(0,255,65,0.25); margin: auto; }
+  .hint { font-size: 0.8rem; color: var(--c-muted); }
 
-.detail-header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.detail-id { font-size: 1rem; font-weight: 700; letter-spacing: 0.12em; }
-.detail-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
-.act-btn {
-  background: transparent;
-  border: 1px solid rgba(0,255,65,0.25);
-  border-radius: 3px;
-  color: rgba(0,255,65,0.5);
-  font-family: inherit;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.act-btn:hover { color: #00ff41; border-color: rgba(0,255,65,0.5); background: rgba(0,255,65,0.06); }
-.act-pause:hover { color: #ffb300; border-color: rgba(255,179,0,0.5); background: rgba(255,179,0,0.06); }
-.act-resume { border-color: rgba(0,255,65,0.4); color: #00ff41; }
-.act-end { border-color: rgba(255,68,68,0.25); color: rgba(255,68,68,0.5); }
-.act-end:hover { color: #ff4444; border-color: rgba(255,68,68,0.5); background: rgba(255,68,68,0.06); }
-.act-block { border-color: rgba(255,179,0,0.25); color: rgba(255,179,0,0.5); }
-.act-block:hover { color: #ffb300; border-color: rgba(255,179,0,0.5); background: rgba(255,179,0,0.06); }
-.act-unblock { border-color: rgba(0,255,65,0.4); color: #00ff41; }
-.act-announce { border-color: rgba(255,179,0,0.4); color: #ffb300; flex-shrink: 0; }
-.act-announce:hover { background: rgba(255,179,0,0.08); }
-.act-announce:disabled { opacity: 0.25; cursor: not-allowed; }
-.act-close { border-color: rgba(255,68,68,0.2); color: rgba(255,68,68,0.4); }
-.act-close:hover { color: #ff4444; border-color: rgba(255,68,68,0.5); background: rgba(255,68,68,0.06); }
-.act-close-confirm { border-color: rgba(255,68,68,0.6); color: #ff4444; background: rgba(255,68,68,0.1); font-weight: 900; }
-.act-ghost { border-color: rgba(0,255,65,0.15); color: rgba(0,255,65,0.3); }
+  .room-detail { gap: 18px; }
+  .no-select { font-size: 0.85rem; color: var(--c-muted); margin: auto; }
 
-.announce-zone { display: flex; flex-direction: column; gap: 8px; }
-.announce-row { display: flex; gap: 8px; }
-.announce-input {
-  flex: 1;
-  background: rgba(0,255,65,0.04);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: #00ff41;
-  font-family: inherit;
-  font-size: 0.8rem;
-  padding: 7px 12px;
-  outline: none;
-}
-.announce-input::placeholder { color: rgba(0,255,65,0.2); }
-.announce-input:focus { border-color: rgba(0,255,65,0.4); }
+  .detail-header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .detail-id { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; }
+  .detail-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
 
-.round-state { display: flex; flex-direction: column; gap: 8px; }
-.rs-row { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; }
-.rs-label { font-size: 0.65rem; letter-spacing: 0.1em; color: rgba(0,255,65,0.4); width: 60px; }
-.rs-val { color: rgba(0,255,65,0.8); font-variant-numeric: tabular-nums; }
-.rs-lobby { color: rgba(0,255,65,0.4); }
-.rs-track { align-items: flex-start; }
-.rs-track-val { color: rgba(255,179,0,0.8); font-size: 0.78rem; }
-.badge-paused-lg { color: #ffb300; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; width: auto; }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { border-color: rgba(99, 102, 241, 0.4); color: var(--c-indigo); }
+  .btn-primary:hover:not(:disabled) { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.6); }
+  .btn-ok { border-color: rgba(34, 197, 94, 0.4); color: var(--c-green); }
+  .btn-ok:hover:not(:disabled) { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.6); }
+  .btn-amber { border-color: rgba(245, 158, 11, 0.4); color: var(--c-amber); }
+  .btn-amber:hover:not(:disabled) { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.6); }
+  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
+  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
 
-.timer-bar {
-  height: 3px;
-  background: rgba(0,255,65,0.1);
-  border-radius: 2px;
-  overflow: hidden;
-  width: 100%;
-  max-width: 300px;
-}
-.timer-fill {
-  height: 100%;
-  background: #00ff41;
-  border-radius: 2px;
-  transition: width 0.9s linear;
-}
+  .section { display: flex; flex-direction: column; gap: 10px; }
 
-.section-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; color: rgba(0,255,65,0.4); }
+  .row-input { display: flex; gap: 8px; }
+  .field-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.84rem;
+    padding: 7px 12px;
+    outline: none;
+  }
+  .field-input::placeholder { color: var(--c-muted); }
+  .field-input:focus { border-color: rgba(255, 255, 255, 0.2); }
 
-.adm-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-.adm-table th {
-  text-align: left;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: rgba(0,255,65,0.4);
-  padding: 6px 10px;
-  border-bottom: 1px solid rgba(0,255,65,0.12);
-}
-.adm-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid rgba(0,255,65,0.06);
-  color: rgba(0,255,65,0.8);
-  vertical-align: middle;
-}
-.adm-table tr:hover td { background: rgba(0,255,65,0.03); }
+  .round-state { display: flex; flex-direction: column; gap: 8px; }
+  .rs-row { display: flex; align-items: center; gap: 12px; font-size: 0.84rem; }
+  .rs-label { font-size: 0.72rem; color: var(--c-muted); width: 60px; }
+  .rs-val { font-family: 'JetBrains Mono', monospace; color: var(--c-text); }
+  .rs-track-val { color: var(--c-amber); font-size: 0.82rem; }
 
-.td-name { font-weight: 600; }
-.td-score { font-variant-numeric: tabular-nums; color: #ffb300; }
-.td-found { font-size: 1rem; }
-.adm-table td.td-found { color: rgba(0,255,65,0.3); }
-.adm-table tr:has(.td-found:first-of-type) td.td-found:first-of-type { color: #00ff41; }
+  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); }
+  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
 
-.btn-kick {
-  background: transparent;
-  border: 1px solid rgba(255,68,68,0.2);
-  border-radius: 3px;
-  color: rgba(255,68,68,0.5);
-  font-family: inherit;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 2px 8px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.btn-kick:hover { color: #ff4444; border-color: rgba(255,68,68,0.5); background: rgba(255,68,68,0.06); }
+  .timer-bar {
+    height: 3px;
+    background: var(--c-border);
+    border-radius: 2px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 300px;
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--c-indigo);
+    border-radius: 2px;
+    transition: width 0.9s linear;
+  }
 
-.chat-box {
-  max-height: 220px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border: 1px solid rgba(0,255,65,0.08);
-  border-radius: 3px;
-  padding: 8px 10px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0,255,65,0.2) transparent;
-}
-.chat-msg { display: flex; align-items: baseline; gap: 8px; font-size: 0.75rem; line-height: 1.6; }
-.chat-ts { color: rgba(0,255,65,0.25); flex-shrink: 0; font-size: 0.62rem; font-variant-numeric: tabular-nums; }
-.chat-name { color: rgba(0,255,65,0.65); font-weight: 700; flex-shrink: 0; }
-.chat-sep { color: rgba(0,255,65,0.2); flex-shrink: 0; }
-.chat-text { color: rgba(0,255,65,0.85); word-break: break-word; }
-.chat-admin .chat-name { color: #ffb300; }
-.chat-admin .chat-text { color: rgba(255,179,0,0.7); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--c-muted);
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
-.chat-zone { display: flex; flex-direction: column; gap: 8px; }
-.act-chat { border-color: rgba(0,255,65,0.4); color: rgba(0,255,65,0.7); flex-shrink: 0; }
-.act-chat:hover { background: rgba(0,255,65,0.08); color: #00ff41; }
-.act-chat:disabled { opacity: 0.25; cursor: not-allowed; }
+  .td-strong { font-weight: 500; }
+  .td-dim { color: var(--c-muted); }
+  .td-num { font-family: 'JetBrains Mono', monospace; }
+  .td-actions { text-align: right; }
+  td.found { color: var(--c-green); }
+  td:not(.found) { color: var(--c-muted); }
+
+  .link { background: none; border: none; font-family: inherit; font-size: 0.78rem; color: var(--c-muted); cursor: pointer; padding: 0; transition: color 0.15s; }
+  .link:hover { color: var(--c-text); }
+  .link-danger { color: rgba(239, 68, 68, 0.6); }
+  .link-danger:hover { color: var(--c-red); }
+
+  .chat-box {
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    scrollbar-width: thin;
+  }
+  .chat-msg { display: flex; align-items: baseline; gap: 8px; font-size: 0.78rem; line-height: 1.6; }
+  .chat-ts { color: var(--c-muted); flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; }
+  .chat-name { color: var(--c-text); font-weight: 600; flex-shrink: 0; }
+  .chat-sep { color: var(--c-muted); flex-shrink: 0; }
+  .chat-text { color: var(--c-text); word-break: break-word; }
+  .chat-admin .chat-name { color: var(--c-amber); }
+  .chat-admin .chat-text { color: var(--c-amber); }
+
+  .alert { font-size: 0.84rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
+  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
+  .alert-ok { color: var(--c-green); border-color: rgba(34, 197, 94, 0.3); }
 </style>
