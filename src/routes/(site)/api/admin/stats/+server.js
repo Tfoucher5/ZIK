@@ -1,7 +1,6 @@
 import { error, json } from "@sveltejs/kit";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { getUmamiData } from "$lib/server/umami.js";
 import { sumWindow, computeDelta, toPercent } from "$lib/admin/stats-utils.js";
 
 const CACHE_TTL = 5 * 60_000;
@@ -29,13 +28,26 @@ export async function GET({ url }) {
   if (hit && hit.exp > Date.now()) return json(hit.data);
 
   const sb = getAdminClient();
-  const [signups, players, games, ratio, retention, umami] = await Promise.all([
+  const [
+    signups,
+    players,
+    games,
+    ratio,
+    retention,
+    ziklePerDay,
+    zikleToday,
+    zikle7d,
+    totals,
+  ] = await Promise.all([
     sb.rpc("admin_signups_per_day", { p_days: days }),
     sb.rpc("admin_active_players_per_day", { p_days: days }),
     sb.rpc("admin_games_per_day", { p_days: days }),
     sb.rpc("admin_guest_ratio_7d"),
     sb.rpc("admin_retention_j7"),
-    getUmamiData(days),
+    sb.rpc("admin_zikle_per_day", { p_days: days }),
+    sb.rpc("admin_zikle_today"),
+    sb.rpc("admin_zikle_7d"),
+    sb.rpc("admin_site_totals"),
   ]);
 
   const s = (r) => r.data ?? [];
@@ -45,40 +57,65 @@ export async function GET({ url }) {
   };
 
   const signupsSerie = s(signups);
+  const playersSerie = s(players);
+  const gamesSerie = s(games);
+  const zikleSerie = s(ziklePerDay);
+
   const { guests = 0, logged = 0 } = s(ratio)[0] ?? {};
   const { cohort_size = 0, retained = 0 } = s(retention)[0] ?? {};
-  const signups7d = sumWindow(signupsSerie, 7);
+  const {
+    total_players: todayTotal = 0,
+    won_count: todayWon = 0,
+    avg_attempts: todayAvg = 0,
+  } = s(zikleToday)[0] ?? {};
+  const { total_players: zikle7dTotal = 0, won_count: zikle7dWon = 0 } =
+    s(zikle7d)[0] ?? {};
+  const {
+    total_users = 0,
+    total_games = 0,
+    zikle_pool_size = 0,
+    zikle_days_played = 0,
+  } = s(totals)[0] ?? {};
 
   const data = {
     series: {
-      visitors: umami?.visitors ?? [],
       signups: signupsSerie,
-      players: s(players),
+      players: playersSerie,
+      games: gamesSerie,
+      zikle: zikleSerie,
     },
     hero: {
-      visitors7d: umami
-        ? {
-            value: umami.visitors7d,
-            delta: computeDelta(umami.visitors7d, umami.visitors7dPrev),
-          }
-        : { value: null, delta: null },
       signups7d: stat(signupsSerie),
-      players7d: stat(s(players)),
-      games7d: stat(s(games)),
+      players7d: stat(playersSerie),
+      games7d: stat(gamesSerie),
+      zikle7d: stat(zikleSerie),
     },
-    traffic: {
-      referrers: umami?.referrers ?? [],
-      pages: umami?.pages ?? [],
-      available: Boolean(umami),
+    zikle: {
+      today: {
+        total: todayTotal,
+        won: todayWon,
+        winRate: toPercent(todayWon, todayTotal),
+        avgAttempts: Number(todayAvg),
+      },
+      sevenDays: {
+        total: zikle7dTotal,
+        won: zikle7dWon,
+        winRate: toPercent(zikle7dWon, zikle7dTotal),
+      },
     },
     kpis: {
-      conversionPct: umami ? toPercent(signups7d, umami.visitors7d) : null,
       guestPct: toPercent(guests, guests + logged),
       retention: {
         cohort: cohort_size,
         retained,
         pct: toPercent(retained, cohort_size),
       },
+    },
+    totals: {
+      users: total_users,
+      games: total_games,
+      ziklePool: zikle_pool_size,
+      zikleDays: zikle_days_played,
     },
   };
 

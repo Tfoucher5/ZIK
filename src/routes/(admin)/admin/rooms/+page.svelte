@@ -43,24 +43,24 @@
   function closeDelete() { deleteModal = null; }
 </script>
 
-<div class="rooms-page">
-  <div class="page-header">
-    <span class="page-title">// ROOM_DATABASE</span>
-    <span class="page-sub">{data.total} enregistrements</span>
+<div class="zk">
+  <div class="zk-head">
+    <h1>Rooms</h1>
+    <span class="zk-date">{data.total} enregistrements</span>
   </div>
 
   <div class="toolbar">
     <input
       class="search-input"
       type="text"
-      placeholder="> SEARCH_NAME_OR_CODE..."
+      placeholder="Rechercher un nom ou un code…"
       value={searchInput}
       oninput={onSearch}
     />
     <div class="sort-btns">
-      {#each [['last_active_at','ACTIVE'],['created_at','DATE'],['name','NAME']] as [key, label] (key)}
+      {#each [['last_active_at','Actives'],['created_at','Date'],['name','Nom']] as [key, label] (key)}
         <button
-          class="sort-btn"
+          class="chip"
           class:active={data.sort === key}
           onclick={() => setParam('sort', key)}
         >{label}</button>
@@ -69,118 +69,126 @@
   </div>
 
   {#if form && !form.success}
-    <div class="alert-err">[ERROR] {form.error ?? 'Action échouée'}</div>
+    <div class="alert alert-err">{form.error ?? 'Action échouée'}</div>
   {/if}
   {#if form?.success}
-    <div class="alert-ok">[OK] Action appliquée.</div>
+    <div class="alert alert-ok">Action appliquée.</div>
   {/if}
 
-  {#if data.error}
-    <div class="alert-err">[ERROR] {data.error}</div>
-  {:else}
-    <div class="table-wrap">
-      <table class="adm-table">
-        <thead>
-          <tr>
-            <th>CODE</th>
-            <th>NAME</th>
-            <th>OWNER</th>
-            <th>PUBLIC</th>
-            <th>OFFICIAL</th>
-            <th>ROUNDS</th>
-            <th>LAST ACTIVE</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each data.rooms as r (r.id)}
+  <div class="panel">
+    {#if data.error}
+      <div class="alert alert-err">{data.error}</div>
+    {:else}
+      <div class="table-wrap">
+        <table>
+          <thead>
             <tr>
-              <td class="td-code">{r.emoji} {r.code}</td>
-              <td>{r.name}</td>
-              <td class="td-dim">{r.profiles?.username ?? '—'}</td>
-
-              <!-- Toggle is_public -->
-              <td>
-                <form method="POST" action="?/toggleFlag" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                  <input type="hidden" name="_token" value={token}>
-                  <input type="hidden" name="id" value={r.id}>
-                  <input type="hidden" name="field" value="is_public">
-                  <input type="hidden" name="value" value={String(!r.is_public)}>
-                  <button class="flag-btn" class:on={r.is_public}>{r.is_public ? '●' : '○'}</button>
-                </form>
-              </td>
-
-              <!-- Toggle is_official -->
-              <td>
-                <form method="POST" action="?/toggleFlag" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                  <input type="hidden" name="_token" value={token}>
-                  <input type="hidden" name="id" value={r.id}>
-                  <input type="hidden" name="field" value="is_official">
-                  <input type="hidden" name="value" value={String(!r.is_official)}>
-                  <button class="flag-btn flag-official" class:on={r.is_official}>{r.is_official ? '★' : '☆'}</button>
-                </form>
-              </td>
-
-              <td class="td-dim">{r.max_rounds}r / {r.round_duration}s</td>
-              <td class="td-dim">{fmt(r.last_active_at)}</td>
-
-              <td class="td-actions">
-                <button class="btn-edit" onclick={() => openEdit(r)}>EDIT</button>
-                <button class="btn-del" onclick={() => openDelete(r)}>DEL</button>
-              </td>
+              <th>Code</th>
+              <th>Nom</th>
+              <th>Propriétaire</th>
+              <th>Public</th>
+              <th>Officiel</th>
+              <th>Rounds</th>
+              <th>Dernière activité</th>
+              <th></th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {#each data.rooms as r (r.id)}
+              <tr>
+                <td class="td-code">{r.emoji} {r.code}</td>
+                <td class="td-strong">{r.name}</td>
+                <td class="td-dim">{r.profiles?.username ?? '—'}</td>
 
-    {#if totalPages > 1}
-      <div class="pagination">
-        <button disabled={data.page <= 1} onclick={() => setParam('page', String(data.page - 1))}>◀ PREV</button>
-        <span>{data.page} / {totalPages}</span>
-        <button disabled={data.page >= totalPages} onclick={() => setParam('page', String(data.page + 1))}>NEXT ▶</button>
+                <!-- Toggle is_public -->
+                <td>
+                  <form method="POST" action="?/toggleFlag" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
+                    <input type="hidden" name="_token" value={token}>
+                    <input type="hidden" name="id" value={r.id}>
+                    <input type="hidden" name="field" value="is_public">
+                    <input type="hidden" name="value" value={String(!r.is_public)}>
+                    <button class="flag-btn" class:on={r.is_public}>{r.is_public ? '●' : '○'}</button>
+                  </form>
+                </td>
+
+                <!-- Toggle is_official -->
+                <td>
+                  <form method="POST" action="?/toggleFlag" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
+                    <input type="hidden" name="_token" value={token}>
+                    <input type="hidden" name="id" value={r.id}>
+                    <input type="hidden" name="field" value="is_official">
+                    <input type="hidden" name="value" value={String(!r.is_official)}>
+                    <button class="flag-btn flag-official" class:on={r.is_official}>{r.is_official ? '★' : '☆'}</button>
+                  </form>
+                </td>
+
+                <td class="td-dim">{r.max_rounds}r / {r.round_duration}s</td>
+                <td class="td-dim">{fmt(r.last_active_at)}</td>
+
+                <td class="td-actions">
+                  <button class="link" onclick={() => openEdit(r)}>Éditer</button>
+                  <button class="link link-danger" onclick={() => openDelete(r)}>Supprimer</button>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
       </div>
+
+      {#if totalPages > 1}
+        <div class="pagination">
+          <button class="btn" disabled={data.page <= 1} onclick={() => setParam('page', String(data.page - 1))}>◀ Précédent</button>
+          <span class="page-count">{data.page} / {totalPages}</span>
+          <button class="btn" disabled={data.page >= totalPages} onclick={() => setParam('page', String(data.page + 1))}>Suivant ▶</button>
+        </div>
+      {/if}
     {/if}
-  {/if}
+  </div>
 </div>
 
 <!-- Modal edit -->
 {#if editModal}
   <div class="modal-overlay" onclick={closeEdit} role="presentation">
     <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">// EDIT_ROOM — {editModal.code}</div>
+      <div class="modal-title">Éditer {editModal.code}</div>
       <form method="POST" action="?/editRoom" use:enhance={() => ({
         onResult: ({ result }) => { if (result.type === 'success') { closeEdit(); invalidateAll(); } }
       })}>
         <input type="hidden" name="_token" value={token}>
         <input type="hidden" name="id" value={editModal.id}>
-        <label class="field-label">NAME
+        <label class="field">
+          <span class="field-label">Nom</span>
           <input class="field-input" type="text" name="name" value={editModal.name} maxlength="60" required>
         </label>
-        <label class="field-label">EMOJI
+        <label class="field">
+          <span class="field-label">Emoji</span>
           <input class="field-input" type="text" name="emoji" value={editModal.emoji} maxlength="4">
         </label>
-        <label class="field-label">DESCRIPTION
+        <label class="field">
+          <span class="field-label">Description</span>
           <input class="field-input" type="text" name="description" value={editModal.description ?? ''}>
         </label>
         <div class="field-row">
-          <label class="field-label">MAX_ROUNDS
+          <label class="field">
+            <span class="field-label">Rounds max</span>
             <input class="field-input field-num" type="number" name="max_rounds" value={editModal.max_rounds} min="3" max="50">
           </label>
-          <label class="field-label">ROUND_DURATION (s)
+          <label class="field">
+            <span class="field-label">Durée round (s)</span>
             <input class="field-input field-num" type="number" name="round_duration" value={editModal.round_duration} min="10" max="60">
           </label>
-          <label class="field-label">BREAK_DURATION (s)
+          <label class="field">
+            <span class="field-label">Pause (s)</span>
             <input class="field-input field-num" type="number" name="break_duration" value={editModal.break_duration} min="3" max="15">
           </label>
         </div>
-        <label class="field-checkbox">
+        <label class="checkbox">
           <input type="checkbox" name="auto_start" checked={editModal.auto_start}>
-          AUTO_START
+          Démarrage automatique
         </label>
         <div class="modal-btns">
-          <button type="button" class="btn-cancel" onclick={closeEdit}>CANCEL</button>
-          <button type="submit" class="btn-confirm">SAVE</button>
+          <button type="button" class="btn" onclick={closeEdit}>Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
         </div>
       </form>
     </div>
@@ -190,8 +198,8 @@
 <!-- Modal delete -->
 {#if deleteModal}
   <div class="modal-overlay" onclick={closeDelete} role="presentation">
-    <div class="modal modal-sm" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">// DELETE_ROOM</div>
+    <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
+      <div class="modal-title">Supprimer la room</div>
       <p class="modal-warn">Supprimer <strong>{deleteModal.name}</strong> ({deleteModal.code}) ?</p>
       <form method="POST" action="?/deleteRoom" use:enhance={() => ({
         onResult: ({ result }) => { if (result.type === 'success') { closeDelete(); invalidateAll(); } }
@@ -199,8 +207,8 @@
         <input type="hidden" name="_token" value={token}>
         <input type="hidden" name="id" value={deleteModal.id}>
         <div class="modal-btns">
-          <button type="button" class="btn-cancel" onclick={closeDelete}>CANCEL</button>
-          <button type="submit" class="btn-confirm btn-red">SUPPRIMER</button>
+          <button type="button" class="btn" onclick={closeDelete}>Annuler</button>
+          <button type="submit" class="btn btn-danger">Supprimer</button>
         </div>
       </form>
     </div>
@@ -208,184 +216,182 @@
 {/if}
 
 <style>
-.rooms-page { display: flex; flex-direction: column; gap: 20px; }
-.page-header { display: flex; align-items: baseline; gap: 16px; }
-.page-title { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.1em; }
-.page-sub { font-size: 0.72rem; color: rgba(0,255,65,0.4); }
+  .zk {
+    --c-panel: #13161e;
+    --c-border: rgba(255, 255, 255, 0.07);
+    --c-text: #e2e8f0;
+    --c-muted: #6b7280;
+    --c-green: #22c55e;
+    --c-red: #ef4444;
+    --c-amber: #f59e0b;
+    --c-indigo: #6366f1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--c-text);
+  }
 
-.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.search-input {
-  background: rgba(0,255,65,0.04);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: #00ff41;
-  font-family: inherit;
-  font-size: 0.82rem;
-  padding: 8px 14px;
-  outline: none;
-  min-width: 280px;
-}
-.search-input::placeholder { color: rgba(0,255,65,0.25); }
-.search-input:focus { border-color: rgba(0,255,65,0.5); }
+  .zk-head { display: flex; align-items: baseline; gap: 12px; }
+  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+  .zk-date { font-size: 0.78rem; color: var(--c-muted); }
 
-.sort-btns { display: flex; gap: 4px; }
-.sort-btn {
-  background: transparent;
-  border: 1px solid rgba(0,255,65,0.15);
-  border-radius: 3px;
-  color: rgba(0,255,65,0.4);
-  font-family: inherit;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.sort-btn:hover, .sort-btn.active { background: rgba(0,255,65,0.1); color: #00ff41; border-color: rgba(0,255,65,0.4); }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.84rem;
+    padding: 8px 12px;
+    outline: none;
+    min-width: 280px;
+    flex: 1;
+  }
+  .search-input::placeholder { color: var(--c-muted); }
+  .search-input:focus { border-color: rgba(255, 255, 255, 0.2); }
 
-.table-wrap { overflow-x: auto; }
-.adm-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-.adm-table th {
-  text-align: left;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: rgba(0,255,65,0.4);
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0,255,65,0.15);
-}
-.adm-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(0,255,65,0.06);
-  color: rgba(0,255,65,0.8);
-  vertical-align: middle;
-}
-.adm-table tr:hover td { background: rgba(0,255,65,0.03); }
+  .sort-btns { display: flex; gap: 4px; }
+  .chip {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip:hover, .chip.active { background: rgba(255, 255, 255, 0.05); color: var(--c-text); border-color: rgba(255, 255, 255, 0.15); }
 
-.td-code { font-weight: 700; letter-spacing: 0.05em; }
-.td-dim { color: rgba(0,255,65,0.4); font-size: 0.75rem; }
-.td-actions { display: flex; gap: 6px; }
+  .panel {
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-.flag-btn {
-  background: transparent;
-  border: none;
-  color: rgba(0,255,65,0.3);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.1s;
-}
-.flag-btn.on { color: #00ff41; }
-.flag-btn.flag-official.on { color: #ffb300; }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { border-color: rgba(99, 102, 241, 0.4); color: var(--c-indigo); }
+  .btn-primary:hover:not(:disabled) { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.6); }
+  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
+  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
 
-.btn-edit, .btn-del {
-  background: transparent;
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: rgba(0,255,65,0.5);
-  font-family: inherit;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 3px 8px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.btn-edit:hover { color: #00ff41; border-color: rgba(0,255,65,0.5); }
-.btn-del { border-color: rgba(255,68,68,0.2); color: rgba(255,68,68,0.5); }
-.btn-del:hover { color: #ff4444; border-color: rgba(255,68,68,0.5); }
+  .link { background: none; border: none; font-family: inherit; font-size: 0.8rem; color: var(--c-muted); cursor: pointer; padding: 0; transition: color 0.15s; }
+  .link:hover { color: var(--c-text); }
+  .link-danger { color: rgba(239, 68, 68, 0.6); }
+  .link-danger:hover { color: var(--c-red); }
 
-.pagination { display: flex; align-items: center; gap: 16px; font-size: 0.75rem; }
-.pagination button {
-  background: rgba(0,255,65,0.06);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: #00ff41;
-  font-family: inherit;
-  font-size: 0.72rem;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-.pagination button:disabled { opacity: 0.25; cursor: not-allowed; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--c-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
-.alert-err { color: #ff4444; font-size: 0.82rem; }
-.alert-ok { color: #00ff41; font-size: 0.82rem; }
+  .td-code { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+  .td-strong { font-weight: 500; }
+  .td-dim { color: var(--c-muted); font-size: 0.8rem; }
+  .td-actions { display: flex; gap: 10px; }
 
-/* Modals */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
-.modal {
-  background: #0d0d14;
-  border: 1px solid rgba(0,255,65,0.3);
-  border-radius: 6px;
-  padding: 28px;
-  width: 520px;
-  max-width: 95vw;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.modal-sm { width: 360px; }
-.modal-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; color: #00ff41; }
-.modal-warn { font-size: 0.82rem; color: rgba(0,255,65,0.7); }
-.modal-warn strong { color: #ffb300; }
+  .flag-btn {
+    background: transparent;
+    border: none;
+    color: var(--c-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .flag-btn.on { color: var(--c-green); }
+  .flag-btn.flag-official.on { color: var(--c-amber); }
 
-.field-label {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: rgba(0,255,65,0.5);
-  flex: 1;
-}
-.field-input {
-  background: rgba(0,255,65,0.04);
-  border: 1px solid rgba(0,255,65,0.2);
-  border-radius: 3px;
-  color: #00ff41;
-  font-family: inherit;
-  font-size: 0.82rem;
-  padding: 7px 10px;
-  outline: none;
-}
-.field-input:focus { border-color: rgba(0,255,65,0.5); }
-.field-num { width: 80px; }
-.field-row { display: flex; gap: 12px; }
-.field-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.72rem;
-  color: rgba(0,255,65,0.6);
-  cursor: pointer;
-  letter-spacing: 0.08em;
-}
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .page-count { font-size: 0.8rem; color: var(--c-muted); }
 
-.modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
-.btn-cancel, .btn-confirm {
-  background: transparent;
-  border: 1px solid rgba(0,255,65,0.3);
-  border-radius: 3px;
-  color: rgba(0,255,65,0.6);
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 7px 16px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.btn-cancel:hover { border-color: rgba(0,255,65,0.5); color: #00ff41; }
-.btn-confirm { border-color: rgba(0,255,65,0.5); color: #00ff41; }
-.btn-confirm:hover { background: rgba(0,255,65,0.08); }
-.btn-confirm.btn-red { border-color: rgba(255,68,68,0.4); color: #ff4444; }
-.btn-confirm.btn-red:hover { background: rgba(255,68,68,0.08); }
+  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
+  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
+  .alert-ok { color: var(--c-green); border-color: rgba(34, 197, 94, 0.3); }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  .modal {
+    --c-panel: #13161e;
+    --c-border: rgba(255, 255, 255, 0.07);
+    --c-text: #e2e8f0;
+    --c-muted: #6b7280;
+    --c-indigo: #6366f1;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 24px;
+    width: 480px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--c-text);
+  }
+  .modal-title { font-size: 0.95rem; font-weight: 600; }
+  .modal-warn { font-size: 0.84rem; color: var(--c-muted); }
+  .modal-warn strong { color: var(--c-text); }
+
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .field-label { font-size: 0.72rem; color: var(--c-muted); }
+  .field-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: 0.84rem;
+    padding: 7px 10px;
+    outline: none;
+  }
+  .field-input:focus { border-color: rgba(255, 255, 255, 0.2); }
+  .field-num { width: 80px; }
+  .field-row { display: flex; gap: 12px; }
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--c-text);
+    cursor: pointer;
+  }
+
+  .modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 </style>

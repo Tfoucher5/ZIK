@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
   import { getContext } from 'svelte';
@@ -38,27 +38,8 @@
 
 <div class="zk">
   <div class="zk-head">
-    <h1>Playlists</h1>
-    <span class="zk-date">{data.total} enregistrements</span>
-  </div>
-
-  <div class="toolbar">
-    <input
-      class="search-input"
-      type="text"
-      placeholder="Rechercher un nom…"
-      value={searchInput}
-      oninput={onSearch}
-    />
-    <div class="sort-btns">
-      {#each [['track_count','Tracks'],['created_at','Date'],['name','Nom']] as [key, label] (key)}
-        <button
-          class="chip"
-          class:active={data.sort === key}
-          onclick={() => setParam('sort', key)}
-        >{label}</button>
-      {/each}
-    </div>
+    <h1>Tracks</h1>
+    <span class="zk-date">{data.total} morceaux</span>
   </div>
 
   {#if form && !form.success}
@@ -68,6 +49,25 @@
     <div class="alert alert-ok">Action appliquée.</div>
   {/if}
 
+  <div class="toolbar">
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Rechercher un artiste ou un titre…"
+      value={searchInput}
+      oninput={onSearch}
+    />
+    <div class="sort-btns">
+      {#each [['created_at','Récents'],['artist','Artiste']] as [key, label] (key)}
+        <button
+          class="chip"
+          class:active={data.sort === key}
+          onclick={() => setParam('sort', key)}
+        >{label}</button>
+      {/each}
+    </div>
+  </div>
+
   <div class="panel">
     {#if data.error}
       <div class="alert alert-err">{data.error}</div>
@@ -76,50 +76,40 @@
         <table>
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Propriétaire</th>
-              <th>Public</th>
-              <th>Officiel</th>
-              <th>Tracks</th>
-              <th>Créée</th>
+              <th></th>
+              <th>Artiste</th>
+              <th>Titre</th>
+              <th>Source</th>
+              <th>Extrait</th>
+              <th>Utilisation</th>
+              <th>Ajouté</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {#each data.playlists as pl (pl.id)}
+            {#each data.tracks as t (t.id)}
               <tr>
-                <td class="td-strong">{pl.emoji} {pl.name}</td>
-                <td class="td-dim">{pl.profiles?.username ?? '—'}</td>
-
-                <!-- Toggle is_public -->
                 <td>
-                  <form method="POST" action="?/toggleFlag" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                    <input type="hidden" name="_token" value={token}>
-                    <input type="hidden" name="id" value={pl.id}>
-                    <input type="hidden" name="field" value="is_public">
-                    <input type="hidden" name="value" value={String(!pl.is_public)}>
-                    <button class="flag-btn" class:on={pl.is_public}>{pl.is_public ? '●' : '○'}</button>
-                  </form>
+                  {#if t.cover_url}<img src={t.cover_url} alt="" class="cover" />{/if}
                 </td>
-
-                <!-- Toggle is_official -->
-                <td>
-                  <form method="POST" action="?/toggleFlag" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                    <input type="hidden" name="_token" value={token}>
-                    <input type="hidden" name="id" value={pl.id}>
-                    <input type="hidden" name="field" value="is_official">
-                    <input type="hidden" name="value" value={String(!pl.is_official)}>
-                    <button class="flag-btn flag-official" class:on={pl.is_official}>{pl.is_official ? '★' : '☆'}</button>
-                  </form>
+                <td class="td-strong">{t.artist}</td>
+                <td>{t.title}</td>
+                <td class="td-dim">{t.source}</td>
+                <td class="td-dim">
+                  {#if t.preview_url}
+                    <a href={t.preview_url} target="_blank" rel="noreferrer" class="link">Écouter</a>
+                  {:else}
+                    —
+                  {/if}
                 </td>
-
-                <td class="td-num">{pl.track_count}</td>
-                <td class="td-dim">{fmt(pl.created_at)}</td>
-
+                <td class="td-dim">
+                  {t.playlistCount} playlist{t.playlistCount === 1 ? '' : 's'}
+                  {#if t.zikleDays > 0}· {t.zikleDays} Zikle{/if}
+                </td>
+                <td class="td-dim">{fmt(t.created_at)}</td>
                 <td class="td-actions">
-                  <a href="/admin/playlists/{pl.id}" class="link">Ouvrir →</a>
-                  <button class="link" onclick={() => editModal = { ...pl }}>Éditer</button>
-                  <button class="link link-danger" onclick={() => deleteModal = pl}>Supprimer</button>
+                  <button class="link" onclick={() => editModal = { ...t }}>Éditer</button>
+                  <button class="link link-danger" onclick={() => deleteModal = t}>Supprimer</button>
                 </td>
               </tr>
             {/each}
@@ -138,23 +128,24 @@
   </div>
 </div>
 
-<!-- Modal edit -->
 {#if editModal}
   <div class="modal-overlay" onclick={() => editModal = null} role="presentation">
     <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Éditer la playlist</div>
-      <form method="POST" action="?/editPlaylist" use:enhance={() => ({
-        onResult: ({ result }) => { if (result.type === 'success') { editModal = null; invalidateAll(); } }
-      })}>
+      <div class="modal-title">Éditer le morceau</div>
+      <form method="POST" action="?/editTrack" use:enhance={() => async ({ update }) => { await update({ reset: false }); editModal = null; }}>
         <input type="hidden" name="_token" value={token}>
         <input type="hidden" name="id" value={editModal.id}>
         <label class="field">
-          <span class="field-label">Nom</span>
-          <input class="field-input" type="text" name="name" value={editModal.name} required>
+          <span class="field-label">Artiste</span>
+          <input class="field-input" type="text" name="artist" value={editModal.artist} required>
         </label>
         <label class="field">
-          <span class="field-label">Emoji</span>
-          <input class="field-input" type="text" name="emoji" value={editModal.emoji} maxlength="4">
+          <span class="field-label">Titre</span>
+          <input class="field-input" type="text" name="title" value={editModal.title} required>
+        </label>
+        <label class="field">
+          <span class="field-label">Cover URL</span>
+          <input class="field-input" type="text" name="cover_url" value={editModal.cover_url ?? ''} placeholder="https://…">
         </label>
         <div class="modal-btns">
           <button type="button" class="btn" onclick={() => editModal = null}>Annuler</button>
@@ -165,15 +156,17 @@
   </div>
 {/if}
 
-<!-- Modal delete -->
 {#if deleteModal}
   <div class="modal-overlay" onclick={() => deleteModal = null} role="presentation">
     <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Supprimer la playlist</div>
-      <p class="modal-warn">Supprimer <strong>{deleteModal.emoji} {deleteModal.name}</strong> ({deleteModal.track_count} tracks) ?</p>
-      <form method="POST" action="?/deletePlaylist" use:enhance={() => ({
-        onResult: ({ result }) => { if (result.type === 'success') { deleteModal = null; invalidateAll(); } }
-      })}>
+      <div class="modal-title">Supprimer le morceau</div>
+      <p class="modal-warn">
+        Supprimer <strong>{deleteModal.artist} — {deleteModal.title}</strong> ?
+        {#if deleteModal.playlistCount > 0 || deleteModal.zikleDays > 0}
+          <br>Utilisé dans {deleteModal.playlistCount} playlist{deleteModal.playlistCount === 1 ? '' : 's'}{deleteModal.zikleDays > 0 ? ` et ${deleteModal.zikleDays} jour(s) Zikle` : ''} — la suppression sera refusée tant que ce sera le cas.
+        {/if}
+      </p>
+      <form method="POST" action="?/deleteTrack" use:enhance={() => async ({ update }) => { await update({ reset: false }); deleteModal = null; }}>
         <input type="hidden" name="_token" value={token}>
         <input type="hidden" name="id" value={deleteModal.id}>
         <div class="modal-btns">
@@ -193,7 +186,6 @@
     --c-muted: #6b7280;
     --c-green: #22c55e;
     --c-red: #ef4444;
-    --c-amber: #f59e0b;
     --c-indigo: #6366f1;
     display: flex;
     flex-direction: column;
@@ -216,7 +208,7 @@
     font-size: 0.84rem;
     padding: 8px 12px;
     outline: none;
-    min-width: 260px;
+    min-width: 280px;
     flex: 1;
   }
   .search-input::placeholder { color: var(--c-muted); }
@@ -280,27 +272,16 @@
     color: var(--c-muted);
     padding: 8px 12px;
     border-bottom: 1px solid var(--c-border);
+    white-space: nowrap;
   }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
+  .cover { width: 34px; height: 34px; border-radius: 4px; object-fit: cover; display: block; }
   .td-strong { font-weight: 500; }
-  .td-dim { color: var(--c-muted); font-size: 0.8rem; }
-  .td-num { font-family: 'JetBrains Mono', monospace; }
-  .td-actions { display: flex; gap: 10px; align-items: center; }
-
-  .flag-btn {
-    background: transparent;
-    border: none;
-    color: var(--c-muted);
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0;
-    transition: color 0.15s;
-  }
-  .flag-btn.on { color: var(--c-green); }
-  .flag-btn.flag-official.on { color: var(--c-amber); }
+  .td-dim { color: var(--c-muted); font-size: 0.8rem; white-space: nowrap; }
+  .td-actions { display: flex; gap: 10px; white-space: nowrap; }
 
   .pagination { display: flex; align-items: center; justify-content: center; gap: 14px; }
   .page-count { font-size: 0.8rem; color: var(--c-muted); }
@@ -328,7 +309,7 @@
     border: 1px solid var(--c-border);
     border-radius: 10px;
     padding: 24px;
-    width: 400px;
+    width: 420px;
     max-width: 95vw;
     display: flex;
     flex-direction: column;
@@ -336,11 +317,11 @@
     color: var(--c-text);
   }
   .modal-title { font-size: 0.95rem; font-weight: 600; }
-  .modal-warn { font-size: 0.84rem; color: var(--c-muted); }
+  .modal-warn { font-size: 0.84rem; color: var(--c-muted); line-height: 1.5; }
   .modal-warn strong { color: var(--c-text); }
 
   .field { display: flex; flex-direction: column; gap: 5px; }
-  .field-label { font-size: 0.72rem; color: var(--c-muted); }
+  .field-label { font-size: 0.75rem; color: var(--c-muted); }
   .field-input {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--c-border);
@@ -348,10 +329,11 @@
     color: var(--c-text);
     font-family: inherit;
     font-size: 0.84rem;
-    padding: 7px 10px;
+    padding: 8px 12px;
     outline: none;
   }
   .field-input:focus { border-color: rgba(255, 255, 255, 0.2); }
+  form { display: flex; flex-direction: column; gap: 12px; }
 
   .modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 </style>

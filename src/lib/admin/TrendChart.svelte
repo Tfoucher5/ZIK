@@ -69,12 +69,13 @@
   .tooltip {
     position: absolute; top: 0; transform: translateX(-50%);
     background: var(--adm-panel); border: 1px solid var(--adm-border);
-    border-radius: 10px; padding: 8px 12px; font-size: 0.78rem;
+    border-radius: 8px; padding: 8px 12px; font-size: 0.78rem;
     pointer-events: none; white-space: nowrap; z-index: 5; color: var(--adm-text);
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  .tt-date { color: var(--adm-muted); margin-bottom: 4px; }
+  .tt-date { color: var(--adm-muted); margin-bottom: 4px; font-size: 0.72rem; }
   .tt-row { display: flex; align-items: center; gap: 6px; }
-  .legend { display: flex; gap: 16px; margin-top: 10px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--adm-muted); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .legend { display: flex; gap: 16px; margin-top: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--adm-muted); font-family: 'Inter', system-ui, sans-serif; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 </style>

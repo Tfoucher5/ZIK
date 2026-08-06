@@ -14,13 +14,21 @@ export async function load({ params }) {
   const { id } = params;
   assertUuid(id);
 
-  const [profileRes, authUserRes, gamesRes, reportsRes] = await Promise.all([
+  const [
+    profileRes,
+    authUserRes,
+    gamesRes,
+    reportsRes,
+    followingRes,
+    followersRes,
+    friendshipsRes,
+  ] = await Promise.all([
     sb.from("profiles").select("*").eq("id", id).single(),
     sb.auth.admin.getUserById(id),
     sb
       .from("game_players")
       .select(
-        "score, rank, is_guest, games(id, room_id, started_at, ended_at, rounds)",
+        "id, score, rank, is_guest, games(id, room_id, started_at, ended_at, rounds)",
       )
       .eq("user_id", id)
       .limit(50),
@@ -30,6 +38,23 @@ export async function load({ params }) {
       .or(`reporter_id.eq.${id},reported_user_id.eq.${id}`)
       .order("created_at", { ascending: false })
       .limit(20),
+    sb
+      .from("follows")
+      .select("id, created_at, profiles!follows_following_id_fkey(username)")
+      .eq("follower_id", id)
+      .order("created_at", { ascending: false }),
+    sb
+      .from("follows")
+      .select("id, created_at, profiles!follows_follower_id_fkey(username)")
+      .eq("following_id", id)
+      .order("created_at", { ascending: false }),
+    sb
+      .from("friendships")
+      .select(
+        "id, status, created_at, accepted_at, requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(username), addressee:profiles!friendships_addressee_id_fkey(username)",
+      )
+      .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (profileRes.error || !profileRes.data)
@@ -46,12 +71,24 @@ export async function load({ params }) {
     return db - da;
   });
 
+  const friendships = (friendshipsRes.data ?? []).map((f) => ({
+    id: f.id,
+    status: f.status,
+    created_at: f.created_at,
+    accepted_at: f.accepted_at,
+    other_username:
+      f.requester_id === id ? f.addressee?.username : f.requester?.username,
+  }));
+
   return {
     profile: profileRes.data,
     isBanned,
     bannedUntil: authUser?.banned_until ?? null,
     games,
     reports: reportsRes.data ?? [],
+    following: followingRes.data ?? [],
+    followers: followersRes.data ?? [],
+    friendships,
   };
 }
 
@@ -174,5 +211,25 @@ export const actions = {
       username: profile.username,
     });
     return { success: true, deleted: true };
+  },
+
+  deleteFollow: async ({ request }) => {
+    const { adminUser, formData } = await requireAdmin(request);
+    const id = formData.get("id");
+    const sb = getAdminClient();
+    const { error: err } = await sb.from("follows").delete().eq("id", id);
+    if (err) return { success: false, error: err.message };
+    await logAdminAction(adminUser.id, "delete_follow", id, "follow");
+    return { success: true };
+  },
+
+  deleteFriendship: async ({ request }) => {
+    const { adminUser, formData } = await requireAdmin(request);
+    const id = formData.get("id");
+    const sb = getAdminClient();
+    const { error: err } = await sb.from("friendships").delete().eq("id", id);
+    if (err) return { success: false, error: err.message };
+    await logAdminAction(adminUser.id, "delete_friendship", id, "friendship");
+    return { success: true };
   },
 };

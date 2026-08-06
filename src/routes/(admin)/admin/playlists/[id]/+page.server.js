@@ -44,6 +44,42 @@ export async function load({ params }) {
 }
 
 export const actions = {
+  addTrack: async ({ request, params }) => {
+    assertUuid(params.id);
+    const { adminUser, formData } = await requireAdmin(request);
+    const trackId = formData.get("track_id");
+    if (!trackId) return { success: false, error: "track_id requis" };
+    const sb = getAdminClient();
+
+    const { data: last } = await sb
+      .from("custom_playlist_tracks")
+      .select("position")
+      .eq("playlist_id", params.id)
+      .order("position", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextPosition = (last?.position ?? -1) + 1;
+
+    const { data: track } = await sb
+      .from("tracks")
+      .select("artist, title")
+      .eq("id", trackId)
+      .single();
+
+    const { error: err } = await sb.from("custom_playlist_tracks").insert({
+      playlist_id: params.id,
+      track_id: trackId,
+      position: nextPosition,
+    });
+    if (err) return { success: false, error: err.message };
+    await logAdminAction(adminUser.id, "add_track", params.id, "playlist", {
+      track_id: trackId,
+      artist: track?.artist,
+      title: track?.title,
+    });
+    return { success: true };
+  },
+
   deleteTrack: async ({ request, params }) => {
     assertUuid(params.id);
     const { adminUser, formData } = await requireAdmin(request);

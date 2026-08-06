@@ -1,4 +1,5 @@
 import { getAdminClient } from "$lib/server/config.js";
+import { requireAdmin, logAdminAction } from "$lib/server/middleware/auth.js";
 
 export async function load({ url }) {
   const supabase = getAdminClient();
@@ -57,11 +58,11 @@ export async function load({ url }) {
 
 export const actions = {
   updateStatus: async ({ request }) => {
-    const data = await request.formData();
-    const id = data.get("id");
-    const status = data.get("status");
-    const note = data.get("admin_note") || null;
-    const reply = data.get("admin_reply") || null;
+    const { formData } = await requireAdmin(request);
+    const id = formData.get("id");
+    const status = formData.get("status");
+    const note = formData.get("admin_note") || null;
+    const reply = formData.get("admin_reply") || null;
 
     if (!id || !["pending", "resolved", "dismissed"].includes(status)) {
       return { success: false };
@@ -114,9 +115,9 @@ export const actions = {
   },
 
   sendReply: async ({ request }) => {
-    const data = await request.formData();
-    const id = data.get("id");
-    const reply = data.get("admin_reply")?.trim();
+    const { formData } = await requireAdmin(request);
+    const id = formData.get("id");
+    const reply = formData.get("admin_reply")?.trim();
 
     if (!id || !reply) return { success: false, error: "Champs manquants" };
 
@@ -157,5 +158,16 @@ export const actions = {
 
     const ok = res?.ok ?? false;
     return { success: ok, sent: ok };
+  },
+
+  deleteReport: async ({ request }) => {
+    const { adminUser, formData } = await requireAdmin(request);
+    const id = formData.get("id");
+    if (!id) return { success: false, error: "id requis" };
+    const supabase = getAdminClient();
+    const { error: err } = await supabase.from("reports").delete().eq("id", id);
+    if (err) return { success: false, error: err.message };
+    await logAdminAction(adminUser.id, "delete_report", id, "report");
+    return { success: true };
   },
 };
