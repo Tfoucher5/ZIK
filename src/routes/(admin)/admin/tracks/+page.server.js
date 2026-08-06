@@ -14,10 +14,9 @@ export async function load({ url }) {
 
   let query = sb
     .from("tracks")
-    .select(
-      "id, artist, title, cover_url, preview_url, source, created_at",
-      { count: "exact" },
-    )
+    .select("id, artist, title, cover_url, preview_url, source, created_at", {
+      count: "exact",
+    })
     .order(sort, { ascending: sort === "artist" })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 

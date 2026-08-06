@@ -15,8 +15,13 @@ function parseTiers(raw) {
   } catch {
     throw new Error("Paliers : JSON invalide");
   }
-  if (!Array.isArray(parsed) || !parsed.every((t) => t?.level && Number.isFinite(t?.target))) {
-    throw new Error("Paliers : chaque entrée doit avoir au moins level et target");
+  if (
+    !Array.isArray(parsed) ||
+    !parsed.every((t) => t?.level && Number.isFinite(t?.target))
+  ) {
+    throw new Error(
+      "Paliers : chaque entrée doit avoir au moins level et target",
+    );
   }
   return parsed;
 }
@@ -24,20 +29,28 @@ function parseTiers(raw) {
 export async function load() {
   const sb = getAdminClient();
 
-  const [{ data: defs, error: defsErr }, { data: holderRows }, { data: unlocks, error: unlocksErr }] =
-    await Promise.all([
-      sb.from("achievements").select("*").order("category").order("id"),
-      sb.from("user_achievements").select("achievement_id"),
-      sb
-        .from("user_achievements")
-        .select("id, user_id, achievement_id, tier, unlocked_at, profiles(username), achievements(name, icon)")
-        .order("unlocked_at", { ascending: false })
-        .limit(UNLOCKS_LIMIT),
-    ]);
+  const [
+    { data: defs, error: defsErr },
+    { data: holderRows },
+    { data: unlocks, error: unlocksErr },
+  ] = await Promise.all([
+    sb.from("achievements").select("*").order("category").order("id"),
+    sb.from("user_achievements").select("achievement_id"),
+    sb
+      .from("user_achievements")
+      .select(
+        "id, user_id, achievement_id, tier, unlocked_at, profiles(username), achievements(name, icon)",
+      )
+      .order("unlocked_at", { ascending: false })
+      .limit(UNLOCKS_LIMIT),
+  ]);
 
   const holderCounts = new Map();
   for (const r of holderRows || [])
-    holderCounts.set(r.achievement_id, (holderCounts.get(r.achievement_id) || 0) + 1);
+    holderCounts.set(
+      r.achievement_id,
+      (holderCounts.get(r.achievement_id) || 0) + 1,
+    );
 
   return {
     achievements: (defs || []).map((a) => ({
@@ -61,8 +74,10 @@ export const actions = {
     const category = formData.get("category");
 
     if (!id || !name) return { success: false, error: "id et nom requis" };
-    if (!TYPES.includes(type)) return { success: false, error: "Type invalide" };
-    if (!RARITIES.includes(rarity)) return { success: false, error: "Rareté invalide" };
+    if (!TYPES.includes(type))
+      return { success: false, error: "Type invalide" };
+    if (!RARITIES.includes(rarity))
+      return { success: false, error: "Rareté invalide" };
     if (!CATEGORIES.includes(category))
       return { success: false, error: "Catégorie invalide" };
 
@@ -89,9 +104,15 @@ export const actions = {
         return { success: false, error: "Un succès avec cet id existe déjà" };
       return { success: false, error: err.message };
     }
-    await logAdminAction(adminUser.id, "create_achievement", id, "achievement", {
-      name,
-    });
+    await logAdminAction(
+      adminUser.id,
+      "create_achievement",
+      id,
+      "achievement",
+      {
+        name,
+      },
+    );
     return { success: true };
   },
 
@@ -106,8 +127,10 @@ export const actions = {
     const category = formData.get("category");
 
     if (!id || !name) return { success: false, error: "id et nom requis" };
-    if (!TYPES.includes(type)) return { success: false, error: "Type invalide" };
-    if (!RARITIES.includes(rarity)) return { success: false, error: "Rareté invalide" };
+    if (!TYPES.includes(type))
+      return { success: false, error: "Type invalide" };
+    if (!RARITIES.includes(rarity))
+      return { success: false, error: "Rareté invalide" };
     if (!CATEGORIES.includes(category))
       return { success: false, error: "Catégorie invalide" };
 
@@ -144,9 +167,17 @@ export const actions = {
     const { adminUser, formData } = await requireAdmin(request);
     const id = formData.get("id");
     const sb = getAdminClient();
-    const { error: err } = await sb.from("user_achievements").delete().eq("id", id);
+    const { error: err } = await sb
+      .from("user_achievements")
+      .delete()
+      .eq("id", id);
     if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "revoke_achievement", id, "user_achievement");
+    await logAdminAction(
+      adminUser.id,
+      "revoke_achievement",
+      id,
+      "user_achievement",
+    );
     return { success: true };
   },
 
@@ -173,7 +204,10 @@ export const actions = {
     });
     if (err) {
       if (err.code === "23505")
-        return { success: false, error: "Ce joueur a déjà ce succès (à ce palier)" };
+        return {
+          success: false,
+          error: "Ce joueur a déjà ce succès (à ce palier)",
+        };
       return { success: false, error: err.message };
     }
     await logAdminAction(
