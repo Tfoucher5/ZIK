@@ -3,6 +3,16 @@
 
 export const NEWS = [
   {
+    date: "2026-08-11",
+    version: "3.3.1",
+    tag: "Correctif",
+    title: "Zikle — les versions d'un même titre ne piègent plus",
+    items: [
+      "Proposer « Smooth Criminal - Radio Edit » quand la réponse est « Smooth Criminal » compte désormais comme trouvé : radio edits, remasters, versions live et featurings sont reconnus comme le même morceau.",
+      "Les suggestions de recherche fusionnent ces variantes : un morceau n'apparaît plus qu'une fois dans la liste, sous son titre le plus simple.",
+    ],
+  },
+  {
     date: "2026-08-05",
     version: "3.2.0",
     tag: "Nouveauté",
