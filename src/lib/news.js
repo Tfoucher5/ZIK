@@ -4,6 +4,17 @@
 export const NEWS = [
   {
     date: "2026-08-11",
+    version: "3.3.2",
+    tag: "Correctif",
+    title: "Mobile — les réponses QCM sont enfin lisibles en entier",
+    items: [
+      "Mode Salon : le libellé des boutons de réponse était coupé par des points de suspension sur téléphone. Il passe désormais à la ligne, artiste et titre restent lisibles en entier — indispensable quand deux propositions partagent le même artiste.",
+      "Blind test en QCM : sur mobile, les quatre réponses s'affichent sur une seule colonne pleine largeur au lieu de deux colonnes trop étroites.",
+      "L'historique des titres joués affiche l'artiste et le titre complets sur mobile, sans troncature.",
+    ],
+  },
+  {
+    date: "2026-08-11",
     version: "3.3.1",
     tag: "Correctif",
     title: "Zikle — les versions d'un même titre ne piègent plus",
