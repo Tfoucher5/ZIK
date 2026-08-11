@@ -823,7 +823,7 @@
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/game.css?v=3.3.2">
 </svelte:head>
 
 {#if showDcBanner}
