@@ -437,7 +437,7 @@
 
       <h3>Série, classement et partage</h3>
       <p>
-        Votre <strong>série</strong> compte les jours gagnés d'affilée. En fin de partie, un <strong>classement du jour</strong> affiche les joueurs connectés ayant trouvé, triés par nombre d'essais puis par rapidité. Le bouton <strong>Partager</strong> copie une grille d'emojis sans spoiler : elle montre en combien d'essais et sur quelle durée d'extrait vous avez trouvé.
+        Votre <strong>série</strong> compte les jours gagnés d'affilée. En fin de partie, un <strong>classement du jour</strong> réunit tous les joueurs connectés ayant joué : d'abord ceux qui ont trouvé, triés par nombre d'essais puis par rapidité, puis une section <strong>« Ont tenté »</strong> pour ceux qui n'ont pas trouvé. Votre rang y est calculé sur l'ensemble des participants et vous est rappelé même si vous n'êtes pas dans les premiers. Le bouton <strong>Partager</strong> copie une grille d'emojis sans spoiler : elle montre en combien d'essais et sur quelle durée d'extrait vous avez trouvé.
       </p>
 
       <h3>Archives</h3>

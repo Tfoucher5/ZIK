@@ -54,6 +54,9 @@
   const LB_STEP = 5;
   let lbShown = $state(LB_STEP);
   const lbRows = $derived(leaderboard.slice(0, lbShown));
+  // Le serveur trie déjà les gagnants en premier : filtrer conserve cet ordre.
+  const lbWinners = $derived(lbRows.filter((r) => r.won !== false));
+  const lbLosers = $derived(lbRows.filter((r) => r.won === false));
   const lbTotal = $derived(leaderboard[0]?.total ?? leaderboard.length);
   const myRow = $derived(leaderboard.find((r) => r.is_me) ?? null);
   const showMyRow = $derived(!!myRow && !lbRows.includes(myRow));
@@ -587,10 +590,21 @@
           <span class="zk-lb-total">{lbTotal}</span>
         </h3>
         <ol class="zk-lb-list">
-          {#each lbRows as row, i (row.username)}
+          {#each lbWinners as row, i (row.username)}
             {@render lbLine(row, i)}
           {/each}
         </ol>
+
+        {#if lbLosers.length}
+          <!-- Les deux groupes sont séparés explicitement : sinon un « X/6 » au
+               milieu du podium se lit comme un score parmi les autres. -->
+          <p class="zk-lb-split">Ont tenté</p>
+          <ol class="zk-lb-list">
+            {#each lbLosers as row, i (row.username)}
+              {@render lbLine(row, lbWinners.length + i)}
+            {/each}
+          </ol>
+        {/if}
 
         {#if showMyRow}
           <!-- Hors de la tranche affichée : on rappelle sa propre ligne, pour
@@ -1415,12 +1429,39 @@
     color: var(--dim);
   }
   /* Ceux qui ont joué sans trouver restent listés, en retrait : on voit qui a
-     tenté sa chance sans que ça brouille la lecture du podium. */
+     tenté sa chance sans que ça brouille la lecture du podium. Le :not(.zk-lb-me)
+     laisse le liseré accent gagner quand c'est ta propre ligne. */
+  .zk-lb-lost:not(.zk-lb-me) {
+    border-left: 2px solid rgb(248 113 113 / 0.35);
+    padding-left: 8px;
+    background: rgb(248 113 113 / 0.03);
+  }
+  .zk-lb-lost .zk-lb-rank,
   .zk-lb-lost .zk-lb-name {
     color: var(--mid);
   }
   .zk-lb-lost .zk-lb-score {
     color: var(--danger);
+  }
+  /* Intertitre de bascule podium → tentatives, dans le même vocabulaire que
+     les eyebrows du reste de la page. */
+  .zk-lb-split {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 6px;
+    font-family: var(--zk-cond);
+    font-weight: 900;
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--danger);
+  }
+  .zk-lb-split::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgb(248 113 113 / 0.35), transparent);
   }
   /* minmax(0,1fr) + min-width:0 : sans ça l'ellipse ne coupe pas dans une grille
      et un pseudo très long ferait déborder la carte. */

@@ -10,7 +10,7 @@ export const NEWS = [
     items: [
       "Proposer « Smooth Criminal - Radio Edit » quand la réponse est « Smooth Criminal » compte désormais comme trouvé : radio edits, remasters, versions live et featurings sont reconnus comme le même morceau.",
       "Les suggestions de recherche fusionnent ces variantes : un morceau n'apparaît plus qu'une fois dans la liste, sous son titre le plus simple.",
-      "Le classement du jour affiche aussi les joueurs qui n'ont pas trouvé, après les gagnants : on voit tous ceux qui ont tenté leur chance.",
+      "Le classement du jour affiche aussi les joueurs qui n'ont pas trouvé, dans une section « Ont tenté » séparée du podium : on voit tous ceux qui ont tenté leur chance sans confondre les deux.",
       "Classement dépliable avec un bouton « Voir plus », et ton rang réel est toujours rappelé sous la liste, même si tu n'es pas dans les premiers.",
     ],
   },
