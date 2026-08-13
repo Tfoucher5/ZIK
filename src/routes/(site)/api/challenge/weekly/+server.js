@@ -13,6 +13,8 @@ export async function GET() {
   _cache = payload;
   _cacheExp = Date.now() + 60_000;
   return json(payload, {
-    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+    },
   });
 }
