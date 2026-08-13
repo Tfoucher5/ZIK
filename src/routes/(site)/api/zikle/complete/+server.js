@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
+import { bumpWeeklyChallenge } from "$lib/server/services/weeklyChallenge.js";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -49,6 +50,7 @@ export async function POST({ request }) {
     });
     if (error) return json({ error: error.message }, { status: 400 });
     saved = data?.[0] ?? null;
+    if (saved?.is_new && saved.won) bumpWeeklyChallenge("zikle_wins", user.id, 1);
   }
 
   return json({ track: songRow.tracks, saved });

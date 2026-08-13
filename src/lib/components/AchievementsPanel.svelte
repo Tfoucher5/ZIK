@@ -18,6 +18,7 @@
   ];
 
   const unlockedKeys = $derived(new Set(unlocked.map(u => `${u.achievement_id}:${u.tier || ''}`)));
+  const repeatCounts = $derived(new Map(unlocked.map(u => [`${u.achievement_id}:${u.tier || ''}`, u.count])));
   const unlockedCount = $derived(new Set(unlocked.map(u => u.achievement_id)).size);
   const filteredDefs = $derived(activeCat === 'all' ? defs : defs.filter(d => d.category === activeCat));
 
@@ -43,7 +44,7 @@
     if (!sb || !userId) return;
     const [{ data: d }, { data: u }, { data: p }] = await Promise.all([
       sb.from('achievements').select('*'),
-      sb.from('user_achievements').select('achievement_id, tier, unlocked_at').eq('user_id', userId),
+      sb.from('user_achievements').select('achievement_id, tier, unlocked_at, count').eq('user_id', userId),
       sb.from('profiles').select('current_streak, best_streak, win_streak, best_win_streak').eq('id', userId).single(),
     ]);
     if (d?.length) defs = d;
@@ -90,6 +91,7 @@
       {#each shownDefs as def (def.id)}
         {@const won = isUnlocked(def)}
         {@const tier = bestTier(def)}
+        {@const repeatCount = def.type === 'one_time' ? (repeatCounts.get(`${def.id}:`) ?? 0) : 0}
         <div class="ach-card" class:locked={!won} class:ach-card--legendary={won && def.rarity === 'legendary'}>
           <span class="ach-card-icon">{def.icon}</span>
           <div class="ach-card-body">
@@ -97,6 +99,9 @@
               {def.name}
               {#if tier}
                 <span class="ach-card-tier ach-card-tier--{tier}">{TIER_LABELS[tier]}</span>
+              {/if}
+              {#if repeatCount > 1}
+                <span class="ach-card-repeat">×{repeatCount}</span>
               {/if}
             </div>
             <div class="ach-card-desc">{def.description}</div>
@@ -265,6 +270,15 @@
 .ach-card-tier--bronze { background: rgba(180, 100, 50, 0.25); color: #e8a97a; }
 .ach-card-tier--silver { background: rgba(190, 195, 205, 0.22); color: #d8dde6; }
 .ach-card-tier--gold   { background: rgba(250, 204, 21, 0.22); color: #fde68a; }
+
+.ach-card-repeat {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgb(var(--accent-rgb) / 0.16);
+  color: var(--accent, #ff00ff);
+}
 
 .ach-card-desc {
   font-size: 0.74rem;

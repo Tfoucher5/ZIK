@@ -20,6 +20,7 @@ import {
   checkAchievements,
   saveGameResult,
 } from "../../services/achievements.js";
+import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
 import { ytdlAudioCache } from "../../ytdlCache.js";
 import { YTDL_TTL, getYtAudioUrl } from "../../ytdlAudio.js";
 import {
@@ -427,6 +428,9 @@ async function saveGameResults(roomId, finalScores, io) {
       is_guest: p.isGuest || !p.userId,
     }));
     await supabase.from("game_players").insert(players);
+    finalScores.forEach((p) => {
+      if (p.userId && !p.isGuest) bumpWeeklyChallenge("games_played", p.userId, 1);
+    });
 
     const room = getOrCreateRoom(roomId);
     // Marquer chaque joueur sauvegardé — _dcTimer vérifie ce flag pour éviter double-save
@@ -1072,6 +1076,7 @@ export function register(io) {
         user.roundsFullFound = (user.roundsFullFound || 0) + 1;
         if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
         room.game.totalFullFound++;
+        if (user.userId && !user.isGuest) bumpWeeklyChallenge("correct_answers", user.userId, 1);
         socket.emit("reveal_cover", { cover: room.game.currentTrack.cover });
       }
 
@@ -1103,6 +1108,7 @@ export function register(io) {
         user._fullFoundCounted = true;
         if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
         room.game.totalFullFound++;
+        if (user.userId && !user.isGuest) bumpWeeklyChallenge("correct_answers", user.userId, 1);
         socket.emit("feedback", {
           type: "qcm_correct",
           msg: `Bonne réponse ! +${pts} pts`,

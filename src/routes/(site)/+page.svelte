@@ -6,6 +6,7 @@
   import Modal from '$lib/components/Modal.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
   import { AD_SLOTS } from '$lib/ads.js';
+  import { NEWS } from '$lib/news.js';
 
   let { data } = $props();
 
@@ -42,6 +43,8 @@
   });
 
   let eloLb = $state(data.eloLb ?? []);
+  const weeklyChallenge = data.weeklyChallenge?.active ? data.weeklyChallenge : null;
+  const latestNews = NEWS[0];
   let globalStats = $state(data.globalStats ?? { users: 0, publicRooms: 0, publicPlaylists: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
   let guestUsername = $state("");
@@ -246,6 +249,21 @@
         "@type": "Question",
         "name": "ZIK fonctionne-t-il sur mobile ?",
         "acceptedAnswer": { "@type": "Answer", "text": "Oui. ZIK est conçu mobile-first. Le Mode Salon est particulièrement adapté aux smartphones pour les joueurs invités." }
+      },
+      {
+        "@type": "Question",
+        "name": "C'est quoi Zikle ?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Zikle est le mini-jeu quotidien de ZIK : une chanson à deviner en 6 essais, la même pour tous les joueurs, jouable sans compte. Un extrait de plus en plus long est révélé à chaque erreur." }
+      },
+      {
+        "@type": "Question",
+        "name": "Comment fonctionne le défi communautaire hebdomadaire ?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Chaque semaine, ZIK propose un objectif collectif (bonnes réponses, parties jouées ou victoires Zikle cumulées par tous les joueurs). Si l'objectif est atteint avant la fin de la semaine, tous les participants débloquent un succès, et le joueur ayant le plus contribué devient le top contributeur de la semaine." }
+      },
+      {
+        "@type": "Question",
+        "name": "Comment fonctionnent les succès sur ZIK ?",
+        "acceptedAnswer": { "@type": "Answer", "text": "ZIK propose des succès à débloquer (streaks, victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur." }
       }
     ]
   });
@@ -282,6 +300,7 @@
   gamesMonth={globalStats.gamesMonth}
   userCount={globalStats.users}
   roomCount={globalStats.publicRooms}
+  challenge={weeklyChallenge}
 >
   <button class="btn-accent" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer maintenant →</button>
   <button class="btn-ghost" onclick={() => goto('/rooms')}>Explorer les rooms</button>
@@ -398,30 +417,59 @@
   </div>
 </section>
 
+
 <!-- ══════════════════════════════ FEATURES ══════════════════════════════ -->
 <section class="features" use:reveal>
-  <h2 class="feat-title">Pourquoi <em>ZIK</em> ?</h2>
+  <h2 class="feat-title">Tout <em>ZIK</em>, en un coup d'œil</h2>
   <div class="feat-grid">
-    <div class="feat-item">
+    <a href="/zikle" class="feat-item">
       <span class="feat-n">01</span>
+      <span class="feat-tag">Chaque jour · Sans compte</span>
+      <div class="feat-name">Zikle</div>
+      <p class="feat-desc">Un défi musical quotidien gratuit : devine la chanson du jour en 6 essais, la même pour tout le monde.</p>
+    </a>
+    <a href="/salon" class="feat-item">
+      <span class="feat-n">02</span>
+      <span class="feat-tag">Grand écran + téléphone</span>
+      <div class="feat-name">Mode Salon</div>
+      <p class="feat-desc">Diffuse la musique sur la TV, chaque invité répond depuis son smartphone. Idéal pour les soirées.</p>
+    </a>
+    <a href="/docs#qcm" class="feat-item">
+      <span class="feat-n">03</span>
+      <span class="feat-tag">Accessible à tous</span>
+      <div class="feat-name">Mode QCM</div>
+      <p class="feat-desc">Quatre propositions, la bonne réponse suffit — sans pression, sans classement ELO.</p>
+    </a>
+    <a href="/playlists" class="feat-item">
+      <span class="feat-n">04</span>
       <span class="feat-tag">Spotify · Deezer</span>
       <div class="feat-name">Tes playlists, tes règles</div>
-    </div>
-    <div class="feat-item">
-      <span class="feat-n">02</span>
-      <span class="feat-tag">Socket.io · Temps réel</span>
-      <div class="feat-name">Zéro latence</div>
-    </div>
-    <div class="feat-item">
-      <span class="feat-n">03</span>
+      <p class="feat-desc">Importe tes propres playlists ou pioche parmi celles de la communauté.</p>
+    </a>
+    <a href="/classements" class="feat-item">
+      <span class="feat-n">05</span>
       <span class="feat-tag">ELO mondial</span>
-      <div class="feat-name">Un classement qui compte</div>
-    </div>
-    <div class="feat-item">
-      <span class="feat-n">04</span>
-      <span class="feat-tag">Mode Salon</span>
-      <div class="feat-name">Grand écran + téléphone</div>
-    </div>
+      <div class="feat-name">Classement qui compte</div>
+      <p class="feat-desc">Grimpe dans le classement mondial en Mode Classique, manche après manche.</p>
+    </a>
+    <a href="/docs#succes" class="feat-item">
+      <span class="feat-n">06</span>
+      <span class="feat-tag">Bronze · Argent · Or</span>
+      <div class="feat-name">Succès & séries</div>
+      <p class="feat-desc">Débloque des succès et enchaîne les streaks, visibles sur ton profil.</p>
+    </a>
+    <a href="/docs#amis" class="feat-item">
+      <span class="feat-n">07</span>
+      <span class="feat-tag">Profils · Invitations</span>
+      <div class="feat-name">Amis & social</div>
+      <p class="feat-desc">Suis tes amis, invite-les en un clic, comparez vos scores.</p>
+    </a>
+    <a href="/defi" class="feat-item">
+      <span class="feat-n">08</span>
+      <span class="feat-tag">Toute la communauté</span>
+      <div class="feat-name">Défi hebdomadaire</div>
+      <p class="feat-desc">Un objectif collectif chaque semaine. Contribue en jouant et grimpe dans le classement des joueurs les plus actifs.</p>
+    </a>
   </div>
 </section>
 
@@ -521,6 +569,15 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════ NOUVEAUTÉS TEASER ══════════════════════════════ -->
+{#if latestNews}
+<a href="/nouveautes" class="news-teaser" use:reveal>
+  <span class="news-teaser-badge"><span class="news-teaser-dot" aria-hidden="true"></span>Quoi de neuf</span>
+  <span class="news-teaser-title">{latestNews.title}</span>
+  <span class="news-teaser-cta">Voir les nouveautés →</span>
+</a>
+{/if}
+
 <!-- ══════════════════════════════ FAQ ══════════════════════════════ -->
 <section class="faq-section" id="faq" use:reveal>
   <h2 class="faq-title">Questions fréquentes</h2>
@@ -556,6 +613,18 @@
     <details class="faq-item">
       <summary class="faq-q">ZIK fonctionne-t-il sur mobile ?</summary>
       <p class="faq-a">Oui. ZIK est conçu mobile-first. Le Mode Salon est particulièrement adapté aux smartphones pour les joueurs invités.</p>
+    </details>
+    <details class="faq-item">
+      <summary class="faq-q">C'est quoi Zikle ?</summary>
+      <p class="faq-a">Zikle est le mini-jeu quotidien de ZIK : une chanson à deviner en 6 essais, la même pour tous les joueurs, jouable sans compte. Un extrait de plus en plus long est révélé à chaque erreur.</p>
+    </details>
+    <details class="faq-item">
+      <summary class="faq-q">Comment fonctionne le défi communautaire hebdomadaire ?</summary>
+      <p class="faq-a">Chaque semaine, ZIK propose un objectif collectif (bonnes réponses, parties jouées ou victoires Zikle cumulées par tous les joueurs). Si l'objectif est atteint avant la fin de la semaine, tous les participants débloquent un succès, et le joueur ayant le plus contribué devient le top contributeur de la semaine.</p>
+    </details>
+    <details class="faq-item">
+      <summary class="faq-q">Comment fonctionnent les succès sur ZIK ?</summary>
+      <p class="faq-a">ZIK propose des succès à débloquer (streaks, victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur.</p>
     </details>
   </div>
 </section>
@@ -962,10 +1031,12 @@
   .feat-title em { color: var(--accent); font-style: normal; }
   .feat-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 2px;
   }
   .feat-item {
+    display: flex;
+    flex-direction: column;
     padding: 28px 24px;
     border: 1px solid rgb(var(--c-glass) / 0.06);
     transition: border-color 0.15s, background 0.15s;
@@ -973,6 +1044,12 @@
   .feat-item:hover {
     border-color: rgb(var(--accent-rgb) / 0.2);
     background: rgb(var(--accent-rgb) / 0.03);
+  }
+  .feat-desc {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--mid);
+    margin-top: 10px;
   }
   .feat-n {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1385,6 +1462,58 @@
     font-size: 1.5rem;
   }
 
+  /* ════════════════════════════ NOUVEAUTÉS TEASER ════════════════════════════ */
+  .news-teaser {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 40px 48px 0;
+    padding: 20px 24px;
+    border: 1px solid rgb(var(--c-glass) / 0.1);
+    background: rgb(var(--c-glass) / 0.02);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .news-teaser:hover {
+    border-color: rgb(var(--accent-rgb) / 0.3);
+    background: rgb(var(--accent-rgb) / 0.03);
+  }
+  .news-teaser-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .news-teaser-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .news-teaser-title {
+    font-weight: 600;
+    font-size: 0.92rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .news-teaser-cta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+  .news-teaser:hover .news-teaser-cta { color: var(--accent); }
+
   /* ════════════════════════════ FAQ ════════════════════════════ */
   .faq-section {
     padding: 72px clamp(20px, 5vw, 72px);
@@ -1451,6 +1580,7 @@
     .chart { padding: 48px 24px; }
     .ticket-section { padding: 48px 24px; grid-template-columns: 1fr; gap: 36px; }
     .salon-phones { display: none; }
+    .news-teaser { margin: 32px 24px 0; }
     .faq-section { padding: 48px 24px; }
   }
 

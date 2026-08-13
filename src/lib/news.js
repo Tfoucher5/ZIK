@@ -3,6 +3,20 @@
 
 export const NEWS = [
   {
+    date: "2026-08-06",
+    version: "3.4.0",
+    tag: "Nouveauté",
+    title: "Défi communautaire hebdomadaire",
+    items: [
+      "Chaque semaine, un objectif collectif est proposé à toute la communauté : bonnes réponses, parties jouées ou victoires Zikle cumulées par tous les joueurs.",
+      "Si l'objectif est atteint avant la fin de la semaine, tous les participants débloquent un succès collectif.",
+      "Le joueur ayant le plus contribué devient le top contributeur de la semaine et débloque un succès dédié, affiché avec un ×N sur le profil s'il est obtenu plusieurs semaines différentes.",
+      "Le défi en cours, sa progression et le top 3 des contributeurs sont affichés sur la page d'accueil.",
+      "Nouvelle page /defi : classement complet de la semaine en cours et historique de tous les défis passés, avec le classement détaillé de chaque semaine.",
+      "La page d'accueil présente aussi désormais toutes les fonctionnalités du site (Zikle, Mode Salon, QCM, succès, social) et un aperçu des dernières nouveautés.",
+    ],
+  },
+  {
     date: "2026-08-05",
     version: "3.2.0",
     tag: "Nouveauté",
