@@ -28,6 +28,7 @@ ZIK propose plusieurs façons de jouer :
 - Les titres proviennent du top Deezer, rafraîchi chaque semaine : uniquement des morceaux populaires.
 - Un même titre ne peut pas revenir avant 365 jours.
 - Le Zikle du jour est jouable sans compte. Les archives demandent un compte gratuit.
+- Classement du jour pour les joueurs connectés : ceux qui ont trouvé d'abord (par essais puis rapidité), puis ceux qui ont tenté sans trouver. Chacun voit son rang réel, même hors du haut de tableau.
 - Résultat partageable sous forme de grille d'emojis, sans révéler le titre.
 
 ## À propos

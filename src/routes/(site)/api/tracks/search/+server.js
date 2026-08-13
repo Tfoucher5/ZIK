@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
-import { escapeIlike, dedupById } from "$lib/zikle/shared.js";
+import { escapeIlike, dedupByTrack } from "$lib/zikle/shared.js";
 
 export async function GET({ request, url }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
@@ -42,10 +42,15 @@ export async function GET({ request, url }) {
     return 4;
   };
 
+  // Dédup par morceau et pas par id : les variantes d'un même titre (radio edit,
+  // remaster, feat.) fusionnent en une suggestion, sous leur libellé le plus court.
   // Slice à 20 (pas 8) : un artiste avec beaucoup de titres exacts (ex. Tiakola
   // en solo) dépasse déjà les 8 sans compter les feats — la liste de suggestions
   // scrolle (cf. ZikleGame.svelte), pas besoin de couper aussi court.
-  const merged = dedupById([...(byArtist.data || []), ...(byTitle.data || [])])
+  const merged = dedupByTrack([
+    ...(byArtist.data || []),
+    ...(byTitle.data || []),
+  ])
     .sort(
       (a, b) =>
         rank(a) - rank(b) ||

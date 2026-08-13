@@ -86,13 +86,52 @@ export function escapeIlike(q) {
   return q.replace(/[%_]/g, (c) => `\\${c}`);
 }
 
-export function dedupById(rows) {
-  const seen = new Set();
-  const out = [];
+// Le catalogue contient plusieurs entrées pour un même morceau (« Smooth
+// Criminal », « Smooth Criminal - Radio Edit », « (Remastered 2012) »,
+// « feat. X »). Sans clé commune, proposer la mauvaise variante compte comme un
+// essai raté alors que le joueur a trouvé le titre.
+const VARIANT_RE =
+  /\b(radio ?edit|edit|remaster\w*|remix|rmx|version|mix|live|acoustic|unplugged|instrumental|karaoke|extended|single|album|mono|stereo|explicit|clean|bonus|deluxe|edition|anniversary|rework|session|demo|feat|ft|featuring|with)\b/;
+const FEAT_RE = /\s*[([]?\s*\b(feat|ft|featuring|avec|with)\b\.?\s.*$/;
+
+function deburr(s) {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+// Les apostrophes disparaissent au lieu de devenir un espace, pour que
+// « Don't Stop » et « Dont Stop » donnent la même clé.
+function squash(s) {
+  return s
+    .replace(/['’`]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// On ne coupe que si le segment porte un mot de variante : « Numb - Encore » ou
+// « Live and Let Die » doivent rester intacts.
+function stripVariants(s) {
+  return s
+    .replace(/[([][^)\]]*[)\]]/g, (seg) => (VARIANT_RE.test(seg) ? " " : seg))
+    .replace(/\s[-–—]\s.*$/, (seg) => (VARIANT_RE.test(seg) ? "" : seg));
+}
+
+export function canonicalTrackKey(artist, title) {
+  const a = squash(deburr(artist).replace(FEAT_RE, ""));
+  const raw = deburr(title);
+  const t = squash(stripVariants(raw));
+  return `${a}::${t || squash(raw)}`;
+}
+
+export function dedupByTrack(rows) {
+  const best = new Map();
   for (const row of rows) {
-    if (seen.has(row.id)) continue;
-    seen.add(row.id);
-    out.push(row);
+    const key = canonicalTrackKey(row.artist, row.title);
+    const cur = best.get(key);
+    // À clé égale on garde le titre le plus court : c'est la forme canonique.
+    if (!cur || row.title.length < cur.title.length) best.set(key, row);
   }
-  return out;
+  return [...best.values()];
 }

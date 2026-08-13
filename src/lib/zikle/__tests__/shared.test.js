@@ -6,7 +6,8 @@ import {
   computeStreak,
   buildShareGrid,
   escapeIlike,
-  dedupById,
+  canonicalTrackKey,
+  dedupByTrack,
 } from "../shared.js";
 
 describe("durationForAttempt", () => {
@@ -101,16 +102,64 @@ describe("escapeIlike", () => {
   });
 });
 
-describe("dedupById", () => {
-  it("garde la première occurrence de chaque id", () => {
+describe("canonicalTrackKey", () => {
+  const MJ = "Michael Jackson";
+  const ref = canonicalTrackKey(MJ, "Smooth Criminal");
+
+  it("ignore les mentions de variante", () => {
+    for (const t of [
+      "Smooth Criminal - Radio Edit",
+      "Smooth Criminal (Remastered 2012)",
+      "smooth criminal [Single Version]",
+      "Smooth Criminal - 2012 Remaster",
+      "Smooth Criminal (Live)",
+    ])
+      expect(canonicalTrackKey(MJ, t)).toBe(ref);
+  });
+
+  it("ignore les featurings et la casse côté artiste", () => {
+    expect(
+      canonicalTrackKey("michael jackson feat. Akon", "Smooth Criminal"),
+    ).toBe(ref);
+  });
+
+  it("ignore accents, apostrophes et ponctuation", () => {
+    expect(canonicalTrackKey("Céline Dion", "S'il suffisait d'aimer")).toBe(
+      canonicalTrackKey("Celine Dion", "Sil suffisait daimer"),
+    );
+  });
+
+  it("ne coupe pas un titre dont un mot ressemble à une variante", () => {
+    expect(canonicalTrackKey("Wings", "Live and Let Die")).not.toBe(
+      canonicalTrackKey("Wings", "Live"),
+    );
+    expect(canonicalTrackKey("Linkin Park", "Numb - Encore")).not.toBe(
+      canonicalTrackKey("Linkin Park", "Numb"),
+    );
+  });
+
+  it("distingue deux morceaux différents", () => {
+    expect(canonicalTrackKey(MJ, "Bad")).not.toBe(ref);
+    expect(canonicalTrackKey("Alien Ant Farm", "Smooth Criminal")).not.toBe(
+      ref,
+    );
+  });
+});
+
+describe("dedupByTrack", () => {
+  it("fusionne les variantes et garde le titre le plus court", () => {
     const rows = [
-      { id: "1", n: "a" },
-      { id: "2", n: "b" },
-      { id: "1", n: "c" },
+      {
+        id: "1",
+        artist: "Michael Jackson",
+        title: "Smooth Criminal - Radio Edit",
+      },
+      { id: "2", artist: "Michael Jackson", title: "Smooth Criminal" },
+      { id: "3", artist: "Michael Jackson", title: "Bad" },
     ];
-    expect(dedupById(rows)).toEqual([
-      { id: "1", n: "a" },
-      { id: "2", n: "b" },
+    expect(dedupByTrack(rows)).toEqual([
+      { id: "2", artist: "Michael Jackson", title: "Smooth Criminal" },
+      { id: "3", artist: "Michael Jackson", title: "Bad" },
     ]);
   });
 });

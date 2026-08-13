@@ -3,7 +3,7 @@
 
 export const NEWS = [
   {
-    date: "2026-08-06",
+    date: "2026-08-13",
     version: "3.4.0",
     tag: "Nouveauté",
     title: "Défi communautaire hebdomadaire",
@@ -14,6 +14,29 @@ export const NEWS = [
       "Le défi en cours, sa progression et le top 3 des contributeurs sont affichés sur la page d'accueil.",
       "Nouvelle page /defi : classement complet de la semaine en cours et historique de tous les défis passés, avec le classement détaillé de chaque semaine.",
       "La page d'accueil présente aussi désormais toutes les fonctionnalités du site (Zikle, Mode Salon, QCM, succès, social) et un aperçu des dernières nouveautés.",
+    ],
+  },
+  {
+    date: "2026-08-11",
+    version: "3.3.2",
+    tag: "Correctif",
+    title: "Mobile — les réponses QCM sont enfin lisibles en entier",
+    items: [
+      "Mode Salon : le libellé des boutons de réponse était coupé par des points de suspension sur téléphone. Il passe désormais à la ligne, artiste et titre restent lisibles en entier — indispensable quand deux propositions partagent le même artiste.",
+      "Blind test en QCM : sur mobile, les quatre réponses s'affichent sur une seule colonne pleine largeur au lieu de deux colonnes trop étroites.",
+      "L'historique des titres joués affiche l'artiste et le titre complets sur mobile, sans troncature.",
+    ],
+  },
+  {
+    date: "2026-08-11",
+    version: "3.3.1",
+    tag: "Correctif",
+    title: "Zikle — les versions d'un même titre ne piègent plus",
+    items: [
+      "Proposer « Smooth Criminal - Radio Edit » quand la réponse est « Smooth Criminal » compte désormais comme trouvé : radio edits, remasters, versions live et featurings sont reconnus comme le même morceau.",
+      "Les suggestions de recherche fusionnent ces variantes : un morceau n'apparaît plus qu'une fois dans la liste, sous son titre le plus simple.",
+      "Le classement du jour affiche aussi les joueurs qui n'ont pas trouvé, dans une section « Ont tenté » séparée du podium : on voit tous ceux qui ont tenté leur chance sans confondre les deux.",
+      "Classement dépliable avec un bouton « Voir plus », et ton rang réel est toujours rappelé sous la liste, même si tu n'es pas dans les premiers.",
     ],
   },
   {

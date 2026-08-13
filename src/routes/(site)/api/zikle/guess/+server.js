@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
-import { todayParis } from "$lib/zikle/shared.js";
+import { todayParis, canonicalTrackKey } from "$lib/zikle/shared.js";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,13 +32,26 @@ export async function POST({ request }) {
   }
 
   const sb = getAdminClient();
-  const { data, error } = await sb
-    .from("daily_songs")
-    .select("track_id")
-    .eq("date", date)
-    .single();
-  if (error || !data)
+  // Comparaison sur artiste + titre normalisés, pas sur l'id : le catalogue
+  // contient plusieurs entrées pour un même morceau (radio edit, remaster,
+  // feat.), et proposer la mauvaise ne doit pas coûter un essai.
+  const [song, guess] = await Promise.all([
+    sb
+      .from("daily_songs")
+      .select("tracks(artist, title)")
+      .eq("date", date)
+      .single(),
+    sb.from("tracks").select("artist, title").eq("id", trackId).maybeSingle(),
+  ]);
+  if (song.error || !song.data?.tracks)
     return json({ error: "Aucune chanson pour cette date" }, { status: 404 });
 
-  return json({ correct: data.track_id === trackId });
+  const target = song.data.tracks;
+  const proposed = guess.data;
+  const correct =
+    !!proposed &&
+    canonicalTrackKey(target.artist, target.title) ===
+      canonicalTrackKey(proposed.artist, proposed.title);
+
+  return json({ correct });
 }

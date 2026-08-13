@@ -2150,7 +2150,6 @@ html.no-animations *::after {
     transform 0.1s;
   min-height: 62px;
   position: relative;
-  overflow: hidden;
 }
 .g-qcm-btn:active:not(:disabled) {
   transform: scale(0.97);
@@ -2223,9 +2222,13 @@ html.no-animations *::after {
   background: currentColor;
   opacity: 0.7;
 }
+/* min-width: 0 + anywhere : sans ça un « Artiste — Titre » très long déborde du
+   bouton au lieu de passer à la ligne (min-width auto des enfants flex). */
 .g-qcm-text {
   flex: 1;
+  min-width: 0;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 .g-qcm-correct {
   background: linear-gradient(
@@ -2401,6 +2404,28 @@ html.no-animations *::after {
   }
   .g-rv-chips {
     justify-content: center;
+  }
+
+  /* QCM : deux colonnes laissaient ~100px de large au texte, donc un
+     « Artiste — Titre » sur 5 lignes serrées. Une seule colonne pleine largeur
+     le rend lisible d'un coup d'œil, et la hauteur suit le contenu. */
+  .g-qcm-grid {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .g-qcm-btn {
+    min-height: 52px;
+    padding: 11px 13px;
+    font-size: 0.92rem;
+  }
+
+  /* L'historique occupe toute la largeur sur mobile : l'ellipse de la sidebar
+     n'a plus lieu d'être, on affiche artiste et titre en entier. */
+  .g-hitem-artist,
+  .g-hitem-title {
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
   }
 }
 

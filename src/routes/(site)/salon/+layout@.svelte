@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <link rel="stylesheet" href="/css/salon.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/salon.css?v=3.3.2">
 </svelte:head>
 
 {@render children()}

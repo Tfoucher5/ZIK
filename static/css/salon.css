@@ -2590,14 +2590,15 @@ a {
 }
 .salon-play-body .salon-choices {
   flex: 1;
-  max-height: 500px;
   justify-content: flex-end;
 }
+/* flex-shrink 0 et pas de max-height : les deux rognaient les libellés passés
+   sur 2-3 lignes. Les boutons occupent toujours l'espace libre (grow), le corps
+   de page scrolle (overflow-y: auto ci-dessus) quand les textes sont longs. */
 .salon-play-body .salon-choice-btn {
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   min-height: 58px;
-  max-height: 104px;
-  font-size: clamp(1.05rem, 2.8vw, 1.25rem);
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
 }
 .salon-play .salon-timer-bar {
   position: absolute;
@@ -2925,11 +2926,13 @@ a {
 .c3 .choice-shape::before {
   content: "■";
 }
+/* Le libellé est « Artiste — Titre », et un leurre peut porter le même artiste
+   que la bonne réponse : tronquer à l'ellipse rendait le choix indevinable sur
+   téléphone. On laisse le texte passer à la ligne, jamais couper. */
 .choice-text {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 
 /* États QCM joueur */
