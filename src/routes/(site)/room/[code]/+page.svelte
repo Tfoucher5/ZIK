@@ -1,8 +1,10 @@
 <script>
   import { onMount } from 'svelte';
+  import { modeRules } from '$lib/rooms/room-content.js';
 
   let { data } = $props();
-  const { room } = data;
+  const { room, trackCount, artists, leaderboard } = data;
+  const mode = modeRules(room.game_mode);
 
   let loggedUser   = $state(null);
   let guestName    = $state('');
@@ -160,16 +162,56 @@
     </div>
   </div>
 
-  <!-- SEO content block (visible and useful to users too) -->
-  <section class="room-seo-block">
-    <h2>Comment jouer au blind test sur ZIK ?</h2>
-    <ol>
-      <li>Entre ton pseudo ci-dessus et clique sur <strong>Jouer maintenant</strong></li>
-      <li>Écoute l'extrait musical qui se lance — identifie l'artiste et le titre</li>
-      <li>Tape ta réponse dans le champ prévu et valide — plus tu es rapide, plus tu marques de points</li>
-      <li>Grimpe dans le classement et défie les autres joueurs en ligne !</li>
-    </ol>
-    <p>Le blind test est <strong>gratuit</strong>, sans installation, directement dans le navigateur. <a href="/docs">En savoir plus sur le fonctionnement →</a></p>
+  <section class="room-info">
+    <div class="room-info-card">
+      <h2>{mode.label}</h2>
+      <p class="room-info-intro">{mode.intro}</p>
+      <ul class="room-rules">
+        {#each mode.rules as rule (rule)}
+          <li>{rule}</li>
+        {/each}
+      </ul>
+    </div>
+
+    <div class="room-info-card">
+      <h2>La partie en bref</h2>
+      <dl class="room-specs">
+        <div><dt>Manches</dt><dd>{room.max_rounds}</dd></div>
+        <div><dt>Par manche</dt><dd>{room.round_duration} s</dd></div>
+        {#if trackCount}
+          <div><dt>Titres en jeu</dt><dd>{trackCount}</dd></div>
+        {/if}
+      </dl>
+      <p class="room-info-foot">
+        <a href="/docs">Comment ça marche ?</a>
+      </p>
+    </div>
+
+    {#if artists.length}
+      <div class="room-info-card">
+        <h2>Artistes les plus présents</h2>
+        <ul class="room-artists">
+          {#each artists as a (a.artist)}
+            <li><span class="ra-name">{a.artist}</span><span class="ra-count">{a.count}</span></li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
+    {#if leaderboard.length}
+      <div class="room-info-card">
+        <h2>Classement de la semaine</h2>
+        <ol class="room-lb">
+          {#each leaderboard as p, i (p.username)}
+            <li>
+              <span class="lb-rank">{i + 1}</span>
+              <span class="lb-name">{p.username}</span>
+              <span class="lb-score">{p.weekly_score}</span>
+            </li>
+          {/each}
+        </ol>
+      </div>
+    {/if}
   </section>
 
 </main>
@@ -364,34 +406,117 @@
   }
   .room-back-link a:hover { color: var(--text, #f1f5f9); }
 
-  /* ── SEO content block ── */
-  .room-seo-block {
-    max-width: 640px;
+  /* ── Fiche d'information ── */
+  .room-info {
+    max-width: 900px;
     margin: 0 auto;
     padding: 0 clamp(16px, 5vw, 80px) 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    align-items: start;
   }
-  .room-seo-block h2 {
+  .room-info-card {
+    background: var(--surface, rgb(var(--c-glass) / 0.04));
+    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .room-info-card h2 {
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin: 0 0 12px;
     color: var(--text, #f1f5f9);
   }
-  .room-seo-block ol {
-    color: var(--mid, #94a3b8);
+  .room-info-intro {
     font-size: 0.9rem;
-    line-height: 1.7;
-    padding-left: 20px;
-    margin-bottom: 16px;
-  }
-  .room-seo-block p {
-    font-size: 0.88rem;
-    color: var(--dim, #64748b);
+    color: var(--mid, #94a3b8);
     line-height: 1.6;
+    margin: 0 0 12px;
   }
-  .room-seo-block a {
-    color: var(--accent, #ff00ff);
+  .room-rules {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--mid, #94a3b8);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  .room-specs {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .room-specs > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
+    padding-bottom: 6px;
+  }
+  .room-specs dt {
+    color: var(--dim, #64748b);
+    font-size: 0.85rem;
+  }
+  .room-specs dd {
+    margin: 0;
+    color: var(--text, #f1f5f9);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .room-info-foot {
+    margin: 14px 0 0;
+    font-size: 0.82rem;
+  }
+  .room-info-foot a {
+    color: var(--accent);
     text-decoration: none;
   }
-  .room-seo-block a:hover { text-decoration: underline; }
+  .room-info-foot a:hover { text-decoration: underline; }
+
+  .room-artists {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .room-artists li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.88rem;
+  }
+  .ra-name { color: var(--text, #f1f5f9); }
+  .ra-count { color: var(--dim, #64748b); }
+
+  .room-lb {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .room-lb li {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+  }
+  .lb-rank {
+    color: var(--accent);
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 800;
+  }
+  .lb-name {
+    color: var(--text, #f1f5f9);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lb-score { color: var(--mid, #94a3b8); font-weight: 600; }
 </style>
