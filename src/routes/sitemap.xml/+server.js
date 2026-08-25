@@ -1,5 +1,4 @@
-import { supabase, getAdminClient } from "$lib/server/config.js";
-import { todayParis } from "$lib/zikle/shared.js";
+import { supabase } from "$lib/server/config.js";
 
 const SITE = "https://www.zik-music.fr";
 
@@ -10,6 +9,8 @@ const STATIC_PAGES = [
   { loc: "/zikle/archives", changefreq: "daily", priority: "0.6" },
   { loc: "/playlists", changefreq: "weekly", priority: "0.7" },
   { loc: "/classements", changefreq: "daily", priority: "0.7" },
+  { loc: "/defi", changefreq: "daily", priority: "0.7" },
+  { loc: "/defi/archives", changefreq: "weekly", priority: "0.5" },
   { loc: "/salon", changefreq: "monthly", priority: "0.7" },
   { loc: "/docs", changefreq: "monthly", priority: "0.6" },
   { loc: "/nouveautes", changefreq: "weekly", priority: "0.5" },
@@ -28,47 +29,26 @@ function escapeXml(str) {
 export async function GET() {
   const urls = [...STATIC_PAGES];
 
-  const { data: rooms } = await supabase
+  // `rooms` n'a pas de colonne updated_at : le lastmod vient de last_active_at.
+  const { data: rooms, error: roomsError } = await supabase
     .from("rooms")
-    .select("code, updated_at")
+    .select("code, last_active_at")
     .eq("is_public", true)
+    .eq("is_official", true)
     .order("last_active_at", { ascending: false })
     .limit(200);
 
-  if (rooms) {
-    for (const room of rooms) {
-      urls.push({
-        loc: `/room/${room.code}`,
-        changefreq: "daily",
-        priority: "0.5",
-        lastmod: room.updated_at ? room.updated_at.slice(0, 10) : undefined,
-      });
-    }
-  }
+  if (roomsError) console.error("[sitemap] rooms:", roomsError.message);
 
-  // Archives Zikle : une page indexable par jour PASSÉ. La date du jour est
-  // exclue car /zikle/archives/[date] redirige vers /zikle pour aujourd'hui.
-  // `daily_songs` n'a pas de policy publique d'où le client admin ; on ne lit
-  // que la date, jamais le titre (ce serait un spoiler).
-  // Isolé : le sitemap ne doit pas tomber si cette section échoue.
-  try {
-    const { data: days } = await getAdminClient()
-      .from("daily_songs")
-      .select("date")
-      .lt("date", todayParis())
-      .order("date", { ascending: false })
-      .limit(365);
-
-    for (const day of days ?? []) {
-      urls.push({
-        loc: `/zikle/archives/${day.date}`,
-        changefreq: "yearly",
-        priority: "0.4",
-        lastmod: day.date,
-      });
-    }
-  } catch (e) {
-    console.error("[sitemap] archives Zikle:", e.message);
+  for (const room of rooms ?? []) {
+    urls.push({
+      loc: `/room/${room.code}`,
+      changefreq: "daily",
+      priority: "0.5",
+      lastmod: room.last_active_at
+        ? room.last_active_at.slice(0, 10)
+        : undefined,
+    });
   }
 
   const today = new Date().toISOString().slice(0, 10);
