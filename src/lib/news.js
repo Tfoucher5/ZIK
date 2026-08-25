@@ -3,6 +3,18 @@
 
 export const NEWS = [
   {
+    date: "2026-08-25",
+    version: "3.4.0",
+    tag: "Amélioration",
+    title: "Les pages de room racontent enfin quelque chose",
+    items: [
+      "Chaque room affiche ses règles selon son mode de jeu, son nombre de manches et la durée d'une manche : une room Classique et sa variante Casual ne se ressemblent plus.",
+      "Les artistes les plus présents dans la playlist sont listés, avec leur nombre de titres — sans jamais dévoiler les morceaux, qui restent la réponse du blind test.",
+      "Le classement de la semaine de la room est visible directement sur sa page.",
+      "Les pages sans contenu propre sortent de l'index Google, ce qui concentre le référencement sur les pages qui en valent la peine.",
+    ],
+  },
+  {
     date: "2026-08-11",
     version: "3.3.2",
     tag: "Correctif",
