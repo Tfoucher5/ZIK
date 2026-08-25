@@ -542,5 +542,16 @@
   @media (max-width: 600px) {
     .hero-title { font-size: clamp(2.8rem, 13vw, 5rem); }
     .covers-grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: calc(100vw / 4); }
+
+    /* Le panneau s'ancre sur la rangée de pastilles et non sur le bouton :
+       décalé vers la droite par les pastilles ou un retour à la ligne, il
+       sortait de l'écran. */
+    .hero-pills { position: relative; }
+    .challenge-widget { position: static; }
+    .challenge-panel {
+      left: 0;
+      right: 0;
+      width: auto;
+    }
   }
 </style>
