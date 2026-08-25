@@ -92,6 +92,8 @@ export function buildTrack({
   custom_title,
   custom_feats,
   extraAnswers,
+  id,
+  external_id,
 }) {
   const effectiveArtist = custom_artist || artist;
   const { main, feats: parsedFeats } = parseFeaturing(effectiveArtist || "");
@@ -114,6 +116,8 @@ export function buildTrack({
     cleanTitle: cleanString(effectiveTitle),
     cover: cover || "",
     preview_url: preview_url || null,
+    id,
+    external_id,
     extraAnswers: extras,
   };
 }
@@ -137,6 +141,8 @@ export function buildTrackFromRow(row) {
       label: a.answer_types?.name || "",
       value: a.value,
     })),
+    id: meta.id,
+    external_id: meta.external_id,
   });
 }
 
