@@ -3,6 +3,16 @@
 
 export const NEWS = [
   {
+    date: "2026-08-26",
+    version: "3.6.0",
+    tag: "Amélioration",
+    title: "Signaler un titre muet en deux clics",
+    items: [
+      "Quand tu n'entends pas la musique, le signalement te laisse désigner le ou les titres concernés, y compris celui de la manche en cours — sans en dévoiler la réponse.",
+      "Les autres bugs se signalent toujours librement, avec un motif pour les orienter plus vite.",
+    ],
+  },
+  {
     date: "2026-08-25",
     version: "3.5.0",
     tag: "Amélioration",
