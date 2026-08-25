@@ -1,6 +1,6 @@
 import { supabase } from "$lib/server/config.js";
 import { error } from "@sveltejs/kit";
-import { topArtists } from "$lib/rooms/room-content.js";
+import { topArtists, artistFromRow } from "$lib/rooms/room-content.js";
 
 async function loadTrackCount(playlistId) {
   if (!playlistId) return null;
@@ -16,9 +16,11 @@ async function loadArtists(playlistId) {
   if (!playlistId) return [];
   const { data } = await supabase
     .from("custom_playlist_tracks")
-    .select("artist")
+    .select("custom_artist, tracks(artist)")
     .eq("playlist_id", playlistId);
-  return topArtists(data ?? []);
+  return topArtists(
+    (data ?? []).map((row) => ({ artist: artistFromRow(row) })),
+  );
 }
 
 async function loadLeaderboard(code) {

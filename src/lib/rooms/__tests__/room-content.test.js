@@ -1,5 +1,33 @@
 import { describe, it, expect } from "vitest";
-import { topArtists, modeRules } from "../room-content.js";
+import { topArtists, modeRules, artistFromRow } from "../room-content.js";
+
+describe("artistFromRow", () => {
+  it("prend l'artiste du catalogue tracks", () => {
+    expect(
+      artistFromRow({ custom_artist: null, tracks: { artist: "Ninho" } }),
+    ).toBe("Ninho");
+  });
+
+  it("laisse custom_artist primer sur le catalogue", () => {
+    expect(
+      artistFromRow({
+        custom_artist: "Ninho & Niska",
+        tracks: { artist: "Ninho" },
+      }),
+    ).toBe("Ninho & Niska");
+  });
+
+  it("ignore un custom_artist vide", () => {
+    expect(
+      artistFromRow({ custom_artist: "", tracks: { artist: "PLK" } }),
+    ).toBe("PLK");
+  });
+
+  it("renvoie null si la jointure tracks est absente", () => {
+    expect(artistFromRow({ custom_artist: null, tracks: null })).toBe(null);
+    expect(artistFromRow({})).toBe(null);
+  });
+});
 
 describe("topArtists", () => {
   it("compte les titres par artiste et trie par fréquence", () => {
