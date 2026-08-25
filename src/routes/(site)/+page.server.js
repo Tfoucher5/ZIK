@@ -1,11 +1,12 @@
 export async function load({ fetch }) {
-  const [roomsRes, statsRes, eloRes] = await Promise.all([
+  const [roomsRes, statsRes, eloRes, challengeRes] = await Promise.all([
     fetch("/api/rooms/official"),
     fetch("/api/stats/global"),
     fetch("/api/leaderboard/elo"),
+    fetch("/api/challenge/weekly"),
   ]);
 
-  const [roomsData, statsData, eloData] = await Promise.all([
+  const [roomsData, statsData, eloData, challengeData] = await Promise.all([
     roomsRes.json().catch(() => ({ rooms: [], totalOnline: 0 })),
     statsRes.json().catch(() => ({
       users: 0,
@@ -14,6 +15,7 @@ export async function load({ fetch }) {
       gamesMonth: 0,
     })),
     eloRes.json().catch(() => []),
+    challengeRes.json().catch(() => ({ active: false })),
   ]);
 
   return {
@@ -26,5 +28,6 @@ export async function load({ fetch }) {
       gamesMonth: statsData.gamesMonth ?? 0,
     },
     eloLb: Array.isArray(eloData) ? eloData : [],
+    weeklyChallenge: challengeData,
   };
 }

@@ -4,7 +4,7 @@
 export const NEWS = [
   {
     date: "2026-08-25",
-    version: "3.4.0",
+    version: "3.5.0",
     tag: "Amélioration",
     title: "Les pages de room racontent enfin quelque chose",
     items: [
@@ -12,6 +12,21 @@ export const NEWS = [
       "Les artistes les plus présents dans la playlist sont listés, avec leur nombre de titres — sans jamais dévoiler les morceaux, qui restent la réponse du blind test.",
       "Le classement de la semaine de la room est visible directement sur sa page.",
       "Les pages sans contenu propre sortent de l'index Google, ce qui concentre le référencement sur les pages qui en valent la peine.",
+      "Sur mobile, le panneau du défi hebdomadaire ne déborde plus de l'écran une fois déplié.",
+    ],
+  },
+  {
+    date: "2026-08-13",
+    version: "3.4.0",
+    tag: "Nouveauté",
+    title: "Défi communautaire hebdomadaire",
+    items: [
+      "Chaque semaine, un objectif collectif est proposé à toute la communauté : bonnes réponses, parties jouées ou victoires Zikle cumulées par tous les joueurs.",
+      "Si l'objectif est atteint avant la fin de la semaine, tous les participants débloquent un succès collectif.",
+      "Le joueur ayant le plus contribué devient le top contributeur de la semaine et débloque un succès dédié, affiché avec un ×N sur le profil s'il est obtenu plusieurs semaines différentes.",
+      "Le défi en cours, sa progression et le top 3 des contributeurs sont affichés sur la page d'accueil.",
+      "Nouvelle page /defi : classement complet de la semaine en cours et historique de tous les défis passés, avec le classement détaillé de chaque semaine.",
+      "La page d'accueil présente aussi désormais toutes les fonctionnalités du site (Zikle, Mode Salon, QCM, succès, social) et un aperçu des dernières nouveautés.",
     ],
   },
   {

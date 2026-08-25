@@ -9,6 +9,8 @@ const STATIC_PAGES = [
   { loc: "/zikle/archives", changefreq: "daily", priority: "0.6" },
   { loc: "/playlists", changefreq: "weekly", priority: "0.7" },
   { loc: "/classements", changefreq: "daily", priority: "0.7" },
+  { loc: "/defi", changefreq: "daily", priority: "0.7" },
+  { loc: "/defi/archives", changefreq: "weekly", priority: "0.5" },
   { loc: "/salon", changefreq: "monthly", priority: "0.7" },
   { loc: "/docs", changefreq: "monthly", priority: "0.6" },
   { loc: "/nouveautes", changefreq: "weekly", priority: "0.5" },
