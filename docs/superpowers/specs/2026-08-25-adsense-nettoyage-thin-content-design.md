@@ -112,8 +112,16 @@ repère sur le contenu de la room, pas un spoiler exploitable. Arbitrage validé
 
 Implémentation : `custom_playlist_tracks` ne se prête pas à un `GROUP BY` via supabase-js.
 Sélectionner la seule colonne `artist` pour la `playlist_id` de la room, puis agréger côté
-serveur dans le `load`. Le volume le permet : environ 1 150 lignes pour l'ensemble des
-playlists, soit une centaine par room.
+serveur dans le `load`. Sondage du 2026-08-25 : la playlist « RAP FR » compte 586 titres et
+la lecture passe avec le client anon, la RLS ne bloque pas.
+
+**Limite connue.** Les deux membres d'une paire pointent sur la **même** `playlist_id`
+(vérifié en base pour les 8 paires). Ce bloc et le nombre de titres seront donc identiques
+entre « Rap FR » et « RAP FR - Casual ». La différenciation repose sur les trois autres
+éléments, qui diffèrent réellement : le texte des règles, le nombre de manches (10 en
+classique contre 20 en QCM) et le classement hebdomadaire, propre au code de la room.
+La duplication résiduelle est assumée : elle porte sur une liste de dix noms, non sur le
+corps de la page.
 
 #### 3.4 Classement hebdomadaire de la room
 
