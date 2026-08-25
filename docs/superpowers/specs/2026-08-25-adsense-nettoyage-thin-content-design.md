@@ -9,11 +9,11 @@
 Le sitemap expose environ 126 URL (comptage réel en base au 2026-08-25 ; les `limit(200)`
 et `limit(365)` du code sont des plafonds, pas des volumes) :
 
-| Type d'URL | Nombre réel | Ce que voit un crawler non connecté |
-| --- | --- | --- |
-| `/room/[code]` | 90 | Le même gabarit à chaque fois. Seuls le nom, l'emoji et la description changent ; le bloc « Comment jouer au blind test sur ZIK ? » est identique mot pour mot. |
-| `/zikle/archives/[date]` | 21 | Un mur de login. Le corps de page se limite à « Zikle #N » et « Les jours passés sont réservés aux comptes ». |
-| Pages à contenu réel | 15 | `/`, `/docs`, `/vs/*`, `/nouveautes`, `/playlists`, `/classements`, `/salon`, pages légales. |
+| Type d'URL               | Nombre réel | Ce que voit un crawler non connecté                                                                                                                             |
+| ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/room/[code]`           | 90          | Le même gabarit à chaque fois. Seuls le nom, l'emoji et la description changent ; le bloc « Comment jouer au blind test sur ZIK ? » est identique mot pour mot. |
+| `/zikle/archives/[date]` | 21          | Un mur de login. Le corps de page se limite à « Zikle #N » et « Les jours passés sont réservés aux comptes ».                                                   |
+| Pages à contenu réel     | 15          | `/`, `/docs`, `/vs/*`, `/nouveautes`, `/playlists`, `/classements`, `/salon`, pages légales.                                                                    |
 
 Environ 88 % des pages indexables sont donc dupliquées ou vides. Le volume absolu reste
 modeste — on n'est pas devant une ferme de contenu — mais la proportion est mauvaise et

@@ -25,9 +25,11 @@
 ### Task 1: Filtrer le sitemap
 
 **Files:**
+
 - Modify: `src/routes/sitemap.xml/+server.js`
 
 **Interfaces:**
+
 - Consumes: rien
 - Produces: rien (aucun autre fichier ne dépend de ce module)
 
@@ -47,14 +49,30 @@ Supprimer la ligne `import { todayParis } from "$lib/zikle/shared.js";`. `getAdm
 
 - [ ] **Step 3: Restreindre les rooms aux officielles**
 
+**Attention :** `rooms` n'a **pas** de colonne `updated_at` — le `select` d'origine était
+cassé et l'erreur non capturée, si bien qu'aucune room n'a jamais figuré dans le sitemap.
+Le `lastmod` doit venir de `last_active_at`.
+
 ```js
-  const { data: rooms } = await supabase
-    .from("rooms")
-    .select("code, updated_at")
-    .eq("is_public", true)
-    .eq("is_official", true)
-    .order("last_active_at", { ascending: false })
-    .limit(200);
+// `rooms` n'a pas de colonne updated_at : le lastmod vient de last_active_at.
+const { data: rooms, error: roomsError } = await supabase
+  .from("rooms")
+  .select("code, last_active_at")
+  .eq("is_public", true)
+  .eq("is_official", true)
+  .order("last_active_at", { ascending: false })
+  .limit(200);
+
+if (roomsError) console.error("[sitemap] rooms:", roomsError.message);
+
+for (const room of rooms ?? []) {
+  urls.push({
+    loc: `/room/${room.code}`,
+    changefreq: "daily",
+    priority: "0.5",
+    lastmod: room.last_active_at ? room.last_active_at.slice(0, 10) : undefined,
+  });
+}
 ```
 
 - [ ] **Step 4: Vérifier le résultat**
@@ -83,10 +101,12 @@ git commit -m "fix(seo): sitemap limité aux pages à contenu propre"
 ### Task 2: Passer en noindex les pages sans contenu propre
 
 **Files:**
+
 - Modify: `src/routes/(site)/zikle/archives/[date]/+page.svelte:16`
 - Modify: `src/routes/(site)/room/[code]/+page.svelte:71`
 
 **Interfaces:**
+
 - Consumes: `data.room.is_official`, déjà fourni par `room/[code]/+page.server.js`
 - Produces: rien
 
@@ -146,10 +166,12 @@ git commit -m "fix(seo): noindex sur les archives Zikle et les rooms non officie
 ### Task 3: Module de contenu des rooms (TDD)
 
 **Files:**
+
 - Create: `src/lib/rooms/room-content.js`
 - Test: `src/lib/rooms/__tests__/room-content.test.js`
 
 **Interfaces:**
+
 - Consumes: rien
 - Produces:
   - `topArtists(tracks, limit = 10) -> Array<{ artist: string, count: number }>`
@@ -183,11 +205,19 @@ describe("topArtists", () => {
 
   it("départage les ex aequo par ordre alphabétique", () => {
     const tracks = [{ artist: "Zaho" }, { artist: "Alpha Wann" }];
-    expect(topArtists(tracks).map((a) => a.artist)).toEqual(["Alpha Wann", "Zaho"]);
+    expect(topArtists(tracks).map((a) => a.artist)).toEqual([
+      "Alpha Wann",
+      "Zaho",
+    ]);
   });
 
   it("ignore les artistes vides ou nuls", () => {
-    const tracks = [{ artist: "IAM" }, { artist: "" }, { artist: null }, { artist: "   " }];
+    const tracks = [
+      { artist: "IAM" },
+      { artist: "" },
+      { artist: null },
+      { artist: "   " },
+    ];
     expect(topArtists(tracks)).toEqual([{ artist: "IAM", count: 1 }]);
   });
 
@@ -298,9 +328,11 @@ git commit -m "feat(rooms): module de contenu des fiches de room"
 ### Task 4: Charger la donnée dans le load de la room
 
 **Files:**
+
 - Modify: `src/routes/(site)/room/[code]/+page.server.js`
 
 **Interfaces:**
+
 - Consumes: `topArtists` de `$lib/rooms/room-content.js` (Task 3)
 - Produces: le `load` retourne désormais
   `{ room, trackCount: number | null, artists: Array<{artist, count}>, leaderboard: Array<{username, avatar_url, weekly_score, games_count}> }`
@@ -394,9 +426,11 @@ git commit -m "feat(rooms): charge playlist, artistes et classement hebdo"
 ### Task 5: Remplacer le bloc dupliqué par les blocs différenciés
 
 **Files:**
+
 - Modify: `src/routes/(site)/room/[code]/+page.svelte`
 
 **Interfaces:**
+
 - Consumes: `{ room, trackCount, artists, leaderboard }` du `load` (Task 4) ; `modeRules` de `$lib/rooms/room-content.js` (Task 3)
 - Produces: rien
 
@@ -405,12 +439,12 @@ git commit -m "feat(rooms): charge playlist, artistes et classement hebdo"
 Le haut du `<script>` doit devenir :
 
 ```js
-  import { onMount } from 'svelte';
-  import { modeRules } from '$lib/rooms/room-content.js';
+import { onMount } from "svelte";
+import { modeRules } from "$lib/rooms/room-content.js";
 
-  let { data } = $props();
-  const { room, trackCount, artists, leaderboard } = data;
-  const mode = modeRules(room.game_mode);
+let { data } = $props();
+const { room, trackCount, artists, leaderboard } = data;
+const mode = modeRules(room.game_mode);
 ```
 
 L'import rejoint celui d'`onMount` en tête de bloc ; la déstructuration existante
@@ -492,120 +526,129 @@ Supprimer les règles `.room-seo-block` et ses descendants (`.room-seo-block h2`
 `a`, `a:hover`), puis ajouter à la fin du `<style>` :
 
 ```css
-  /* ── Fiche d'information ── */
-  .room-info {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 clamp(16px, 5vw, 80px) 80px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 16px;
-    align-items: start;
-  }
-  .room-info-card {
-    background: var(--surface, rgb(var(--c-glass) / 0.04));
-    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
-    border-radius: 16px;
-    padding: 22px;
-  }
-  .room-info-card h2 {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 12px;
-    color: var(--text, #f1f5f9);
-  }
-  .room-info-intro {
-    font-size: 0.9rem;
-    color: var(--mid, #94a3b8);
-    line-height: 1.6;
-    margin: 0 0 12px;
-  }
-  .room-rules {
-    margin: 0;
-    padding-left: 18px;
-    color: var(--mid, #94a3b8);
-    font-size: 0.88rem;
-    line-height: 1.7;
-  }
-  .room-specs {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .room-specs > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
-    padding-bottom: 6px;
-  }
-  .room-specs dt {
-    color: var(--dim, #64748b);
-    font-size: 0.85rem;
-  }
-  .room-specs dd {
-    margin: 0;
-    color: var(--text, #f1f5f9);
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-  .room-info-foot {
-    margin: 14px 0 0;
-    font-size: 0.82rem;
-  }
-  .room-info-foot a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-  .room-info-foot a:hover { text-decoration: underline; }
+/* ── Fiche d'information ── */
+.room-info {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 5vw, 80px) 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.room-info-card {
+  background: var(--surface, rgb(var(--c-glass) / 0.04));
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
+  border-radius: 16px;
+  padding: 22px;
+}
+.room-info-card h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--text, #f1f5f9);
+}
+.room-info-intro {
+  font-size: 0.9rem;
+  color: var(--mid, #94a3b8);
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+.room-rules {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--mid, #94a3b8);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.room-specs {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.room-specs > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
+  padding-bottom: 6px;
+}
+.room-specs dt {
+  color: var(--dim, #64748b);
+  font-size: 0.85rem;
+}
+.room-specs dd {
+  margin: 0;
+  color: var(--text, #f1f5f9);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.room-info-foot {
+  margin: 14px 0 0;
+  font-size: 0.82rem;
+}
+.room-info-foot a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.room-info-foot a:hover {
+  text-decoration: underline;
+}
 
-  .room-artists {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .room-artists li {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 0.88rem;
-  }
-  .ra-name { color: var(--text, #f1f5f9); }
-  .ra-count { color: var(--dim, #64748b); }
+.room-artists {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.room-artists li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+}
+.ra-name {
+  color: var(--text, #f1f5f9);
+}
+.ra-count {
+  color: var(--dim, #64748b);
+}
 
-  .room-lb {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    counter-reset: none;
-  }
-  .room-lb li {
-    display: grid;
-    grid-template-columns: 24px 1fr auto;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.88rem;
-  }
-  .lb-rank {
-    color: var(--accent);
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 800;
-  }
-  .lb-name {
-    color: var(--text, #f1f5f9);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .lb-score { color: var(--mid, #94a3b8); font-weight: 600; }
+.room-lb {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: none;
+}
+.room-lb li {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+.lb-rank {
+  color: var(--accent);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+}
+.lb-name {
+  color: var(--text, #f1f5f9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-score {
+  color: var(--mid, #94a3b8);
+  font-weight: 600;
+}
 ```
 
 - [ ] **Step 5: Vérifier la différenciation et l'absence de spoiler**
@@ -642,11 +685,13 @@ git commit -m "feat(rooms): fiche de room différenciée (règles, specs, artist
 ### Task 6: Passer en version 3.4.0
 
 **Files:**
+
 - Modify: `package.json:3`
 - Modify: `src/routes/(site)/+layout.svelte:227`
 - Modify: `src/lib/news.js`
 
 **Interfaces:**
+
 - Consumes: rien
 - Produces: rien
 

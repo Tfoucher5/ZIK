@@ -68,7 +68,7 @@
 <svelte:head>
   <title>{pageTitle}</title>
   <meta name="description" content="{desc} Gratuit, sans installation, directement dans le navigateur.">
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content={room.is_official ? 'index, follow' : 'noindex, follow'}>
   <link rel="canonical" href={canonicalUrl}>
 
   <meta property="og:title" content={pageTitle}>
