@@ -27,6 +27,7 @@
   let deckSpin    = $state(false);
   let players     = $state([]);
   let history     = $state([]);
+  let currentRoundInfo = $state(null);
   let slotArtist  = $state({ val: '???', state: null });
   let slotTitle   = $state({ val: '???', state: null });
   let featSlots   = $state([]);
@@ -645,6 +646,7 @@
       clearTimeout(_roundLoadingTimer);
       roundLoading = false;
       roundInfo = `Manche ${data.round} / ${data.total}`;
+      currentRoundInfo = { round: data.round, trackId: data.trackId ?? null, videoId: data.videoId ?? null };
       coverSrc = ''; showCover = false;
       summaryShow = false; gameoverShow = false; feedback = { msg: '', cls: '' };
       const featCount = data.featCount || 0;
@@ -743,6 +745,7 @@
       _roundActive = false; _waitingForSync = false; syncWaiting = false; _syncAnchor = null; guessDisabled = true; stopVideo(); timerPct = 0; deckSpin = false;
       stopMediaGuard();
       history = [data, ...history];
+      currentRoundInfo = null;
     });
     socket.on('game_over', scores => {
       _roundActive = false; _syncAnchor = null; stopVideo();
@@ -1323,6 +1326,8 @@
   roomId={ROOM_ID}
   reporterId={USER_ID}
   reporterName={USERNAME}
+  {history}
+  currentRound={currentRoundInfo}
 />
 
 <!-- Inviter des amis dans la room courante -->

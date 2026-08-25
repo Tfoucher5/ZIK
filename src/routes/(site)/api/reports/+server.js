@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
+import { sanitizeReportTracks } from "$lib/reports/bug-report.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -40,7 +41,16 @@ export async function POST({ request }) {
   if (!["bug", "user", "contact"].includes(type)) {
     return json({ error: "Type invalide" }, { status: 400 });
   }
-  if (!message?.trim()) {
+  // metadata vient du client : on ne recopie que des champs connus.
+  const safeTracks = metadata?.tracks
+    ? sanitizeReportTracks(metadata.tracks)
+    : null;
+  const safeMetadata = safeTracks ? { ...metadata, tracks: safeTracks } : {};
+
+  // Un titre désigné vaut description : le message n'est alors plus exigé.
+  const titreDesigne =
+    type === "bug" && subject === "audio" && safeTracks?.length > 0;
+  if (!message?.trim() && !titreDesigne) {
     return json({ error: "Message requis" }, { status: 400 });
   }
   if (type === "contact" && !reporter_email?.trim()) {
@@ -66,7 +76,7 @@ export async function POST({ request }) {
     reported_username: reported_username?.trim() || null,
     room_id: room_id || null,
     subject: subject?.trim() || null,
-    metadata: metadata || {},
+    metadata: safeMetadata,
   });
 
   if (error) return json({ error: error.message }, { status: 500 });
