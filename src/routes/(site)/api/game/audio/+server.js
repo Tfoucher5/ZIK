@@ -29,11 +29,15 @@ export async function GET({ url, request }) {
         signal: AbortSignal.timeout(8000),
       });
     } catch {
+      console.warn(`[audio] régénération yt-dlp KO pour ${videoId}`);
       return new Response("Audio unavailable", { status: 503 });
     }
   }
 
   if (!upstream || upstream.status >= 400) {
+    console.warn(
+      `[audio] ${videoId} indisponible — upstream ${upstream?.status ?? "injoignable"}, Range "${range ?? "aucun"}"`,
+    );
     return new Response("Audio unavailable", { status: 503 });
   }
 
