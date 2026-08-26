@@ -436,6 +436,11 @@
                     {#if r.profiles?.username}<div class="pw-owner">par {r.profiles.username}</div>{/if}
                     <div class="pw-footer">
                       <span class="pw-code {cfg.cls}">{r.code}</span>
+                      <a
+                        class="pw-details"
+                        href="/room/{r.code}"
+                        onclick={e => e.stopPropagation()}
+                      >Détails</a>
                     </div>
                   </div>
                 </div>
@@ -473,6 +478,11 @@
                       {#if r.is_official}<span class="pw-badge pw-badge-official">✓ Off.</span>{/if}
                       {#if r.game_mode === 'qcm'}<span class="pw-badge pw-badge-qcm">QCM</span>{:else}<span class="pw-badge pw-badge-classic">Classique</span>{/if}
                     </div>
+                    <a
+                      class="pwh-details"
+                      href="/room/{r.code}"
+                      onclick={e => e.stopPropagation()}
+                    >Détails</a>
                     <button class="{r.online > 0 ? 'btn-join' : 'btn-dispo'} pwh-btn">
                       {r.online > 0 ? 'Rejoindre →' : 'Entrer →'}
                     </button>
@@ -1027,6 +1037,9 @@
     font-weight: 900; letter-spacing: 0.22em;
     text-shadow: 0 2px 10px rgba(0,0,0,1);
   }
+  /* Au repos sur desktop, la place manque dans les petites cases : l'accès à la
+     fiche passe par l'overlay. En liste mobile, il n'y a pas d'overlay. */
+  .pw-details { display: none; }
   .pw-code.pw-a { font-size: 1.4rem; color: var(--accent); }
   .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: rgba(255, 255, 255, 0.3); }
 
@@ -1126,6 +1139,25 @@
     flex-shrink: 0;
   }
   .pwh-badges { display: flex; gap: 6px; align-items: center; flex: 1; flex-wrap: wrap; }
+
+  .pwh-details {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border: 1px solid rgb(var(--c-glass) / 0.22);
+    border-radius: 3px;
+    color: var(--mid, #94a3b8);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .pwh-details:hover {
+    color: var(--text, #f1f5f9);
+    border-color: rgb(var(--c-glass) / 0.45);
+  }
 
   .pwh-btn {
     flex-shrink: 0;
@@ -1560,6 +1592,21 @@
     .pw-name { font-size: 1rem !important; }
     .pw-name.pw-a { font-size: 1.1rem !important; }
     .pw-code { font-size: 0.72rem !important; color: rgb(var(--c-glass) / 0.3) !important; }
+    .pw-details {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      padding: 6px 11px;
+      border: 1px solid rgb(var(--c-glass) / 0.22);
+      border-radius: 3px;
+      color: var(--mid, #94a3b8);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
   }
 
   @media (max-width: 700px) {
