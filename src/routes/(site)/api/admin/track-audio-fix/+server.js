@@ -17,10 +17,13 @@ async function checkAdmin(token) {
 export async function POST({ url, request }) {
   await checkAdmin(url.searchParams.get("token"));
 
-  const { trackId, previewUrl, externalId } = await request.json();
+  const { trackId, previewUrl, externalId, youtubeId } = await request.json();
   if (!trackId) return json({ error: "trackId requis" }, { status: 400 });
 
   const patch = {};
+  // Chaîne vide = on désépingle et le jeu reprend sa recherche automatique.
+  if (typeof youtubeId === "string")
+    patch.youtube_id = youtubeId.trim() || null;
   if (previewUrl) {
     patch.preview_url = previewUrl;
     // Les URL Deezer portent leur expiration : on la stocke pour que le

@@ -19,6 +19,21 @@ describe("buildTrack — identifiants du catalogue", () => {
     expect(t.external_id).toBeUndefined();
   });
 
+  it("conserve la vidéo épinglée", () => {
+    const t = buildTrack({
+      artist: "PLK",
+      title: "Pas de son",
+      youtube_id: "abc123",
+    });
+    expect(t.youtube_id).toBe("abc123");
+  });
+
+  it("laisse la vidéo épinglée indéfinie quand elle n'est pas fournie", () => {
+    expect(
+      buildTrack({ artist: "PLK", title: "Pas de son" }).youtube_id,
+    ).toBeUndefined();
+  });
+
   it("n'altère pas les champs de jeu existants", () => {
     const t = buildTrack({
       artist: "Gazo feat. Tiakola",
@@ -44,8 +59,13 @@ describe("buildTrackFromRow", () => {
       cover_url: "http://x/c.jpg",
       preview_url: "http://x/p.mp3",
       external_id: "dz-77",
+      youtube_id: "yt-88",
     },
   };
+
+  it("reprend la vidéo épinglée du catalogue", () => {
+    expect(buildTrackFromRow(row).youtube_id).toBe("yt-88");
+  });
 
   it("reprend les identifiants du catalogue joint", () => {
     const t = buildTrackFromRow(row);

@@ -46,6 +46,40 @@ export async function ytsSearch(artist, title) {
   }
 }
 
+// Infos d'une vidéo précise, au format de `ytsSearch` pour être substituable.
+// La durée sert à tirer le point de départ de l'extrait.
+export async function ytVideoInfo(videoId) {
+  const { stdout } = await execFileAsync(
+    YTDLP_BIN,
+    [
+      `https://www.youtube.com/watch?v=${videoId}`,
+      "-j",
+      "--no-playlist",
+      "--no-warnings",
+      "--socket-timeout",
+      "8",
+    ],
+    { timeout: 12000, maxBuffer: 20 * 1024 * 1024 },
+  );
+  const info = JSON.parse(stdout);
+  return {
+    id: info.id,
+    duration: (info.duration || 0) * 1000,
+    channel: { name: info.channel || info.uploader || "" },
+  };
+}
+
+// Une vidéo épinglée court-circuite la recherche : c'est un choix humain, il
+// prime sur l'heuristique. Si son interrogation échoue, on l'utilise quand même
+// — l'extrait démarrera au début faute de connaître la durée.
+export async function resolveVideo(artist, track) {
+  if (track.youtube_id) {
+    const info = await ytVideoInfo(track.youtube_id).catch(() => null);
+    return info ?? { id: track.youtube_id, duration: 0, channel: { name: "" } };
+  }
+  return ytsSearch(artist, track.title);
+}
+
 export function previewCacheKey(track) {
   return `prev_${(track.cleanArtist + track.cleanTitle).replace(/\W/g, "").slice(0, 32)}`;
 }
@@ -89,7 +123,7 @@ export async function prefetchNextRound(roomId) {
 
   try {
     const artist = nextTrack.mainArtist || nextTrack.artist;
-    const video = await ytsSearch(artist, nextTrack.title);
+    const video = await resolveVideo(artist, nextTrack);
 
     let videoId = null,
       startSeconds = 0,

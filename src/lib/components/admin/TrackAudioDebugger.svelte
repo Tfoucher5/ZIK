@@ -91,6 +91,27 @@
     finally { saving = false; }
   }
 
+  // Épingler force le jeu à utiliser cette vidéo ; épingler la vidéo déjà
+  // épinglée la libère et rend la main à la recherche automatique.
+  async function epingler(videoId) {
+    saving = true; erreur = '';
+    try {
+      const res = await fetch(`/api/admin/track-audio-fix?token=${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackId,
+          youtubeId: report?.track?.youtubeId === videoId ? '' : videoId,
+        }),
+      });
+      const d = await res.json();
+      if (res.status === 403) { erreur = 'Session expirée — recharge la page.'; return; }
+      if (!res.ok) { erreur = d.error || "L'épinglage a échoué."; return; }
+      await tester();
+    } catch { erreur = 'Le serveur est injoignable.'; }
+    finally { saving = false; }
+  }
+
   function duree(s) {
     if (!s) return '';
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -134,13 +155,19 @@
             {#if cle === 'recherche' && report.candidats?.length}
               <ul class="tad-yt">
                 {#each report.candidats as c (c.id)}
-                  <li class:retenu={c.retenu}>
-                    <span class="tad-yt-mark">{c.retenu ? '▸' : ''}</span>
+                  {@const epingle = report.track.youtubeId === c.id}
+                  <li class:retenu={epingle || (!report.track.youtubeId && c.retenu)}>
+                    <span class="tad-yt-mark">
+                      {epingle ? '📌' : (!report.track.youtubeId && c.retenu) ? '▸' : ''}
+                    </span>
                     <a href="https://www.youtube.com/watch?v={c.id}" target="_blank" rel="noopener noreferrer">
                       {c.titre}
                     </a>
                     <span class="tad-yt-meta">
                       {c.chaine}{c.topic ? ' · officielle' : ''}{c.duree ? ` · ${duree(c.duree)}` : ''}
+                      <button class="tad-pin" onclick={() => epingler(c.id)} disabled={saving}>
+                        {epingle ? 'Détacher' : 'Épingler'}
+                      </button>
                     </span>
                   </li>
                 {/each}
@@ -377,10 +404,31 @@
   .tad-yt a:hover { border-bottom-color: currentColor; }
   .tad-yt-meta {
     grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
     font-size: 0.68rem;
     color: var(--c-muted, #6b7280);
-    opacity: 0.75;
   }
+  .tad-pin {
+    background: none;
+    border: 1px solid var(--c-border, rgba(255, 255, 255, 0.07));
+    border-radius: 3px;
+    color: var(--c-muted, #6b7280);
+    font-family: inherit;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tad-pin:hover:not(:disabled) {
+    color: var(--c-text, #e2e8f0);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .tad-pin:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .tad-audio { width: 100%; height: 32px; }
   .tad-sep {

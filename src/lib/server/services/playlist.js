@@ -94,6 +94,7 @@ export function buildTrack({
   extraAnswers,
   id,
   external_id,
+  youtube_id,
 }) {
   const effectiveArtist = custom_artist || artist;
   const { main, feats: parsedFeats } = parseFeaturing(effectiveArtist || "");
@@ -118,6 +119,7 @@ export function buildTrack({
     preview_url: preview_url || null,
     id,
     external_id,
+    youtube_id,
     extraAnswers: extras,
   };
 }
@@ -143,11 +145,12 @@ export function buildTrackFromRow(row) {
     })),
     id: meta.id,
     external_id: meta.external_id,
+    youtube_id: meta.youtube_id,
   });
 }
 
 export const TRACK_ROW_SELECT =
-  "id, position, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, source, preview_expires_at), track_answers(value, answer_types(name))";
+  "id, position, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, youtube_id, source, preview_expires_at), track_answers(value, answer_types(name))";
 
 export function calcSpeedBonus(timeTaken) {
   if (timeTaken < 10) return 2;

@@ -85,7 +85,7 @@ export async function POST({ url, request }) {
   const { data: track } = await getAdminClient()
     .from("tracks")
     .select(
-      "id, artist, title, preview_url, preview_expires_at, external_id, source",
+      "id, artist, title, preview_url, preview_expires_at, external_id, youtube_id, source",
     )
     .eq("id", trackId)
     .single();
@@ -114,13 +114,19 @@ export async function POST({ url, request }) {
 
   // getYtAudioUrl attend un identifiant de vidéo : on passe d'abord par
   // ytsSearch, exactement comme le fait le jeu.
-  const video = await ytsSearch(track.artist, track.title).catch(() => null);
+  // Une vidéo épinglée court-circuite la recherche, comme dans le jeu.
+  const epingle = track.youtube_id || null;
+  const video = epingle
+    ? { id: epingle }
+    : await ytsSearch(track.artist, track.title).catch(() => null);
   const candidats = await candidatsYoutube(track.artist, track.title);
   steps.recherche = step(
     Boolean(video?.id),
-    video?.id
-      ? `${candidats.length} résultats, retenu ${video.id}`
-      : "aucune vidéo trouvée",
+    epingle
+      ? `vidéo épinglée ${epingle} — la recherche est ignorée`
+      : video?.id
+        ? `${candidats.length} résultats, retenu ${video.id}`
+        : "aucune vidéo trouvée",
     video?.id ? null : "ytsSearch ne renvoie rien",
   );
 
@@ -173,7 +179,12 @@ export async function POST({ url, request }) {
   );
 
   return json({
-    track: { id: track.id, artist: track.artist, title: track.title },
+    track: {
+      id: track.id,
+      artist: track.artist,
+      title: track.title,
+      youtubeId: epingle,
+    },
     steps,
     candidats,
     playable: overridePreviewUrl || stillValid || dz || it || null,

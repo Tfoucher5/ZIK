@@ -87,7 +87,10 @@
       "mcp__plugin_supabase_supabase__list_tables",
       "mcp__plugin_supabase_supabase__list_migrations",
       "Bash(node -e ' *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(npx vitest *)",
+      "Bash(curl -s --max-time 25 localhost:5173/nouveautes)",
+      "Bash(git rev-list *)"
     ]
   }
 }

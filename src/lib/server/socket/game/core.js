@@ -31,7 +31,7 @@ import {
 import { scheduleChatClear, cancelChatClear, addChatMessage } from "./chat.js";
 import { makeChoices, calcQcmPoints } from "./scoring.js";
 import {
-  ytsSearch,
+  resolveVideo,
   previewCacheKey,
   validPreviewUrl,
   getDeezerPreview,
@@ -306,7 +306,7 @@ async function startNextRound(roomId, io) {
 
     if (!videoId) {
       const artist = track.mainArtist || track.artist;
-      const video = await ytsSearch(artist, track.title);
+      const video = await resolveVideo(artist, track);
       if (video) {
         videoId = video.id;
         const durationSec = Math.round((video.duration || 0) / 1000);
