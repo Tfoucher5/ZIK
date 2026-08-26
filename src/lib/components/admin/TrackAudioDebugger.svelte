@@ -19,14 +19,19 @@
   let searchErrors = $state([]);
   let choisi       = $state(null);
 
-  const ORDRE = [
+  // L'ordre reproduit celui que le jeu emprunte réellement.
+  const ETAPES = [
     ['catalogue', 'Catalogue'],
-    ['recherche', 'Recherche'],
-    ['ytdlp', 'yt-dlp'],
-    ['proxy', 'Proxy audio'],
+    ['recherche', 'Recherche YouTube'],
+    ['ytdlp', 'Extraction yt-dlp'],
+    ['proxy', 'Flux audio'],
     ['deezer', 'Deezer'],
     ['itunes', 'iTunes'],
   ];
+
+  const etapes = $derived(
+    report ? ETAPES.filter(([cle]) => report.steps[cle]) : [],
+  );
 
   async function tester() {
     loading = true; erreur = ''; saved = false;
@@ -37,10 +42,10 @@
         body: JSON.stringify({ trackId }),
       });
       const d = await res.json();
-      if (!res.ok) { erreur = d.error || 'Erreur'; return; }
+      if (!res.ok) { erreur = d.error || 'Le diagnostic a échoué.'; return; }
       report = d;
       if (!query.trim()) query = `${d.track.artist} ${d.track.title}`.trim();
-    } catch { erreur = 'Erreur réseau.'; }
+    } catch { erreur = 'Le serveur est injoignable.'; }
     finally { loading = false; }
   }
 
@@ -54,15 +59,14 @@
         body: JSON.stringify({ query }),
       });
       const d = await res.json();
-      if (!res.ok) { erreur = d.error || 'Erreur'; return; }
+      if (!res.ok) { erreur = d.error || 'La recherche a échoué.'; return; }
       results = d.results;
       searchErrors = d.errors ?? [];
-    } catch { erreur = 'Erreur réseau.'; }
+    } catch { erreur = 'Le serveur est injoignable.'; }
     finally { searching = false; }
   }
 
-  // On n'enregistre que ce qui a été écouté : le bouton n'apparaît qu'après
-  // sélection d'une proposition, et n'écrit que sa source.
+  // On n'enregistre que ce qui a été écouté : la source vient d'une proposition.
   async function utiliser(r) {
     saving = true; erreur = '';
     try {
@@ -76,11 +80,11 @@
         }),
       });
       const d = await res.json();
-      if (!res.ok) { erreur = d.error || 'Erreur'; return; }
+      if (!res.ok) { erreur = d.error || "L'enregistrement a échoué."; return; }
       saved = true;
       choisi = r;
       await tester();
-    } catch { erreur = 'Erreur réseau.'; }
+    } catch { erreur = 'Le serveur est injoignable.'; }
     finally { saving = false; }
   }
 
@@ -90,94 +94,264 @@
   }
 </script>
 
-<div class="tad">
-  <button class="tad-run" onclick={tester} disabled={loading}>
-    {loading ? 'Test en cours…' : 'Diagnostiquer'}
-  </button>
+<section class="tad">
+  <header class="tad-top">
+    <span class="tad-eyebrow">Diagnostic audio</span>
+    <button class="tad-btn tad-btn-run" onclick={tester} disabled={loading}>
+      {loading ? 'Analyse…' : report ? 'Relancer' : 'Analyser la chaîne'}
+    </button>
+  </header>
 
-  {#if erreur}<p class="tad-err">{erreur}</p>{/if}
+  {#if erreur}<p class="tad-alert">{erreur}</p>{/if}
 
   {#if report}
-    <p class="tad-title">{report.track.artist} — {report.track.title}</p>
+    <p class="tad-track">
+      <span class="tad-track-a">{report.track.artist}</span>
+      <span class="tad-track-t">{report.track.title}</span>
+    </p>
 
-    <ul class="tad-steps">
-      {#each ORDRE as [cle, libelle] (cle)}
-        {#if report.steps[cle]}
-          <li class:ok={report.steps[cle].ok}>
-            <span class="tad-dot">{report.steps[cle].ok ? '✓' : '✕'}</span>
-            <span class="tad-lbl">{libelle}</span>
+    <p class="tad-verdict" class:ko={!report.playable}>
+      {report.playable
+        ? 'Une source jouable a été trouvée.'
+        : 'Aucune source jouable — ce titre reste muet en partie.'}
+    </p>
+
+    <ol class="tad-chain">
+      {#each etapes as [cle, libelle], i (cle)}
+        <li class:ok={report.steps[cle].ok} class:last={i === etapes.length - 1}>
+          <span class="tad-idx">{String(i + 1).padStart(2, '0')}</span>
+          <span class="tad-node" aria-hidden="true"></span>
+          <div class="tad-body">
+            <span class="tad-step">{libelle}</span>
             <span class="tad-detail">{report.steps[cle].detail}</span>
             {#if report.steps[cle].error}
               <span class="tad-why">{report.steps[cle].error}</span>
             {/if}
-          </li>
-        {/if}
+          </div>
+        </li>
       {/each}
-    </ul>
+    </ol>
 
     {#if report.playable}
       <!-- svelte-ignore a11y_media_has_caption -->
-      <audio controls src={report.playable}></audio>
+      <audio class="tad-audio" controls src={report.playable}></audio>
     {/if}
 
+    <div class="tad-sep"></div>
+
+    <span class="tad-eyebrow">Remplacer la source</span>
     <div class="tad-search">
       <input
         bind:value={query}
-        placeholder="Rechercher un titre de remplacement"
+        placeholder="Artiste et titre"
         onkeydown={e => { if (e.key === 'Enter') chercher(); }}
       >
-      <button onclick={chercher} disabled={searching || !query.trim()}>
+      <button class="tad-btn" onclick={chercher} disabled={searching || !query.trim()}>
         {searching ? 'Recherche…' : 'Chercher'}
       </button>
     </div>
 
     {#each searchErrors as e (e)}
-      <p class="tad-hint">{e}</p>
+      <p class="tad-note">{e}</p>
     {/each}
 
     {#if results}
       {#if results.length}
-        <p class="tad-hint">Écoute puis choisis : la source du titre sera remplacée.</p>
+        <p class="tad-note">Écoute, puis remplace la source par celle qui correspond.</p>
         <ul class="tad-res">
           {#each results as r (r.source + (r.externalId ?? r.previewUrl))}
             <li class:chosen={choisi?.previewUrl === r.previewUrl}>
-              {#if r.cover}<img src={r.cover} alt="" width="40" height="40">{/if}
+              {#if r.cover}
+                <img src={r.cover} alt="" width="36" height="36">
+              {/if}
               <div class="tad-res-txt">
                 <span class="tad-res-t">{r.title}</span>
-                <span class="tad-res-a">{r.artist}{r.album ? ` · ${r.album}` : ''}{r.duration ? ` · ${duree(r.duration)}` : ''}</span>
-                <span class="tad-res-src">{r.source}</span>
+                <span class="tad-res-a">
+                  {r.artist}{r.album ? ` · ${r.album}` : ''}{r.duration ? ` · ${duree(r.duration)}` : ''}
+                </span>
               </div>
+              <span class="tad-src">{r.source}</span>
               <!-- svelte-ignore a11y_media_has_caption -->
               <audio controls preload="none" src={r.previewUrl}></audio>
-              <button class="tad-use" onclick={() => utiliser(r)} disabled={saving}>
+              <button class="tad-btn tad-btn-use" onclick={() => utiliser(r)} disabled={saving}>
                 {saving ? '…' : 'Utiliser'}
               </button>
             </li>
           {/each}
         </ul>
       {:else}
-        <p class="tad-hint">Aucun extrait écoutable pour cette recherche.</p>
+        <p class="tad-note">Aucun extrait écoutable pour cette recherche.</p>
       {/if}
     {/if}
 
     {#if saved}
-      <p class="tad-ok">
+      <p class="tad-saved">
         Source remplacée{choisi ? ` par « ${choisi.title} » de ${choisi.artist}` : ''}.
       </p>
     {/if}
   {/if}
-</div>
+</section>
 
 <style>
   .tad {
-    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
-    border-radius: 12px;
-    padding: 14px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--c-border, rgba(255, 255, 255, 0.07));
+    border-radius: 10px;
+    padding: 14px 16px;
     margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
-  .tad-run { padding: 7px 14px; cursor: pointer; font-family: inherit; }
-  .tad-title { font-weight: 700; margin: 12px 0 8px; color: var(--text, #f1f5f9); }
-  .tad-steps {
+
+  .tad-top { display: flex; align-items: center; gap: 12px; }
+
+  .tad-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--c-muted, #6b7280);
+  }
+
+  .tad-btn {
+    background: none;
+    border: 1px solid var(--c-border, rgba(255, 255, 255, 0.07));
+    color: var(--c-text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .tad-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  .tad-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tad-btn-run {
+    margin-left: auto;
+    border-color: rgba(99, 102, 241, 0.4);
+    color: var(--c-indigo, #6366f1);
+  }
+  .tad-btn-run:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.6);
+  }
+  .tad-btn-use {
+    border-color: rgba(34, 197, 94, 0.4);
+    color: var(--c-green, #22c55e);
+    flex-shrink: 0;
+  }
+  .tad-btn-use:hover:not(:disabled) {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.6);
+  }
+
+  .tad-track { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .tad-track-a { font-weight: 600; color: var(--c-text, #e2e8f0); font-size: 0.9rem; }
+  .tad-track-t { color: var(--c-muted, #6b7280); font-size: 0.84rem; }
+
+  .tad-verdict {
+    font-size: 0.8rem;
+    color: var(--c-green, #22c55e);
+    border-left: 3px solid var(--c-green, #22c55e);
+    padding-left: 10px;
+  }
+  .tad-verdict.ko {
+    color: var(--c-red, #ef4444);
+    border-left-color: var(--c-red, #ef4444);
+  }
+
+  /* Le rail suit l'ordre réel des tentatives : le filet montre jusqu'où ça tient. */
+  .tad-chain { list-style: none; margin: 2px 0; padding: 0; }
+  .tad-chain li {
+    display: grid;
+    grid-template-columns: 22px 12px 1fr;
+    align-items: start;
+    gap: 8px;
+    position: relative;
+    padding-bottom: 12px;
+  }
+  .tad-chain li::before {
+    content: '';
+    position: absolute;
+    left: 27px;
+    top: 14px;
+    bottom: 0;
+    width: 1px;
+    background: var(--c-red, #ef4444);
+    opacity: 0.35;
+  }
+  .tad-chain li.ok::before { background: var(--c-green, #22c55e); opacity: 0.4; }
+  .tad-chain li.last { padding-bottom: 0; }
+  .tad-chain li.last::before { display: none; }
+
+  .tad-idx {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--c-muted, #6b7280);
+    line-height: 1.5;
+  }
+  .tad-node {
+    width: 9px;
+    height: 9px;
+    margin-top: 4px;
+    border-radius: 50%;
+    background: var(--c-red, #ef4444);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  }
+  .tad-chain li.ok .tad-node {
+    background: var(--c-green, #22c55e);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+  }
+
+  .tad-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tad-step {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+    color: var(--c-text, #e2e8f0);
+  }
+  .tad-detail {
+    font-size: 0.76rem;
+    color: var(--c-muted, #6b7280);
+    word-break: break-word;
+  }
+  .tad-why {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--c-red, #ef4444);
+  }
+
+  .tad-audio { width: 100%; height: 32px; }
+  .tad-sep {
+    height: 1px;
+    background: var(--c-border, rgba(255, 255, 255, 0.07));
+    margin: 4px 0;
+  }
+
+  .tad-search { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tad-search input {
+    flex: 1 1 240px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--c-border, rgba(255, 255, 255, 0.07));
+    border-radius: 6px;
+    color: var(--c-text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .tad-search input:focus-visible {
+    border-color: rgba(99, 102, 241, 0.6);
+  }
+
+  .tad-note { font-size: 0.75rem; color: var(--c-muted, #6b7280); }
+
+  .tad-res {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -185,77 +359,54 @@
     flex-direction: column;
     gap: 6px;
   }
-  .tad-steps li {
-    display: grid;
-    grid-template-columns: 18px 90px 1fr;
-    gap: 8px;
-    font-size: 0.82rem;
-    color: var(--mid, #94a3b8);
-  }
-  .tad-dot { color: var(--danger, #ef4444); }
-  .tad-steps li.ok .tad-dot { color: #4ade80; }
-  .tad-lbl { color: var(--text, #f1f5f9); }
-  .tad-detail { word-break: break-all; }
-  .tad-why {
-    grid-column: 3;
-    color: var(--danger, #ef4444);
-    font-size: 0.78rem;
-  }
-  .tad-search { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-  .tad-search input {
-    flex: 1 1 260px;
-    padding: 6px 10px;
-    font-family: inherit;
-  }
-  .tad-search button { padding: 6px 12px; cursor: pointer; font-family: inherit; }
-
-  .tad-res {
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
   .tad-res li {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-    padding: 8px;
-    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
-    border-radius: 10px;
+    padding: 7px 9px;
+    background: var(--c-panel, #13161e);
+    border: 1px solid var(--c-border, rgba(255, 255, 255, 0.07));
+    border-radius: 8px;
   }
-  .tad-res li.chosen { border-color: #4ade80; }
+  .tad-res li.chosen { border-color: rgba(34, 197, 94, 0.5); }
   .tad-res img { border-radius: 4px; flex-shrink: 0; }
-  .tad-res-txt {
-    display: flex;
-    flex-direction: column;
-    min-width: 150px;
-    flex: 1 1 150px;
-  }
+  .tad-res-txt { display: flex; flex-direction: column; flex: 1 1 160px; min-width: 0; }
   .tad-res-t {
-    color: var(--text, #f1f5f9);
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--c-text, #e2e8f0);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .tad-res-a { color: var(--mid, #94a3b8); font-size: 0.78rem; }
-  .tad-res-src {
-    color: var(--dim, #64748b);
-    font-size: 0.7rem;
+  .tad-res-a { font-size: 0.74rem; color: var(--c-muted, #6b7280); }
+  .tad-src {
+    font-family: var(--mono);
+    font-size: 0.62rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .tad-res audio { width: 220px; margin: 0; flex-shrink: 0; }
-  .tad-use {
-    padding: 6px 14px;
-    cursor: pointer;
-    font-family: inherit;
+    letter-spacing: 0.1em;
+    color: var(--c-muted, #6b7280);
+    border: 1px solid var(--c-border, rgba(255, 255, 255, 0.07));
+    border-radius: 4px;
+    padding: 2px 6px;
     flex-shrink: 0;
   }
-  .tad-use:disabled { opacity: 0.45; cursor: not-allowed; }
-  .tad-err { color: var(--danger, #ef4444); font-size: 0.82rem; }
-  .tad-hint { color: var(--dim, #64748b); font-size: 0.78rem; margin-top: 8px; }
-  .tad-ok { color: #4ade80; font-size: 0.82rem; margin-top: 8px; }
-  audio { width: 100%; margin-top: 12px; }
+  .tad-res audio { width: 200px; height: 30px; flex-shrink: 0; }
+
+  .tad-alert {
+    font-size: 0.78rem;
+    color: var(--c-red, #ef4444);
+    border-left: 3px solid var(--c-red, #ef4444);
+    padding-left: 10px;
+  }
+  .tad-saved {
+    font-size: 0.78rem;
+    color: var(--c-green, #22c55e);
+    border-left: 3px solid var(--c-green, #22c55e);
+    padding-left: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .tad-res audio { width: 100%; }
+  }
 </style>
