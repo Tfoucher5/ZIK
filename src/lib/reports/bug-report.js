@@ -5,6 +5,14 @@ export const BUG_MOTIFS = [
   { value: "autre", label: "Autre" },
 ];
 
+// Motifs qui portent sur un morceau précis : sans lui, le signalement est
+// inexploitable. Les autres ne concernent pas un titre en particulier.
+const MOTIFS_AVEC_TITRE = new Set(["audio", "mauvaise-reponse"]);
+
+export function motifCibleUnTitre(motif) {
+  return MOTIFS_AVEC_TITRE.has(motif);
+}
+
 // La manche en cours est proposée sans son titre : l'afficher donnerait la réponse.
 export function buildTrackChoices({ history = [], current = null }) {
   const choices = [];

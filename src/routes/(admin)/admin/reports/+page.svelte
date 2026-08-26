@@ -80,7 +80,7 @@
               {/if}
               <div class="message">{r.message}</div>
 
-              {#if r.subject === 'audio' && r.metadata?.tracks?.length}
+              {#if r.metadata?.tracks?.length}
                 {#each r.metadata.tracks as t (t.trackId ?? t.round)}
                   {#if t.trackId}
                     <div class="field-label">

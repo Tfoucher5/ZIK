@@ -4,7 +4,21 @@ import {
   buildTrackChoices,
   sanitizeReportTracks,
   asUuidOrNull,
+  motifCibleUnTitre,
 } from "../bug-report.js";
+
+describe("motifCibleUnTitre", () => {
+  it("vise un titre pour un son muet et une mauvaise réponse", () => {
+    expect(motifCibleUnTitre("audio")).toBe(true);
+    expect(motifCibleUnTitre("mauvaise-reponse")).toBe(true);
+  });
+
+  it("ne vise aucun titre pour les autres motifs", () => {
+    expect(motifCibleUnTitre("affichage")).toBe(false);
+    expect(motifCibleUnTitre("autre")).toBe(false);
+    expect(motifCibleUnTitre(undefined)).toBe(false);
+  });
+});
 
 describe("asUuidOrNull", () => {
   it("garde un uuid valide", () => {

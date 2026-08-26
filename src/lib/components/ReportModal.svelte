@@ -12,7 +12,7 @@
    *   history         — manches terminées de la partie en cours
    *   currentRound    — { round, trackId, videoId } de la manche active, ou null
    */
-  import { BUG_MOTIFS, buildTrackChoices } from '$lib/reports/bug-report.js';
+  import { BUG_MOTIFS, buildTrackChoices, motifCibleUnTitre } from '$lib/reports/bug-report.js';
 
   let {
     open            = $bindable(false),
@@ -42,8 +42,9 @@
   let bugMotif = $state('audio');
   let checked  = $state({});
   const choices = $derived(buildTrackChoices({ history, current: currentRound }));
+  const cibleUnTitre = $derived(motifCibleUnTitre(bugMotif));
   const selection = $derived(
-    bugMotif === 'audio' ? choices.filter(c => checked[c.key]) : [],
+    cibleUnTitre ? choices.filter(c => checked[c.key]) : [],
   );
 
   // La manche en cours est cochée d'office : c'est le cas le plus fréquent.
@@ -55,7 +56,8 @@
   });
 
   async function submit() {
-    // Un titre désigné vaut description : on n'exige alors pas de message.
+    // Un titre muet désigné vaut description. Pour une mauvaise réponse, le
+    // titre ne dit pas ce qui est faux : le message reste nécessaire.
     const messageRequis = type !== 'bug' || bugMotif !== 'audio' || selection.length === 0;
     if (messageRequis && !message.trim()) { error = 'Décris le problème.'; return; }
     error = '';
@@ -79,7 +81,7 @@
             room_id: roomId || null,
             subject: bugMotif,
             message: message.trim(),
-            metadata: bugMotif === 'audio'
+            metadata: cibleUnTitre
               ? {
                   tracks: selection.map(c => ({
                     trackId: c.trackId,
@@ -177,7 +179,7 @@
           </div>
         </div>
 
-        {#if bugMotif === 'audio'}
+        {#if cibleUnTitre}
           <div class="rm-field">
             <span class="rm-label">Sur quel titre ?</span>
             {#if choices.length}
