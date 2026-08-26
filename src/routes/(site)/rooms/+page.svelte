@@ -1060,9 +1060,28 @@
     font-weight: 900; letter-spacing: 0.22em;
     text-shadow: 0 2px 10px rgba(0,0,0,1);
   }
-  /* Au repos sur desktop, la place manque dans les petites cases : l'accès à la
-     fiche passe par l'overlay. En liste mobile, il n'y a pas d'overlay. */
-  .pw-details { display: none; }
+  /* Au repos sur un écran qui survole, la place manque dans les petites cases :
+     l'accès à la fiche passe par l'overlay. Sans survol, il n'y a pas
+     d'overlay — le bouton doit alors être là en permanence. */
+  .pw-details {
+    display: none;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 6px 11px;
+    border: 1px solid rgb(var(--c-glass) / 0.22);
+    border-radius: 3px;
+    color: var(--mid, #94a3b8);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: auto;
+  }
+  @media (hover: none) {
+    .pw-details { display: inline-flex; }
+  }
   .pw-code.pw-a { font-size: 1.4rem; color: var(--accent); }
   .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: rgba(255, 255, 255, 0.3); }
 
@@ -1093,8 +1112,13 @@
     overflow: hidden;
     gap: 0;
   }
-  .pw-room:hover .pw-hover { opacity: 1; pointer-events: all; }
-  .pw-room:hover .pw-info  { opacity: 0; }
+  /* Sur un écran tactile, le premier appui simule un survol : l'overlay
+     s'ouvrait et interceptait l'appui suivant, rendant les boutons de la tuile
+     inatteignables. Il est réservé aux appareils qui survolent vraiment. */
+  @media (hover: hover) {
+    .pw-room:hover .pw-hover { opacity: 1; pointer-events: all; }
+    .pw-room:hover .pw-info  { opacity: 0; }
+  }
 
   /* Tête : nom + sous-ligne */
   .pwh-head { display: flex; flex-direction: column; gap: 5px; }
@@ -1625,21 +1649,9 @@
     .pw-name { font-size: 1rem !important; }
     .pw-name.pw-a { font-size: 1.1rem !important; }
     .pw-code { font-size: 0.72rem !important; color: rgb(var(--c-glass) / 0.3) !important; }
-    .pw-details {
-      display: inline-flex;
-      align-items: center;
-      flex-shrink: 0;
-      padding: 6px 11px;
-      border: 1px solid rgb(var(--c-glass) / 0.22);
-      border-radius: 3px;
-      color: var(--mid, #94a3b8);
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700;
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
+    .pw-details { display: inline-flex; }
+    /* En liste, l'overlay ne sert plus : les infos sont déjà dans la ligne. */
+    .pw-hover { display: none; }
   }
 
   @media (max-width: 700px) {
