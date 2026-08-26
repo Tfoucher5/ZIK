@@ -52,6 +52,9 @@
   const REJOIN_DELAY = 15;
   let heldRound = $state(null);
   let rejoinIn = $state(0);
+  // 'replay'  : la partie va se relancer toute seule
+  // 'rejoin'  : une partie tourne déjà, on va y entrer
+  let countdownMode = $state(null);
   let iRequestedReplay = false;
   let _rejoinTimer = null;
   let achToasts = $state([]);
@@ -511,14 +514,20 @@
     clearInterval(_rejoinTimer);
     _rejoinTimer = null;
     rejoinIn = 0;
+    countdownMode = null;
   }
 
-  function startRejoinCountdown() {
+  function startRejoinCountdown(mode) {
     stopRejoinCountdown();
+    countdownMode = mode;
     rejoinIn = REJOIN_DELAY;
     _rejoinTimer = setInterval(() => {
       rejoinIn -= 1;
-      if (rejoinIn <= 0) joinRunningGame();
+      if (rejoinIn > 0) return;
+      const m = countdownMode;
+      stopRejoinCountdown();
+      if (m === 'replay') requestGame();
+      else joinRunningGame();
     }, 1000);
   }
 
@@ -721,7 +730,7 @@
       if (holdOnResults) {
         // Aucun chargement audio : on n'entend pas une partie qu'on ne regarde pas.
         heldRound = data;
-        startRejoinCountdown();
+        startRejoinCountdown('rejoin');
         return;
       }
       if (data.audioUrl) {
@@ -814,6 +823,8 @@
       heldRound = null;
       iRequestedReplay = false;
       stopRejoinCountdown();
+      // Relance automatique, sauf pour ceux qui ne peuvent pas lancer la partie.
+      if (!hasOwner || autoStart || isAdmin) startRejoinCountdown('replay');
       revealStep = 0;
       _revealTimers.forEach(clearTimeout);
       _revealTimers = [];
@@ -1281,17 +1292,23 @@
             {shareCopied ? '✅ Lien copié !' : '📤 Partager mon score'}
           </button>
         {/if}
-        {#if heldRound}
-          {#if rejoinIn > 0}
-            <div class="g-rejoin-note">Nouvelle partie en cours — tu la rejoins dans {rejoinIn} s</div>
-            <div class="g-rejoin-actions">
+        {#if rejoinIn > 0}
+          <div class="g-rejoin-note">
+            {countdownMode === 'replay'
+              ? `Nouvelle partie dans ${rejoinIn} s`
+              : `Une partie a démarré — tu la rejoins dans ${rejoinIn} s`}
+          </div>
+          <div class="g-rejoin-actions">
+            {#if countdownMode === 'replay'}
+              <button class="g-start-btn" onclick={requestGame}>&#x1F504; Rejouer maintenant</button>
+            {:else}
               <button class="g-start-btn" onclick={joinRunningGame}>&#x25B6; Rejoindre</button>
-              <button class="g-rejoin-stay" onclick={stayOnResults}>Rester sur les scores</button>
-            </div>
-          {:else}
-            <div class="g-rejoin-note">Une partie est en cours.</div>
-            <button class="g-start-btn" onclick={joinRunningGame}>&#x25B6; Rejoindre la partie</button>
-          {/if}
+            {/if}
+            <button class="g-rejoin-stay" onclick={stayOnResults}>Rester sur les scores</button>
+          </div>
+        {:else if heldRound}
+          <div class="g-rejoin-note">Une partie est en cours.</div>
+          <button class="g-start-btn" onclick={joinRunningGame}>&#x25B6; Rejoindre la partie</button>
         {:else if !hasOwner || autoStart || isAdmin}
           <button class="g-start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
         {:else}
