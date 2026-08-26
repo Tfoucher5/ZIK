@@ -47,6 +47,13 @@
   let _announceTimer = null;
   let gameoverShow = $state(false);
   let gameoverScores = $state([]);
+  // Relance : une nouvelle partie peut tourner pendant qu'on lit encore les
+  // scores. On retient la manche en cours au lieu d'y basculer de force.
+  const REJOIN_DELAY = 15;
+  let heldRound = $state(null);
+  let rejoinIn = $state(0);
+  let iRequestedReplay = false;
+  let _rejoinTimer = null;
   let achToasts = $state([]);
   let shareResultId = $state(null);
   let shareCopied = $state(false);
@@ -494,9 +501,46 @@
 
   function requestGame() {
     if (!socket) return;
+    iRequestedReplay = true;
     socket.emit('request_new_game');
     startDisabled = true;
     startLabel = 'Chargement\u2026';
+  }
+
+  function stopRejoinCountdown() {
+    clearInterval(_rejoinTimer);
+    _rejoinTimer = null;
+    rejoinIn = 0;
+  }
+
+  function startRejoinCountdown() {
+    stopRejoinCountdown();
+    rejoinIn = REJOIN_DELAY;
+    _rejoinTimer = setInterval(() => {
+      rejoinIn -= 1;
+      if (rejoinIn <= 0) joinRunningGame();
+    }, 1000);
+  }
+
+  // Bascule vers la partie en cours et cale la lecture l\u00e0 o\u00f9 elle en est.
+  function joinRunningGame() {
+    stopRejoinCountdown();
+    const d = heldRound;
+    heldRound = null;
+    gameoverShow = false;
+    if (!d) return;
+    if (d.audioUrl) {
+      _usingIframe = false;
+      loadAudio(d.audioUrl, d.startSeconds, () => socket?.emit('player_ready'));
+      if (!_waitingForSync) playSyncedAudio();
+    } else {
+      _usingIframe = true;
+      loadVideo(d.videoId, d.startSeconds);
+    }
+  }
+
+  function stayOnResults() {
+    stopRejoinCountdown();
   }
 
   function launchConfetti() {
@@ -648,7 +692,12 @@
       roundInfo = `Manche ${data.round} / ${data.total}`;
       currentRoundInfo = { round: data.round, trackId: data.trackId ?? null, videoId: data.videoId ?? null };
       coverSrc = ''; showCover = false;
-      summaryShow = false; gameoverShow = false; feedback = { msg: '', cls: '' };
+      // Une partie relancée par quelqu'un d'autre ne doit pas nous arracher aux
+      // scores : on retient la manche et on laisse le joueur décider.
+      const holdOnResults = gameoverShow && !iRequestedReplay;
+      iRequestedReplay = false;
+      summaryShow = false; feedback = { msg: '', cls: '' };
+      if (!holdOnResults) gameoverShow = false;
       const featCount = data.featCount || 0;
       featSlots  = Array.from({ length: featCount }, () => ({ val: '???', state: null }));
       extraSlots = (data.extraLabels || []).map(label => ({ val: '???', state: null, label }));
@@ -669,6 +718,12 @@
       syncReady = 0; syncTotal = 0;
       _syncAnchor = null;
       _lastVideo = { videoId: data.videoId, startSeconds: data.startSeconds, startedAt: Date.now() };
+      if (holdOnResults) {
+        // Aucun chargement audio : on n'entend pas une partie qu'on ne regarde pas.
+        heldRound = data;
+        startRejoinCountdown();
+        return;
+      }
       if (data.audioUrl) {
         _usingIframe = false;
         loadAudio(data.audioUrl, data.startSeconds, () => socket?.emit('player_ready'));
@@ -684,6 +739,9 @@
       syncWaiting = false;
       guessDisabled = false;
       _syncPaused = false;
+      // Toujours poser l'ancre, pour caler la lecture si le joueur rejoint plus
+      // tard — mais ne rien jouer tant qu'il regarde les scores.
+      if (heldRound) return;
       if (_usingIframe) {
         if (ytPlayer?.seekTo && _lastVideo) ytPlayer.seekTo(_lastVideo.startSeconds + elapsed, true);
         if (ytPlayer?.unMute) ytPlayer.unMute();
@@ -753,6 +811,9 @@
       guessDisabled = true; timerPct = 0; deckSpin = false; summaryShow = false;
       gameoverScores = scores;
       gameoverShow   = true;
+      heldRound = null;
+      iRequestedReplay = false;
+      stopRejoinCountdown();
       revealStep = 0;
       _revealTimers.forEach(clearTimeout);
       _revealTimers = [];
@@ -826,7 +887,7 @@
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.3.2">
+  <link rel="stylesheet" href="/css/game.css?v=3.6.0">
 </svelte:head>
 
 {#if showDcBanner}
@@ -1220,7 +1281,18 @@
             {shareCopied ? '✅ Lien copié !' : '📤 Partager mon score'}
           </button>
         {/if}
-        {#if !hasOwner || autoStart || isAdmin}
+        {#if heldRound}
+          {#if rejoinIn > 0}
+            <div class="g-rejoin-note">Nouvelle partie en cours — tu la rejoins dans {rejoinIn} s</div>
+            <div class="g-rejoin-actions">
+              <button class="g-start-btn" onclick={joinRunningGame}>&#x25B6; Rejoindre</button>
+              <button class="g-rejoin-stay" onclick={stayOnResults}>Rester sur les scores</button>
+            </div>
+          {:else}
+            <div class="g-rejoin-note">Une partie est en cours.</div>
+            <button class="g-start-btn" onclick={joinRunningGame}>&#x25B6; Rejoindre la partie</button>
+          {/if}
+        {:else if !hasOwner || autoStart || isAdmin}
           <button class="g-start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
         {:else}
           <div class="g-waiting" style="font-size:.8rem">&#x23F3; En attente de l&apos;admin pour rejouer.</div>

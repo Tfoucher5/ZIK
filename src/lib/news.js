@@ -10,6 +10,7 @@ export const NEWS = [
     items: [
       "Quand tu n'entends pas la musique, le signalement te laisse désigner le ou les titres concernés, y compris celui de la manche en cours — sans en dévoiler la réponse.",
       "Les autres bugs se signalent toujours librement, avec un motif pour les orienter plus vite.",
+      "Fin de partie : quand quelqu'un relance, tu n'es plus arraché au tableau des scores. Tu rejoins dans 15 secondes, ou tu restes le temps que tu veux et tu rejoins d'un clic.",
     ],
   },
   {

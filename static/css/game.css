@@ -1736,6 +1736,41 @@ a {
   flex-wrap: wrap;
   margin-top: 26px;
 }
+.g-rejoin-note {
+  color: var(--mid);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  width: 100%;
+}
+.g-rejoin-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.g-rejoin-stay {
+  background: none;
+  color: var(--dim);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.g-rejoin-stay:hover {
+  color: var(--text);
+  border-color: var(--mid);
+}
+
 .g-go-back {
   color: var(--mid);
   font-family: var(--g-cond);
