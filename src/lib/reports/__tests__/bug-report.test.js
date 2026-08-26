@@ -3,7 +3,26 @@ import {
   BUG_MOTIFS,
   buildTrackChoices,
   sanitizeReportTracks,
+  asUuidOrNull,
 } from "../bug-report.js";
+
+describe("asUuidOrNull", () => {
+  it("garde un uuid valide", () => {
+    const u = "11111111-2222-3333-4444-555555555555";
+    expect(asUuidOrNull(u)).toBe(u);
+  });
+
+  it("rejette l'identifiant local d'un invité", () => {
+    expect(asUuidOrNull("guest_1712345678901")).toBe(null);
+    expect(asUuidOrNull("dbg1")).toBe(null);
+  });
+
+  it("rejette les valeurs non textuelles", () => {
+    expect(asUuidOrNull(null)).toBe(null);
+    expect(asUuidOrNull(undefined)).toBe(null);
+    expect(asUuidOrNull(42)).toBe(null);
+  });
+});
 
 describe("BUG_MOTIFS", () => {
   it("propose le motif audio en premier", () => {

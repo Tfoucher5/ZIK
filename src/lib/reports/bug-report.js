@@ -33,6 +33,17 @@ export function buildTrackChoices({ history = [], current = null }) {
   return choices;
 }
 
+// Les invités ont un identifiant local (« guest_1712… ») que la colonne uuid
+// refuse : l'insertion échouait alors entièrement. On ne garde qu'un uuid.
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function asUuidOrNull(value) {
+  return typeof value === "string" && UUID_RE.test(value.trim())
+    ? value.trim()
+    : null;
+}
+
 export function sanitizeReportTracks(value) {
   if (!Array.isArray(value) || value.length > 50) return null;
   return value.map((t) => ({

@@ -190,6 +190,7 @@ function endRound(roomId, reason, io) {
     reason,
     firstFinder: game.firstFullFinder,
     totalFound: game.totalFullFound,
+    round: game.currentRound,
     trackId: track.id ?? null,
     videoId: game.lastRoundData?.videoId ?? null,
     featArtists: (track.featArtists || []).map(displayString),
