@@ -4,6 +4,7 @@
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
   import { getContext } from 'svelte';
+  import TrackAudioDebugger from '$lib/components/admin/TrackAudioDebugger.svelte';
 
   let { data, form } = $props();
   const adminCtx = getContext('adminToken');
@@ -11,6 +12,7 @@
 
   let editModal = $state(null);
   let deleteModal = $state(null);
+  let debugId = $state(null);
 
   function setParam(key, value) {
     const p = new SvelteURLSearchParams(page.url.searchParams);
@@ -109,9 +111,19 @@
                 <td class="td-dim">{fmt(t.created_at)}</td>
                 <td class="td-actions">
                   <button class="link" onclick={() => editModal = { ...t }}>Éditer</button>
+                  <button class="link" onclick={() => debugId = debugId === t.id ? null : t.id}>
+                    {debugId === t.id ? 'Fermer' : 'Diagnostiquer'}
+                  </button>
                   <button class="link link-danger" onclick={() => deleteModal = t}>Supprimer</button>
                 </td>
               </tr>
+              {#if debugId === t.id}
+                <tr>
+                  <td colspan="8">
+                    <TrackAudioDebugger trackId={t.id} {token} />
+                  </td>
+                </tr>
+              {/if}
             {/each}
           </tbody>
         </table>

@@ -190,6 +190,9 @@ function endRound(roomId, reason, io) {
     reason,
     firstFinder: game.firstFullFinder,
     totalFound: game.totalFullFound,
+    round: game.currentRound,
+    trackId: track.id ?? null,
+    videoId: game.lastRoundData?.videoId ?? null,
     featArtists: (track.featArtists || []).map(displayString),
     extraAnswers: (track.extraAnswers || []).map((e) => ({
       label: e.label,
@@ -370,9 +373,12 @@ async function startNextRound(roomId, io) {
       game.correctChoiceIndex = null;
     }
 
+    // trackId sert au signalement d'un titre muet. Ne jamais ajouter ici
+    // l'artiste ni le titre : lastRoundData part au client pendant la manche.
     game.lastRoundData = {
       videoId,
       startSeconds,
+      trackId: track.id ?? null,
       round: game.currentRound,
       total: game.maxRounds,
       featCount: track.featArtists.length,

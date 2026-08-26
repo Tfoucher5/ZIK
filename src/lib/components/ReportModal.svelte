@@ -9,7 +9,11 @@
    *   roomId          — code de la room courante
    *   reporterId      — userId de celui qui signale (null si invité)
    *   reporterName    — username de celui qui signale
+   *   history         — manches terminées de la partie en cours
+   *   currentRound    — { round, trackId, videoId } de la manche active, ou null
    */
+  import { BUG_MOTIFS, buildTrackChoices } from '$lib/reports/bug-report.js';
+
   let {
     open            = $bindable(false),
     type            = 'user',
@@ -18,6 +22,8 @@
     roomId          = null,
     reporterId      = null,
     reporterName    = '',
+    history         = [],
+    currentRound    = null,
   } = $props();
 
   const MOTIFS_USER = [
@@ -33,8 +39,25 @@
   let success = $state(false);
   let error   = $state('');
 
+  let bugMotif = $state('audio');
+  let checked  = $state({});
+  const choices = $derived(buildTrackChoices({ history, current: currentRound }));
+  const selection = $derived(
+    bugMotif === 'audio' ? choices.filter(c => checked[c.key]) : [],
+  );
+
+  // La manche en cours est cochée d'office : c'est le cas le plus fréquent.
+  $effect(() => {
+    const first = choices[0];
+    if (open && first?.locked && checked[first.key] === undefined) {
+      checked = { ...checked, [first.key]: true };
+    }
+  });
+
   async function submit() {
-    if (!message.trim()) { error = 'Décris le problème.'; return; }
+    // Un titre désigné vaut description : on n'exige alors pas de message.
+    const messageRequis = type !== 'bug' || bugMotif !== 'audio' || selection.length === 0;
+    if (messageRequis && !message.trim()) { error = 'Décris le problème.'; return; }
     error = '';
     loading = true;
     try {
@@ -54,7 +77,18 @@
             reporter_id: reporterId || null,
             reporter_name: reporterName || null,
             room_id: roomId || null,
+            subject: bugMotif,
             message: message.trim(),
+            metadata: bugMotif === 'audio'
+              ? {
+                  tracks: selection.map(c => ({
+                    trackId: c.trackId,
+                    videoId: c.videoId,
+                    round: c.round,
+                    answer: c.answer,
+                  })),
+                }
+              : {},
           };
 
       const res = await fetch('/api/reports', {
@@ -131,10 +165,51 @@
             {/each}
           </div>
         </div>
+      {:else}
+        <div class="rm-field">
+          <span class="rm-label">Que se passe-t-il ?</span>
+          <div class="rm-motifs">
+            {#each BUG_MOTIFS as m (m.value)}
+              <button type="button" class="rm-motif" class:on={bugMotif === m.value} onclick={() => bugMotif = m.value}>
+                {m.label}
+              </button>
+            {/each}
+          </div>
+        </div>
+
+        {#if bugMotif === 'audio'}
+          <div class="rm-field">
+            <span class="rm-label">Sur quel titre ?</span>
+            {#if choices.length}
+              <div class="rm-tracks">
+                {#each choices as c (c.key)}
+                  <label class="rm-track" class:locked={c.locked}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(checked[c.key])}
+                      onchange={e => checked = { ...checked, [c.key]: e.currentTarget.checked }}
+                    >
+                    <span class="rm-track-lbl">{c.label}</span>
+                    {#if c.locked}<span class="rm-track-lock" title="Titre masqué pendant la manche">🔒</span>{/if}
+                  </label>
+                {/each}
+              </div>
+            {:else}
+              <p class="rm-empty">Aucun titre joué pour l'instant.</p>
+            {/if}
+          </div>
+        {/if}
       {/if}
 
       <div class="rm-field">
-        <label class="rm-label" for="rm-message">Description <span class="rm-req">*</span></label>
+        <label class="rm-label" for="rm-message">
+          Description
+          {#if type === 'bug' && bugMotif === 'audio' && selection.length}
+            <span class="rm-opt">(facultatif)</span>
+          {:else}
+            <span class="rm-req">*</span>
+          {/if}
+        </label>
         <textarea
           id="rm-message"
           bind:value={message}
@@ -314,6 +389,39 @@
   background: var(--border, rgb(var(--c-glass) / 0.1));
 }
 .rm-req { color: var(--accent, #ff00ff); }
+.rm-opt { color: var(--dim, #64748b); font-weight: 400; }
+
+.rm-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.rm-track {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--mid, #94a3b8);
+  transition: border-color 0.15s;
+}
+.rm-track:hover { border-color: rgb(var(--accent-rgb) / 0.4); }
+.rm-track.locked { border-style: dashed; }
+.rm-track input { flex-shrink: 0; accent-color: var(--accent); }
+.rm-track-lbl {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rm-track-lock { flex-shrink: 0; font-size: 0.78rem; }
+.rm-empty { color: var(--dim, #64748b); font-size: 0.83rem; margin: 0; }
 
 .rm-motifs {
   display: grid;

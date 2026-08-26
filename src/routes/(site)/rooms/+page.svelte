@@ -432,10 +432,19 @@
                     {#if r.game_mode === 'qcm'}<span class="pw-badge pw-badge-qcm">QCM</span>{:else}<span class="pw-badge pw-badge-classic">Classique</span>{/if}
                   </div>
                   <div class="pw-bottom">
-                    <div class="pw-name {cfg.cls}">{r.name}</div>
+                    <a
+                      class="pw-name {cfg.cls}"
+                      href="/room/{r.code}"
+                      onclick={e => e.stopPropagation()}
+                    >{r.name}</a>
                     {#if r.profiles?.username}<div class="pw-owner">par {r.profiles.username}</div>{/if}
                     <div class="pw-footer">
                       <span class="pw-code {cfg.cls}">{r.code}</span>
+                      <a
+                        class="pw-details"
+                        href="/room/{r.code}"
+                        onclick={e => e.stopPropagation()}
+                      >Détails</a>
                     </div>
                   </div>
                 </div>
@@ -443,7 +452,11 @@
                 <!-- Overlay hover -->
                 <div class="pw-hover" onclick={e => { e.stopPropagation(); joinRoom(r.code, r.game_mode); }}>
                   <div class="pwh-head">
-                    <div class="pwh-name">{r.name}</div>
+                    <a
+                      class="pwh-name"
+                      href="/room/{r.code}"
+                      onclick={e => e.stopPropagation()}
+                    >{r.name}</a>
                     <div class="pwh-sub">
                       {#if r.profiles?.username}<span>par {r.profiles.username}</span><span class="pwh-dot">·</span>{/if}
                       <span>{r.max_rounds} manches</span>
@@ -473,6 +486,11 @@
                       {#if r.is_official}<span class="pw-badge pw-badge-official">✓ Off.</span>{/if}
                       {#if r.game_mode === 'qcm'}<span class="pw-badge pw-badge-qcm">QCM</span>{:else}<span class="pw-badge pw-badge-classic">Classique</span>{/if}
                     </div>
+                    <a
+                      class="pwh-details"
+                      href="/room/{r.code}"
+                      onclick={e => e.stopPropagation()}
+                    >Détails</a>
                     <button class="{r.online > 0 ? 'btn-join' : 'btn-dispo'} pwh-btn">
                       {r.online > 0 ? 'Rejoindre →' : 'Entrer →'}
                     </button>
@@ -996,11 +1014,26 @@
   .pw-badge-live { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.5); background: rgba(0,0,0,0.7); }
   .pw-badge-auto { color: #fbbf24; border-color: rgba(251,191,36,0.45); background: rgba(0,0,0,0.7); }
 
+  /* Le nom mène à la fiche de la room : c'est le geste attendu, et le seul
+     disponible au doigt puisqu'il n'y a pas de survol sur mobile. */
   .pw-name {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    /* .pw-info neutralise les clics pour laisser passer celui de la tuile :
+       le nom doit les réactiver pour lui-même. */
+    pointer-events: auto;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; text-transform: uppercase; line-height: 0.92; letter-spacing: -0.01em;
     text-shadow: 0 2px 16px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1);
     color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .pw-name:hover,
+  .pw-name:focus-visible {
+    border-bottom-color: rgba(255, 255, 255, 0.55);
   }
   .pw-name.pw-a { font-size: clamp(1.9rem, 3.2vw, 2.6rem); }
   .pw-name.pw-b { font-size: clamp(1.2rem, 2vw, 1.6rem); }
@@ -1026,6 +1059,28 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; letter-spacing: 0.22em;
     text-shadow: 0 2px 10px rgba(0,0,0,1);
+  }
+  /* Au repos sur un écran qui survole, la place manque dans les petites cases :
+     l'accès à la fiche passe par l'overlay. Sans survol, il n'y a pas
+     d'overlay — le bouton doit alors être là en permanence. */
+  .pw-details {
+    display: none;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 6px 11px;
+    border: 1px solid rgb(var(--c-glass) / 0.22);
+    border-radius: 3px;
+    color: var(--mid, #94a3b8);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: auto;
+  }
+  @media (hover: none) {
+    .pw-details { display: inline-flex; }
   }
   .pw-code.pw-a { font-size: 1.4rem; color: var(--accent); }
   .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: rgba(255, 255, 255, 0.3); }
@@ -1057,18 +1112,33 @@
     overflow: hidden;
     gap: 0;
   }
-  .pw-room:hover .pw-hover { opacity: 1; pointer-events: all; }
-  .pw-room:hover .pw-info  { opacity: 0; }
+  /* Sur un écran tactile, le premier appui simule un survol : l'overlay
+     s'ouvrait et interceptait l'appui suivant, rendant les boutons de la tuile
+     inatteignables. Il est réservé aux appareils qui survolent vraiment. */
+  @media (hover: hover) {
+    .pw-room:hover .pw-hover { opacity: 1; pointer-events: all; }
+    .pw-room:hover .pw-info  { opacity: 0; }
+  }
 
   /* Tête : nom + sous-ligne */
   .pwh-head { display: flex; flex-direction: column; gap: 5px; }
 
   .pwh-name {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; text-transform: uppercase;
     font-size: clamp(1.15rem, 2.2vw, 1.9rem);
     line-height: 0.92; letter-spacing: -0.01em;
     color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .pwh-name:hover,
+  .pwh-name:focus-visible {
+    border-bottom-color: rgba(255, 255, 255, 0.55);
   }
   .pwh-sub {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1126,6 +1196,25 @@
     flex-shrink: 0;
   }
   .pwh-badges { display: flex; gap: 6px; align-items: center; flex: 1; flex-wrap: wrap; }
+
+  .pwh-details {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border: 1px solid rgb(var(--c-glass) / 0.22);
+    border-radius: 3px;
+    color: var(--mid, #94a3b8);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .pwh-details:hover {
+    color: var(--text, #f1f5f9);
+    border-color: rgb(var(--c-glass) / 0.45);
+  }
 
   .pwh-btn {
     flex-shrink: 0;
@@ -1560,6 +1649,9 @@
     .pw-name { font-size: 1rem !important; }
     .pw-name.pw-a { font-size: 1.1rem !important; }
     .pw-code { font-size: 0.72rem !important; color: rgb(var(--c-glass) / 0.3) !important; }
+    .pw-details { display: inline-flex; }
+    /* En liste, l'overlay ne sert plus : les infos sont déjà dans la ligne. */
+    .pw-hover { display: none; }
   }
 
   @media (max-width: 700px) {

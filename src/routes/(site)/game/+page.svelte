@@ -27,6 +27,7 @@
   let deckSpin    = $state(false);
   let players     = $state([]);
   let history     = $state([]);
+  let currentRoundInfo = $state(null);
   let slotArtist  = $state({ val: '???', state: null });
   let slotTitle   = $state({ val: '???', state: null });
   let featSlots   = $state([]);
@@ -46,6 +47,16 @@
   let _announceTimer = null;
   let gameoverShow = $state(false);
   let gameoverScores = $state([]);
+  // Relance : une nouvelle partie peut tourner pendant qu'on lit encore les
+  // scores. On retient la manche en cours au lieu d'y basculer de force.
+  const REJOIN_DELAY = 15;
+  let heldRound = $state(null);
+  let rejoinIn = $state(0);
+  // 'replay'  : la partie va se relancer toute seule
+  // 'rejoin'  : une partie tourne déjà, on va y entrer
+  let countdownMode = $state(null);
+  let iRequestedReplay = false;
+  let _rejoinTimer = null;
   let achToasts = $state([]);
   let shareResultId = $state(null);
   let shareCopied = $state(false);
@@ -493,10 +504,50 @@
 
   function requestGame() {
     if (!socket) return;
+    iRequestedReplay = true;
     socket.emit('request_new_game');
     startDisabled = true;
     startLabel = 'Chargement\u2026';
   }
+
+  function stopRejoinCountdown() {
+    clearInterval(_rejoinTimer);
+    _rejoinTimer = null;
+    rejoinIn = 0;
+    countdownMode = null;
+  }
+
+  function startRejoinCountdown(mode) {
+    stopRejoinCountdown();
+    countdownMode = mode;
+    rejoinIn = REJOIN_DELAY;
+    _rejoinTimer = setInterval(() => {
+      rejoinIn -= 1;
+      if (rejoinIn > 0) return;
+      const m = countdownMode;
+      stopRejoinCountdown();
+      if (m === 'replay') requestGame();
+      else joinRunningGame();
+    }, 1000);
+  }
+
+  // Bascule vers la partie en cours et cale la lecture l\u00e0 o\u00f9 elle en est.
+  function joinRunningGame() {
+    stopRejoinCountdown();
+    const d = heldRound;
+    heldRound = null;
+    gameoverShow = false;
+    if (!d) return;
+    if (d.audioUrl) {
+      _usingIframe = false;
+      loadAudio(d.audioUrl, d.startSeconds, () => socket?.emit('player_ready'));
+      if (!_waitingForSync) playSyncedAudio();
+    } else {
+      _usingIframe = true;
+      loadVideo(d.videoId, d.startSeconds);
+    }
+  }
+
 
   function launchConfetti() {
     if (!browser) return;
@@ -645,8 +696,14 @@
       clearTimeout(_roundLoadingTimer);
       roundLoading = false;
       roundInfo = `Manche ${data.round} / ${data.total}`;
+      currentRoundInfo = { round: data.round, trackId: data.trackId ?? null, videoId: data.videoId ?? null };
       coverSrc = ''; showCover = false;
-      summaryShow = false; gameoverShow = false; feedback = { msg: '', cls: '' };
+      // Une partie relancée par quelqu'un d'autre ne doit pas nous arracher aux
+      // scores : on retient la manche et on laisse le joueur décider.
+      const holdOnResults = gameoverShow && !iRequestedReplay;
+      iRequestedReplay = false;
+      summaryShow = false; feedback = { msg: '', cls: '' };
+      if (!holdOnResults) gameoverShow = false;
       const featCount = data.featCount || 0;
       featSlots  = Array.from({ length: featCount }, () => ({ val: '???', state: null }));
       extraSlots = (data.extraLabels || []).map(label => ({ val: '???', state: null, label }));
@@ -667,6 +724,12 @@
       syncReady = 0; syncTotal = 0;
       _syncAnchor = null;
       _lastVideo = { videoId: data.videoId, startSeconds: data.startSeconds, startedAt: Date.now() };
+      if (holdOnResults) {
+        // Aucun chargement audio : on n'entend pas une partie qu'on ne regarde pas.
+        heldRound = data;
+        startRejoinCountdown('rejoin');
+        return;
+      }
       if (data.audioUrl) {
         _usingIframe = false;
         loadAudio(data.audioUrl, data.startSeconds, () => socket?.emit('player_ready'));
@@ -682,6 +745,9 @@
       syncWaiting = false;
       guessDisabled = false;
       _syncPaused = false;
+      // Toujours poser l'ancre, pour caler la lecture si le joueur rejoint plus
+      // tard — mais ne rien jouer tant qu'il regarde les scores.
+      if (heldRound) return;
       if (_usingIframe) {
         if (ytPlayer?.seekTo && _lastVideo) ytPlayer.seekTo(_lastVideo.startSeconds + elapsed, true);
         if (ytPlayer?.unMute) ytPlayer.unMute();
@@ -743,6 +809,7 @@
       _roundActive = false; _waitingForSync = false; syncWaiting = false; _syncAnchor = null; guessDisabled = true; stopVideo(); timerPct = 0; deckSpin = false;
       stopMediaGuard();
       history = [data, ...history];
+      currentRoundInfo = null;
     });
     socket.on('game_over', scores => {
       _roundActive = false; _syncAnchor = null; stopVideo();
@@ -750,6 +817,11 @@
       guessDisabled = true; timerPct = 0; deckSpin = false; summaryShow = false;
       gameoverScores = scores;
       gameoverShow   = true;
+      heldRound = null;
+      iRequestedReplay = false;
+      stopRejoinCountdown();
+      // Relance automatique, sauf pour ceux qui ne peuvent pas lancer la partie.
+      if (!hasOwner || autoStart || isAdmin) startRejoinCountdown('replay');
       revealStep = 0;
       _revealTimers.forEach(clearTimeout);
       _revealTimers = [];
@@ -823,7 +895,7 @@
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.3.2">
+  <link rel="stylesheet" href="/css/game.css?v=3.6.0">
 </svelte:head>
 
 {#if showDcBanner}
@@ -1212,23 +1284,35 @@
         </div>
 
         <div class="g-go-actions">
+        <div class="g-go-lead">
+          {#if rejoinIn > 0}
+            <span class="g-rejoin-note">
+              {countdownMode === 'replay' ? 'Nouvelle partie' : 'La partie a démarré'} dans {rejoinIn} s
+            </span>
+          {/if}
+          {#if heldRound}
+            <button class="g-start-btn" onclick={joinRunningGame}>Rejoindre la partie</button>
+          {:else if !hasOwner || autoStart || isAdmin}
+            <button class="g-start-btn" onclick={requestGame}>Rejouer</button>
+          {:else}
+            <span class="g-rejoin-note">En attente de l&apos;admin pour rejouer</span>
+          {/if}
+        </div>
+
+        <div class="g-go-more">
         {#if shareResultId}
           <button class="g-go-share" onclick={shareResult}>
-            {shareCopied ? '✅ Lien copié !' : '📤 Partager mon score'}
+            {shareCopied ? 'Lien copié' : 'Partager mon score'}
           </button>
         {/if}
-        {#if !hasOwner || autoStart || isAdmin}
-          <button class="g-start-btn" onclick={requestGame}>&#x1F504; Rejouer</button>
-        {:else}
-          <div class="g-waiting" style="font-size:.8rem">&#x23F3; En attente de l&apos;admin pour rejouer.</div>
-        {/if}
-        <a href="/" class="g-go-back">&#x2190; Changer de room</a>
+        <a href="/" class="g-go-back">Changer de room</a>
         <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="g-go-discord">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path fill-rule="evenodd" clip-rule="evenodd" fill="white" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942.0209-.0406.0098-.0895-.0321-.1112a13.201 13.201 0 0 1-1.8735-.8914.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
           </svg>
-          Rejoindre le Discord
+          Discord
         </a>
+        </div>
         </div>
 
         <AdSlot adSlot={AD_SLOTS.gameOver} height={90} />
@@ -1323,6 +1407,8 @@
   roomId={ROOM_ID}
   reporterId={USER_ID}
   reporterName={USERNAME}
+  {history}
+  currentRound={currentRoundInfo}
 />
 
 <!-- Inviter des amis dans la room courante -->

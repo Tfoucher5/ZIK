@@ -4,6 +4,7 @@
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
   import { getContext } from 'svelte';
+  import TrackAudioDebugger from '$lib/components/admin/TrackAudioDebugger.svelte';
 
   let { data } = $props();
   const adminCtx = getContext('adminToken');
@@ -78,6 +79,21 @@
                 <div class="field-label">Sujet : <span class="td-strong">{r.subject}</span></div>
               {/if}
               <div class="message">{r.message}</div>
+
+              {#if r.subject === 'audio' && r.metadata?.tracks?.length}
+                {#each r.metadata.tracks as t (t.trackId ?? t.round)}
+                  {#if t.trackId}
+                    <div class="field-label">
+                      Manche {t.round}{t.answer ? ` · ${t.answer}` : ' · titre masqué en jeu'}
+                    </div>
+                    <TrackAudioDebugger trackId={t.trackId} {token} />
+                  {:else}
+                    <div class="field-label">
+                      Manche {t.round} — titre non identifiable (room personnalisée)
+                    </div>
+                  {/if}
+                {/each}
+              {/if}
 
               {#if r.metadata && Object.keys(r.metadata).length}
                 <pre class="meta">{JSON.stringify(r.metadata, null, 2)}</pre>
