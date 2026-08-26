@@ -27,6 +27,53 @@ async function checkAdmin(token) {
 
 const step = (ok, detail, err = null) => ({ ok, detail, error: err });
 
+// Le jeu ne garde qu'un résultat de `ytsearch5` — celui d'une chaîne « - Topic »
+// s'il y en a une. On expose les cinq pour vérifier que le bon a été retenu.
+async function candidatsYoutube(artist, title) {
+  try {
+    const { stdout } = await execFileAsync(
+      YTDLP_BIN,
+      [
+        `ytsearch5:${artist} - ${title}`,
+        "--flat-playlist",
+        "-j",
+        "--no-warnings",
+        "--socket-timeout",
+        "8",
+      ],
+      { timeout: 12000, maxBuffer: 2 * 1024 * 1024 },
+    );
+    const lignes = stdout
+      .trim()
+      .split("\n")
+      .map((l) => {
+        try {
+          return JSON.parse(l);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    const estTopic = (v) =>
+      Boolean(
+        v.channel?.endsWith("- Topic") || v.uploader?.endsWith("- Topic"),
+      );
+    const retenu = lignes.find(estTopic) ?? lignes[0];
+
+    return lignes.map((v) => ({
+      id: v.id,
+      titre: v.title ?? "",
+      chaine: v.channel || v.uploader || "",
+      duree: v.duration ?? null,
+      topic: estTopic(v),
+      retenu: v.id === retenu?.id,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // Rejoue la chaîne audio d'un titre sans jamais écrire en base.
 export async function POST({ url, request }) {
   await checkAdmin(url.searchParams.get("token"));
@@ -68,9 +115,12 @@ export async function POST({ url, request }) {
   // getYtAudioUrl attend un identifiant de vidéo : on passe d'abord par
   // ytsSearch, exactement comme le fait le jeu.
   const video = await ytsSearch(track.artist, track.title).catch(() => null);
+  const candidats = await candidatsYoutube(track.artist, track.title);
   steps.recherche = step(
     Boolean(video?.id),
-    video?.id ? `vidéo ${video.id}` : "aucune vidéo trouvée",
+    video?.id
+      ? `${candidats.length} résultats, retenu ${video.id}`
+      : "aucune vidéo trouvée",
     video?.id ? null : "ytsSearch ne renvoie rien",
   );
 
@@ -125,6 +175,7 @@ export async function POST({ url, request }) {
   return json({
     track: { id: track.id, artist: track.artist, title: track.title },
     steps,
+    candidats,
     playable: overridePreviewUrl || stillValid || dz || it || null,
   });
 }

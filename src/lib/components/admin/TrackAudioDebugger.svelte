@@ -130,6 +130,22 @@
             {#if report.steps[cle].error}
               <span class="tad-why">{report.steps[cle].error}</span>
             {/if}
+
+            {#if cle === 'recherche' && report.candidats?.length}
+              <ul class="tad-yt">
+                {#each report.candidats as c (c.id)}
+                  <li class:retenu={c.retenu}>
+                    <span class="tad-yt-mark">{c.retenu ? '▸' : ''}</span>
+                    <a href="https://www.youtube.com/watch?v={c.id}" target="_blank" rel="noopener noreferrer">
+                      {c.titre}
+                    </a>
+                    <span class="tad-yt-meta">
+                      {c.chaine}{c.topic ? ' · officielle' : ''}{c.duree ? ` · ${duree(c.duree)}` : ''}
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
           </div>
         </li>
       {/each}
@@ -327,6 +343,43 @@
     font-family: var(--mono);
     font-size: 0.7rem;
     color: var(--c-red, #ef4444);
+  }
+
+  /* Les cinq résultats de yt-dlp, celui que le jeu retient en tête de liste. */
+  .tad-yt {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .tad-yt li {
+    display: grid;
+    grid-template-columns: 12px 1fr;
+    gap: 6px;
+    font-size: 0.73rem;
+    color: var(--c-muted, #6b7280);
+  }
+  .tad-yt-mark {
+    color: var(--c-green, #22c55e);
+    font-family: var(--mono);
+  }
+  .tad-yt li.retenu a { color: var(--c-text, #e2e8f0); }
+  .tad-yt a {
+    color: var(--c-muted, #6b7280);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tad-yt a:hover { border-bottom-color: currentColor; }
+  .tad-yt-meta {
+    grid-column: 2;
+    font-size: 0.68rem;
+    color: var(--c-muted, #6b7280);
+    opacity: 0.75;
   }
 
   .tad-audio { width: 100%; height: 32px; }
