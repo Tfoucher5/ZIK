@@ -6,11 +6,14 @@ export const NEWS = [
     date: "2026-08-26",
     version: "3.6.0",
     tag: "Amélioration",
-    title: "Signaler un titre muet en deux clics",
+    title: "Signaler un titre muet, et une fin de partie plus posée",
     items: [
       "Quand tu n'entends pas la musique, le signalement te laisse désigner le ou les titres concernés, y compris celui de la manche en cours — sans en dévoiler la réponse.",
       "Les autres bugs se signalent toujours librement, avec un motif pour les orienter plus vite.",
-      "Fin de partie : quand quelqu'un relance, tu n'es plus arraché au tableau des scores. Tu rejoins dans 15 secondes, ou tu restes le temps que tu veux et tu rejoins d'un clic.",
+      "Les signalements envoyés sans être connecté n'arrivaient jamais : ils partaient en erreur au moment de l'envoi. C'est corrigé.",
+      "Fin de partie : un décompte de 15 secondes lance la partie suivante. Tu peux relancer tout de suite, ou laisser filer le décompte en regardant les scores.",
+      "Quand quelqu'un d'autre relance, tu n'es plus arraché au tableau des scores en pleine lecture : tu le rejoins à la fin du décompte.",
+      "L'écran de fin est réorganisé : l'action du moment d'abord, le partage et la navigation en dessous, à taille égale.",
     ],
   },
   {
