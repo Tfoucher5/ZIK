@@ -42,6 +42,7 @@
         body: JSON.stringify({ trackId }),
       });
       const d = await res.json();
+      if (res.status === 403) { erreur = 'Session expirée — recharge la page.'; return; }
       if (!res.ok) { erreur = d.error || 'Le diagnostic a échoué.'; return; }
       report = d;
       if (!query.trim()) query = `${d.track.artist} ${d.track.title}`.trim();
@@ -59,6 +60,7 @@
         body: JSON.stringify({ query }),
       });
       const d = await res.json();
+      if (res.status === 403) { erreur = 'Session expirée — recharge la page.'; return; }
       if (!res.ok) { erreur = d.error || 'La recherche a échoué.'; return; }
       results = d.results;
       searchErrors = d.errors ?? [];
@@ -80,6 +82,7 @@
         }),
       });
       const d = await res.json();
+      if (res.status === 403) { erreur = 'Session expirée — recharge la page.'; return; }
       if (!res.ok) { erreur = d.error || "L'enregistrement a échoué."; return; }
       saved = true;
       choisi = r;

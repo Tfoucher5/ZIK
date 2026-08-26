@@ -8,6 +8,7 @@
   let adminUsername = $state('');
   let ready = $state(false);
   let adminToken = $state('');
+  let authSub = null;
 
   setContext('adminToken', { get token() { return adminToken; } });
 
@@ -29,8 +30,19 @@
     adminToken = session.access_token;
     ready = true;
 
+    // Supabase fait tourner l'access_token toutes les heures environ. Sans
+    // écouter ce renouvellement, un onglet admin resté ouvert continue
+    // d'envoyer un jeton mort et toutes les requêtes tombent en 403.
+    authSub = sb.auth.onAuthStateChange((_event, s) => {
+      if (s?.access_token) adminToken = s.access_token;
+    }).data;
+
     fetch(`/api/admin/maintenance-bypass?token=${encodeURIComponent(adminToken)}`).catch(() => {});
   });
+
+  // onMount ignore la valeur de retour d'un callback async : le nettoyage de la
+  // souscription passe par un effet.
+  $effect(() => () => authSub?.subscription?.unsubscribe());
 </script>
 
 <svelte:head>
