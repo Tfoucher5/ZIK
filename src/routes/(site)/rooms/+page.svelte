@@ -432,7 +432,11 @@
                     {#if r.game_mode === 'qcm'}<span class="pw-badge pw-badge-qcm">QCM</span>{:else}<span class="pw-badge pw-badge-classic">Classique</span>{/if}
                   </div>
                   <div class="pw-bottom">
-                    <div class="pw-name {cfg.cls}">{r.name}</div>
+                    <a
+                      class="pw-name {cfg.cls}"
+                      href="/room/{r.code}"
+                      onclick={e => e.stopPropagation()}
+                    >{r.name}</a>
                     {#if r.profiles?.username}<div class="pw-owner">par {r.profiles.username}</div>{/if}
                     <div class="pw-footer">
                       <span class="pw-code {cfg.cls}">{r.code}</span>
@@ -448,7 +452,11 @@
                 <!-- Overlay hover -->
                 <div class="pw-hover" onclick={e => { e.stopPropagation(); joinRoom(r.code, r.game_mode); }}>
                   <div class="pwh-head">
-                    <div class="pwh-name">{r.name}</div>
+                    <a
+                      class="pwh-name"
+                      href="/room/{r.code}"
+                      onclick={e => e.stopPropagation()}
+                    >{r.name}</a>
                     <div class="pwh-sub">
                       {#if r.profiles?.username}<span>par {r.profiles.username}</span><span class="pwh-dot">·</span>{/if}
                       <span>{r.max_rounds} manches</span>
@@ -1006,11 +1014,26 @@
   .pw-badge-live { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.5); background: rgba(0,0,0,0.7); }
   .pw-badge-auto { color: #fbbf24; border-color: rgba(251,191,36,0.45); background: rgba(0,0,0,0.7); }
 
+  /* Le nom mène à la fiche de la room : c'est le geste attendu, et le seul
+     disponible au doigt puisqu'il n'y a pas de survol sur mobile. */
   .pw-name {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    /* .pw-info neutralise les clics pour laisser passer celui de la tuile :
+       le nom doit les réactiver pour lui-même. */
+    pointer-events: auto;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; text-transform: uppercase; line-height: 0.92; letter-spacing: -0.01em;
     text-shadow: 0 2px 16px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1);
     color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .pw-name:hover,
+  .pw-name:focus-visible {
+    border-bottom-color: rgba(255, 255, 255, 0.55);
   }
   .pw-name.pw-a { font-size: clamp(1.9rem, 3.2vw, 2.6rem); }
   .pw-name.pw-b { font-size: clamp(1.2rem, 2vw, 1.6rem); }
@@ -1077,11 +1100,21 @@
   .pwh-head { display: flex; flex-direction: column; gap: 5px; }
 
   .pwh-name {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; text-transform: uppercase;
     font-size: clamp(1.15rem, 2.2vw, 1.9rem);
     line-height: 0.92; letter-spacing: -0.01em;
     color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .pwh-name:hover,
+  .pwh-name:focus-visible {
+    border-bottom-color: rgba(255, 255, 255, 0.55);
   }
   .pwh-sub {
     font-family: 'Barlow Condensed', sans-serif;
