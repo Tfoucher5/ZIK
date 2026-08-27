@@ -176,16 +176,16 @@
     clearTimeout(stopTimer);
     rafId = null;
     stopTimer = null;
+    if (audioEl) audioEl.pause();
     playing = false;
+    progress = 0;
   }
 
   function tick(dur) {
     if (!audioEl) return;
     progress = Math.min(1, audioEl.currentTime / dur);
     if (audioEl.currentTime >= dur) {
-      audioEl.pause();
       clearPlayback();
-      progress = 0;
       return;
     }
     rafId = requestAnimationFrame(() => tick(dur));
@@ -198,19 +198,13 @@
     const dur = unlocked;
     audioEl.currentTime = 0;
     playing = true;
-    progress = 0;
     audioEl.play().catch(() => {
       playing = false;
       errorMsg = "Lecture impossible, réessaie.";
     });
     rafId = requestAnimationFrame(() => tick(dur));
     // Filet de sécurité si requestAnimationFrame est throttlé (onglet en arrière-plan).
-    stopTimer = setTimeout(() => {
-      if (!audioEl) return;
-      audioEl.pause();
-      clearPlayback();
-      progress = 0;
-    }, dur * 1000 + 250);
+    stopTimer = setTimeout(() => clearPlayback(), dur * 1000 + 250);
   }
 
   function onAudioError() {
