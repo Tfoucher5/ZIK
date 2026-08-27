@@ -3,6 +3,15 @@
 
 export const NEWS = [
   {
+    date: "2026-08-27",
+    version: "3.6.1",
+    tag: "Correctif",
+    title: "Zikle : passer un tour coupe enfin l'extrait",
+    items: [
+      "Quand tu passais un tour ou te trompais pendant la lecture, l'extrait continuait jusqu'au bout du morceau. Il s'arrête maintenant net : il faut réappuyer sur Écouter pour entendre la nouvelle durée débloquée.",
+    ],
+  },
+  {
     date: "2026-08-26",
     version: "3.6.0",
     tag: "Amélioration",
