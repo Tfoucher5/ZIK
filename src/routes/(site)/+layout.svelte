@@ -219,7 +219,8 @@
         Rejoindre le Discord
       </a>
       <span class="footer-discord-text">Feedback, bugs, discussions</span>
-      <a href="/soutenir" class="footer-support-link">Soutenir ZIK</a>
+      <a href="/soutenir" class="btn-support">Soutenir ZIK</a>
+      <span class="footer-support-text">Le serveur coûte 5 à 15 € par mois</span>
     </div>
   </div>
 
