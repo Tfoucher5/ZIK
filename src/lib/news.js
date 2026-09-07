@@ -3,6 +3,16 @@
 
 export const NEWS = [
   {
+    date: "2026-09-08",
+    version: "3.7.0",
+    tag: "Nouveauté",
+    title: "Une page pour soutenir le projet",
+    items: [
+      "ZIK tourne sur un serveur payé de ma poche, entre 5 et 15 € par mois selon l'affluence. La page Soutenir explique où va l'argent et permet de participer aux frais si le cœur t'en dit.",
+      "Rien ne change dans le jeu : les dons sont libres et ne donnent accès à aucun avantage, aucun bonus et aucun contenu réservé. Tout le monde garde exactement le même ZIK.",
+    ],
+  },
+  {
     date: "2026-08-27",
     version: "3.6.1",
     tag: "Correctif",

@@ -1765,6 +1765,7 @@ a {
 
 .g-go-more .g-go-share,
 .g-go-more .g-go-back,
+.g-go-more .g-go-support,
 .g-go-more .g-go-discord {
   display: inline-flex;
   align-items: center;
@@ -1789,6 +1790,17 @@ a {
 }
 .g-go-more .g-go-share {
   border-color: rgb(var(--accent-rgb) / 0.45);
+}
+.g-go-more .g-go-support {
+  color: var(--mid);
+  opacity: 0.65;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+.g-go-more .g-go-support:hover {
+  opacity: 1;
+  color: var(--text);
 }
 
 .g-rejoin-note {

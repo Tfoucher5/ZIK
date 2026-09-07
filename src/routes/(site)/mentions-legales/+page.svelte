@@ -8,7 +8,7 @@
 <main class="legal-page">
   <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
   <h1>Mentions L&eacute;gales</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juin 2026</p>
+  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: septembre 2026</p>
 
   <section>
     <h2>1. &Eacute;diteur du site</h2>
@@ -18,6 +18,7 @@
       <li><strong>Statut&nbsp;:</strong> Particulier (projet personnel, non commercial)</li>
       <li><strong>Contact&nbsp;:</strong> <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a></li>
     </ul>
+    <p>ZIK reste un projet personnel non commercial. La page <a href="/soutenir">Soutenir</a> permet de participer volontairement aux frais d&rsquo;h&eacute;bergement&nbsp;: il s&rsquo;agit de <strong>dons libres et sans contrepartie</strong>. Aucun avantage, contenu ou fonctionnalit&eacute; n&rsquo;est r&eacute;serv&eacute; aux personnes ayant donn&eacute;, et aucun bien ni service n&rsquo;est vendu sur le site.</p>
   </section>
 
   <section>
