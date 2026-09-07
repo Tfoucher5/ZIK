@@ -12,6 +12,7 @@ export const NEWS = [
       "Rien ne change dans le jeu : les dons sont libres et ne donnent accès à aucun avantage, aucun bonus et aucun contenu réservé. Tout le monde garde exactement le même ZIK.",
       "La publicité disparaît complètement du site : plus aucun encart, plus aucun script publicitaire, plus aucun cookie de ce type. La politique de confidentialité a été mise à jour en conséquence.",
       "La fenêtre d'informations qui s'ouvrait à l'arrivée sur le site est supprimée, ainsi que le réglage qui servait à la masquer.",
+      "Zikle : la lecture est maintenant strictement limitée à la durée débloquée, quelle que soit la façon dont elle est lancée. Il restait possible d'entendre l'extrait complet en contournant le bouton Écouter.",
     ],
   },
   {
