@@ -1,12 +1,12 @@
 <script>
   import { KOFI_URL } from '$lib/support.js';
 
-  // Pseudos des personnes qui ont soutenu le projet — ajoutés à la main.
+  // Pseudos des personnes qui ont soutenu le projet - ajoutés à la main.
   const SUPPORTERS = [];
 </script>
 
 <svelte:head>
-  <title>ZIK — Soutenir le projet</title>
+  <title>ZIK - Soutenir le projet</title>
   <meta name="description" content="ZIK est gratuit et le restera. Si le blind test te plaît, tu peux aider à payer le serveur." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/soutenir" />
@@ -29,9 +29,8 @@
     <h2 class="sup-card-head">Où va l'argent</h2>
     <p>
       ZIK tourne sur un serveur qui coûte <strong>entre 5 et 15 € par mois</strong>, facturé à la consommation.
-      Plus il y a de parties, plus la note monte — c'est plutôt bon signe, mais c'est aujourd'hui payé
-      de ma poche. Il n'y a personne derrière ZIK à part moi : pas d'entreprise, pas d'investisseur,
-      pas de salaire.
+      Plus il y a de parties, plus la note monte - c'est plutôt bon signe, mais c'est aujourd'hui payé
+      de ma poche. Il n'y a personne derrière ZIK à part moi : pas d'entreprise, pas d'investisseur.
     </p>
     <div class="sup-figures">
       <div class="sup-fig">
@@ -65,7 +64,7 @@
     <h2 class="sup-card-head">Aider sans donner un centime</h2>
     <ul class="sup-alt-list">
       <li><strong>Amène du monde.</strong> Un blind test à deux, c'est triste. C'est le vrai besoin du projet.</li>
-      <li><strong>Signale les bugs et les titres muets</strong> depuis le jeu — ça prend dix secondes et ça sert à tout le monde.</li>
+      <li><strong>Signale les bugs et les titres muets</strong> depuis le jeu - ça prend dix secondes et ça sert à tout le monde.</li>
       <li><strong>Passe sur le <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer">Discord</a></strong> pour dire ce qui manque.</li>
     </ul>
   </section>
