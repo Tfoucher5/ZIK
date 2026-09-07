@@ -4,9 +4,7 @@
   import { goto } from '$app/navigation';
   import ReportModal from '$lib/components/ReportModal.svelte';
   import AchievementToast from '$lib/components/AchievementToast.svelte';
-  import AdSlot from '$lib/components/AdSlot.svelte';
   import Modal from '$lib/components/Modal.svelte';
-  import { AD_SLOTS } from '$lib/ads.js';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { dicebear } from '$lib/utils.js';
 
@@ -895,7 +893,7 @@
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.6.0">
+  <link rel="stylesheet" href="/css/game.css?v=3.7.0">
 </svelte:head>
 
 {#if showDcBanner}
@@ -1076,9 +1074,6 @@
           {/if}
         {/if}
 
-        {#if showStart && !gameoverShow}
-          <AdSlot adSlot={AD_SLOTS.gameLobby} height={90} />
-        {/if}
 
       </main>
 
@@ -1315,7 +1310,11 @@
         </div>
         </div>
 
-        <AdSlot adSlot={AD_SLOTS.gameOver} height={90} />
+        <div class="g-go-support-box">
+          <span class="g-go-support-text">ZIK est gratuit et tourne sur un serveur payé de ma poche.</span>
+          <a href="/soutenir" class="g-go-support-btn">Soutenir ZIK</a>
+        </div>
+
       </div>
 
     </div>

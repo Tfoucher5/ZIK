@@ -3,6 +3,19 @@
 
 export const NEWS = [
   {
+    date: "2026-09-08",
+    version: "3.7.0",
+    tag: "Nouveauté",
+    title: "Une page pour soutenir le projet",
+    items: [
+      "ZIK tourne sur un serveur payé de ma poche, entre 5 et 15 € par mois selon l'affluence. La page Soutenir explique où va l'argent et permet de participer aux frais si le cœur t'en dit.",
+      "Rien ne change dans le jeu : les dons sont libres et ne donnent accès à aucun avantage, aucun bonus et aucun contenu réservé. Tout le monde garde exactement le même ZIK.",
+      "La publicité disparaît complètement du site : plus aucun encart, plus aucun script publicitaire, plus aucun cookie de ce type. La politique de confidentialité a été mise à jour en conséquence.",
+      "La fenêtre d'informations qui s'ouvrait à l'arrivée sur le site est supprimée, ainsi que le réglage qui servait à la masquer.",
+      "Zikle : la lecture est maintenant strictement limitée à la durée débloquée, quelle que soit la façon dont elle est lancée. Il restait possible d'entendre l'extrait complet en contournant le bouton Écouter.",
+    ],
+  },
+  {
     date: "2026-08-27",
     version: "3.6.1",
     tag: "Correctif",

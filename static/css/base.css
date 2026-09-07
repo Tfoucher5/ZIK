@@ -681,6 +681,40 @@ button {
   text-transform: uppercase;
   color: rgb(var(--c-glass) / 0.18);
 }
+.btn-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 9px 16px;
+  border-radius: 2px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  width: fit-content;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.btn-support:hover {
+  background: var(--accent);
+  color: #0b0b12;
+}
+.footer-support-text {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--c-glass) / 0.18);
+}
 
 /* Bas */
 .footer-bottom {

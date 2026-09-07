@@ -207,6 +207,14 @@
     stopTimer = setTimeout(() => clearPlayback(), dur * 1000 + 250);
   }
 
+  // Les contrôles média du navigateur (barre média, touches multimédia) appellent
+  // play() directement sur l'élément, hors de playSnippet : la durée débloquée
+  // n'est alors bornée par rien et tout l'extrait devient audible.
+  function onAudioPlay() {
+    if (playing) return;
+    audioEl.pause();
+  }
+
   function onAudioError() {
     clearPlayback();
     errorMsg = "Cet extrait n'a pas pu être chargé, réessaie plus tard.";
@@ -371,7 +379,7 @@
   }
 </script>
 
-<audio bind:this={audioEl} src={previewUrl} preload="auto" onerror={onAudioError}></audio>
+<audio bind:this={audioEl} src={previewUrl} preload="auto" onplay={onAudioPlay} onerror={onAudioError}></audio>
 
 <section class="zk">
   <!-- Bandeau d'en-tête : numéro du jour + série -->
