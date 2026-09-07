@@ -3,8 +3,6 @@
   import Toast from '$lib/components/Toast.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
   import { toast } from '$lib/toast.svelte.js';
-  import AdSlot from '$lib/components/AdSlot.svelte';
-  import { AD_SLOTS } from '$lib/ads.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -48,20 +46,20 @@
 
   const hasActiveFilters = $derived(filterAutoStart || filterActive || filterQcm || filterClassic || filterOfficial);
 
-  // Multiple de 7 : chaque patchwork (7 rooms + 1 pub) reste complet tant qu'il y a des rooms à charger
-  let visibleCount = $state(21);
+  // Multiple de 8 : chaque patchwork reste complet tant qu'il y a des rooms à charger
+  let visibleCount = $state(24);
   const visibleRooms = $derived(filteredPublic.slice(0, visibleCount));
   const hasMore      = $derived(visibleCount < filteredPublic.length);
 
   $effect(() => {
     // Reset pagination quand les filtres/search changent
     pubSearch; filterAutoStart; filterActive; filterQcm; filterClassic; filterOfficial;
-    visibleCount = 21;
+    visibleCount = 24;
   });
 
   const patchworkChunks = $derived.by(() => {
     const chunks = [];
-    for (let i = 0; i < visibleRooms.length; i += 7) chunks.push(visibleRooms.slice(i, i + 7));
+    for (let i = 0; i < visibleRooms.length; i += 8) chunks.push(visibleRooms.slice(i, i + 8));
     return chunks;
   });
 
@@ -78,8 +76,6 @@
     { cls: 'pw-h', cgCls: 'cg-2x2', count: 4,  maxPl: 0, showDesc: false },
   ];
 
-  // Case réservée à la pub-tuile, différente selon la disposition (pv0..pv3)
-  const AD_CELLS = ['pw-e', 'pw-g', 'pw-b', 'pw-h'];
 
   function fillCovers(covers, n) {
     if (!covers?.length) return Array(n).fill(null);
@@ -387,21 +383,13 @@
       </div>
     {:else}
 
-      <!-- Patchwork — 7 rooms + 1 pub-tuile par chunk, 4 dispositions en rotation -->
+      <!-- Patchwork — 8 rooms par chunk, 4 dispositions en rotation -->
       {#each patchworkChunks as chunk, ci (ci)}
-        {@const adCell = AD_CELLS[ci % AD_CELLS.length]}
-        {@const adIdx = SLOT_CONFIGS.findIndex(c => c.cls === adCell)}
-        <div class="patchwork pv{ci % AD_CELLS.length}">
+        <div class="patchwork pv{ci % 4}">
           {#each SLOT_CONFIGS as cfg, i (i)}
-            {#if cfg.cls === adCell}
-              <div class="pw-ad {cfg.cls}">
-                <AdSlot adSlot={AD_SLOTS.roomsTile} variant="fill" />
-              </div>
-            {:else}
-              {@const ri = i < adIdx ? i : i - 1}
-              {#if chunk[ri]}
-              {@const r = chunk[ri]}
-              {@const gi = ci * 7 + ri}
+            {#if chunk[i]}
+              {@const r = chunk[i]}
+              {@const gi = ci * 8 + i}
               <div
                 class="pw-room {cfg.cls} {r.online > 0 ? 'is-live' : ''}"
                 role="button" tabindex="0"
@@ -498,9 +486,8 @@
                 </div>
 
               </div>
-              {:else}
-                <div class="pw-empty {cfg.cls}"></div>
-              {/if}
+            {:else}
+              <div class="pw-empty {cfg.cls}"></div>
             {/if}
           {/each}
         </div>
@@ -628,7 +615,6 @@
     {/if}
   {/if}
 
-  <AdSlot adSlot={AD_SLOTS.content} />
 </div>
 
 <!-- Room modal -->
@@ -941,8 +927,6 @@
     z-index: 1;
   }
   .pw-empty { background: #0a0a0a; opacity: 0.4; }
-  .pw-ad { background: #0a0a0a; position: relative; }
-
   .patchwork:has(.pw-room:hover) .pw-room:not(:hover) { filter: brightness(0.45) saturate(0.6); }
   .pw-room:hover {
     outline: 2px solid var(--accent);
@@ -1638,9 +1622,6 @@
     .patchwork:has(.pw-room:hover) .pw-room:not(:hover) { filter: none; }
     .pw-room:hover { filter: none; }
     .pw-empty { display: none; }
-    .pw-ad { width: 100%; height: 250px; }
-    .pw-ad:not(:has(:global(ins))),
-    .pw-ad:has(:global(ins[data-ad-status='unfilled'])) { display: none; }
     .pw-cover-empty {
       position: relative !important; inset: unset !important;
       flex-shrink: 0; width: 110px; align-self: stretch;

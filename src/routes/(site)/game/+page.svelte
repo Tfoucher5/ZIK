@@ -4,9 +4,7 @@
   import { goto } from '$app/navigation';
   import ReportModal from '$lib/components/ReportModal.svelte';
   import AchievementToast from '$lib/components/AchievementToast.svelte';
-  import AdSlot from '$lib/components/AdSlot.svelte';
   import Modal from '$lib/components/Modal.svelte';
-  import { AD_SLOTS } from '$lib/ads.js';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { dicebear } from '$lib/utils.js';
 
@@ -1076,9 +1074,6 @@
           {/if}
         {/if}
 
-        {#if showStart && !gameoverShow}
-          <AdSlot adSlot={AD_SLOTS.gameLobby} height={90} />
-        {/if}
 
       </main>
 
@@ -1316,11 +1311,10 @@
         </div>
 
         <div class="g-go-support-box">
-          <span class="g-go-support-text">ZIK tourne sur un serveur payé de ma poche, 5 à 15 € par mois.</span>
+          <span class="g-go-support-text">ZIK est gratuit et tourne sur un serveur payé de ma poche.</span>
           <a href="/soutenir" class="g-go-support-btn">Soutenir ZIK</a>
         </div>
 
-        <AdSlot adSlot={AD_SLOTS.gameOver} height={90} />
       </div>
 
     </div>

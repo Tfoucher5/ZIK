@@ -3,12 +3,10 @@
   import { page } from '$app/state';
   import Nav from '$lib/components/Nav.svelte';
   import AuthModal from '$lib/components/AuthModal.svelte';
-  import AnnouncementPopup from '$lib/components/AnnouncementPopup.svelte';
   import ContactModal from '$lib/components/ContactModal.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
-  import { ADSENSE_CLIENT } from '$lib/ads.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -73,19 +71,8 @@
     authOpen = true;
   }
 
-  let adsLoaded = false;
-  function loadAdsScript() {
-    if (adsLoaded || currentUser?.profile?.role === 'super_admin') return;
-    adsLoaded = true;
-    const s = document.createElement('script');
-    s.async = true;
-    s.crossOrigin = 'anonymous';
-    s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
-    document.head.appendChild(s);
-  }
-
   onMount(async () => {
-    if (!sb) { authReady = true; loadAdsScript(); return; }
+    if (!sb) { authReady = true; return; }
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session?.user) await applyUser(session.user);
@@ -94,7 +81,6 @@
     }
 
     authReady = true;
-    loadAdsScript();
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await applyUser(session.user);
@@ -116,7 +102,6 @@
   <meta name="author" content="ZIK">
   <meta name="theme-color" content="#7c3aed">
   <meta name="format-detection" content="telephone=no">
-  <meta name="google-adsense-account" content="ca-pub-6495356963886902">
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="ZIK">
@@ -149,7 +134,6 @@
 />
 {/if}
 
-<AnnouncementPopup {sb} />
 
 {@render children()}
 
@@ -220,7 +204,7 @@
       </a>
       <span class="footer-discord-text">Feedback, bugs, discussions</span>
       <a href="/soutenir" class="btn-support">Soutenir ZIK</a>
-      <span class="footer-support-text">Le serveur coûte 5 à 15 € par mois</span>
+      <span class="footer-support-text">Aider ZIK à rester en ligne</span>
     </div>
   </div>
 

@@ -10,6 +10,8 @@ export const NEWS = [
     items: [
       "ZIK tourne sur un serveur payé de ma poche, entre 5 et 15 € par mois selon l'affluence. La page Soutenir explique où va l'argent et permet de participer aux frais si le cœur t'en dit.",
       "Rien ne change dans le jeu : les dons sont libres et ne donnent accès à aucun avantage, aucun bonus et aucun contenu réservé. Tout le monde garde exactement le même ZIK.",
+      "La publicité disparaît complètement du site : plus aucun encart, plus aucun script publicitaire, plus aucun cookie de ce type. La politique de confidentialité a été mise à jour en conséquence.",
+      "La fenêtre d'informations qui s'ouvrait à l'arrivée sur le site est supprimée, ainsi que le réglage qui servait à la masquer.",
     ],
   },
   {

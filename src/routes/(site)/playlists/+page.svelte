@@ -4,8 +4,6 @@
   import TrackRow from './TrackRow.svelte';
   import TrackSearch from './TrackSearch.svelte';
   import { toast } from '$lib/toast.svelte.js';
-  import AdSlot from '$lib/components/AdSlot.svelte';
-  import { AD_SLOTS } from '$lib/ads.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -508,7 +506,6 @@
     {/if}
   </div>
 
-  <AdSlot adSlot={AD_SLOTS.content} />
 </div>
 
 <!-- Playlist create/edit modal -->
