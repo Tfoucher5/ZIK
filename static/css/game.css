@@ -1765,7 +1765,6 @@ a {
 
 .g-go-more .g-go-share,
 .g-go-more .g-go-back,
-.g-go-more .g-go-support,
 .g-go-more .g-go-discord {
   display: inline-flex;
   align-items: center;
@@ -1791,16 +1790,48 @@ a {
 .g-go-more .g-go-share {
   border-color: rgb(var(--accent-rgb) / 0.45);
 }
-.g-go-more .g-go-support {
+.g-go-support-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  width: 100%;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border2);
+}
+.g-go-support-text {
   color: var(--mid);
-  opacity: 0.65;
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.g-go-support-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 18px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
   transition:
-    opacity 0.15s,
+    background 0.15s,
     color 0.15s;
 }
-.g-go-more .g-go-support:hover {
-  opacity: 1;
-  color: var(--text);
+.g-go-support-btn:hover {
+  background: var(--accent);
+  color: #0b0b12;
 }
 
 .g-rejoin-note {
