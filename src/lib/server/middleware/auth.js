@@ -81,6 +81,25 @@ export async function requireAdmin(request) {
   return { adminUser: user, formData };
 }
 
+// Variante pour les endpoints GET, où l'admin s'authentifie par un token en
+// query string plutôt que par un formulaire.
+export async function requireAdminToken(token) {
+  if (!token) throw error(403, "Token manquant");
+
+  const user = await verifyToken(token);
+  if (!user) throw error(403, "Token invalide");
+
+  const { data: profile } = await getAdminClient()
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "super_admin") throw error(403, "Accès refusé");
+
+  return user;
+}
+
 export async function logAdminAction(
   adminId,
   action,

@@ -1,25 +1,13 @@
-import { error, json } from "@sveltejs/kit";
-import { verifyToken } from "$lib/server/middleware/auth.js";
+import { json } from "@sveltejs/kit";
+import { requireAdminToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { sumWindow, computeDelta, toPercent } from "$lib/admin/stats-utils.js";
 
 const CACHE_TTL = 5 * 60_000;
 const _cache = new Map(); // days -> { data, exp }
 
-async function checkAdmin(token) {
-  if (!token) throw error(403, "Token manquant");
-  const user = await verifyToken(token);
-  if (!user) throw error(403, "Token invalide");
-  const { data: profile } = await getAdminClient()
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "super_admin") throw error(403, "Accès refusé");
-}
-
 export async function GET({ url }) {
-  await checkAdmin(url.searchParams.get("token"));
+  await requireAdminToken(url.searchParams.get("token"));
   const days = [30, 60, 90].includes(Number(url.searchParams.get("days")))
     ? Number(url.searchParams.get("days"))
     : 30;

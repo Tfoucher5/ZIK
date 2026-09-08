@@ -2,12 +2,17 @@
   import { getContext } from "svelte";
   import StatCard from "$lib/admin/StatCard.svelte";
   import TrendChart from "$lib/admin/TrendChart.svelte";
+  import CohortTable from "$lib/admin/CohortTable.svelte";
+  import BucketBars from "$lib/admin/BucketBars.svelte";
+  import LeverTable from "$lib/admin/LeverTable.svelte";
+  import AtRiskList from "$lib/admin/AtRiskList.svelte";
 
   let { data, form } = $props();
   const adminCtx = getContext("adminToken");
   const token = $derived(adminCtx?.token ?? "");
 
   let stats = $state(null);
+  let retention = $state(null);
   let days = $state(30);
   let loading = $state(true);
   let maintEnabled = $state(data.maintenance?.enabled ?? false);
@@ -21,10 +26,25 @@
     loading = false;
   }
 
+  // Fenêtres fixes (12 semaines de cohortes, 30 jours de fréquence) : le
+  // sélecteur de période ne pilote pas ce bloc, d'où le chargement séparé.
+  async function loadRetention() {
+    if (!token) return;
+    const r = await fetch(
+      `/api/admin/retention?token=${encodeURIComponent(token)}`,
+    );
+    if (r.ok) retention = await r.json();
+  }
+
   $effect(() => {
     void days;
     void token;
     loadStats();
+  });
+
+  $effect(() => {
+    void token;
+    loadRetention();
   });
 
   const sparkOf = (serie) => (serie ?? []).slice(-14).map((p) => p.n ?? p.y ?? 0);
@@ -52,6 +72,34 @@
             label: "Zikle",
             color: "#38bdf8",
             points: stats.series.zikle.map((p) => ({ x: p.day, y: p.n })),
+          },
+        ].filter((s) => s.points.length > 0),
+  );
+
+  const breakdownSeries = $derived(
+    !retention
+      ? []
+      : [
+          {
+            label: "Nouveaux",
+            color: "#6366f1",
+            points: retention.breakdown.map((w) => ({ x: w.week, y: w.new })),
+          },
+          {
+            label: "Revenants",
+            color: "#22c55e",
+            points: retention.breakdown.map((w) => ({
+              x: w.week,
+              y: w.returning,
+            })),
+          },
+          {
+            label: "Résurrectés",
+            color: "#f59e0b",
+            points: retention.breakdown.map((w) => ({
+              x: w.week,
+              y: w.resurrected,
+            })),
           },
         ].filter((s) => s.points.length > 0),
   );
@@ -196,6 +244,55 @@
     <p class="status">Chargement…</p>
   {:else}
     <p class="status err">Impossible de charger les statistiques.</p>
+  {/if}
+
+  {#if retention}
+    <div class="sec-head">
+      <h2>Rétention</h2>
+      <span class="sec-sub">Inscrits uniquement · fenêtres fixes</span>
+    </div>
+
+    <div class="hero">
+      <StatCard label="Actifs aujourd'hui" value={retention.engagement.dau} />
+      <StatCard label="Actifs 7 j" value={retention.engagement.wau} />
+      <StatCard label="Actifs 30 j" value={retention.engagement.mau} />
+      <StatCard
+        label="Stickiness (DAU/MAU)"
+        value={`${retention.engagement.stickiness} %`}
+      />
+    </div>
+
+    <CohortTable cohorts={retention.cohorts} />
+
+    <div class="ret-grid">
+      <BucketBars
+        title="Fréquence de retour ({retention.frequency.days} j)"
+        buckets={retention.frequency.buckets}
+        footer={`Écart médian entre deux jours joués : ${retention.frequency.medianGap} j`}
+      />
+      <BucketBars
+        title="Cycle de vie"
+        buckets={[
+          { label: "Actifs 30 j", n: retention.churn.active30d },
+          { label: "À risque", n: retention.churn.atRisk },
+          { label: "Perdus", n: retention.churn.churned },
+        ]}
+        footer="À risque : rien depuis 14 à 30 jours. Perdus : rien depuis plus de 30 jours."
+      />
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-label">Nouveaux, revenants et résurrectés</span>
+        <span class="panel-sub">par semaine</span>
+      </div>
+      <TrendChart series={breakdownSeries} />
+    </div>
+
+    <div class="ret-grid">
+      <LeverTable levers={retention.levers} />
+      <AtRiskList users={retention.atRiskUsers} />
+    </div>
   {/if}
 
   <div class="ops-bar">
@@ -420,6 +517,28 @@
     gap: 12px;
   }
 
+  /* Rétention */
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 18px;
+    border-top: 1px solid var(--c-border);
+  }
+  .sec-head h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--c-text);
+    letter-spacing: -0.02em;
+  }
+  .sec-sub { font-size: 0.72rem; color: var(--c-muted); }
+  .ret-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
   /* Status */
   .status { color: var(--c-muted); font-size: 0.85rem; padding: 8px 0; }
   .status.err { color: var(--c-red); }
@@ -530,6 +649,7 @@
   @media (max-width: 680px) {
     .hero      { grid-template-columns: 1fr 1fr; }
     .secondary { grid-template-columns: 1fr; }
+    .ret-grid  { grid-template-columns: 1fr; }
     .ops-links { margin-left: 0; }
   }
 </style>
