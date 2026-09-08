@@ -29,7 +29,7 @@
   <meta property="og:description" content="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. ZIK permet l'import de playlists Spotify/Deezer et propose un Mode Salon pour les soirées." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/blindtest-io" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
   <script type="application/ld+json">{@html ld}</script>
 </svelte:head>
 

@@ -70,7 +70,7 @@
   <meta property="og:description" content="Rejoue les Zikle des jours précédents." />
   <meta property="og:url" content="https://www.zik-music.fr/zikle/archives" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
 </svelte:head>
 
 <main class="za">

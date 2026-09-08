@@ -4,6 +4,16 @@
 export const NEWS = [
   {
     date: "2026-09-08",
+    version: "3.7.1",
+    tag: "Amélioration",
+    title: "Nouvelles icônes et nouvelle image de partage",
+    items: [
+      "Le carré du logo passe du violet au magenta du site. L'icône reste la même, mais elle est enfin de la bonne couleur dans l'onglet, sur l'écran d'accueil du téléphone et dans les favoris.",
+      "L'image affichée quand on partage un lien ZIK sur Discord, WhatsApp ou les réseaux a été entièrement refaite : la punchline de la page d'accueil sur un mur de pochettes, et surtout la bonne adresse du site. L'ancienne datait des débuts et affichait encore un nom de domaine qui n'existe plus.",
+    ],
+  },
+  {
+    date: "2026-09-08",
     version: "3.7.0",
     tag: "Nouveauté",
     title: "Une page pour soutenir le projet",

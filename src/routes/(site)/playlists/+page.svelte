@@ -396,12 +396,12 @@
   <meta property="og:description" content="Créez vos playlists de blind test, importez depuis Spotify ou Deezer. Lancez une room directement. Gratuit, sans limite." />
   <meta property="og:url" content="https://www.zik-music.fr/playlists" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Playlists de Blind Test | ZIK" />
   <meta name="twitter:description" content="Importez vos playlists Spotify/Deezer et jouez au blind test avec vos musiques. Gratuit." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
 
   <script type="application/ld+json">{@html playlistsJsonLd}</script>
 </svelte:head>
