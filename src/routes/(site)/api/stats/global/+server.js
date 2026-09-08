@@ -26,7 +26,7 @@ export async function GET() {
         .eq("is_public", true),
       supabase
         .from("games")
-        .select("id", { count: "exact", head: true })
+        .select("id, game_players!inner(id)", { count: "exact", head: true })
         .gte("started_at", since30d),
     ]);
 
