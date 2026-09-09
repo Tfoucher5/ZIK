@@ -61,6 +61,7 @@
       <li>Votre pseudo d&rsquo;invit&eacute; pour pr&eacute;remplir le formulaire de jeu lors d&rsquo;une prochaine visite</li>
       <li>En Mode Salon&nbsp;: le code salon et le pseudo saisis lors de votre derni&egrave;re session, pour pr&eacute;remplir le formulaire. Ces donn&eacute;es restent exclusivement sur votre appareil et ne sont jamais transmises &agrave; nos serveurs.</li>
     </ul>
+    <p>Un unique cookie, <code>zik_src</code>, est d&eacute;pos&eacute; lors de votre premi&egrave;re visite. Il ne contient qu&rsquo;un indicateur de passage, sans identifiant&nbsp;: il sert uniquement &agrave; savoir combien de personnes arrivent sur le site et depuis quel canal (moteur de recherche, r&eacute;seau social, lien direct). Aucune adresse IP, aucun profil et aucune donn&eacute;e permettant de vous reconna&icirc;tre n&rsquo;est conserv&eacute;e, et cette mesure d&rsquo;audience reste strictement interne &agrave; ZIK.</p>
     <p><strong>ZIK n&rsquo;affiche aucune publicit&eacute;</strong> et ne d&eacute;pose aucun cookie publicitaire. Aucun cookie de tracking ou d&rsquo;analyse tiers n&rsquo;est utilis&eacute; sur ZIK.</p>
   </section>
 
