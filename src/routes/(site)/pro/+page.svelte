@@ -279,7 +279,7 @@
   .pro-page {
     max-width: 860px;
     margin: 0 auto;
-    padding: 32px 20px 80px;
+    padding: calc(var(--nav-h) + 24px) 20px 80px;
   }
   .pro-back {
     margin-bottom: 24px;
