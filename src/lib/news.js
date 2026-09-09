@@ -4,6 +4,15 @@
 export const NEWS = [
   {
     date: "2026-09-09",
+    version: "3.8.2",
+    tag: "Correctif",
+    title: "Les parties coupées par la modération comptent",
+    items: [
+      "Quand une partie était interrompue depuis l'interface d'administration, les points marqués n'étaient enregistrés nulle part : ni au classement, ni dans les statistiques du profil. Ils comptent maintenant, comme pour une partie arrivée à son terme.",
+    ],
+  },
+  {
+    date: "2026-09-09",
     version: "3.8.1",
     tag: "Correctif",
     title: "Le classement Score comptait mal les parties",
