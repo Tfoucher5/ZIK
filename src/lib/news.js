@@ -4,6 +4,17 @@
 export const NEWS = [
   {
     date: "2026-09-09",
+    version: "3.8.1",
+    tag: "Correctif",
+    title: "Le classement Score comptait mal les parties",
+    items: [
+      "Les parties jouées dans une room créée à la volée n'apparaissaient nulle part dans le classement Score, alors qu'elles comptaient sur la page d'accueil. Des dizaines de joueurs étaient invisibles au classement : c'est réparé, et leurs points sont revenus.",
+      "Quand une partie était abandonnée par tous ses joueurs, les points marqués avant de partir étaient bien enregistrés mais jamais classés. Ils comptent désormais.",
+      "Un même compte pouvait jouer depuis deux onglets à la fois et voir ses points comptés en double. Ce n'est plus possible : tant qu'une partie est ouverte quelque part, le second onglet propose de reprendre la main plutôt que de créer un deuxième joueur.",
+    ],
+  },
+  {
+    date: "2026-09-09",
     version: "3.8.0",
     tag: "Nouveauté",
     title: "Ton score s'affiche enfin quand tu partages une partie",

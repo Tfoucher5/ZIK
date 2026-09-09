@@ -26,7 +26,7 @@
   <meta property="og:description" content="ZIK est spécialisé dans le blind test musical avec import Spotify/Deezer et classement ELO. Kahoot est une plateforme de quiz généraliste. Comparaison factuelle." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/kahoot" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.1" />
   <script type="application/ld+json">{@html jsonLd}</script>
 </svelte:head>
 
