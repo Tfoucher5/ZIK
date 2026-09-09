@@ -78,6 +78,20 @@ async function loadSalonTracks(playlistIds, client = supabase) {
   return all;
 }
 
+/**
+ * Tire au hasard les titres d'une session dans le pool complet.
+ * Les manches consomment le tableau par la fin (pop), l'ordre est donc deja
+ * celui du jeu.
+ */
+export function buildSessionPlaylist(fullPlaylist, count) {
+  const pool = [...fullPlaylist];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, Math.max(0, count));
+}
+
 // ─── Multiple choice helpers ──────────────────────────────────────────────────
 
 function makeChoices(correct, allTracks) {
@@ -587,7 +601,12 @@ export async function createSalonRoom({
 }
 
 // Phases pendant lesquelles l'hote peut changer la selection de playlists.
-const PLAYLIST_SWAP_PHASES = ["lobby", "gameover"];
+// "starting" est exclu : la session est en train d'etre composee.
+const PLAYLIST_SWAP_PHASES = ["lobby", "gameover", "round", "summary"];
+
+// Phases ou une partie est en cours : les manches restantes sont retirees dans
+// le nouveau pool, sans toucher a celles deja jouees.
+const PLAYLIST_SWAP_LIVE_PHASES = ["round", "summary"];
 
 /**
  * Remplace le pool de titres d'un salon deja ouvert.
@@ -604,9 +623,7 @@ export async function changeSalonPlaylists({
   if (!salon.hostUserId || salon.hostUserId !== userId)
     throw new Error("Seul l'hote du salon peut changer les playlists.");
   if (!PLAYLIST_SWAP_PHASES.includes(salon.game.phase))
-    throw new Error(
-      "Les playlists ne peuvent etre changees qu'avant le lancement ou en fin de partie.",
-    );
+    throw new Error("Impossible de changer les playlists maintenant.");
 
   const client = token ? userClient(token) : supabase;
   const tracks = await loadSalonTracks(playlistIds, client);
@@ -618,12 +635,30 @@ export async function changeSalonPlaylists({
   salon.game.fullPlaylist = tracks;
   salon.settings = { ...salon.settings, playlistIds };
 
-  getIO()?.to(`salon:${code}`).emit("salon_playlists_changed", {
-    playlistIds,
-    trackCount: tracks.length,
-  });
+  // En pleine partie, les manches restantes basculent sur le nouveau pool. La
+  // manche en cours n'est pas interrompue : son titre a deja ete sorti de la
+  // session et continue de jouer.
+  const live = PLAYLIST_SWAP_LIVE_PHASES.includes(salon.game.phase);
+  const remainingRounds = Math.max(
+    0,
+    salon.settings.maxRounds - salon.game.currentRound,
+  );
+  if (live) {
+    salon.game.sessionPlaylist = buildSessionPlaylist(tracks, remainingRounds);
+    // Le titre precharge venait de l'ancienne selection.
+    salon.game.prefetchedRound = null;
+  }
 
-  return { trackCount: tracks.length };
+  getIO()
+    ?.to(`salon:${code}`)
+    .emit("salon_playlists_changed", {
+      playlistIds,
+      trackCount: tracks.length,
+      appliedNow: live,
+      remainingRounds: live ? remainingRounds : null,
+    });
+
+  return { trackCount: tracks.length, appliedNow: live, remainingRounds };
 }
 
 // ─── Socket registration ──────────────────────────────────────────────────────
@@ -768,10 +803,10 @@ export function registerSalon(io) {
       if (socket.id !== salon.hostSocketId) return;
       if (salon.game.phase !== "lobby") return;
 
-      const tracks = [...salon.game.fullPlaylist]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, salon.settings.maxRounds);
-      salon.game.sessionPlaylist = tracks;
+      salon.game.sessionPlaylist = buildSessionPlaylist(
+        salon.game.fullPlaylist,
+        salon.settings.maxRounds,
+      );
       salon.game.currentRound = 0;
 
       for (const p of Object.values(salon.players)) p.score = 0;
@@ -1017,10 +1052,10 @@ export function registerSalon(io) {
       }
 
       // Re-shuffle session playlist from full playlist
-      const tracks = [...salon.game.fullPlaylist]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, salon.settings.maxRounds);
-      salon.game.sessionPlaylist = tracks;
+      salon.game.sessionPlaylist = buildSessionPlaylist(
+        salon.game.fullPlaylist,
+        salon.settings.maxRounds,
+      );
       salon.game.currentRound = 0;
       salon.game.history = [];
       salon.game.firstFinder = null;

@@ -190,10 +190,12 @@
       players = p; roundEnd = null; finalScores = []; clearAutoNext();
     });
 
-    socket.on('salon_playlists_changed', ({ playlistIds, trackCount }) => {
+    socket.on('salon_playlists_changed', ({ playlistIds, trackCount, appliedNow, remainingRounds }) => {
       settings = { ...settings, playlistIds };
-      playlistNotice = `Playlists mises à jour : ${trackCount} titres disponibles.`;
-      setTimeout(() => { playlistNotice = ''; }, 6000);
+      playlistNotice = appliedNow
+        ? `Nouvelle sélection (${trackCount} titres) : elle démarre dès la manche suivante, ${remainingRounds} restante${remainingRounds > 1 ? 's' : ''}.`
+        : `Nouvelle sélection (${trackCount} titres) : elle s'appliquera à la prochaine partie.`;
+      setTimeout(() => { playlistNotice = ''; }, 8000);
     });
 
     socket.on('salon_error', ({ message }) => { error = message; });
@@ -270,6 +272,14 @@
           style="--vol:{volume}%"
         />
       </div>
+      {#if canChangePlaylists && phase !== 'starting'}
+        <button
+          class="salon-host-playlist-btn"
+          title="Changer de playlist"
+          aria-label="Changer de playlist"
+          onclick={openPicker}
+        >🎵</button>
+      {/if}
       <div class="salon-host-players-pill">
         <i></i>{players.length} joueur{players.length !== 1 ? 's' : ''}
       </div>
@@ -341,7 +351,12 @@
     <div class="salon-picker-modal" onclick={(e) => e.stopPropagation()}>
       <h2>Changer de playlist</h2>
       <p class="salon-picker-sub">
-        La sélection s'appliquera à la prochaine partie. Les scores actuels ne sont pas touchés.
+        {#if phase === 'round' || phase === 'summary'}
+          La manche en cours va au bout, puis les <strong>{Math.max(0, total - round)} manches restantes</strong>
+          seront tirées dans la nouvelle sélection. Les scores ne sont pas touchés.
+        {:else}
+          La sélection s'appliquera à la prochaine partie. Les scores ne sont pas touchés.
+        {/if}
       </p>
 
       <PlaylistPicker playlists={allPlaylists} bind:selectedIds={pickerIds} />
@@ -391,6 +406,21 @@
     color: var(--mid);
     margin-bottom: 18px;
     line-height: 1.6;
+  }
+  .salon-host-playlist-btn {
+    background: rgb(var(--c-glass) / 0.07);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .salon-host-playlist-btn:hover {
+    background: rgb(var(--accent-rgb) / 0.15);
+    border-color: rgb(var(--accent-rgb) / 0.5);
   }
   .salon-picker-actions {
     display: flex;
