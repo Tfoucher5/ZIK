@@ -26,7 +26,7 @@
   <meta property="og:description" content="ZIK et Blinest sont deux blind tests musicaux en ligne. ZIK permet d'importer ses propres playlists Spotify/Deezer et propose un Mode Salon pour les soirées." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/blinest" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.0" />
   <script type="application/ld+json">{@html jsonLd}</script>
 </svelte:head>
 

@@ -3,6 +3,17 @@
 
 export const NEWS = [
   {
+    date: "2026-09-09",
+    version: "3.8.0",
+    tag: "Nouveauté",
+    title: "Ton score s'affiche enfin quand tu partages une partie",
+    items: [
+      "Quand tu partages le lien d'une partie terminée, l'aperçu sur WhatsApp, Discord ou les réseaux montre maintenant une vraie carte de score : ton pseudo, tes points, ton rang et le thème de la room. Avant, c'était la même image passe-partout pour tout le monde.",
+      "Nouvelle page Organiser une soirée, pensée pour les bars, les associations et les comités d'entreprise qui veulent monter un blind test sur grand écran. Le Mode Salon reste gratuit et sans limite, elle explique juste comment s'y prendre.",
+      "Un cookie de mesure a été ajouté pour savoir combien de personnes arrivent sur le site et d'où elles viennent. Il ne contient aucun identifiant, ne permet pas de te reconnaître, et rien n'est transmis à un service extérieur. La politique de confidentialité le détaille.",
+    ],
+  },
+  {
     date: "2026-09-08",
     version: "3.7.1",
     tag: "Amélioration",
