@@ -111,12 +111,12 @@
   <meta property="og:description" content="Blind test en soirée : grand écran sur la TV, smartphones comme manettes. Style Kahoot avec vos playlists Spotify/Deezer. Gratuit, sans inscription." />
   <meta property="og:url" content="https://www.zik-music.fr/salon" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Mode Salon — Blind Test en Soirée | ZIK" />
   <meta name="twitter:description" content="Organisez un blind test sur TV + smartphones. Style Kahoot, avec vos musiques. Gratuit." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.1" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
 
   <script type="application/ld+json">{@html salonJsonLd}</script>
 </svelte:head>

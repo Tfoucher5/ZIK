@@ -110,7 +110,7 @@
   <meta property="og:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
   <meta property="og:description" content="Blind test multijoueur gratuit en ligne. Spotify & Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
   <meta property="og:url" content="https://www.zik-music.fr/">
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.1">
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="ZIK — Blind Test Multijoueur">
@@ -119,7 +119,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Spotify/Deezer, grimpe dans le classement ELO. Sans installation.">
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.1">
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.2">
 
   <link rel="stylesheet" href="/css/base.css?v=3.7.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
@@ -211,7 +211,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.8.1</span>
+    <span class="footer-version-tag">v3.8.2</span>
   </div>
 </footer>
 {/if}

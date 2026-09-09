@@ -61,7 +61,7 @@ export async function POST({ request, params }) {
       ok = adminSkipRound(roomId);
       break;
     case "end_game":
-      ok = adminEndGame(roomId);
+      ok = await adminEndGame(roomId);
       break;
     case "kick":
       if (!username) throw error(400, "username requis");

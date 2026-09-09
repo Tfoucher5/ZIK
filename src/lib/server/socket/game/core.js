@@ -420,7 +420,8 @@ async function startNextRound(roomId, io) {
 async function saveGameResults(roomId, finalScores, io) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
-  if (!dbGameId) return;
+  // _ended : partie déjà persistée — rejouer elo, stats et succès la compterait deux fois
+  if (!dbGameId || room.game._ended) return;
 
   try {
     await supabase
@@ -1360,7 +1361,7 @@ export function adminSkipRound(roomId) {
   return true;
 }
 
-export function adminEndGame(roomId) {
+export async function adminEndGame(roomId) {
   const room = roomGames[roomId];
   if (!room) return false;
   const io = globalThis.__zik_io;
@@ -1373,6 +1374,8 @@ export function adminEndGame(roomId) {
     .sort((a, b) => b.score - a.score)
     .map(sanitizePlayer);
   io?.to(`room:${roomId}`).emit("game_over", finalScores);
+  // Une partie coupée par l'admin compte comme une partie jouée
+  await saveGameResults(roomId, finalScores, io);
   return true;
 }
 

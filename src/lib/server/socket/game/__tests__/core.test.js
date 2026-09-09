@@ -28,7 +28,7 @@ vi.mock("../../../services/weeklyChallenge.js", () => ({
 }));
 
 const { roomGames, dbRooms, customRooms } = await import("../../../state.js");
-const { register } = await import("../core.js");
+const { register, adminEndGame } = await import("../core.js");
 
 let _io = null;
 
@@ -244,5 +244,47 @@ describe("un seul onglet par compte", () => {
 
     expect(second.emitted.map((e) => e.evt)).not.toContain("join_refused");
     expect(Object.keys(roomGames.TESTRM.players)).toEqual(["lafritequivole"]);
+  });
+});
+
+describe("partie coupée par l'admin", () => {
+  let handlers;
+
+  beforeEach(() => {
+    inserted.length = 0;
+    vi.useFakeTimers();
+    Object.keys(roomGames).forEach((k) => delete roomGames[k]);
+    Object.keys(dbRooms).forEach((k) => delete dbRooms[k]);
+    Object.keys(customRooms).forEach((k) => delete customRooms[k]);
+    customRooms.TESTRM = { id: "TESTRM", name: "Test", tracks: [] };
+    const io = makeIo();
+    handlers = io.handlers;
+    register(io.io);
+  });
+
+  it("enregistre les scores au lieu de les perdre", async () => {
+    const { events } = connect(handlers);
+    await events.join_room({ roomId: "TESTRM", username: "Alice" });
+    startFakeGame("TESTRM", "Alice");
+
+    await adminEndGame("TESTRM");
+
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0]).toMatchObject({
+      username: "Alice",
+      score: 42,
+      rank: 1,
+    });
+  });
+
+  it("ne persiste pas deux fois si l'admin coupe une partie déjà finie", async () => {
+    const { events } = connect(handlers);
+    await events.join_room({ roomId: "TESTRM", username: "Alice" });
+    startFakeGame("TESTRM", "Alice");
+
+    await adminEndGame("TESTRM");
+    await adminEndGame("TESTRM");
+
+    expect(inserted).toHaveLength(1);
   });
 });

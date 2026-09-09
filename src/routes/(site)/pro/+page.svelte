@@ -133,7 +133,7 @@
   />
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
   <script type="application/ld+json">{@html jsonLd}</script>
   <script type="application/ld+json">{@html faqJsonLd}</script>
 </svelte:head>
