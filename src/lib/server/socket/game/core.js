@@ -94,6 +94,9 @@ function getOrCreateRoom(roomId) {
       totalFullFound: 0,
       lastRoundData: null,
       dbGameId: null,
+      // Pseudos déjà écrits dans game_players pour la partie en cours — évite
+      // qu'un joueur soit persisté deux fois (fin de partie + départ)
+      savedPlayers: new Set(),
       isSyncWaiting: false,
       readyPlayers: new Set(),
       readyTimer: null,
@@ -425,26 +428,26 @@ async function saveGameResults(roomId, finalScores, io) {
       .update({ ended_at: new Date().toISOString() })
       .eq("id", dbGameId);
 
-    const players = finalScores.map((p, i) => ({
-      game_id: dbGameId,
-      user_id: p.userId || null,
-      username: p.name,
-      score: p.score,
-      rank: i + 1,
-      is_guest: p.isGuest || !p.userId,
-    }));
-    await supabase.from("game_players").insert(players);
+    // Un joueur parti en cours de partie a déjà sa ligne (saveMidGamePlayer) :
+    // le réinsérer doublerait son score dans les classements
+    const players = finalScores
+      .map((p, i) => ({
+        game_id: dbGameId,
+        user_id: p.userId || null,
+        username: p.name,
+        score: p.score,
+        rank: i + 1,
+        is_guest: p.isGuest || !p.userId,
+      }))
+      .filter((row) => !room.game.savedPlayers.has(row.username));
+    if (players.length) await supabase.from("game_players").insert(players);
+    finalScores.forEach((p) => room.game.savedPlayers.add(p.name));
     finalScores.forEach((p) => {
       if (p.userId && !p.isGuest)
         bumpWeeklyChallenge("games_played", p.userId, 1);
     });
 
-    const room = getOrCreateRoom(roomId);
-    // Marquer chaque joueur sauvegardé — _dcTimer vérifie ce flag pour éviter double-save
     room.game._ended = true;
-    finalScores.forEach((p) => {
-      if (room.players[p.name]) room.players[p.name]._savedToDb = true;
-    });
     const eloEligible =
       !!dbRooms[roomId]?.is_public &&
       finalScores.length >= 3 &&
@@ -670,13 +673,45 @@ async function startAutoCountdown(roomId, io) {
           })
           .select()
           .single();
-        if (data) room.game.dbGameId = data.id;
+        if (data) {
+          room.game.dbGameId = data.id;
+          room.game.savedPlayers = new Set();
+        }
       } catch {
         /* non-blocking */
       }
       startNextRound(roomId, io);
     }, AUTO_START_DELAY * 1000),
   };
+}
+
+/**
+ * Session de jeu déjà ouverte par ce compte, toutes rooms confondues.
+ * Un joueur en délai de grâce (_dcTimer) ne compte pas : son onglet est parti.
+ * Rejoindre la room où il joue déjà, sous le même pseudo, est une reconnexion.
+ */
+function findAccountSession(userId, roomId, username) {
+  for (const room of Object.values(roomGames)) {
+    for (const p of Object.values(room.players)) {
+      if (p.userId !== userId || p.isGuest || p._dcTimer) continue;
+      if (room.roomId === roomId && p.name === username) continue;
+      return { roomId: room.roomId, name: p.name };
+    }
+  }
+  return null;
+}
+
+/** Libère la place occupée par l'ancien onglet et le renvoie vers /rooms. */
+function releaseAccountSession({ roomId, name }, io) {
+  const room = roomGames[roomId];
+  if (!room) return;
+  const socketId = room.nameToSocket[name];
+  const old = socketId ? io.sockets.sockets.get(socketId) : null;
+  if (old) old.emit("session_taken_over");
+  // Faux socket si l'onglet n'est plus joignable : leaveRoom n'a besoin que de
+  // l'id pour retrouver le joueur et sauvegarder son score en cours
+  leaveRoom(old || { id: socketId, leave: () => {} }, roomId, io);
+  old?.disconnect();
 }
 
 function leaveRoom(socket, roomId, io) {
@@ -694,21 +729,27 @@ function leaveRoom(socket, roomId, io) {
       // wasActive ne suffit pas : entre deux manches isActive=false, pourtant la partie est en cours
       const wasInGame = !!room.game.dbGameId && room.game.currentRound > 0;
       const dbGameId = room.game.dbGameId;
+      // Référence à l'objet game, pas à roomGames[roomId] : la room peut avoir
+      // été libérée de la mémoire avant que ce timer ne se déclenche
+      const gameRef = room.game;
       const gameMode = room.game_mode;
       const totalPlayers = Object.keys(room.players).length;
 
       room.players[name]._dcTimer = setTimeout(() => {
-        // Sauvegarder si la partie était en cours et que saveGameResults n'a pas déjà persisté ce joueur
-        if (wasInGame && dbGameId && playerSnapshot.score > 0) {
-          const currentRoom = roomGames[roomId];
-          if (!currentRoom?.players[name]?._savedToDb) {
-            saveMidGamePlayer(
-              dbGameId,
-              playerSnapshot,
-              gameMode,
-              totalPlayers,
-            ).catch(() => {});
-          }
+        // Sauvegarder si la partie était en cours et que ce joueur n'a pas déjà été persisté
+        if (
+          wasInGame &&
+          dbGameId &&
+          playerSnapshot.score > 0 &&
+          !gameRef.savedPlayers.has(name)
+        ) {
+          gameRef.savedPlayers.add(name);
+          saveMidGamePlayer(
+            dbGameId,
+            playerSnapshot,
+            gameMode,
+            totalPlayers,
+          ).catch(() => {});
         }
 
         if (!roomGames[roomId]) return;
@@ -749,7 +790,9 @@ function leaveRoom(socket, roomId, io) {
 export function register(io) {
   globalThis.__zik_io = io;
   io.on("connection", (socket) => {
-    socket.on("join_room", async ({ roomId, username, userId, isGuest }) => {
+    socket.on("join_room", async (payload) => {
+      const { roomId, username: rawName, userId, isGuest, takeover } = payload;
+      let username = rawName;
       if (!username?.trim()) return socket.emit("error", "Pseudo requis");
 
       // Fetch from DB if not cached, or if cache is stale (missing auto_start/owner_id fields added later)
@@ -774,6 +817,25 @@ export function register(io) {
       }
 
       username = username.trim();
+
+      // Un compte ne tient qu'une session de jeu à la fois, toutes rooms
+      // confondues : un second onglet doublerait son score. Rejoindre la même
+      // room sous le même pseudo reste une reconnexion (géré plus bas).
+      if (userId && isGuest === false) {
+        const busy = findAccountSession(userId, roomId, username);
+        if (busy) {
+          if (!takeover) {
+            const meta = dbRooms[busy.roomId] || customRooms[busy.roomId] || {};
+            return socket.emit("join_refused", {
+              roomId: busy.roomId,
+              roomName: meta.name || busy.roomId,
+              playerName: busy.name,
+            });
+          }
+          releaseAccountSession(busy, io);
+        }
+      }
+
       const room = getOrCreateRoom(roomId);
 
       if (socket.currentRoom) leaveRoom(socket, socket.currentRoom, io);
@@ -947,7 +1009,10 @@ export function register(io) {
           })
           .select()
           .single();
-        if (data) room.game.dbGameId = data.id;
+        if (data) {
+          room.game.dbGameId = data.id;
+          room.game.savedPlayers = new Set();
+        }
       } catch {
         /* non-blocking */
       }

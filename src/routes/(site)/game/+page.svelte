@@ -37,6 +37,15 @@
   let summaryReason  = $state('');
   let summaryFinder  = $state('');
   let errorMsg    = $state('');
+  let joinConflict = $state(null);
+  let takenOver    = $state(false);
+  let _joinSocket = null;
+
+  // Reprend la main sur l'autre onglet : il sera déconnecté à notre place
+  function takeOverSession() {
+    joinConflict = null;
+    _joinSocket?.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST, takeover: true });
+  }
   let showStart   = $state(true);
   let startDisabled = $state(false);
   let startLabel  = $state('&#x1F3AE; Lancer la partie');
@@ -653,7 +662,7 @@
       if (_hasJoined) socket.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST });
     });
     socket.on('disconnect', () => {
-      showDcBanner = true;
+      if (!takenOver) showDcBanner = true;
       if (_roundActive) stopVideo();
     });
 
@@ -837,6 +846,16 @@
       startDisabled = false; startLabel = '\u{1F3AE} Lancer la partie';
     });
 
+    socket.on('join_refused', info => {
+      joinConflict = info;
+    });
+
+    // Un autre onglet a pris la main : ne pas se remettre dans la partie
+    socket.on('session_taken_over', () => {
+      takenOver = true;
+      _hasJoined = false;
+    });
+
     socket.on('admin_kicked', () => {
       socket.disconnect();
       goto('/rooms');
@@ -874,6 +893,7 @@
 
     // Join
     _hasJoined = true;
+    _joinSocket = socket;
     socket.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST });
 
   });
@@ -893,11 +913,37 @@
   <title>ZIK — En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.7.0">
+  <link rel="stylesheet" href="/css/game.css?v=3.8.1">
 </svelte:head>
 
 {#if showDcBanner}
   <div class="g-dc-banner">Reconnexion en cours&hellip;</div>
+{/if}
+
+{#if joinConflict}
+  <div class="g-session-overlay" role="alertdialog">
+    <div class="g-session-card">
+      <h2>Ce compte joue déjà</h2>
+      <p>
+        Tu es dans la room <strong>{joinConflict.roomName}</strong> sous le pseudo
+        <strong>{joinConflict.playerName}</strong>. Un même compte ne peut pas jouer
+        depuis deux onglets à la fois.
+      </p>
+      <button class="g-session-btn" onclick={takeOverSession}>Continuer ici</button>
+      <a class="g-session-link" href="/rooms">Retour aux rooms</a>
+      <p class="g-session-note">L'autre onglet sera déconnecté.</p>
+    </div>
+  </div>
+{/if}
+
+{#if takenOver}
+  <div class="g-session-overlay" role="alertdialog">
+    <div class="g-session-card">
+      <h2>Partie reprise ailleurs</h2>
+      <p>Ce compte a rejoint une partie depuis un autre onglet. Celui-ci a été déconnecté.</p>
+      <a class="g-session-btn" href="/rooms">Retour aux rooms</a>
+    </div>
+  </div>
 {/if}
 
 <audio id="previewAudio" style="display:none" preload="auto"></audio>
