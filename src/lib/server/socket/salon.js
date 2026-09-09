@@ -6,7 +6,7 @@ import { YouTube } from "youtube-sr";
 
 import { supabase } from "../config.js";
 import { userClient } from "../middleware/auth.js";
-import { salonRooms } from "../state.js";
+import { salonRooms, setIO, getIO } from "../state.js";
 import {
   buildTrackFromRow,
   calcSpeedBonus,
@@ -528,7 +528,12 @@ async function startNextRound(code, io) {
 
 // ─── Public API for HTTP-based salon creation ─────────────────────────────────
 
-export async function createSalonRoom({ playlistIds, settings, token }) {
+export async function createSalonRoom({
+  playlistIds,
+  settings,
+  token,
+  hostUserId = null,
+}) {
   const client = token ? userClient(token) : supabase;
   const tracks = await loadSalonTracks(playlistIds, client);
   if (tracks.length < 3) {
@@ -551,6 +556,7 @@ export async function createSalonRoom({ playlistIds, settings, token }) {
 
   salonRooms[code] = {
     code,
+    hostUserId,
     hostSocketId: null,
     _hostDcTimer: null,
     _cleanupTimer: null,
@@ -580,9 +586,51 @@ export async function createSalonRoom({ playlistIds, settings, token }) {
   return code;
 }
 
+// Phases pendant lesquelles l'hote peut changer la selection de playlists.
+const PLAYLIST_SWAP_PHASES = ["lobby", "gameover"];
+
+/**
+ * Remplace le pool de titres d'un salon deja ouvert.
+ * La partie suivante (salon_start ou salon_restart) tire dans le nouveau pool.
+ */
+export async function changeSalonPlaylists({
+  code,
+  playlistIds,
+  token,
+  userId,
+}) {
+  const salon = salonRooms[code];
+  if (!salon) throw new Error("Salon introuvable.");
+  if (!salon.hostUserId || salon.hostUserId !== userId)
+    throw new Error("Seul l'hote du salon peut changer les playlists.");
+  if (!PLAYLIST_SWAP_PHASES.includes(salon.game.phase))
+    throw new Error(
+      "Les playlists ne peuvent etre changees qu'avant le lancement ou en fin de partie.",
+    );
+
+  const client = token ? userClient(token) : supabase;
+  const tracks = await loadSalonTracks(playlistIds, client);
+  if (tracks.length < 3)
+    throw new Error(
+      "Playlists introuvables ou trop courtes (min. 3 titres au total).",
+    );
+
+  salon.game.fullPlaylist = tracks;
+  salon.settings = { ...salon.settings, playlistIds };
+
+  getIO()?.to(`salon:${code}`).emit("salon_playlists_changed", {
+    playlistIds,
+    trackCount: tracks.length,
+  });
+
+  return { trackCount: tracks.length };
+}
+
 // ─── Socket registration ──────────────────────────────────────────────────────
 
 export function registerSalon(io) {
+  setIO(io);
+
   io.on("connection", (socket) => {
     // ── Host connects to their salon ──────────────────────────────────────────
     socket.on("salon_join_host", ({ code }) => {

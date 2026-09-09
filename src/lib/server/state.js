@@ -19,6 +19,14 @@ export const chatHistories = globalThis.__zik_chatHistories; // roomId -> { mess
 export const errorLog = globalThis.__zik_errorLog; // { ts, level, msg }[]
 export const presence = globalThis.__zik_presence; // userId -> Set<socketId>
 
+// L'instance Socket.io, pour que les endpoints HTTP puissent notifier une room.
+export function setIO(io) {
+  globalThis.__zik_io = io;
+}
+export function getIO() {
+  return globalThis.__zik_io ?? null;
+}
+
 const MAX_ERROR_LOG = 300;
 
 export function pushError(level, ...args) {

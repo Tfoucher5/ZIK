@@ -1,5 +1,8 @@
 import { json } from "@sveltejs/kit";
-import { createSalonRoom } from "$lib/server/socket/salon.js";
+import {
+  createSalonRoom,
+  changeSalonPlaylists,
+} from "$lib/server/socket/salon.js";
 import { salonRooms } from "$lib/server/state.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 
@@ -25,6 +28,7 @@ export async function POST({ request }) {
       playlistIds,
       settings: settings || {},
       token,
+      hostUserId: user.id,
     });
     return json({ code });
   } catch (e) {
@@ -42,4 +46,35 @@ export async function GET({ url }) {
     phase: salon.game.phase,
     answerMode: salon.settings.answerMode,
   });
+}
+
+export async function PATCH({ request }) {
+  const token = request.headers.get("authorization")?.slice(7);
+  if (!token) return json({ error: "Non authentifié" }, { status: 401 });
+  const user = await verifyToken(token);
+  if (!user) return json({ error: "Session invalide" }, { status: 401 });
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Corps invalide" }, { status: 400 });
+  }
+
+  const { code, playlistIds } = body;
+  if (!code) return json({ error: "Code requis" }, { status: 400 });
+  if (!Array.isArray(playlistIds) || playlistIds.length === 0)
+    return json({ error: "Au moins une playlist requise" }, { status: 400 });
+
+  try {
+    const { trackCount } = await changeSalonPlaylists({
+      code: String(code).toUpperCase(),
+      playlistIds,
+      token,
+      userId: user.id,
+    });
+    return json({ trackCount });
+  } catch (e) {
+    return json({ error: e.message }, { status: 400 });
+  }
 }
