@@ -12,6 +12,7 @@ const STATIC_PAGES = [
   { loc: "/defi", changefreq: "daily", priority: "0.7" },
   { loc: "/defi/archives", changefreq: "weekly", priority: "0.5" },
   { loc: "/salon", changefreq: "monthly", priority: "0.7" },
+  { loc: "/pro", changefreq: "monthly", priority: "0.8" },
   { loc: "/docs", changefreq: "monthly", priority: "0.6" },
   { loc: "/nouveautes", changefreq: "weekly", priority: "0.5" },
   { loc: "/vs/kahoot", changefreq: "monthly", priority: "0.6" },
