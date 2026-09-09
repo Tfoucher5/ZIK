@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ main, master, refactor/code-cleanup ]
+    branches: [ '**' ]
   pull_request:
     branches: [ main, master ]
 
@@ -15,7 +15,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
