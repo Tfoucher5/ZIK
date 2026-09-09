@@ -176,7 +176,7 @@
         "Playlists personnalisées partageables",
         "Détection intelligente des réponses (accents, fautes de frappe)"
       ],
-      "screenshot": "https://www.zik-music.fr/og.png?v=3.7.1",
+      "screenshot": "https://www.zik-music.fr/og.png?v=3.8.0",
       "author": { "@type": "Organization", "name": "ZIK", "url": "https://www.zik-music.fr" }
     },
     {
@@ -197,7 +197,7 @@
       "@type": "Organization",
       "name": "ZIK",
       "url": "https://www.zik-music.fr/",
-      "logo": "https://www.zik-music.fr/og.png?v=3.7.1",
+      "logo": "https://www.zik-music.fr/og.png?v=3.8.0",
       "sameAs": ["https://github.com/Tfoucher5/ZIK"]
     }
   ]);

@@ -13,6 +13,7 @@
 
   let stats = $state(null);
   let retention = $state(null);
+  let acquisition = $state(null);
   let days = $state(30);
   let loading = $state(true);
   let maintEnabled = $state(data.maintenance?.enabled ?? false);
@@ -42,9 +43,22 @@
     loadStats();
   });
 
+  async function loadAcquisition() {
+    if (!token) return;
+    const r = await fetch(
+      `/api/admin/acquisition?token=${encodeURIComponent(token)}`,
+    );
+    if (r.ok) acquisition = await r.json();
+  }
+
   $effect(() => {
     void token;
     loadRetention();
+  });
+
+  $effect(() => {
+    void token;
+    loadAcquisition();
   });
 
   const sparkOf = (serie) => (serie ?? []).slice(-14).map((p) => p.n ?? p.y ?? 0);
@@ -102,6 +116,38 @@
             })),
           },
         ].filter((s) => s.points.length > 0),
+  );
+
+  const acquisitionSeries = $derived(
+    !acquisition?.daily.length
+      ? []
+      : [
+          {
+            label: "Nouveaux visiteurs",
+            color: "#a855f7",
+            points: acquisition.daily.map((d) => ({ x: d.day, y: d.n })),
+          },
+        ],
+  );
+
+  const MEDIUM_LABELS = {
+    direct: "Accès direct",
+    search: "Moteur de recherche",
+    social: "Réseau social",
+    messaging: "Messagerie",
+    referral: "Site référent",
+    campagne: "Campagne",
+  };
+
+  const sourceBuckets = $derived(
+    (acquisition?.sources ?? []).map((s) => ({
+      label: `${s.source} · ${MEDIUM_LABELS[s.medium] ?? s.medium}`,
+      n: s.n,
+    })),
+  );
+
+  const landingBuckets = $derived(
+    (acquisition?.landings ?? []).map((l) => ({ label: l.path, n: l.n })),
   );
 </script>
 
@@ -292,6 +338,36 @@
     <div class="ret-grid">
       <LeverTable levers={retention.levers} />
       <AtRiskList users={retention.atRiskUsers} />
+    </div>
+  {/if}
+
+  {#if acquisition}
+    <div class="sec-head">
+      <h2>Acquisition</h2>
+      <span class="sec-sub">
+        Nouveaux visiteurs sur {acquisition.days} j · {acquisition.total} au total
+      </span>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-label">Nouveaux visiteurs</span>
+        <span class="panel-sub">par jour</span>
+      </div>
+      <TrendChart series={acquisitionSeries} />
+    </div>
+
+    <div class="ret-grid">
+      <BucketBars
+        title="D'où viennent-ils"
+        buckets={sourceBuckets}
+        footer="Un visiteur n'est compté qu'une fois, à sa première venue."
+      />
+      <BucketBars
+        title="Page d'arrivée"
+        buckets={landingBuckets}
+        footer="La page sur laquelle ils atterrissent en premier."
+      />
     </div>
   {/if}
 

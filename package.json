@@ -1,6 +1,6 @@
 {
   "name": "zik-music.fr",
-  "version": "3.7.1",
+  "version": "3.8.0",
   "description": "Blind Test Multijoueur",
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@supabase/supabase-js": "^2.108.1",
     "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.70.1",

@@ -7,7 +7,7 @@
     roundEnd = null, finalScores = [],
     round = 0, total = 10,
     choices = null, answerMode = 'free',
-    onRestart, onNewSalon, onMusicReady,
+    onRestart, onNewSalon, onMusicReady, onChangePlaylists = null,
   } = $props();
 
   const VIS_BARS = Array.from({ length: 18 }, (_, i) => i);
@@ -261,6 +261,9 @@
               {/if}
               <div class="salon-gameover-actions">
                 <button class="btn-salon-start" onclick={onRestart}>🔄 Rejouer</button>
+                {#if onChangePlaylists}
+                  <button class="btn-salon-next" onclick={onChangePlaylists}>🎵 Changer de playlist</button>
+                {/if}
                 <button class="btn-salon-next" onclick={onNewSalon}>Nouveau salon</button>
               </div>
             </div>

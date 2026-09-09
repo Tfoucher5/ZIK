@@ -20,6 +20,15 @@
   <meta property="og:title" content={metaTitle} />
   <meta property="og:description" content={metaDesc} />
   <meta property="og:url" content="https://www.zik-music.fr/results/{r.id}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://www.zik-music.fr/results/{r.id}/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content={metaTitle} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={metaTitle} />
+  <meta name="twitter:description" content={metaDesc} />
+  <meta name="twitter:image" content="https://www.zik-music.fr/results/{r.id}/og.png" />
 </svelte:head>
 
 <main class="result-root">

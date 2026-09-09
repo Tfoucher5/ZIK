@@ -3,9 +3,24 @@
   import { io } from 'socket.io-client';
   import HostCenter from './HostCenter.svelte';
   import PlayerSidebar from './PlayerSidebar.svelte';
+  import PlaylistPicker from '$lib/components/salon/PlaylistPicker.svelte';
+  import { createSupabaseClient } from '$lib/supabase.js';
+  import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
+
+  let { data } = $props();
+  const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
 
   let code = $state('');
   let socket;
+
+  // Changement de playlist en cours de salon
+  let allPlaylists   = $state([]);
+  let pickerOpen     = $state(false);
+  let pickerIds      = $state([]);
+  let savingPlaylist = $state(false);
+  let pickerError    = $state('');
+  let playlistNotice = $state('');
+  let canChangePlaylists = $state(false);
 
   // Game state
   let phase         = $state('lobby');
@@ -62,6 +77,34 @@
   function startGame()   { socket?.emit('salon_start'); phase = 'starting'; }
   function nextRound()   { socket?.emit('salon_next_round'); clearAutoNext(); }
   function restartGame() { socket?.emit('salon_restart'); }
+
+  function openPicker() {
+    pickerError = '';
+    pickerIds = [...(settings.playlistIds || [])];
+    pickerOpen = true;
+  }
+
+  async function savePlaylists() {
+    if (pickerIds.length === 0) { pickerError = 'Sélectionne au moins une playlist.'; return; }
+    savingPlaylist = true;
+    pickerError = '';
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('Session expirée, reconnecte-toi sur ce navigateur.');
+      const res = await fetch('/api/salon', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ code, playlistIds: pickerIds }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Changement impossible');
+      pickerOpen = false;
+    } catch (e) {
+      pickerError = e.message;
+    } finally {
+      savingPlaylist = false;
+    }
+  }
 
   function connectSocket(roomCode) {
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
@@ -147,10 +190,18 @@
       players = p; roundEnd = null; finalScores = []; clearAutoNext();
     });
 
+    socket.on('salon_playlists_changed', ({ playlistIds, trackCount, appliedNow, remainingRounds }) => {
+      settings = { ...settings, playlistIds };
+      playlistNotice = appliedNow
+        ? `Nouvelle sélection (${trackCount} titres) : elle démarre dès la manche suivante, ${remainingRounds} restante${remainingRounds > 1 ? 's' : ''}.`
+        : `Nouvelle sélection (${trackCount} titres) : elle s'appliquera à la prochaine partie.`;
+      setTimeout(() => { playlistNotice = ''; }, 8000);
+    });
+
     socket.on('salon_error', ({ message }) => { error = message; });
   }
 
-  onMount(() => {
+  onMount(async () => {
     const params = new URLSearchParams(window.location.search);
     code = params.get('code')?.toUpperCase() || '';
     if (!code) { window.location.href = '/salon'; return; }
@@ -158,6 +209,16 @@
     volume = Number.isNaN(savedVol) ? 100 : savedVol;
     hostCenter?.setVolume(volume);
     connectSocket(code);
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      canChangePlaylists = true;
+      try {
+        allPlaylists = await loadSalonPlaylists(sb, session.user.id);
+      } catch {
+        canChangePlaylists = false;
+      }
+    }
   });
 
   onDestroy(() => {
@@ -211,6 +272,14 @@
           style="--vol:{volume}%"
         />
       </div>
+      {#if canChangePlaylists && phase !== 'starting'}
+        <button
+          class="salon-host-playlist-btn"
+          title="Changer de playlist"
+          aria-label="Changer de playlist"
+          onclick={openPicker}
+        >🎵</button>
+      {/if}
       <div class="salon-host-players-pill">
         <i></i>{players.length} joueur{players.length !== 1 ? 's' : ''}
       </div>
@@ -234,6 +303,7 @@
       {choices}
       answerMode={settings.answerMode || 'free'}
       onRestart={restartGame}
+      onChangePlaylists={canChangePlaylists ? openPicker : null}
       onNewSalon={() => window.location.href = '/salon'}
       onMusicReady={() => socket?.emit('salon_music_ready')}
     />
@@ -264,9 +334,98 @@
         </div>
       {/if}
     {/if}
+    {#if playlistNotice}
+      <p style="color:var(--accent);font-size:.9rem;text-align:center">{playlistNotice}</p>
+    {/if}
     {#if error}
       <p style="color:var(--danger);font-size:.9rem;text-align:center">{error}</p>
     {/if}
   </footer>
 
 </div>
+
+{#if pickerOpen}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div class="salon-picker-backdrop" onclick={() => (pickerOpen = false)}>
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="salon-picker-modal" onclick={(e) => e.stopPropagation()}>
+      <h2>Changer de playlist</h2>
+      <p class="salon-picker-sub">
+        {#if phase === 'round' || phase === 'summary'}
+          La manche en cours va au bout, puis les <strong>{Math.max(0, total - round)} manches restantes</strong>
+          seront tirées dans la nouvelle sélection. Les scores ne sont pas touchés.
+        {:else}
+          La sélection s'appliquera à la prochaine partie. Les scores ne sont pas touchés.
+        {/if}
+      </p>
+
+      <PlaylistPicker playlists={allPlaylists} bind:selectedIds={pickerIds} />
+
+      {#if pickerError}
+        <p style="color:var(--danger);font-size:.85rem;margin-top:10px">{pickerError}</p>
+      {/if}
+
+      <div class="salon-picker-actions">
+        <button class="btn-salon-next" onclick={() => (pickerOpen = false)}>Annuler</button>
+        <button class="btn-salon-start" onclick={savePlaylists} disabled={savingPlaylist || pickerIds.length === 0}>
+          {savingPlaylist ? 'Chargement…' : 'Valider'}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<style>
+  .salon-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    backdrop-filter: blur(6px);
+    display: grid;
+    place-items: center;
+    z-index: 60;
+    padding: 20px;
+  }
+  .salon-picker-modal {
+    background: var(--modal-bg);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 24px;
+    width: min(560px, 100%);
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .salon-picker-modal h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .salon-picker-sub {
+    font-size: 0.85rem;
+    color: var(--mid);
+    margin-bottom: 18px;
+    line-height: 1.6;
+  }
+  .salon-host-playlist-btn {
+    background: rgb(var(--c-glass) / 0.07);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .salon-host-playlist-btn:hover {
+    background: rgb(var(--accent-rgb) / 0.15);
+    border-color: rgb(var(--accent-rgb) / 0.5);
+  }
+  .salon-picker-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+</style>

@@ -55,11 +55,11 @@
   <meta property="og:description" content="Un extrait audio qui s'allonge à chaque essai raté. 6 essais pour deviner le titre du jour." />
   <meta property="og:url" content="https://www.zik-music.fr/zikle" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.0" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Zikle — Devine la chanson du jour" />
   <meta name="twitter:description" content="Un extrait qui s'allonge à chaque essai raté. 6 essais pour deviner le titre du jour. Gratuit, sans compte." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.7.1" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.0" />
   <script type="application/ld+json">{@html jsonLd}</script>
 </svelte:head>
 
