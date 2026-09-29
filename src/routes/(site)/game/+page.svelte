@@ -1346,6 +1346,9 @@
             {shareCopied ? 'Lien copié' : 'Partager mon score'}
           </button>
         {/if}
+        {#if IS_GUEST}
+          <a href="/?auth=register" class="g-go-share">Créer un compte gratuit</a>
+        {/if}
         <a href="/" class="g-go-back">Changer de room</a>
         <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="g-go-discord">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">

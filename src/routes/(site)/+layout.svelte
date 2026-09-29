@@ -81,6 +81,9 @@
     }
 
     authReady = true;
+    // ?auth=register : lien « Créer un compte » de fin de partie invité
+    const wanted = new URLSearchParams(window.location.search).get('auth');
+    if (!currentUser && (wanted === 'register' || wanted === 'login')) openAuthModal(wanted);
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await applyUser(session.user);
