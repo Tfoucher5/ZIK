@@ -101,6 +101,13 @@
   // ── Inviter ses amis dans la room courante ──
   let canInviteFriends = $state(false);
   let inviteOpen      = $state(false);
+  let roomLinkCopied  = $state(false);
+
+  async function copyRoomLink() {
+    await navigator.clipboard.writeText(`https://www.zik-music.fr/room/${ROOM_ID}`);
+    roomLinkCopied = true;
+    setTimeout(() => (roomLinkCopied = false), 2000);
+  }
   let friendsList     = $state([]);
   let friendsLoading  = $state(false);
   let invitedIds      = $state([]);
@@ -1118,6 +1125,16 @@
               <p class="g-admin-hint">Tu es l&apos;admin &mdash; toi seul peux lancer.</p>
             {/if}
           {/if}
+          {#if !showCountdown && players.length <= 1}
+            <!-- Seul dans la room : le jeu est pensé pour plusieurs, on donne les moyens d'en ramener -->
+            <div class="g-alone">
+              <p>Tu es seul pour l&apos;instant. Le blind test, c&apos;est mieux à plusieurs&nbsp;!</p>
+              <div class="g-alone-actions">
+                <button class="g-alone-btn" onclick={copyRoomLink}>{roomLinkCopied ? 'Lien copié' : 'Copier le lien de la room'}</button>
+                <a class="g-alone-btn" href="/salon">Soirée entre amis : Mode Salon</a>
+              </div>
+            </div>
+          {/if}
         {/if}
 
 
@@ -1651,4 +1668,38 @@
   user-select: none;
 }
 .g-chat-head--draggable:active { cursor: grabbing; }
+.g-alone {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  text-align: center;
+  max-width: 420px;
+}
+.g-alone p {
+  font-size: 0.85rem;
+  color: var(--mid);
+  margin: 0 0 10px;
+}
+.g-alone-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.g-alone-btn {
+  background: none;
+  border: 1px solid rgb(var(--accent-rgb) / 0.45);
+  color: var(--accent);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.g-alone-btn:hover {
+  background: rgb(var(--accent-rgb) / 0.1);
+}
 </style>
