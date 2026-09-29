@@ -1,10 +1,41 @@
 <script>
+  import { PLANS, PRO_COMING, FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/proPlans.js";
+
+  const COMPARE = [
+    ["Joueurs par salon", `jusqu'à ${FREE_MAX_PLAYERS}`, "illimité"],
+    ["Équipes", `jusqu'à ${FREE_MAX_TEAMS}`, "jusqu'à 8, renommables"],
+    ["Régie sur un second écran", "lancer, pause, manche suivante, exclure un joueur", "tout : révéler, terminer, corriger les points, volume de la TV"],
+    ["Réglages en pleine partie", "entre deux parties", "à tout moment"],
+  ];
+
+  let wl = $state({ email: "", venue: "", venueType: "bar", plan: "monthly" });
+  let wlState = $state("idle");
+  let wlError = $state("");
+
+  async function joinWaitlist(e) {
+    e.preventDefault();
+    wlState = "sending";
+    wlError = "";
+    try {
+      const res = await fetch("/api/pro/waitlist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(wl),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Envoi impossible");
+      wlState = "done";
+    } catch (err) {
+      wlError = err.message;
+      wlState = "idle";
+    }
+  }
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: "Organiser un blind test - ZIK pour les bars, associations et entreprises",
     description:
-      "Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit, sans installation et sans compte.",
+      "Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à 12 joueurs, ZIK Pro pour les bars et événements.",
     url: "https://www.zik-music.fr/pro",
     inLanguage: "fr-FR",
     isPartOf: {
@@ -40,7 +71,7 @@
         name: "Combien de personnes peuvent jouer en même temps ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Une trentaine de joueurs sur un même salon. Chacun joue sur son propre téléphone, il n'y a rien à installer.",
+          text: "Jusqu'à 12 joueurs en version gratuite, sans limite avec ZIK Pro. Chacun joue sur son propre téléphone, il n'y a rien à installer.",
         },
       },
       {
@@ -56,7 +87,7 @@
         name: "Est-ce que c'est payant ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Non, le Mode Salon est gratuit et sans limite d'utilisation. ZIK est un projet indépendant financé par des dons.",
+          text: "Le Mode Salon est gratuit jusqu'à 12 joueurs et 2 équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € HT la soirée.",
         },
       },
       {
@@ -98,7 +129,7 @@
       n: "1",
       titre: "Ouvrez un salon sur l'écran",
       texte:
-        "Depuis l'ordinateur relié à la TV ou au vidéoprojecteur, choisissez un thème et lancez le salon. Un code à 4 caractères s'affiche.",
+        "Depuis l'ordinateur relié à la TV ou au vidéoprojecteur, choisissez un thème et lancez le salon. Un code à 6 caractères s'affiche.",
     },
     {
       n: "2",
@@ -119,7 +150,7 @@
   <title>Organiser un blind test dans votre bar ou votre association - ZIK</title>
   <meta
     name="description"
-    content="Animez une soirée blind test sans animateur et sans budget. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit, sans installation, sans compte."
+    content="Animez une soirée blind test sans animateur. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit jusqu'à 12 joueurs, ZIK Pro pour les bars, campings et événements."
   />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/pro" />
@@ -129,7 +160,7 @@
   />
   <meta
     property="og:description"
-    content="L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit, sans installation et sans animateur."
+    content="L'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation et sans animateur."
   />
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
@@ -148,10 +179,13 @@
       <p class="pro-intro">
         Un écran, du son, et les téléphones que vos invités ont déjà dans la
         poche. ZIK s'occupe du reste : les extraits, les points, le classement
-        et le suspense. C'est gratuit, il n'y a rien à installer et personne
-        n'a besoin de créer un compte.
+        et le suspense. Il n'y a rien à installer et vos invités n'ont pas
+        besoin de créer un compte.
       </p>
-      <a class="pro-cta-btn" href="/salon">Lancer un salon maintenant</a>
+      <div class="pro-header-ctas">
+        <a class="pro-cta-btn" href="/salon">Essayer gratuitement</a>
+        <a class="pro-cta-ghost" href="#tarifs">Voir les tarifs</a>
+      </div>
     </header>
 
     <section class="pro-section">
@@ -193,7 +227,7 @@
         <li>Un téléphone par joueur, avec ou sans wifi</li>
       </ul>
       <p>
-        Comptez une trentaine de joueurs par salon. Si quelqu'un perd sa
+        Jusqu'à {FREE_MAX_PLAYERS} joueurs en version gratuite, sans limite avec ZIK Pro. Si quelqu'un perd sa
         connexion en cours de route, il retrouve sa place et son score en
         rejoignant à nouveau.
       </p>
@@ -214,19 +248,63 @@
       </p>
     </section>
 
-    <section class="pro-section">
-      <h2>Combien ça coûte</h2>
+    <section class="pro-section" id="tarifs">
+      <h2>Tarifs</h2>
       <p>
-        Rien. Il n'y a ni abonnement, ni version payante, ni limite
-        d'utilisation, et vous pouvez organiser autant de soirées que vous
-        voulez.
+        La version gratuite suffit pour une soirée entre amis. ZIK Pro est fait
+        pour les lieux qui animent : plus de joueurs, plus d'équipes, et une
+        régie complète sur un second écran pendant que la TV montre le jeu.
       </p>
-      <p>
-        ZIK est développé par une seule personne, sans société derrière. Les
-        serveurs sont financés par les dons de ceux qui jouent. Si l'outil vous
-        rend service, la page <a href="/soutenir">Soutenir ZIK</a> existe pour ça,
-        mais rien ne vous y oblige.
-      </p>
+
+      <table class="pro-compare">
+        <thead><tr><th></th><th>Gratuit</th><th>ZIK Pro</th></tr></thead>
+        <tbody>
+          {#each COMPARE as [label, free, pro] (label)}
+            <tr><th scope="row">{label}</th><td>{free}</td><td>{pro}</td></tr>
+          {/each}
+        </tbody>
+      </table>
+
+      <ul class="pro-plans">
+        {#each PLANS as p (p.id)}
+          <li class:featured={p.featured}>
+            <span class="pro-plan-name">{p.name}</span>
+            <span class="pro-plan-price">{p.price}</span>
+            <span class="pro-plan-period">{p.period}</span>
+            <p>{p.pitch}</p>
+          </li>
+        {/each}
+      </ul>
+
+      <div class="pro-coming">
+        <h3>Bientôt dans ZIK Pro</h3>
+        <ul>{#each PRO_COMING as c (c)}<li>{c}</li>{/each}</ul>
+      </div>
+
+      <div class="pro-waitlist">
+        {#if wlState === "done"}
+          <p><b>C'est noté.</b> Vous serez prévenu en premier à l'ouverture de ZIK Pro.</p>
+        {:else}
+          <h3>Le paiement en ligne ouvre bientôt</h3>
+          <p>Laissez vos coordonnées : vous serez prévenu en premier, et les premiers lieux inscrits pourront tester ZIK Pro en avant-première.</p>
+          <form onsubmit={joinWaitlist}>
+            <input type="email" required placeholder="Adresse e-mail" bind:value={wl.email} maxlength="200" />
+            <input type="text" placeholder="Nom du lieu ou de l'association" bind:value={wl.venue} maxlength="120" />
+            <select bind:value={wl.venueType} aria-label="Type de lieu">
+              <option value="bar">Bar ou restaurant</option>
+              <option value="camping">Camping ou village vacances</option>
+              <option value="association">Association</option>
+              <option value="entreprise">Entreprise ou CE</option>
+              <option value="autre">Autre</option>
+            </select>
+            <select bind:value={wl.plan} aria-label="Formule envisagée">
+              {#each PLANS as p (p.id)}<option value={p.id}>{p.name} - {p.price}</option>{/each}
+            </select>
+            <button class="pro-cta-btn" disabled={wlState === "sending"}>{wlState === "sending" ? "Envoi…" : "Être prévenu"}</button>
+          </form>
+          {#if wlError}<p class="pro-wl-error">{wlError}</p>{/if}
+        {/if}
+      </div>
     </section>
 
     <section class="pro-section">
@@ -276,6 +354,130 @@
 </main>
 
 <style>
+  #tarifs {
+    scroll-margin-top: calc(var(--nav-h) + 16px);
+  }
+  .pro-header-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .pro-cta-ghost {
+    font-size: 0.9rem;
+    color: var(--text);
+    text-underline-offset: 3px;
+  }
+  .pro-compare {
+    width: 100%;
+    margin: 18px 0 24px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .pro-compare th,
+  .pro-compare td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .pro-compare thead th {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+  .pro-compare thead th:last-child,
+  .pro-compare td:last-child {
+    color: var(--accent);
+  }
+  .pro-compare tbody th {
+    font-weight: 600;
+  }
+  .pro-compare td {
+    color: var(--mid);
+  }
+  .pro-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 0;
+    list-style: none;
+  }
+  .pro-plans li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px;
+    border: 2px solid var(--border2);
+    border-radius: 3px;
+  }
+  .pro-plans li.featured {
+    border-color: var(--accent);
+    box-shadow: 5px 5px 0 var(--accent);
+  }
+  .pro-plan-name {
+    font-size: 0.85rem;
+    color: var(--mid);
+  }
+  .pro-plan-price {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 900;
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+  .pro-plan-period {
+    font-size: 0.78rem;
+    color: var(--mid);
+  }
+  .pro-plans p {
+    margin-top: 8px;
+    font-size: 0.88rem;
+  }
+  .pro-coming {
+    margin-top: 24px;
+  }
+  .pro-coming h3 {
+    margin-bottom: 8px;
+  }
+  .pro-waitlist {
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px dashed var(--border2);
+    border-radius: 3px;
+  }
+  .pro-waitlist h3 {
+    margin-bottom: 6px;
+  }
+  .pro-waitlist form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .pro-waitlist input,
+  .pro-waitlist select {
+    padding: 11px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    color: var(--text);
+    font: inherit;
+  }
+  .pro-waitlist button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .pro-wl-error {
+    margin-top: 8px;
+    color: var(--danger);
+  }
+  @media (max-width: 560px) {
+    .pro-waitlist form {
+      grid-template-columns: 1fr;
+    }
+  }
   .pro-page {
     max-width: 860px;
     margin: 0 auto;

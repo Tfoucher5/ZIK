@@ -101,7 +101,7 @@
             <tr><td>Mode QCM</td><td class="yes">✓</td><td class="yes">✓</td></tr>
             <tr><td>Rooms privées avec code</td><td class="yes">✓</td><td class="yes">✓</td></tr>
             <tr><td>Sans inscription obligatoire</td><td class="yes">✓</td><td class="partial">Variable</td></tr>
-            <tr><td>Entièrement gratuit</td><td class="yes">✓</td><td class="partial">Variable</td></tr>
+            <tr><td>Jeu en ligne gratuit</td><td class="yes">✓</td><td class="partial">Variable</td></tr>
           </tbody>
         </table>
       </div>

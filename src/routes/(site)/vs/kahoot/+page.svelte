@@ -101,7 +101,7 @@
             <tr><td>Mode Salon (TV + smartphones)</td><td class="yes">✓</td><td class="partial">Partiel</td></tr>
             <tr><td>Mode QCM multijoueur</td><td class="yes">✓</td><td class="yes">✓</td></tr>
             <tr><td>Sans inscription obligatoire</td><td class="yes">✓</td><td class="no">✗</td></tr>
-            <tr><td>Entièrement gratuit</td><td class="yes">✓</td><td class="partial">Freemium</td></tr>
+            <tr><td>Version gratuite</td><td class="yes">✓</td><td class="yes">✓</td></tr>
             <tr><td>Quiz non-musicaux</td><td class="no">✗</td><td class="yes">✓</td></tr>
           </tbody>
         </table>
@@ -115,7 +115,7 @@
         <li>Vous voulez utiliser vos propres playlists Spotify ou Deezer</li>
         <li>Vous cherchez un classement compétitif avec système ELO</li>
         <li>Vous voulez jouer sans créer de compte</li>
-        <li>Vous voulez un accès totalement gratuit, sans limite de participants</li>
+        <li>Vous voulez un accès gratuit, et une offre Pro abordable pour les bars et les événements</li>
       </ul>
     </section>
 
