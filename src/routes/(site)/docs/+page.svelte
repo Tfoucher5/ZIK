@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount } from 'svelte';
 
   let activeSection = $state('decouverte');
@@ -82,8 +83,8 @@
   <meta name="twitter:title" content="Guide complet — Blind Test ZIK | Règles, Points, Mode Salon" />
   <meta name="twitter:description" content="Comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ. Guide complet du blind test ZIK." />
 
-  <script type="application/ld+json">{@html jsonLdPage}</script>
-  <script type="application/ld+json">{@html jsonLdFaq}</script>
+  <JsonLd json={jsonLdPage} />
+  <JsonLd json={jsonLdFaq} />
 </svelte:head>
 
 <div class="doc-root">
@@ -464,7 +465,7 @@
       </p>
 
       <h3>Créer un salon</h3>
-      <p>Rendez-vous sur <a href="/salon">/salon</a> (compte requis). Configurez votre salon :</p>
+      <p>Rendez-vous sur <a href="/salon">/salon</a>. Sans compte, vous choisissez parmi les playlists publiques et officielles ; connecté, vous avez aussi accès aux vôtres. Configurez votre salon :</p>
       <ul class="doc-list">
         <li>Choisissez la <strong>playlist</strong> (vos playlists perso ou les officielles)</li>
         <li>Réglez les paramètres (voir tableau ci-dessous)</li>

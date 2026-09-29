@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount, getContext } from 'svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import TrackRow from './TrackRow.svelte';
@@ -396,14 +397,14 @@
   <meta property="og:description" content="Créez vos playlists de blind test, importez depuis Spotify ou Deezer. Lancez une room directement. Gratuit, sans limite." />
   <meta property="og:url" content="https://www.zik-music.fr/playlists" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Playlists de Blind Test | ZIK" />
   <meta name="twitter:description" content="Importez vos playlists Spotify/Deezer et jouez au blind test avec vos musiques. Gratuit." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
 
-  <script type="application/ld+json">{@html playlistsJsonLd}</script>
+  <JsonLd json={playlistsJsonLd} />
 </svelte:head>
 
 <header class="page-head">

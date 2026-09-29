@@ -6,11 +6,26 @@ import {
 import { salonRooms } from "$lib/server/state.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 
+// Un salon sans compte ne lit que les playlists publiques (client anonyme,
+// RLS). Plafond pour qu'un script ne remplisse pas la mémoire de salons.
+const MAX_GUEST_SALONS = 50;
+
 export async function POST({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
-  if (!token) return json({ error: "Non authentifié" }, { status: 401 });
-  const user = await verifyToken(token);
-  if (!user) return json({ error: "Session invalide" }, { status: 401 });
+  let user = null;
+  if (token) {
+    user = await verifyToken(token);
+    if (!user) return json({ error: "Session invalide" }, { status: 401 });
+  } else {
+    const guestSalons = Object.values(salonRooms).filter(
+      (s) => !s.hostUserId,
+    ).length;
+    if (guestSalons >= MAX_GUEST_SALONS)
+      return json(
+        { error: "Trop de salons ouverts, connecte-toi pour en créer un." },
+        { status: 429 },
+      );
+  }
 
   let body;
   try {
@@ -19,18 +34,20 @@ export async function POST({ request }) {
     return json({ error: "Corps invalide" }, { status: 400 });
   }
 
-  const { playlistIds, settings } = body;
+  const { playlistIds, settings, origin } = body;
   if (!Array.isArray(playlistIds) || playlistIds.length === 0)
     return json({ error: "Au moins une playlist requise" }, { status: 400 });
 
   try {
-    const code = await createSalonRoom({
+    const { code, key } = await createSalonRoom({
       playlistIds,
       settings: settings || {},
       token,
-      hostUserId: user.id,
+      hostUserId: user?.id ?? null,
+      // Hôte venu du bouton de fin de partie d'un invité : mesure la boucle virale
+      origin: origin === "invite" ? "invite" : null,
     });
-    return json({ code });
+    return json({ code, key });
   } catch (e) {
     return json({ error: e.message }, { status: 400 });
   }
@@ -48,11 +65,12 @@ export async function GET({ url }) {
   });
 }
 
+// Hôte connecté (son compte) ou régie (la clé du salon, sans compte)
 export async function PATCH({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
-  if (!token) return json({ error: "Non authentifié" }, { status: 401 });
-  const user = await verifyToken(token);
-  if (!user) return json({ error: "Session invalide" }, { status: 401 });
+  const user = token ? await verifyToken(token) : null;
+  if (token && !user)
+    return json({ error: "Session invalide" }, { status: 401 });
 
   let body;
   try {
@@ -61,7 +79,8 @@ export async function PATCH({ request }) {
     return json({ error: "Corps invalide" }, { status: 400 });
   }
 
-  const { code, playlistIds } = body;
+  const { code, playlistIds, key } = body;
+  if (!user && !key) return json({ error: "Non authentifié" }, { status: 401 });
   if (!code) return json({ error: "Code requis" }, { status: 400 });
   if (!Array.isArray(playlistIds) || playlistIds.length === 0)
     return json({ error: "Au moins une playlist requise" }, { status: 400 });
@@ -71,7 +90,8 @@ export async function PATCH({ request }) {
       code: String(code).toUpperCase(),
       playlistIds,
       token,
-      userId: user.id,
+      userId: user?.id,
+      key,
     });
     return json({ trackCount });
   } catch (e) {

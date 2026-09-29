@@ -126,6 +126,28 @@
     </div>
 
     <div class="panel">
+      <div class="panel-head"><span class="panel-label">ZIK Pro</span></div>
+      <p class="hint">
+        {#if data.pro && new Date(data.pro.current_period_end) > new Date()}
+          Actif ({data.pro.plan}) jusqu'au {new Date(data.pro.current_period_end).toLocaleDateString('fr-FR')}
+        {:else}
+          Pas d'accès Pro
+        {/if}
+      </p>
+      <form method="POST" action="?/setPro" use:enhance class="form-inline">
+        <input type="hidden" name="_token" value={token}>
+        <select name="days" class="field-input">
+          <option value="1">Offrir 1 soirée (24 h)</option>
+          <option value="30">Offrir 30 jours</option>
+          <option value="90">Offrir 90 jours</option>
+          <option value="365">Offrir 1 an</option>
+          <option value="0">Retirer l'accès</option>
+        </select>
+        <button class="btn btn-primary">Appliquer</button>
+      </form>
+    </div>
+
+    <div class="panel">
       <div class="panel-head"><span class="panel-label">Rôle</span></div>
       <form method="POST" action="?/setRole" use:enhance class="form-inline">
         <input type="hidden" name="_token" value={token}>

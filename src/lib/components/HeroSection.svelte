@@ -3,7 +3,7 @@
   import ChallengeIcon from '$lib/components/ChallengeIcon.svelte';
   import { dicebear } from '$lib/utils.js';
 
-  let { badge = null, playlistCount = 0, gamesMonth = 0, userCount = 0, roomCount = 0, challenge = null, children } = $props();
+  let { badge = null, gamesMonth = 0, userCount = 0, challenge = null, children } = $props();
 
   let challengeOpen = $state(true);
 
@@ -171,7 +171,10 @@
       <span class="l2">L'OREILLE&nbsp;?</span>
       <span class="l3">PROUVE-LE.</span>
     </h1>
-    <p class="hero-sub">Multijoueur · Temps réel · Classements ELO</p>
+    <p class="hero-sub">
+      Blind test en soirée sur la TV ou en ligne · Sur tes playlists
+      {#if userCount > 0}<br><span class="hero-proof">{fmt(userCount)} joueurs inscrits · {fmt(gamesMonth)} parties ce mois</span>{/if}
+    </p>
 
     {#if children}
       <div class="hero-actions">
@@ -180,25 +183,25 @@
     {/if}
   </div>
 
-  <div class="badge b1" aria-hidden="true">
-    <span class="badge-big">{playlistCount > 0 ? fmt(playlistCount) : '—'}</span>
-    <span class="badge-lbl">Playlists publiques</span>
-  </div>
-  <div class="badge b2" aria-hidden="true">
-    <span>Gratuit · Sans inscription</span>
-  </div>
-  <div class="badge b3" aria-hidden="true">
-    <span class="badge-big">{gamesMonth > 0 ? fmt(gamesMonth) : '—'}</span>
-    <span class="badge-lbl">Parties ce mois</span>
-  </div>
-  <div class="badge b4" aria-hidden="true">
-    <span class="badge-big">{userCount > 0 ? fmt(userCount) : '—'}</span>
-    <span class="badge-lbl">Joueurs inscrits</span>
-  </div>
-  <div class="badge b5" aria-hidden="true">
-    <span class="badge-big">{roomCount > 0 ? fmt(roomCount) : '—'}</span>
-    <span class="badge-lbl">Rooms publiques</span>
-  </div>
+  <!-- Le Mode Salon, cœur de ZIK : visible dès l'arrivée, sur tous les écrans -->
+  <aside class="hero-salon" aria-labelledby="hero-salon-title">
+    <div class="hs-screen" aria-hidden="true">
+      <div class="hs-screen-top"><b>ZIK Salon</b><span>7F3K2Q</span></div>
+      <div class="hs-timer">12</div>
+      <div class="hs-choices"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <p class="hs-kicker">Mode Salon · Blind test de soirée</p>
+    <h2 id="hero-salon-title">La TV diffuse.<br>Les téléphones répondent.</h2>
+    <ul class="hs-points">
+      <li>Un QR code, un pseudo : aucune appli, aucun compte pour les joueurs</li>
+      <li>Équipes, classement en direct et podium sur grand écran</li>
+      <li>Pour une soirée entre amis, un bar, un camping ou un team building</li>
+    </ul>
+    <div class="hs-ctas">
+      <a class="btn-accent" href="/salon">Lancer une soirée →</a>
+      <a class="hs-link" href="/salon/play">J'ai un code</a>
+    </div>
+  </aside>
 </section>
 
 <style>
@@ -432,107 +435,117 @@
   }
 
   /* ── Badges flottants ── */
-  .badge {
+  /* ── Panneau Mode Salon ── */
+  .hero-salon {
     position: absolute;
     z-index: 3;
+    right: clamp(24px, 5vw, 80px);
+    top: 50%;
+    transform: translateY(-46%);
+    width: min(400px, 34vw);
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 12px;
+    padding: 22px;
+    background: rgb(var(--bg-rgb) / 0.92);
+    border: 2px solid var(--text);
+    box-shadow: 8px 8px 0 var(--accent);
   }
-
-  .badge-big {
+  .hs-screen {
+    padding: 12px;
+    background: #000;
+    border: 1px solid rgb(var(--c-glass) / 0.25);
+  }
+  .hs-screen-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: rgb(var(--c-glass) / 0.6);
+  }
+  .hs-screen-top b { color: var(--accent); font-weight: 600; }
+  .hs-timer {
+    margin: 4px 0 8px;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
+    font-size: 3.4rem;
     line-height: 1;
+    text-align: center;
   }
-
-  .badge-lbl {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.52rem;
+  .hs-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .hs-choices i { height: 14px; border-radius: 2px; }
+  .hs-choices i:nth-child(1) { background: #ff4f9a; }
+  .hs-choices i:nth-child(2) { background: #5bc0eb; }
+  .hs-choices i:nth-child(3) { background: #f4e04d; }
+  .hs-choices i:nth-child(4) { background: #3ddc84; }
+  .hs-kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
+    color: var(--accent);
   }
-
-  /* b1 — playlists, fond sombre + border magenta, incliné */
-  .b1 {
-    right: 17%;
-    top: 30%;
-    background: rgb(var(--bg-rgb) / 0.85);
-    border: 2px solid var(--accent);
-    padding: 18px 24px;
-    animation: float1 4s ease-in-out infinite;
-  }
-  .b1 .badge-big { font-size: 2.8rem; color: var(--accent); }
-  .b1 .badge-lbl { color: rgb(var(--c-glass) / 0.45); }
-
-  /* b2 — fond magenta plein, incliné */
-  .b2 {
-    right: 33%;
-    bottom: 22%;
-    background: var(--accent);
-    padding: 10px 20px;
-    animation: float2 5s ease-in-out infinite;
-    flex-direction: row;
-    align-items: center;
-  }
-  .b2 span {
+  .hero-salon h2 {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
-    font-size: 0.72rem;
+    font-size: clamp(1.6rem, 2.2vw, 2.1rem);
+    line-height: 0.95;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--on-accent);
+  }
+  .hs-points {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 16px;
+    font-size: 0.85rem;
+    color: var(--mid);
+    line-height: 1.4;
+  }
+  .hs-ctas {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .hs-link {
+    font-size: 0.9rem;
+    color: var(--text);
+    text-underline-offset: 3px;
+  }
+  .hero-proof {
+    color: var(--mid);
   }
 
-  /* b3 — fond sombre + border blanche */
-  .b3 {
-    right: 8%;
-    bottom: 38%;
-    background: rgb(var(--bg-rgb) / 0.82);
-    border: 1px solid rgb(var(--c-glass) / 0.35);
-    padding: 14px 18px;
-    animation: float1 3.5s ease-in-out 1s infinite;
-  }
-  .b3 .badge-big { font-size: 1.5rem; color: var(--text); }
-  .b3 .badge-lbl { color: rgb(var(--c-glass) / 0.7); }
-
-  /* b4 — joueurs inscrits, fond sombre + border blanche */
-  .b4 {
-    right: 28%;
-    top: 16%;
-    background: rgb(var(--bg-rgb) / 0.82);
-    border: 1px solid rgb(var(--c-glass) / 0.35);
-    padding: 14px 18px;
-    animation: float2 4.5s ease-in-out 0.5s infinite;
-  }
-  .b4 .badge-big { font-size: 1.5rem; color: var(--text); }
-  .b4 .badge-lbl { color: rgb(var(--c-glass) / 0.7); }
-
-  /* b5 — rooms publiques, fond sombre + border magenta fine */
-  .b5 {
-    right: 14%;
-    bottom: 14%;
-    background: rgb(var(--bg-rgb) / 0.85);
-    border: 1px solid rgb(var(--accent-rgb) / 0.55);
-    padding: 14px 18px;
-    animation: float1 4.2s ease-in-out 0.8s infinite;
-  }
-  .b5 .badge-big { font-size: 1.5rem; color: var(--accent); }
-  .b5 .badge-lbl { color: rgb(var(--c-glass) / 0.6); }
-
-  @keyframes float1 {
-    0%, 100% { transform: rotate(2.5deg) translateY(0); }
-    50%       { transform: rotate(2.5deg) translateY(-8px); }
-  }
-
-  @keyframes float2 {
-    0%, 100% { transform: rotate(-1.8deg) translateY(0); }
-    50%       { transform: rotate(-1.8deg) translateY(-5px); }
+  /* Tablette et mobile : le panneau passe sous le titre, dans le flux */
+  @media (max-width: 1100px) {
+    .hero {
+      height: auto;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 28px;
+      padding: 90px 0 40px;
+    }
+    .hero-salon {
+      position: relative;
+      right: auto;
+      top: auto;
+      transform: none;
+      width: auto;
+      margin: 0 clamp(24px, 5vw, 80px);
+      max-width: 520px;
+    }
+    .hero-inner { max-width: 100%; }
   }
 
   @media (max-width: 900px) {
-    .b1, .b2, .b3, .b4, .b5 { display: none; }
     .covers-grid { grid-template-columns: repeat(6, 1fr); grid-auto-rows: calc(100vw / 6); }
   }
 

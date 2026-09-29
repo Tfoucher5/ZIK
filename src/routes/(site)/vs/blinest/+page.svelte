@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -26,8 +27,8 @@
   <meta property="og:description" content="ZIK et Blinest sont deux blind tests musicaux en ligne. ZIK permet d'importer ses propres playlists Spotify/Deezer et propose un Mode Salon pour les soirées." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/blinest" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
-  <script type="application/ld+json">{@html jsonLd}</script>
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
+  <JsonLd json={jsonLd} />
 </svelte:head>
 
 <main class="vs-page">
@@ -98,7 +99,7 @@
             <tr><td>Blind test solo / défis par genre</td><td class="partial">Partiel</td><td class="yes">✓</td></tr>
             <tr><td>Rooms privées avec code</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Sans inscription obligatoire</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Entièrement gratuit</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Jeu en ligne gratuit</td><td class="yes">✓</td><td class="yes">✓</td></tr>
           </tbody>
         </table>
       </div>

@@ -7,6 +7,7 @@
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
+  import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -81,10 +82,18 @@
     }
 
     authReady = true;
+    // ?auth=register&ref=… : lien « Créer un compte » de fin de partie invité
+    const params = new URLSearchParams(window.location.search);
+    const wanted = params.get('auth');
+    if (!currentUser && (wanted === 'register' || wanted === 'login')) {
+      if (params.get('ref')) rememberSignupRef(params.get('ref'));
+      openAuthModal(wanted);
+    }
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await applyUser(session.user);
         authOpen = false;
+        setTimeout(() => tagNewUser(sb, session.user));
       } else if (event === 'SIGNED_OUT') {
         clearCachedProfile(currentUser?.id);
         currentUser = null;
@@ -97,7 +106,9 @@
 </script>
 
 <svelte:head>
-  <meta name="description" content="ZIK — Blind test musical multijoueur en ligne. Rejoins une room, trouve les titres avant tout le monde et grimpe dans le classement ELO. Gratuit, sans téléchargement.">
+  <!-- Pas de meta description ici : chaque page en définit une dans son propre
+       svelte:head. Svelte n'écrase pas celle du layout, il l'ajoute en plus —
+       avoir les deux dupliquait la description sur toutes les pages. -->
   <meta name="keywords" content="blind test, blind test en ligne, blind test gratuit, blind test multijoueur, quiz musical en ligne, jeu de musique, deviner les chansons, jeu musique gratuit, blind test kahoot, blind test soirée, blind test spotify, blind test deezer, jeu blind test, musique en ligne">
   <meta name="author" content="ZIK">
   <meta name="theme-color" content="#7c3aed">
@@ -110,7 +121,7 @@
   <meta property="og:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
   <meta property="og:description" content="Blind test multijoueur gratuit en ligne. Spotify & Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
   <meta property="og:url" content="https://www.zik-music.fr/">
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2">
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="ZIK — Blind Test Multijoueur">
@@ -119,9 +130,9 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Spotify/Deezer, grimpe dans le classement ELO. Sans installation.">
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.2">
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.0">
 
-  <link rel="stylesheet" href="/css/base.css?v=3.7.0">
+  <link rel="stylesheet" href="/css/base.css?v=3.9.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
 </svelte:head>
 
@@ -190,6 +201,30 @@
     </div>
 
     <div class="footer-col">
+      <span class="footer-col-head">Blind test en soirée</span>
+      <div class="footer-col-links">
+        <a href="/salon">Lancer une soirée</a>
+        <a href="/blind-test/soiree">Soirée entre amis</a>
+        <a href="/blind-test/bar">Bar et restaurant</a>
+        <a href="/blind-test/camping">Camping</a>
+        <a href="/blind-test/entreprise">Team building</a>
+        <a href="/pro">ZIK Pro</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <span class="footer-col-head">Blind test par thème</span>
+      <div class="footer-col-links">
+        <a href="/blind-test/annees-80">Années 80</a>
+        <a href="/blind-test/annees-2000">Années 2000</a>
+        <a href="/blind-test/rap-fr">Rap français</a>
+        <a href="/blind-test/disney">Disney</a>
+        <a href="/blind-test/anniversaire">Anniversaire</a>
+        <a href="/blind-test">Tous les thèmes</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
       <span class="footer-col-head">Comparer</span>
       <div class="footer-col-links">
         <a href="/vs/kahoot">ZIK vs Kahoot</a>
@@ -211,7 +246,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.8.2</span>
+    <span class="footer-version-tag">v3.9.0</span>
   </div>
 </footer>
 {/if}

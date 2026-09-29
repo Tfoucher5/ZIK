@@ -101,6 +101,13 @@
   // ── Inviter ses amis dans la room courante ──
   let canInviteFriends = $state(false);
   let inviteOpen      = $state(false);
+  let roomLinkCopied  = $state(false);
+
+  async function copyRoomLink() {
+    await navigator.clipboard.writeText(`https://www.zik-music.fr/room/${ROOM_ID}`);
+    roomLinkCopied = true;
+    setTimeout(() => (roomLinkCopied = false), 2000);
+  }
   let friendsList     = $state([]);
   let friendsLoading  = $state(false);
   let invitedIds      = $state([]);
@@ -191,6 +198,9 @@
   let _roundLoadingTimer = null;
   let _waitingForSync = false;
   let _syncPaused    = false;
+  // Extrait de la manche suivante, téléchargé pendant la manche en cours
+  let _nextAudio   = null;
+  let _playingBlob = null;
   let _adminPaused   = false;
   let _usingIframe   = false;
   let _metaGuardInterval = null;
@@ -407,6 +417,40 @@
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
   }
 
+  function prefetchAudio(url) {
+    dropPrefetch();
+    const entry = { url, blobUrl: null, ctrl: new AbortController(), start: null };
+    entry.start = () => {
+      entry.start = null;
+      fetch(url, { signal: entry.ctrl.signal })
+        .then(r => (r.ok ? r.blob() : Promise.reject()))
+        .then(b => { if (_nextAudio === entry) entry.blobUrl = URL.createObjectURL(b); })
+        .catch(() => {});
+    };
+    _nextAudio = entry;
+    // Pas pendant le chargement de l'extrait courant : on ne lui vole pas la bande passante
+    if (!_waitingForSync) entry.start();
+  }
+
+  function dropPrefetch() {
+    if (!_nextAudio) return;
+    _nextAudio.ctrl.abort();
+    if (_nextAudio.blobUrl) URL.revokeObjectURL(_nextAudio.blobUrl);
+    _nextAudio = null;
+  }
+
+  // URL à lire : la copie locale si le préchargement a abouti
+  function audioSource(url) {
+    if (_playingBlob) { URL.revokeObjectURL(_playingBlob); _playingBlob = null; }
+    if (_nextAudio?.url === url && _nextAudio.blobUrl) {
+      _playingBlob = _nextAudio.blobUrl;
+      _nextAudio = null;
+      return _playingBlob;
+    }
+    dropPrefetch();
+    return url;
+  }
+
   function loadAudio(audioUrl, startSeconds, onReady) {
     const audio = document.getElementById('previewAudio');
     if (!audio) return;
@@ -416,7 +460,7 @@
     audio.onended = null;
     audio.oncanplaythrough = null;
     startMediaGuard();
-    audio.src = audioUrl;
+    audio.src = audioSource(audioUrl);
     audio.volume = savedVol() / 100;
     if (onReady) {
       let readySent = false;
@@ -745,6 +789,7 @@
         loadVideo(data.videoId, data.startSeconds);
       }
     });
+    socket.on('next_audio', ({ audioUrl }) => prefetchAudio(audioUrl));
     socket.on('round_start_sync', (data) => {
       const elapsed = data?.elapsed || 0;
       _syncAnchor = Date.now() - elapsed * 1000;
@@ -752,6 +797,7 @@
       syncWaiting = false;
       guessDisabled = false;
       _syncPaused = false;
+      _nextAudio?.start?.();
       // Toujours poser l'ancre, pour caler la lecture si le joueur rejoint plus
       // tard — mais ne rien jouer tant qu'il regarde les scores.
       if (heldRound) return;
@@ -900,6 +946,8 @@
 
   onDestroy(() => {
     if (socket) socket.disconnect();
+    dropPrefetch();
+    if (_playingBlob) URL.revokeObjectURL(_playingBlob);
     stopMediaGuard();
     clearTimeout(feedTimer);
     clearTimeout(_roundLoadingTimer);
@@ -1117,6 +1165,16 @@
             {#if hasOwner && !autoStart}
               <p class="g-admin-hint">Tu es l&apos;admin &mdash; toi seul peux lancer.</p>
             {/if}
+          {/if}
+          {#if !showCountdown && players.length <= 1}
+            <!-- Seul dans la room : le jeu est pensé pour plusieurs, on donne les moyens d'en ramener -->
+            <div class="g-alone">
+              <p>Tu es seul pour l&apos;instant. Le blind test, c&apos;est mieux à plusieurs&nbsp;!</p>
+              <div class="g-alone-actions">
+                <button class="g-alone-btn" onclick={copyRoomLink}>{roomLinkCopied ? 'Lien copié' : 'Copier le lien de la room'}</button>
+                <a class="g-alone-btn" href="/salon">Soirée entre amis : Mode Salon</a>
+              </div>
+            </div>
           {/if}
         {/if}
 
@@ -1345,6 +1403,9 @@
           <button class="g-go-share" onclick={shareResult}>
             {shareCopied ? 'Lien copié' : 'Partager mon score'}
           </button>
+        {/if}
+        {#if IS_GUEST}
+          <a href="/?auth=register&ref=room-guest" class="g-go-share">Créer un compte gratuit</a>
         {/if}
         <a href="/" class="g-go-back">Changer de room</a>
         <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="g-go-discord">
@@ -1648,4 +1709,38 @@
   user-select: none;
 }
 .g-chat-head--draggable:active { cursor: grabbing; }
+.g-alone {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  text-align: center;
+  max-width: 420px;
+}
+.g-alone p {
+  font-size: 0.85rem;
+  color: var(--mid);
+  margin: 0 0 10px;
+}
+.g-alone-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.g-alone-btn {
+  background: none;
+  border: 1px solid rgb(var(--accent-rgb) / 0.45);
+  color: var(--accent);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.g-alone-btn:hover {
+  background: rgb(var(--accent-rgb) / 0.1);
+}
 </style>

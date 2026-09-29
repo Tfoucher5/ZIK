@@ -1,6 +1,6 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount } from "svelte";
-  import { goto } from '$app/navigation';
   import { dicebear } from '$lib/utils.js';
   import HeroSection from '$lib/components/HeroSection.svelte';
   import Modal from '$lib/components/Modal.svelte';
@@ -41,7 +41,7 @@
   let eloLb = $state(data.eloLb ?? []);
   const weeklyChallenge = data.weeklyChallenge?.active ? data.weeklyChallenge : null;
   const latestNews = NEWS[0];
-  let globalStats = $state(data.globalStats ?? { users: 0, publicRooms: 0, publicPlaylists: 0, gamesMonth: 0 });
+  let globalStats = $state(data.globalStats ?? { users: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
   let guestUsername = $state("");
   let pendingRoom = $state(null);
@@ -93,8 +93,6 @@
         const d = await r.json();
         globalStats = {
           users: d.users ?? 0,
-          publicRooms: d.publicRooms ?? 0,
-          publicPlaylists: d.publicPlaylists ?? 0,
           gamesMonth: d.gamesMonth ?? 0,
         };
       }
@@ -176,7 +174,7 @@
         "Playlists personnalisées partageables",
         "Détection intelligente des réponses (accents, fautes de frappe)"
       ],
-      "screenshot": "https://www.zik-music.fr/og.png?v=3.8.2",
+      "screenshot": "https://www.zik-music.fr/og.png?v=3.9.0",
       "author": { "@type": "Organization", "name": "ZIK", "url": "https://www.zik-music.fr" }
     },
     {
@@ -197,7 +195,7 @@
       "@type": "Organization",
       "name": "ZIK",
       "url": "https://www.zik-music.fr/",
-      "logo": "https://www.zik-music.fr/og.png?v=3.8.2",
+      "logo": "https://www.zik-music.fr/og.png?v=3.9.0",
       "sameAs": ["https://github.com/Tfoucher5/ZIK"]
     }
   ]);
@@ -276,30 +274,28 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — Blind Test Multijoueur en Ligne Gratuit</title>
-  <meta name="description" content="Joue au blind test multijoueur gratuit en ligne. Importe tes playlists Spotify &amp; Deezer, grimpe dans le classement ELO, joue en Mode Salon. Jeu musical en ligne sans inscription." />
+  <title>ZIK - Blind test en soirée sur la TV et multijoueur en ligne</title>
+  <meta name="description" content="Le blind test de soirée : la TV diffuse la musique, chacun répond sur son téléphone, en solo ou en équipes. Aussi en ligne, avec tes playlists Spotify et Deezer. Gratuit, sans appli." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/" />
-  <meta property="og:title" content="ZIK — Blind Test Musical Multijoueur | Gratuit" />
-  <meta property="og:description" content="Le blind test musical multijoueur gratuit ! Identifie les chansons avant tout le monde, importe tes playlists Spotify/Deezer, Mode Salon Kahoot-like, classement ELO. Sans installation." />
+  <meta property="og:title" content="ZIK - Le blind test de soirée sur la TV" />
+  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium, vos playlists Spotify ou Deezer. Aussi en ligne. Gratuit, sans appli." />
   <meta property="og:url" content="https://www.zik-music.fr/" />
-  <meta name="twitter:title" content="ZIK — Blind Test Musical Multijoueur | Gratuit" />
-  <meta name="twitter:description" content="Blind test musical multijoueur gratuit en ligne. Playlists Spotify/Deezer, Mode Salon Kahoot-like, classement ELO. Sans inscription requise." />
-  <script type="application/ld+json">{@html jsonLd}</script>
-  <script type="application/ld+json">{@html faqJsonLd}</script>
+  <meta name="twitter:title" content="ZIK - Le blind test de soirée sur la TV" />
+  <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Aussi en ligne. Gratuit, sans appli." />
+  <JsonLd json={jsonLd} />
+  <JsonLd json={faqJsonLd} />
 </svelte:head>
 
 <!-- ══════════════════════════════ HERO ══════════════════════════════ -->
 <HeroSection
   badge={displayOnline > 0 ? `${displayOnline} joueurs en ligne` : 'Blind Test Multijoueur'}
-  playlistCount={globalStats.publicPlaylists}
   gamesMonth={globalStats.gamesMonth}
   userCount={globalStats.users}
-  roomCount={globalStats.publicRooms}
   challenge={weeklyChallenge}
 >
-  <button class="btn-accent" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer maintenant →</button>
-  <button class="btn-ghost" onclick={() => goto('/rooms')}>Explorer les rooms</button>
+  <a href="/salon" class="btn-accent">🎉 Organiser une soirée</a>
+  <button class="btn-ghost" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer en ligne</button>
   <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="btn-discord">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path fill-rule="evenodd" clip-rule="evenodd" fill="white" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942.0209-.0406.0098-.0895-.0321-.1112a13.201 13.201 0 0 1-1.8735-.8914.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
@@ -546,6 +542,7 @@
         <a href="/salon" class="btn-accent">Lancer une session →</a>
         <a href="/docs#salon" class="btn-ghost sm">En savoir plus</a>
       </div>
+      <a href="/pro" class="salon-pro-link">Bar, association, entreprise ? Organisez votre blind test →</a>
     </div>
     <div class="salon-phones" aria-hidden="true">
       <div class="sphone sphone-l"><div class="sphone-s"><span style="color:#22c55e">▲</span></div></div>
@@ -1418,6 +1415,8 @@
     max-width: 420px;
   }
   .salon-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .salon-pro-link { display: inline-block; margin-top: 14px; font-size: .85rem; color: var(--mid); text-decoration: underline; text-underline-offset: 3px; }
+  .salon-pro-link:hover { color: var(--accent2); }
   .salon-phones { display: flex; align-items: flex-end; gap: 10px; flex-shrink: 0; }
   .sphone {
     width: 56px; height: 96px;

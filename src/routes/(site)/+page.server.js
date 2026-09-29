@@ -10,8 +10,6 @@ export async function load({ fetch }) {
     roomsRes.json().catch(() => ({ rooms: [], totalOnline: 0 })),
     statsRes.json().catch(() => ({
       users: 0,
-      publicRooms: 0,
-      publicPlaylists: 0,
       gamesMonth: 0,
     })),
     eloRes.json().catch(() => []),
@@ -23,8 +21,6 @@ export async function load({ fetch }) {
     totalOnline: roomsData.totalOnline ?? 0,
     globalStats: {
       users: statsData.users ?? 0,
-      publicRooms: statsData.publicRooms ?? 0,
-      publicPlaylists: statsData.publicPlaylists ?? 0,
       gamesMonth: statsData.gamesMonth ?? 0,
     },
     eloLb: Array.isArray(eloData) ? eloData : [],

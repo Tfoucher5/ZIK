@@ -22,6 +22,7 @@ export async function load({ params }) {
     followingRes,
     followersRes,
     friendshipsRes,
+    proRes,
   ] = await Promise.all([
     sb.from("profiles").select("*").eq("id", id).single(),
     sb.auth.admin.getUserById(id),
@@ -55,6 +56,11 @@ export async function load({ params }) {
       )
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
       .order("created_at", { ascending: false }),
+    sb
+      .from("pro_subscriptions")
+      .select("plan, status, current_period_end")
+      .eq("user_id", id)
+      .maybeSingle(),
   ]);
 
   if (profileRes.error || !profileRes.data)
@@ -89,6 +95,7 @@ export async function load({ params }) {
     following: followingRes.data ?? [],
     followers: followersRes.data ?? [],
     friendships,
+    pro: proRes.data ?? null,
   };
 }
 
@@ -172,6 +179,30 @@ export const actions = {
       })
       .eq("id", params.id);
     await logAdminAction(adminUser.id, "reset_stats", params.id, "user", {});
+    return { success: true };
+  },
+
+  // Accès ZIK Pro offert (lieux testeurs), en attendant le paiement en ligne
+  setPro: async ({ request, params }) => {
+    assertUuid(params.id);
+    const { adminUser, formData } = await requireAdmin(request);
+    const days = Number(formData.get("days"));
+    if (![0, 1, 30, 90, 365].includes(days)) return { success: false };
+    const sb = getAdminClient();
+    if (days === 0) {
+      await sb.from("pro_subscriptions").delete().eq("user_id", params.id);
+    } else {
+      await sb.from("pro_subscriptions").upsert({
+        user_id: params.id,
+        plan: "manual",
+        status: "active",
+        current_period_end: new Date(
+          Date.now() + days * 86400000,
+        ).toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+    await logAdminAction(adminUser.id, "set_pro", params.id, "user", { days });
     return { success: true };
   },
 

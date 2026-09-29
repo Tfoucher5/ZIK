@@ -9,6 +9,16 @@ import { isTrackableVisit, buildVisitRow } from "$lib/server/visitSource.js";
 
 const MAINTENANCE_EXEMPT = ["/admin", "/api/admin"];
 
+// Pages privées : jamais indexées. On le dit par en-tête plutôt que dans
+// robots.txt, qui est public et révélerait leur existence à tout le monde.
+const PRIVATE_PATHS = [
+  "/admin",
+  "/api",
+  "/salon/host",
+  "/salon/regie",
+  "/settings",
+];
+
 const VISIT_COOKIE = "zik_src";
 const VISIT_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -72,5 +82,7 @@ export async function handle({ event, resolve }) {
   // Empêche les iframes (YouTube) d'accéder à l'API Media Session
   // → le titre de la chanson ne peut plus apparaître dans les contrôles système iOS/Android
   response.headers.set("Permissions-Policy", "mediasession=(self)");
+  if (PRIVATE_PATHS.some((p) => path === p || path.startsWith(p + "/")))
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }

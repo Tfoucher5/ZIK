@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount, getContext } from 'svelte';
   import Toast from '$lib/components/Toast.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
@@ -322,12 +323,12 @@
   <meta property="og:description" content="Rejoins une room de blind test en ligne ou crée la tienne. Mode Classique ELO ou QCM casual. Playlists Spotify & Deezer. Gratuit, sans inscription." />
   <meta property="og:url" content="https://www.zik-music.fr/rooms" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Rooms de Blind Test Multijoueur — ZIK" />
   <meta name="twitter:description" content="Rejoins ou crée une room de blind test en ligne. Mode Classique ELO ou QCM. Gratuit, sans inscription." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.2" />
-  <script type="application/ld+json">{@html roomsJsonLd}</script>
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
+  <JsonLd json={roomsJsonLd} />
 </svelte:head>
 
 <div class="rooms-page">
