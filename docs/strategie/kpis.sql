@@ -85,3 +85,12 @@ select
 from games
 where source = 'salon'
   and started_at > now() - interval '7 days';
+
+-- 8. Inscriptions par provenance (salon-invite, salon-setup, room-guest ; vide = directe)
+select
+  coalesce(raw_user_meta_data->>'signup_ref', 'directe') as provenance,
+  count(*) as inscriptions
+from auth.users
+where created_at > now() - interval '7 days'
+group by 1
+order by 2 desc;

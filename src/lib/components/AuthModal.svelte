@@ -1,4 +1,5 @@
 <script>
+  import { signupRef } from '$lib/signupRef.js';
   /**
    * @type {{
    *   sb: any,
@@ -98,7 +99,7 @@
     if (exists) { regError = 'Ce pseudo est deja pris.'; return; }
 
     regLoading = true;
-    const { error } = await sb.auth.signUp({ email: regEmail, password: regPassword, options: { data: { username: regUsername } } });
+    const { error } = await sb.auth.signUp({ email: regEmail, password: regPassword, options: { data: { username: regUsername, signup_ref: signupRef() ?? undefined } } });
     regLoading = false;
     if (error) regError = error.message;
     else view = 'confirm';

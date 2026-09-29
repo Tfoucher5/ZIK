@@ -7,6 +7,7 @@
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
+  import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -81,13 +82,18 @@
     }
 
     authReady = true;
-    // ?auth=register : lien « Créer un compte » de fin de partie invité
-    const wanted = new URLSearchParams(window.location.search).get('auth');
-    if (!currentUser && (wanted === 'register' || wanted === 'login')) openAuthModal(wanted);
+    // ?auth=register&ref=… : lien « Créer un compte » de fin de partie invité
+    const params = new URLSearchParams(window.location.search);
+    const wanted = params.get('auth');
+    if (!currentUser && (wanted === 'register' || wanted === 'login')) {
+      if (params.get('ref')) rememberSignupRef(params.get('ref'));
+      openAuthModal(wanted);
+    }
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await applyUser(session.user);
         authOpen = false;
+        setTimeout(() => tagNewUser(sb, session.user));
       } else if (event === 'SIGNED_OUT') {
         clearCachedProfile(currentUser?.id);
         currentUser = null;
