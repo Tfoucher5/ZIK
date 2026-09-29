@@ -1,7 +1,6 @@
 import { supabase, getAdminClient } from "../config.js";
 import { playlistCache, customRooms, dbRooms } from "../state.js";
 import {
-  fetchDeezerPlaylist,
   fetchDeezerTrackPreview,
   iTunesPreviewSearch,
   parseExpFromUrl,

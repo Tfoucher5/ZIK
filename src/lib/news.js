@@ -3,6 +3,19 @@
 
 export const NEWS = [
   {
+    date: "2026-09-29",
+    version: "3.9.0",
+    tag: "Nouveauté",
+    title: "Le son revient, et le Mode Salon s'ouvre à tous",
+    items: [
+      "Fini les manches muettes : les extraits de secours étaient souvent périmés au moment de jouer, surtout sur la première manche. Ils sont maintenant préparés juste avant chaque manche et renouvelés s'ils expirent en cours de lecture.",
+      "Plus besoin de compte pour organiser une soirée en Mode Salon : choisis une playlist publique ou officielle et lance. Avec un compte, tu gardes l'accès à tes propres playlists.",
+      "Un invité qui arrive en retard peut rejoindre un salon déjà lancé : il entre dans la manche en cours avec 0 point.",
+      "Nouvelles pages Blind test par thème (années 80, rap français, Disney, anniversaire, mariage…) avec un bouton pour lancer directement la playlist en soirée.",
+      "Seul dans une room ? Un bouton copie le lien pour inviter tes amis, un autre t'emmène vers le Mode Salon.",
+    ],
+  },
+  {
     date: "2026-09-09",
     version: "3.8.2",
     tag: "Correctif",
