@@ -74,6 +74,7 @@
         method: 'POST',
         headers,
         body: JSON.stringify({
+          origin: new URLSearchParams(window.location.search).get('ref'),
           playlistIds: selectedIds,
           settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration },
         }),

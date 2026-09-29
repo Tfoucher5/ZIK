@@ -58,7 +58,7 @@
   </div>
   <div class="salon-host-cta">
     <p>Ça t'a plu ? Organise ta propre soirée, avec <b>tes</b> playlists.</p>
-    <a href="/salon" class="btn-salon-join">Créer mon salon →</a>
+    <a href="/salon?ref=invite" class="btn-salon-join">Créer mon salon →</a>
   </div>
   <button class="salon-join-link" onclick={onLeave}>
     Rejoindre un autre salon

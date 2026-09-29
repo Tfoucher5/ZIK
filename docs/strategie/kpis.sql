@@ -2,16 +2,22 @@
 -- Chaque requête porte sur les 7 derniers jours sauf mention contraire.
 
 -- 1. Étoile polaire : parties terminées à au moins 2 joueurs
-select count(*) as parties_multi
-from (
-  select g.id
-  from games g
-  join game_players gp on gp.game_id = g.id
-  where g.ended_at is not null
-    and g.started_at > now() - interval '7 days'
-  group by g.id
-  having count(gp.id) >= 2
-) x;
+-- (rooms en ligne via game_players, salons via player_count)
+select
+  (select count(*) from (
+    select g.id
+    from games g
+    join game_players gp on gp.game_id = g.id
+    where g.ended_at is not null
+      and g.started_at > now() - interval '7 days'
+    group by g.id
+    having count(gp.id) >= 2
+  ) x) as rooms_multi,
+  (select count(*) from games
+   where source = 'salon'
+     and ended_at is not null
+     and player_count >= 2
+     and started_at > now() - interval '7 days') as salons_multi;
 
 -- 2. Activité globale
 select
@@ -69,3 +75,13 @@ from reports
 where created_at > now() - interval '7 days'
 group by 1, 2
 order by 3 desc;
+
+-- 7. Mode salon : parties, joueurs moyens, part des hôtes venus d'une invitation
+select
+  count(*) as salons_lances,
+  count(*) filter (where ended_at is not null) as salons_finis,
+  round(avg(player_count) filter (where ended_at is not null), 1) as joueurs_moyens,
+  count(*) filter (where origin = 'invite') as depuis_invitation
+from games
+where source = 'salon'
+  and started_at > now() - interval '7 days';

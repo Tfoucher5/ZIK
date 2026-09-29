@@ -36,6 +36,7 @@ async function recordSalonGameStart(salon) {
         rounds: salon.settings.maxRounds,
         mode: salon.settings.answerMode === "multiple" ? "qcm" : "classic",
         source: "salon",
+        origin: salon.origin,
       })
       .select("id")
       .single();
@@ -586,6 +587,7 @@ export async function createSalonRoom({
   settings,
   token,
   hostUserId = null,
+  origin = null,
 }) {
   const client = token ? userClient(token) : supabase;
   const tracks = await loadSalonTracks(playlistIds, client);
@@ -610,6 +612,7 @@ export async function createSalonRoom({
   salonRooms[code] = {
     code,
     hostUserId,
+    origin,
     hostSocketId: null,
     _hostDcTimer: null,
     _cleanupTimer: null,

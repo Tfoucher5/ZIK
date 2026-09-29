@@ -24,3 +24,7 @@ BEGIN
       ADD CONSTRAINT games_source_check CHECK (source IN ('web', 'discord', 'salon'));
   END IF;
 END $$;
+
+-- Provenance d'un salon : 'invite' quand l'hôte a cliqué sur « Créer mon
+-- salon » à la fin d'une partie où il était invité (boucle virale).
+ALTER TABLE public.games ADD COLUMN IF NOT EXISTS origin text;

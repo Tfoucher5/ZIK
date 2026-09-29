@@ -34,7 +34,7 @@ export async function POST({ request }) {
     return json({ error: "Corps invalide" }, { status: 400 });
   }
 
-  const { playlistIds, settings } = body;
+  const { playlistIds, settings, origin } = body;
   if (!Array.isArray(playlistIds) || playlistIds.length === 0)
     return json({ error: "Au moins une playlist requise" }, { status: 400 });
 
@@ -44,6 +44,8 @@ export async function POST({ request }) {
       settings: settings || {},
       token,
       hostUserId: user?.id ?? null,
+      // Hôte venu du bouton de fin de partie d'un invité : mesure la boucle virale
+      origin: origin === "invite" ? "invite" : null,
     });
     return json({ code });
   } catch (e) {
