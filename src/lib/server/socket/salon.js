@@ -746,67 +746,74 @@ export function registerSalon(io) {
         });
 
       // ── Reconnect path: player was already in the game ────────────────────
-      if (salon.game.phase !== "lobby") {
+      // Un retardataire entre dans la partie en cours avec 0 point, par le même
+      // chemin qu'une reconnexion. Pendant le podium (gameover), il passe par le
+      // join normal et attend la partie suivante.
+      const late =
+        !salon.players[username] &&
+        salon.game.phase !== "lobby" &&
+        salon.game.phase !== "gameover";
+      if (late) {
+        salon.players[username] = {
+          ...makePlayer(username, socket.id),
+          scoreBeforeRound: 0,
+        };
+      }
+      if (salon.game.phase !== "lobby" && salon.players[username]) {
         const existing = salon.players[username];
-        if (existing) {
-          // Cancel pending removal timer
-          clearTimeout(existing._dcTimer);
-          existing._dcTimer = null;
-          existing._disconnected = false;
-          existing.socketId = socket.id;
+        // Cancel pending removal timer
+        clearTimeout(existing._dcTimer);
+        existing._dcTimer = null;
+        existing._disconnected = false;
+        existing.socketId = socket.id;
 
-          socket.join(`salon:${code}`);
-          socket.join(`salon:players:${code}`);
-          socket.salonCode = code;
-          socket.salonRole = "player";
-          socket.salonUsername = username;
+        socket.join(`salon:${code}`);
+        socket.join(`salon:players:${code}`);
+        socket.salonCode = code;
+        socket.salonRole = "player";
+        socket.salonUsername = username;
 
-          // Build reconnect payload so client can restore its UI
-          const reconnectData = {
-            username,
-            reconnecting: true,
-            settings: {
-              answerMode: salon.settings.answerMode,
-              maxRounds: salon.settings.maxRounds,
-            },
-            phase: salon.game.phase,
-            round: salon.game.currentRound,
-            score: existing.score,
-            foundArtist: existing.foundArtist,
-            foundTitle: existing.foundTitle,
-            foundFeatCount: existing.foundFeats.filter(Boolean).length,
-            foundExtrasCount: existing.foundExtras.filter(Boolean).length,
-            allFound: existing._fullFoundCounted,
-            timerVal: salon.game.timerValue,
-            timerMax: salon.settings.roundDuration,
-            timerActive: salon.game.timerActive,
-          };
-          if (salon.game.phase === "round") {
-            reconnectData.extras = (
-              salon.game.currentTrack?.extraAnswers || []
-            ).map((e) => ({ label: e.label }));
-            if (salon.settings.answerMode === "multiple") {
-              reconnectData.choices = salon.game.choices;
-              reconnectData.featCount =
-                salon.game.currentTrack?.featArtists?.length || 0;
-            }
+        // Build reconnect payload so client can restore its UI
+        const reconnectData = {
+          username,
+          reconnecting: true,
+          settings: {
+            answerMode: salon.settings.answerMode,
+            maxRounds: salon.settings.maxRounds,
+          },
+          phase: salon.game.phase,
+          round: salon.game.currentRound,
+          score: existing.score,
+          foundArtist: existing.foundArtist,
+          foundTitle: existing.foundTitle,
+          foundFeatCount: existing.foundFeats.filter(Boolean).length,
+          foundExtrasCount: existing.foundExtras.filter(Boolean).length,
+          allFound: existing._fullFoundCounted,
+          timerVal: salon.game.timerValue,
+          timerMax: salon.settings.roundDuration,
+          timerActive: salon.game.timerActive,
+        };
+        if (salon.game.phase === "round") {
+          reconnectData.extras = (
+            salon.game.currentTrack?.extraAnswers || []
+          ).map((e) => ({ label: e.label }));
+          if (salon.settings.answerMode === "multiple") {
+            reconnectData.choices = salon.game.choices;
+            reconnectData.featCount =
+              salon.game.currentTrack?.featArtists?.length || 0;
           }
-
-          socket.emit("salon_joined", reconnectData);
-
-          // Notify host the player is back
-          if (salon.hostSocketId) {
-            io.to(salon.hostSocketId).emit("salon_player_joined", {
-              players: getPlayerList(salon),
-            });
-          }
-          scheduleCleanup(code);
-          return;
         }
-        // New player trying to join a game already in progress
-        return socket.emit("salon_error", {
-          message: "La partie a déjà commencé.",
-        });
+
+        socket.emit("salon_joined", reconnectData);
+
+        // Notify host the player is back
+        if (salon.hostSocketId) {
+          io.to(salon.hostSocketId).emit("salon_player_joined", {
+            players: getPlayerList(salon),
+          });
+        }
+        scheduleCleanup(code);
+        return;
       }
 
       if (salon.players[username]) {

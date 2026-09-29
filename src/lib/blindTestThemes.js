@@ -335,7 +335,7 @@ export const BLIND_TEST_THEMES = [
     tips: [
       "Préparez une playlist avec les chansons préférées de la personne fêtée : effet garanti.",
       "Enchaînez plusieurs courtes parties plutôt qu'une longue : le podium relance l'ambiance.",
-      "Le QR code reste affiché en haut de l'écran : les retardataires rejoignent dès la partie suivante.",
+      "Le QR code reste affiché en haut de l'écran : les retardataires rejoignent même en pleine partie.",
     ],
     faq: [
       {
