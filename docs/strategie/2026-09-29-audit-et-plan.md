@@ -205,24 +205,25 @@ Toutes ces valeurs se calculent déjà depuis Supabase (`games`, `game_players`,
 - [x] Page `/salon` : lien vers le guide `/pro`.
 - [x] Fin de partie sur le téléphone d'un invité : « Ça t'a plu ? Organise ta propre soirée » → `/salon`.
 
-### Sprint 2 — Invité → hôte sans friction
+### Sprint 2 — Invité → hôte sans friction ✅
 
-- [ ] **Enregistrer les parties salon** (`games.source = 'salon'` + nombre de joueurs, sans toucher aux classements). Sans ça, impossible de mesurer la stratégie. Demande une petite migration.
-- [ ] **Créer un salon sans compte**, sur les playlists publiques. Aujourd'hui un compte est obligatoire, ce qui casse la boucle virale.
-- [ ] Mesurer la conversion invité → hôte (événement au clic sur « Créer mon salon »).
-- [ ] QR code de l'écran hôte visible en permanence en bas de l'écran pendant la partie (les retardataires rejoignent sans interrompre).
+- [x] Parties salon enregistrées (`games.source = 'salon'`, `player_count`, `origin`), hors classements. Migration `20260929_games_salon_stats.sql`.
+- [x] Créer un salon sans compte, sur les playlists publiques et officielles (plafond de 50 salons invités simultanés).
+- [x] Conversion invité → hôte mesurée (`?ref=invite` → `games.origin = 'invite'`, requête 7 de `kpis.sql`).
+- [x] QR code : déjà affiché en permanence dans l'en-tête de l'écran hôte.
+- [x] Les retardataires rejoignent un salon déjà lancé (0 point, manche en cours) ou pendant le podium.
 
-### Sprint 3 — SEO « blind test + thème »
+### Sprint 3 — SEO « blind test + thème » ✅
 
-- [ ] Pages `/blind-test/<thème>` (années 80, rap FR, Disney, mariage, anniversaire, Noël…) : texte utile, FAQ, bouton « Lancer en salon » sur une playlist du thème, balises Schema.org.
-- [ ] Ajout au sitemap, maillage depuis l'accueil, `/salon` et `/pro`.
-- [ ] Demander à être listé dans les comparatifs (Mukiz, AlternativeTo, blogs).
+- [x] `/blind-test` + 12 pages thème (années 70/80/2000, rap FR/US, rock, chanson française, techno, films, Disney, anniversaire, mariage) : texte propre, artistes réels, FAQ + fil d'Ariane Schema.org, « Lancer en soirée » avec playlist présélectionnée, room officielle.
+- [x] Sitemap, colonne dédiée dans le footer, lien depuis `/pro`.
+- [ ] Demander à être listé dans les comparatifs (Mukiz, AlternativeTo, blogs) — côté Théo.
 
-### Sprint 4 — Rétention
+### Sprint 4 — Rétention ✅
 
-- [ ] Partage Zikle façon Wordle (grille d'emojis).
-- [ ] Première partie sans inscription, inscription proposée après la partie.
-- [ ] Plus de room publique vide : proposer solo ou salon quand personne n'est en ligne.
+- [x] Partage Zikle façon Wordle : déjà présent.
+- [x] Jeu sans inscription déjà possible ; bouton « Créer un compte gratuit » en fin de partie invité (`/?auth=register`).
+- [x] Joueur seul dans une room : copier le lien de la room ou passer au Mode Salon.
 
 ### Plus tard
 
