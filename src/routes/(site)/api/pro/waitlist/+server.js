@@ -1,5 +1,10 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
+import { sendMail, ADMIN_EMAIL } from "$lib/server/mail/send.js";
+import {
+  waitlistWelcome,
+  waitlistAdminAlert,
+} from "$lib/server/mail/proWaitlist.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VENUE_TYPES = ["bar", "camping", "association", "entreprise", "autre"];
@@ -37,21 +42,41 @@ export async function POST({ request, getClientAddress }) {
   if (!EMAIL_RE.test(email))
     return json({ error: "Adresse e-mail invalide." }, { status: 400 });
 
-  const { error } = await getAdminClient()
-    .from("pro_waitlist")
-    .insert({
-      email,
-      venue:
-        String(body.venue ?? "")
-          .trim()
-          .slice(0, 120) || null,
-      venue_type: VENUE_TYPES.includes(body.venueType) ? body.venueType : null,
-      plan: PLAN_IDS.includes(body.plan) ? body.plan : null,
-    });
+  const row = {
+    email,
+    venue:
+      String(body.venue ?? "")
+        .trim()
+        .slice(0, 120) || null,
+    venue_type: VENUE_TYPES.includes(body.venueType) ? body.venueType : null,
+    plan: PLAN_IDS.includes(body.plan) ? body.plan : null,
+  };
+  const sb = getAdminClient();
+  const { error } = await sb.from("pro_waitlist").insert(row);
   if (error)
     return json(
       { error: "Inscription impossible, réessaie." },
       { status: 500 },
     );
-  return json({ ok: true });
+
+  // Confirmation au lieu et alerte à Théo. Un mail raté ne fait pas échouer
+  // l'inscription, déjà enregistrée.
+  const { count } = await sb
+    .from("pro_waitlist")
+    .select("*", { count: "exact", head: true });
+  const results = await Promise.allSettled([
+    sendMail({ to: email, ...waitlistWelcome(row) }),
+    sendMail({
+      to: ADMIN_EMAIL,
+      ...waitlistAdminAlert({
+        email,
+        venue: row.venue,
+        venueType: row.venue_type,
+        plan: row.plan,
+        total: count ?? 1,
+      }),
+    }),
+  ]);
+  const mailed = results[0].status === "fulfilled" && results[0].value;
+  return json({ ok: true, mailed });
 }

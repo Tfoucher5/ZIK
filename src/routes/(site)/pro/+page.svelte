@@ -12,6 +12,7 @@
   let wl = $state({ email: "", venue: "", venueType: "bar", plan: "monthly" });
   let wlState = $state("idle");
   let wlError = $state("");
+  let wlMailed = $state(false);
 
   async function joinWaitlist(e) {
     e.preventDefault();
@@ -25,6 +26,7 @@
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Envoi impossible");
+      wlMailed = d.mailed;
       wlState = "done";
     } catch (err) {
       wlError = err.message;
@@ -165,7 +167,7 @@
   />
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.1" />
   <JsonLd json={jsonLd} />
   <JsonLd json={faqJsonLd} />
 </svelte:head>
@@ -284,7 +286,10 @@
 
       <div class="pro-waitlist">
         {#if wlState === "done"}
-          <p><b>C'est noté.</b> Vous serez prévenu en premier à l'ouverture de ZIK Pro.</p>
+          <p>
+            <b>C'est noté.</b> Vous serez prévenu en premier à l'ouverture de ZIK Pro.
+            {#if wlMailed}Un e-mail de confirmation vient de partir à {wl.email} (pensez à regarder dans les indésirables).{/if}
+          </p>
         {:else}
           <h3>Le paiement en ligne ouvre bientôt</h3>
           <p>Laissez vos coordonnées : vous serez prévenu en premier, et les premiers lieux inscrits pourront tester ZIK Pro en avant-première.</p>
