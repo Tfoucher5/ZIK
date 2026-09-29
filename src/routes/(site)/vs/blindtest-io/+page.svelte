@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -16,8 +17,6 @@
     }
   });
 
-  // eslint-disable-next-line no-unused-vars
-  const ld = jsonLd;
 </script>
 
 <svelte:head>
@@ -30,7 +29,7 @@
   <meta property="og:url" content="https://www.zik-music.fr/vs/blindtest-io" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
-  <script type="application/ld+json">{@html ld}</script>
+  <JsonLd json={jsonLd} />
 </svelte:head>
 
 <main class="vs-page">

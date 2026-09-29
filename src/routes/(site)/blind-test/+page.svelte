@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { BLIND_TEST_THEMES } from '$lib/blindTestThemes.js';
 
   const SITE = 'https://www.zik-music.fr';
@@ -18,8 +19,8 @@
     })),
   });
 
-  const genres = BLIND_TEST_THEMES.filter((t) => !['anniversaire', 'mariage'].includes(t.slug));
-  const occasions = BLIND_TEST_THEMES.filter((t) => ['anniversaire', 'mariage'].includes(t.slug));
+  const genres = BLIND_TEST_THEMES.filter((t) => !t.occasion);
+  const occasions = BLIND_TEST_THEMES.filter((t) => t.occasion);
 </script>
 
 <svelte:head>
@@ -30,7 +31,7 @@
   <meta property="og:description" content={description} />
   <meta property="og:url" content="{SITE}/blind-test" />
   <meta property="og:type" content="website" />
-  <script type="application/ld+json">{@html jsonLd}</script>
+  <JsonLd json={jsonLd} />
 </svelte:head>
 
 <main class="bt-index">
@@ -70,16 +71,12 @@
           </a>
         </li>
       {/each}
-      <li>
-        <a href="/pro">
-          <span class="bt-num">{String(occasions.length + 1).padStart(2, '0')}</span>
-          <span class="bt-name">Bar, asso, entreprise</span>
-          <span class="bt-arrow" aria-hidden="true">→</span>
-        </a>
-      </li>
     </ol>
   </section>
 
+  <p class="bt-own">
+    Vous animez un lieu ou un événement ? <a href="/pro">ZIK Pro</a> : joueurs illimités, jusqu'à 8 équipes et une régie complète.
+  </p>
   <p class="bt-own">
     Votre thème n'est pas là ? <a href="/salon">Ouvrez un salon</a> avec vos propres playlists Spotify ou Deezer.
   </p>

@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import ZikleGame from "$lib/components/ZikleGame.svelte";
 
   let { data } = $props();
@@ -60,7 +61,7 @@
   <meta name="twitter:title" content="Zikle — Devine la chanson du jour" />
   <meta name="twitter:description" content="Un extrait qui s'allonge à chaque essai raté. 6 essais pour deviner le titre du jour. Gratuit, sans compte." />
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
-  <script type="application/ld+json">{@html jsonLd}</script>
+  <JsonLd json={jsonLd} />
 </svelte:head>
 
 <main class="zikle-page">

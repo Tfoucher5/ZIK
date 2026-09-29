@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount } from 'svelte';
   import { modeRules } from '$lib/rooms/room-content.js';
 
@@ -78,7 +79,7 @@
   <meta property="og:url" content={canonicalUrl}>
   <meta property="og:type" content="website">
 
-  <script type="application/ld+json">{@html jsonLd}</script>
+  <JsonLd json={jsonLd} />
 
 </svelte:head>
 

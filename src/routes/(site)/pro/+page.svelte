@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { PLANS, PRO_COMING, FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/proPlans.js";
 
   const COMPARE = [
@@ -147,7 +148,7 @@
 </script>
 
 <svelte:head>
-  <title>Organiser un blind test dans votre bar ou votre association - ZIK</title>
+  <title>Animation blind test pour bar, camping et entreprise - ZIK Pro</title>
   <meta
     name="description"
     content="Animez une soirée blind test sans animateur. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit jusqu'à 12 joueurs, ZIK Pro pour les bars, campings et événements."
@@ -165,8 +166,8 @@
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
-  <script type="application/ld+json">{@html jsonLd}</script>
-  <script type="application/ld+json">{@html faqJsonLd}</script>
+  <JsonLd json={jsonLd} />
+  <JsonLd json={faqJsonLd} />
 </svelte:head>
 
 <main class="pro-page">

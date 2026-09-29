@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { NEWS } from '$lib/news.js';
 
   const TAG_COLORS = {
@@ -32,7 +33,7 @@
   <meta property="og:title" content="Nouveautés — Blind Test ZIK" />
   <meta property="og:description" content="Les dernières mises à jour du blind test multijoueur ZIK." />
   <meta property="og:url" content="https://www.zik-music.fr/nouveautes" />
-  <script type="application/ld+json">{@html jsonLd}</script>
+  <JsonLd json={jsonLd} />
 </svelte:head>
 
 <main class="news-root">

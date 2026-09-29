@@ -201,6 +201,18 @@
     </div>
 
     <div class="footer-col">
+      <span class="footer-col-head">Blind test en soirée</span>
+      <div class="footer-col-links">
+        <a href="/salon">Lancer une soirée</a>
+        <a href="/blind-test/soiree">Soirée entre amis</a>
+        <a href="/blind-test/bar">Bar et restaurant</a>
+        <a href="/blind-test/camping">Camping</a>
+        <a href="/blind-test/entreprise">Team building</a>
+        <a href="/pro">ZIK Pro</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
       <span class="footer-col-head">Blind test par thème</span>
       <div class="footer-col-links">
         <a href="/blind-test/annees-80">Années 80</a>

@@ -296,11 +296,11 @@
 </script>
 
 <svelte:head>
-  <title>ZIK Salon - Rejoindre</title>
+  <title>Rejoindre un blind test en soirée - ZIK Salon</title>
   <!-- Autoriser l’indexation -->
   <meta name="robots" content="index, follow">
   <!-- Description SEO -->
-  <meta name="description"content="Rejoindre un salon avec un code.">
+  <meta name="description" content="Entre le code affiché sur la TV et ton pseudo pour jouer au blind test depuis ton téléphone. Sans appli, sans compte.">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </svelte:head>
 

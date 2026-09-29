@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount } from 'svelte';
 
   let activeSection = $state('decouverte');
@@ -82,8 +83,8 @@
   <meta name="twitter:title" content="Guide complet — Blind Test ZIK | Règles, Points, Mode Salon" />
   <meta name="twitter:description" content="Comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ. Guide complet du blind test ZIK." />
 
-  <script type="application/ld+json">{@html jsonLdPage}</script>
-  <script type="application/ld+json">{@html jsonLdFaq}</script>
+  <JsonLd json={jsonLdPage} />
+  <JsonLd json={jsonLdFaq} />
 </svelte:head>
 
 <div class="doc-root">

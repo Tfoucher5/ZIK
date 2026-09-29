@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount } from 'svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import AuthModal from '$lib/components/AuthModal.svelte';
@@ -9,21 +10,61 @@
   import ProUpsell from '$lib/components/salon/ProUpsell.svelte';
   import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/proPlans.js';
 
+  const SITE = 'https://www.zik-music.fr';
+
+  // Affichée sur la page ET envoyée à Google : les deux doivent rester identiques
+  const SALON_FAQ = [
+    { q: 'Comment fonctionne le Mode Salon ?', a: "L'hôte ouvre le salon sur l'ordinateur branché à la TV. Les joueurs scannent le QR code affiché à l'écran avec leur téléphone et choisissent un pseudo. La TV diffuse les extraits, le chrono et le classement, les téléphones servent de buzzers." },
+    { q: 'Faut-il installer une application ?', a: "Non, ni pour l'hôte ni pour les joueurs : tout se passe dans le navigateur. Les joueurs n'ont pas besoin de créer de compte." },
+    { q: 'Combien de joueurs peuvent participer ?', a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes.` },
+    { q: 'Peut-on jouer en équipes ?', a: "Oui. L'hôte choisit le nombre d'équipes, chaque joueur rejoint la sienne depuis son téléphone. Le score d'une équipe est la moyenne de ses joueurs, pour que les petites équipes gardent leurs chances." },
+    { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Spotify ou Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
+    { q: 'Combien ça coûte ?', a: `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € HT la soirée, 19 € HT par mois ou 190 € HT par an.` },
+  ];
+
+  const OCCASIONS = [
+    ['soiree', 'Soirée entre amis'],
+    ['bar', 'Bar et restaurant'],
+    ['camping', 'Camping'],
+    ['entreprise', 'Team building'],
+    ['anniversaire', 'Anniversaire'],
+    ['mariage', 'Mariage'],
+  ];
+
   const salonJsonLd = JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Mode Salon - Blind Test en Soirée | ZIK",
-    "description": "Organisez un blind test en soirée avec le Mode Salon ZIK. Un hôte diffuse la musique sur grand écran, les joueurs répondent depuis leur smartphone.",
-    "url": "https://www.zik-music.fr/salon",
-    "inLanguage": "fr-FR",
-    "isPartOf": { "@type": "WebSite", "url": "https://www.zik-music.fr/", "name": "ZIK" },
-    "breadcrumb": {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://www.zik-music.fr/" },
-        { "@type": "ListItem", "position": 2, "name": "Mode Salon", "item": "https://www.zik-music.fr/salon" }
-      ]
-    }
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebApplication',
+        name: 'ZIK Mode Salon',
+        url: `${SITE}/salon`,
+        description: "Blind test de soirée : la TV diffuse la musique et le classement, les joueurs répondent depuis leur téléphone, en solo ou en équipes.",
+        applicationCategory: 'GameApplication',
+        operatingSystem: 'Web',
+        inLanguage: 'fr-FR',
+        offers: [
+          { '@type': 'Offer', name: 'Gratuit', price: '0', priceCurrency: 'EUR' },
+          { '@type': 'Offer', name: 'ZIK Pro Soirée', price: '7.90', priceCurrency: 'EUR' },
+          { '@type': 'Offer', name: 'ZIK Pro Mensuel', price: '19.00', priceCurrency: 'EUR' },
+          { '@type': 'Offer', name: 'ZIK Pro Annuel', price: '190.00', priceCurrency: 'EUR' },
+        ],
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE}/` },
+          { '@type': 'ListItem', position: 2, name: 'Blind test en soirée', item: `${SITE}/salon` },
+        ],
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: SALON_FAQ.map(({ q, a }) => ({
+          '@type': 'Question',
+          name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+      },
+    ],
   });
 
   const ROUNDS    = [5, 10, 15, 20];
@@ -131,23 +172,23 @@
 </script>
 
 <svelte:head>
-  <title>Mode Salon - Blind Test en Soirée sur TV &amp; Smartphones | ZIK</title>
-  <meta name="description" content="Organisez un blind test en soirée avec le Mode Salon ZIK. Un hôte diffuse la musique sur grand écran, les joueurs répondent depuis leur smartphone. Style Kahoot, avec vos musiques. Gratuit." />
+  <title>Blind test en soirée sur la TV, les téléphones en buzzers - gratuit | ZIK</title>
+  <meta name="description" content="Organisez un blind test en soirée en 2 minutes : la TV diffuse la musique et le classement, chacun répond sur son téléphone, en solo ou en équipes. Sans appli, gratuit jusqu'à 12 joueurs." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/salon" />
 
-  <meta property="og:title" content="Mode Salon - Blind Test en Soirée | ZIK" />
-  <meta property="og:description" content="Blind test en soirée : grand écran sur la TV, smartphones comme manettes. Style Kahoot avec vos playlists Spotify/Deezer. Gratuit, sans inscription." />
+  <meta property="og:title" content="Blind test en soirée sur la TV | ZIK" />
+  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Spotify ou Deezer. Sans appli, gratuit jusqu'à 12 joueurs." />
   <meta property="og:url" content="https://www.zik-music.fr/salon" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Mode Salon - Blind Test en Soirée | ZIK" />
-  <meta name="twitter:description" content="Organisez un blind test sur TV + smartphones. Style Kahoot, avec vos musiques. Gratuit." />
+  <meta name="twitter:title" content="Blind test en soirée sur la TV | ZIK" />
+  <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Sans appli, gratuit jusqu'à 12 joueurs." />
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
 
-  <script type="application/ld+json">{@html salonJsonLd}</script>
+  <JsonLd json={salonJsonLd} />
 </svelte:head>
 
 {#snippet segmented(options, value, set, unit = '')}
@@ -247,6 +288,29 @@
       {/if}
     </p>
   {/if}
+
+  <section class="st-seo" aria-labelledby="st-seo-title">
+    <h2 id="st-seo-title">Le blind test de soirée, sans animateur</h2>
+    <p>
+      Le Mode Salon transforme n'importe quelle TV en plateau de jeu : l'écran diffuse les extraits,
+      le chrono et le classement, chaque invité répond sur son téléphone après avoir scanné un QR code.
+      ZIK vérifie les réponses, compte les points et affiche le podium. Vous n'avez qu'à choisir la musique.
+    </p>
+    <h3>Pour chaque occasion</h3>
+    <ul class="st-occasions">
+      {#each OCCASIONS as [slug, label] (slug)}
+        <li><a href="/blind-test/{slug}">Blind test {label.toLowerCase()}</a></li>
+      {/each}
+      <li><a href="/blind-test">Tous les thèmes</a></li>
+    </ul>
+    <h3>Questions fréquentes</h3>
+    <dl class="st-faq">
+      {#each SALON_FAQ as { q, a } (q)}
+        <dt>{q}</dt>
+        <dd>{a}</dd>
+      {/each}
+    </dl>
+  </section>
 </div>
 
 {#if authReady}
@@ -403,6 +467,44 @@
   }
   .st-seg-wide small { font-weight: 400; font-size: 0.74rem; opacity: 0.65; }
 
+  .st-seo {
+    margin-top: 56px;
+    padding-top: 36px;
+    border-top: 2px solid var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 760px;
+  }
+  .st-seo h2 {
+    font-family: var(--s-cond);
+    font-weight: 900;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+  }
+  .st-seo h3 {
+    margin-top: 14px;
+    font-family: var(--s-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+  .st-seo p, .st-faq dd { font-size: 0.92rem; color: var(--mid); line-height: 1.65; }
+  .st-occasions { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+  .st-occasions a {
+    display: inline-block;
+    padding: 7px 12px;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    font-size: 0.88rem;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .st-occasions a:hover { border-color: var(--text); }
+  .st-faq dt { margin-top: 12px; font-weight: 700; }
+  .st-faq dd { margin-top: 4px; }
   .st-pro-note { padding-top: 28px; font-size: 0.85rem; color: var(--mid); }
   .st-pro-note a, .st-pro-note b { color: var(--text); text-underline-offset: 3px; }
   .st-seg button.st-pro:not(.on) { color: var(--dim); }

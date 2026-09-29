@@ -338,6 +338,7 @@ export const BLIND_TEST_THEMES = [
     ],
     playlists: [PL.annees2000, PL.annees8090],
     room: null,
+    occasion: true,
   },
   {
     slug: "mariage",
@@ -351,14 +352,14 @@ export const BLIND_TEST_THEMES = [
       "Préparez une playlist aux couleurs des mariés : les chansons de leur rencontre, leurs tubes de soirée, leurs années lycée. Importez-la depuis Spotify ou Deezer et lancez-la en salon le jour J.",
     ],
     tips: [
-      "Jouez par table : un téléphone par table, un pseudo par table.",
+      "Jouez en équipes : une équipe par table, le classement des tables s'affiche sur l'écran.",
       "Glissez dans la playlist les chansons qui ont marqué l'histoire des mariés.",
       "Testez le son et le QR code la veille, dans la salle si possible.",
     ],
     faq: [
       {
         q: "Combien d'invités peuvent jouer en même temps ?",
-        a: "Autant que de téléphones connectés au salon. Pour un grand mariage, faire jouer par table reste le plus lisible.",
+        a: "Jusqu'à 12 téléphones en version gratuite, sans limite avec ZIK Pro. Pour un grand mariage, le jeu en équipes (une équipe par table) reste le plus lisible.",
       },
       {
         q: "Faut-il une connexion internet dans la salle ?",
@@ -367,6 +368,135 @@ export const BLIND_TEST_THEMES = [
     ],
     playlists: [PL.annees8090, PL.chanson],
     room: null,
+    occasion: true,
+  },
+  {
+    slug: "soiree",
+    name: "Soirée entre amis",
+    title: "Blind test soirée entre amis sur la TV - gratuit | ZIK",
+    h1: "Blind test pour une soirée entre amis",
+    description:
+      "Organisez un blind test en soirée : la musique et le classement sur la TV, chacun répond sur son téléphone. Gratuit, sans application, prêt en deux minutes.",
+    intro: [
+      "Le blind test est le jeu de soirée qui met tout le monde d'accord : pas de règles à expliquer, pas de matériel, et même ceux qui disent « je n'y connais rien » finissent par hurler le nom d'un chanteur. Avec le Mode Salon de ZIK, la TV du salon devient l'écran de jeu : elle diffuse les extraits, le chrono et le classement, et chaque ami répond depuis son téléphone.",
+      "Pas besoin de désigner un animateur qui ne joue pas : ZIK s'occupe des extraits, vérifie les réponses et compte les points. Vous choisissez une ambiance (années 2000, rap français, chanson française…) ou vous importez la playlist de la soirée depuis Spotify ou Deezer.",
+    ],
+    tips: [
+      "Mélangez deux playlists (par exemple années 2000 et rap français) pour que chacun ait ses chances.",
+      "Faites deux équipes pour les soirées nombreuses : le classement devient un match.",
+      "Le mode 4 choix est parfait après quelques verres : on clique, on ne tape plus.",
+    ],
+    faq: [
+      {
+        q: "Combien de joueurs peuvent participer ?",
+        a: "Jusqu'à 12 joueurs gratuitement, chacun sur son téléphone. Au-delà, ZIK Pro accueille autant de joueurs que vous voulez.",
+      },
+      {
+        q: "Faut-il installer une application ?",
+        a: "Non. L'écran principal ouvre zik-music.fr dans un navigateur, les joueurs scannent un QR code avec leur téléphone.",
+      },
+    ],
+    playlists: [PL.annees2000, PL.rapFr],
+    room: null,
+    occasion: true,
+  },
+  {
+    slug: "bar",
+    name: "Bar et restaurant",
+    title: "Soirée blind test dans un bar - animation clé en main | ZIK",
+    h1: "Soirée blind test pour votre bar",
+    description:
+      "Animez votre bar avec une soirée blind test sans animateur : la partie tourne sur la TV, les clients jouent en équipes sur leur téléphone. Essai gratuit, ZIK Pro dès 7,90 € la soirée.",
+    intro: [
+      "Le blind test est l'une des animations qui remplit le mieux un bar en semaine : les clients viennent en groupe, restent jusqu'au podium et reviennent la semaine suivante pour prendre leur revanche. Avec ZIK, pas besoin d'animateur ni de matériel : la TV du bar affiche le jeu, et chaque table joue depuis ses téléphones.",
+      "Le Mode Salon gère tout : les extraits, le chrono, la vérification des réponses et le classement en direct. Depuis la régie, sur l'ordinateur ou la tablette du comptoir, vous mettez en pause, passez un titre, corrigez un point ou excluez un joueur qui dérange, sans que la salle ne voie rien.",
+    ],
+    tips: [
+      "Faites jouer par table : chaque table est une équipe, le classement des équipes lance la compétition.",
+      "Annoncez un thème chaque semaine (années 80, rap français, génériques de séries) pour créer un rendez-vous.",
+      "Offrez une tournée à l'équipe gagnante : la photo du podium sur la TV fait le reste sur les réseaux.",
+    ],
+    faq: [
+      {
+        q: "Combien coûte une soirée blind test avec ZIK ?",
+        a: "La version gratuite accueille 12 joueurs et 2 équipes, idéale pour tester. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète : 7,90 € HT la soirée, 19 € HT par mois ou 190 € HT par an.",
+      },
+      {
+        q: "De quel matériel a-t-on besoin ?",
+        a: "Une TV ou un vidéoprojecteur relié à un ordinateur, une sono, et une connexion internet. Les clients utilisent leur propre téléphone, sans application.",
+      },
+      {
+        q: "Peut-on utiliser nos propres playlists ?",
+        a: "Oui : importez n'importe quelle playlist Spotify ou Deezer, ou partez des playlists officielles ZIK (années 80, 2000, rap, rock, chanson française…).",
+      },
+    ],
+    playlists: [PL.annees8090, PL.annees2000],
+    room: null,
+    occasion: true,
+    pro: true,
+  },
+  {
+    slug: "camping",
+    name: "Camping et village vacances",
+    title: "Animation blind test camping - soirée musicale clé en main | ZIK",
+    h1: "Blind test pour un camping ou un village vacances",
+    description:
+      "Une soirée blind test au camping sans animateur : le jeu sur l'écran, les vacanciers jouent en équipes sur leur téléphone. De 7 à 77 ans, sans application.",
+    intro: [
+      "Au camping, le blind test est l'animation qui rassemble le plus de monde : familles, ados et grands-parents jouent ensemble, et les équipes se forment par mobil-home ou par emplacement. Avec ZIK, un vidéoprojecteur ou une TV dans la salle d'animation suffit : l'écran diffuse la musique et le classement, les vacanciers répondent depuis leur téléphone.",
+      "L'animateur garde la main depuis la régie : pause pour annoncer les résultats, passage d'un titre, points corrigés quand un enfant répond à voix haute. Le mode 4 choix permet aux plus jeunes de jouer sans taper au clavier.",
+    ],
+    tips: [
+      "Formez des équipes par famille ou par allée : jusqu'à 8 équipes avec ZIK Pro, chacune avec son nom.",
+      "Pour un public familial, mélangez Disney, années 80 et années 2000 : chaque génération a ses manches.",
+      "Programmez le blind test le même soir chaque semaine : les vacanciers s'en parlent d'une semaine sur l'autre.",
+    ],
+    faq: [
+      {
+        q: "Les vacanciers doivent-ils créer un compte ?",
+        a: "Non. Ils scannent le QR code affiché à l'écran et choisissent un pseudo. Aucune donnée personnelle n'est demandée.",
+      },
+      {
+        q: "Combien de participants au maximum ?",
+        a: "12 joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes, pour 7,90 € HT la soirée ou 19 € HT par mois pendant la saison.",
+      },
+    ],
+    playlists: [PL.disney, PL.annees8090, PL.annees2000],
+    room: null,
+    occasion: true,
+    pro: true,
+  },
+  {
+    slug: "entreprise",
+    name: "Entreprise et team building",
+    title:
+      "Blind test team building pour entreprise - en salle ou à distance | ZIK",
+    h1: "Blind test pour une entreprise ou un team building",
+    description:
+      "Un team building musical en salle ou en visio : blind test en équipes sur grand écran, chacun joue sur son téléphone. Sans installation, avec vos propres playlists.",
+    intro: [
+      "Le blind test est un team building qui fonctionne parce qu'il ne ressemble pas à une réunion : les services s'affrontent, les nouveaux se font remarquer et tout le monde parle du podium à la machine à café. Avec ZIK, l'écran de la salle de réunion (ou le partage d'écran en visio) affiche la partie, chaque collègue répond depuis son téléphone.",
+      "Préparez une playlist qui vous ressemble, importée depuis Spotify ou Deezer, et répartissez les équipes par service ou par table. La régie permet à l'organisateur de piloter la partie depuis son ordinateur pendant que la salle regarde l'écran.",
+    ],
+    tips: [
+      "Mélangez les services dans les équipes pour que les gens qui ne se parlent jamais jouent ensemble.",
+      "À distance, partagez l'écran de la TV en visio et donnez le code du salon : chacun joue depuis chez lui.",
+      "Glissez quelques titres liés à l'entreprise (la chanson de la pub, l'hymne du pot de départ) dans la playlist.",
+    ],
+    faq: [
+      {
+        q: "Peut-on jouer en télétravail ?",
+        a: "Oui. L'organisateur partage l'écran du salon dans votre outil de visio, les collègues rejoignent avec le code depuis leur téléphone.",
+      },
+      {
+        q: "Peut-on avoir une facture ?",
+        a: "ZIK Pro s'adresse aux entreprises, bars et événements : les formules Soirée, Mensuelle et Annuelle seront facturées. Le paiement en ligne ouvre bientôt, inscrivez-vous sur la page ZIK Pro pour être prévenu.",
+      },
+    ],
+    playlists: [PL.annees2000, PL.annees8090, PL.chanson],
+    room: null,
+    occasion: true,
+    pro: true,
   },
 ];
 

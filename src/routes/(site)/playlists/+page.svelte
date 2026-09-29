@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount, getContext } from 'svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import TrackRow from './TrackRow.svelte';
@@ -403,7 +404,7 @@
   <meta name="twitter:description" content="Importez vos playlists Spotify/Deezer et jouez au blind test avec vos musiques. Gratuit." />
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.0" />
 
-  <script type="application/ld+json">{@html playlistsJsonLd}</script>
+  <JsonLd json={playlistsJsonLd} />
 </svelte:head>
 
 <header class="page-head">

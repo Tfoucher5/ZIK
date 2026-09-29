@@ -1,4 +1,5 @@
 <script>
+  import JsonLd from '$lib/components/JsonLd.svelte';
   let { data } = $props();
 
   const SITE = 'https://www.zik-music.fr';
@@ -44,8 +45,8 @@
   <meta property="og:description" content={theme.description} />
   <meta property="og:url" content={url} />
   <meta property="og:type" content="website" />
-  <script type="application/ld+json">{@html jsonLd}</script>
-  <script type="application/ld+json">{@html faqJsonLd}</script>
+  <JsonLd json={jsonLd} />
+  <JsonLd json={faqJsonLd} />
 </svelte:head>
 
 <main class="bt-page">
@@ -61,6 +62,12 @@
           <b>Lancer en soirée</b>
           <span>La TV diffuse, les invités répondent sur leur téléphone</span>
         </a>
+        {#if theme.pro}
+          <a class="bt-cta" href="/pro#tarifs">
+            <b>ZIK Pro</b>
+            <span>Joueurs illimités, 8 équipes, régie complète. Dès 7,90 € HT la soirée</span>
+          </a>
+        {/if}
         {#if theme.room}
           <a class="bt-cta" href="/room/{theme.room}">
             <b>Jouer en ligne</b>
