@@ -13,13 +13,37 @@
   const SITE = 'https://www.zik-music.fr';
 
   // Affichée sur la page ET envoyée à Google : les deux doivent rester identiques
-  const SALON_FAQ = [
-    { q: 'Comment fonctionne le Mode Salon ?', a: "L'hôte ouvre le salon sur l'ordinateur branché à la TV. Les joueurs scannent le QR code affiché à l'écran avec leur téléphone et choisissent un pseudo. La TV diffuse les extraits, le chrono et le classement, les téléphones servent de buzzers." },
-    { q: 'Faut-il installer une application ?', a: "Non, ni pour l'hôte ni pour les joueurs : tout se passe dans le navigateur. Les joueurs n'ont pas besoin de créer de compte." },
-    { q: 'Combien de joueurs peuvent participer ?', a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes.` },
-    { q: 'Peut-on jouer en équipes ?', a: "Oui. L'hôte choisit le nombre d'équipes, chaque joueur rejoint la sienne depuis son téléphone. Le score d'une équipe est la moyenne de ses joueurs, pour que les petites équipes gardent leurs chances." },
-    { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Spotify ou Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
-    { q: 'Combien ça coûte ?', a: `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € HT la soirée, 19 € HT par mois ou 190 € HT par an.` },
+  const FAQ_GROUPS = [
+    {
+      title: 'Pour jouer',
+      items: [
+        { q: 'Comment fonctionne le Mode Salon ?', a: "L'hôte ouvre le salon sur l'ordinateur branché à la TV. Les joueurs scannent le QR code affiché à l'écran avec leur téléphone et choisissent un pseudo. La TV diffuse les extraits, le chrono et le classement, les téléphones servent de buzzers." },
+        { q: 'Faut-il installer une application ?', a: "Non, ni pour l'hôte ni pour les joueurs : tout se passe dans le navigateur. Les joueurs n'ont pas besoin de créer de compte." },
+        { q: 'Peut-on jouer en équipes ?', a: "Oui. L'hôte choisit le nombre d'équipes, chaque joueur rejoint la sienne depuis son téléphone. Le score d'une équipe est la moyenne de ses joueurs, pour que les petites équipes gardent leurs chances." },
+      ],
+    },
+    {
+      title: 'Pour organiser',
+      items: [
+        { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Spotify ou Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
+        { q: 'Peut-on piloter la partie depuis un autre écran ?', a: "Oui. La régie s'ouvre sur un ordinateur ou une tablette à côté de la TV : pause, manche suivante, réglages et classement, sans que la salle ne voie rien." },
+        { q: 'Et si la connexion est lente ?', a: "La musique de la manche suivante se charge pendant la manche en cours, pour éviter les temps morts. Un joueur qui perd le réseau retrouve sa place et ses points en revenant." },
+      ],
+    },
+    {
+      title: 'Tarifs',
+      items: [
+        { q: 'Combien de joueurs peuvent participer ?', a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes.` },
+        { q: 'Combien ça coûte ?', a: `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € HT la soirée, 19 € HT par mois ou 190 € HT par an.` },
+      ],
+    },
+  ];
+  const SALON_FAQ = FAQ_GROUPS.flatMap((g) => g.items);
+
+  const STEPS = [
+    ['Ouvrez le salon', "sur l'ordinateur branché à la TV, choisissez la musique."],
+    ['Les invités scannent le QR code', 'avec leur téléphone, sans appli ni compte.'],
+    ['Jouez', 'ZIK diffuse, vérifie les réponses, compte les points et affiche le podium.'],
   ];
 
   const OCCASIONS = [
@@ -291,25 +315,41 @@
 
   <section class="st-seo" aria-labelledby="st-seo-title">
     <h2 id="st-seo-title">Le blind test de soirée, sans animateur</h2>
-    <p>
-      Le Mode Salon transforme n'importe quelle TV en plateau de jeu : l'écran diffuse les extraits,
-      le chrono et le classement, chaque invité répond sur son téléphone après avoir scanné un QR code.
-      ZIK vérifie les réponses, compte les points et affiche le podium. Vous n'avez qu'à choisir la musique.
-    </p>
-    <h3>Pour chaque occasion</h3>
-    <ul class="st-occasions">
-      {#each OCCASIONS as [slug, label] (slug)}
-        <li><a href="/blind-test/{slug}">Blind test {label.toLowerCase()}</a></li>
-      {/each}
-      <li><a href="/blind-test">Tous les thèmes</a></li>
-    </ul>
+
+    <div class="st-seo-grid">
+      <div>
+        <h3>Comment ça marche</h3>
+        <ol class="st-steps">
+          {#each STEPS as [head, rest], i (head)}
+            <li><span>{String(i + 1).padStart(2, '0')}</span><p><b>{head}</b> {rest}</p></li>
+          {/each}
+        </ol>
+      </div>
+      <div>
+        <h3>Pour chaque occasion</h3>
+        <ul class="st-occasions">
+          {#each OCCASIONS as [slug, label] (slug)}
+            <li><a href="/blind-test/{slug}">{label}</a></li>
+          {/each}
+          <li><a href="/blind-test">Tous les thèmes</a></li>
+        </ul>
+      </div>
+    </div>
+
     <h3>Questions fréquentes</h3>
-    <dl class="st-faq">
-      {#each SALON_FAQ as { q, a } (q)}
-        <dt>{q}</dt>
-        <dd>{a}</dd>
+    <div class="st-faq">
+      {#each FAQ_GROUPS as g (g.title)}
+        <div class="st-faq-group">
+          <p class="st-faq-title">{g.title}</p>
+          {#each g.items as { q, a } (q)}
+            <details>
+              <summary>{q}</summary>
+              <p>{a}</p>
+            </details>
+          {/each}
+        </div>
       {/each}
-    </dl>
+    </div>
   </section>
 </div>
 
@@ -473,8 +513,7 @@
     border-top: 2px solid var(--text);
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    max-width: 760px;
+    gap: 16px;
   }
   .st-seo h2 {
     font-family: var(--s-cond);
@@ -483,7 +522,7 @@
     text-transform: uppercase;
   }
   .st-seo h3 {
-    margin-top: 14px;
+    margin: 14px 0 10px;
     font-family: var(--s-mono);
     font-size: 0.72rem;
     font-weight: 500;
@@ -491,7 +530,16 @@
     text-transform: uppercase;
     color: var(--mid);
   }
-  .st-seo p, .st-faq dd { font-size: 0.92rem; color: var(--mid); line-height: 1.65; }
+  .st-seo-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+  }
+  .st-steps { display: flex; flex-direction: column; gap: 12px; list-style: none; }
+  .st-steps li { display: flex; gap: 14px; }
+  .st-steps span { font-family: var(--s-mono); font-size: 0.8rem; color: var(--accent); padding-top: 2px; }
+  .st-steps p { font-size: 0.92rem; color: var(--mid); line-height: 1.55; }
+  .st-steps b { color: var(--text); font-weight: 600; }
   .st-occasions { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
   .st-occasions a {
     display: inline-block;
@@ -503,8 +551,48 @@
     text-decoration: none;
   }
   .st-occasions a:hover { border-color: var(--text); }
-  .st-faq dt { margin-top: 12px; font-weight: 700; }
-  .st-faq dd { margin-top: 4px; }
+
+  .st-faq {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+  .st-faq-title {
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--text);
+    font-family: var(--s-cond);
+    font-weight: 900;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+  }
+  .st-faq details { border-bottom: 1px solid var(--border); }
+  .st-faq summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .st-faq summary::-webkit-details-marker { display: none; }
+  .st-faq summary::after {
+    content: '+';
+    flex: none;
+    font-family: var(--s-mono);
+    color: var(--accent);
+    transition: transform 0.2s;
+  }
+  .st-faq details[open] summary::after { transform: rotate(45deg); }
+  .st-faq summary:hover { color: var(--accent); }
+  .st-faq details p {
+    padding: 0 0 14px;
+    font-size: 0.9rem;
+    color: var(--mid);
+    line-height: 1.6;
+  }
   .st-pro-note { padding-top: 28px; font-size: 0.85rem; color: var(--mid); }
   .st-pro-note a, .st-pro-note b { color: var(--text); text-underline-offset: 3px; }
   .st-seg button.st-pro:not(.on) { color: var(--dim); }
@@ -555,6 +643,7 @@
     .st-block { grid-template-columns: 1fr; gap: 18px; padding: 30px 0; }
     .st-block h2 span { display: inline; margin: 0 10px 0 0; }
     .st-sheet > div { grid-template-columns: 1fr; gap: 8px; }
+    .st-seo-grid, .st-faq { grid-template-columns: 1fr; gap: 24px; }
     .st-bar-in { flex-wrap: wrap; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
     .st-go { width: 100%; margin-left: 0; }
   }
