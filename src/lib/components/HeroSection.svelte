@@ -171,7 +171,7 @@
       <span class="l2">L'OREILLE&nbsp;?</span>
       <span class="l3">PROUVE-LE.</span>
     </h1>
-    <p class="hero-sub">Multijoueur · Temps réel · Classements ELO</p>
+    <p class="hero-sub">En ligne ou en soirée sur la TV · Sur tes playlists · Gratuit</p>
 
     {#if children}
       <div class="hero-actions">

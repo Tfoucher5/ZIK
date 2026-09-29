@@ -22,7 +22,7 @@ import {
 } from "../../services/achievements.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
 import { ytdlAudioCache } from "../../ytdlCache.js";
-import { YTDL_TTL, getYtAudioUrl } from "../../ytdlAudio.js";
+import { getYtAudioUrl } from "../../ytdlAudio.js";
 import {
   DEFAULT_ROUND_DURATION,
   DEFAULT_BREAK_DURATION,
@@ -30,14 +30,7 @@ import {
 } from "./config.js";
 import { scheduleChatClear, cancelChatClear, addChatMessage } from "./chat.js";
 import { makeChoices, calcQcmPoints } from "./scoring.js";
-import {
-  resolveVideo,
-  previewCacheKey,
-  validPreviewUrl,
-  getDeezerPreview,
-  getItunesPreview,
-  prefetchNextRound,
-} from "./audio.js";
+import { resolveVideo, getPreview, prefetchNextRound } from "./audio.js";
 
 // ─── Auto-start countdowns ────────────────────────────────────────────────────
 // Map: roomId -> { timer, startAt, seconds }
@@ -338,28 +331,11 @@ async function startNextRound(roomId, io) {
 
     // Fallback preview Deezer/iTunes si yt-dlp KO (30s clip, sans leak)
     if (!ytAudio) {
-      const pKey = previewCacheKey(track);
-      const cachedPreview = ytdlAudioCache.get(pKey);
-      if (cachedPreview && Date.now() - cachedPreview.fetchedAt < YTDL_TTL) {
-        videoId = pKey;
+      const preview = await getPreview(track);
+      if (preview) {
+        videoId = preview.pKey;
         startSeconds = 0;
-        ytAudio = cachedPreview;
-      } else {
-        const artist = track.mainArtist || track.artist;
-        const previewUrl =
-          validPreviewUrl(track.preview_url) ||
-          (await getDeezerPreview(artist, track.title).catch(() => null)) ||
-          (await getItunesPreview(artist, track.title).catch(() => null));
-        if (previewUrl) {
-          ytdlAudioCache.set(pKey, {
-            url: previewUrl,
-            mimeType: "audio/mpeg",
-            fetchedAt: Date.now(),
-          });
-          videoId = pKey;
-          startSeconds = 0;
-          ytAudio = { url: previewUrl };
-        }
+        ytAudio = preview.entry;
       }
     }
 

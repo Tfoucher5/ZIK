@@ -3,6 +3,7 @@ import { promisify } from "util";
 import { ytdlAudioCache } from "../../ytdlCache.js";
 import { YTDLP_BIN, getYtAudioUrl } from "../../ytdlAudio.js";
 import { roomGames } from "../../state.js";
+import { fetchDeezerTrackPreview } from "../../services/deezer.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -84,10 +85,17 @@ export function previewCacheKey(track) {
   return `prev_${(track.cleanArtist + track.cleanTitle).replace(/\W/g, "").slice(0, 32)}`;
 }
 
+// Seuls les CDN Deezer et iTunes servent un fichier audio : un lien YouTube ou
+// Spotify stocké en preview_url n'est pas lisible par <audio>.
+const PREVIEW_HOST_RE = /^https:\/\/[\w.-]+\.(dzcdn\.net|itunes\.apple\.com)\//;
+// Un lien Deezer ne vit que ~15 min : il doit tenir jusqu'à la fin de la manche
+const PREVIEW_MARGIN_MS = 2 * 60 * 1000;
+
 export function validPreviewUrl(url) {
-  if (!url) return null;
+  if (!url || !PREVIEW_HOST_RE.test(url)) return null;
   const m = url.match(/hdnea=exp=(\d+)/);
-  if (m && parseInt(m[1], 10) * 1000 < Date.now()) return null;
+  if (m && parseInt(m[1], 10) * 1000 < Date.now() + PREVIEW_MARGIN_MS)
+    return null;
   return url;
 }
 
@@ -110,6 +118,46 @@ export async function getItunesPreview(artist, title) {
   );
   const data = await res.json();
   return data.results?.[0]?.previewUrl || null;
+}
+
+async function findPreview({ artist, title, externalId }) {
+  return (
+    (externalId && (await fetchDeezerTrackPreview(externalId))) ||
+    (await getDeezerPreview(artist, title).catch(() => null)) ||
+    (await getItunesPreview(artist, title).catch(() => null))
+  );
+}
+
+function cachePreview(pKey, query, url) {
+  const entry = { url, mimeType: "audio/mpeg", fetchedAt: Date.now(), query };
+  ytdlAudioCache.set(pKey, entry);
+  return entry;
+}
+
+// Lien d'extrait lisible pour la manche. Résolu au dernier moment plutôt que
+// stocké : un lien Deezer expire trop vite pour être rafraîchi à l'avance.
+export async function getPreview(track) {
+  const pKey = previewCacheKey(track);
+  const cached = ytdlAudioCache.get(pKey);
+  if (validPreviewUrl(cached?.url)) return { pKey, entry: cached };
+
+  const query = {
+    artist: track.mainArtist || track.artist,
+    title: track.title,
+    // Seuls les titres importés de Deezer ont un id numérique Deezer
+    externalId: /^\d+$/.test(track.external_id ?? "")
+      ? track.external_id
+      : null,
+  };
+  const url = validPreviewUrl(track.preview_url) || (await findPreview(query));
+  return url ? { pKey, entry: cachePreview(pKey, query, url) } : null;
+}
+
+// Lien expiré en cours de lecture (403) : on en redemande un frais
+export async function refreshPreview(pKey, entry) {
+  const url = await findPreview(entry.query);
+  if (!url) throw new Error("Aucun extrait");
+  return cachePreview(pKey, entry.query, url);
 }
 
 export async function prefetchNextRound(roomId) {
@@ -145,22 +193,14 @@ export async function prefetchNextRound(roomId) {
       if (ytAudio) ytdlAudioCache.set(videoId, ytAudio);
     }
 
-    // Preview seulement si pas de videoId du tout
-    if (!ytAudio && !videoId) {
-      const previewUrl =
-        validPreviewUrl(nextTrack.preview_url) ||
-        (await getDeezerPreview(artist, nextTrack.title).catch(() => null)) ||
-        (await getItunesPreview(artist, nextTrack.title).catch(() => null));
-      if (previewUrl) {
-        const pKey = previewCacheKey(nextTrack);
-        ytdlAudioCache.set(pKey, {
-          url: previewUrl,
-          mimeType: "audio/mpeg",
-          fetchedAt: Date.now(),
-        });
-        videoId = pKey;
+    // yt-dlp KO : l'extrait est prêt avant la manche au lieu d'être cherché
+    // pendant l'écran de chargement
+    if (!ytAudio) {
+      const preview = await getPreview(nextTrack);
+      if (preview) {
+        videoId = preview.pKey;
         startSeconds = 0;
-        ytAudio = { url: previewUrl };
+        ytAudio = preview.entry;
       }
     }
 

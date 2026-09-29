@@ -248,37 +248,6 @@ export async function refreshExpiredPreviews(trackRows) {
   );
 }
 
-// ─── Cron refresh global ─────────────────────────────────────────────────────
-
-export async function runPreviewRefreshCron() {
-  const threshold = new Date(
-    Date.now() + PREVIEW_REFRESH_MARGIN_MS,
-  ).toISOString();
-  try {
-    const { data: rows, error } = await getAdminClient()
-      .from("tracks")
-      .select("id, artist, title, preview_url, preview_expires_at, external_id")
-      .not("preview_url", "is", null)
-      .or(
-        `preview_expires_at.lt.${threshold},and(preview_expires_at.is.null,preview_url.ilike.%hdnea%)`,
-      );
-
-    if (error) throw error;
-    if (!rows?.length) {
-      console.log("[cron] Previews Deezer: aucune expiration imminente.");
-      return;
-    }
-
-    await refreshExpiredPreviews(rows.map((t) => ({ tracks: t })));
-
-    // Vider le cache pour que les rooms rechargent les URLs fraîches
-    Object.keys(playlistCache).forEach((k) => delete playlistCache[k]);
-    console.log("[cron] Cache playlists invalidé après refresh.");
-  } catch (e) {
-    console.error("[cron] Erreur refresh previews:", e.message);
-  }
-}
-
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
 function dedup(tracks) {
@@ -318,7 +287,6 @@ export async function loadPlaylist(roomId) {
         .order("position");
 
       if (trackRows?.length >= 3) {
-        await refreshExpiredPreviews(trackRows);
         const tracks = dedup(trackRows.map(buildTrackFromRow));
         playlistCache[roomId] = tracks;
         console.log(
@@ -340,7 +308,6 @@ export async function loadPlaylist(roomId) {
         .eq("playlist_id", dbRoom.playlist_id)
         .order("position");
       if (trackRows?.length >= 3) {
-        await refreshExpiredPreviews(trackRows);
         const tracks = dedup(trackRows.map(buildTrackFromRow));
         playlistCache[roomId] = tracks;
         console.log(

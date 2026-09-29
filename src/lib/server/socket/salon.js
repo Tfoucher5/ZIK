@@ -12,7 +12,6 @@ import {
   calcSpeedBonus,
   cleanString,
   displayString,
-  refreshExpiredPreviews,
   TRACK_ROW_SELECT,
 } from "../services/playlist.js";
 
@@ -46,7 +45,6 @@ async function loadTracksForPlaylist(playlistId, client = supabase) {
       .eq("playlist_id", playlistId)
       .order("position");
     if (rows?.length) {
-      await refreshExpiredPreviews(rows);
       return rows.map(buildTrackFromRow);
     }
   } catch {

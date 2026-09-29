@@ -136,6 +136,7 @@
       <span class="salon-hero-step"><i>2</i>Partage le code</span>
       <span class="salon-hero-step"><i>3</i>Jouez !</span>
     </div>
+    <a href="/pro" class="salon-pro-link">Pour un bar, une asso ou une entreprise → le guide</a>
   </div>
 
   {#if !authReady}
@@ -263,3 +264,16 @@
 {/if}
 
 <AuthModal {sb} open={authOpen} bind:view={authView} onClose={() => (authOpen = false)} onSuccess={() => (authOpen = false)} />
+
+<style>
+  .salon-pro-link {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--mid);
+    text-underline-offset: 3px;
+  }
+  .salon-pro-link:hover {
+    color: var(--text);
+  }
+</style>

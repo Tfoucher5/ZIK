@@ -97,7 +97,9 @@
 </script>
 
 <svelte:head>
-  <meta name="description" content="ZIK — Blind test musical multijoueur en ligne. Rejoins une room, trouve les titres avant tout le monde et grimpe dans le classement ELO. Gratuit, sans téléchargement.">
+  <!-- Pas de meta description ici : chaque page en définit une dans son propre
+       svelte:head. Svelte n'écrase pas celle du layout, il l'ajoute en plus —
+       avoir les deux dupliquait la description sur toutes les pages. -->
   <meta name="keywords" content="blind test, blind test en ligne, blind test gratuit, blind test multijoueur, quiz musical en ligne, jeu de musique, deviner les chansons, jeu musique gratuit, blind test kahoot, blind test soirée, blind test spotify, blind test deezer, jeu blind test, musique en ligne">
   <meta name="author" content="ZIK">
   <meta name="theme-color" content="#7c3aed">

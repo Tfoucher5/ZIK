@@ -56,7 +56,34 @@
       </div>
     {/each}
   </div>
-  <button class="btn-salon-join" onclick={onLeave} style="margin-top:8px">
+  <div class="salon-host-cta">
+    <p>Ça t'a plu ? Organise ta propre soirée, avec <b>tes</b> playlists.</p>
+    <a href="/salon" class="btn-salon-join">Créer mon salon →</a>
+  </div>
+  <button class="salon-join-link" onclick={onLeave}>
     Rejoindre un autre salon
   </button>
 {/if}
+
+<style>
+  .salon-host-cta {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .salon-host-cta p {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: var(--mid);
+  }
+  .salon-host-cta a {
+    display: block;
+    text-decoration: none;
+  }
+  .salon-join-link {
+    display: block;
+    margin: 12px auto 0;
+  }
+</style>
