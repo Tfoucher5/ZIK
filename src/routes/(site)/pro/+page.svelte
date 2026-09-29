@@ -202,8 +202,8 @@
     <section class="pro-section">
       <h2>Le choix de la musique</h2>
       <p>
-        Vous pouvez partir des thèmes déjà prêts (années 80, rap français,
-        Disney, génériques de séries...) ou construire votre propre playlist en
+        Vous pouvez partir des <a href="/blind-test">thèmes déjà prêts</a>
+        (années 80, rap français, Disney, génériques de séries...) ou construire votre propre playlist en
         important directement depuis Spotify ou Deezer. De quoi coller à votre
         public plutôt qu'à une sélection générique.
       </p>

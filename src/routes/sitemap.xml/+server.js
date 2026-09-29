@@ -1,4 +1,5 @@
 import { supabase } from "$lib/server/config.js";
+import { BLIND_TEST_THEMES } from "$lib/blindTestThemes.js";
 
 const SITE = "https://www.zik-music.fr";
 
@@ -28,7 +29,15 @@ function escapeXml(str) {
 }
 
 export async function GET() {
-  const urls = [...STATIC_PAGES];
+  const urls = [
+    ...STATIC_PAGES,
+    { loc: "/blind-test", changefreq: "weekly", priority: "0.8" },
+    ...BLIND_TEST_THEMES.map((t) => ({
+      loc: `/blind-test/${t.slug}`,
+      changefreq: "monthly",
+      priority: "0.8",
+    })),
+  ];
 
   // `rooms` n'a pas de colonne updated_at : le lastmod vient de last_active_at.
   const { data: rooms, error: roomsError } = await supabase

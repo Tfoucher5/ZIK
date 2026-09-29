@@ -56,7 +56,12 @@
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
       allPlaylists = flat;
-      if (selectedIds.length === 0 && flat.length > 0) selectedIds = [flat[0].id];
+      // ?playlist=id1,id2 : lien depuis une page /blind-test/<thème>
+      const wanted = (new URLSearchParams(window.location.search).get('playlist') ?? '')
+        .split(',')
+        .filter((id) => flat.some((p) => p.id === id));
+      if (wanted.length) selectedIds = wanted;
+      else if (selectedIds.length === 0 && flat.length > 0) selectedIds = [flat[0].id];
     } catch {
       error = 'Impossible de charger les playlists.';
     }

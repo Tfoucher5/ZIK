@@ -123,7 +123,7 @@
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Spotify/Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.8.2">
 
-  <link rel="stylesheet" href="/css/base.css?v=3.7.0">
+  <link rel="stylesheet" href="/css/base.css?v=3.9.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
 </svelte:head>
 
@@ -188,6 +188,18 @@
         <a href="/confidentialite">Confidentialité</a>
         <a href="/mentions-legales">Mentions légales</a>
         <button class="footer-contact-btn" onclick={() => contactOpen = true}>Contact</button>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <span class="footer-col-head">Blind test par thème</span>
+      <div class="footer-col-links">
+        <a href="/blind-test/annees-80">Années 80</a>
+        <a href="/blind-test/annees-2000">Années 2000</a>
+        <a href="/blind-test/rap-fr">Rap français</a>
+        <a href="/blind-test/disney">Disney</a>
+        <a href="/blind-test/anniversaire">Anniversaire</a>
+        <a href="/blind-test">Tous les thèmes</a>
       </div>
     </div>
 

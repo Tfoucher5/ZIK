@@ -592,7 +592,7 @@ button {
 /* Colonnes journal */
 .footer-columns {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   border-bottom: 1px solid var(--border);
 }
 .footer-col {
