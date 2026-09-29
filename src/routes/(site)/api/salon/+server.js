@@ -6,11 +6,26 @@ import {
 import { salonRooms } from "$lib/server/state.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 
+// Un salon sans compte ne lit que les playlists publiques (client anonyme,
+// RLS). Plafond pour qu'un script ne remplisse pas la mémoire de salons.
+const MAX_GUEST_SALONS = 50;
+
 export async function POST({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
-  if (!token) return json({ error: "Non authentifié" }, { status: 401 });
-  const user = await verifyToken(token);
-  if (!user) return json({ error: "Session invalide" }, { status: 401 });
+  let user = null;
+  if (token) {
+    user = await verifyToken(token);
+    if (!user) return json({ error: "Session invalide" }, { status: 401 });
+  } else {
+    const guestSalons = Object.values(salonRooms).filter(
+      (s) => !s.hostUserId,
+    ).length;
+    if (guestSalons >= MAX_GUEST_SALONS)
+      return json(
+        { error: "Trop de salons ouverts, connecte-toi pour en créer un." },
+        { status: 429 },
+      );
+  }
 
   let body;
   try {
@@ -28,7 +43,7 @@ export async function POST({ request }) {
       playlistIds,
       settings: settings || {},
       token,
-      hostUserId: user.id,
+      hostUserId: user?.id ?? null,
     });
     return json({ code });
   } catch (e) {

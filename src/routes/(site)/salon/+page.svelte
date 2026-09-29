@@ -53,9 +53,8 @@
   function clamp(val, min, max) { return Math.min(max, Math.max(min, Number(val) || min)); }
 
   async function loadPlaylists() {
-    if (!user) return;
     try {
-      const flat = await loadSalonPlaylists(sb, user.id);
+      const flat = await loadSalonPlaylists(sb, user?.id ?? null);
       allPlaylists = flat;
       if (selectedIds.length === 0 && flat.length > 0) selectedIds = [flat[0].id];
     } catch {
@@ -69,10 +68,11 @@
     creating = true;
     try {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) throw new Error('Session expirée, reconnecte-toi.');
+      const headers = { 'content-type': 'application/json' };
+      if (session) headers.Authorization = `Bearer ${session.access_token}`;
       const res = await fetch('/api/salon', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        headers,
         body: JSON.stringify({
           playlistIds: selectedIds,
           settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration },
@@ -92,11 +92,11 @@
     const { data: { session } } = await sb.auth.getSession();
     user = session?.user ?? null;
     authReady = true;
-    if (user) loadPlaylists();
+    loadPlaylists();
 
     sb.auth.onAuthStateChange((_event, session) => {
       user = session?.user ?? null;
-      if (user) loadPlaylists();
+      loadPlaylists();
     });
   });
 </script>
@@ -142,18 +142,21 @@
   {#if !authReady}
     <div class="salon-card" style="text-align:center;color:var(--mid)">Chargement…</div>
 
-  {:else if !user}
-    <div class="salon-card salon-card-guest">
-      <p class="salon-guest-txt">
-        Tu es invité à une soirée ? Rejoins le salon avec le code de l'hôte —
-        <b>pas besoin de compte</b>.
-      </p>
-      <a href="/salon/play" class="btn-salon-create salon-guest-join">Rejoindre un salon →</a>
-      <p class="salon-guest-sub">Pour <b>créer</b> un salon en revanche, il faut être connecté.</p>
-      <button type="button" class="salon-join-link" onclick={() => { authView = 'login'; authOpen = true; }}>Se connecter →</button>
-    </div>
-
   {:else}
+    {#if !user}
+      <div class="salon-card salon-card-guest">
+        <p class="salon-guest-txt">
+          Tu es invité à une soirée ? Rejoins le salon avec le code de l'hôte.
+        </p>
+        <a href="/salon/play" class="btn-salon-create salon-guest-join">Rejoindre un salon →</a>
+        <p class="salon-guest-sub">
+          Tu organises ? <b>Pas besoin de compte</b> : choisis une playlist publique ci-dessous.
+          Connecte-toi pour jouer sur tes propres playlists.
+        </p>
+        <button type="button" class="salon-join-link" onclick={() => { authView = 'login'; authOpen = true; }}>Se connecter →</button>
+      </div>
+    {/if}
+
     <div class="salon-setup-grid">
 
       <!-- Colonne gauche : paramètres -->
@@ -245,7 +248,7 @@
   {/if}
 </div>
 
-{#if authReady && user}
+{#if authReady}
   <div class="salon-actionbar">
     <div class="salon-actionbar-in">
       <div class="salon-recap">

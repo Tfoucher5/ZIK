@@ -464,7 +464,7 @@
       </p>
 
       <h3>Créer un salon</h3>
-      <p>Rendez-vous sur <a href="/salon">/salon</a> (compte requis). Configurez votre salon :</p>
+      <p>Rendez-vous sur <a href="/salon">/salon</a>. Sans compte, vous choisissez parmi les playlists publiques et officielles ; connecté, vous avez aussi accès aux vôtres. Configurez votre salon :</p>
       <ul class="doc-list">
         <li>Choisissez la <strong>playlist</strong> (vos playlists perso ou les officielles)</li>
         <li>Réglez les paramètres (voir tableau ci-dessous)</li>

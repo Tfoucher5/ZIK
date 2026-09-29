@@ -1,21 +1,26 @@
 /**
  * Playlists selectionnables pour un salon : celles de l'utilisateur, plus les
- * officielles et les publiques. Partagee entre l'ecran de configuration et
- * l'ecran hote, qui proposent la meme liste.
+ * officielles et les publiques. Sans compte (userId null), seulement ces
+ * dernieres. Partagee entre l'ecran de configuration et l'ecran hote, qui
+ * proposent la meme liste.
  */
 export async function loadSalonPlaylists(sb, userId) {
+  let sharedQuery = sb
+    .from("custom_playlists")
+    .select("id, name, emoji, track_count, is_official")
+    .or("is_public.eq.true,is_official.eq.true");
+  if (userId) sharedQuery = sharedQuery.neq("owner_id", userId);
+  sharedQuery = sharedQuery.order("name");
+
   const [{ data: mine }, { data: shared }] = await Promise.all([
-    sb
-      .from("custom_playlists")
-      .select("id, name, emoji, track_count")
-      .eq("owner_id", userId)
-      .order("created_at", { ascending: false }),
-    sb
-      .from("custom_playlists")
-      .select("id, name, emoji, track_count, is_official")
-      .or("is_public.eq.true,is_official.eq.true")
-      .neq("owner_id", userId)
-      .order("name"),
+    userId
+      ? sb
+          .from("custom_playlists")
+          .select("id, name, emoji, track_count")
+          .eq("owner_id", userId)
+          .order("created_at", { ascending: false })
+      : { data: [] },
+    sharedQuery,
   ]);
 
   const flat = [];
