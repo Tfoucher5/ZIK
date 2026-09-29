@@ -33,7 +33,7 @@ export async function load({ params, setHeaders }) {
     theme,
     artists: await topArtists(theme.playlists[0]).catch(() => []),
     others: BLIND_TEST_THEMES.filter((t) => t.slug !== theme.slug).map(
-      ({ slug, name, emoji }) => ({ slug, name, emoji }),
+      ({ slug, name }) => ({ slug, name }),
     ),
   };
 }

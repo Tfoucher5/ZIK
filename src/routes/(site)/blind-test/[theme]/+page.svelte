@@ -55,25 +55,26 @@
 
   <article>
     <header class="bt-header">
-      <span class="bt-emoji" aria-hidden="true">{theme.emoji}</span>
-      <h1>{theme.h1}</h1>
+      <h1><span class="bt-kicker">Blind test</span>{theme.h1.replace(/^Blind test /i, '')}</h1>
+      <div class="bt-ctas">
+        <a class="bt-cta bt-cta-main" href={salonHref}>
+          <b>Lancer en soirée</b>
+          <span>La TV diffuse, les invités répondent sur leur téléphone</span>
+        </a>
+        {#if theme.room}
+          <a class="bt-cta" href="/room/{theme.room}">
+            <b>Jouer en ligne</b>
+            <span>Rejoindre la room officielle, tout de suite</span>
+          </a>
+        {/if}
+      </div>
+    </header>
+
+    <section class="bt-section">
       {#each theme.intro as p, i (i)}
         <p class="bt-intro">{p}</p>
       {/each}
-    </header>
-
-    <div class="bt-ctas">
-      <a class="bt-cta bt-cta-main" href={salonHref}>
-        <b>🎉 Lancer en soirée</b>
-        <span>La TV diffuse, les invités répondent sur leur téléphone</span>
-      </a>
-      {#if theme.room}
-        <a class="bt-cta" href="/room/{theme.room}">
-          <b>🎧 Jouer en ligne</b>
-          <span>Rejoindre la room officielle, tout de suite</span>
-        </a>
-      {/if}
-    </div>
+    </section>
 
     {#if data.artists.length}
       <section class="bt-section">
@@ -119,7 +120,7 @@
       <h2>Autres thèmes</h2>
       <ul class="bt-others">
         {#each data.others as t (t.slug)}
-          <li><a href="/blind-test/{t.slug}">{t.emoji} Blind test {t.name.toLowerCase()}</a></li>
+          <li><a href="/blind-test/{t.slug}">Blind test {t.name.toLowerCase()}</a></li>
         {/each}
       </ul>
       <p class="bt-pro">
@@ -131,68 +132,104 @@
 
 <style>
   .bt-page {
-    max-width: 800px;
+    max-width: 860px;
     margin: 0 auto;
-    padding: 40px clamp(16px, 5vw, 48px) 80px;
+    padding: calc(var(--nav-h) + 32px) 24px 96px;
   }
-  .bt-crumbs { font-size: 0.8rem; color: var(--dim); margin-bottom: 28px; }
-  .bt-crumbs a { color: var(--accent); }
-  .bt-header { margin-bottom: 28px; }
-  .bt-emoji { font-size: 2.2rem; }
+  .bt-crumbs { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
+  .bt-crumbs a { color: var(--mid); text-underline-offset: 3px; }
+  .bt-header { padding-bottom: 40px; margin-bottom: 40px; border-bottom: 2px solid var(--text); }
+  .bt-kicker {
+    display: block;
+    margin-bottom: 14px;
+    line-height: 1;
+    font-weight: 400;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
   h1 {
     font-family: "Barlow Condensed", sans-serif;
-    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-size: clamp(3rem, 10vw, 6.4rem);
     font-weight: 900;
-    letter-spacing: -1px;
-    line-height: 1.1;
-    margin: 8px 0 16px;
+    letter-spacing: -0.02em;
+    line-height: 0.86;
+    text-transform: uppercase;
+    margin: 12px 0 32px;
   }
-  .bt-intro { font-size: 0.95rem; color: var(--mid); line-height: 1.7; margin-bottom: 12px; }
+  .bt-intro { font-size: 1rem; color: var(--mid); line-height: 1.7; margin-bottom: 14px; }
 
-  .bt-ctas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 40px; }
+  .bt-ctas { display: flex; flex-wrap: wrap; gap: 16px; }
   .bt-cta {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 18px 20px;
-    border: 1px solid var(--border2);
-    border-radius: 14px;
+    min-width: 240px;
+    padding: 16px 20px;
+    border: 2px solid var(--text);
+    border-radius: 3px;
     text-decoration: none;
     color: var(--text);
-    transition: border-color 0.15s, transform 0.15s;
+    transition: transform 0.1s, box-shadow 0.1s;
   }
-  .bt-cta:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .bt-cta b { font-family: "Barlow Condensed", sans-serif; font-size: 1.15rem; }
+  .bt-cta:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--text); }
+  .bt-cta b { font-family: "Barlow Condensed", sans-serif; font-size: 1.35rem; font-weight: 900; text-transform: uppercase; }
   .bt-cta span { font-size: 0.82rem; color: var(--mid); }
-  .bt-cta-main { background: var(--accent); border-color: var(--accent); color: #000; }
+  .bt-cta-main { background: var(--accent); color: #000; box-shadow: 4px 4px 0 var(--text); }
+  .bt-cta-main:hover { box-shadow: 6px 6px 0 var(--text); }
   .bt-cta-main span { color: rgb(0 0 0 / 0.7); }
 
-  .bt-section { margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .bt-section { margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--border); }
   .bt-section:last-of-type { border-bottom: none; }
   .bt-section h2 {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin-bottom: 12px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 16px;
   }
-  .bt-section p, .bt-section li, .bt-faq dd { font-size: 0.9rem; color: var(--mid); line-height: 1.7; }
+  .bt-section p, .bt-section li, .bt-faq dd { font-size: 0.95rem; color: var(--mid); line-height: 1.7; }
 
-  .bt-artists { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin-top: 10px; }
-  .bt-artists li {
-    padding: 4px 12px;
-    border: 1px solid var(--border2);
-    border-radius: 999px;
-    font-size: 0.82rem;
+  .bt-artists { display: flex; flex-wrap: wrap; gap: 4px 18px; list-style: none; padding: 0; margin-top: 12px; }
+  .bt-section .bt-artists li {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    text-transform: uppercase;
     color: var(--text);
   }
-  .bt-steps { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .bt-steps { list-style: none; padding: 0; counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
+  .bt-steps li { counter-increment: step; position: relative; padding-left: 40px; }
+  .bt-steps li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 3px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
   .bt-steps b { color: var(--text); }
-  .bt-tips { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-  .bt-tips li { padding-left: 18px; position: relative; }
-  .bt-tips li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
-  .bt-faq dt { font-weight: 700; color: var(--text); margin-top: 14px; font-size: 0.92rem; }
+  .bt-tips { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .bt-tips li { padding-left: 22px; position: relative; }
+  .bt-tips li::before { content: "→"; position: absolute; left: 0; color: var(--text); }
+  .bt-faq dt { font-weight: 700; color: var(--text); margin-top: 18px; font-size: 1rem; }
+  .bt-faq dt:first-child { margin-top: 0; }
   .bt-faq dd { margin: 4px 0 0; }
-  .bt-others { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
-  .bt-others a, .bt-pro a { color: var(--accent); }
-  .bt-pro { margin-top: 16px; }
+  .bt-others { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 24px; }
+  .bt-section .bt-others li { border-bottom: 1px solid var(--border); }
+  .bt-others a { display: block; padding: 9px 0; color: var(--text); text-decoration: none; }
+  .bt-others a:hover { color: var(--accent); }
+  .bt-pro a { color: var(--text); text-underline-offset: 3px; }
+  .bt-pro { margin-top: 20px; }
+
+  @media (max-width: 600px) {
+    .bt-page { padding: calc(var(--nav-h) + 20px) 16px 72px; }
+    .bt-cta { min-width: 0; width: 100%; }
+  }
 </style>

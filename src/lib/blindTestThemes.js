@@ -23,8 +23,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "annees-80",
     name: "Années 80",
-    emoji: "💽",
-    title: "Blind test années 80 gratuit — en ligne ou en soirée | ZIK",
+    title: "Blind test années 80 gratuit - en ligne ou en soirée | ZIK",
     h1: "Blind test années 80",
     description:
       "Blind test années 80 gratuit : plus de 700 tubes des années 80 et 90 à deviner en ligne ou en soirée sur la TV. Sans téléchargement, sans compte pour les joueurs.",
@@ -53,8 +52,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "annees-2000",
     name: "Années 2000",
-    emoji: "💿",
-    title: "Blind test années 2000 gratuit — tubes à deviner | ZIK",
+    title: "Blind test années 2000 gratuit - tubes à deviner | ZIK",
     h1: "Blind test années 2000",
     description:
       "Blind test années 2000 : près de 700 tubes de la décennie à deviner entre amis, en ligne ou sur la TV du salon. Gratuit, les joueurs répondent depuis leur téléphone.",
@@ -83,8 +81,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "annees-70",
     name: "Années 70",
-    emoji: "🕺",
-    title: "Blind test années 70 gratuit — disco, rock et variété | ZIK",
+    title: "Blind test années 70 gratuit - disco, rock et variété | ZIK",
     h1: "Blind test années 70",
     description:
       "Blind test années 70 : disco, rock et variété française, plus de 300 titres à deviner en ligne ou en soirée. Gratuit, sans application à installer.",
@@ -113,8 +110,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "rap-fr",
     name: "Rap français",
-    emoji: "🇫🇷",
-    title: "Blind test rap français gratuit — rap FR à deviner | ZIK",
+    title: "Blind test rap français gratuit - rap FR à deviner | ZIK",
     h1: "Blind test rap français",
     description:
       "Blind test rap FR : plus de 600 sons de rap français, des classiques aux sorties récentes. Jouez en ligne ou en soirée, gratuitement, sur ZIK.",
@@ -143,8 +139,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "rap-us",
     name: "Rap US",
-    emoji: "📀",
-    title: "Blind test rap US gratuit — hip-hop américain | ZIK",
+    title: "Blind test rap US gratuit - hip-hop américain | ZIK",
     h1: "Blind test rap US",
     description:
       "Blind test rap US : 400 sons de hip-hop américain, des classiques old school aux hits récents. Gratuit, en ligne ou en soirée sur la TV.",
@@ -173,8 +168,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "rock",
     name: "Rock & Metal",
-    emoji: "🤘",
-    title: "Blind test rock et metal gratuit — riffs à deviner | ZIK",
+    title: "Blind test rock et metal gratuit - riffs à deviner | ZIK",
     h1: "Blind test rock & metal",
     description:
       "Blind test rock et metal : plus de 400 riffs et refrains à reconnaître, du rock classique au metal. Gratuit, en ligne ou en soirée.",
@@ -203,8 +197,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "chanson-francaise",
     name: "Chanson française",
-    emoji: "🇫🇷",
-    title: "Blind test chanson française gratuit — variété | ZIK",
+    title: "Blind test chanson française gratuit - variété | ZIK",
     h1: "Blind test chanson française",
     description:
       "Blind test chanson française : près de 300 classiques de la variété, de Brel à aujourd'hui. Gratuit, idéal en famille sur la TV avec les téléphones.",
@@ -233,7 +226,6 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "techno",
     name: "Techno",
-    emoji: "💥",
     title: "Blind test techno et électro gratuit | ZIK",
     h1: "Blind test techno",
     description:
@@ -263,8 +255,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "films",
     name: "Musiques de films",
-    emoji: "🎬",
-    title: "Blind test musiques de films gratuit — BO à deviner | ZIK",
+    title: "Blind test musiques de films gratuit - BO à deviner | ZIK",
     h1: "Blind test musiques de films",
     description:
       "Blind test musiques de films : plus de 160 bandes originales et chansons de films à reconnaître. Gratuit, parfait pour une soirée cinéma entre amis.",
@@ -293,8 +284,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "disney",
     name: "Disney",
-    emoji: "🏰",
-    title: "Blind test Disney gratuit — chansons de dessins animés | ZIK",
+    title: "Blind test Disney gratuit - chansons de dessins animés | ZIK",
     h1: "Blind test Disney",
     description:
       "Blind test Disney : plus de 100 chansons de dessins animés et films Disney à deviner en famille. Gratuit, sur la TV avec les téléphones, sans compte pour les joueurs.",
@@ -323,8 +313,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "anniversaire",
     name: "Anniversaire",
-    emoji: "🎂",
-    title: "Blind test anniversaire — animation musicale gratuite | ZIK",
+    title: "Blind test anniversaire - animation musicale gratuite | ZIK",
     h1: "Blind test pour un anniversaire",
     description:
       "Organisez un blind test d'anniversaire en 2 minutes : la TV diffuse, les invités répondent sur leur téléphone. Gratuit, sans application ni compte pour les invités.",
@@ -353,8 +342,7 @@ export const BLIND_TEST_THEMES = [
   {
     slug: "mariage",
     name: "Mariage",
-    emoji: "💍",
-    title: "Blind test mariage — animation pour la soirée | ZIK",
+    title: "Blind test mariage - animation pour la soirée | ZIK",
     h1: "Blind test pour un mariage",
     description:
       "Animez un mariage avec un blind test : la musique passe sur l'écran de la salle, les invités jouent depuis leur téléphone. Gratuit, sans inscription pour les invités.",
