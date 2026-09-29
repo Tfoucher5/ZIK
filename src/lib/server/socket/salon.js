@@ -21,6 +21,46 @@ const SALON_CLEANUP_DELAY = 30 * 60 * 1000; // 30 min
 const HOST_RECONNECT_GRACE = 120 * 1000; // 2 min
 const PLAYER_RECONNECT_GRACE = 90 * 1000; // 90 s
 
+// ─── Persistance des parties ──────────────────────────────────────────────────
+// Une partie salon n'a pas de ligne game_players : les invités n'ont pas de
+// compte et le salon ne doit pas compter dans les classements. Seuls la partie
+// et son nombre de joueurs sont gardés, pour les statistiques.
+
+async function recordSalonGameStart(salon) {
+  salon.game.dbGameId = null;
+  try {
+    const { data } = await supabase
+      .from("games")
+      .insert({
+        room_id: salon.code,
+        rounds: salon.settings.maxRounds,
+        mode: salon.settings.answerMode === "multiple" ? "qcm" : "classic",
+        source: "salon",
+      })
+      .select("id")
+      .single();
+    if (data) salon.game.dbGameId = data.id;
+  } catch {
+    /* non bloquant */
+  }
+}
+
+function recordSalonGameEnd(salon) {
+  const id = salon.game.dbGameId;
+  if (!id) return;
+  salon.game.dbGameId = null;
+  supabase
+    .from("games")
+    .update({
+      ended_at: new Date().toISOString(),
+      player_count: Object.keys(salon.players).length,
+    })
+    .eq("id", id)
+    .then(({ error }) => {
+      if (error) console.error("[salon] fin de partie:", error.message);
+    });
+}
+
 // ─── Code generation ──────────────────────────────────────────────────────────
 
 function generateCode() {
@@ -436,6 +476,7 @@ async function startNextRound(code, io) {
     game.sessionPlaylist.length === 0
   ) {
     game.phase = "gameover";
+    recordSalonGameEnd(salon);
     const finalScores = Object.values(salon.players)
       .map((p) => ({ username: p.username, score: p.score }))
       .sort((a, b) => b.score - a.score);
@@ -810,6 +851,7 @@ export function registerSalon(io) {
       for (const p of Object.values(salon.players)) p.score = 0;
 
       io.to(`salon:${code}`).emit("salon_game_starting");
+      recordSalonGameStart(salon);
       startNextRound(code, io);
     });
 
@@ -1062,6 +1104,7 @@ export function registerSalon(io) {
       io.to(`salon:${code}`).emit("salon_restarted", {
         players: getPlayerList(salon),
       });
+      recordSalonGameStart(salon);
       startNextRound(code, io);
     });
 
