@@ -1,5 +1,7 @@
 <script>
   import { signupRef } from '$lib/signupRef.js';
+  import { env } from '$env/dynamic/public';
+  import Captcha from '$lib/components/Captcha.svelte';
   /**
    * @type {{
    *   sb: any,
@@ -27,6 +29,13 @@
   let regError    = $state('');
   let regLoading  = $state(false);
   let showRegPwd  = $state(false);
+  // Champ invisible : un humain ne le voit pas, un robot le remplit
+  let regWebsite  = $state('');
+
+  const captchaOn = !!env.PUBLIC_TURNSTILE_SITE_KEY;
+  let captchaToken = $state(null);
+  let captcha;
+  const CAPTCHA_MSG = 'Valide la vérification anti-robot.';
 
   /* animation d'entrée : portes + tampon — garde la modale montée
      même quand le layout ferme `open` sur SIGNED_IN */
@@ -50,15 +59,21 @@
     onClose();
   }
 
-  function setView(v) { view = v; resetFields(); }
+  function setView(v) { view = v; captchaToken = null; resetFields(); }
 
   async function handleLogin() {
     loginError = '';
     if (!sb) { loginError = 'Supabase non configure.'; return; }
     if (!loginEmail || !loginPassword) { loginError = 'Remplis tous les champs.'; return; }
+    if (captchaOn && !captchaToken) { loginError = CAPTCHA_MSG; return; }
     loginLoading = true;
-    const { error } = await sb.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    const { error } = await sb.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+      options: { captchaToken: captchaToken ?? undefined },
+    });
     loginLoading = false;
+    captcha?.reset();
     if (error) {
       const msg = error.message.toLowerCase();
       loginError = msg.includes('invalid') ? 'Email ou mot de passe incorrect.' :
@@ -78,11 +93,14 @@
     resetError = '';
     if (!sb) { resetError = 'Supabase non configure.'; return; }
     if (!loginEmail) { resetError = 'Renseigne ton email.'; return; }
+    if (captchaOn && !captchaToken) { resetError = CAPTCHA_MSG; return; }
     resetLoading = true;
     const { error } = await sb.auth.resetPasswordForEmail(loginEmail, {
-      redirectTo: `${window.location.origin}/reset-password`
+      redirectTo: `${window.location.origin}/reset-password`,
+      captchaToken: captchaToken ?? undefined,
     });
     resetLoading = false;
+    captcha?.reset();
     if (error) resetError = error.message;
     else resetSent = true;
   }
@@ -94,13 +112,24 @@
     if (regUsername.length < 3) { regError = 'Pseudo trop court (min. 3 caracteres).'; return; }
     if (regPassword.length < 6) { regError = 'Mot de passe trop court (min. 6 caracteres).'; return; }
     if (!/^[a-zA-Z0-9_-]{3,20}$/.test(regUsername)) { regError = 'Pseudo invalide (lettres, chiffres, - et _ uniquement).'; return; }
+    // Robot pris au piège : on fait comme si tout allait bien, sans rien créer
+    if (regWebsite) { view = 'confirm'; return; }
+    if (captchaOn && !captchaToken) { regError = CAPTCHA_MSG; return; }
 
     const { data: exists } = await sb.from('profiles').select('id').eq('username', regUsername).maybeSingle();
     if (exists) { regError = 'Ce pseudo est deja pris.'; return; }
 
     regLoading = true;
-    const { error } = await sb.auth.signUp({ email: regEmail, password: regPassword, options: { data: { username: regUsername, signup_ref: signupRef() ?? undefined } } });
+    const { error } = await sb.auth.signUp({
+      email: regEmail,
+      password: regPassword,
+      options: {
+        data: { username: regUsername, signup_ref: signupRef() ?? undefined },
+        captchaToken: captchaToken ?? undefined,
+      },
+    });
     regLoading = false;
+    captcha?.reset();
     if (error) regError = error.message;
     else view = 'confirm';
   }
@@ -209,6 +238,7 @@
 
         <button type="button" class="forgot" onclick={() => setView('reset')}>Mot de passe oublié ?</button>
 
+        <Captcha bind:this={captcha} bind:token={captchaToken} />
         {#if loginError}<div class="alert-err">{loginError}</div>{/if}
 
         <button class="submit" onclick={handleLogin} disabled={loginLoading || entering}>
@@ -254,6 +284,8 @@
           </div>
         </div>
 
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" bind:value={regWebsite}>
+        <Captcha bind:this={captcha} bind:token={captchaToken} />
         {#if regError}<div class="alert-err">{regError}</div>{/if}
 
         <button class="submit" onclick={handleRegister} disabled={regLoading}>
@@ -284,6 +316,7 @@
               onkeypress={e => { if (e.key === 'Enter') handleReset(); }} />
           </div>
 
+          <Captcha bind:this={captcha} bind:token={captchaToken} />
           {#if resetError}<div class="alert-err">{resetError}</div>{/if}
 
           <button class="submit" onclick={handleReset} disabled={resetLoading}>
@@ -317,6 +350,14 @@
 {/if}
 
 <style>
+  /* Champ piège : hors écran mais présent pour les robots */
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
   .gl-overlay {
     position: fixed; inset: 0; z-index: 1000;
     display: grid; grid-template-columns: 1fr 470px;

@@ -6,7 +6,7 @@ ZIK propose plusieurs façons de jouer :
 
 - **Rooms multijoueur** — parties en temps réel, en saisie libre (artiste + titre) ou en QCM. Classement ELO pour les joueurs inscrits.
 - **Zikle** — jeu quotidien solo : une seule chanson par jour, la même pour tout le monde, à deviner en 6 essais. L'extrait audio s'allonge à chaque erreur (1s, 2s, 4s, 7s, 11s, 16s). Sans compte.
-- **Mode Salon** — blind test façon Kahoot pour soirées et salles de classe : l'hôte projette sur TV, les joueurs répondent sur leur téléphone via un QR code.
+- **Mode Salon** — le blind test de soirée : l'écran (TV, vidéoprojecteur) diffuse la musique, le chrono et le classement, les joueurs répondent sur leur téléphone après avoir scanné un QR code. Jeu en solo ou en équipes, régie sur un second écran pour l'organisateur. Gratuit jusqu'à 12 joueurs ; ZIK Pro (bars, campings, événements) : joueurs illimités, 8 équipes, régie complète, dès 7,90 € HT la soirée.
 - **Playlists** — création de playlists personnalisées, import depuis Deezer.
 
 ## Pages principales
@@ -17,7 +17,9 @@ ZIK propose plusieurs façons de jouer :
 - [Rooms](https://www.zik-music.fr/rooms) : liste des salles de blind test multijoueur.
 - [Playlists](https://www.zik-music.fr/playlists) : playlists officielles et personnalisées.
 - [Classements](https://www.zik-music.fr/classements) : classement ELO et classement hebdomadaire.
-- [Mode Salon](https://www.zik-music.fr/salon) : blind test sur grand écran pour un groupe.
+- [Mode Salon](https://www.zik-music.fr/salon) : lancer un blind test de soirée sur la TV.
+- [ZIK Pro](https://www.zik-music.fr/pro) : l'offre pour les bars, campings, associations et entreprises, avec les tarifs.
+- [Blind test par thème et par occasion](https://www.zik-music.fr/blind-test) : années 80, rap français, Disney, soirée entre amis, bar, camping, team building, anniversaire, mariage.
 - [Documentation](https://www.zik-music.fr/docs) : règles complètes, système de points, FAQ.
 - [Nouveautés](https://www.zik-music.fr/nouveautes) : journal des mises à jour.
 
