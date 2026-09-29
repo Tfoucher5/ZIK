@@ -47,6 +47,11 @@
   let error         = $state('');
   let errorTimer    = null;
 
+  let roster = $state([]);
+  let teams  = $state(null);
+  let myTeam = $state(null);
+  let paused = $state(false);
+
   let socket;
 
   function showFeedback(data) {
@@ -62,6 +67,19 @@
   }
 
   let myRank = $derived(scores.findIndex(s => s.username === username) + 1);
+  // Podium en cours de partie : les trois premiers, plus soi-même si on n'y est pas
+  let board = $derived.by(() => {
+    const list = (scores.length ? scores : roster).map((p, i) => ({ ...p, rank: i + 1 }));
+    const top = list.slice(0, 3);
+    const me = list.find(p => p.username === username);
+    return me && me.rank > 3 ? [...top, me] : top;
+  });
+  let teamName = $derived(teams?.find(t => t.id === myTeam)?.name);
+
+  function pickTeam(id) {
+    myTeam = id;
+    socket?.emit('salon_pick_team', { team: id });
+  }
 
   function submitGuess() {
     if (allFound || !guess.trim()) return;
@@ -88,7 +106,10 @@
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
 
     socket.on('connect', () => {
-      socket.emit('salon_join_player', { code: c, username: u });
+      // Jeton de ce téléphone : lui seul peut reprendre sa place après une coupure
+      let token = null;
+      try { token = localStorage.getItem('zik_salon_player_' + c); } catch { /* stockage indisponible */ }
+      socket.emit('salon_join_player', { code: c, username: u, token });
     });
 
     socket.on('salon_joined', (data) => {
@@ -101,10 +122,17 @@
       error      = '';
       localStorage.setItem('salon_code', c);
       localStorage.setItem('salon_user', u);
+      localStorage.setItem('zik_salon_player_' + c, data.token);
+      roster = data.players || [];
+      teams  = data.teams;
+      myTeam = data.team;
 
       if (data.reconnecting) {
         // Restore server-side state after a disconnection
         phase    = data.phase || 'round';
+        paused   = !!data.paused;
+        round    = data.round ?? round;
+        total    = data.settings?.maxRounds ?? total;
         myScore  = data.score ?? myScore;
         foundArtist = data.foundArtist ?? foundArtist;
         foundTitle  = data.foundTitle  ?? foundTitle;
@@ -123,7 +151,7 @@
         timerMax     = data.timerMax ?? timerMax;
         timerStarted = data.timerActive ?? (data.timerVal > 0);
       } else {
-        // Fresh join — reset everything
+        // Fresh join - reset everything
         phase       = 'lobby';
         myScore     = 0;
         scores      = [];
@@ -136,7 +164,22 @@
       }
     });
 
-    socket.on('salon_game_starting', () => { phase = 'starting'; });
+    const resetScores = () => { scores = []; myScore = 0; finalScores = []; };
+    socket.on('salon_game_starting', () => { phase = 'starting'; resetScores(); });
+    socket.on('salon_restarted', resetScores);
+
+    socket.on('salon_roster', ({ players, teams: t }) => {
+      roster = players;
+      teams  = t;
+      myTeam = players.find(p => p.username === username)?.team ?? myTeam;
+    });
+    socket.on('salon_paused', ({ paused: p }) => { paused = p; });
+    socket.on('salon_settings', ({ settings: st }) => { total = st.maxRounds; answerMode = st.answerMode; });
+    socket.on('salon_kicked', () => {
+      socket.disconnect();
+      joined = false;
+      joinError = "L'hôte t'a retiré du salon.";
+    });
 
     socket.on('salon_round_start', (data) => {
       phase              = 'round';
@@ -189,8 +232,9 @@
       }
     });
 
-    socket.on('salon_scores_update', ({ scores: s }) => {
+    socket.on('salon_scores_update', ({ scores: s, teams: t }) => {
       scores = s;
+      if (t) teams = t;
       const me = s.find(p => p.username === username);
       if (me) myScore = me.score;
     });
@@ -199,6 +243,7 @@
       roundEnd = data;
       allFound = true;
       if (data.scores) scores = data.scores;
+      teams = data.teams;
 
       if (answerMode === 'multiple' && data.correctChoiceIndex !== undefined) {
         // QCM: brief reveal of correct answer before transitioning to summary
@@ -214,9 +259,10 @@
       }
     });
 
-    socket.on('salon_game_over', ({ scores: s }) => {
+    socket.on('salon_game_over', ({ scores: s, teams: t }) => {
       phase       = 'gameover';
       finalScores = s;
+      teams       = t;
     });
 
     socket.on('salon_error', ({ message }) => {
@@ -258,9 +304,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </svelte:head>
 
-<div class="salon-blob b1"></div>
-<div class="salon-blob b2"></div>
-
 {#if !joined}
   <a class="salon-back salon-play-backlink" href="/salon">← Retour</a>
   <JoinForm
@@ -271,27 +314,51 @@
     onJoin={connectAndJoin}
   />
 {:else}
-  <div class="salon-play">
-
-    <header class="salon-play-header">
-      <span class="salon-play-av" style="--h:{hue(username)}">{username[0]?.toUpperCase() ?? '?'}</span>
+  <main class="sp">
+    <header class="sp-head">
+      <span class="sp-av" style="--h:{hue(username)}">{username[0]?.toUpperCase() ?? '?'}</span>
       <div>
-        <div class="salon-play-name">{username}</div>
-        <div class="salon-play-salon">Salon {code}</div>
+        <div class="sp-name">{username}</div>
+        <div class="sp-salon">
+          Salon {code}
+          {#if teamName}<span class="sp-team-tag" style="--tc:var(--q{myTeam})">{teamName}</span>{/if}
+        </div>
       </div>
-      <div class="salon-play-score">{myScore}<small>points</small></div>
+      <div class="sp-score">{myScore}<small>points</small></div>
     </header>
 
-    <div class="salon-play-body">
-
+    <div class="sp-body">
       {#if phase === 'lobby' || phase === 'starting'}
-        <div class="salon-play-lobby">
-          <p style="font-size:1rem;font-weight:700">Connecté !</p>
-          <p style="color:var(--mid);font-size:.9rem">En attente du lancement par l'hôte…</p>
-          <div class="waiting-dots">
-            <span>●</span><span>●</span><span>●</span>
-          </div>
+        <div>
+          <p class="sx-kicker"><b>●</b> Connecté</p>
+          <div class="sp-big">C'est bon,<br>tu es dedans.</div>
+          <p class="sp-hint">Regarde la TV : la partie démarre quand l'hôte la lance.</p>
         </div>
+
+        {#if teams}
+          <section>
+            <p class="sx-kicker">Choisis ton équipe</p>
+            <div class="sp-teams">
+              {#each teams as t (t.id)}
+                <button class="sp-team" class:on={myTeam === t.id} style="--tc:var(--q{t.id})" onclick={() => pickTeam(t.id)}>
+                  <b>{t.name}</b>
+                  <small>{t.members.length} joueur{t.members.length > 1 ? 's' : ''}</small>
+                </button>
+              {/each}
+            </div>
+          </section>
+        {/if}
+
+        <section>
+          <p class="sx-kicker">Dans le salon · {roster.length}</p>
+          <ul class="sp-roster">
+            {#each roster as p (p.username)}
+              <li class:me={p.username === username}>
+                {#if teams && p.team != null}<i style="--tc:var(--q{p.team})"></i>{/if}{p.username}
+              </li>
+            {/each}
+          </ul>
+        </section>
 
       {:else if phase === 'round'}
         <RoundPlay
@@ -308,26 +375,36 @@
           onSubmitChoice={submitChoice}
         />
 
-        {#if myRank > 0 && scores.length > 1}
-          <div class="salon-me-rank">
-            <b>{myRank}{myRank === 1 ? 'er' : 'e'}</b> sur {scores.length}
-          </div>
+        {#if board.length > 1 && (answerMode === 'multiple' ? chosenIndex !== null && revealCorrectIndex === null : allFound)}
+          <section class="sp-board">
+            <p class="sx-kicker">{myRank > 0 ? `Tu es ${myRank}${myRank === 1 ? 'er' : 'e'} sur ${scores.length}` : 'Classement'}</p>
+            <ol class="sp-list">
+              {#each board as p (p.username)}
+                <li class:me={p.username === username}>
+                  <span class="r">{String(p.rank).padStart(2, '0')}</span>
+                  <span class="n">{p.username}</span>
+                  <span class="p">{p.score}</span>
+                </li>
+              {/each}
+            </ol>
+          </section>
         {/if}
 
       {:else if phase === 'summary' || phase === 'gameover'}
         <SummaryView
-          {phase} {roundEnd} {finalScores} {scores} {username}
+          {phase} {roundEnd} {finalScores} {scores} {username} {teams} {myTeam}
           {round} {total}
           onLeave={() => { joined = false; codeInput = ''; }}
         />
       {/if}
 
-      {#if error && joined}
-        <p style="color:var(--danger);font-size:.85rem;text-align:center">{error}</p>
-      {/if}
-
+      {#if error}<p class="sp-error">{error}</p>{/if}
     </div>
-  </div>
+  </main>
+
+  {#if paused}
+    <div class="sp-pause"><span>Pause</span><small>L'hôte a mis la partie en pause</small></div>
+  {/if}
 
   <FeedbackOverlay {feedback} />
 {/if}

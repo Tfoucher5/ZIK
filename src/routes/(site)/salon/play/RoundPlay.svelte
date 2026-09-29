@@ -17,73 +17,41 @@
     onSubmitChoice,
   } = $props();
 
-  // SVG arc timer — circumference of r=44: 2π×44 ≈ 276.46
-  const CIRCUMFERENCE = 276.46;
-
-  function timerPct() {
-    return timerMax ? Math.max(0, (timerVal / timerMax) * 100) : 100;
-  }
-
-  function timerClass() {
-    const p = timerPct();
-    if (p < 20) return 'danger';
-    if (p < 40) return 'warning';
-    return '';
-  }
-
-  function arcOffset() {
-    return ((1 - timerPct() / 100) * CIRCUMFERENCE).toFixed(2);
-  }
+  let ratio = $derived(timerMax ? Math.max(0, timerVal / timerMax) : 1);
+  let level = $derived(ratio >= 0.4 ? '' : ratio >= 0.2 ? 'warn' : 'danger');
 </script>
 
-<!-- Progress bar (top of screen) -->
-<div class="salon-timer-bar">
-  <div class="salon-timer-fill" style="width:{timerPct()}%"></div>
+<div class="sp-timer-row">
+  <span class="sx-kicker">Manche <b>{round}</b> / {total}</span>
+  {#if timerStarted}<span class="sp-timer {level}">{timerVal}</span>{/if}
 </div>
-
-<div class="salon-play-round">
-  Manche <strong>{round} / {total}</strong>
-</div>
-
-<!-- SVG arc countdown timer -->
-<div class="salon-timer-wrap">
-  <svg class="salon-timer-svg" viewBox="0 0 100 100" aria-hidden="true">
-    <circle class="timer-track" cx="50" cy="50" r="44" />
-    <circle
-      class="timer-arc {timerClass()}"
-      cx="50" cy="50" r="44"
-      style="stroke-dashoffset: {arcOffset()}"
-    />
-  </svg>
-  <div class="salon-timer-num {timerClass()}">{timerVal}</div>
-</div>
+<div class="sp-bar"><i style="width:{timerStarted ? ratio * 100 : 0}%"></i></div>
 
 {#if !timerStarted}
-  <div class="salon-music-loading">
-    <div class="waiting-dots"><span>●</span><span>●</span><span>●</span></div>
-    <p>Chargement de la musique…</p>
+  <div class="sp-center">
+    <span class="sx-dots"><i></i><i></i><i></i></span>
+    <p>La musique arrive sur la TV…</p>
   </div>
 
 {:else if answerMode === 'free'}
-  <div class="salon-progress-row">
-    <span class="salon-progress-chip {foundArtist ? 'found' : ''}">🎤 Artiste</span>
+  <div class="sp-chips">
+    <span class="sp-chip" class:found={foundArtist}>Artiste</span>
     {#each foundFeats as ff, i (i)}
-      <span class="salon-progress-chip {ff ? 'found' : ''}">🎸 Feat {i + 1}</span>
+      <span class="sp-chip" class:found={ff}>Feat {i + 1}</span>
     {/each}
-    <span class="salon-progress-chip {foundTitle ? 'found' : ''}">🎵 Titre</span>
+    <span class="sp-chip" class:found={foundTitle}>Titre</span>
     {#each extras as label, i (i)}
-      <span class="salon-progress-chip {foundExtras[i] ? 'found' : ''}">🎬 {label}</span>
+      <span class="sp-chip" class:found={foundExtras[i]}>{label}</span>
     {/each}
   </div>
 
   {#if allFound}
-    <div class="salon-all-found">
-      <div class="salon-all-found-emoji">🎉</div>
-      <div class="salon-all-found-text">Tout trouvé !</div>
-      <div class="salon-all-found-sub">En attente des autres…</div>
+    <div class="sp-done">
+      <div class="sp-big">Tout trouvé</div>
+      <p>On attend les autres…</p>
     </div>
   {:else}
-    <div class="salon-play-guess">
+    <div class="sp-guess">
       <input
         id="salon-guess-input"
         type="text"
@@ -94,41 +62,34 @@
         spellcheck="false"
         onkeydown={e => { if (e.key === 'Enter') onSubmitGuess(); }}
       >
-      <button class="btn-salon-submit" onclick={onSubmitGuess} disabled={!guess.trim()}>
-        Envoyer
-      </button>
+      <button class="sx-btn sx-btn-primary" onclick={onSubmitGuess} disabled={!guess.trim()}>OK</button>
     </div>
   {/if}
 
 {:else if answerMode === 'multiple' && choices}
-  <!-- QCM: choices always visible — state classes drive the reveal animation -->
-  <div class="salon-choices">
-    {#each choices as choice, i (i)}
-      {@const isChosen = chosenIndex === i}
-      {@const isRevealing = revealCorrectIndex !== null}
-      {@const isCorrect = isRevealing && i === revealCorrectIndex}
-      {@const isWrong = isRevealing && isChosen && !isCorrect}
-      {@const isNeutral = isRevealing && !isChosen && !isCorrect}
-      <button
-        class="salon-choice-btn c{i}"
-        class:is-selected={isChosen && !isRevealing}
-        class:is-waiting={!isChosen && chosenIndex !== null && !isRevealing}
-        class:reveal-correct={isCorrect}
-        class:reveal-wrong={isWrong}
-        class:reveal-neutral={isNeutral}
-        onclick={() => onSubmitChoice(i)}
-        disabled={allFound}
-      >
-        <span class="choice-shape"></span>
-        <span class="choice-text">{choice}</span>
-      </button>
-    {/each}
-  </div>
-
-  {#if chosenIndex !== null && !isNaN(chosenIndex) && revealCorrectIndex === null}
-    <p class="salon-qcm-waiting">
-      <span class="waiting-dots"><span>●</span><span>●</span><span>●</span></span>
-      Réponse verrouillée
-    </p>
+  {#if chosenIndex !== null && revealCorrectIndex === null}
+    <!-- Réponse donnée : on la rappelle en petit, le classement prend la place -->
+    <div class="sp-chosen">
+      <div class="sx-choice c{chosenIndex}"><span class="sx-shape"></span>{choices[chosenIndex]}</div>
+      <p class="sp-locked"><span class="sx-dots"><i></i><i></i><i></i></span> Réponse verrouillée</p>
+    </div>
+  {:else}
+    <div class="sx-choices sp-drawer">
+      {#each choices as choice, i (i)}
+        {@const isChosen = chosenIndex === i}
+        {@const isRevealing = revealCorrectIndex !== null}
+        {@const isCorrect = isRevealing && i === revealCorrectIndex}
+        <button
+          class="sx-choice c{i}"
+          class:reveal-correct={isCorrect}
+          class:reveal-wrong={isRevealing && isChosen && !isCorrect}
+          class:reveal-neutral={isRevealing && !isChosen && !isCorrect}
+          onclick={() => onSubmitChoice(i)}
+          disabled={allFound}
+        >
+          <span class="sx-shape"></span>{choice}
+        </button>
+      {/each}
+    </div>
   {/if}
 {/if}

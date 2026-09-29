@@ -3,14 +3,19 @@
   import { io } from 'socket.io-client';
   import HostCenter from './HostCenter.svelte';
   import PlayerSidebar from './PlayerSidebar.svelte';
-  import PlaylistPicker from '$lib/components/salon/PlaylistPicker.svelte';
+  import PlaylistModal from '$lib/components/salon/PlaylistModal.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
+  import { takeSalonKeyFromUrl, patchSalonPlaylists } from '$lib/salonClient.js';
 
   let { data } = $props();
   const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
 
   let code = $state('');
+  let key = null;
+  // L'écran TV n'existe qu'avec la clé du salon : personne d'autre ne l'ouvre
+  let joined = $state(false);
+  let pro = $state(false);
   let socket;
 
   // Changement de playlist en cours de salon
@@ -29,35 +34,23 @@
   let total         = $state(10);
   let timerVal      = $state(0);
   let timerMax      = $state(30);
+  let timerStarted  = $state(false);
   let roundEnd      = $state(null);
-  let finalScores   = $state([]);
+  let gameOver      = $state(null);
+  let teams         = $state(null);
+  let paused        = $state(false);
   let settings      = $state({});
   let choices       = $state(null);
   let error         = $state('');
   let autoNextSec   = $state(0);
   let autoNextTimer = null;
-  let currentPhrase = $state('');
   let volume        = $state(100);
 
   /** @type {HostCenter} */
   let hostCenter;
 
-  const phrases = [
-    'Écoutez bien… 👂', 'Vous le sentez ce titre ? 🎵', 'Chaud devant ! 🔥',
-    'Qui sera le premier ? 🏆', 'Concentrez-vous ! 🧠', 'La pression monte… ⏰',
-    "Un indice : c'est de la musique 😅", 'Même les pros suent là… 💦',
-    'Ça commence à chauffer ! 🌡️', 'Tournée des grands ducs 👑',
-    'Le premier qui trouve gagne tout ! 🎯', "C'est maintenant ou jamais… ⚡",
-    "Vos oreilles valent de l'or 🪙", 'Top niveau ce soir ! 🎶',
-    'Ça sent la victoire ! 🏅',
-  ];
-
-  function pickPhrase() {
-    currentPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-  }
-
-  function timerPct()   { return timerMax ? Math.max(0, (timerVal / timerMax) * 100) : 100; }
-  function timerColor() { const p = timerPct(); return p > 60 ? '#4ade80' : p > 30 ? '#fbbf24' : '#f87171'; }
+  let timerLevel = $derived(!timerMax || timerVal / timerMax >= 0.4 ? '' : timerVal / timerMax >= 0.2 ? 'warn' : 'danger');
+  let deltas = $derived(Object.fromEntries((roundEnd?.scores ?? []).map(s => [s.username, s.delta])));
 
   function qrUrl(size = 200) {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent('https://www.zik-music.fr/salon/play?code=' + code)}&bgcolor=ffffff&color=000000`;
@@ -77,6 +70,13 @@
   function startGame()   { socket?.emit('salon_start'); phase = 'starting'; }
   function nextRound()   { socket?.emit('salon_next_round'); clearAutoNext(); }
   function restartGame() { socket?.emit('salon_restart'); }
+  function togglePause() { socket?.emit(paused ? 'salon_resume' : 'salon_pause'); }
+
+  // Garde les indicateurs de la manche (A/T) quand la liste est renvoyée
+  function mergeRoster(list) {
+    const old = Object.fromEntries(players.map(p => [p.username, p]));
+    players = list.map(p => ({ ...old[p.username], ...p })).sort((a, b) => b.score - a.score);
+  }
 
   function openPicker() {
     pickerError = '';
@@ -89,15 +89,7 @@
     savingPlaylist = true;
     pickerError = '';
     try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) throw new Error('Session expirée, reconnecte-toi sur ce navigateur.');
-      const res = await fetch('/api/salon', {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ code, playlistIds: pickerIds }),
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'Changement impossible');
+      await patchSalonPlaylists(sb, code, pickerIds);
       pickerOpen = false;
     } catch (e) {
       pickerError = e.message;
@@ -109,20 +101,32 @@
   function connectSocket(roomCode) {
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
 
-    socket.on('connect', () => socket.emit('salon_join_host', { code: roomCode }));
+    socket.on('connect', () => socket.emit('salon_join_host', { code: roomCode, key }));
 
     socket.on('salon_host_joined', (data) => {
+      joined   = true;
+      pro      = data.pro;
       settings = data.settings || {};
       players  = data.players || [];
+      teams    = data.teams;
+      paused   = data.paused;
       phase    = data.phase || 'lobby';
       round    = data.currentRound || 0;
       total    = settings.maxRounds || 10;
     });
 
-    socket.on('salon_player_joined', ({ players: p }) => { players = p; });
-    socket.on('salon_player_left',   ({ players: p }) => { players = p; });
+    socket.on('salon_roster', ({ players: p, teams: t }) => { mergeRoster(p); teams = t; });
+    socket.on('salon_settings', ({ settings: s }) => { settings = s; total = s.maxRounds; });
+    socket.on('salon_volume', ({ volume: v }) => applyVolume(v));
+    socket.on('salon_paused', ({ paused: p }) => {
+      paused = p;
+      if (p) hostCenter?.pauseVideo();
+      else hostCenter?.resumeVideo();
+      if (p) clearAutoNext();
+    });
 
-    socket.on('salon_scores_update', ({ scores }) => {
+    socket.on('salon_scores_update', ({ scores, teams: t }) => {
+      if (t) teams = t;
       players = players.map(pl => {
         const s = scores.find(s => s.username === pl.username);
         return s ? { ...pl, score: s.score } : pl;
@@ -131,15 +135,17 @@
 
     socket.on('salon_game_starting', () => { phase = 'starting'; });
 
+    socket.on('salon_next_video', ({ videoId, startSeconds }) => hostCenter?.preloadVideo(videoId, startSeconds));
+
     socket.on('salon_round_start', (data) => {
       phase    = 'round';
       round    = data.round;
       total    = data.total;
       roundEnd = null;
       timerVal = 0;
+      timerStarted = false;
       choices  = data.choices || null;
       clearAutoNext();
-      pickPhrase();
       players = players.map(p => ({
         ...p,
         foundThisRound: false, answeredThisRound: false,
@@ -149,8 +155,8 @@
       hostCenter?.loadVideo(data.videoId, data.startSeconds);
     });
 
-    socket.on('salon_timer_started', ({ max }) => { timerVal = max; timerMax = max; });
-    socket.on('salon_timer_update', ({ current, max }) => { timerVal = current; timerMax = max; });
+    socket.on('salon_timer_started', ({ max }) => { timerVal = max; timerMax = max; timerStarted = true; });
+    socket.on('salon_timer_update', ({ current, max }) => { timerVal = current; timerMax = max; timerStarted = true; });
 
     socket.on('salon_player_answered', ({ username, correct, answered, foundArtist, foundTitle, foundFeatCount, totalFeatCount }) => {
       players = players.map(p =>
@@ -174,6 +180,7 @@
       phase    = 'summary';
       choices  = null;
       roundEnd = data;
+      teams    = data.teams;
       setTimeout(() => hostCenter?.revealVideo(), 200);
       if (data.scores) {
         const m = Object.fromEntries(data.scores.map(s => [s.username, s.score]));
@@ -182,12 +189,12 @@
       if (!settings.manualNext) startAutoNextCountdown(settings.showAnswerDuration || 7);
     });
 
-    socket.on('salon_game_over', ({ scores }) => {
-      phase = 'gameover'; finalScores = scores; clearAutoNext();
+    socket.on('salon_game_over', (data) => {
+      phase = 'gameover'; gameOver = data; teams = data.teams; clearAutoNext();
     });
 
     socket.on('salon_restarted', ({ players: p }) => {
-      players = p; roundEnd = null; finalScores = []; clearAutoNext();
+      mergeRoster(p); roundEnd = null; gameOver = null; clearAutoNext();
     });
 
     socket.on('salon_playlists_changed', ({ playlistIds, trackCount, appliedNow, remainingRounds }) => {
@@ -205,16 +212,17 @@
     const params = new URLSearchParams(window.location.search);
     code = params.get('code')?.toUpperCase() || '';
     if (!code) { window.location.href = '/salon'; return; }
+    key = takeSalonKeyFromUrl(code);
     const savedVol = parseInt(localStorage.getItem('zik_salon_vol') ?? '100');
     volume = Number.isNaN(savedVol) ? 100 : savedVol;
     hostCenter?.setVolume(volume);
     connectSocket(code);
 
     const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
+    if (session?.user || key) {
       canChangePlaylists = true;
       try {
-        allPlaylists = await loadSalonPlaylists(sb, session.user.id);
+        allPlaylists = await loadSalonPlaylists(sb, session?.user.id ?? null);
       } catch {
         canChangePlaylists = false;
       }
@@ -228,204 +236,105 @@
 </script>
 
 <svelte:head>
-  <title>ZIK Salon — Hôte {code}</title>
+  <title>ZIK Salon - Hôte {code}</title>
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
-<div class="salon-blob b1"></div>
-<div class="salon-blob b2"></div>
-
-<div class="salon-host">
-
-  <!-- Header -->
-  <header class="salon-host-header">
-    <a class="salon-host-home" href="/" title="Retour à l'accueil du site" aria-label="Retour à l'accueil du site">⌂</a>
-    <div class="salon-host-brand">ZIK <span>Salon</span></div>
-    <div class="salon-host-code">
-      <img class="salon-host-qr-sm" src={qrUrl(100)} alt="QR" width="46" height="46">
+{#if !joined && error}
+  <main class="sh-locked">
+    <p class="sx-kicker"><b>●</b> ZIK Salon</p>
+    <h1>Écran réservé<br>à l'hôte.</h1>
+    <p>{error} Pour rejoindre la partie, va sur <b>zik-music.fr/salon/play</b> et entre le code affiché sur la TV.</p>
+    <a class="sx-btn sx-btn-primary" href="/salon/play?code={code}">Rejoindre comme joueur</a>
+  </main>
+{:else}
+<div class="sh">
+  <header class="sh-top">
+    <a class="sh-brand" href="/" title="Retour au site">ZIK <span>Salon</span></a>
+    <div class="sh-join">
+      <img src={qrUrl(100)} alt="" width="44" height="44">
       <div>
-        <div class="salon-code-label">Rejoindre</div>
-        <div class="salon-code-chars">
-          {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
-        </div>
+        <div class="sh-join-url">zik-music.fr/salon/play</div>
+        <div class="sh-join-code">{code}</div>
       </div>
     </div>
-    <div class="salon-host-url-full">
-      zik-music.fr/salon/play<br><span>→ entre le code sur ton tel</span>
-    </div>
-    <div class="salon-host-header-right">
+    <div class="sh-top-right">
       {#if phase === 'round' || phase === 'summary'}
-        <div class="salon-host-round">Manche <b>{round} / {total}</b></div>
+        <span class="sh-round">Manche <b>{round} / {total}</b></span>
+        {#if phase === 'summary' && !paused && (settings.manualNext || autoNextSec > 0)}
+          {#if !settings.manualNext}<span class="sh-round">Suite dans <b>{autoNextSec} s</b></span>{/if}
+          <button class="sx-btn sh-regie-btn" onclick={nextRound}>{settings.manualNext ? 'Manche suivante' : 'Maintenant'}</button>
+        {/if}
+        <button class="sh-icon-btn" onclick={togglePause} title={paused ? 'Reprendre' : 'Pause'} aria-label={paused ? 'Reprendre' : 'Pause'}>{paused ? '▶' : '❚❚'}</button>
       {/if}
-      <div class="salon-host-vol" title="Volume de la musique">
+      <div class="sh-vol">
         <button
-          class="salon-host-vol-btn"
+          class="sh-icon-btn"
           aria-label={volume === 0 ? 'Réactiver le son' : 'Couper le son'}
           onclick={() => applyVolume(volume === 0 ? 100 : 0)}
-        >{volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}</button>
+        >{volume === 0 ? '🔇' : '🔊'}</button>
         <input
-          class="salon-host-vol-range"
           type="range" min="0" max="100" step="5"
           value={volume}
           aria-label="Volume"
           oninput={(e) => applyVolume(parseInt(e.target.value))}
-          style="--vol:{volume}%"
         />
       </div>
       {#if canChangePlaylists && phase !== 'starting'}
-        <button
-          class="salon-host-playlist-btn"
-          title="Changer de playlist"
-          aria-label="Changer de playlist"
-          onclick={openPicker}
-        >🎵</button>
+        <button class="sh-icon-btn" title="Changer de playlist" aria-label="Changer de playlist" onclick={openPicker}>♫</button>
       {/if}
-      <div class="salon-host-players-pill">
-        <i></i>{players.length} joueur{players.length !== 1 ? 's' : ''}
-      </div>
+      <a class="sx-btn sh-regie-btn" href="/salon/regie?code={code}" target="_blank" rel="noopener" title="Piloter la soirée depuis un autre écran">Régie</a>
     </div>
   </header>
 
-  <!-- Timer bar -->
-  <div class="salon-timer-bar {phase === 'round' ? 'active' : ''}">
-    <div class="salon-timer-fill" style="width:{timerPct()}%;background:{timerColor()}"></div>
+  <div class="sh-progress {timerLevel}">
+    {#if phase === 'round'}<i style="width:{timerMax ? (timerVal / timerMax) * 100 : 0}%"></i>{/if}
   </div>
 
-  <!-- Body -->
-  <div class="salon-host-body">
-
+  <div class="sh-body">
     <HostCenter
       bind:this={hostCenter}
-      {phase} {code} {timerVal} {timerMax}
-      {currentPhrase}
-      {players} {roundEnd} {finalScores}
+      {phase} {code} {timerVal} {timerMax} {timerStarted}
+      {players} {teams} {roundEnd} {gameOver}
+      {paused} {pro}
       {round} {total}
       {choices}
       answerMode={settings.answerMode || 'free'}
       onRestart={restartGame}
+      {settings}
+      onSetting={(patch) => socket?.emit('salon_update_settings', patch)}
       onChangePlaylists={canChangePlaylists ? openPicker : null}
       onNewSalon={() => window.location.href = '/salon'}
       onMusicReady={() => socket?.emit('salon_music_ready')}
     />
-
-    <PlayerSidebar
-      players={phase === 'gameover'
-        ? players.filter(p => !finalScores.slice(0, 3).some(s => s.username === p.username))
-        : players}
-      {phase}
-      answerMode={settings.answerMode || 'free'}
-    />
-
+    <PlayerSidebar {players} {teams} {phase} {deltas} answerMode={settings.answerMode || 'free'} />
   </div>
 
-  <!-- Footer -->
-  <footer class="salon-host-footer">
-    {#if phase === 'lobby'}
-      <button class="btn-salon-start" onclick={startGame} disabled={players.length === 0}>
-        {players.length === 0 ? 'En attente de joueurs…' : '▶ Lancer la partie'}
+  {#if phase === 'lobby'}
+    <footer class="sh-foot">
+      <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={startGame} disabled={players.length === 0}>
+        {players.length === 0 ? 'En attente de joueurs' : 'Lancer la partie'}
       </button>
-    {:else if phase === 'summary'}
-      {#if settings.manualNext}
-        <button class="btn-salon-next" onclick={nextRound}>Manche suivante →</button>
-      {:else if autoNextSec > 0}
-        <div class="salon-auto-next">
-          Manche suivante dans <strong>{autoNextSec}s</strong>…
-          <button class="btn-salon-next" onclick={nextRound} style="margin-left:12px">Maintenant →</button>
-        </div>
-      {/if}
-    {/if}
-    {#if playlistNotice}
-      <p style="color:var(--accent);font-size:.9rem;text-align:center">{playlistNotice}</p>
-    {/if}
-    {#if error}
-      <p style="color:var(--danger);font-size:.9rem;text-align:center">{error}</p>
-    {/if}
-  </footer>
-
+    </footer>
+  {/if}
 </div>
 
-{#if pickerOpen}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="salon-picker-backdrop" onclick={() => (pickerOpen = false)}>
-    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-    <div class="salon-picker-modal" onclick={(e) => e.stopPropagation()}>
-      <h2>Changer de playlist</h2>
-      <p class="salon-picker-sub">
-        {#if phase === 'round' || phase === 'summary'}
-          La manche en cours va au bout, puis les <strong>{Math.max(0, total - round)} manches restantes</strong>
-          seront tirées dans la nouvelle sélection. Les scores ne sont pas touchés.
-        {:else}
-          La sélection s'appliquera à la prochaine partie. Les scores ne sont pas touchés.
-        {/if}
-      </p>
-
-      <PlaylistPicker playlists={allPlaylists} bind:selectedIds={pickerIds} />
-
-      {#if pickerError}
-        <p style="color:var(--danger);font-size:.85rem;margin-top:10px">{pickerError}</p>
-      {/if}
-
-      <div class="salon-picker-actions">
-        <button class="btn-salon-next" onclick={() => (pickerOpen = false)}>Annuler</button>
-        <button class="btn-salon-start" onclick={savePlaylists} disabled={savingPlaylist || pickerIds.length === 0}>
-          {savingPlaylist ? 'Chargement…' : 'Valider'}
-        </button>
-      </div>
-    </div>
-  </div>
 {/if}
 
-<style>
-  .salon-picker-backdrop {
-    position: fixed;
-    inset: 0;
-    background: var(--overlay);
-    backdrop-filter: blur(6px);
-    display: grid;
-    place-items: center;
-    z-index: 60;
-    padding: 20px;
-  }
-  .salon-picker-modal {
-    background: var(--modal-bg);
-    border: 1px solid var(--border2);
-    border-radius: 18px;
-    padding: 24px;
-    width: min(560px, 100%);
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-  .salon-picker-modal h2 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin-bottom: 6px;
-  }
-  .salon-picker-sub {
-    font-size: 0.85rem;
-    color: var(--mid);
-    margin-bottom: 18px;
-    line-height: 1.6;
-  }
-  .salon-host-playlist-btn {
-    background: rgb(var(--c-glass) / 0.07);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 1rem;
-    line-height: 1;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .salon-host-playlist-btn:hover {
-    background: rgb(var(--accent-rgb) / 0.15);
-    border-color: rgb(var(--accent-rgb) / 0.5);
-  }
-  .salon-picker-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 20px;
-  }
-</style>
+{#if joined && (playlistNotice || error)}
+  <p class="sh-toast" class:err={!!error} role="status">{error || playlistNotice}</p>
+{/if}
+
+{#if pickerOpen}
+  <PlaylistModal
+    playlists={allPlaylists}
+    bind:selectedIds={pickerIds}
+    live={phase === 'round' || phase === 'summary'}
+    remaining={Math.max(0, total - round)}
+    saving={savingPlaylist}
+    error={pickerError}
+    onSave={savePlaylists}
+    onClose={() => (pickerOpen = false)}
+  />
+{/if}
+

@@ -1,47 +1,58 @@
 <script>
-  let { players = [], phase = 'lobby', answerMode = 'free' } = $props();
+  import { flip } from 'svelte/animate';
 
-  function hue(name) {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-    return h;
-  }
+  let { players = [], teams = null, phase = 'lobby', answerMode = 'free', deltas = {} } = $props();
+
+  let inGame = $derived(phase === 'round' || phase === 'summary');
+  // En équipes : chaque équipe suivie de ses joueurs, dans l'ordre du classement
+  let groups = $derived(
+    teams
+      ? teams.map(t => ({ team: t, members: players.filter(p => p.team === t.id) }))
+      : [{ team: null, members: players }]
+  );
 </script>
 
-<!-- La fosse : les joueurs en personnages devant la scène.
-     Bras levés + téléphone qui flashe quand ils ont répondu. -->
-<div class="salon-crowd">
+<aside class="sh-board">
+  <div class="sh-board-head">
+    <span class="sx-kicker">{inGame || phase === 'gameover' ? 'Classement' : 'Joueurs'}</span>
+    <span class="sx-kicker">{players.length}</span>
+  </div>
   {#if players.length === 0}
-    <div class="salon-crowd-empty">
-      {phase === 'gameover' ? 'Tout le monde est sur le podium ! 🎉' : 'La fosse est vide… scannez le QR pour entrer !'}
-    </div>
+    <p class="sh-board-empty">Personne pour l'instant. Les joueurs apparaissent ici dès qu'ils entrent le code.</p>
   {:else}
-    {#each players as p, i (p.username)}
-      {@const active = p.answeredThisRound || p.foundThisRound}
-      {@const inGame = phase === 'round' || phase === 'summary'}
-      {@const h = hue(p.username)}
-      <div
-        class="crowd-p"
-        class:hot={active && inGame}
-        style="--h:{h};--d:{(i % 7) * 0.4}s;--sz:{0.88 + ((h + i) % 4) * 0.06}"
-      >
-        <span class="crowd-name">{p.username}</span>
-        <span class="crowd-pts">{p.score ?? 0}<small>pt</small></span>
-        <div class="crowd-fig">
-          <i class="crowd-arm l"></i>
-          <i class="crowd-arm r"></i>
-          <i class="crowd-phone"></i>
-          <i class="crowd-head"></i>
-          <i class="crowd-torso"></i>
-        </div>
-        {#if inGame && answerMode === 'free'}
-          <div class="salon-crowd-badges">
-            <span class:ok={p.foundArtist}>A</span>
-            {#if (p.totalFeatCount || 0) > 0}<span class:ok={(p.foundFeatCount || 0) > 0}>F</span>{/if}
-            <span class:ok={p.foundTitle}>T</span>
-          </div>
-        {/if}
-      </div>
-    {/each}
+    <div class="sh-board-list">
+      {#each groups as g (g.team?.id ?? 'solo')}
+        <section class="sh-group" animate:flip={{ duration: 500 }} style="--tc:{g.team ? `var(--q${g.team.id})` : 'transparent'}">
+          {#if g.team}
+            <header class="sh-group-head">
+              <b>{g.team.name}</b>
+              <small>{g.members.length} joueur{g.members.length > 1 ? 's' : ''}</small>
+              <span class="pts">{g.team.score}</span>
+            </header>
+          {/if}
+          <ol>
+            {#each g.members as p, i (p.username)}
+              <li animate:flip={{ duration: 500 }} class="sh-row" class:offline={p.offline} class:done={phase === 'round' && (p.foundThisRound || p.answeredThisRound)}>
+                <span class="sh-row-rank">{String(i + 1).padStart(2, '0')}</span>
+                <span class="sh-row-name">
+                  {p.username}
+                  {#if phase === 'round' && answerMode === 'free'}
+                    <span class="sh-row-marks" aria-hidden="true">
+                      <i class:ok={p.foundArtist}>A</i>
+                      {#if (p.totalFeatCount || 0) > 0}<i class:ok={(p.foundFeatCount || 0) > 0}>F</i>{/if}
+                      <i class:ok={p.foundTitle}>T</i>
+                    </span>
+                  {/if}
+                </span>
+                <span class="sh-row-pts">
+                  {p.score ?? 0}
+                  {#if phase === 'summary' && deltas[p.username] > 0}<small>+{deltas[p.username]}</small>{/if}
+                </span>
+              </li>
+            {/each}
+          </ol>
+        </section>
+      {/each}
+    </div>
   {/if}
-</div>
+</aside>

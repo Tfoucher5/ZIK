@@ -2,6 +2,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const stringSimilarity = require("string-similarity");
 
+import { randomBytes } from "crypto";
 import { YouTube } from "youtube-sr";
 
 import { supabase } from "../config.js";
@@ -14,11 +15,22 @@ import {
   displayString,
   TRACK_ROW_SELECT,
 } from "../services/playlist.js";
+import {
+  makeTeams,
+  cleanTeamName,
+  smallestTeam,
+  spreadPlayers,
+  teamStandings,
+} from "./salonTeams.js";
+import { isPro } from "../services/pro.js";
+import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../proPlans.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SALON_CLEANUP_DELAY = 30 * 60 * 1000; // 30 min
-const HOST_RECONNECT_GRACE = 120 * 1000; // 2 min
+// Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
+// fermer la soirée
+const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 const PLAYER_RECONNECT_GRACE = 90 * 1000; // 90 s
 
 // ─── Persistance des parties ──────────────────────────────────────────────────
@@ -135,7 +147,7 @@ export function buildSessionPlaylist(fullPlaylist, count) {
 
 function makeChoices(correct, allTracks) {
   const label = (t) =>
-    `${displayString(t.mainArtist || t.artist)} — ${displayString(t.title)}`;
+    `${displayString(t.mainArtist || t.artist)} - ${displayString(t.title)}`;
   const correctLabel = label(correct);
   const correctArtistKey = (correct.mainArtist || correct.artist || "")
     .toLowerCase()
@@ -266,17 +278,81 @@ function makePlayer(username, socketId) {
     _fullFoundCounted: false,
     _choiceIndex: null,
     _choiceTimeTaken: null,
+    team: null,
+    stats: { found: 0, first: 0 },
+    token: randomBytes(12).toString("base64url"),
+    _lastGuessAt: 0,
   };
+}
+
+function addPlayer(salon, username, socketId) {
+  const player = makePlayer(username, socketId);
+  player.team = smallestTeam(
+    salon.settings.teams,
+    Object.values(salon.players),
+  );
+  salon.players[username] = player;
+  return player;
 }
 
 function getPlayerList(salon) {
   return Object.values(salon.players).map((p) => ({
     username: p.username,
     score: p.score,
+    team: p.team,
+    offline: !!p._disconnected,
     foundThisRound: p._fullFoundCounted,
     answeredThisRound:
       p.foundArtist || p.foundTitle || p.foundFeats.some(Boolean),
   }));
+}
+
+function standings(salon) {
+  return teamStandings(salon.settings.teams, Object.values(salon.players));
+}
+
+function sortedScores(salon) {
+  return Object.values(salon.players)
+    .map((p) => ({ username: p.username, score: p.score, team: p.team }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// Écrans TV et régie : tout ce que les joueurs ne doivent pas recevoir
+function staff(code, io) {
+  return io.to([`salon:screens:${code}`, `salon:ctrl:${code}`]);
+}
+
+function broadcastRoster(code, io) {
+  const salon = salonRooms[code];
+  if (!salon) return;
+  io.to(`salon:${code}`).emit("salon_roster", {
+    players: getPlayerList(salon),
+    teams: standings(salon),
+  });
+}
+
+// Fonction ZIK Pro : refusée aux salons gratuits, l'hôte voit l'offre
+function requirePro(socket, salon, feature) {
+  if (salon.pro) return true;
+  socket.emit("salon_pro_required", { feature });
+  return false;
+}
+
+function teamLimit(salon) {
+  return salon.pro ? Infinity : FREE_MAX_TEAMS;
+}
+
+// Socket de la régie ou d'un écran ouvert avec la clé : seuls à piloter
+function adminSalon(socket) {
+  if (!socket.salonAdmin) return null;
+  return salonRooms[socket.salonCode] ?? null;
+}
+
+function resetStats(salon) {
+  for (const p of Object.values(salon.players)) {
+    p.score = 0;
+    p.stats = { found: 0, first: 0 };
+  }
 }
 
 function resetRoundFlags(salon) {
@@ -324,7 +400,13 @@ function checkEveryoneDone(code, io) {
 // Also called by a fallback timeout if no signal arrives within 5s.
 function startTimer(code, io) {
   const salon = salonRooms[code];
-  if (!salon || salon.game.phase !== "round" || salon.game.interval) return;
+  if (
+    !salon ||
+    salon.game.phase !== "round" ||
+    salon.game.interval ||
+    salon.game.paused
+  )
+    return;
   const game = salon.game;
   const duration = salon.settings.roundDuration;
 
@@ -332,20 +414,98 @@ function startTimer(code, io) {
   game.musicReadyTimer = null;
   game.startTime = Date.now();
   game.timerValue = duration;
+  game.timerMax = duration;
   game.timerActive = true;
 
   io.to(`salon:${code}`).emit("salon_timer_started", { max: duration });
+  runTimer(code, io);
+}
 
+function runTimer(code, io) {
+  const game = salonRooms[code].game;
   game.interval = setInterval(() => {
     game.timerValue--;
     io.to(`salon:${code}`).emit("salon_timer_update", {
       current: game.timerValue,
-      max: duration,
+      max: game.timerMax,
     });
     if (game.timerValue <= 0) {
       endRound(code, "Temps écoulé !", io);
     }
   }, 1000);
+}
+
+// ─── Pause ────────────────────────────────────────────────────────────────────
+
+function pauseGame(code, io) {
+  const game = salonRooms[code]?.game;
+  if (!game || game.paused || !["round", "summary"].includes(game.phase))
+    return;
+  game.paused = true;
+  game.pausedAt = Date.now();
+  clearInterval(game.interval);
+  game.interval = null;
+  clearTimeout(game.musicReadyTimer);
+  game.musicReadyTimer = null;
+  clearTimeout(game.breakTimer);
+  game.breakTimer = null;
+  io.to(`salon:${code}`).emit("salon_paused", { paused: true });
+}
+
+function clearPause(code, io) {
+  const game = salonRooms[code].game;
+  if (!game.paused) return false;
+  game.paused = false;
+  // Le temps de pause ne compte pas dans le bonus de rapidité
+  game.startTime += Date.now() - game.pausedAt;
+  io.to(`salon:${code}`).emit("salon_paused", { paused: false });
+  return true;
+}
+
+function resumeGame(code, io) {
+  const salon = salonRooms[code];
+  if (!salon || !clearPause(code, io)) return;
+  const game = salon.game;
+  if (game.phase === "round") {
+    if (game.timerActive) runTimer(code, io);
+    else game.musicReadyTimer = setTimeout(() => startTimer(code, io), 12000);
+  } else if (game.phase === "summary" && !salon.settings.manualNext) {
+    game.breakTimer = setTimeout(() => {
+      game.breakTimer = null;
+      startNextRound(code, io);
+    }, 3000);
+  }
+}
+
+function finishGame(code, io) {
+  const salon = salonRooms[code];
+  const game = salon.game;
+  clearInterval(game.interval);
+  game.interval = null;
+  clearTimeout(game.breakTimer);
+  game.breakTimer = null;
+  clearTimeout(game.musicReadyTimer);
+  game.musicReadyTimer = null;
+  if (game.paused) clearPause(code, io);
+  game.phase = "gameover";
+  recordSalonGameEnd(salon);
+  const scores = Object.values(salon.players)
+    .map((p) => ({
+      username: p.username,
+      score: p.score,
+      team: p.team,
+      found: p.stats.found,
+      first: p.stats.first,
+    }))
+    .sort((a, b) => b.score - a.score);
+  io.to(`salon:${code}`).emit("salon_game_over", {
+    scores,
+    teams: standings(salon),
+    history: game.history,
+    rounds: game.history.length,
+  });
+  prepareSession(code, io);
+  scheduleCleanup(code);
 }
 
 function endRound(code, reason, io) {
@@ -355,10 +515,11 @@ function endRound(code, reason, io) {
 
   clearInterval(game.interval);
   game.interval = null;
+  game.paused = false;
   game.phase = "summary";
 
   const track = game.currentTrack;
-  const answer = `${displayString(track.mainArtist || track.artist)} — ${displayString(track.title)}`;
+  const answer = `${displayString(track.mainArtist || track.artist)} - ${displayString(track.title)}`;
 
   // ── QCM deferred scoring: compute points and send individual feedback now ──
   if (salon.settings.answerMode === "multiple") {
@@ -417,10 +578,21 @@ function endRound(code, reason, io) {
     }
   }
 
+  for (const p of Object.values(salon.players)) {
+    const ok =
+      salon.settings.answerMode === "multiple"
+        ? p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex
+        : p._fullFoundCounted;
+    if (ok) p.stats.found++;
+  }
+  if (game.firstFinder && salon.players[game.firstFinder])
+    salon.players[game.firstFinder].stats.first++;
+
   const scores = Object.values(salon.players)
     .map((p) => ({
       username: p.username,
       score: p.score,
+      team: p.team,
       delta: p.score - (p.scoreBeforeRound ?? 0),
     }))
     .sort((a, b) => b.score - a.score);
@@ -432,6 +604,7 @@ function endRound(code, reason, io) {
     firstFinder: game.firstFinder,
     featArtists: (track.featArtists || []).map(displayString),
     scores,
+    teams: standings(salon),
     correctChoiceIndex:
       salon.settings.answerMode === "multiple"
         ? game.correctChoiceIndex
@@ -467,6 +640,51 @@ async function searchTrackVideo(track, roundDuration) {
   return { video, safeStart };
 }
 
+// Cherche la vidéo du prochain titre et l'annonce à l'hôte, qui la met en
+// mémoire tampon pendant la manche en cours : sur une connexion lente, la
+// manche suivante démarre sans attendre le réseau.
+function prefetchNextVideo(code, io) {
+  const salon = salonRooms[code];
+  const game = salon.game;
+  const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
+  if (!nextTrack) return;
+  const gen = (game._prefetchGen = (game._prefetchGen ?? 0) + 1);
+  game._prefetchPromise = searchTrackVideo(
+    nextTrack,
+    salon.settings.roundDuration,
+  )
+    .then((r) => {
+      if (game._prefetchGen !== gen) return;
+      game.prefetchedRound = { track: nextTrack, ...r };
+      // Déjà sorti de la pile : la manche démarre avec, rien à précharger
+      if (game.sessionPlaylist.at(-1) === nextTrack)
+        announceNextVideo(salon, io);
+    })
+    .catch(() => {});
+}
+
+function announceNextVideo(salon, io) {
+  const next = salon.game.prefetchedRound;
+  if (!next) return;
+  io.to(`salon:screens:${salon.code}`).emit("salon_next_video", {
+    videoId: next.video.id,
+    startSeconds: next.safeStart,
+  });
+}
+
+// Tirage des titres dès le lobby (et au podium, pour la revanche) : la vidéo
+// de la première manche est prête avant le clic sur « Lancer ».
+function prepareSession(code, io) {
+  const salon = salonRooms[code];
+  salon.game.sessionPlaylist = buildSessionPlaylist(
+    salon.game.fullPlaylist,
+    salon.settings.maxRounds,
+  );
+  salon.game.prefetchedRound = null;
+  salon.game.played = [];
+  prefetchNextVideo(code, io);
+}
+
 async function startNextRound(code, io) {
   const salon = salonRooms[code];
   if (!salon) return;
@@ -476,13 +694,7 @@ async function startNextRound(code, io) {
     game.currentRound >= salon.settings.maxRounds ||
     game.sessionPlaylist.length === 0
   ) {
-    game.phase = "gameover";
-    recordSalonGameEnd(salon);
-    const finalScores = Object.values(salon.players)
-      .map((p) => ({ username: p.username, score: p.score }))
-      .sort((a, b) => b.score - a.score);
-    io.to(`salon:${code}`).emit("salon_game_over", { scores: finalScores });
-    scheduleCleanup(code);
+    finishGame(code, io);
     return;
   }
 
@@ -490,6 +702,7 @@ async function startNextRound(code, io) {
   game.firstFinder = null;
   resetRoundFlags(salon);
   game.currentTrack = game.sessionPlaylist.pop();
+  game.played.push(game.currentTrack);
   game.choices = null;
   game.correctChoiceIndex = null;
 
@@ -542,42 +755,38 @@ async function startNextRound(code, io) {
       extras: (track.extraAnswers || []).map((e) => ({ label: e.label })),
     };
 
-    // Send to host (includes answer info — revealed ONLY at round end on host screen)
-    if (salon.hostSocketId) {
-      io.to(salon.hostSocketId).emit("salon_round_start", {
-        ...roundData,
-        hostInfo: {
-          artist: displayString(track.mainArtist || track.artist),
-          title: displayString(track.title),
-          cover: track.cover,
-          correctChoiceIndex: game.correctChoiceIndex,
-        },
-      });
-    }
+    // La réponse ne part qu'à la régie : l'écran TV est public, n'importe
+    // qui avec le code peut l'ouvrir
+    io.to(`salon:screens:${code}`).emit("salon_round_start", roundData);
+    io.to(`salon:ctrl:${code}`).emit("salon_round_start", {
+      ...roundData,
+      hostInfo: currentTrackInfo(salon),
+    });
     // Send to players (no answer info)
     io.to(`salon:players:${code}`).emit("salon_round_start", roundData);
 
-    // Wait for host to signal music is playing (max 5s fallback)
-    game.musicReadyTimer = setTimeout(() => startTimer(code, io), 5000);
+    // L'hôte signale le début de la musique ; filet si son lecteur ne répond
+    // pas. Large : sur une connexion lente, la vidéo met du temps à démarrer.
+    game.musicReadyTimer = setTimeout(() => startTimer(code, io), 12000);
 
-    // Précharger la recherche YouTube du round suivant pendant celui-ci
-    const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
-    if (nextTrack) {
-      game._prefetchPromise = searchTrackVideo(
-        nextTrack,
-        salon.settings.roundDuration,
-      )
-        .then((r) => {
-          game.prefetchedRound = { track: nextTrack, ...r };
-        })
-        .catch(() => {});
-    }
+    prefetchNextVideo(code, io);
   } catch (err) {
     console.error(`Salon skip "${track.title}":`, err.message);
     // Titre sans source : on ne consomme pas la manche, on passe au titre suivant
     game.currentRound--;
     startNextRound(code, io);
   }
+}
+
+function currentTrackInfo(salon) {
+  const track = salon.game.currentTrack;
+  if (!track) return null;
+  return {
+    artist: displayString(track.mainArtist || track.artist),
+    title: displayString(track.title),
+    cover: track.cover,
+    correctChoiceIndex: salon.game.correctChoiceIndex,
+  };
 }
 
 // ─── Public API for HTTP-based salon creation ─────────────────────────────────
@@ -598,6 +807,7 @@ export async function createSalonRoom({
   }
 
   const code = generateCode();
+  const pro = await isPro(hostUserId);
   const s = {
     maxRounds: Math.min(Math.max(settings.maxRounds || 10, 5), 20),
     roundDuration: Math.min(Math.max(settings.roundDuration || 30, 15), 60),
@@ -607,17 +817,24 @@ export async function createSalonRoom({
       Math.max(settings.showAnswerDuration || 7, 3),
       15,
     ),
+    teams: makeTeams(
+      pro ? settings.teamCount : Math.min(settings.teamCount, FREE_MAX_TEAMS),
+    ),
   };
+  // Clé de la régie : seul celui qui a créé le salon peut le piloter
+  const adminKey = randomBytes(9).toString("base64url");
 
   salonRooms[code] = {
     code,
+    adminKey,
+    pro,
     hostUserId,
     origin,
-    hostSocketId: null,
     _hostDcTimer: null,
     _cleanupTimer: null,
     settings: { ...s, playlistIds },
     players: {},
+    banned: new Set(),
     game: {
       phase: "lobby",
       currentRound: 0,
@@ -634,12 +851,14 @@ export async function createSalonRoom({
       startTime: 0,
       firstFinder: null,
       history: [],
+      played: [],
+      paused: false,
     },
   };
 
   scheduleCleanup(code);
   console.log(`Salon "${code}" cree`);
-  return code;
+  return { code, key: adminKey };
 }
 
 // Phases pendant lesquelles l'hote peut changer la selection de playlists.
@@ -659,10 +878,14 @@ export async function changeSalonPlaylists({
   playlistIds,
   token,
   userId,
+  key,
 }) {
   const salon = salonRooms[code];
   if (!salon) throw new Error("Salon introuvable.");
-  if (!salon.hostUserId || salon.hostUserId !== userId)
+  const isHost =
+    (key && key === salon.adminKey) ||
+    (salon.hostUserId && salon.hostUserId === userId);
+  if (!isHost)
     throw new Error("Seul l'hote du salon peut changer les playlists.");
   if (!PLAYLIST_SWAP_PHASES.includes(salon.game.phase))
     throw new Error("Impossible de changer les playlists maintenant.");
@@ -689,6 +912,9 @@ export async function changeSalonPlaylists({
     salon.game.sessionPlaylist = buildSessionPlaylist(tracks, remainingRounds);
     // Le titre precharge venait de l'ancienne selection.
     salon.game.prefetchedRound = null;
+    prefetchNextVideo(code, getIO());
+  } else {
+    prepareSession(code, getIO());
   }
 
   getIO()
@@ -703,6 +929,14 @@ export async function changeSalonPlaylists({
   return { trackCount: tracks.length, appliedNow: live, remainingRounds };
 }
 
+// Pseudo affiché sur la TV : court, sans caractères invisibles
+function cleanUsername(name) {
+  return String(name ?? "")
+    .replace(/[\p{Cc}\p{Cf}]/gu, "")
+    .trim()
+    .slice(0, 20);
+}
+
 // ─── Socket registration ──────────────────────────────────────────────────────
 
 export function registerSalon(io) {
@@ -710,32 +944,247 @@ export function registerSalon(io) {
 
   io.on("connection", (socket) => {
     // ── Host connects to their salon ──────────────────────────────────────────
-    socket.on("salon_join_host", ({ code }) => {
+    // ── Écran TV : public avec le code, pilotable seulement avec la clé ──────
+    socket.on("salon_join_host", ({ code, key }) => {
       const salon = salonRooms[code];
       if (!salon)
         return socket.emit("salon_error", { message: "Salon introuvable." });
+      if (!key || key !== salon.adminKey)
+        return socket.emit("salon_error", {
+          message: "Cet écran est réservé à l'hôte du salon.",
+        });
 
       clearTimeout(salon._hostDcTimer);
       salon._hostDcTimer = null;
-      salon.hostSocketId = socket.id;
 
       socket.join(`salon:${code}`);
-      socket.join(`salon:host:${code}`);
+      socket.join(`salon:screens:${code}`);
       socket.salonCode = code;
-      socket.salonRole = "host";
+      socket.salonRole = "screen";
+      socket.salonAdmin = true;
 
       socket.emit("salon_host_joined", {
+        pro: salon.pro,
         settings: salon.settings,
         players: getPlayerList(salon),
+        teams: standings(salon),
         phase: salon.game.phase,
+        paused: salon.game.paused,
         currentRound: salon.game.currentRound,
+      });
+      if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
+        prepareSession(code, io);
+      else announceNextVideo(salon, io);
+      scheduleCleanup(code);
+    });
+
+    // ── Régie : l'écran de pilotage, à côté de la TV ─────────────────────────
+    socket.on("salon_join_control", ({ code, key }) => {
+      const salon = salonRooms[code];
+      if (!salon)
+        return socket.emit("salon_error", { message: "Salon introuvable." });
+      if (!key || key !== salon.adminKey)
+        return socket.emit("salon_error", {
+          message: "Lien de régie invalide.",
+        });
+
+      clearTimeout(salon._hostDcTimer);
+      salon._hostDcTimer = null;
+      socket.join(`salon:${code}`);
+      socket.join(`salon:ctrl:${code}`);
+      socket.salonCode = code;
+      socket.salonRole = "control";
+      socket.salonAdmin = true;
+
+      const game = salon.game;
+      socket.emit("salon_control_joined", {
+        pro: salon.pro,
+        settings: salon.settings,
+        players: getPlayerList(salon),
+        teams: standings(salon),
+        phase: game.phase,
+        paused: game.paused,
+        currentRound: game.currentRound,
+        timerVal: game.timerValue,
+        timerMax: game.timerMax ?? salon.settings.roundDuration,
+        timerActive: game.timerActive,
+        track:
+          game.phase === "round" || game.phase === "summary"
+            ? currentTrackInfo(salon)
+            : null,
+        history: game.history,
+        trackCount: game.fullPlaylist.length,
       });
       scheduleCleanup(code);
     });
 
+    socket.on("salon_pause", () => {
+      const salon = adminSalon(socket);
+      if (salon) pauseGame(salon.code, io);
+    });
+
+    socket.on("salon_resume", () => {
+      const salon = adminSalon(socket);
+      if (salon) resumeGame(salon.code, io);
+    });
+
+    // Révéler tout de suite, sans attendre la fin du chrono
+    socket.on("salon_reveal", () => {
+      const salon = adminSalon(socket);
+      if (!salon || salon.game.phase !== "round") return;
+      if (!requirePro(socket, salon, "reveal")) return;
+      clearPause(salon.code, io);
+      clearTimeout(salon.game.musicReadyTimer);
+      endRound(salon.code, "Réponse révélée", io);
+    });
+
+    socket.on("salon_end_game", () => {
+      const salon = adminSalon(socket);
+      if (!salon || !["round", "summary"].includes(salon.game.phase)) return;
+      if (!requirePro(socket, salon, "endGame")) return;
+      finishGame(salon.code, io);
+    });
+
+    socket.on("salon_volume", ({ volume } = {}) => {
+      const salon = adminSalon(socket);
+      if (!salon || !requirePro(socket, salon, "volume")) return;
+      const v = Math.min(Math.max(Math.round(Number(volume) || 0), 0), 100);
+      io.to(`salon:screens:${salon.code}`).emit("salon_volume", { volume: v });
+    });
+
+    socket.on("salon_kick", ({ username } = {}) => {
+      const salon = adminSalon(socket);
+      const player = salon?.players[username];
+      if (!player) return;
+      clearTimeout(player._dcTimer);
+      delete salon.players[username];
+      // Ni ce pseudo ni ce téléphone ne reviennent dans la soirée
+      salon.banned.add(username.toLowerCase());
+      salon.banned.add(player.token);
+      const target = player.socketId && io.sockets.sockets.get(player.socketId);
+      if (target) {
+        target.emit("salon_kicked");
+        target.leave(`salon:${salon.code}`);
+        target.leave(`salon:players:${salon.code}`);
+        target.salonCode = null;
+      }
+      broadcastRoster(salon.code, io);
+      checkEveryoneDone(salon.code, io);
+    });
+
+    // Correction à la main par l'animateur (réponse orale acceptée, triche…)
+    socket.on("salon_adjust_score", ({ username, delta } = {}) => {
+      const salon = adminSalon(socket);
+      const player = salon?.players[username];
+      const d = Math.round(Number(delta) || 0);
+      if (!player || !d || Math.abs(d) > 1000) return;
+      if (!requirePro(socket, salon, "score")) return;
+      player.score = Math.max(0, player.score + d);
+      io.to(`salon:${salon.code}`).emit("salon_scores_update", {
+        scores: sortedScores(salon),
+        teams: standings(salon),
+      });
+      broadcastRoster(salon.code, io);
+    });
+
+    socket.on("salon_update_settings", (patch = {}) => {
+      const salon = adminSalon(socket);
+      if (!salon) return;
+      const code = salon.code;
+      const s = salon.settings;
+      const game = salon.game;
+      const idle = game.phase === "lobby" || game.phase === "gameover";
+      if (!idle && !requirePro(socket, salon, "liveSettings")) return;
+      const clamp = (v, lo, hi, d) =>
+        Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
+
+      if ("roundDuration" in patch)
+        s.roundDuration = clamp(patch.roundDuration, 15, 60, s.roundDuration);
+      if ("showAnswerDuration" in patch)
+        s.showAnswerDuration = clamp(
+          patch.showAnswerDuration,
+          3,
+          15,
+          s.showAnswerDuration,
+        );
+      if ("manualNext" in patch) s.manualNext = patch.manualNext === true;
+      if (idle && "answerMode" in patch)
+        s.answerMode = patch.answerMode === "multiple" ? "multiple" : "free";
+      if ("maxRounds" in patch) {
+        const n = clamp(
+          patch.maxRounds,
+          idle ? 5 : Math.max(5, game.currentRound),
+          20,
+          s.maxRounds,
+        );
+        if (n !== s.maxRounds) {
+          s.maxRounds = n;
+          if (idle) prepareSession(code, io);
+          else {
+            // Les titres déjà joués ne reviennent pas
+            game.sessionPlaylist = buildSessionPlaylist(
+              game.fullPlaylist.filter((t) => !game.played.includes(t)),
+              n - game.currentRound,
+            );
+            game.prefetchedRound = null;
+            prefetchNextVideo(code, io);
+          }
+        }
+      }
+      if (idle && "teamCount" in patch) {
+        if (patch.teamCount > teamLimit(salon))
+          return requirePro(socket, salon, "teams");
+        s.teams = makeTeams(patch.teamCount);
+        spreadPlayers(s.teams, Object.values(salon.players));
+        broadcastRoster(code, io);
+      }
+      // Passage en automatique pendant l'affichage d'une réponse
+      if (
+        game.phase === "summary" &&
+        !s.manualNext &&
+        !game.breakTimer &&
+        !game.paused
+      ) {
+        game.breakTimer = setTimeout(() => {
+          game.breakTimer = null;
+          startNextRound(code, io);
+        }, s.showAnswerDuration * 1000);
+      }
+      io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+    });
+
+    socket.on("salon_rename_team", ({ team, name } = {}) => {
+      const salon = adminSalon(socket);
+      const t = salon?.settings.teams?.find((x) => x.id === team);
+      const n = cleanTeamName(name);
+      if (!t || !n || !requirePro(socket, salon, "teamEdit")) return;
+      t.name = n;
+      broadcastRoster(salon.code, io);
+    });
+
+    socket.on("salon_set_player_team", ({ username, team } = {}) => {
+      const salon = adminSalon(socket);
+      const player = salon?.players[username];
+      if (!player || !salon.settings.teams?.some((t) => t.id === team)) return;
+      if (!requirePro(socket, salon, "teamEdit")) return;
+      player.team = team;
+      broadcastRoster(salon.code, io);
+    });
+
+    // Le joueur choisit son équipe avant la partie, pas en cours de route
+    socket.on("salon_pick_team", ({ team } = {}) => {
+      const salon = salonRooms[socket.salonCode];
+      const player = salon?.players[socket.salonUsername];
+      if (!player || !salon.settings.teams?.some((t) => t.id === team)) return;
+      if (salon.game.phase !== "lobby" && salon.game.phase !== "gameover")
+        return;
+      player.team = team;
+      broadcastRoster(salon.code, io);
+    });
+
     // ── Player joins ──────────────────────────────────────────────────────────
-    socket.on("salon_join_player", ({ code, username }) => {
-      username = username?.trim();
+    socket.on("salon_join_player", ({ code, username, token }) => {
+      username = cleanUsername(username);
       if (!username)
         return socket.emit("salon_error", { message: "Pseudo requis." });
 
@@ -749,17 +1198,36 @@ export function registerSalon(io) {
       // Un retardataire entre dans la partie en cours avec 0 point, par le même
       // chemin qu'une reconnexion. Pendant le podium (gameover), il passe par le
       // join normal et attend la partie suivante.
+      if (
+        !salon.players[username] &&
+        !salon.pro &&
+        Object.keys(salon.players).length >= FREE_MAX_PLAYERS
+      ) {
+        io.to(`salon:ctrl:${code}`).emit("salon_pro_required", {
+          feature: "players",
+        });
+        return socket.emit("salon_error", {
+          message: "Le salon est complet.",
+        });
+      }
+
+      if (salon.banned.has(username.toLowerCase()) || salon.banned.has(token))
+        return socket.emit("salon_error", {
+          message: "L'hôte t'a retiré de ce salon.",
+        });
+
+      const taken = salon.players[username];
+      if (taken && taken.token !== token)
+        return socket.emit("salon_error", {
+          message: "Ce pseudo est déjà pris.",
+        });
+
       const late =
         !salon.players[username] &&
         salon.game.phase !== "lobby" &&
         salon.game.phase !== "gameover";
-      if (late) {
-        salon.players[username] = {
-          ...makePlayer(username, socket.id),
-          scoreBeforeRound: 0,
-        };
-      }
-      if (salon.game.phase !== "lobby" && salon.players[username]) {
+      if (late) addPlayer(salon, username, socket.id).scoreBeforeRound = 0;
+      if (salon.players[username]) {
         const existing = salon.players[username];
         // Cancel pending removal timer
         clearTimeout(existing._dcTimer);
@@ -776,13 +1244,18 @@ export function registerSalon(io) {
         // Build reconnect payload so client can restore its UI
         const reconnectData = {
           username,
+          token: existing.token,
           reconnecting: true,
           settings: {
             answerMode: salon.settings.answerMode,
             maxRounds: salon.settings.maxRounds,
           },
           phase: salon.game.phase,
+          paused: salon.game.paused,
           round: salon.game.currentRound,
+          team: existing.team,
+          teams: standings(salon),
+          players: getPlayerList(salon),
           score: existing.score,
           foundArtist: existing.foundArtist,
           foundTitle: existing.foundTitle,
@@ -790,7 +1263,7 @@ export function registerSalon(io) {
           foundExtrasCount: existing.foundExtras.filter(Boolean).length,
           allFound: existing._fullFoundCounted,
           timerVal: salon.game.timerValue,
-          timerMax: salon.settings.roundDuration,
+          timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
           timerActive: salon.game.timerActive,
         };
         if (salon.game.phase === "round") {
@@ -805,24 +1278,12 @@ export function registerSalon(io) {
         }
 
         socket.emit("salon_joined", reconnectData);
-
-        // Notify host the player is back
-        if (salon.hostSocketId) {
-          io.to(salon.hostSocketId).emit("salon_player_joined", {
-            players: getPlayerList(salon),
-          });
-        }
+        broadcastRoster(code, io);
         scheduleCleanup(code);
         return;
       }
 
-      if (salon.players[username]) {
-        return socket.emit("salon_error", {
-          message: "Ce pseudo est déjà pris.",
-        });
-      }
-
-      salon.players[username] = makePlayer(username, socket.id);
+      const player = addPlayer(salon, username, socket.id);
 
       socket.join(`salon:${code}`);
       socket.join(`salon:players:${code}`);
@@ -830,35 +1291,32 @@ export function registerSalon(io) {
       socket.salonRole = "player";
       socket.salonUsername = username;
 
-      const players = getPlayerList(salon);
       socket.emit("salon_joined", {
         username,
+        token: player.token,
         settings: {
           answerMode: salon.settings.answerMode,
           maxRounds: salon.settings.maxRounds,
         },
+        team: player.team,
+        teams: standings(salon),
+        players: getPlayerList(salon),
       });
-      if (salon.hostSocketId) {
-        io.to(salon.hostSocketId).emit("salon_player_joined", { players });
-      }
+      broadcastRoster(code, io);
       scheduleCleanup(code);
     });
 
     // ── Host starts the game ──────────────────────────────────────────────────
     socket.on("salon_start", () => {
-      const code = socket.salonCode;
-      const salon = salonRooms[code];
-      if (!salon) return;
-      if (socket.id !== salon.hostSocketId) return;
-      if (salon.game.phase !== "lobby") return;
+      const salon = adminSalon(socket);
+      if (!salon || salon.game.phase !== "lobby") return;
+      const code = salon.code;
 
-      salon.game.sessionPlaylist = buildSessionPlaylist(
-        salon.game.fullPlaylist,
-        salon.settings.maxRounds,
-      );
+      if (!salon.game.sessionPlaylist.length) prepareSession(code, io);
       salon.game.currentRound = 0;
-
-      for (const p of Object.values(salon.players)) p.score = 0;
+      salon.game.history = [];
+      resetStats(salon);
+      broadcastRoster(code, io);
 
       io.to(`salon:${code}`).emit("salon_game_starting");
       recordSalonGameStart(salon);
@@ -867,21 +1325,25 @@ export function registerSalon(io) {
 
     // ── Host signals music has started playing ────────────────────────────────
     socket.on("salon_music_ready", () => {
-      if (socket.salonRole !== "host") return;
+      if (socket.salonRole !== "screen") return;
       const code = socket.salonCode;
       const salon = salonRooms[code];
-      if (!salon || salon.game.phase !== "round" || salon.game.timerActive)
+      if (
+        !salon ||
+        salon.game.phase !== "round" ||
+        salon.game.timerActive ||
+        salon.game.paused
+      )
         return;
       startTimer(code, io);
     });
 
     // ── Host triggers next round (manual mode) ────────────────────────────────
     socket.on("salon_next_round", () => {
-      const code = socket.salonCode;
-      const salon = salonRooms[code];
-      if (!salon) return;
-      if (socket.id !== salon.hostSocketId) return;
-      if (salon.game.phase !== "summary") return;
+      const salon = adminSalon(socket);
+      if (!salon || salon.game.phase !== "summary") return;
+      const code = salon.code;
+      clearPause(code, io);
 
       clearTimeout(salon.game.breakTimer);
       salon.game.breakTimer = null;
@@ -893,10 +1355,19 @@ export function registerSalon(io) {
       const code = socket.salonCode;
       const username = socket.salonUsername;
       const salon = salonRooms[code];
-      if (!salon || salon.game.phase !== "round") return;
+      // Pas de réponse avant que la musique joue (chrono lancé)
+      if (
+        !salon ||
+        salon.game.phase !== "round" ||
+        salon.game.paused ||
+        !salon.game.timerActive
+      )
+        return;
 
       const player = salon.players[username];
       if (!player || player._fullFoundCounted) return;
+      if (Date.now() - player._lastGuessAt < 300) return;
+      player._lastGuessAt = Date.now();
 
       const track = salon.game.currentTrack;
       const input = cleanString(guess?.slice(0, 100) || "");
@@ -1024,8 +1495,8 @@ export function registerSalon(io) {
       }
 
       // Notify host on every hit with full found state
-      if (hit && salon.hostSocketId) {
-        io.to(salon.hostSocketId).emit("salon_player_answered", {
+      if (hit) {
+        staff(code, io).emit("salon_player_answered", {
           username,
           correct: player._fullFoundCounted,
           foundArtist: player.foundArtist,
@@ -1036,10 +1507,10 @@ export function registerSalon(io) {
       }
 
       // Broadcast updated scores
-      const scores = Object.values(salon.players)
-        .map((p) => ({ username: p.username, score: p.score }))
-        .sort((a, b) => b.score - a.score);
-      io.to(`salon:${code}`).emit("salon_scores_update", { scores });
+      io.to(`salon:${code}`).emit("salon_scores_update", {
+        scores: sortedScores(salon),
+        teams: standings(salon),
+      });
 
       checkEveryoneDone(code, io);
     });
@@ -1049,7 +1520,14 @@ export function registerSalon(io) {
       const code = socket.salonCode;
       const username = socket.salonUsername;
       const salon = salonRooms[code];
-      if (!salon || salon.game.phase !== "round") return;
+      // Pas de réponse avant que la musique joue (chrono lancé)
+      if (
+        !salon ||
+        salon.game.phase !== "round" ||
+        salon.game.paused ||
+        !salon.game.timerActive
+      )
+        return;
 
       const player = salon.players[username];
       if (!player || player._fullFoundCounted) return;
@@ -1063,14 +1541,12 @@ export function registerSalon(io) {
       player._fullFoundCounted = true; // block re-submission
 
       // Notify host that player has answered — but NOT whether it's correct
-      if (salon.hostSocketId) {
-        io.to(salon.hostSocketId).emit("salon_player_answered", {
-          username,
-          answered: true,
-          // foundArtist/foundTitle intentionally omitted — reveal at round end
-          totalFeatCount: game.currentTrack?.cleanFeatArtists?.length || 0,
-        });
-      }
+      staff(code, io).emit("salon_player_answered", {
+        username,
+        answered: true,
+        // foundArtist/foundTitle intentionally omitted — reveal at round end
+        totalFeatCount: game.currentTrack?.cleanFeatArtists?.length || 0,
+      });
 
       // Scores are NOT updated here — deferred to endRound
       checkEveryoneDone(code, io);
@@ -1078,12 +1554,12 @@ export function registerSalon(io) {
 
     // ── Host restarts the game with same players ──────────────────────────────
     socket.on("salon_restart", () => {
-      const code = socket.salonCode;
-      const salon = salonRooms[code];
+      const salon = adminSalon(socket);
       if (!salon) return;
-      if (socket.id !== salon.hostSocketId) return;
+      const code = salon.code;
       if (salon.game.phase !== "gameover" && salon.game.phase !== "summary")
         return;
+      clearPause(code, io);
 
       // Clear any pending timers
       clearInterval(salon.game.interval);
@@ -1091,9 +1567,9 @@ export function registerSalon(io) {
       salon.game.interval = null;
       salon.game.breakTimer = null;
 
-      // Reset all player scores
+      resetStats(salon);
+      broadcastRoster(code, io);
       for (const p of Object.values(salon.players)) {
-        p.score = 0;
         p.foundArtist = false;
         p.foundTitle = false;
         p.foundFeats = [];
@@ -1101,11 +1577,8 @@ export function registerSalon(io) {
         p._fullFoundCounted = false;
       }
 
-      // Re-shuffle session playlist from full playlist
-      salon.game.sessionPlaylist = buildSessionPlaylist(
-        salon.game.fullPlaylist,
-        salon.settings.maxRounds,
-      );
+      // Au podium, les titres de la revanche sont déjà tirés et préchargés
+      if (salon.game.phase === "summary") prepareSession(code, io);
       salon.game.currentRound = 0;
       salon.game.history = [];
       salon.game.firstFinder = null;
@@ -1125,7 +1598,14 @@ export function registerSalon(io) {
       const salon = salonRooms[code];
       if (!salon) return;
 
-      if (socket.salonRole === "host") {
+      if (socket.salonRole === "screen" || socket.salonRole === "control") {
+        // Le salon ferme quand plus aucun écran ni régie n'est connecté
+        const rooms = io.sockets.adapter.rooms;
+        const left =
+          (rooms.get(`salon:screens:${code}`)?.size ?? 0) +
+          (rooms.get(`salon:ctrl:${code}`)?.size ?? 0);
+        if (left > 0) return;
+        clearTimeout(salon._hostDcTimer);
         salon._hostDcTimer = setTimeout(() => {
           cleanupNow(code, io);
         }, HOST_RECONNECT_GRACE);
@@ -1134,17 +1614,13 @@ export function registerSalon(io) {
         if (!username || !salon.players[username]) return;
 
         const player = salon.players[username];
+        // Ce téléphone a déjà été remplacé par une reconnexion
+        if (player.socketId !== socket.id) return;
 
         // During lobby: remove immediately (they can re-enter with same name)
         if (salon.game.phase === "lobby") {
           delete salon.players[username];
-          const players = getPlayerList(salon);
-          if (salon.hostSocketId) {
-            io.to(salon.hostSocketId).emit("salon_player_left", {
-              username,
-              players,
-            });
-          }
+          broadcastRoster(code, io);
           return;
         }
 
@@ -1152,12 +1628,7 @@ export function registerSalon(io) {
         player._disconnected = true;
         player.socketId = null;
 
-        if (salon.hostSocketId) {
-          io.to(salon.hostSocketId).emit("salon_player_left", {
-            username,
-            players: getPlayerList(salon),
-          });
-        }
+        broadcastRoster(code, io);
 
         // Check if their absence unblocks round end
         checkEveryoneDone(code, io);
@@ -1166,13 +1637,7 @@ export function registerSalon(io) {
           const s = salonRooms[code];
           if (!s?.players[username]) return;
           delete s.players[username];
-          const players = getPlayerList(s);
-          if (s.hostSocketId) {
-            io.to(s.hostSocketId).emit("salon_player_left", {
-              username,
-              players,
-            });
-          }
+          broadcastRoster(code, io);
         }, PLAYER_RECONNECT_GRACE);
       }
     });
