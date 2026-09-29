@@ -198,6 +198,9 @@
   let _roundLoadingTimer = null;
   let _waitingForSync = false;
   let _syncPaused    = false;
+  // Extrait de la manche suivante, téléchargé pendant la manche en cours
+  let _nextAudio   = null;
+  let _playingBlob = null;
   let _adminPaused   = false;
   let _usingIframe   = false;
   let _metaGuardInterval = null;
@@ -414,6 +417,40 @@
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
   }
 
+  function prefetchAudio(url) {
+    dropPrefetch();
+    const entry = { url, blobUrl: null, ctrl: new AbortController(), start: null };
+    entry.start = () => {
+      entry.start = null;
+      fetch(url, { signal: entry.ctrl.signal })
+        .then(r => (r.ok ? r.blob() : Promise.reject()))
+        .then(b => { if (_nextAudio === entry) entry.blobUrl = URL.createObjectURL(b); })
+        .catch(() => {});
+    };
+    _nextAudio = entry;
+    // Pas pendant le chargement de l'extrait courant : on ne lui vole pas la bande passante
+    if (!_waitingForSync) entry.start();
+  }
+
+  function dropPrefetch() {
+    if (!_nextAudio) return;
+    _nextAudio.ctrl.abort();
+    if (_nextAudio.blobUrl) URL.revokeObjectURL(_nextAudio.blobUrl);
+    _nextAudio = null;
+  }
+
+  // URL à lire : la copie locale si le préchargement a abouti
+  function audioSource(url) {
+    if (_playingBlob) { URL.revokeObjectURL(_playingBlob); _playingBlob = null; }
+    if (_nextAudio?.url === url && _nextAudio.blobUrl) {
+      _playingBlob = _nextAudio.blobUrl;
+      _nextAudio = null;
+      return _playingBlob;
+    }
+    dropPrefetch();
+    return url;
+  }
+
   function loadAudio(audioUrl, startSeconds, onReady) {
     const audio = document.getElementById('previewAudio');
     if (!audio) return;
@@ -423,7 +460,7 @@
     audio.onended = null;
     audio.oncanplaythrough = null;
     startMediaGuard();
-    audio.src = audioUrl;
+    audio.src = audioSource(audioUrl);
     audio.volume = savedVol() / 100;
     if (onReady) {
       let readySent = false;
@@ -752,6 +789,7 @@
         loadVideo(data.videoId, data.startSeconds);
       }
     });
+    socket.on('next_audio', ({ audioUrl }) => prefetchAudio(audioUrl));
     socket.on('round_start_sync', (data) => {
       const elapsed = data?.elapsed || 0;
       _syncAnchor = Date.now() - elapsed * 1000;
@@ -759,6 +797,7 @@
       syncWaiting = false;
       guessDisabled = false;
       _syncPaused = false;
+      _nextAudio?.start?.();
       // Toujours poser l'ancre, pour caler la lecture si le joueur rejoint plus
       // tard — mais ne rien jouer tant qu'il regarde les scores.
       if (heldRound) return;
@@ -907,6 +946,8 @@
 
   onDestroy(() => {
     if (socket) socket.disconnect();
+    dropPrefetch();
+    if (_playingBlob) URL.revokeObjectURL(_playingBlob);
     stopMediaGuard();
     clearTimeout(feedTimer);
     clearTimeout(_roundLoadingTimer);
@@ -1364,7 +1405,7 @@
           </button>
         {/if}
         {#if IS_GUEST}
-          <a href="/?auth=register" class="g-go-share">Créer un compte gratuit</a>
+          <a href="/?auth=register&ref=room-guest" class="g-go-share">Créer un compte gratuit</a>
         {/if}
         <a href="/" class="g-go-back">Changer de room</a>
         <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="g-go-discord">

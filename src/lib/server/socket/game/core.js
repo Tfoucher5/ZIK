@@ -21,7 +21,7 @@ import {
   saveGameResult,
 } from "../../services/achievements.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
-import { ytdlAudioCache } from "../../ytdlCache.js";
+import { ytdlAudioCache, audioUrlFor } from "../../ytdlCache.js";
 import { getYtAudioUrl } from "../../ytdlAudio.js";
 import {
   DEFAULT_ROUND_DURATION,
@@ -188,7 +188,7 @@ function endRound(roomId, reason, io) {
     totalFound: game.totalFullFound,
     round: game.currentRound,
     trackId: track.id ?? null,
-    videoId: game.lastRoundData?.videoId ?? null,
+    videoId: game.lastVideoId ?? null,
     featArtists: (track.featArtists || []).map(displayString),
     extraAnswers: (track.extraAnswers || []).map((e) => ({
       label: e.label,
@@ -279,9 +279,11 @@ async function startNextRound(roomId, io) {
       ytAudio = null;
 
     let prefetchYtdlFailed = false;
+    let prefetched = null;
 
     if (game.prefetchedRound?.track === track) {
-      ({ videoId, startSeconds, ytAudio } = game.prefetchedRound);
+      prefetched = game.prefetchedRound;
+      ({ videoId, startSeconds, ytAudio } = prefetched);
       prefetchYtdlFailed = !!videoId && !ytAudio;
       game.prefetchedRound = null;
     }
@@ -294,7 +296,8 @@ async function startNextRound(roomId, io) {
       ]);
       game._prefetchPromise = null;
       if (game.prefetchedRound?.track === track) {
-        ({ videoId, startSeconds, ytAudio } = game.prefetchedRound);
+        prefetched = game.prefetchedRound;
+        ({ videoId, startSeconds, ytAudio } = prefetched);
         prefetchYtdlFailed = !!videoId && !ytAudio;
         game.prefetchedRound = null;
       }
@@ -354,15 +357,22 @@ async function startNextRound(roomId, io) {
 
     // trackId sert au signalement d'un titre muet. Ne jamais ajouter ici
     // l'artiste ni le titre : lastRoundData part au client pendant la manche.
+    // Même URL que celle annoncée en next_audio : le joueur l'a déjà en mémoire
+    const audioUrl =
+      prefetched?.audioUrl && prefetched.videoId === videoId
+        ? prefetched.audioUrl
+        : audioUrlFor(videoId);
+    game.lastVideoId = videoId;
     game.lastRoundData = {
-      videoId,
+      // Sans iframe, l'id ne sert à rien côté joueur et trahirait le titre
+      videoId: ytAudio ? null : videoId,
       startSeconds,
       trackId: track.id ?? null,
       round: game.currentRound,
       total: game.maxRounds,
       featCount: track.featArtists.length,
       extraLabels: (track.extraAnswers || []).map((e) => e.label),
-      audioUrl: ytAudio ? `/api/game/audio?v=${videoId}` : null,
+      audioUrl,
       choices,
     };
 
@@ -382,7 +392,7 @@ async function startNextRound(roomId, io) {
 
     // Précharger la manche suivante pendant que celle-ci tourne
     if (game.sessionPlaylist.length > 0) {
-      game._prefetchPromise = prefetchNextRound(roomId);
+      game._prefetchPromise = prefetchNextRound(roomId, io);
       game._prefetchPromise.catch(() => {});
     }
   } catch (err) {
@@ -638,7 +648,7 @@ async function startAutoCountdown(roomId, io) {
       io.to(`room:${roomId}`).emit("game_starting");
       // Précharger le premier titre pendant le countdown — startNextRound
       // attendra cette promesse si yt-dlp n'a pas fini quand le timer sonne.
-      room.game._prefetchPromise = prefetchNextRound(roomId);
+      room.game._prefetchPromise = prefetchNextRound(roomId, io);
       room.game._prefetchPromise.catch(() => {});
       try {
         const { data } = await supabase
@@ -973,7 +983,7 @@ export function register(io) {
       io.to(`room:${roomId}`).emit("game_starting");
       // Précharger le premier titre immédiatement — startNextRound attendra
       // cette promesse si yt-dlp n'a pas fini avant l'appel.
-      room.game._prefetchPromise = prefetchNextRound(roomId);
+      room.game._prefetchPromise = prefetchNextRound(roomId, io);
       room.game._prefetchPromise.catch(() => {});
 
       try {

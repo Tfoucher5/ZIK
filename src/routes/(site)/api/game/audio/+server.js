@@ -1,12 +1,12 @@
-import { ytdlAudioCache } from "$lib/server/ytdlCache.js";
+import { ytdlAudioCache, audioKeyFor } from "$lib/server/ytdlCache.js";
 import { getYtAudioUrl } from "$lib/server/ytdlAudio.js";
 import { refreshPreview } from "$lib/server/socket/game/audio.js";
 
 const TTL = 2 * 60 * 60 * 1000;
 
 export async function GET({ url, request }) {
-  const videoId = url.searchParams.get("v");
-  if (!videoId) return new Response("Missing video ID", { status: 400 });
+  const videoId = audioKeyFor(url.searchParams.get("v"));
+  if (!videoId) return new Response("Unknown audio", { status: 404 });
 
   let entry = ytdlAudioCache.get(videoId);
   if (!entry || Date.now() - entry.fetchedAt > TTL) {

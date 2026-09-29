@@ -1,6 +1,6 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { ytdlAudioCache } from "../../ytdlCache.js";
+import { ytdlAudioCache, audioUrlFor } from "../../ytdlCache.js";
 import { YTDLP_BIN, getYtAudioUrl } from "../../ytdlAudio.js";
 import { roomGames } from "../../state.js";
 import { fetchDeezerTrackPreview } from "../../services/deezer.js";
@@ -160,7 +160,7 @@ export async function refreshPreview(pKey, entry) {
   return cachePreview(pKey, entry.query, url);
 }
 
-export async function prefetchNextRound(roomId) {
+export async function prefetchNextRound(roomId, io) {
   const room = roomGames[roomId];
   if (!room) return;
   const game = room.game;
@@ -209,7 +209,17 @@ export async function prefetchNextRound(roomId) {
     if (game.sessionPlaylist[game.sessionPlaylist.length - 1] !== nextTrack)
       return;
 
-    game.prefetchedRound = { track: nextTrack, videoId, startSeconds, ytAudio };
+    const audioUrl = ytAudio ? audioUrlFor(videoId) : null;
+    game.prefetchedRound = {
+      track: nextTrack,
+      videoId,
+      startSeconds,
+      ytAudio,
+      audioUrl,
+    };
+    // Les joueurs téléchargent l'extrait pendant la manche en cours : la
+    // suivante démarre sans attendre le réseau.
+    if (audioUrl) io.to(`room:${roomId}`).emit("next_audio", { audioUrl });
   } catch {
     // Échec silencieux — startNextRound fera le fetch normalement
   }
