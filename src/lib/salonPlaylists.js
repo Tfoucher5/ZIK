@@ -20,7 +20,7 @@ export async function loadSalonPlaylists(sb, userId) {
     userId
       ? sb
           .from("custom_playlists")
-          .select("id, name, emoji, track_count")
+          .select("id, name, emoji, track_count, is_official")
           .eq("owner_id", userId)
           .order("created_at", { ascending: false })
       : { data: [] },
@@ -35,7 +35,9 @@ export async function loadSalonPlaylists(sb, userId) {
     group,
   });
 
-  const official = (shared ?? [])
+  // Une playlist officielle reste officielle même pour son propriétaire (le
+  // compte admin qui les gère) : elle a sa pochette dans le bac à disques.
+  const official = [...(mine ?? []), ...(shared ?? [])]
     .filter((p) => p.is_official)
     .sort(
       (a, b) =>
@@ -43,7 +45,9 @@ export async function loadSalonPlaylists(sb, userId) {
         (b.track_count ?? 0) - (a.track_count ?? 0),
     )
     .map((p) => toItem(p, "official"));
-  const own = (mine ?? []).map((p) => toItem(p, "mine"));
+  const own = (mine ?? [])
+    .filter((p) => !p.is_official)
+    .map((p) => toItem(p, "mine"));
   const community = (shared ?? [])
     .filter((p) => !p.is_official)
     .map((p) => toItem(p, "public"));

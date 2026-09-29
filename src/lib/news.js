@@ -4,6 +4,16 @@
 export const NEWS = [
   {
     date: "2026-09-29",
+    version: "3.9.1",
+    tag: "Amélioration",
+    title: "Un mail de confirmation pour ZIK Pro",
+    items: [
+      "Les lieux qui s'inscrivent sur la liste d'attente ZIK Pro reçoivent un e-mail de confirmation, avec les formules et de quoi essayer le Mode Salon tout de suite.",
+      "Les e-mails de ZIK (inscription, mot de passe oublié) adoptent les couleurs du site.",
+    ],
+  },
+  {
+    date: "2026-09-29",
     version: "3.9.0",
     tag: "Nouveauté",
     title: "Le Mode Salon passe en version soirée",
