@@ -109,7 +109,7 @@
   <!-- Pas de meta description ici : chaque page en définit une dans son propre
        svelte:head. Svelte n'écrase pas celle du layout, il l'ajoute en plus —
        avoir les deux dupliquait la description sur toutes les pages. -->
-  <meta name="keywords" content="blind test, blind test en ligne, blind test gratuit, blind test multijoueur, quiz musical en ligne, jeu de musique, deviner les chansons, jeu musique gratuit, blind test kahoot, blind test soirée, blind test spotify, blind test deezer, jeu blind test, musique en ligne">
+  <meta name="keywords" content="blind test, blind test en ligne, blind test gratuit, blind test multijoueur, quiz musical en ligne, jeu de musique, deviner les chansons, jeu musique gratuit, blind test kahoot, blind test soirée, blind test deezer, jeu blind test, musique en ligne">
   <meta name="author" content="ZIK">
   <meta name="theme-color" content="#7c3aed">
   <meta name="format-detection" content="telephone=no">
@@ -119,7 +119,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="fr_FR">
   <meta property="og:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
-  <meta property="og:description" content="Blind test multijoueur gratuit en ligne. Spotify & Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
+  <meta property="og:description" content="Blind test multijoueur gratuit en ligne. Import Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
   <meta property="og:url" content="https://www.zik-music.fr/">
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0">
   <meta property="og:image:width" content="1200">
@@ -129,7 +129,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
-  <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Spotify/Deezer, grimpe dans le classement ELO. Sans installation.">
+  <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.10.0">
 
   <link rel="stylesheet" href="/css/base.css?v=3.10.0">

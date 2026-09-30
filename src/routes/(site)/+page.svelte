@@ -156,7 +156,7 @@
       "@type": ["WebApplication", "VideoGame"],
       "name": "ZIK — Blind Test Musical",
       "url": "https://www.zik-music.fr/",
-      "description": "Jeu de blind test musical multijoueur en ligne. Identifiez les chansons avant tout le monde, importez vos playlists Spotify ou Deezer, et grimpez au classement ELO. Gratuit, sans installation.",
+      "description": "Jeu de blind test musical multijoueur en ligne. Identifiez les chansons avant tout le monde, importez vos playlists Deezer, et grimpez au classement ELO. Gratuit, sans installation.",
       "applicationCategory": "GameApplication",
       "genre": ["Music", "Quiz", "Trivia"],
       "operatingSystem": "Any",
@@ -166,7 +166,7 @@
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
       "featureList": [
         "Blind test musical multijoueur en temps réel",
-        "Import de playlists Spotify et Deezer",
+        "Import de playlists Deezer",
         "Mode Salon Kahoot-like (QCM sur smartphone)",
         "Classement ELO et statistiques joueur",
         "Rooms privées avec code partageable",
@@ -236,8 +236,8 @@
       },
       {
         "@type": "Question",
-        "name": "Puis-je importer mes playlists Spotify ou Deezer ?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Oui. ZIK permet l'import direct de playlists publiques Spotify et Deezer en quelques clics." }
+        "name": "Puis-je importer mes playlists Deezer ?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Oui. ZIK permet l'import direct de playlists publiques Deezer en quelques clics." }
       },
       {
         "@type": "Question",
@@ -275,11 +275,11 @@
 
 <svelte:head>
   <title>ZIK - Blind test en soirée sur la TV et multijoueur en ligne</title>
-  <meta name="description" content="Le blind test de soirée : la TV diffuse la musique, chacun répond sur son téléphone, en solo ou en équipes. Aussi en ligne, avec tes playlists Spotify et Deezer. Gratuit, sans appli." />
+  <meta name="description" content="Le blind test de soirée : la TV diffuse la musique, chacun répond sur son téléphone, en solo ou en équipes. Aussi en ligne, avec tes playlists Deezer. Gratuit, sans appli." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/" />
   <meta property="og:title" content="ZIK - Le blind test de soirée sur la TV" />
-  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium, vos playlists Spotify ou Deezer. Aussi en ligne. Gratuit, sans appli." />
+  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium, vos playlists Deezer. Aussi en ligne. Gratuit, sans appli." />
   <meta property="og:url" content="https://www.zik-music.fr/" />
   <meta name="twitter:title" content="ZIK - Le blind test de soirée sur la TV" />
   <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Aussi en ligne. Gratuit, sans appli." />
@@ -311,7 +311,7 @@
       <span>Blind Test</span><span class="tk-sep"> /// </span>
       <span>Multijoueur</span><span class="tk-sep"> /// </span>
       <span>Gratuit</span><span class="tk-sep"> /// </span>
-      <span>Spotify &amp; Deezer</span><span class="tk-sep"> /// </span>
+      <span>Deezer</span><span class="tk-sep"> /// </span>
       <span>Classement ELO</span><span class="tk-sep"> /// </span>
       <span>Mode Salon</span><span class="tk-sep"> /// </span>
       <span>Sans inscription</span><span class="tk-sep"> /// </span>
@@ -424,7 +424,7 @@
     </a>
     <a href="/playlists" class="feat-item">
       <span class="feat-n">04</span>
-      <span class="feat-tag">Spotify · Deezer</span>
+      <span class="feat-tag">Deezer</span>
       <div class="feat-name">Tes playlists, tes règles</div>
       <p class="feat-desc">Importe tes propres playlists ou pioche parmi celles de la communauté.</p>
     </a>
@@ -590,8 +590,8 @@
       <p class="faq-a">En Mode Salon, un hôte lance une session depuis son ordinateur ou sa TV. Les invités rejoignent depuis leur smartphone en entrant un code ou en scannant un QR code. La musique est diffusée uniquement depuis l'écran de l'hôte.</p>
     </details>
     <details class="faq-item">
-      <summary class="faq-q">Puis-je importer mes playlists Spotify ou Deezer ?</summary>
-      <p class="faq-a">Oui. ZIK permet l'import direct de playlists publiques Spotify et Deezer en quelques clics. Il est aussi possible de créer des playlists manuellement sur le site.</p>
+      <summary class="faq-q">Puis-je importer mes playlists Deezer ?</summary>
+      <p class="faq-a">Oui. ZIK permet l'import direct de playlists publiques Deezer en quelques clics. Il est aussi possible de créer des playlists manuellement sur le site.</p>
     </details>
     <details class="faq-item">
       <summary class="faq-q">ZIK fonctionne-t-il sur mobile ?</summary>

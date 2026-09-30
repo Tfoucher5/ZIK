@@ -78,7 +78,7 @@
     Vous animez un lieu ou un événement ? <a href="/pro">ZIK Pro</a> : joueurs illimités, jusqu'à 8 équipes et une régie complète.
   </p>
   <p class="bt-own">
-    Votre thème n'est pas là ? <a href="/salon">Ouvrez un salon</a> avec vos propres playlists Spotify ou Deezer.
+    Votre thème n'est pas là ? <a href="/salon">Ouvrez un salon</a> avec vos propres playlists Deezer.
   </p>
 </main>
 

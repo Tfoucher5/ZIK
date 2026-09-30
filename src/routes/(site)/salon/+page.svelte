@@ -25,7 +25,7 @@
     {
       title: 'Pour organiser',
       items: [
-        { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Spotify ou Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
+        { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
         { q: 'Peut-on piloter la partie depuis un autre écran ?', a: "Oui. La régie s'ouvre sur un ordinateur ou une tablette à côté de la TV : pause, manche suivante, réglages et classement, sans que la salle ne voie rien." },
         { q: 'Et si la connexion est lente ?', a: "La musique de la manche suivante se charge pendant la manche en cours, pour éviter les temps morts. Un joueur qui perd le réseau retrouve sa place et ses points en revenant." },
       ],
@@ -210,7 +210,7 @@
   <link rel="canonical" href="https://www.zik-music.fr/salon" />
 
   <meta property="og:title" content="Blind test en soirée sur la TV | ZIK" />
-  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Spotify ou Deezer. Sans appli, gratuit jusqu'à 12 joueurs." />
+  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Deezer. Sans appli, gratuit jusqu'à 12 joueurs." />
   <meta property="og:url" content="https://www.zik-music.fr/salon" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />

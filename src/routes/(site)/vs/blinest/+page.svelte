@@ -20,11 +20,11 @@
 
 <svelte:head>
   <title>ZIK vs Blinest — Comparaison des blind tests musicaux en ligne</title>
-  <meta name="description" content="ZIK ou Blinest pour votre prochain blind test musical ? Comparaison factuelle : playlists Spotify/Deezer personnalisées sur ZIK, classement ELO compétitif, Mode Salon pour les soirées." />
+  <meta name="description" content="ZIK ou Blinest pour votre prochain blind test musical ? Comparaison factuelle : playlists Deezer personnalisées sur ZIK, classement ELO compétitif, Mode Salon pour les soirées." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/vs/blinest" />
   <meta property="og:title" content="ZIK vs Blinest — Comparaison blind test musical" />
-  <meta property="og:description" content="ZIK et Blinest sont deux blind tests musicaux en ligne. ZIK permet d'importer ses propres playlists Spotify/Deezer et propose un Mode Salon pour les soirées." />
+  <meta property="og:description" content="ZIK et Blinest sont deux blind tests musicaux en ligne. ZIK permet d'importer ses propres playlists Deezer et propose un Mode Salon pour les soirées." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/blinest" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
@@ -58,7 +58,7 @@
         ZIK est un blind test musical multijoueur en temps réel. Il se distingue par :
       </p>
       <ul>
-        <li>L'import de playlists personnalisées depuis Spotify et Deezer</li>
+        <li>L'import de playlists personnalisées depuis Deezer</li>
         <li>Trois modes de jeu : Classique (ELO), QCM (casual), Salon (soirée TV + smartphones)</li>
         <li>Un classement ELO compétitif persistant pour les joueurs inscrits</li>
         <li>La création de rooms publiques et privées avec code partageable</li>
@@ -91,7 +91,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>Import playlists Spotify / Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
+            <tr><td>Import playlists Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Multijoueur en temps réel</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Classement ELO compétitif</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Mode Salon (TV + smartphones)</td><td class="yes">✓</td><td class="no">✗</td></tr>
@@ -108,7 +108,7 @@
     <section class="vs-section">
       <h2>Quand choisir ZIK plutôt que Blinest ?</h2>
       <ul>
-        <li>Vous voulez jouer avec vos propres playlists Spotify ou Deezer</li>
+        <li>Vous voulez jouer avec vos propres playlists Deezer</li>
         <li>Vous cherchez un blind test multijoueur en temps réel avec des amis</li>
         <li>Vous organisez une soirée et voulez un Mode Salon TV + smartphones</li>
         <li>Vous voulez un classement ELO compétitif et persistant</li>

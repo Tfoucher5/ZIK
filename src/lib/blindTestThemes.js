@@ -43,7 +43,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Peut-on ne jouer que sur les années 90 ?",
-        a: "Oui : créez une playlist personnalisée ou importez une playlist Spotify ou Deezer des années 90, puis lancez-la en salon.",
+        a: "Oui : créez une playlist personnalisée ou importez une playlist Deezer des années 90, puis lancez-la en salon.",
       },
     ],
     playlists: [PL.annees8090],
@@ -130,7 +130,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Peut-on jouer sur un seul rappeur ?",
-        a: "Oui : importez une playlist Spotify ou Deezer consacrée à cet artiste, puis lancez-la dans une room ou un salon.",
+        a: "Oui : importez une playlist Deezer consacrée à cet artiste, puis lancez-la dans une room ou un salon.",
       },
     ],
     playlists: [PL.rapFr],
@@ -184,7 +184,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Y a-t-il du metal extrême ?",
-        a: "La playlist officielle reste accessible au grand public. Pour du metal plus pointu, importez votre propre playlist Spotify ou Deezer.",
+        a: "La playlist officielle reste accessible au grand public. Pour du metal plus pointu, importez votre propre playlist Deezer.",
       },
       {
         q: "Peut-on jouer depuis un téléphone ?",
@@ -246,7 +246,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Peut-on importer sa propre playlist électro ?",
-        a: "Oui, depuis Spotify ou Deezer, puis la lancer en room ou en salon.",
+        a: "Oui, depuis Deezer, puis la lancer en room ou en salon.",
       },
     ],
     playlists: [PL.techno],
@@ -319,7 +319,7 @@ export const BLIND_TEST_THEMES = [
       "Organisez un blind test d'anniversaire en 2 minutes : la TV diffuse, les invités répondent sur leur téléphone. Gratuit, sans application ni compte pour les invités.",
     intro: [
       "Un blind test est l'animation d'anniversaire la plus simple à organiser : pas de matériel, pas de préparation, et tous les âges peuvent jouer. Avec le Mode Salon de ZIK, l'écran principal (TV, ordinateur ou vidéoprojecteur) diffuse la musique et le classement, et chaque invité répond depuis son téléphone.",
-      "Choisissez les playlists selon l'âge de la personne fêtée : « Années 2000 » pour des trentenaires, « Années 1980-1990 » pour des quadras, « Disney » pour les enfants. Vous pouvez aussi importer sa playlist Spotify ou Deezer préférée.",
+      "Choisissez les playlists selon l'âge de la personne fêtée : « Années 2000 » pour des trentenaires, « Années 1980-1990 » pour des quadras, « Disney » pour les enfants. Vous pouvez aussi importer sa playlist Deezer préférée.",
     ],
     tips: [
       "Préparez une playlist avec les chansons préférées de la personne fêtée : effet garanti.",
@@ -349,7 +349,7 @@ export const BLIND_TEST_THEMES = [
       "Animez un mariage avec un blind test : la musique passe sur l'écran de la salle, les invités jouent depuis leur téléphone. Gratuit, sans inscription pour les invités.",
     intro: [
       "Entre le dîner et l'ouverture du bal, un blind test fait participer toute la salle : les tables s'affrontent, les générations se mélangent, et le classement s'affiche en direct sur l'écran. Avec le Mode Salon de ZIK, il suffit d'un vidéoprojecteur ou d'une TV reliée à la sono.",
-      "Préparez une playlist aux couleurs des mariés : les chansons de leur rencontre, leurs tubes de soirée, leurs années lycée. Importez-la depuis Spotify ou Deezer et lancez-la en salon le jour J.",
+      "Préparez une playlist aux couleurs des mariés : les chansons de leur rencontre, leurs tubes de soirée, leurs années lycée. Importez-la depuis Deezer et lancez-la en salon le jour J.",
     ],
     tips: [
       "Jouez en équipes : une équipe par table, le classement des tables s'affiche sur l'écran.",
@@ -379,7 +379,7 @@ export const BLIND_TEST_THEMES = [
       "Organisez un blind test en soirée : la musique et le classement sur la TV, chacun répond sur son téléphone. Gratuit, sans application, prêt en deux minutes.",
     intro: [
       "Le blind test est le jeu de soirée qui met tout le monde d'accord : pas de règles à expliquer, pas de matériel, et même ceux qui disent « je n'y connais rien » finissent par hurler le nom d'un chanteur. Avec le Mode Salon de ZIK, la TV du salon devient l'écran de jeu : elle diffuse les extraits, le chrono et le classement, et chaque ami répond depuis son téléphone.",
-      "Pas besoin de désigner un animateur qui ne joue pas : ZIK s'occupe des extraits, vérifie les réponses et compte les points. Vous choisissez une ambiance (années 2000, rap français, chanson française…) ou vous importez la playlist de la soirée depuis Spotify ou Deezer.",
+      "Pas besoin de désigner un animateur qui ne joue pas : ZIK s'occupe des extraits, vérifie les réponses et compte les points. Vous choisissez une ambiance (années 2000, rap français, chanson française…) ou vous importez la playlist de la soirée depuis Deezer.",
     ],
     tips: [
       "Mélangez deux playlists (par exemple années 2000 et rap français) pour que chacun ait ses chances.",
@@ -427,7 +427,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Peut-on utiliser nos propres playlists ?",
-        a: "Oui : importez n'importe quelle playlist Spotify ou Deezer, ou partez des playlists officielles ZIK (années 80, 2000, rap, rock, chanson française…).",
+        a: "Oui : importez n'importe quelle playlist Deezer, ou partez des playlists officielles ZIK (années 80, 2000, rap, rock, chanson française…).",
       },
     ],
     playlists: [PL.annees8090, PL.annees2000],
@@ -476,7 +476,7 @@ export const BLIND_TEST_THEMES = [
       "Un team building musical en salle ou en visio : blind test en équipes sur grand écran, chacun joue sur son téléphone. Sans installation, avec vos propres playlists.",
     intro: [
       "Le blind test est un team building qui fonctionne parce qu'il ne ressemble pas à une réunion : les services s'affrontent, les nouveaux se font remarquer et tout le monde parle du podium à la machine à café. Avec ZIK, l'écran de la salle de réunion (ou le partage d'écran en visio) affiche la partie, chaque collègue répond depuis son téléphone.",
-      "Préparez une playlist qui vous ressemble, importée depuis Spotify ou Deezer, et répartissez les équipes par service ou par table. La régie permet à l'organisateur de piloter la partie depuis son ordinateur pendant que la salle regarde l'écran.",
+      "Préparez une playlist qui vous ressemble, importée depuis Deezer, et répartissez les équipes par service ou par table. La régie permet à l'organisateur de piloter la partie depuis son ordinateur pendant que la salle regarde l'écran.",
     ],
     tips: [
       "Mélangez les services dans les équipes pour que les gens qui ne se parlent jamais jouent ensemble.",
