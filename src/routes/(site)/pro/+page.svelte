@@ -196,7 +196,7 @@
   />
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
   <JsonLd json={jsonLd} />
   <JsonLd json={faqJsonLd} />
 </svelte:head>
