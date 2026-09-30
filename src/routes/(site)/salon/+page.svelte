@@ -213,12 +213,12 @@
   <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Deezer. Sans appli, gratuit jusqu'à 12 joueurs." />
   <meta property="og:url" content="https://www.zik-music.fr/salon" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Blind test en soirée sur la TV | ZIK" />
   <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Sans appli, gratuit jusqu'à 12 joueurs." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
 
   <JsonLd json={salonJsonLd} />
 </svelte:head>
