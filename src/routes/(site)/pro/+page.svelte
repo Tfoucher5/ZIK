@@ -1,6 +1,8 @@
 <script>
+  import { getContext } from 'svelte';
   import JsonLd from '$lib/components/JsonLd.svelte';
-  import { PLANS, PRO_COMING, FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/proPlans.js";
+  import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
+  import { PLANS, PRO_PERKS, PRO_COMING, FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/proPlans.js";
 
   const COMPARE = [
     ["Joueurs par salon", `jusqu'à ${FREE_MAX_PLAYERS}`, "illimité"],
@@ -9,29 +11,56 @@
     ["Réglages en pleine partie", "entre deux parties", "à tout moment"],
   ];
 
-  let wl = $state({ email: "", venue: "", venueType: "bar", plan: "monthly" });
-  let wlState = $state("idle");
-  let wlError = $state("");
-  let wlMailed = $state(false);
+  const zik = getContext('zik');
+  const INTENT_KEY = 'zik_pro_intent';
 
-  async function joinWaitlist(e) {
-    e.preventDefault();
-    wlState = "sending";
-    wlError = "";
-    try {
-      const res = await fetch("/api/pro/waitlist", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(wl),
+  let pro = $state(null);
+  let busy = $state(null);
+  let payError = $state('');
+
+  const activePro = $derived(proActive(pro));
+  const subscribed = $derived(activePro && pro.plan !== 'night' && pro.plan !== 'manual');
+  const endLabel = $derived(pro ? new Date(pro.current_period_end).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }) : '');
+
+  $effect(() => {
+    const user = zik.user;
+    if (!user) { pro = null; return; }
+    fetchPro(zik.sb, user.id)
+      .then((data) => {
+        pro = data;
+        // Formule choisie avant de se connecter : on enchaîne sur le paiement
+        let intent = null;
+        try { intent = sessionStorage.getItem(INTENT_KEY); sessionStorage.removeItem(INTENT_KEY); } catch { /* stockage indisponible */ }
+        if (intent) buy(intent);
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || "Envoi impossible");
-      wlMailed = d.mailed;
-      wlState = "done";
-    } catch (err) {
-      wlError = err.message;
-      wlState = "idle";
+  });
+
+  async function buy(plan) {
+    payError = '';
+    if (!zik.user) {
+      try { sessionStorage.setItem(INTENT_KEY, plan); } catch { /* stockage indisponible */ }
+      zik.openAuthModal('register');
+      return;
     }
+    busy = plan;
+    try { await goToStripe(zik.sb, '/api/pro/checkout', { plan }); }
+    catch (err) { payError = err.message; busy = null; }
+  }
+
+  async function openPortal() {
+    payError = '';
+    busy = 'portal';
+    try { await goToStripe(zik.sb, '/api/pro/portal'); }
+    catch (err) { payError = err.message; busy = null; }
+  }
+
+  // Apparition en cascade des cartes quand elles arrivent à l'écran
+  function reveal(node) {
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { node.classList.add('in'); io.disconnect(); }
+    }, { threshold: 0.15 });
+    io.observe(node);
+    return { destroy: () => io.disconnect() };
   }
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -90,7 +119,7 @@
         name: "Est-ce que c'est payant ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Le Mode Salon est gratuit jusqu'à 12 joueurs et 2 équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € HT la soirée.",
+          text: "Le Mode Salon est gratuit jusqu'à 12 joueurs et 2 équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € la soirée.",
         },
       },
       {
@@ -123,7 +152,7 @@
     {
       titre: "Anniversaires, EVJF et EVG",
       texte:
-        "Créez une playlist sur mesure à partir de Spotify ou Deezer et transformez-la en blind test en quelques minutes.",
+        "Créez une playlist sur mesure à partir de Deezer et transformez-la en blind test en quelques minutes.",
     },
   ];
 
@@ -167,7 +196,7 @@
   />
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
   <JsonLd json={jsonLd} />
   <JsonLd json={faqJsonLd} />
 </svelte:head>
@@ -241,7 +270,7 @@
       <p>
         Vous pouvez partir des <a href="/blind-test">thèmes déjà prêts</a>
         (années 80, rap français, Disney, génériques de séries...) ou construire votre propre playlist en
-        important directement depuis Spotify ou Deezer. De quoi coller à votre
+        important directement depuis Deezer. De quoi coller à votre
         public plutôt qu'à une sélection générique.
       </p>
       <p>
@@ -268,48 +297,74 @@
         </tbody>
       </table>
 
-      <ul class="pro-plans">
-        {#each PLANS as p (p.id)}
-          <li class:featured={p.featured}>
-            <span class="pro-plan-name">{p.name}</span>
-            <span class="pro-plan-price">{p.price}</span>
-            <span class="pro-plan-period">{p.period}</span>
-            <p>{p.pitch}</p>
-          </li>
+      {#if activePro}
+        <div class="pro-status">
+          <span class="pro-status-dot" aria-hidden="true"></span>
+          <div>
+            <b>ZIK Pro est actif sur votre compte</b>
+            <span>
+              {#if pro.plan === 'night'}Passe Soirée valable jusqu'au {endLabel}.
+              {:else if pro.plan === 'manual'}Accès offert jusqu'au {endLabel}.
+              {:else}Formule {pro.plan === 'yearly' ? 'Annuel' : 'Mensuel'}, prochaine échéance le {endLabel}.{/if}
+            </span>
+          </div>
+          {#if pro.stripe_customer_id}
+            <button class="pro-status-btn" onclick={openPortal} disabled={busy === 'portal'}>
+              {busy === 'portal' ? 'Ouverture…' : subscribed ? 'Gérer mon abonnement' : 'Mes factures'}
+            </button>
+          {/if}
+        </div>
+      {/if}
+
+      <div class="pro-offers">
+        {#each PLANS as p, i (p.id)}
+          <article class="pro-offer" class:featured={p.featured} style="--d:{i * 110}ms" use:reveal>
+            {#if p.badge}<span class="pro-offer-badge">{p.badge}</span>{/if}
+            <h3 class="pro-offer-name">{p.name}</h3>
+            <p class="pro-offer-pitch">{p.pitch}</p>
+            <div class="pro-offer-price">
+              <strong>{p.price}</strong>
+              <span>{p.period}</span>
+            </div>
+            <ul class="pro-offer-perks">
+              {#each p.perks as perk (perk)}<li>{perk}</li>{/each}
+              <li class="pro-offer-all">Tout ZIK Pro inclus</li>
+            </ul>
+            <button
+              class="pro-offer-btn"
+              onclick={() => buy(p.id)}
+              disabled={busy !== null || subscribed}
+            >
+              {#if busy === p.id}Redirection vers le paiement…
+              {:else if subscribed}Déjà abonné
+              {:else if p.id === 'night'}Prendre la soirée
+              {:else}Choisir {p.name.toLowerCase()}{/if}
+            </button>
+          </article>
         {/each}
+      </div>
+
+      {#if payError}<p class="pro-pay-error" role="alert">{payError}</p>{/if}
+
+      <div class="pro-included">
+        <h3>Inclus dans toutes les formules</h3>
+        <ul>{#each PRO_PERKS as c (c)}<li>{c}</li>{/each}</ul>
+      </div>
+
+      <ul class="pro-trust">
+        <li><b>Paiement sécurisé</b> par Stripe : carte, Apple Pay, Google Pay</li>
+        <li><b>Facture automatique</b> envoyée par e-mail à chaque paiement</li>
+        <li><b>Sans engagement</b> : résiliation en un clic depuis cette page</li>
       </ul>
+      <p class="pro-legal-note">
+        Prix en euros, TVA non applicable. En payant, vous acceptez les
+        <a href="/cgv">conditions générales de vente</a>. Un compte ZIK gratuit
+        est nécessaire pour rattacher ZIK Pro à vos salons.
+      </p>
 
       <div class="pro-coming">
         <h3>Bientôt dans ZIK Pro</h3>
         <ul>{#each PRO_COMING as c (c)}<li>{c}</li>{/each}</ul>
-      </div>
-
-      <div class="pro-waitlist">
-        {#if wlState === "done"}
-          <p>
-            <b>C'est noté.</b> Vous serez prévenu en premier à l'ouverture de ZIK Pro.
-            {#if wlMailed}Un e-mail de confirmation vient de partir à {wl.email} (pensez à regarder dans les indésirables).{/if}
-          </p>
-        {:else}
-          <h3>Le paiement en ligne ouvre bientôt</h3>
-          <p>Laissez vos coordonnées : vous serez prévenu en premier, et les premiers lieux inscrits pourront tester ZIK Pro en avant-première.</p>
-          <form onsubmit={joinWaitlist}>
-            <input type="email" required placeholder="Adresse e-mail" bind:value={wl.email} maxlength="200" />
-            <input type="text" placeholder="Nom du lieu ou de l'association" bind:value={wl.venue} maxlength="120" />
-            <select bind:value={wl.venueType} aria-label="Type de lieu">
-              <option value="bar">Bar ou restaurant</option>
-              <option value="camping">Camping ou village vacances</option>
-              <option value="association">Association</option>
-              <option value="entreprise">Entreprise ou CE</option>
-              <option value="autre">Autre</option>
-            </select>
-            <select bind:value={wl.plan} aria-label="Formule envisagée">
-              {#each PLANS as p (p.id)}<option value={p.id}>{p.name} - {p.price}</option>{/each}
-            </select>
-            <button class="pro-cta-btn" disabled={wlState === "sending"}>{wlState === "sending" ? "Envoi…" : "Être prévenu"}</button>
-          </form>
-          {#if wlError}<p class="pro-wl-error">{wlError}</p>{/if}
-        {/if}
       </div>
     </section>
 
@@ -335,6 +390,18 @@
         <dd>
           Oui. Il suffit de partager l'écran de l'hôte en visio et de donner le
           code du salon.
+        </dd>
+        <dt>Comment se passe le paiement ?</dt>
+        <dd>
+          Choisissez une formule, payez par carte, Apple Pay ou Google Pay sur
+          la page sécurisée de Stripe, et ZIK Pro s'active tout de suite sur
+          votre compte. Le reçu et la facture arrivent par e-mail.
+        </dd>
+        <dt>Puis-je arrêter quand je veux ?</dt>
+        <dd>
+          Oui. Le passe Soirée ne se renouvelle jamais. Les abonnements se
+          résilient en un clic depuis cette page : ZIK Pro reste actif jusqu'à
+          la fin de la période déjà payée, sans autre prélèvement.
         </dd>
         <dt>Puis-je afficher ZIK dans mon établissement ?</dt>
         <dd>
@@ -404,84 +471,292 @@
   .pro-compare td {
     color: var(--mid);
   }
-  .pro-plans {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    padding: 0;
-    list-style: none;
+  @property --pro-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
   }
-  .pro-plans li {
+  .pro-status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 0 0 20px;
+    padding: 14px 18px;
+    border: 1px solid rgb(var(--accent-rgb) / 0.4);
+    border-radius: 14px;
+    background: rgb(var(--accent-rgb) / 0.08);
+  }
+  .pro-status > div {
+    flex: 1;
+    min-width: 200px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 18px;
-    border: 2px solid var(--border2);
-    border-radius: 3px;
-  }
-  .pro-plans li.featured {
-    border-color: var(--accent);
-    box-shadow: 5px 5px 0 var(--accent);
-  }
-  .pro-plan-name {
-    font-size: 0.85rem;
-    color: var(--mid);
-  }
-  .pro-plan-price {
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 900;
-    font-size: 2.4rem;
-    line-height: 1;
-  }
-  .pro-plan-period {
-    font-size: 0.78rem;
-    color: var(--mid);
-  }
-  .pro-plans p {
-    margin-top: 8px;
+    gap: 2px;
     font-size: 0.88rem;
+    color: var(--mid);
+  }
+  .pro-status b {
+    color: var(--text);
+  }
+  .pro-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 rgb(var(--accent-rgb) / 0.6);
+    animation: pro-ping 2s infinite;
+  }
+  .pro-status-btn {
+    padding: 9px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .pro-offers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: stretch;
+    margin-top: 8px;
+  }
+  .pro-offer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 26px 22px 22px;
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    background: rgb(var(--c-glass) / 0.04);
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.6s ease var(--d),
+      transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d),
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+  .pro-offer:global(.in) {
+    opacity: 1;
+    transform: none;
+  }
+  .pro-offer:global(.in):hover {
+    transform: translateY(-6px);
+    border-color: rgb(var(--accent-rgb) / 0.6);
+    box-shadow: 0 18px 40px -18px rgb(var(--accent-rgb) / 0.55);
+  }
+  .pro-offer.featured {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--bg), var(--bg)) padding-box,
+      conic-gradient(
+          from var(--pro-angle),
+          var(--accent),
+          rgb(var(--accent-rgb) / 0.15),
+          #ff00ff,
+          rgb(var(--accent-rgb) / 0.15),
+          var(--accent)
+        )
+        border-box;
+    border-width: 2px;
+    animation: pro-spin 5s linear infinite;
+  }
+  .pro-offer.featured::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+      60% 50% at 50% 0%,
+      rgb(var(--accent-rgb) / 0.35),
+      transparent
+    );
+    filter: blur(24px);
+  }
+  .pro-offer-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #000;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pro-offer-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .pro-section .pro-offer-pitch {
+    margin: -8px 0 0;
+    font-size: 0.86rem;
+    min-height: 3em;
+  }
+  .pro-offer-price {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .pro-offer-price strong {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 3.2rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--text);
+  }
+  .pro-offer.featured .pro-offer-price strong {
+    background: linear-gradient(90deg, var(--accent), #ff00ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .pro-offer-price span {
+    font-size: 0.8rem;
+    color: var(--mid);
+  }
+  .pro-section ul.pro-offer-perks {
+    flex: 1;
+    margin: 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .pro-section ul.pro-offer-perks li {
+    font-size: 0.86rem;
+    padding-left: 24px;
+  }
+  .pro-section ul.pro-offer-perks li::before {
+    content: "✓";
+  }
+  .pro-section ul.pro-offer-perks li.pro-offer-all {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .pro-offer-btn {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    background: rgb(var(--c-glass) / 0.06);
+    color: var(--text);
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      color 0.2s,
+      transform 0.15s;
+  }
+  .pro-offer-btn:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  .pro-offer-btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .pro-offer.featured .pro-offer-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  .pro-offer-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+  .pro-pay-error {
+    margin-top: 14px;
+    color: var(--danger);
+  }
+  .pro-included {
+    margin-top: 28px;
+  }
+  .pro-included h3,
+  .pro-coming h3 {
+    margin-bottom: 10px;
+  }
+  .pro-section .pro-included ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 8px 20px;
+  }
+  .pro-section ul.pro-trust {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .pro-section ul.pro-trust li {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.82rem;
+  }
+  .pro-section ul.pro-trust li::before {
+    content: none;
+  }
+  .pro-trust b {
+    display: block;
+    color: var(--text);
+  }
+  .pro-section .pro-legal-note {
+    font-size: 0.8rem;
+    color: var(--dim);
   }
   .pro-coming {
     margin-top: 24px;
   }
-  .pro-coming h3 {
-    margin-bottom: 8px;
+  @keyframes pro-spin {
+    to {
+      --pro-angle: 360deg;
+    }
   }
-  .pro-waitlist {
-    margin-top: 24px;
-    padding: 20px;
-    border: 1px dashed var(--border2);
-    border-radius: 3px;
+  @keyframes pro-ping {
+    70% {
+      box-shadow: 0 0 0 10px rgb(var(--accent-rgb) / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(var(--accent-rgb) / 0);
+    }
   }
-  .pro-waitlist h3 {
-    margin-bottom: 6px;
-  }
-  .pro-waitlist form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 14px;
-  }
-  .pro-waitlist input,
-  .pro-waitlist select {
-    padding: 11px 12px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 3px;
-    color: var(--text);
-    font: inherit;
-  }
-  .pro-waitlist button {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
-  .pro-wl-error {
-    margin-top: 8px;
-    color: var(--danger);
-  }
-  @media (max-width: 560px) {
-    .pro-waitlist form {
+  @media (max-width: 760px) {
+    .pro-offers,
+    .pro-section ul.pro-trust {
       grid-template-columns: 1fr;
+    }
+    .pro-offer.featured {
+      order: -1;
+    }
+    .pro-section .pro-offer-pitch {
+      min-height: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pro-offer {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .pro-offer.featured,
+    .pro-status-dot {
+      animation: none;
     }
   }
   .pro-page {

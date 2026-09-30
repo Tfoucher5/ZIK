@@ -41,7 +41,7 @@
     "@type": "WebPage",
     "name": "Guide complet — Blind Test ZIK",
     "url": "https://www.zik-music.fr/docs",
-    "description": "Guide complet du blind test ZIK : comment jouer, système de points, Mode Salon Kahoot-like, import Spotify/Deezer, classement ELO, FAQ.",
+    "description": "Guide complet du blind test ZIK : comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ.",
     "inLanguage": "fr-FR",
     "isPartOf": { "@type": "WebSite", "url": "https://www.zik-music.fr/", "name": "ZIK" },
     "breadcrumb": {

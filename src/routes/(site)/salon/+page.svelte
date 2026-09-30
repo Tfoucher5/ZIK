@@ -6,7 +6,7 @@
   import PlaylistPicker from '$lib/components/salon/PlaylistPicker.svelte';
   import { loadSalonPlaylists, DEFAULT_SALON_PLAYLIST } from '$lib/salonPlaylists.js';
   import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
-  import { saveSalonKey, fetchIsPro } from '$lib/salonClient.js';
+  import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
   import ProUpsell from '$lib/components/salon/ProUpsell.svelte';
   import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/proPlans.js';
 
@@ -25,7 +25,7 @@
     {
       title: 'Pour organiser',
       items: [
-        { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Spotify ou Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
+        { q: 'Peut-on utiliser ses propres musiques ?', a: 'Oui : importez une playlist Deezer, ou choisissez une playlist officielle ZIK (chanson française, années 80, 2000, rap français, Disney…).' },
         { q: 'Peut-on piloter la partie depuis un autre écran ?', a: "Oui. La régie s'ouvre sur un ordinateur ou une tablette à côté de la TV : pause, manche suivante, réglages et classement, sans que la salle ne voie rien." },
         { q: 'Et si la connexion est lente ?', a: "La musique de la manche suivante se charge pendant la manche en cours, pour éviter les temps morts. Un joueur qui perd le réseau retrouve sa place et ses points en revenant." },
       ],
@@ -34,7 +34,7 @@
       title: 'Tarifs',
       items: [
         { q: 'Combien de joueurs peuvent participer ?', a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes.` },
-        { q: 'Combien ça coûte ?', a: `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € HT la soirée, 19 € HT par mois ou 190 € HT par an.` },
+        { q: 'Combien ça coûte ?', a: `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € la soirée, 19 € par mois ou 190 € par an.` },
       ],
     },
   ];
@@ -110,7 +110,9 @@
   let manualNext         = $state(false);
   let showAnswerDuration = $state(7);
   let teamCount          = $state(0);
-  let pro                = $state(false);
+  let proRow             = $state(null);
+  const pro              = $derived(proActive(proRow));
+  let portalBusy         = $state(false);
   let upsell             = $state(null);
 
   let allPlaylists = $state([]);
@@ -130,13 +132,19 @@
     authOpen = true;
   }
 
+  async function openPortal() {
+    portalBusy = true;
+    try { await goToStripe(sb, '/api/pro/portal'); }
+    catch (e) { error = e.message; portalBusy = false; }
+  }
+
   function pickTeams(n) {
     if (!pro && n > FREE_MAX_TEAMS) upsell = 'teams';
     else teamCount = n;
   }
 
   async function loadPlaylists() {
-    fetchIsPro(sb, user?.id).then((v) => (pro = v)).catch(() => {});
+    fetchPro(sb, user?.id).then((r) => (proRow = r)).catch(() => {});
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
       allPlaylists = flat;
@@ -202,15 +210,15 @@
   <link rel="canonical" href="https://www.zik-music.fr/salon" />
 
   <meta property="og:title" content="Blind test en soirée sur la TV | ZIK" />
-  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Spotify ou Deezer. Sans appli, gratuit jusqu'à 12 joueurs." />
+  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Deezer. Sans appli, gratuit jusqu'à 12 joueurs." />
   <meta property="og:url" content="https://www.zik-music.fr/salon" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Blind test en soirée sur la TV | ZIK" />
   <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Sans appli, gratuit jusqu'à 12 joueurs." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.9.1" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
 
   <JsonLd json={salonJsonLd} />
 </svelte:head>
@@ -306,6 +314,11 @@
     <p class="st-pro-note">
       {#if pro}
         <b>ZIK Pro actif</b> : joueurs illimités, jusqu'à 8 équipes, régie complète.
+        {#if proRow.stripe_customer_id}
+          <button type="button" class="st-pro-manage" disabled={portalBusy} onclick={openPortal}>
+            {portalBusy ? 'Ouverture…' : proRow.plan === 'night' ? 'Mes factures' : 'Gérer mon abonnement'}
+          </button>
+        {/if}
       {:else}
         Version gratuite : jusqu'à {FREE_MAX_PLAYERS} joueurs et {FREE_MAX_TEAMS} équipes.
         Un bar, un camping, un événement ? <a href="/pro#tarifs">Découvrir ZIK Pro</a>
@@ -595,6 +608,7 @@
   }
   .st-pro-note { padding-top: 28px; font-size: 0.85rem; color: var(--mid); }
   .st-pro-note a, .st-pro-note b { color: var(--text); text-underline-offset: 3px; }
+  .st-pro-manage { margin-left: 6px; padding: 0; background: none; border: none; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .st-seg button.st-pro:not(.on) { color: var(--dim); }
   .st-seg button.st-pro::after { content: ' ●'; color: var(--accent); font-size: 0.6rem; }
 

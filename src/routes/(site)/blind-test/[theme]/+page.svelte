@@ -65,7 +65,7 @@
         {#if theme.pro}
           <a class="bt-cta" href="/pro#tarifs">
             <b>ZIK Pro</b>
-            <span>Joueurs illimités, 8 équipes, régie complète. Dès 7,90 € HT la soirée</span>
+            <span>Joueurs illimités, 8 équipes, régie complète. Dès 7,90 € la soirée</span>
           </a>
         {/if}
         {#if theme.room}

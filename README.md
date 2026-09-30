@@ -45,7 +45,7 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 ### 🎵 Playlists
 
 - Création et gestion de playlists personnalisées
-- Import depuis **Spotify** (lien de playlist)
+- Import depuis **Spotify** (réservé à l'éditeur, restrictions du mode développeur Spotify)
 - Import depuis **Deezer** (lien de playlist)
 - Playlists publiques ou privées
 - Playlists officielles curées par l'équipe
@@ -259,7 +259,7 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 - Auth email + Google OAuth
 - Rooms officielles et personnalisées (éphémères + persistantes)
 - Gameplay multijoueur temps réel (Socket.IO)
-- Import Spotify / Deezer
+- Import Deezer
 - Featurings multiples
 - Classements ELO + hebdomadaire
 - Profil avec stats et meilleurs scores
@@ -275,7 +275,7 @@ Les joueurs rejoignent une room, écoutent des extraits musicaux et tentent de t
 - [x] Auth email + Google OAuth
 - [x] Rooms officielles et personnalisées
 - [x] Gameplay temps réel (Socket.IO)
-- [x] Import Spotify / Deezer
+- [x] Import Deezer
 - [x] Featurings multiples
 - [x] Classements ELO + hebdomadaire
 - [x] Profil avec stats et meilleurs scores

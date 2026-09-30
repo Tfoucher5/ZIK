@@ -88,7 +88,7 @@
 
 {#if phase === 'gameover'}
   <div class="salon-host-cta">
-    <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Spotify ou Deezer et organise ta propre soirée.</p>
+    <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>
     <a href="/?auth=register&ref=salon-invite" class="sx-btn sx-btn-primary">Créer mon compte</a>
     <a href="/salon?ref=invite" class="salon-join-link">Ou organiser un salon sans compte</a>
   </div>

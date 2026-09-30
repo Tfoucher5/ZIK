@@ -21,14 +21,14 @@
 
 <svelte:head>
   <title>ZIK vs Blindtest.io — Comparaison des blind tests musicaux en ligne</title>
-  <meta name="description" content="ZIK ou Blindtest.io ? Comparaison factuelle : ZIK propose l'import Spotify/Deezer, un classement ELO compétitif et un Mode Salon pour les soirées. Gratuit, sans inscription." />
+  <meta name="description" content="ZIK ou Blindtest.io ? Comparaison factuelle : ZIK propose l'import Deezer, un classement ELO compétitif et un Mode Salon pour les soirées. Gratuit, sans inscription." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/vs/blindtest-io" />
   <meta property="og:title" content="ZIK vs Blindtest.io — Comparaison blind test en ligne" />
-  <meta property="og:description" content="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. ZIK permet l'import de playlists Spotify/Deezer et propose un Mode Salon pour les soirées." />
+  <meta property="og:description" content="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. ZIK permet l'import de playlists Deezer et propose un Mode Salon pour les soirées." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/blindtest-io" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
   <JsonLd json={jsonLd} />
 </svelte:head>
 
@@ -64,7 +64,7 @@
         <li><strong>Mode Salon</strong> — hôte sur grand écran, joueurs sur smartphone (QR code / code)</li>
       </ul>
       <p>
-        ZIK permet d'importer des playlists depuis Spotify et Deezer, ou de créer des playlists manuellement.
+        ZIK permet d'importer des playlists depuis Deezer, ou de créer des playlists manuellement.
         Rooms publiques, privées et rooms officielles thématiques disponibles.
       </p>
     </section>
@@ -93,7 +93,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>Import playlists Spotify / Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
+            <tr><td>Import playlists Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Multijoueur en temps réel</td><td class="yes">✓</td><td class="yes">✓</td></tr>
             <tr><td>Classement ELO compétitif</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Mode Salon (TV + smartphones)</td><td class="yes">✓</td><td class="no">✗</td></tr>
@@ -109,7 +109,7 @@
     <section class="vs-section">
       <h2>Quand choisir ZIK ?</h2>
       <ul>
-        <li>Vous voulez utiliser vos propres playlists Spotify ou Deezer</li>
+        <li>Vous voulez utiliser vos propres playlists Deezer</li>
         <li>Vous cherchez un classement ELO compétitif persistant</li>
         <li>Vous organisez une soirée et voulez un Mode Salon (TV + smartphones)</li>
         <li>Vous voulez une expérience multijoueur en temps réel, gratuite et sans inscription</li>

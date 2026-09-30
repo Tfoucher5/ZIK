@@ -2,6 +2,7 @@
   import { onMount, getContext } from 'svelte';
   import { toast } from '$lib/toast.svelte.js';
   import Modal from '$lib/components/Modal.svelte';
+  import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -140,6 +141,20 @@
     const el = document.getElementById('pref-volume');
     if (el) el.style.setProperty('--vol', volVal + '%');
   });
+
+  let proRow = $state(null);
+  let portalBusy = $state(false);
+
+  $effect(() => {
+    if (!user) { proRow = null; return; }
+    fetchPro(sb, user.id).then((r) => (proRow = r)).catch(() => {});
+  });
+
+  async function openPortal() {
+    portalBusy = true;
+    try { await goToStripe(sb, '/api/pro/portal'); }
+    catch (e) { toast(e.message, 'error'); portalBusy = false; }
+  }
 
   // Load privacy setting from profile when user is available
   $effect(() => {
@@ -289,6 +304,28 @@
         </label>
       </div>
     </section>
+
+    {#if proRow}
+    <section class="settings-section">
+      <h2 class="settings-section-title">ZIK Pro</h2>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">{proActive(proRow) ? 'ZIK Pro actif' : 'ZIK Pro terminé'}</div>
+          <div class="settings-row-desc">
+            {proActive(proRow) ? "Actif jusqu'au" : 'Terminé le'}
+            {new Date(proRow.current_period_end).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}.
+          </div>
+        </div>
+        {#if proRow.stripe_customer_id}
+          <button class="btn-unlink" onclick={openPortal} disabled={portalBusy}>
+            {portalBusy ? 'Ouverture…' : 'Gérer mon abonnement'}
+          </button>
+        {:else}
+          <a class="btn-unlink" href="/pro#tarifs">Voir les formules</a>
+        {/if}
+      </div>
+    </section>
+    {/if}
 
     <section class="settings-section" id="discord-section">
       <h2 class="settings-section-title">Compte Discord</h2>
@@ -577,6 +614,7 @@
 }
 .btn-unlink:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.08); }
 .btn-unlink:disabled { opacity: 0.6; cursor: not-allowed; }
+a.btn-unlink { text-decoration: none; white-space: nowrap; }
 
 /* -- Danger zone -- */
 .settings-section-danger { border-color: rgba(239,68,68,0.35); }

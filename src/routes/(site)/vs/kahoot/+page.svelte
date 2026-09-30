@@ -4,7 +4,7 @@
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "ZIK vs Kahoot — Comparaison des blind tests en ligne",
-    "description": "ZIK et Kahoot sont deux plateformes de quiz multijoueur. ZIK est spécialisé dans le blind test musical avec import Spotify/Deezer. Comparaison factuelle.",
+    "description": "ZIK et Kahoot sont deux plateformes de quiz multijoueur. ZIK est spécialisé dans le blind test musical avec import Deezer. Comparaison factuelle.",
     "url": "https://www.zik-music.fr/vs/kahoot",
     "inLanguage": "fr-FR",
     "isPartOf": { "@type": "WebSite", "url": "https://www.zik-music.fr/", "name": "ZIK" },
@@ -20,14 +20,14 @@
 
 <svelte:head>
   <title>ZIK vs Kahoot — Quel est le meilleur blind test multijoueur ?</title>
-  <meta name="description" content="ZIK ou Kahoot pour votre prochain blind test musical ? Comparaison factuelle : spécialisation musicale, import Spotify/Deezer, classement ELO, Mode Salon. ZIK est conçu exclusivement pour le blind test." />
+  <meta name="description" content="ZIK ou Kahoot pour votre prochain blind test musical ? Comparaison factuelle : spécialisation musicale, import Deezer, classement ELO, Mode Salon. ZIK est conçu exclusivement pour le blind test." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/vs/kahoot" />
   <meta property="og:title" content="ZIK vs Kahoot — Comparaison blind test multijoueur" />
-  <meta property="og:description" content="ZIK est spécialisé dans le blind test musical avec import Spotify/Deezer et classement ELO. Kahoot est une plateforme de quiz généraliste. Comparaison factuelle." />
+  <meta property="og:description" content="ZIK est spécialisé dans le blind test musical avec import Deezer et classement ELO. Kahoot est une plateforme de quiz généraliste. Comparaison factuelle." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/kahoot" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.9.1" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.10.0" />
   <JsonLd json={jsonLd} />
 </svelte:head>
 
@@ -65,7 +65,7 @@
         <li><strong>Mode Salon</strong> — hôte sur grand écran, joueurs sur smartphone</li>
       </ul>
       <p>
-        ZIK permet l'import direct de playlists depuis Spotify et Deezer. Il est gratuit, sans abonnement,
+        ZIK permet l'import direct de playlists depuis Deezer. Il est gratuit, sans abonnement,
         et ne nécessite pas de compte pour jouer.
       </p>
     </section>
@@ -97,7 +97,7 @@
           </thead>
           <tbody>
             <tr><td>Spécialisé blind test musical</td><td class="yes">✓</td><td class="no">✗</td></tr>
-            <tr><td>Import Spotify / Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
+            <tr><td>Import Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Classement ELO compétitif</td><td class="yes">✓</td><td class="no">✗</td></tr>
             <tr><td>Mode Salon (TV + smartphones)</td><td class="yes">✓</td><td class="partial">Partiel</td></tr>
             <tr><td>Mode QCM multijoueur</td><td class="yes">✓</td><td class="yes">✓</td></tr>
@@ -113,7 +113,7 @@
       <h2>Quand choisir ZIK plutôt que Kahoot ?</h2>
       <ul>
         <li>Vous organisez une soirée blind test musical entre amis</li>
-        <li>Vous voulez utiliser vos propres playlists Spotify ou Deezer</li>
+        <li>Vous voulez utiliser vos propres playlists Deezer</li>
         <li>Vous cherchez un classement compétitif avec système ELO</li>
         <li>Vous voulez jouer sans créer de compte</li>
         <li>Vous voulez un accès gratuit, et une offre Pro abordable pour les bars et les événements</li>

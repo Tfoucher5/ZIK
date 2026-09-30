@@ -1,6 +1,6 @@
 {
   "name": "zik-music.fr",
-  "version": "3.9.1",
+  "version": "3.10.0",
   "description": "Blind Test Multijoueur",
   "type": "module",
   "scripts": {
@@ -24,6 +24,7 @@
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.8.3",
     "string-similarity": "^4.0.4",
+    "stripe": "^22.6.2",
     "svelte": "^5.56.3",
     "youtube-sr": "^4.3.12"
   },

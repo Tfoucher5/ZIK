@@ -19,7 +19,7 @@
 
   <section>
     <h2>2. Acc&egrave;s au service</h2>
-    <p>L&rsquo;acc&egrave;s &agrave; ZIK est gratuit et sans abonnement. La cr&eacute;ation d&rsquo;un compte est facultative pour profiter des fonctionnalit&eacute;s de base (mode invit&eacute;), mais obligatoire pour&nbsp;:</p>
+    <p>L&rsquo;acc&egrave;s &agrave; ZIK est gratuit. Seule l&rsquo;offre ZIK Pro du Mode Salon est payante, selon les <a href="/cgv">Conditions G&eacute;n&eacute;rales de Vente</a>. La cr&eacute;ation d&rsquo;un compte est facultative pour profiter des fonctionnalit&eacute;s de base (mode invit&eacute;), mais obligatoire pour&nbsp;:</p>
     <ul>
       <li>Sauvegarder ses scores et statistiques</li>
       <li>Cr&eacute;er des playlists et des rooms personnalis&eacute;es</li>

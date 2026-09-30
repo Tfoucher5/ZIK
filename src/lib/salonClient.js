@@ -48,14 +48,42 @@ export async function patchSalonPlaylists(sb, code, playlistIds) {
 }
 
 // Abonnement ZIK Pro du compte connecté (lecture de sa propre ligne, RLS)
-export async function fetchIsPro(sb, userId) {
-  if (!userId) return false;
+export async function fetchPro(sb, userId) {
+  if (!userId) return null;
   const { data } = await sb
     .from("pro_subscriptions")
-    .select("status, current_period_end")
+    .select("plan, status, current_period_end, stripe_customer_id")
     .eq("user_id", userId)
     .maybeSingle();
-  return (
-    data?.status === "active" && new Date(data.current_period_end) > new Date()
-  );
+  return data;
+}
+
+export const proActive = (row) =>
+  row?.status === "active" && new Date(row.current_period_end) > new Date();
+
+export async function fetchIsPro(sb, userId) {
+  return proActive(await fetchPro(sb, userId));
+}
+
+// Paiement ou espace client : le serveur crée la page Stripe, on y part
+export async function goToStripe(sb, path, body = {}) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      Authorization: `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok || !d.url)
+    throw new Error(
+      d.error ||
+        d.message ||
+        "Stripe ne répond pas, réessayez dans un instant.",
+    );
+  window.location.href = d.url;
 }
