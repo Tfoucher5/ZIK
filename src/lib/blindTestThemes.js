@@ -419,7 +419,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien coûte une soirée blind test avec ZIK ?",
-        a: "La version gratuite accueille 12 joueurs et 2 équipes, idéale pour tester. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète : 7,90 € HT la soirée, 19 € HT par mois ou 190 € HT par an.",
+        a: "La version gratuite accueille 12 joueurs et 2 équipes, idéale pour tester. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète : 7,90 € la soirée, 19 € par mois ou 190 € par an.",
       },
       {
         q: "De quel matériel a-t-on besoin ?",
@@ -458,7 +458,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Combien de participants au maximum ?",
-        a: "12 joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes, pour 7,90 € HT la soirée ou 19 € HT par mois pendant la saison.",
+        a: "12 joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.",
       },
     ],
     playlists: [PL.disney, PL.annees8090, PL.annees2000],

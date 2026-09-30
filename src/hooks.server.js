@@ -7,7 +7,7 @@ import {
 import { getAdminClient } from "$lib/server/config.js";
 import { isTrackableVisit, buildVisitRow } from "$lib/server/visitSource.js";
 
-const MAINTENANCE_EXEMPT = ["/admin", "/api/admin"];
+const MAINTENANCE_EXEMPT = ["/admin", "/api/admin", "/api/stripe"];
 
 // Pages privées : jamais indexées. On le dit par en-tête plutôt que dans
 // robots.txt, qui est public et révélerait leur existence à tout le monde.

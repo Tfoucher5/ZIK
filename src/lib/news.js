@@ -3,6 +3,18 @@
 
 export const NEWS = [
   {
+    date: "2026-09-30",
+    version: "3.10.0",
+    tag: "Nouveauté",
+    title: "ZIK Pro s'achète en ligne",
+    items: [
+      "Les bars, campings et organisateurs d'événements peuvent prendre ZIK Pro directement sur le site : passe Soirée à 7,90 €, abonnement mensuel à 19 € ou annuel à 190 €.",
+      "Paiement sécurisé par Stripe (carte, Apple Pay, Google Pay), facture envoyée automatiquement, ZIK Pro activé dans la seconde.",
+      "Abonnement sans engagement : factures, carte bancaire et résiliation se gèrent en un clic depuis la page Mode Salon ou les paramètres.",
+      "Nouvelles conditions générales de vente, et mentions légales mises à jour.",
+    ],
+  },
+  {
     date: "2026-09-29",
     version: "3.9.1",
     tag: "Amélioration",

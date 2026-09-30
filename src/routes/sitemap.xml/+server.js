@@ -20,6 +20,7 @@ const STATIC_PAGES = [
   { loc: "/vs/blinest", changefreq: "monthly", priority: "0.6" },
   { loc: "/vs/blindtest-io", changefreq: "monthly", priority: "0.6" },
   { loc: "/cgu", changefreq: "yearly", priority: "0.2" },
+  { loc: "/cgv", changefreq: "yearly", priority: "0.2" },
   { loc: "/confidentialite", changefreq: "yearly", priority: "0.2" },
   { loc: "/mentions-legales", changefreq: "yearly", priority: "0.2" },
 ];
