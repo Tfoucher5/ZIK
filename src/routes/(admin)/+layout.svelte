@@ -59,6 +59,7 @@
     <div class="adm-nav-links">
       <a href="/admin/dashboard" class="adm-nav-link">Dashboard</a>
       <a href="/admin/kpis"      class="adm-nav-link">KPI</a>
+      <a href="/admin/prospection" class="adm-nav-link">Prospection</a>
       <a href="/admin/users"     class="adm-nav-link">Users</a>
       <a href="/admin/reports"   class="adm-nav-link">Reports</a>
       <a href="/admin/rooms"     class="adm-nav-link">Rooms</a>
