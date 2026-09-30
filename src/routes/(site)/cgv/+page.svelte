@@ -4,9 +4,8 @@
   // Identité du vendeur, reprise dans les mentions légales
   const SELLER = {
     name: 'Théo Foucher',
-    status: 'Entrepreneur individuel',
-    address: 'À COMPLÉTER',
-    siret: 'À COMPLÉTER',
+    status: 'Particulier',
+    address: '32 rue Georgette Boulestreau, 49100 Angers',
     email: 'theo@zik-music.fr',
   };
 </script>
@@ -35,7 +34,6 @@
       <li><strong>Nom :</strong> {SELLER.name}</li>
       <li><strong>Statut :</strong> {SELLER.status}</li>
       <li><strong>Adresse :</strong> {SELLER.address}</li>
-      <li><strong>SIRET :</strong> {SELLER.siret}</li>
       <li><strong>Contact :</strong> <a href="mailto:{SELLER.email}">{SELLER.email}</a></li>
     </ul>
   </section>
@@ -54,7 +52,7 @@
         <li><strong>{p.name} :</strong> {p.price} {p.period}</li>
       {/each}
     </ul>
-    <p>Les prix sont indiqués en euros, <strong>TVA non applicable, article 293 B du Code général des impôts</strong>. Ils peuvent être modifiés à tout moment. Le prix applicable est celui affiché au moment de la commande. Pour un abonnement en cours, tout changement de prix est annoncé par e-mail au moins 30 jours à l'avance et ne s'applique qu'à partir de l'échéance suivante. Le client peut résilier avant cette échéance s'il refuse le nouveau prix.</p>
+    <p>Les prix sont indiqués en euros, <strong>TVA non applicable</strong>. Ils peuvent être modifiés à tout moment. Le prix applicable est celui affiché au moment de la commande. Pour un abonnement en cours, tout changement de prix est annoncé par e-mail au moins 30 jours à l'avance et ne s'applique qu'à partir de l'échéance suivante. Le client peut résilier avant cette échéance s'il refuse le nouveau prix.</p>
   </section>
 
   <section>
@@ -112,7 +110,7 @@
   <section>
     <h2>13. Réclamations et litiges</h2>
     <p>Toute réclamation se fait par e-mail à <a href="mailto:{SELLER.email}">{SELLER.email}</a> : une réponse est apportée sous 7 jours.</p>
-    <p>Le consommateur peut aussi recourir gratuitement à un médiateur de la consommation (médiateur désigné : À COMPLÉTER), ou à la plateforme européenne de règlement en ligne des litiges.</p>
+    <p>Le consommateur peut aussi saisir gratuitement un médiateur de la consommation.</p>
     <p>Les présentes CGV sont soumises au droit français. À défaut d'accord amiable, le litige est porté devant les tribunaux compétents. Entre professionnels, compétence est attribuée aux tribunaux du ressort du domicile du vendeur.</p>
   </section>
 </main>

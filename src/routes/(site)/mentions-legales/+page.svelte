@@ -15,9 +15,8 @@
     <p>Le site <strong>www.zik-music.fr</strong> est &eacute;dit&eacute; par&nbsp;:</p>
     <ul>
       <li><strong>Nom&nbsp;:</strong> Th&eacute;o Foucher</li>
-      <li><strong>Statut&nbsp;:</strong> Entrepreneur individuel</li>
-      <li><strong>Adresse&nbsp;:</strong> &Agrave; COMPL&Eacute;TER</li>
-      <li><strong>SIRET&nbsp;:</strong> &Agrave; COMPL&Eacute;TER</li>
+      <li><strong>Statut&nbsp;:</strong> Particulier</li>
+      <li><strong>Adresse&nbsp;:</strong> 32 rue Georgette Boulestreau, 49100 Angers</li>
       <li><strong>Directeur de la publication&nbsp;:</strong> Th&eacute;o Foucher</li>
       <li><strong>Contact&nbsp;:</strong> <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a></li>
     </ul>
