@@ -272,7 +272,7 @@
   .vs-cta-btn {
     display: inline-block;
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     font-weight: 800;
     font-family: "Barlow Condensed", sans-serif;
     padding: 12px 28px;

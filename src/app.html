@@ -62,7 +62,12 @@
     <!-- Theme / animation preference (inline to avoid FOUC) -->
     <script>
       (function () {
-        var t = localStorage.getItem("zik_theme") || "light";
+        // L'admin est conçu en sombre : il ignore le thème choisi
+        var t =
+          location.pathname.indexOf("/admin") === 0
+            ? "dark"
+            : localStorage.getItem("zik_theme") ||
+              (location.pathname.indexOf("/salon/host") === 0 ? "dark" : "light");
         document.documentElement.setAttribute("data-theme", t);
         var bgs = {
           dark: "#080808",

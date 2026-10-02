@@ -2,6 +2,8 @@
   let { open, onClose, maxWidth = '440px', boxBg = 'var(--modal-bg)', closeBtnColor = 'rgb(var(--c-glass) / 0.5)', children } = $props();
 </script>
 
+<svelte:window onkeydown={(e) => { if (open && e.key === 'Escape') onClose(); }} />
+
 {#if open}
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->

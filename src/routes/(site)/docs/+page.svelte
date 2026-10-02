@@ -881,7 +881,7 @@
     <section>
       <h2 id="classement">Classements</h2>
 
-      <h3>ELO all-time</h3>
+      <h3>ELO depuis toujours</h3>
       <p>
         Le classement ELO est le classement de référence de ZIK. Il utilise un <strong>vrai système ELO pairwise</strong> : votre ELO évolue en fonction du niveau de chacun de vos adversaires, pas seulement de votre position finale.
       </p>
@@ -898,7 +898,7 @@
 
       <h3>Classement hebdomadaire</h3>
       <p>
-        En parallèle du classement ELO all-time, un <strong>classement hebdomadaire</strong> repart de zéro chaque lundi à minuit. Il prend en compte le total de points bruts accumulés durant la semaine. Il donne sa chance à tout le monde, même aux joueurs avec un ELO faible, de briller sur une semaine donnée.
+        En parallèle du classement ELO général, un <strong>classement hebdomadaire</strong> repart de zéro chaque lundi à minuit. Il prend en compte le total de points bruts accumulés durant la semaine. Il donne sa chance à tout le monde, même aux joueurs avec un ELO faible, de briller sur une semaine donnée.
       </p>
 
       <div class="doc-tip">

@@ -390,6 +390,12 @@
       <span class="zk-streak">Série <b>{streak}</b></span>
     {/if}
   </div>
+  {#if !finished && attempts.length === 0}
+    <p class="zk-rules">
+      Écoute l'extrait et trouve la chanson du jour en 6 essais.
+      Chaque essai raté ou passé débloque un peu plus de musique.
+    </p>
+  {/if}
 
   <!-- Grille des essais -->
   <ol class="zk-rows">
@@ -1157,6 +1163,13 @@
     border-color: var(--text);
   }
 
+  .zk-rules {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--mid);
+    animation: zk-in 0.5s ease both;
+  }
   .zk-source {
     margin: 0;
     text-align: center;
@@ -1636,6 +1649,7 @@
   }
 
   @media (max-width: 560px) {
+    .zk-row { height: 36px; }
     .zk-result {
       flex-direction: column;
       align-items: flex-start;

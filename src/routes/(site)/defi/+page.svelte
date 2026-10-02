@@ -54,6 +54,11 @@
         chaque partie jouée et chaque bonne réponse compte pour tout le monde.
       </p>
       <div class="wd-meta">
+        {#if challenge}
+          <a class="btn-accent" href={challenge.type === 'zikle_wins' ? '/zikle' : '/rooms'}>
+            {challenge.type === 'zikle_wins' ? 'Jouer au Zikle du jour →' : 'Jouer pour contribuer →'}
+          </a>
+        {/if}
         <a class="wd-archives-link" href="/defi/archives">Voir l'historique des défis →</a>
       </div>
     </header>
@@ -164,6 +169,7 @@
     transition: color 0.15s;
   }
   .wd-archives-link:hover { color: var(--accent); }
+  .wd-meta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 
   .wd-card {
     border: 1px solid rgb(var(--accent-rgb) / 0.3);

@@ -635,7 +635,7 @@
     margin-left: auto;
     padding: 15px 30px;
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     border: 0;
     border-radius: 3px;
     font-family: var(--s-cond);

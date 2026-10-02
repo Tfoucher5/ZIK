@@ -10,7 +10,14 @@ export const NEWS = [
     items: [
       "Le site s'affiche désormais en thème clair par défaut, aux couleurs de ZIK. Le thème sombre reste disponible dans les paramètres.",
       "Page d'accueil plus claire : une action principale pour organiser une soirée, un menu plus lisible et des textes plus contrastés.",
+      "Nouveau bloc « Aujourd'hui sur ZIK » sur l'accueil : ton Zikle du jour et ta série, le défi de la semaine, et ta dernière room à reprendre en un clic.",
+      "Accueil allégé : moins de blocs, et l'essentiel en premier.",
       "Le code d'une soirée (affiché sur la TV) et le code d'une partie en ligne ne se confondent plus.",
+      "Depuis la page des rooms, les invités choisissent maintenant leur pseudo au lieu de tous s'appeler « Joueur ».",
+      "L'écran TV du Mode Salon reste sombre pour ne pas éblouir la pièce.",
+      "Zikle explique ses règles dès la première visite, et la page d'erreur propose de quoi rebondir.",
+      "Navigation au clavier visible partout, zoom autorisé sur mobile, et respect du réglage « réduire les animations ».",
+      "En partie, le compte à rebours au centre du vinyle redevient lisible, et les invités savent qu'un compte gratuit garde leur score.",
     ],
   },
   {

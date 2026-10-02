@@ -247,6 +247,7 @@
               style="--swatch-bg:{theme.bg};--swatch-accent:{theme.accent}"
               onclick={() => setTheme(theme.id)}
               aria-label="Th&egrave;me {theme.label}"
+              aria-pressed={activeTheme === theme.id}
               title={theme.label}
             >
               <span class="swatch-preview">
@@ -499,10 +500,10 @@
 .settings-row:last-child { border-bottom: none; }
 .settings-row-info { flex: 1; min-width: 0; }
 .settings-row-label { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
-.settings-row-desc { font-size: 0.75rem; color: var(--dim); line-height: 1.45; }
+.settings-row-desc { font-size: 0.82rem; color: var(--mid); line-height: 1.45; }
 
 /* -- Theme picker -- */
-.settings-row-theme { align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.settings-row-theme { flex-direction: column; align-items: stretch; gap: 14px; }
 .theme-picker { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
 .theme-swatch {
   display: flex;
@@ -677,7 +678,6 @@ a.btn-unlink { text-decoration: none; white-space: nowrap; }
 /* -- Responsive -- */
 @media (max-width: 640px) {
   .settings-row { flex-wrap: wrap; gap: 12px; }
-  .settings-row-theme { flex-direction: column; align-items: stretch; }
   .theme-picker { width: 100%; justify-content: space-between; }
   .theme-swatch { flex: 1; min-width: 0; }
   .swatch-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

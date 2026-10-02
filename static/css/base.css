@@ -12,6 +12,9 @@
   margin: 0;
   padding: 0;
 }
+[id] {
+  scroll-margin-top: calc(var(--nav-h) + 16px);
+}
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
@@ -556,7 +559,7 @@ button {
   font-size: 0.52rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgb(var(--c-glass) / 0.22);
+  color: var(--dim);
 }
 .footer-mast-tagline {
   font-family: "Barlow Condensed", sans-serif;
@@ -575,7 +578,7 @@ button {
   font-size: 0.52rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgb(var(--c-glass) / 0.25);
+  color: var(--dim);
 }
 .footer-online-dot {
   width: 5px;
@@ -628,7 +631,7 @@ button {
   font-size: 0.76rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgb(var(--c-glass) / 0.38);
+  color: var(--mid);
   transition: color 0.15s;
   display: block;
   text-align: left;
@@ -681,7 +684,7 @@ button {
   font-size: 0.58rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgb(var(--c-glass) / 0.18);
+  color: var(--dim);
 }
 .btn-support {
   display: inline-flex;
@@ -715,7 +718,7 @@ button {
   font-size: 0.58rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgb(var(--c-glass) / 0.18);
+  color: var(--dim);
 }
 
 /* Bas */
@@ -731,10 +734,10 @@ button {
   font-weight: 700;
   font-size: 0.62rem;
   letter-spacing: 0.06em;
-  color: rgb(var(--c-glass) / 0.18);
+  color: var(--dim);
 }
 .footer-copy a {
-  color: rgb(var(--c-glass) / 0.28);
+  color: var(--mid);
   transition: color 0.15s;
 }
 .footer-copy a:hover {
@@ -745,7 +748,7 @@ button {
   font-weight: 700;
   font-size: 0.6rem;
   letter-spacing: 0.12em;
-  color: rgb(var(--c-glass) / 0.14);
+  color: var(--dim);
 }
 
 @media (max-width: 900px) {
@@ -1071,11 +1074,7 @@ button {
   color: var(--text);
 }
 .page-head-sub {
-  font-family: "Barlow Condensed", sans-serif;
-  font-weight: 700;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgb(var(--c-glass) / 0.35);
+  font-size: 1rem;
+  color: var(--mid);
   margin-top: 10px;
 }

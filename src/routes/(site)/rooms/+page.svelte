@@ -3,6 +3,7 @@
   import { onMount, getContext } from 'svelte';
   import Toast from '$lib/components/Toast.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
+  import GuestModal from '$lib/components/GuestModal.svelte';
   import { toast } from '$lib/toast.svelte.js';
 
   const _ctx = getContext('zik');
@@ -230,12 +231,17 @@
     }
   }
 
-  function joinRoom(code, gameMode = 'classic') {
-    const username = user?.profile?.username || user?.email?.split('@')[0] || 'Joueur';
-    const userId   = user?.id || '';
-    const isGuest  = user ? '0' : '1';
-    const p = new URLSearchParams({ roomId: code, username, userId, isGuest, gameMode });
+  let guestOpen = $state(false);
+  let pendingJoin = null;
+
+  function goToGame(code, gameMode, username, userId) {
+    const p = new URLSearchParams({ roomId: code, username, userId, isGuest: userId ? '0' : '1', gameMode });
     window.location.href = `/game?${p}`;
+  }
+
+  function joinRoom(code, gameMode = 'classic') {
+    if (!user) { pendingJoin = { code, gameMode }; guestOpen = true; return; }
+    goToGame(code, gameMode, user.profile?.username || user.email?.split('@')[0] || 'Joueur', user.id);
   }
 
   async function openCreate() {
@@ -337,11 +343,9 @@
   <div class="rp-head">
     <div>
       <h1>Rooms</h1>
-      <p class="rp-sub">Classique ELO · QCM · Officiel &amp; Custom</p>
+      <p class="rp-sub">Rejoins une partie en ligne, ou crée ta room avec tes playlists.</p>
     </div>
-    {#if user}
-      <button class="btn-accent rp-btn-create" onclick={openCreate}>+ Créer une room</button>
-    {/if}
+    <button class="btn-accent rp-btn-create" onclick={openCreate}>+ Créer une room</button>
   </div>
 
   <!-- TOOLBAR : tabs underline + search inline -->
@@ -355,7 +359,7 @@
     {#if tab === 'public'}
       <div class="rp-search-wrap">
         <span class="rp-search-icon">⌕</span>
-        <input class="rp-search" type="search" bind:value={pubSearch} placeholder="Rechercher une room..." />
+        <input class="rp-search" type="search" bind:value={pubSearch} placeholder="Rechercher une room…" aria-label="Rechercher une room" />
       </div>
     {/if}
   </div>
@@ -363,13 +367,13 @@
   <!-- FILTRES / CHIPS -->
   {#if tab === 'public'}
     <div class="rp-chips">
-      <button class="chip" class:on={filterActive} onclick={() => filterActive = !filterActive}>● Live</button>
-      <button class="chip" class:on={filterAutoStart} onclick={() => filterAutoStart = !filterAutoStart}>Auto-start</button>
-      <button class="chip" class:on={filterQcm} onclick={() => { filterQcm = !filterQcm; if (filterQcm) filterClassic = false; }}>QCM</button>
-      <button class="chip" class:on={filterClassic} onclick={() => { filterClassic = !filterClassic; if (filterClassic) filterQcm = false; }}>Classique</button>
-      <button class="chip" class:on={filterOfficial} onclick={() => filterOfficial = !filterOfficial}>Officielles</button>
+      <button class="chip" class:on={filterActive} aria-pressed={filterActive} onclick={() => filterActive = !filterActive}>● Live</button>
+      <button class="chip" class:on={filterAutoStart} aria-pressed={filterAutoStart} onclick={() => filterAutoStart = !filterAutoStart}>Démarrage auto</button>
+      <button class="chip" class:on={filterQcm} aria-pressed={filterQcm} onclick={() => { filterQcm = !filterQcm; if (filterQcm) filterClassic = false; }}>QCM</button>
+      <button class="chip" class:on={filterClassic} aria-pressed={filterClassic} onclick={() => { filterClassic = !filterClassic; if (filterClassic) filterQcm = false; }}>Classique</button>
+      <button class="chip" class:on={filterOfficial} aria-pressed={filterOfficial} onclick={() => filterOfficial = !filterOfficial}>Officielles</button>
       {#if hasActiveFilters}
-        <button class="chip chip-reset" onclick={() => { filterActive = false; filterAutoStart = false; filterQcm = false; filterClassic = false; filterOfficial = false; }}>✕</button>
+        <button class="chip chip-reset" onclick={() => { filterActive = false; filterAutoStart = false; filterQcm = false; filterClassic = false; filterOfficial = false; }}>✕ Effacer les filtres</button>
       {/if}
     </div>
   {/if}
@@ -755,6 +759,12 @@
 
 <Toast />
 
+<GuestModal
+  open={guestOpen}
+  onClose={() => guestOpen = false}
+  onConfirm={(name) => { guestOpen = false; goToGame(pendingJoin.code, pendingJoin.gameMode, name, ''); }}
+/>
+
 <style>
   /* ── Page layout ── */
   .rooms-page { width: 100%; padding-top: var(--nav-h); padding-bottom: 0; }
@@ -784,13 +794,9 @@
     margin: 0;
   }
   .rp-sub {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.65rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.22);
-    margin-top: 4px;
+    font-size: 1rem;
+    color: var(--mid);
+    margin-top: 6px;
   }
   .rp-btn-create { flex-shrink: 0; }
 
@@ -809,7 +815,7 @@
     font-size: 0.8rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.3);
+    color: var(--mid);
     padding: 0 24px 0 0;
     height: 54px;
     display: flex;
@@ -823,7 +829,7 @@
   }
   .rp-tab.on { color: var(--text); border-bottom-color: var(--accent); }
   .rp-search-wrap { display: flex; align-items: center; gap: 8px; }
-  .rp-search-icon { color: rgb(var(--c-glass) / 0.25); font-size: 1.1rem; line-height: 1; }
+  .rp-search-icon { color: var(--mid); font-size: 1.1rem; line-height: 1; }
   .rp-search {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
@@ -832,13 +838,13 @@
     text-transform: uppercase;
     background: none;
     border: none;
-    border-bottom: 1px solid rgb(var(--c-glass) / 0.14);
+    border-bottom: 1px solid rgb(var(--c-glass) / 0.3);
     color: var(--text);
     padding: 8px 0;
     outline: none;
     width: 240px;
   }
-  .rp-search::placeholder { color: rgb(var(--c-glass) / 0.22); }
+  .rp-search::placeholder { color: var(--dim); }
 
   /* ── Chips filtres ── */
   .rp-chips {
@@ -855,14 +861,14 @@
     letter-spacing: 0.16em;
     text-transform: uppercase;
     padding: 7px 16px;
-    border: 1px solid rgb(var(--c-glass) / 0.14);
+    border: 1px solid rgb(var(--c-glass) / 0.25);
     border-radius: 0;
     background: none;
-    color: rgb(var(--c-glass) / 0.35);
+    color: rgb(var(--c-glass) / 0.7);
     cursor: pointer;
     transition: all 0.15s;
   }
-  .chip:hover { border-color: rgb(var(--c-glass) / 0.35); color: rgb(var(--c-glass) / 0.7); }
+  .chip:hover { border-color: rgb(var(--c-glass) / 0.5); color: var(--text); }
   .chip.on { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.05); }
   .chip-reset { color: var(--danger); border-color: rgba(248,113,113,0.25); }
 
@@ -1068,7 +1074,7 @@
     .pw-details { display: inline-flex; }
   }
   .pw-code.pw-a { font-size: 1.4rem; color: var(--accent); }
-  .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: rgba(255, 255, 255, 0.3); }
+  .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: rgba(255, 255, 255, 0.65); }
 
   .btn-join {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1228,7 +1234,7 @@
   .rp-end {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.18);
+    color: var(--dim);
     text-align: center;
     padding: 32px 0 48px;
     border-top: 1px solid rgb(var(--c-glass) / 0.06);
@@ -1477,7 +1483,7 @@
   .m2-eyebrow {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.55rem; letter-spacing: 0.28em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.22); margin-bottom: 3px;
+    color: var(--mid); margin-bottom: 3px;
   }
   .m2-room-id { display: flex; align-items: baseline; gap: 10px; }
   .m2-room-name {
@@ -1507,7 +1513,7 @@
   .m2-label {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.25); display: block; margin-bottom: 4px;
+    color: var(--mid); display: block; margin-bottom: 4px;
   }
   .m2-input {
     background: rgb(var(--c-glass) / 0.03); border: 1px solid rgb(var(--c-glass) / 0.1);
@@ -1533,7 +1539,7 @@
     font-weight: 900; font-size: 1.5rem; line-height: 1; color: var(--text);
     padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid rgb(var(--c-glass) / 0.07);
   }
-  .m2-unit { font-size: 0.72rem; color: rgb(var(--c-glass) / 0.22); }
+  .m2-unit { font-size: 0.72rem; color: var(--dim); }
   .m2-param .m2-input { padding: 5px 8px; font-size: 0.76rem; margin-top: 5px; }
   .m2-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 14px; }
   .m2-mode {
@@ -1545,12 +1551,12 @@
   .m2-mode-name {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.4);
+    color: var(--mid);
   }
   .m2-mode.active .m2-mode-name { color: var(--accent); }
-  .m2-mode-sub { font-size: 0.64rem; color: rgb(var(--c-glass) / 0.2); }
+  .m2-mode-sub { font-size: 0.64rem; color: var(--dim); }
   .m2-check-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
-  .m2-check-label { font-size: 0.77rem; color: rgb(var(--c-glass) / 0.45); cursor: pointer; }
+  .m2-check-label { font-size: 0.77rem; color: var(--mid); cursor: pointer; }
   .m2-pl-list {
     height: 220px; overflow-y: auto; border: 1px solid rgb(var(--c-glass) / 0.07);
     margin-bottom: 8px; scrollbar-width: thin;
@@ -1568,12 +1574,12 @@
     display: flex; align-items: center; justify-content: center; font-size: 0.54rem; color: var(--accent);
   }
   .m2-pl-ck.on { background: rgb(var(--accent-rgb) / 0.1); border-color: rgb(var(--accent-rgb) / 0.5); }
-  .m2-pl-grp { font-size: 0.64rem; color: rgb(var(--c-glass) / 0.2); white-space: nowrap; }
-  .m2-pl-cnt { font-size: 0.64rem; color: rgb(var(--c-glass) / 0.22); white-space: nowrap; }
-  .m2-note { font-size: 0.68rem; color: rgb(var(--c-glass) / 0.2); margin-bottom: 0; }
+  .m2-pl-grp { font-size: 0.64rem; color: var(--dim); white-space: nowrap; }
+  .m2-pl-cnt { font-size: 0.64rem; color: var(--dim); white-space: nowrap; }
+  .m2-note { font-size: 0.68rem; color: var(--dim); margin-bottom: 0; }
   .m2-info-box {
     display: flex; gap: 8px; background: rgb(var(--accent-rgb) / .04); border: 1px solid rgb(var(--accent-rgb) / .14);
-    padding: 10px 12px; font-size: 0.74rem; color: rgb(var(--c-glass) / 0.38); line-height: 1.5;
+    padding: 10px 12px; font-size: 0.74rem; color: var(--mid); line-height: 1.5;
     margin-top: 10px;
   }
   .m2-alert {
@@ -1628,9 +1634,10 @@
       flex-shrink: 0; width: 110px; align-self: stretch;
       transform: none !important;
     }
-    .pw-name { font-size: 1rem !important; }
+    .pw-name { font-size: 1rem !important; color: var(--text) !important; text-shadow: none !important; }
     .pw-name.pw-a { font-size: 1.1rem !important; }
-    .pw-code { font-size: 0.72rem !important; color: rgb(var(--c-glass) / 0.3) !important; }
+    .pw-owner { color: var(--mid); text-shadow: none; }
+    .pw-code { font-size: 0.72rem !important; color: var(--mid) !important; text-shadow: none !important; }
     .pw-details { display: inline-flex; }
     /* En liste, l'overlay ne sert plus : les infos sont déjà dans la ligne. */
     .pw-hover { display: none; }

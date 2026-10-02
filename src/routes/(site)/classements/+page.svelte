@@ -219,7 +219,7 @@
         </div>
         <span class="hp-sep"></span>
       {/if}
-      <span class="hp-context">{eloAmis ? 'Toi et tes amis · ELO' : 'Rooms officielles · Mode classique · All-time'}</span>
+      <span class="hp-context">{eloAmis ? 'Toi et tes amis · ELO' : 'Rooms officielles · Mode classique · Depuis toujours'}</span>
     {:else}
       <div class="hp-chips">
         <button class="hp-chip" class:on={scoreMode === 'classique'} onclick={() => scoreMode = 'classique'}>Classique</button>

@@ -176,7 +176,7 @@
         <a href="/classements">Classements</a>
         <a href="/zikle">Zikle</a>
         <a href="/salon">Mode Salon</a>
-        <a href="/docs">Documentation</a>
+        <a href="/docs">Aide et règles du jeu</a>
         <a href="/nouveautes">Nouveautés</a>
       </div>
     </div>

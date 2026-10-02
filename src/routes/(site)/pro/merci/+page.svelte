@@ -116,7 +116,7 @@
   }
   .merci-btn {
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     font-family: "Barlow Condensed", sans-serif;
     font-weight: 800;
     padding: 12px 28px;

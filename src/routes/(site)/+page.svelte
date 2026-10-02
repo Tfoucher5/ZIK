@@ -3,7 +3,8 @@
   import { onMount } from "svelte";
   import { dicebear } from '$lib/utils.js';
   import HeroSection from '$lib/components/HeroSection.svelte';
-  import Modal from '$lib/components/Modal.svelte';
+  import GuestModal from '$lib/components/GuestModal.svelte';
+  import TodayStrip from '$lib/components/TodayStrip.svelte';
   import { NEWS } from '$lib/news.js';
 
   let { data } = $props();
@@ -43,7 +44,6 @@
   const latestNews = NEWS[0];
   let globalStats = $state(data.globalStats ?? { users: 0, gamesMonth: 0 });
   let guestOpen = $state(false);
-  let guestUsername = $state("");
   let pendingRoom = $state(null);
   let pendingGameMode = $state('classic');
   let _roomsTimer = null;
@@ -119,8 +119,6 @@
   }
 
   function joinRoom(roomId, gameMode = 'classic') {
-    pendingRoom = roomId;
-    pendingGameMode = gameMode;
     const userId = sessionStorage.getItem("zik_uid");
     const name = sessionStorage.getItem("zik_uname");
     if (userId && name) navigateToGame(roomId, name, userId, false, gameMode);
@@ -136,18 +134,12 @@
   function openGuestModal(roomId, gameMode = 'classic') {
     pendingRoom = roomId;
     pendingGameMode = gameMode;
-    const saved = localStorage.getItem("zik_guest");
-    if (saved) guestUsername = saved;
     guestOpen = true;
-    setTimeout(() => document.getElementById("guestUsernameInput")?.focus(), 80);
   }
 
-  function confirmGuest() {
-    const u = guestUsername.trim();
-    if (!u) return;
-    localStorage.setItem("zik_guest", u);
+  function confirmGuest(name) {
     guestOpen = false;
-    navigateToGame(pendingRoom, u, null, true, pendingGameMode);
+    navigateToGame(pendingRoom, name, null, true, pendingGameMode);
   }
 
   const jsonLd = JSON.stringify([
@@ -289,29 +281,16 @@
 
 <!-- ══════════════════════════════ HERO ══════════════════════════════ -->
 <HeroSection
-  badge={displayOnline > 0 ? `${displayOnline} joueurs en ligne` : 'Blind Test Multijoueur'}
+  badge={displayOnline > 0 ? `${displayOnline} joueurs en ligne` : null}
   gamesMonth={globalStats.gamesMonth}
   userCount={globalStats.users}
-  challenge={weeklyChallenge}
 >
   <a href="/salon" class="btn-accent hero-cta">🎉 Organiser une soirée</a>
   <button class="btn-ghost hero-cta hero-online" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer en ligne</button>
 </HeroSection>
 
-<!-- ══════════════════════════════ TICKER ══════════════════════════════ -->
-<div class="ticker" aria-hidden="true">
-  <div class="ticker-track">
-    {#each Array(3) as _, ti (ti)}
-      <span>Blind Test</span><span class="tk-sep"> /// </span>
-      <span>Multijoueur</span><span class="tk-sep"> /// </span>
-      <span>Gratuit</span><span class="tk-sep"> /// </span>
-      <span>Deezer</span><span class="tk-sep"> /// </span>
-      <span>Classement ELO</span><span class="tk-sep"> /// </span>
-      <span>Mode Salon</span><span class="tk-sep"> /// </span>
-      <span>Sans inscription</span><span class="tk-sep"> /// </span>
-    {/each}
-  </div>
-</div>
+<!-- ══════════════════════════════ AUJOURD'HUI ══════════════════════════════ -->
+<TodayStrip challenge={weeklyChallenge} onResume={(room) => joinRoom(room.id, room.gameMode)} />
 
 <!-- ══════════════════════════════ COLLAGE — ROOMS ══════════════════════════════ -->
 <section class="poster-wall" id="rooms">
@@ -449,53 +428,29 @@
 <section class="features" use:reveal>
   <h2 class="feat-title">Tout <em>ZIK</em>, en un coup d'œil</h2>
   <div class="feat-grid">
+    <a href="/salon" class="feat-item">
+      <span class="feat-tag">Grand écran + téléphones</span>
+      <div class="feat-name">Mode Salon</div>
+      <p class="feat-desc">La musique passe sur la TV, chaque invité répond depuis son téléphone. Sans appli, sans compte pour les joueurs.</p>
+      <span class="feat-go">Organiser une soirée →</span>
+    </a>
     <a href="/zikle" class="feat-item">
       <span class="feat-tag">Chaque jour · Sans compte</span>
       <div class="feat-name">Zikle</div>
-      <p class="feat-desc">Un défi musical quotidien gratuit : devine la chanson du jour en 6 essais, la même pour tout le monde.</p>
-      <span class="feat-go">Découvrir →</span>
-    </a>
-    <a href="/salon" class="feat-item">
-      <span class="feat-tag">Grand écran + téléphone</span>
-      <div class="feat-name">Mode Salon</div>
-      <p class="feat-desc">Diffuse la musique sur la TV, chaque invité répond depuis son smartphone. Idéal pour les soirées.</p>
-      <span class="feat-go">Découvrir →</span>
-    </a>
-    <a href="/docs#qcm" class="feat-item">
-      <span class="feat-tag">Accessible à tous</span>
-      <div class="feat-name">Mode QCM</div>
-      <p class="feat-desc">Quatre propositions, la bonne réponse suffit — sans pression, sans classement ELO.</p>
-      <span class="feat-go">Découvrir →</span>
+      <p class="feat-desc">Une chanson du jour à deviner en 6 essais, la même pour tout le monde. Enchaîne les jours pour faire grimper ta série.</p>
+      <span class="feat-go">Jouer au Zikle →</span>
     </a>
     <a href="/playlists" class="feat-item">
       <span class="feat-tag">Deezer</span>
-      <div class="feat-name">Tes playlists, tes règles</div>
-      <p class="feat-desc">Importe tes propres playlists ou pioche parmi celles de la communauté.</p>
-      <span class="feat-go">Découvrir →</span>
+      <div class="feat-name">Tes playlists</div>
+      <p class="feat-desc">Importe tes playlists Deezer ou pioche dans celles de la communauté, puis lance une partie avec.</p>
+      <span class="feat-go">Voir les playlists →</span>
     </a>
     <a href="/classements" class="feat-item">
-      <span class="feat-tag">ELO mondial</span>
-      <div class="feat-name">Classement qui compte</div>
-      <p class="feat-desc">Grimpe dans le classement mondial en Mode Classique, manche après manche.</p>
-      <span class="feat-go">Découvrir →</span>
-    </a>
-    <a href="/docs#succes" class="feat-item">
-      <span class="feat-tag">Bronze · Argent · Or</span>
-      <div class="feat-name">Succès & séries</div>
-      <p class="feat-desc">Débloque des succès et enchaîne les séries, visibles sur ton profil.</p>
-      <span class="feat-go">Découvrir →</span>
-    </a>
-    <a href="/docs#amis" class="feat-item">
-      <span class="feat-tag">Profils · Invitations</span>
-      <div class="feat-name">Amis & social</div>
-      <p class="feat-desc">Suis tes amis, invite-les en un clic, comparez vos scores.</p>
-      <span class="feat-go">Découvrir →</span>
-    </a>
-    <a href="/defi" class="feat-item">
-      <span class="feat-tag">Toute la communauté</span>
-      <div class="feat-name">Défi hebdomadaire</div>
-      <p class="feat-desc">Un objectif collectif chaque semaine. Contribue en jouant et grimpe dans le classement des joueurs les plus actifs.</p>
-      <span class="feat-go">Découvrir →</span>
+      <span class="feat-tag">Classement · Défi · Succès</span>
+      <div class="feat-name">Progresse</div>
+      <p class="feat-desc">Avec un compte gratuit : classement ELO, défi collectif chaque semaine, succès à débloquer et amis à défier.</p>
+      <span class="feat-go">Voir les classements →</span>
     </a>
   </div>
 </section>
@@ -512,7 +467,7 @@
   {#if eloLb.length === 0}
     <p class="chart-empty">Chargement…</p>
   {:else}
-    {#each eloLb.slice(0, 8) as p, i (p.username)}
+    {#each eloLb.slice(0, 5) as p, i (p.username)}
       <a href="/user/{p.username}" class="chart-row">
         <span class="chart-pos" class:top3={i < 3}>{i + 1}</span>
         <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} width="32" height="32" loading="lazy" decoding="async" />
@@ -529,27 +484,6 @@
     <a href="/classements" class="chart-cta">Classement complet →</a>
   </div>
 </section>
-
-<!-- ══════════════════════════════ MODE SALON CTA ══════════════════════════════ -->
-<div class="salon-cta" use:reveal>
-  <div class="salon-cta-inner">
-    <div class="salon-left">
-      <span class="salon-kicker">✦ Pour les soirées</span>
-      <h2 class="salon-title">Mode Salon</h2>
-      <p class="salon-desc">Grand écran sur la TV, chaque joueur répond depuis son téléphone. Style Kahoot, mais avec tes musiques.</p>
-      <div class="salon-actions">
-        <a href="/salon" class="btn-accent">Organiser une soirée →</a>
-        <a href="/docs#salon" class="btn-ghost sm">En savoir plus</a>
-      </div>
-      <a href="/pro" class="salon-pro-link">Bar, association, entreprise ? Organisez votre blind test →</a>
-    </div>
-    <div class="salon-phones" aria-hidden="true">
-      <div class="sphone sphone-l"><div class="sphone-s"><span style="color:#22c55e">▲</span></div></div>
-      <div class="sphone sphone-c"><div class="sphone-s"><span style="color:#f59e0b">◆</span></div></div>
-      <div class="sphone sphone-r"><div class="sphone-s"><span style="color:#3b82f6">●</span></div></div>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════ NOUVEAUTÉS TEASER ══════════════════════════════ -->
 {#if latestNews}
@@ -613,59 +547,12 @@
 
 
 <!-- ══════════════════════════════ GUEST MODAL ══════════════════════════════ -->
-<Modal open={guestOpen} onClose={() => guestOpen = false} maxWidth="360px">
-  <h2 class="guest-h2">Jouer en invité</h2>
-  <p class="mdesc">
-    Ton score ne sera pas sauvegardé.
-    <button onclick={() => guestOpen = false}
-      style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font:inherit">
-      Me connecter →
-    </button>
-  </p>
-  <div class="field">
-    <label for="guestUsernameInput">Pseudo</label>
-    <input id="guestUsernameInput" type="text" bind:value={guestUsername}
-      placeholder="MonPseudo" maxlength="20" autocomplete="off"
-      onkeypress={(e) => { if (e.key === 'Enter') confirmGuest(); }} />
-  </div>
-  <div class="modal-btns">
-    <button class="btn-ghost" onclick={() => guestOpen = false}>Annuler</button>
-    <button class="btn-accent" onclick={confirmGuest}>Jouer →</button>
-  </div>
-</Modal>
+<GuestModal open={guestOpen} onClose={() => guestOpen = false} onConfirm={confirmGuest} />
 
 <style>
   /* ════════════════════════════ HERO ════════════════════════════ */
   .hero-cta { padding: 14px 26px; font-size: 0.95rem; }
   .hero-online { color: var(--text); border: 2px solid var(--text); }
-
-  /* ════════════════════════════ TICKER ════════════════════════════ */
-  .ticker {
-    background: var(--accent);
-    overflow: hidden;
-    padding: 9px 0;
-    white-space: nowrap;
-  }
-  .ticker-track {
-    display: inline-flex;
-    gap: 0;
-    animation: ticker-scroll 28s linear infinite;
-  }
-  .ticker-track span {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 0.72rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--on-accent);
-    padding: 0 28px;
-    flex-shrink: 0;
-  }
-  .tk-sep { opacity: 0.3; }
-  @keyframes ticker-scroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-33.333%); }
-  }
 
   /* ════════════════════════════ POSTER WALL ════════════════════════════ */
   .poster-wall {
@@ -891,7 +778,7 @@
   }
   .collage-empty {
     padding: 40px 48px;
-    color: rgb(var(--c-glass) / 0.3);
+    color: var(--mid);
     font-size: 0.85rem;
   }
 
@@ -1092,7 +979,7 @@
     margin-bottom: 36px;
     display: block;
   }
-  .chart-empty { color: rgb(var(--c-glass) / 0.3); font-size: 0.85rem; padding: 24px 0; }
+  .chart-empty { color: var(--mid); font-size: 0.85rem; padding: 24px 0; }
 
   .chart-cta-wrap {
     padding: 40px 0 0;
@@ -1348,85 +1235,6 @@
   .ticket-go:disabled { opacity: 0.5; cursor: not-allowed; }
   .ticket-err { font-size: 0.72rem; color: var(--danger); margin-top: 6px; }
 
-  /* ════════════════════════════ MODE SALON CTA ════════════════════════════ */
-  .salon-cta {
-    margin: 0;
-    background: var(--bg2);
-    border-top: 1px solid rgb(var(--accent-rgb) / 0.12);
-    border-bottom: 1px solid rgb(var(--accent-rgb) / 0.12);
-    padding: 48px clamp(24px, 5vw, 64px);
-    position: relative;
-    overflow: hidden;
-  }
-  .salon-cta::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 75% 50%, rgb(var(--accent-rgb) / 0.06) 0%, transparent 55%);
-    pointer-events: none;
-  }
-  .salon-cta-inner {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 48px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .salon-left {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .salon-kicker {
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: rgb(var(--accent-rgb) / 0.08);
-    border: 1px solid rgb(var(--accent-rgb) / 0.25);
-    padding: 4px 12px;
-    display: inline-block;
-    width: fit-content;
-  }
-  .salon-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: clamp(2rem, 3.5vw, 3rem);
-    font-weight: 900;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    line-height: 1;
-  }
-  .salon-desc {
-    font-size: 0.9rem;
-    color: var(--mid);
-    line-height: 1.65;
-    max-width: 420px;
-  }
-  .salon-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .salon-pro-link { display: inline-block; margin-top: 14px; font-size: .85rem; color: var(--mid); text-decoration: underline; text-underline-offset: 3px; }
-  .salon-pro-link:hover { color: var(--accent2); }
-  .salon-phones { display: flex; align-items: flex-end; gap: 10px; flex-shrink: 0; }
-  .sphone {
-    width: 56px; height: 96px;
-    background: #111;
-    border: 1px solid rgb(var(--c-glass) / 0.15);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
-  }
-  .sphone-l { transform: rotate(-7deg) translateY(10px); }
-  .sphone-c { transform: translateY(-8px); }
-  .sphone-r { transform: rotate(7deg) translateY(6px); }
-  .sphone-s {
-    width: 40px; height: 68px;
-    background: rgba(0,0,0,0.45);
-    border-radius: 7px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-  }
-
   /* ════════════════════════════ NOUVEAUTÉS TEASER ════════════════════════════ */
   .news-teaser {
     display: flex;
@@ -1518,21 +1326,6 @@
   .faq-item[open] .faq-q::after { content: '−'; }
   .faq-a { font-size: 0.84rem; color: var(--mid); line-height: 1.65; padding: 0 20px 16px; margin: 0; }
 
-  /* ════════════════════════════ GUEST MODAL ════════════════════════════ */
-  .guest-h2 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.02em;
-  }
-  .mdesc { font-size: 0.82rem; color: var(--mid); margin-bottom: 20px; line-height: 1.5; }
-  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
-  .field label { font-size: 0.75rem; font-weight: 600; color: var(--mid); }
-  .field input {
-    background: rgb(var(--c-glass) / 0.03); border: 1px solid var(--border2);
-    border-radius: 3px; padding: 10px 14px; color: var(--text);
-    font-size: 0.88rem; font-family: inherit; outline: none;
-  }
-  .field input:focus { border-color: rgb(var(--accent-rgb) / 0.45); box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.08); }
-  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
 
   /* ════════════════════════════ RESPONSIVE ════════════════════════════ */
   @media (max-width: 900px) {
@@ -1544,7 +1337,6 @@
     .feat-grid { grid-template-columns: repeat(2, 1fr); }
     .chart { padding: 48px 24px; }
     .ticket-section { padding: 48px 24px; grid-template-columns: 1fr; gap: 36px; }
-    .salon-phones { display: none; }
     .news-teaser { margin: 32px 24px 0; }
     .faq-section { padding: 48px 24px; }
   }
@@ -1573,7 +1365,6 @@
     .ticket-row { flex-direction: column; gap: 10px; }
     .ticket-input { border-right: 1px solid rgb(var(--c-glass) / 0.12); text-align: center; }
     .ticket-go { padding: 14px 20px; }
-    .salon-cta { padding: 60px 24px; }
     .faq-section { padding: 60px 16px; }
     .faq-list { gap: 10px; }
     .faq-a { line-height: 1.75; }

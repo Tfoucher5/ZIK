@@ -485,7 +485,7 @@
     padding: 1px 5px;
     border-radius: 2px;
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     font-family: var(--s-mono);
     font-size: 0.6rem;
     font-style: normal;

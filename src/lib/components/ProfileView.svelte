@@ -286,7 +286,7 @@
 
         <div class="marquee-actions">
           {#if editable || isOwn}
-            <button class="btn btn-accent" onclick={onEdit}>Modifier le pass</button>
+            <button class="btn btn-accent" onclick={onEdit}>Modifier mon profil</button>
           {:else if canFollow}
             {#if social.friendStatus === 'friends'}
               <button class="btn btn-friend" onclick={() => friendAction('remove')} disabled={friendBusy}>★ Amis</button>

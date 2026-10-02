@@ -46,7 +46,7 @@
     <span class="nav-sep" aria-hidden="true">·</span>
     <a href="/classements" class="nav-link" class:active={activeSection === 'classements'}>Classements</a>
     <span class="nav-sep" aria-hidden="true">·</span>
-    <a href="/docs"        class="nav-link" class:active={activeSection === 'docs'}>Docs</a>
+    <a href="/docs"        class="nav-link" class:active={activeSection === 'docs'}>Aide</a>
   </div>
 
   <div class="nav-right">

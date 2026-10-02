@@ -410,7 +410,7 @@
 <header class="page-head">
   <div class="page-head-inner">
     <h1 class="page-head-title">Playlists</h1>
-    <p class="page-head-sub">Crée, importe, joue · Deezer ou manuellement</p>
+    <p class="page-head-sub">Importe tes playlists Deezer ou crée-les à la main, puis lance une partie avec.</p>
   </div>
 </header>
 
@@ -451,7 +451,7 @@
               <div class="pl-item-name">{pl.name}</div>
               <div class="pl-item-count">{pl.track_count ?? 0} titre{(pl.track_count ?? 0) !== 1 ? 's' : ''}</div>
             </div>
-            <span class="pl-badge {pl.is_public ? 'pl-badge-pub' : 'pl-badge-priv'}">{pl.is_public ? 'PUB' : 'PRIV'}</span>
+            <span class="pl-badge {pl.is_public ? 'pl-badge-pub' : 'pl-badge-priv'}">{pl.is_public ? 'Publique' : 'Privée'}</span>
           </div>
         {/each}
       </div>
@@ -838,7 +838,7 @@
 .pl-item-count { font-size: 0.62rem; color: var(--dim); margin-top: 2px; }
 
 .pl-badge {
-  font-size: 0.55rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
