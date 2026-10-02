@@ -1,12 +1,11 @@
 name: Prospection ZIK Pro
 
-# Du lundi au vendredi à 7 h UTC (9 h à Paris l'été, 8 h l'hiver) : lit les
-# réponses reçues sur theo@zik-music.fr, puis envoie les mails du jour.
-# Le tri des réponses est fait ensuite par la routine Claude (Supabase).
+# Lancé du lundi au vendredi par la routine Claude « ZIK - Prospection » via
+# workflow_dispatch (le cron GitHub sautait des jours) : lit les réponses reçues
+# sur theo@zik-music.fr, puis envoie les mails du jour. La routine trie ensuite
+# les réponses (Supabase).
 # Dépôt public : les scripts n'écrivent que des compteurs dans les journaux.
 on:
-  schedule:
-    - cron: "0 7 * * 1-5"
   workflow_dispatch:
 
 concurrency: prospection
