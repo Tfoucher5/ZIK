@@ -1,5 +1,5 @@
 /* ── ZIK — Variables de thème ────────────────────────────────────────────────
-  Source unique de vérité pour les 3 thèmes (sombre, clair, violet).
+  Source unique de vérité pour les thèmes (clair par défaut, sombre, couleurs).
   Chargé en premier via app.html → disponible sur TOUTES les pages.
 
   Architecture :
@@ -25,8 +25,7 @@
   --c-green: #16a34a;
 }
 
-/* ── Thème sombre (défaut) ──────────────────────────────────────────────── */
-:root,
+/* ── Thème sombre ───────────────────────────────────────────────────────── */
 html[data-theme="dark"] {
   /* Fonds */
   --bg: #080808;
@@ -63,7 +62,7 @@ html[data-theme="dark"] {
   --dim: #4a5568;
 
   /* Navigation */
-  --nav-bg: rgba(8, 8, 8, 0.92);
+  --nav-bg: rgba(8, 8, 8, 0.97);
 
   /* Modales */
   --overlay: rgba(0, 0, 0, 0.55);
@@ -77,11 +76,12 @@ html[data-theme="dark"] {
   --glow-yellow: rgba(251, 191, 36, 0.35);
 }
 
-/* ── Thème clair ────────────────────────────────────────────────────────── */
+/* ── Thème clair (défaut) ───────────────────────────────────────────────── */
+:root,
 html[data-theme="light"] {
-  --bg: #e8edf8;
-  --bg-rgb: 232 237 248;
-  --bg2: #d8e0f0;
+  --bg: #f7f5fa;
+  --bg-rgb: 247 245 250;
+  --bg2: #ece8f2;
   --c-glass: 0 0 0;
   /* Surfaces et bordures renforcées pour être visibles sur fond clair */
   --surface: rgb(var(--c-glass) / 0.05);
@@ -89,11 +89,11 @@ html[data-theme="light"] {
   --surface3: rgb(var(--c-glass) / 0.12);
   --border: rgb(var(--c-glass) / 0.12);
   --border2: rgb(var(--c-glass) / 0.2);
-  --accent: #0ea5e9;
-  --accent2: #7c3aed;
-  --accent3: #9f67ff;
-  --accent-rgb: 14 165 233;
-  --accent2-rgb: 124 58 237;
+  --accent: #c026d3;
+  --accent2: #a21caf;
+  --accent3: #d946ef;
+  --accent-rgb: 192 38 211;
+  --accent2-rgb: 162 28 175;
   --success: #16a34a;
   --danger: #dc2626;
   --warn: #d97706;
@@ -101,12 +101,12 @@ html[data-theme="light"] {
   --gold-rgb: 217 119 6;
   --text: #0f172a;
   --mid: #475569;
-  --dim: #94a3b8;
-  --nav-bg: rgba(244, 246, 251, 0.92);
+  --dim: #64748b;
+  --nav-bg: rgba(247, 245, 250, 0.97);
   --overlay: rgba(15, 23, 42, 0.45);
-  --modal-bg: #f4f6fb;
-  --on-accent: #000;
-  --glow-purple: rgba(124, 58, 237, 0.25);
+  --modal-bg: #ffffff;
+  --on-accent: #fff;
+  --glow-purple: rgba(192, 38, 211, 0.25);
   --glow-green: rgba(22, 163, 74, 0.25);
   --glow-red: rgba(220, 38, 38, 0.25);
   --glow-yellow: rgba(217, 119, 6, 0.25);

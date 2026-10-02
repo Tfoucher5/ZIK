@@ -11,7 +11,7 @@
 
   let animOn       = $state(true);
   let volVal     = $state(50);
-  let activeTheme = $state('dark');
+  let activeTheme = $state('light');
   let isPrivate  = $state(false);
   let privLoading = $state(false);
   let discordLoading = $state(false);
@@ -118,8 +118,8 @@
   }
 
   const THEMES = [
+    { id: 'light',    label: 'Clair',    bg: '#f7f5fa', accent: '#c026d3' },
     { id: 'dark',     label: 'Sombre',   bg: '#080808', accent: '#ff00ff' },
-    { id: 'light',    label: 'Clair',    bg: '#e8edf8', accent: '#0ea5e9' },
     { id: 'violet',   label: 'Violet',   bg: '#0c0814', accent: '#a78bfa' },
     { id: 'ocean',    label: 'Océan',    bg: '#050b13', accent: '#22d3ee' },
     { id: 'sunset',   label: 'Sunset',   bg: '#140806', accent: '#fb923c' },
@@ -137,7 +137,7 @@
   onMount(() => {
     animOn = localStorage.getItem('zik_animations') !== 'off';
     volVal = parseInt(localStorage.getItem('zik_vol') ?? '50');
-    activeTheme = localStorage.getItem('zik_theme') || 'dark';
+    activeTheme = localStorage.getItem('zik_theme') || 'light';
     const el = document.getElementById('pref-volume');
     if (el) el.style.setProperty('--vol', volVal + '%');
   });

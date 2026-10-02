@@ -108,7 +108,7 @@
       const r = await fetch(`/api/rooms/custom/${code}`);
       if (!r.ok) {
         const r2 = await fetch(`/api/rooms/${code}`);
-        if (!r2.ok) throw new Error("Room introuvable ou expirée.");
+        if (!r2.ok) throw new Error("Partie introuvable ou expirée. Vérifie le code.");
       }
       navigateToGame(code);
     } catch (e) {
@@ -174,7 +174,7 @@
         "Playlists personnalisées partageables",
         "Détection intelligente des réponses (accents, fautes de frappe)"
       ],
-      "screenshot": "https://www.zik-music.fr/og.png?v=3.11.0",
+      "screenshot": "https://www.zik-music.fr/og.png?v=3.12.0",
       "author": { "@type": "Organization", "name": "ZIK", "url": "https://www.zik-music.fr" }
     },
     {
@@ -195,7 +195,7 @@
       "@type": "Organization",
       "name": "ZIK",
       "url": "https://www.zik-music.fr/",
-      "logo": "https://www.zik-music.fr/og.png?v=3.11.0",
+      "logo": "https://www.zik-music.fr/og.png?v=3.12.0",
       "sameAs": ["https://github.com/Tfoucher5/ZIK"]
     }
   ]);
@@ -257,7 +257,7 @@
       {
         "@type": "Question",
         "name": "Comment fonctionnent les succès sur ZIK ?",
-        "acceptedAnswer": { "@type": "Answer", "text": "ZIK propose des succès à débloquer (streaks, victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur." }
+        "acceptedAnswer": { "@type": "Answer", "text": "ZIK propose des succès à débloquer (séries de victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur." }
       }
     ]
   });
@@ -294,14 +294,8 @@
   userCount={globalStats.users}
   challenge={weeklyChallenge}
 >
-  <a href="/salon" class="btn-accent">🎉 Organiser une soirée</a>
-  <button class="btn-ghost" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer en ligne</button>
-  <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="btn-discord">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path fill-rule="evenodd" clip-rule="evenodd" fill="white" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942.0209-.0406.0098-.0895-.0321-.1112a13.201 13.201 0 0 1-1.8735-.8914.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
-    </svg>
-    Discord
-  </a>
+  <a href="/salon" class="btn-accent hero-cta">🎉 Organiser une soirée</a>
+  <button class="btn-ghost hero-cta hero-online" onclick={() => document.getElementById('rooms')?.scrollIntoView({behavior:'smooth'})}>Jouer en ligne</button>
 </HeroSection>
 
 <!-- ══════════════════════════════ TICKER ══════════════════════════════ -->
@@ -350,14 +344,20 @@
 
   <div class="pw-head">
     <div class="pw-head-left">
-      <h2 class="pw-title">Rooms <em>officielles</em></h2>
+      <h2 class="pw-title">Jouer <em>en ligne</em></h2>
       {#if totalOnline > 0 && liveRooms.length === 0}
         <span class="pw-live">● {totalOnline} en ligne</span>
       {/if}
+      <p class="pw-sub">Choisis une room par thème et joue contre les autres joueurs, sans inscription.</p>
     </div>
-    <div class="pw-tabs" role="tablist" aria-label="Mode de jeu">
-      <button role="tab" aria-selected={roomsTab === 'classic'} class:active={roomsTab === 'classic'} onclick={() => roomsTab = 'classic'}>Classique</button>
-      <button role="tab" aria-selected={roomsTab === 'qcm'} class:active={roomsTab === 'qcm'} onclick={() => roomsTab = 'qcm'}>QCM</button>
+    <div class="pw-mode">
+      <div class="pw-tabs" role="tablist" aria-label="Mode de jeu">
+        <button role="tab" aria-selected={roomsTab === 'classic'} class:active={roomsTab === 'classic'} onclick={() => roomsTab = 'classic'}>Classique</button>
+        <button role="tab" aria-selected={roomsTab === 'qcm'} class:active={roomsTab === 'qcm'} onclick={() => roomsTab = 'qcm'}>QCM</button>
+      </div>
+      <p class="pw-mode-help">
+        {roomsTab === 'qcm' ? 'QCM : choisis parmi 4 réponses.' : 'Classique : tape le titre ou l’artiste.'}
+      </p>
     </div>
   </div>
 
@@ -381,10 +381,9 @@
             {/if}
           </div>
           <div class="cc-info">
-            <span class="cc-mode">{room.game_mode === 'qcm' ? 'QCM' : 'Classique'}</span>
             <div class="cc-name">{room.emoji} {room.name}</div>
             <div class="cc-status" class:cc-status--live={room.online > 0}>
-              {room.online > 0 ? `${room.online} joueur${room.online > 1 ? 's' : ''}` : 'Disponible'}
+              {room.online > 0 ? `${room.online} joueur${room.online > 1 ? 's' : ''} en jeu` : 'Lance la partie →'}
             </div>
           </div>
         </div>
@@ -400,97 +399,12 @@
 </section>
 
 
-<!-- ══════════════════════════════ FEATURES ══════════════════════════════ -->
-<section class="features" use:reveal>
-  <h2 class="feat-title">Tout <em>ZIK</em>, en un coup d'œil</h2>
-  <div class="feat-grid">
-    <a href="/zikle" class="feat-item">
-      <span class="feat-n">01</span>
-      <span class="feat-tag">Chaque jour · Sans compte</span>
-      <div class="feat-name">Zikle</div>
-      <p class="feat-desc">Un défi musical quotidien gratuit : devine la chanson du jour en 6 essais, la même pour tout le monde.</p>
-    </a>
-    <a href="/salon" class="feat-item">
-      <span class="feat-n">02</span>
-      <span class="feat-tag">Grand écran + téléphone</span>
-      <div class="feat-name">Mode Salon</div>
-      <p class="feat-desc">Diffuse la musique sur la TV, chaque invité répond depuis son smartphone. Idéal pour les soirées.</p>
-    </a>
-    <a href="/docs#qcm" class="feat-item">
-      <span class="feat-n">03</span>
-      <span class="feat-tag">Accessible à tous</span>
-      <div class="feat-name">Mode QCM</div>
-      <p class="feat-desc">Quatre propositions, la bonne réponse suffit — sans pression, sans classement ELO.</p>
-    </a>
-    <a href="/playlists" class="feat-item">
-      <span class="feat-n">04</span>
-      <span class="feat-tag">Deezer</span>
-      <div class="feat-name">Tes playlists, tes règles</div>
-      <p class="feat-desc">Importe tes propres playlists ou pioche parmi celles de la communauté.</p>
-    </a>
-    <a href="/classements" class="feat-item">
-      <span class="feat-n">05</span>
-      <span class="feat-tag">ELO mondial</span>
-      <div class="feat-name">Classement qui compte</div>
-      <p class="feat-desc">Grimpe dans le classement mondial en Mode Classique, manche après manche.</p>
-    </a>
-    <a href="/docs#succes" class="feat-item">
-      <span class="feat-n">06</span>
-      <span class="feat-tag">Bronze · Argent · Or</span>
-      <div class="feat-name">Succès & séries</div>
-      <p class="feat-desc">Débloque des succès et enchaîne les streaks, visibles sur ton profil.</p>
-    </a>
-    <a href="/docs#amis" class="feat-item">
-      <span class="feat-n">07</span>
-      <span class="feat-tag">Profils · Invitations</span>
-      <div class="feat-name">Amis & social</div>
-      <p class="feat-desc">Suis tes amis, invite-les en un clic, comparez vos scores.</p>
-    </a>
-    <a href="/defi" class="feat-item">
-      <span class="feat-n">08</span>
-      <span class="feat-tag">Toute la communauté</span>
-      <div class="feat-name">Défi hebdomadaire</div>
-      <p class="feat-desc">Un objectif collectif chaque semaine. Contribue en jouant et grimpe dans le classement des joueurs les plus actifs.</p>
-    </a>
-  </div>
-</section>
-
-<!-- ══════════════════════════════ CHART — TOP JOUEURS ══════════════════════════════ -->
-<section class="chart" id="leaderboards" use:reveal>
-  <div class="chart-head">
-    <div>
-      <h2 class="chart-h">Top Joueurs</h2>
-      <span class="chart-sub">Classement ELO · Rooms officielles</span>
-    </div>
-  </div>
-
-  {#if eloLb.length === 0}
-    <p class="chart-empty">Chargement…</p>
-  {:else}
-    {#each eloLb.slice(0, 8) as p, i (p.username)}
-      <a href="/user/{p.username}" class="chart-row">
-        <span class="chart-pos" class:top3={i < 3}>{i + 1}</span>
-        <span class="chart-mv">—</span>
-        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} width="32" height="32" loading="lazy" decoding="async" />
-        <div class="chart-info">
-          <div class="c-nm">{p.username}</div>
-          <div class="c-sb">{p.games_played} partie{p.games_played !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="chart-elo">{p.elo}<small>pts ELO</small></div>
-      </a>
-    {/each}
-  {/if}
-
-  <div class="chart-cta-wrap">
-    <a href="/classements" class="chart-cta">Classement complet →</a>
-  </div>
-</section>
-
 <!-- ══════════════════════════════ TICKET — CODE PRIVÉ ══════════════════════════════ -->
 <section class="ticket-section" use:reveal>
   <div class="ticket-left">
-    <span class="ticket-kicker">Rejoindre une partie</span>
+    <span class="ticket-kicker">Partie privée en ligne</span>
     <h2 class="ticket-title">T'as un code&nbsp;?<br>Entre-le.</h2>
+    <p class="ticket-hint">Code affiché sur une TV&nbsp;? C'est une soirée : <a href="/salon/play">rejoindre une soirée →</a></p>
     <div class="quick-links">
       <a href="/rooms" class="ql">Rooms</a>
       <a href="/classements" class="ql">Classements</a>
@@ -507,8 +421,8 @@
     </div>
     <div class="ticket-main">
       <div class="ticket-event">Blind Test</div>
-      <div class="ticket-venue">ZIK · Multijoueur en ligne</div>
-      <label class="ticket-code-label" for="ticket-code-input">Code de la room</label>
+      <div class="ticket-venue">ZIK · Partie en ligne</div>
+      <label class="ticket-code-label" for="ticket-code-input">Code de partie en ligne</label>
       <div class="ticket-row">
         <input
           id="ticket-code-input"
@@ -522,12 +436,97 @@
           oninput={(e) => { roomCodeVal = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
           onkeypress={(e) => { if (e.key === 'Enter') joinByCode(); }}
         />
-        <button class="ticket-go" onclick={joinByCode} disabled={roomCodeLoading} aria-label="Rejoindre la room">
-          {#if roomCodeLoading}…{:else}<span class="ticket-go-label">Rejoindre</span> →{/if}
+        <button class="ticket-go" onclick={joinByCode} disabled={roomCodeLoading} >
+          {#if roomCodeLoading}…{:else}Rejoindre →{/if}
         </button>
       </div>
       {#if roomCodeErr}<p class="ticket-err">{roomCodeErr}</p>{/if}
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ FEATURES ══════════════════════════════ -->
+<section class="features" use:reveal>
+  <h2 class="feat-title">Tout <em>ZIK</em>, en un coup d'œil</h2>
+  <div class="feat-grid">
+    <a href="/zikle" class="feat-item">
+      <span class="feat-tag">Chaque jour · Sans compte</span>
+      <div class="feat-name">Zikle</div>
+      <p class="feat-desc">Un défi musical quotidien gratuit : devine la chanson du jour en 6 essais, la même pour tout le monde.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/salon" class="feat-item">
+      <span class="feat-tag">Grand écran + téléphone</span>
+      <div class="feat-name">Mode Salon</div>
+      <p class="feat-desc">Diffuse la musique sur la TV, chaque invité répond depuis son smartphone. Idéal pour les soirées.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/docs#qcm" class="feat-item">
+      <span class="feat-tag">Accessible à tous</span>
+      <div class="feat-name">Mode QCM</div>
+      <p class="feat-desc">Quatre propositions, la bonne réponse suffit — sans pression, sans classement ELO.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/playlists" class="feat-item">
+      <span class="feat-tag">Deezer</span>
+      <div class="feat-name">Tes playlists, tes règles</div>
+      <p class="feat-desc">Importe tes propres playlists ou pioche parmi celles de la communauté.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/classements" class="feat-item">
+      <span class="feat-tag">ELO mondial</span>
+      <div class="feat-name">Classement qui compte</div>
+      <p class="feat-desc">Grimpe dans le classement mondial en Mode Classique, manche après manche.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/docs#succes" class="feat-item">
+      <span class="feat-tag">Bronze · Argent · Or</span>
+      <div class="feat-name">Succès & séries</div>
+      <p class="feat-desc">Débloque des succès et enchaîne les séries, visibles sur ton profil.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/docs#amis" class="feat-item">
+      <span class="feat-tag">Profils · Invitations</span>
+      <div class="feat-name">Amis & social</div>
+      <p class="feat-desc">Suis tes amis, invite-les en un clic, comparez vos scores.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+    <a href="/defi" class="feat-item">
+      <span class="feat-tag">Toute la communauté</span>
+      <div class="feat-name">Défi hebdomadaire</div>
+      <p class="feat-desc">Un objectif collectif chaque semaine. Contribue en jouant et grimpe dans le classement des joueurs les plus actifs.</p>
+      <span class="feat-go">Découvrir →</span>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ CHART — TOP JOUEURS ══════════════════════════════ -->
+<section class="chart" id="leaderboards" use:reveal>
+  <div class="chart-head">
+    <div>
+      <h2 class="chart-h">Top Joueurs</h2>
+      <span class="chart-sub">Niveau ELO actuel · Rooms en ligne</span>
+    </div>
+  </div>
+
+  {#if eloLb.length === 0}
+    <p class="chart-empty">Chargement…</p>
+  {:else}
+    {#each eloLb.slice(0, 8) as p, i (p.username)}
+      <a href="/user/{p.username}" class="chart-row">
+        <span class="chart-pos" class:top3={i < 3}>{i + 1}</span>
+        <img class="chart-avatar" src={p.avatar_url || dicebear(p.username)} alt={p.username} width="32" height="32" loading="lazy" decoding="async" />
+        <div class="chart-info">
+          <div class="c-nm">{p.username}</div>
+          <div class="c-sb">{p.games_played} partie{p.games_played !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="chart-elo">{p.elo}<small title="Score de niveau : il monte quand tu bats des joueurs mieux classés">pts ELO ⓘ</small></div>
+      </a>
+    {/each}
+  {/if}
+
+  <div class="chart-cta-wrap">
+    <a href="/classements" class="chart-cta">Classement complet →</a>
   </div>
 </section>
 
@@ -539,7 +538,7 @@
       <h2 class="salon-title">Mode Salon</h2>
       <p class="salon-desc">Grand écran sur la TV, chaque joueur répond depuis son téléphone. Style Kahoot, mais avec tes musiques.</p>
       <div class="salon-actions">
-        <a href="/salon" class="btn-accent">Lancer une session →</a>
+        <a href="/salon" class="btn-accent">Organiser une soirée →</a>
         <a href="/docs#salon" class="btn-ghost sm">En savoir plus</a>
       </div>
       <a href="/pro" class="salon-pro-link">Bar, association, entreprise ? Organisez votre blind test →</a>
@@ -607,7 +606,7 @@
     </details>
     <details class="faq-item">
       <summary class="faq-q">Comment fonctionnent les succès sur ZIK ?</summary>
-      <p class="faq-a">ZIK propose des succès à débloquer (streaks, victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur.</p>
+      <p class="faq-a">ZIK propose des succès à débloquer (séries de victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur.</p>
     </details>
   </div>
 </section>
@@ -636,6 +635,10 @@
 </Modal>
 
 <style>
+  /* ════════════════════════════ HERO ════════════════════════════ */
+  .hero-cta { padding: 14px 26px; font-size: 0.95rem; }
+  .hero-online { color: var(--text); border: 2px solid var(--text); }
+
   /* ════════════════════════════ TICKER ════════════════════════════ */
   .ticker {
     background: var(--accent);
@@ -720,10 +723,10 @@
   .live-strip-sub {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.66rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: var(--dim);
+    color: var(--mid);
   }
   .live-strip-row {
     display: flex;
@@ -853,7 +856,10 @@
     flex-wrap: wrap;
     gap: 12px;
   }
-  .pw-head-left { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .pw-head-left { display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; }
+  .pw-sub { flex-basis: 100%; font-size: 1rem; color: var(--mid); }
+  .pw-mode { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .pw-mode-help { font-size: 0.9rem; color: var(--mid); }
   .pw-title {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
@@ -894,17 +900,17 @@
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     cursor: pointer;
     background: #fafafa;
-    box-shadow: 4px 8px 24px rgba(0,0,0,0.6);
+    box-shadow: 4px 8px 24px rgba(0,0,0,0.3);
     position: relative;
     z-index: 1;
   }
   .cc:hover {
     transform: rotate(0deg) translateY(-6px) scale(1.05);
     z-index: 10;
-    box-shadow: 6px 14px 36px rgba(0,0,0,0.75);
+    box-shadow: 6px 14px 36px rgba(0,0,0,0.4);
   }
   .cc--live {
-    box-shadow: 0 0 0 2px var(--accent), 4px 8px 24px rgba(0,0,0,0.6);
+    box-shadow: 0 0 0 2px var(--accent), 4px 8px 24px rgba(0,0,0,0.3);
   }
   .cc--live:hover {
     box-shadow: 0 0 0 2px var(--accent), 6px 14px 36px rgb(var(--accent-rgb) / 0.25);
@@ -936,35 +942,22 @@
     padding: 9px 11px 12px;
     border-top: 2px solid #080808;
   }
-  .cc-mode {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.46rem;
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    color: rgba(0,0,0,0.35);
-    display: block;
-    margin-bottom: 2px;
-  }
   .cc-name {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
-    font-size: 0.88rem;
+    font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: -0.2px;
     line-height: 1.05;
     color: #080808;
   }
   .cc-status {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.52rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: rgba(0,0,0,0.38);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(0,0,0,0.62);
     margin-top: 4px;
   }
-  .cc-status--live { color: var(--accent); }
+  .cc-status--live { color: #a21caf; }
 
   .pw-cta-wrap {
     padding: 40px 48px 0;
@@ -1011,32 +1004,31 @@
     display: flex;
     flex-direction: column;
     padding: 28px 24px;
-    border: 1px solid rgb(var(--c-glass) / 0.06);
+    border: 1px solid rgb(var(--c-glass) / 0.1);
     transition: border-color 0.15s, background 0.15s;
   }
   .feat-item:hover {
-    border-color: rgb(var(--accent-rgb) / 0.2);
-    background: rgb(var(--accent-rgb) / 0.03);
+    border-color: rgb(var(--accent-rgb) / 0.45);
+    background: rgb(var(--accent-rgb) / 0.04);
   }
   .feat-desc {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     line-height: 1.5;
     color: var(--mid);
     margin-top: 10px;
+    flex: 1;
   }
-  .feat-n {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 3.5rem;
-    color: rgb(var(--c-glass) / 0.06);
-    line-height: 1;
-    display: block;
-    margin-bottom: 12px;
+  .feat-go {
+    margin-top: 16px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent);
   }
+  .feat-item:hover .feat-go { text-decoration: underline; text-underline-offset: 3px; }
   .feat-tag {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.55rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.2em;
     color: var(--accent);
@@ -1093,7 +1085,7 @@
   .chart-sub {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.62rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.2em;
     color: var(--accent);
@@ -1132,10 +1124,9 @@
     background: #222;
     flex-shrink: 0;
   }
-  .chart-mv { font-size: 0.8rem; color: var(--dim); }
   .chart-row {
     display: grid;
-    grid-template-columns: 56px 24px 36px 1fr 110px;
+    grid-template-columns: 56px 36px 1fr 110px;
     gap: 16px;
     align-items: center;
     padding: 16px 0;
@@ -1161,10 +1152,10 @@
     font-weight: 900;
     font-size: 2.8rem;
     line-height: 1;
-    color: rgb(var(--c-glass) / 0.1);
+    color: rgb(var(--c-glass) / 0.5);
     letter-spacing: -1px;
   }
-  .top3 { color: rgb(var(--accent-rgb) / 0.3) !important; }
+  .top3 { color: var(--accent) !important; }
   .chart-info { min-width: 0; }
   .c-nm {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1174,12 +1165,8 @@
     letter-spacing: -0.2px;
   }
   .c-sb {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--dim);
+    font-size: 0.8rem;
+    color: var(--mid);
   }
   .chart-elo {
     text-align: right;
@@ -1189,12 +1176,13 @@
     letter-spacing: -0.5px;
   }
   .chart-elo small {
-    font-size: 0.52rem;
-    color: var(--dim);
+    font-size: 0.72rem;
+    color: var(--mid);
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     display: block;
+    cursor: help;
   }
 
   /* ════════════════════════════ TICKET ════════════════════════════ */
@@ -1215,7 +1203,7 @@
   .ticket-kicker {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.62rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.25em;
     color: var(--accent);
@@ -1229,6 +1217,8 @@
     letter-spacing: -1.5px;
     line-height: 0.9;
   }
+  .ticket-hint { font-size: 0.95rem; color: var(--mid); }
+  .ticket-hint a { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   .quick-links {
     display: flex;
     flex-wrap: wrap;
@@ -1307,10 +1297,10 @@
   .ticket-venue {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: var(--dim);
+    color: var(--mid);
     margin-bottom: 22px;
   }
   .ticket-code-label {
@@ -1351,11 +1341,11 @@
     background: var(--accent);
     border: none;
     padding: 12px 20px;
+    white-space: nowrap;
     cursor: pointer;
     transition: opacity 0.15s;
   }
   .ticket-go:disabled { opacity: 0.5; cursor: not-allowed; }
-  .ticket-go-label { display: none; }
   .ticket-err { font-size: 0.72rem; color: var(--danger); margin-top: 6px; }
 
   /* ════════════════════════════ MODE SALON CTA ════════════════════════════ */
@@ -1481,10 +1471,10 @@
   .news-teaser-cta {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--dim);
+    color: var(--mid);
     flex-shrink: 0;
   }
   .news-teaser:hover .news-teaser-cta { color: var(--accent); }
@@ -1563,6 +1553,7 @@
     .pw-head { padding: 0 16px; }
     .live-strip { margin: 0 16px 40px; }
     .live-card, .live-card.featured { min-width: min(86vw, 320px); }
+    .pw-mode { width: 100%; align-items: stretch; }
     .pw-tabs { width: 100%; }
     .pw-tabs button { flex: 1; padding: 12px 0; }
     .collage-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 14px 16px 28px; }
@@ -1573,7 +1564,7 @@
     .feat-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
     .feat-name { font-size: 1.1rem; }
     .chart { padding: 60px 16px; }
-    .chart-row { grid-template-columns: 40px 20px 28px 1fr 80px; gap: 10px; padding: 18px 0; }
+    .chart-row { grid-template-columns: 40px 28px 1fr 80px; gap: 10px; padding: 18px 0; }
     .chart-avatar { width: 28px; height: 28px; }
     .ticket-section { padding: 60px 16px; }
     .ticket::before { display: none; }
@@ -1582,7 +1573,6 @@
     .ticket-row { flex-direction: column; gap: 10px; }
     .ticket-input { border-right: 1px solid rgb(var(--c-glass) / 0.12); text-align: center; }
     .ticket-go { padding: 14px 20px; }
-    .ticket-go-label { display: inline; }
     .salon-cta { padding: 60px 24px; }
     .faq-section { padding: 60px 16px; }
     .faq-list { gap: 10px; }

@@ -3,6 +3,17 @@
 
 export const NEWS = [
   {
+    date: "2026-10-02",
+    version: "3.12.0",
+    tag: "Amélioration",
+    title: "ZIK passe au thème clair",
+    items: [
+      "Le site s'affiche désormais en thème clair par défaut, aux couleurs de ZIK. Le thème sombre reste disponible dans les paramètres.",
+      "Page d'accueil plus claire : une action principale pour organiser une soirée, un menu plus lisible et des textes plus contrastés.",
+      "Le code d'une soirée (affiché sur la TV) et le code d'une partie en ligne ne se confondent plus.",
+    ],
+  },
+  {
     date: "2026-09-30",
     version: "3.10.0",
     tag: "Nouveauté",

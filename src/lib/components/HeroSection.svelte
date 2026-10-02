@@ -5,7 +5,7 @@
 
   let { badge = null, gamesMonth = 0, userCount = 0, challenge = null, children } = $props();
 
-  let challengeOpen = $state(true);
+  let challengeOpen = $state(false);
 
   let now = $state(Date.now());
   $effect(() => {
@@ -129,7 +129,7 @@
             aria-expanded={challengeOpen}
           >
             <ChallengeIcon type={challenge.type} size={13} />
-            <span>{pct}%</span>
+            <span>Défi de la semaine · {pct}&nbsp;%</span>
             <svg
               class="challenge-chevron"
               class:open={challengeOpen}
@@ -197,10 +197,7 @@
       <li>Équipes, classement en direct et podium sur grand écran</li>
       <li>Pour une soirée entre amis, un bar, un camping ou un team building</li>
     </ul>
-    <div class="hs-ctas">
-      <a class="btn-accent" href="/salon">Lancer une soirée →</a>
-      <a class="hs-link" href="/salon/play">J'ai un code</a>
-    </div>
+    <a class="hs-link" href="/salon/play">Rejoindre une soirée avec un code →</a>
   </aside>
 </section>
 
@@ -419,12 +416,10 @@
   .l3 { color: var(--accent); }
 
   .hero-sub {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.35);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text);
   }
 
   .hero-actions {
@@ -454,7 +449,7 @@
   .hs-screen {
     padding: 12px;
     background: #000;
-    border: 1px solid rgb(var(--c-glass) / 0.25);
+    border: 1px solid rgb(255 255 255 / 0.25);
   }
   .hs-screen-top {
     display: flex;
@@ -462,10 +457,11 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.6rem;
     letter-spacing: 0.15em;
-    color: rgb(var(--c-glass) / 0.6);
+    color: rgb(255 255 255 / 0.6);
   }
-  .hs-screen-top b { color: var(--accent); font-weight: 600; }
+  .hs-screen-top b { color: #ff4fff; font-weight: 600; }
   .hs-timer {
+    color: #fff;
     margin: 4px 0 8px;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
@@ -506,19 +502,17 @@
     color: var(--mid);
     line-height: 1.4;
   }
-  .hs-ctas {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin-top: 4px;
-  }
   .hs-link {
-    font-size: 0.9rem;
-    color: var(--text);
+    margin-top: 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: underline;
     text-underline-offset: 3px;
   }
   .hero-proof {
+    font-size: 0.9rem;
+    font-weight: 500;
     color: var(--mid);
   }
 
