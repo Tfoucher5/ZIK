@@ -90,7 +90,13 @@
       "Bash(git fetch *)",
       "Bash(npx vitest *)",
       "Bash(curl -s --max-time 25 localhost:5173/nouveautes)",
-      "Bash(git rev-list *)"
+      "Bash(git rev-list *)",
+      "Bash(taskkill //F //IM chrome.exe //FI \"WINDOWTITLE eq *\")",
+      "Bash(pkill -f \"remote-debugging-port=9333\")",
+      "Bash(pkill -f \"vite dev --port 5199\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 3 http://localhost:5199/)",
+      "Read(//tmp/**)",
+      "Bash(python -)"
     ]
   }
 }
