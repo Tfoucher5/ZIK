@@ -37,19 +37,7 @@ export function cleanTeamName(name) {
     .slice(0, 24);
 }
 
-// Équipe la moins remplie, pour qu'un nouvel arrivant ne déséquilibre rien
-export function smallestTeam(teams, players) {
-  if (!teams) return null;
-  const sizes = teams.map((t) => players.filter((p) => p.team === t.id).length);
-  return teams[sizes.indexOf(Math.min(...sizes))].id;
-}
-
 // Répartition à tour de rôle, dans l'ordre d'arrivée
-export function spreadPlayers(teams, players) {
-  players.forEach((p, i) => {
-    p.team = teams ? teams[i % teams.length].id : null;
-  });
-}
 
 export function teamStandings(teams, players) {
   if (!teams) return null;

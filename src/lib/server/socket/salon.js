@@ -15,13 +15,7 @@ import {
   displayString,
   TRACK_ROW_SELECT,
 } from "../services/playlist.js";
-import {
-  makeTeams,
-  cleanTeamName,
-  smallestTeam,
-  spreadPlayers,
-  teamStandings,
-} from "./salonTeams.js";
+import { makeTeams, cleanTeamName, teamStandings } from "./salonTeams.js";
 import { isPro } from "../services/pro.js";
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../proPlans.js";
 
@@ -286,11 +280,10 @@ function makePlayer(username, socketId) {
 }
 
 function addPlayer(salon, username, socketId) {
+  // Pas d'équipe d'office : le joueur la choisit sur son téléphone, ou l'hôte
+  // la lui donne depuis la régie. Coller un arrivant dans l'équipe la moins
+  // remplie cassait les tables déjà constituées.
   const player = makePlayer(username, socketId);
-  player.team = smallestTeam(
-    salon.settings.teams,
-    Object.values(salon.players),
-  );
   salon.players[username] = player;
   return player;
 }
@@ -1159,7 +1152,13 @@ export function registerSalon(io) {
         if (patch.teamCount > teamLimit(salon))
           return requirePro(socket, salon, "teams");
         s.teams = makeTeams(patch.teamCount, s.teams);
-        spreadPlayers(s.teams, Object.values(salon.players));
+        // On ne redistribue pas : ajouter une équipe déplaçait tout le monde
+        // en tourniquet et défaisait les placements choisis. Seuls ceux dont
+        // l'équipe vient de disparaître sont libérés.
+        const existantes = new Set((s.teams ?? []).map((t) => t.id));
+        for (const p of Object.values(salon.players)) {
+          if (p.team != null && !existantes.has(p.team)) p.team = null;
+        }
         broadcastRoster(code, io);
       }
       // Passage en automatique pendant l'affichage d'une réponse

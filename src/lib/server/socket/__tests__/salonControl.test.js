@@ -69,6 +69,22 @@ function salonDeTest() {
     _cleanupTimer: null,
     settings: { maxRounds: 10, roundDuration: 30, playlistIds: [] },
     players: {
+      Mehdi: {
+        username: "Mehdi",
+        socketId: "s2",
+        score: 0,
+        foundArtist: false,
+        foundTitle: false,
+        foundFeats: [],
+        foundExtras: [],
+        _fullFoundCounted: false,
+        _choiceIndex: null,
+        _choiceTimeTaken: null,
+        team: null,
+        stats: { found: 0, first: 0 },
+        token: "tok2",
+        _lastGuessAt: 0,
+      },
       Camille: {
         username: "Camille",
         socketId: "s1",
@@ -133,6 +149,30 @@ describe("changement du nombre d'équipes", () => {
 
     regle({ teamCount: 4 });
     expect(noms()).toEqual(["Les Bretons", "Bleue", "Jaune", "Verte"]);
+  });
+
+  it("ne déplace personne quand on ajoute une équipe", () => {
+    regle({ teamCount: 2 });
+    const p = salonRooms[CODE].players;
+    // Placements choisis à la main : par le joueur sur son téléphone, ou par
+    // l'hôte depuis la régie.
+    p.Camille.team = 1;
+    p.Mehdi.team = 1;
+
+    regle({ teamCount: 4 });
+    expect(p.Camille.team).toBe(1);
+    expect(p.Mehdi.team).toBe(1);
+  });
+
+  it("libère ceux dont l'équipe disparaît, sans toucher aux autres", () => {
+    regle({ teamCount: 4 });
+    const p = salonRooms[CODE].players;
+    p.Camille.team = 0;
+    p.Mehdi.team = 3;
+
+    regle({ teamCount: 2 });
+    expect(p.Camille.team).toBe(0);
+    expect(p.Mehdi.team).toBeNull();
   });
 
   it("conserve les noms restants quand on retire des équipes", () => {
