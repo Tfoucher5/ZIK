@@ -331,7 +331,8 @@ function staff(code, io) {
  * son allait jouer en double.
  */
 function broadcastScreens(code, io) {
-  const count = io.sockets.adapter.rooms.get(`salon:screens:${code}`)?.size ?? 0;
+  const count =
+    io.sockets.adapter.rooms.get(`salon:screens:${code}`)?.size ?? 0;
   io.to(`salon:ctrl:${code}`).emit("salon_screens", { count });
 }
 

@@ -3,7 +3,13 @@
   import { io } from 'socket.io-client';
   import PlaylistModal from '$lib/components/salon/PlaylistModal.svelte';
   import ProUpsell from '$lib/components/salon/ProUpsell.svelte';
-  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/proPlans.js';
+  import RegieHeader from '$lib/components/salon/RegieHeader.svelte';
+  import RegieTabs from '$lib/components/salon/RegieTabs.svelte';
+  import RegieActions from '$lib/components/salon/RegieActions.svelte';
+  import TabDirect from '$lib/components/salon/TabDirect.svelte';
+  import TabPlayers from '$lib/components/salon/TabPlayers.svelte';
+  import TabSettings from '$lib/components/salon/TabSettings.svelte';
+  import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
   import { takeSalonKeyFromUrl, patchSalonPlaylists } from '$lib/salonClient.js';
@@ -35,6 +41,9 @@
   let confirmKick = $state(null);
   let pro      = $state(false);
   let upsell   = $state(null);
+  // null tant que le serveur n'a pas répondu : on n'alarme pas à tort.
+  let screens  = $state(null);
+  let onglet   = $state('direct');
 
   let allPlaylists = $state([]);
   let pickerIds    = $state([]);
@@ -153,6 +162,7 @@
     socket.on('salon_restarted', ({ players: p }) => { mergeRoster(p); history = []; });
     socket.on('salon_playlists_changed', ({ trackCount, appliedNow }) =>
       flash(`Playlist changée (${trackCount} titres), ${appliedNow ? 'dès la manche suivante' : 'pour la prochaine partie'}.`));
+    socket.on('salon_screens', ({ count }) => { screens = count; });
     socket.on('salon_pro_required', ({ feature }) => { upsell = feature; });
     socket.on('salon_error', ({ message }) => { error = message; });
   }
@@ -177,213 +187,57 @@
 </svelte:head>
 
 <div class="rg">
-  <header class="rg-top">
-    <span class="sh-brand">ZIK <span>Régie</span></span>
-    <span class="rg-code">{code}</span>
-    <span class="rg-status" class:live={phase === 'round' && !paused} class:paused>
-      {paused ? 'En pause' : PHASES[phase]}{live ? ` · ${round} / ${settings.maxRounds}` : ''}
-    </span>
-    {#if ready && !pro}
-      <button class="rg-free" onclick={() => (upsell = 'players')}>
-        Version gratuite · {players.length} / {FREE_MAX_PLAYERS} joueurs · <b>Passer à ZIK Pro</b>
-      </button>
-    {/if}
-    <div class="rg-top-right">
-      <a class="sx-btn rg-sm" href={tvUrl} target="_blank" rel="noopener">Ouvrir l'écran TV</a>
-      <button class="sx-btn rg-sm" onclick={() => copy(tvUrl, 'Lien de l’écran TV')} title="Lien privé : à ouvrir sur l'ordinateur branché à la TV">Copier le lien TV</button>
-      <button class="sx-btn rg-sm" onclick={() => copy(regieUrl, 'Lien de régie')} title="À garder pour toi : il donne le contrôle du salon">Copier le lien régie</button>
-    </div>
-  </header>
+  <RegieHeader
+    {code} {phase} phaseLabel={PHASES[phase]} {paused} {round} maxRounds={settings.maxRounds ?? 0}
+    {timerVal} {timerMax} {timerOn} {screens}
+    joueurs={players.length} repondu={answered}
+    {pro} maxGratuit={FREE_MAX_PLAYERS} {tvUrl} {regieUrl}
+    onCopy={copy}
+    onUpsell={(f) => (upsell = f)}
+  />
 
   {#if error}
-    <p class="rg-error">{error}</p>
+    <div class="rg-vide">
+      <p class="rg-error">{error}</p>
+      <a class="sx-btn" href="/salon">Revenir à la préparation</a>
+    </div>
   {:else if !ready}
-    <p class="rg-muted">Connexion…</p>
+    <div class="rg-vide"><p class="rg-muted">Connexion au salon…</p></div>
   {:else}
-    <main class="rg-grid">
-      <!-- Direct -->
-      <section class="rg-col">
-        <h2 class="sx-kicker">Direct</h2>
+    <RegieTabs actif={onglet} joueurs={players.length} onChange={(id) => (onglet = id)} />
 
-        <div class="rg-now">
-          {#if phase === 'round' || phase === 'summary'}
-            <div class="rg-timer" class:dim={!timerOn}>{timerOn ? timerVal : '--'}<small>/ {timerMax} s</small></div>
-            <p class="rg-muted">{answered} / {players.length} ont répondu</p>
-          {:else}
-            <div class="rg-timer dim">{players.length}<small>joueur{players.length > 1 ? 's' : ''}</small></div>
-          {/if}
-        </div>
-
-        {#if track}
-          <div class="rg-track">
-            {#if track.cover}<img src={track.cover} alt="">{/if}
-            <div>
-              <p class="sx-kicker">{phase === 'round' ? 'Titre en cours (visible ici seulement)' : 'Dernier titre'}</p>
-              <b>{track.artist} - {track.title}</b>
-              {#if settings.answerMode === 'multiple' && track.correctChoiceIndex != null}
-                <small>Bonne réponse : choix {track.correctChoiceIndex + 1}</small>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-        <div class="rg-actions">
-          {#if phase === 'lobby'}
-            <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={() => send('salon_start')} disabled={!players.length}>Lancer la partie</button>
-          {:else if phase === 'gameover'}
-            <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={() => send('salon_restart')}>Rejouer</button>
-          {:else if live}
-            <button class="sx-btn sx-btn-primary" onclick={() => send(paused ? 'salon_resume' : 'salon_pause')}>{paused ? 'Reprendre' : 'Pause'}</button>
-            {#if phase === 'round'}
-              <button class="sx-btn" class:rg-locked={!pro} onclick={() => gate('reveal', () => send('salon_reveal'))}>Révéler maintenant{#if !pro}<i class="rg-pro">Pro</i>{/if}</button>
-            {:else}
-              <button class="sx-btn" onclick={() => send('salon_next_round')}>Manche suivante</button>
-            {/if}
-            <button class="sx-btn" onclick={() => send('salon_restart')} disabled={phase !== 'summary'}>Recommencer</button>
-            <button class="sx-btn rg-danger" class:rg-locked={!pro} onclick={() => gate('endGame', () => send('salon_end_game'))}>Terminer la partie{#if !pro}<i class="rg-pro">Pro</i>{/if}</button>
-          {/if}
-        </div>
-
-        {#if phase === 'lobby'}
-          <ol class="rg-help">
-            <li><b>Ouvre l'écran TV</b> sur l'ordinateur branché à la télé (bouton en haut, ou copie le lien TV). Un seul écran TV, sinon la musique joue deux fois.</li>
-            <li><b>Les joueurs scannent le QR code</b> affiché sur la TV, ou vont sur zik-music.fr/salon/play avec le code <b>{code}</b>.</li>
-            <li><b>Lance la partie</b> quand tout le monde apparaît dans la liste.</li>
-          </ol>
-          <p class="rg-muted">Les liens TV et régie sont privés : ils donnent le contrôle du salon. Ne les partage pas avec les joueurs.</p>
+    <div class="rg-corps">
+      <div class="rg-zone">
+        {#if onglet === 'direct'}
+          <TabDirect
+            {phase} {code} {track} answerMode={settings.answerMode}
+            {volume} {pro} {history}
+            onVolume={setVolume}
+          />
+        {:else if onglet === 'joueurs'}
+          <TabPlayers
+            {players} {teams} {phase} {code} {pro} {step} {confirmKick}
+            onScore={(username, delta) => gate('score', () => send('salon_adjust_score', { username, delta }))}
+            onKick={kick}
+            onTeam={(username, team) => send('salon_set_player_team', { username, team })}
+          />
         {:else}
-          <p class="rg-muted">Garde un seul écran TV ouvert, sinon la musique joue deux fois.</p>
+          <TabSettings
+            {settings} {phase} {round} {pro}
+            onSet={setSetting}
+            onRenameTeam={(team, name) => send('salon_rename_team', { team, name })}
+            onUpsell={(f) => (upsell = f)}
+            onOpenPlaylists={() => { pickerIds = [...(settings.playlistIds || [])]; pickerOpen = true; }}
+          />
         {/if}
+      </div>
+    </div>
 
-        <label class="rg-field">
-          <span>Volume de la TV <b>{volume} %</b>{#if !pro}<i class="rg-pro">Pro</i>{/if}</span>
-          <input type="range" min="0" max="100" step="5" value={volume} oninput={(e) => setVolume(+e.target.value)}>
-        </label>
-
-        {#if history.length}
-          <h3 class="sx-kicker rg-sub">Titres joués</h3>
-          <ol class="rg-history">
-            {#each [...history].reverse() as h, i (history.length - i)}
-              <li><span>{String(history.length - i).padStart(2, '0')}</span>{h.answer}</li>
-            {/each}
-          </ol>
-        {/if}
-      </section>
-
-      <!-- Joueurs -->
-      <section class="rg-col">
-        <h2 class="sx-kicker">Joueurs · {players.length}</h2>
-
-        {#if teams}
-          <ol class="rg-teams">
-            {#each teams as t (t.id)}
-              <li style="--tc:var(--q{t.id})"><b>{t.name}</b><span>{t.members.length} j.</span><span class="pts">{t.score}</span></li>
-            {/each}
-          </ol>
-        {/if}
-
-        {#if players.length === 0}
-          <p class="rg-muted">Personne pour l'instant. Les joueurs rejoignent avec le code {code} sur zik-music.fr/salon/play.</p>
-        {:else}
-          <ul class="rg-players">
-            {#each players as p (p.username)}
-              <li class:off={p.offline} class:done={phase === 'round' && (p.foundThisRound || p.answeredThisRound)}>
-                <span class="rg-pname">
-                  {#if teams && p.team != null}<i style="--tc:var(--q{p.team})"></i>{/if}{p.username}
-                  {#if p.offline}<small>déconnecté</small>{/if}
-                </span>
-                {#if teams}
-                  <select value={p.team} disabled={!pro} title={pro ? '' : 'ZIK Pro'} onchange={(e) => send('salon_set_player_team', { username: p.username, team: +e.target.value })} aria-label="Équipe de {p.username}">
-                    {#each teams as t (t.id)}<option value={t.id}>{t.name}</option>{/each}
-                  </select>
-                {/if}
-                <span class="rg-score">
-                  <button onclick={() => gate('score', () => send('salon_adjust_score', { username: p.username, delta: -step }))} aria-label="Retirer {step} point">−</button>
-                  <b>{p.score}</b>
-                  <button onclick={() => gate('score', () => send('salon_adjust_score', { username: p.username, delta: step }))} aria-label="Ajouter {step} point">+</button>
-                </span>
-                <button class="rg-kick" class:confirm={confirmKick === p.username} onclick={() => kick(p.username)}>
-                  {confirmKick === p.username ? 'Confirmer' : 'Exclure'}
-                </button>
-              </li>
-            {/each}
-          </ul>
-        {/if}
-      </section>
-
-      <!-- Réglages -->
-      <section class="rg-col">
-        <h2 class="sx-kicker">Réglages</h2>
-        <p class="rg-muted">Appliqués tout de suite, à partir de la prochaine manche.</p>
-
-        <div class="rg-field">
-          <span>Manches</span>
-          <div class="rg-seg">
-            {#each [5, 10, 15, 20] as n (n)}
-              <button class:on={settings.maxRounds === n} disabled={!idle && n < round} onclick={() => setSetting({ maxRounds: n })}>{n}</button>
-            {/each}
-          </div>
-        </div>
-        <div class="rg-field">
-          <span>Temps pour répondre</span>
-          <div class="rg-seg">
-            {#each [15, 20, 30, 45, 60] as n (n)}
-              <button class:on={settings.roundDuration === n} onclick={() => setSetting({ roundDuration: n })}>{n} s</button>
-            {/each}
-          </div>
-        </div>
-        <div class="rg-field">
-          <span>Manche suivante</span>
-          <div class="rg-seg">
-            <button class:on={!settings.manualNext} onclick={() => setSetting({ manualNext: false })}>Automatique</button>
-            <button class:on={settings.manualNext} onclick={() => setSetting({ manualNext: true })}>Quand je clique</button>
-          </div>
-        </div>
-        {#if !settings.manualNext}
-          <div class="rg-field">
-            <span>Réponse affichée</span>
-            <div class="rg-seg">
-              {#each [5, 7, 10, 15] as n (n)}
-                <button class:on={settings.showAnswerDuration === n} onclick={() => setSetting({ showAnswerDuration: n })}>{n} s</button>
-              {/each}
-            </div>
-          </div>
-        {/if}
-        <div class="rg-field">
-          <span>Réponses {#if !idle}<small>(entre deux parties)</small>{/if}</span>
-          <div class="rg-seg">
-            <button class:on={settings.answerMode === 'free'} disabled={!idle} onclick={() => setSetting({ answerMode: 'free' })}>Texte libre</button>
-            <button class:on={settings.answerMode === 'multiple'} disabled={!idle} onclick={() => setSetting({ answerMode: 'multiple' })}>4 choix</button>
-          </div>
-        </div>
-        <div class="rg-field">
-          <span>Équipes {#if !idle}<small>(entre deux parties)</small>{/if}</span>
-          <div class="rg-seg">
-            {#each [0, 2, 3, 4, 6, 8] as n (n)}
-              {@const locked = !pro && n > FREE_MAX_TEAMS}
-              <button class:on={(settings.teams?.length ?? 0) === n} class:rg-seg-locked={locked} disabled={!idle}
-                onclick={() => (locked ? (upsell = 'teams') : setSetting({ teamCount: n }))}>{n || 'Aucune'}</button>
-            {/each}
-          </div>
-        </div>
-        {#if settings.teams}
-          <div class="rg-field">
-            <span>Noms des équipes</span>
-            <div class="rg-teamnames">
-            {#each settings.teams as t (t.id)}
-              <input class="rg-input" style="--tc:var(--q{t.id})" value={t.name} maxlength="24" readonly={!pro} onclick={() => { if (!pro) upsell = 'teamEdit'; }}
-                onchange={(e) => send('salon_rename_team', { team: t.id, name: e.target.value })}>
-            {/each}
-            </div>
-          </div>
-        {/if}
-
-        <div class="rg-field">
-          <span>Playlists</span>
-          <button class="sx-btn rg-sm" onclick={() => { pickerIds = [...(settings.playlistIds || [])]; pickerOpen = true; }}>Changer de playlist</button>
-        </div>
-      </section>
-    </main>
+    <RegieActions
+      {phase} {paused} {pro} joueurs={players.length}
+      onAction={(ev) => send(ev)}
+      onGate={gate}
+    />
   {/if}
 
   {#if notice}<p class="rg-notice" role="status">{notice}</p>{/if}
@@ -404,197 +258,52 @@
 </div>
 
 <style>
-  /* Tableau de bord fixe : seules les listes défilent, jamais la page */
-  .rg { height: 100dvh; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
-  .rg-top {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 12px 24px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-  .rg-code { font-family: var(--s-mono); font-weight: 600; letter-spacing: 0.2em; }
-  .rg-status {
-    padding: 4px 10px;
-    border: 1px solid var(--border2);
-    border-radius: 2px;
-    font-family: var(--s-mono);
-    font-size: 0.78rem;
-  }
-  .rg-status.live { border-color: var(--success); color: var(--success); }
-  .rg-status.paused { border-color: var(--warn); color: var(--warn); }
-  .rg-top-right { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-  .rg-sm { padding: 7px 12px; font-size: 0.82rem; }
-
-  .rg-grid {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
-  }
-  .rg-col {
+  /* Console fixe : l'en-tête et la barre d'actions ne bougent jamais, seule
+     la zone d'onglet défile. Même ossature du téléphone au second écran. */
+  .rg {
+    height: 100dvh;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 18px 22px;
-    border-right: 1px solid var(--border);
-    min-width: 0;
-    min-height: 0;
     overflow: hidden;
   }
-  .rg-col:last-child { border-right: 0; }
-  .rg-sub { margin-top: 8px; }
-  .rg-muted { color: var(--mid); font-size: 0.88rem; line-height: 1.5; }
-  .rg-error { margin: 40px auto; max-width: 520px; color: var(--danger); text-align: center; }
 
-  .rg-timer {
-    font-family: var(--s-cond);
-    font-weight: 900;
-    font-size: 4rem;
-    line-height: 0.9;
+  .rg-corps { flex: 1; min-height: 0; overflow-y: auto; }
+  /* Sur un grand écran, la zone reste centrée plutôt qu'étirée : la console
+     se lit comme compacte et non comme une page à moitié vide. */
+  .rg-zone {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 22px 18px 32px;
   }
-  .rg-timer small { margin-left: 8px; font-family: var(--s-mono); font-size: 0.9rem; font-weight: 400; color: var(--mid); }
-  .rg-timer.dim { color: var(--mid); }
-  .rg-track {
+
+  .rg-vide {
+    flex: 1;
     display: flex;
-    gap: 12px;
+    flex-direction: column;
     align-items: center;
-    padding: 12px;
-    border: 1px dashed var(--border2);
+    justify-content: center;
+    gap: 18px;
+    padding: 40px 20px;
+    text-align: center;
   }
-  .rg-track img { width: 56px; height: 56px; object-fit: cover; border-radius: 2px; }
-  .rg-track b { display: block; margin-top: 3px; }
-  .rg-track small { color: var(--success); }
-  .rg-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-  .rg-danger { border-color: var(--danger); color: var(--danger); }
-  .rg-free {
-    padding: 5px 10px;
-    background: none;
-    border: 1px dashed var(--accent);
-    border-radius: 2px;
-    color: var(--mid);
-    font: inherit;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-  .rg-free b { color: var(--accent); }
-  .rg-help { display: flex; flex-direction: column; gap: 8px; padding-left: 18px; font-size: 0.85rem; color: var(--mid); line-height: 1.45; }
-  .rg-help b { color: var(--text); }
-  .rg-pro {
-    margin-left: 8px;
-    padding: 1px 5px;
-    border-radius: 2px;
-    background: var(--accent);
-    color: var(--on-accent);
-    font-family: var(--s-mono);
-    font-size: 0.6rem;
-    font-style: normal;
-    letter-spacing: 0.05em;
-    vertical-align: 2px;
-  }
-  .rg-locked { opacity: 0.75; }
-  .rg-seg .rg-seg-locked:not(.on) { color: var(--dim); }
-  .rg-seg .rg-seg-locked::after { content: ' ●'; color: var(--accent); font-size: 0.6rem; }
-
-  .rg-field { display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; color: var(--mid); }
-  .rg-field b { color: var(--text); font-family: var(--s-mono); }
-  .rg-field small { color: var(--dim); }
-  .rg-field input[type='range'] { accent-color: var(--accent); }
-  .rg-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border2); border-radius: 3px; align-self: flex-start; }
-  .rg-seg button {
-    padding: 6px 10px;
-    background: none;
-    border: 0;
-    border-right: 1px solid var(--border2);
-    color: var(--text);
-    font: inherit;
-    font-family: var(--s-mono);
-    font-size: 0.78rem;
-    cursor: pointer;
-  }
-  .rg-seg button:last-child { border-right: 0; }
-  .rg-seg button.on { background: var(--text); color: var(--bg); }
-  .rg-seg button:disabled { opacity: 0.35; cursor: not-allowed; }
-  .rg-teamnames { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .rg-input {
-    min-width: 0;
-    padding: 8px 10px;
-    background: none;
-    border: 1px solid var(--border2);
-    border-left: 4px solid var(--tc);
-    border-radius: 2px;
-    color: var(--text);
-    font: inherit;
-  }
-
-  .rg-history { flex: 1; min-height: 0; list-style: none; font-size: 0.85rem; overflow-y: auto; }
-  .rg-history li { padding: 6px 0; border-bottom: 1px solid var(--border); }
-  .rg-history span { margin-right: 10px; font-family: var(--s-mono); color: var(--dim); }
-
-  .rg-teams { list-style: none; border-bottom: 2px solid var(--text); }
-  .rg-teams li {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: 12px;
-    padding: 8px 0 8px 12px;
-    border-left: 5px solid var(--tc);
-    border-bottom: 1px solid var(--border);
-  }
-  .rg-teams b { font-family: var(--s-cond); font-size: 1.1rem; text-transform: uppercase; }
-  .rg-teams span { color: var(--mid); font-size: 0.85rem; }
-  .rg-teams .pts { font-family: var(--s-mono); color: var(--text); }
-
-  .rg-players { flex: 1; min-height: 0; list-style: none; overflow-y: auto; }
-  .rg-players li {
-    display: grid;
-    grid-template-columns: 1fr auto auto auto;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .rg-players li.done { background: rgb(74 222 128 / 0.08); }
-  .rg-players li.off { opacity: 0.45; }
-  .rg-pname { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; overflow: hidden; }
-  .rg-pname i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--tc); }
-  .rg-pname small { color: var(--mid); font-weight: 400; }
-  .rg-players select {
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    font: inherit;
-    font-size: 0.82rem;
-    padding: 4px;
-  }
-  .rg-score { display: inline-flex; align-items: center; gap: 6px; }
-  .rg-score b { min-width: 42px; text-align: center; font-family: var(--s-mono); }
-  .rg-score button, .rg-kick {
-    background: none;
-    border: 1px solid var(--border2);
-    border-radius: 2px;
-    color: var(--text);
-    font: inherit;
-    cursor: pointer;
-  }
-  .rg-score button { width: 26px; height: 26px; }
-  .rg-kick { padding: 4px 8px; font-size: 0.78rem; color: var(--mid); }
-  .rg-kick.confirm { border-color: var(--danger); color: var(--danger); }
+  .rg-muted { color: var(--mid); font-size: 0.88rem; line-height: 1.5; }
+  .rg-error { max-width: 460px; color: var(--danger); font-size: 0.95rem; line-height: 1.6; margin: 0; }
 
   .rg-notice {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    z-index: 70;
     padding: 12px 16px;
     background: var(--text);
     color: var(--bg);
     border-radius: 3px;
     font-weight: 600;
+    font-size: 0.86rem;
   }
 
-  @media (max-width: 1100px) {
-    .rg { height: auto; overflow: visible; }
-    .rg-grid { grid-template-columns: 1fr; }
-    .rg-col { overflow: visible; }
-    .rg-col { border-right: 0; border-bottom: 1px solid var(--border); }
+  @media (max-width: 640px) {
+    .rg-zone { padding: 18px 12px 28px; }
   }
 </style>
