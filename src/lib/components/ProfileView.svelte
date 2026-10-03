@@ -150,7 +150,6 @@
     { k: 'Score moyen', v: avg || '—' },
     { k: 'Taux de podium', v: `${pct(podiums, total)}%` },
     { k: '1ères places', v: `${pct(wins, total)}% · ${wins}` },
-    { k: 'Pire score', v: total > 0 ? (m?.worstScore ?? '—') : '—' },
     { k: 'Ce mois', v: `${m?.gamesThisMonth ?? 0} parties` },
   ]);
 
@@ -172,7 +171,7 @@
     return { line, area, last: coords[coords.length - 1], min, max, lastScore: pts[pts.length - 1] };
   }
 
-  // Itinéraire (meilleurs scores par room officielle)
+  // Meilleurs scores par room officielle
   const itinerary = $derived(
     Object.entries(m?.bestByRoom ?? {})
       .map(([code, score]) => ({ room: m?.roomInfo?.[code], score }))
@@ -203,17 +202,38 @@
     return `#${r}`;
   }
 
+  // Le rang brut ne dit rien sans son dénominateur : l'API renvoie déjà
+  // totalPlayers et topPercent, qui n'étaient pas exploités.
   const rank = $derived(stats?.rank);
-  const classementValue = $derived(rank != null ? `#${rank}` : null);
+  const totalPlayers = $derived(stats?.totalPlayers);
+  const topPercent = $derived(stats?.topPercent);
+  const rangOrdinal = $derived(rank == null ? null : rank === 1 ? '1er' : `${rank}e`);
+  const rangDetail = $derived.by(() => {
+    if (rank == null) return null;
+    const bouts = [];
+    if (totalPlayers) bouts.push(`sur ${totalPlayers.toLocaleString('fr-FR')}`);
+    if (topPercent) bouts.push(`top ${topPercent} %`);
+    return bouts.join(' · ') || 'Classement';
+  });
 
   // Nav setlist
-  const sections = [
-    { id: 'rider', n: '01', t: 'Statistiques' },
-    { id: 'tour', n: '02', t: 'Meilleurs scores' },
-    { id: 'guests', n: '03', t: 'Amis' },
-    { id: 'case', n: '04', t: 'Badges' },
-    { id: 'log', n: '05', t: 'Historique' },
+  // Sommaire déclaratif : une section n'est rendue que si elle a du contenu,
+  // sinon elle laissait un en-tête numéroté suivi de vide. Ajouter un bloc
+  // (stats Salon, espace Pro) = une entrée ici, le sommaire suit tout seul.
+  const sectionDefs = [
+    { id: 'rider', t: 'Performances', quand: () => stats != null },
+    { id: 'tour',  t: 'Meilleurs scores', quand: () => itinerary.length > 0 || typeTotal > 0 },
+    { id: 'log',   t: 'Dernières parties', quand: () => carnet.length > 0 },
+    { id: 'case',  t: 'Badges', quand: () => true },
+    { id: 'guests', t: 'Amis', quand: () => true },
   ];
+  const sections = $derived(
+    sectionDefs.filter(s => s.quand()).map((s, i) => ({
+      ...s, n: String(i + 1).padStart(2, '0'),
+    }))
+  );
+  const visible = $derived(new Set(sections.map(s => s.id)));
+  const numDe = (id) => sections.find(s => s.id === id)?.n ?? '';
   let activeSection = $state('rider');
 
   // Reveal au scroll (action Svelte)
@@ -240,15 +260,6 @@
     document.getElementById('pv-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Tilt 3D du pass
-  let passEl = $state(null);
-  function tilt(e) {
-    if (!passEl) return;
-    const r = passEl.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
-    passEl.style.transform = `rotateY(${px * 16}deg) rotateX(${-py * 16}deg) translateY(-6px)`;
-  }
-  function untilt() { if (passEl) passEl.style.transform = ''; }
 </script>
 
 <div class="pv">
@@ -257,15 +268,17 @@
   <!-- ═══ HERO AFFICHE ═══ -->
   <header class="marquee">
     <div class="marquee-top">
-      <span class="eyebrow">ZIK · <b>Profil artiste</b></span>
+      <span class="eyebrow">ZIK · <b>Profil</b></span>
       <span class="rule"></span>
       <span class="eyebrow">Niveau {lvl}</span>
     </div>
 
     <div class="marquee-grid">
       <div class="headliner">
-        {#if classementValue}<span class="kicker">★ {classementValue} au classement</span>{/if}
-        <h1 class="name">{name}<span class="pt">.</span></h1>
+        <div class="identity">
+          <img class="identity-av" src={avatar} alt="" width="84" height="84">
+          <h1 class="name">{name}<span class="pt">.</span></h1>
+        </div>
         <div class="tagline">
           {#if profile?.created_at}Membre depuis {fmtSince(profile.created_at)} · {/if}
           <b>{profile?.games_played ?? total ?? 0} parties jouées</b>
@@ -275,7 +288,7 @@
           <div class="hs max"><b>{elo || '—'}</b><span>ELO</span></div>
           <div class="hs"><b>{fmtScore(profile?.total_score ?? m?.totalScore ?? 0)}</b><span>Score total</span></div>
           <div class="hs"><b>{pct(podiums, total)}%</b><span>Podiums</span></div>
-          {#if classementValue}<div class="hs gold"><b>{classementValue}</b><span>Classement</span></div>{/if}
+          {#if rangOrdinal}<div class="hs gold"><b>{rangOrdinal}</b><span>{rangDetail ?? 'Classement'}</span></div>{/if}
         </div>
 
         <div class="social-row">
@@ -310,24 +323,6 @@
           {/if}
         </div>
 
-        <div class="scroll-hint"><span class="arw"></span> Faire défiler</div>
-      </div>
-
-      <div class="pass-wrap" role="presentation" onmousemove={tilt} onmouseleave={untilt}>
-        <div class="pass-strap"></div>
-        <div class="pass" bind:this={passEl}>
-          <div class="pass-hole"></div>
-          <div class="pass-holo"></div>
-          <div class="pass-tour">ZIK World Tour · 2026</div>
-          <div class="pass-av-row">
-            <img class="pass-av" src={avatar} alt="" width="70" height="70">
-            <div class="pass-nm">{name}<span class="pt">.</span></div>
-          </div>
-          <div class="pass-since">Niveau {lvl}{#if profile?.created_at} · depuis {fmtSince(profile.created_at)}{/if}</div>
-          <div class="pass-access">★ Access all areas ★</div>
-          <div class="pass-barcode"></div>
-          <div class="pass-code">ZIK · ELO {elo || '—'}</div>
-        </div>
       </div>
     </div>
   </header>
@@ -350,10 +345,11 @@
     <main class="program">
 
       <!-- 01 RIDER -->
+    {#if visible.has('rider')}
       <section class="prog-block" id="pv-rider" use:reveal>
         <div class="block-head">
-          <span class="block-num">01</span>
-          <h2>Statistiques</h2>
+          <span class="block-num">{numDe('rider')}</span>
+          <h2>Performances</h2>
           <span class="sub">Mode {isQcm ? 'QCM' : 'classique'}</span>
         </div>
         <div class="case rider-body">
@@ -385,7 +381,7 @@
             </div>
           </div>
           <div class="power">
-            <div class="power-top"><span class="lv">Niveau <b>{lvl}</b> → {lvl + 1}</span><span class="xp">{profile?.xp ?? 0} / {xpMax} XP</span></div>
+            <div class="power-top"><span class="lv">Niveau <b>{lvl}</b> → {lvl + 1}</span><span class="xp">{(profile?.xp ?? 0).toLocaleString('fr-FR')} / {xpMax.toLocaleString('fr-FR')} XP · {xpPct}&nbsp;%</span></div>
             <div class="power-bar">
               {#each Array(powerSegs), i (i)}<i class:on={i < powerOn}></i>{/each}
             </div>
@@ -394,7 +390,7 @@
 
         {#if curve.line}
           <div class="case form-wrap">
-            <div class="eyebrow" style="margin-bottom:6px">Courbe de forme · <b>{recent.length} dernières</b></div>
+            <div class="eyebrow" style="margin-bottom:6px">Évolution des scores · <b>{recent.length} dernières</b></div>
             <svg viewBox="0 0 640 130" preserveAspectRatio="none" aria-hidden="true">
               <line x1="0" y1="30" x2="640" y2="30" stroke="var(--pv-grid)"/>
               <line x1="0" y1="80" x2="640" y2="80" stroke="var(--pv-grid)"/>
@@ -403,15 +399,19 @@
               <polyline points={curve.line} fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
               {#if curve.last}<circle cx={curve.last[0]} cy={curve.last[1]} r="4.5" fill="var(--accent)"/>{/if}
             </svg>
-            <div class="form-caption"><span>plus ancien</span><span>récent · {curve.lastScore} pts</span></div>
+            <div class="form-caption">
+              <span>plus ancien</span>
+              <span class="form-range">min {curve.min} · max {curve.max}</span>
+              <span>récent · {curve.lastScore} pts</span>
+            </div>
           </div>
         {/if}
       </section>
-
-      <!-- 02 ITINÉRAIRE -->
+    {/if}
+    {#if visible.has('tour')}
       <section class="prog-block" id="pv-tour" use:reveal>
         <div class="block-head">
-          <span class="block-num">02</span>
+          <span class="block-num">{numDe('tour')}</span>
           <h2>Meilleurs scores</h2>
           <span class="sub">Par room officielle</span>
         </div>
@@ -439,9 +439,9 @@
                   <i style="width:{typePct(byType.public.count)}%;background:rgb(var(--accent-rgb) / 0.45)"></i>
                   <i style="width:{typePct(byType.private.count)}%;background:rgb(var(--accent-rgb) / 0.18)"></i>
                 </div>
-                <div class="tier-row"><span class="tier-chip" style="background:var(--accent)">VIP</span><span class="tier-name">Rooms officielles</span><span class="tier-count">{byType.official.count}</span><span class="tier-pts">{fmtScore(byType.official.totalScore)} pts</span></div>
-                <div class="tier-row"><span class="tier-chip" style="background:rgb(var(--accent-rgb) / 0.6)">Backstage</span><span class="tier-name">Rooms publiques</span><span class="tier-count">{byType.public.count}</span><span class="tier-pts">{fmtScore(byType.public.totalScore)} pts</span></div>
-                <div class="tier-row"><span class="tier-chip" style="background:rgb(var(--accent-rgb) / 0.3)">General</span><span class="tier-name">Rooms privées</span><span class="tier-count">{byType.private.count}</span><span class="tier-pts">{fmtScore(byType.private.totalScore)} pts</span></div>
+                <div class="tier-row"><span class="tier-dot" style="background:var(--accent)"></span><span class="tier-name">Rooms officielles</span><span class="tier-count">{byType.official.count}</span><span class="tier-pts">{fmtScore(byType.official.totalScore)} pts</span></div>
+                <div class="tier-row"><span class="tier-dot" style="background:rgb(var(--accent-rgb) / 0.6)"></span><span class="tier-name">Rooms publiques</span><span class="tier-count">{byType.public.count}</span><span class="tier-pts">{fmtScore(byType.public.totalScore)} pts</span></div>
+                <div class="tier-row"><span class="tier-dot" style="background:rgb(var(--accent-rgb) / 0.3)"></span><span class="tier-name">Rooms privées</span><span class="tier-count">{byType.private.count}</span><span class="tier-pts">{fmtScore(byType.private.totalScore)} pts</span></div>
               {:else}
                 <p class="pv-empty">Aucune partie jouée.</p>
               {/if}
@@ -449,11 +449,47 @@
           </div>
         </div>
       </section>
-
-      <!-- 03 GUESTLIST -->
+    {/if}
+    {#if visible.has('log')}
+      <section class="prog-block" id="pv-log" use:reveal>
+        <div class="block-head">
+          <span class="block-num">{numDe('log')}</span>
+          <h2>Dernières parties</h2>
+          <span class="sub">Dernières parties</span>
+        </div>
+        <div class="case log">
+          {#if carnet.length}
+            <div class="log-head"><span>#</span><span>Room</span><span>Mode</span><span>Date</span><span style="text-align:right">Score</span><span style="text-align:right">Rang</span></div>
+            {#each carnet as g, i (i)}
+              <div class="log-row" class:cl={g.gmode === 'cl'} class:qcm={g.gmode === 'qcm'}>
+                <span class="log-num">{String(i + 1).padStart(2, '0')}</span>
+                <div class="log-room">{g.roomEmoji} {g.roomName}</div>
+                <span class="log-mode" class:m-cl={g.gmode === 'cl'} class:m-qcm={g.gmode === 'qcm'}>{g.gmode === 'qcm' ? 'QCM' : 'Classique'}</span>
+                <span class="log-date">{fmtDate(g.endedAt)}</span>
+                <span class="log-score">{g.score}</span>
+                <span class="log-rank" class:r1={g.rank === 1}>{rankLabel(g.rank)}</span>
+              </div>
+            {/each}
+          {:else}
+            <p class="pv-empty" style="padding:20px">Aucune partie jouée pour le moment.</p>
+          {/if}
+        </div>
+      </section>
+    {/if}
+    {#if visible.has('case')}
+      <section class="prog-block" id="pv-case" use:reveal>
+        <div class="block-head">
+          <span class="block-num">{numDe('case')}</span>
+          <h2>Badges</h2>
+          <span class="sub">Succès & séries</span>
+        </div>
+        <AchievementsPanel {sb} {userId} />
+      </section>
+    {/if}
+    {#if visible.has('guests')}
       <section class="prog-block" id="pv-guests" use:reveal>
         <div class="block-head">
-          <span class="block-num">03</span>
+          <span class="block-num">{numDe('guests')}</span>
           <h2>Amis</h2>
           <span class="sub">{social.friendsCount} ami{social.friendsCount > 1 ? 's' : ''}</span>
         </div>
@@ -502,47 +538,12 @@
             {/each}
           {:else}
             <p class="pv-empty" style="padding:20px">
-              {#if isOwn}Tu n'as pas encore d'amis. Depuis le profil d'un joueur, clique sur «&nbsp;Ajouter en ami&nbsp;»&nbsp;: dès qu'il accepte, il rejoint ta guestlist.{:else}Aucun ami pour le moment.{/if}
+              {#if isOwn}Tu n'as pas encore d'amis. Depuis le profil d'un joueur, clique sur «&nbsp;Ajouter en ami&nbsp;»&nbsp;: dès qu'il accepte, il apparaît ici.{:else}Aucun ami pour le moment.{/if}
             </p>
           {/if}
         </div>
       </section>
-
-      <!-- 04 FLIGHT CASE -->
-      <section class="prog-block" id="pv-case" use:reveal>
-        <div class="block-head">
-          <span class="block-num">04</span>
-          <h2>Badges</h2>
-          <span class="sub">Succès & séries</span>
-        </div>
-        <AchievementsPanel {sb} {userId} />
-      </section>
-
-      <!-- 05 CARNET -->
-      <section class="prog-block" id="pv-log" use:reveal>
-        <div class="block-head">
-          <span class="block-num">05</span>
-          <h2>Historique</h2>
-          <span class="sub">Dernières parties</span>
-        </div>
-        <div class="case log">
-          {#if carnet.length}
-            <div class="log-head"><span>#</span><span>Room</span><span>Mode</span><span>Date</span><span style="text-align:right">Score</span><span style="text-align:right">Rang</span></div>
-            {#each carnet as g, i (i)}
-              <div class="log-row" class:cl={g.gmode === 'cl'} class:qcm={g.gmode === 'qcm'}>
-                <span class="log-num">{String(i + 1).padStart(2, '0')}</span>
-                <div class="log-room">{g.roomEmoji} {g.roomName}</div>
-                <span class="log-mode" class:m-cl={g.gmode === 'cl'} class:m-qcm={g.gmode === 'qcm'}>{g.gmode === 'qcm' ? 'QCM' : 'Classique'}</span>
-                <span class="log-date">{fmtDate(g.endedAt)}</span>
-                <span class="log-score">{g.score}</span>
-                <span class="log-rank" class:r1={g.rank === 1}>{rankLabel(g.rank)}</span>
-              </div>
-            {/each}
-          {:else}
-            <p class="pv-empty" style="padding:20px">Aucune partie jouée pour le moment.</p>
-          {/if}
-        </div>
-      </section>
+    {/if}
 
     </main>
   </div>
@@ -571,11 +572,6 @@
   @keyframes pv-holo { to { background-position: 200% 0; } }
   @keyframes pv-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(3%, -4%); } }
   @keyframes pv-strap { 0%, 100% { transform: translateX(-50%) rotate(2deg); } 50% { transform: translateX(-50%) rotate(-2deg); } }
-  @keyframes pv-drop {
-    0% { transform: translateY(-140px) rotate(-14deg); opacity: 0; }
-    60% { transform: translateY(8px) rotate(-1deg); opacity: 1; }
-    100% { transform: translateY(0) rotate(-2.5deg); opacity: 1; }
-  }
   @keyframes pv-beam { 0%, 100% { transform: translateX(-50%) rotate(var(--a, 0deg)); opacity: .45; } 50% { transform: translateX(-50%) rotate(calc(var(--a, 0deg) + 6deg)); opacity: .85; } }
   @keyframes pv-mouse { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(6px); opacity: .4; } }
   @keyframes pv-namein { from { opacity: 0; transform: translateY(24px); clip-path: inset(0 100% 0 0); } to { opacity: 1; transform: translateY(0); clip-path: inset(0 0 0 0); } }
@@ -601,15 +597,16 @@
   .eyebrow { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); }
   .eyebrow b { color: var(--accent); }
 
-  .marquee-grid { display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: center; }
-  .kicker {
-    display: inline-flex; align-items: center; gap: 9px;
-    font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.74rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold);
-    border: 1px solid rgb(var(--gold-rgb, 251 191 36) / 0.3); border-radius: 99px; padding: 5px 14px; margin-bottom: 14px;
+  .marquee-grid { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
+  .identity { display: flex; align-items: center; gap: 20px; }
+  .identity-av {
+    width: 84px; height: 84px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
+    border: 2px solid var(--border2); background: var(--surface);
   }
   .name {
     font-family: "Barlow Condensed", sans-serif; font-weight: 900; text-transform: uppercase;
-    line-height: 0.86; letter-spacing: -0.01em; font-size: clamp(48px, 8vw, 118px); word-break: break-word;
+    line-height: 0.86; letter-spacing: -0.01em; font-size: clamp(34px, 7vw, 118px); overflow-wrap: anywhere; hyphens: auto;
     animation: pv-namein 0.7s cubic-bezier(.22,1,.36,1) both;
   }
   .name .pt { color: var(--accent); }
@@ -671,32 +668,7 @@
   .btn-req.accept { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }
   .btn-req:disabled { opacity: 0.55; cursor: default; }
 
-  .scroll-hint { display: flex; align-items: center; gap: 9px; margin-top: 30px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.66rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim); }
-  .scroll-hint .arw { position: relative; display: inline-block; width: 16px; height: 26px; border: 1.5px solid var(--dim); border-radius: 9px; flex-shrink: 0; }
-  .scroll-hint .arw::after { content: ''; position: absolute; left: 0; right: 0; top: 5px; margin: 0 auto; width: 3px; height: 6px; border-radius: 2px; background: var(--accent); animation: pv-mouse 1.6s ease-in-out infinite; }
 
-  /* Le pass */
-  .pass-wrap { position: relative; perspective: 1000px; justify-self: center; width: min(320px, 100%); }
-  .pass-strap { position: absolute; top: -46px; left: 50%; width: 30px; height: 62px; z-index: 0; background: repeating-linear-gradient(0deg, var(--accent) 0 11px, var(--accent2) 11px 14px); animation: pv-strap 4.5s ease-in-out infinite; transform-origin: top center; }
-  .pass {
-    position: relative; z-index: 1; width: min(320px, 100%); border-radius: 15px; transform-style: preserve-3d;
-    background: linear-gradient(160deg, var(--surface3), var(--bg2) 62%); border: 1px solid var(--border2);
-    box-shadow: 0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1px rgb(var(--c-glass) / 0.04);
-    padding: 46px 24px 22px; overflow: hidden; transition: transform 0.25s cubic-bezier(.22,1,.36,1);
-    animation: pv-drop 1s cubic-bezier(.22,1,.36,1) both; will-change: transform;
-  }
-  .pass::before { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, rgb(var(--c-glass) / 0.1) 47%, transparent 56%); pointer-events: none; }
-  .pass-hole { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 52px; height: 11px; border-radius: 6px; background: var(--bg); box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), 0 0 0 1px rgb(var(--c-glass) / 0.12); }
-  .pass-holo { height: 9px; border-radius: 5px; margin-bottom: 16px; background: linear-gradient(90deg, #ff00ff, #4ade80, #38bdf8, #fbbf24, #ff00ff, #ff00ff, #4ade80, #38bdf8, #fbbf24, #ff00ff); background-size: 200% 100%; opacity: 0.78; animation: pv-holo 5s linear infinite; }
-  .pass-tour { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); }
-  .pass-av-row { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
-  .pass-av { width: 70px; height: 70px; border-radius: 9px; flex-shrink: 0; object-fit: cover; border: 1px solid var(--border2); background: var(--surface); }
-  .pass-nm { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; line-height: 0.95; word-break: break-word; }
-  .pass-nm .pt { color: var(--accent); }
-  .pass-since { font-family: "JetBrains Mono", monospace; font-size: 0.58rem; color: var(--mid); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .pass-access { margin-top: 15px; text-align: center; background: var(--accent); color: var(--on-accent); border-radius: 4px; font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.98rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 0; }
-  .pass-barcode { margin-top: 15px; height: 34px; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--text) 0 2px, transparent 2px 5px, var(--text) 5px 6px, transparent 6px 11px, var(--text) 11px 14px, transparent 14px 17px); opacity: 0.7; }
-  .pass-code { font-family: "JetBrains Mono", monospace; font-size: 0.56rem; color: var(--dim); text-align: center; margin-top: 6px; letter-spacing: 0.24em; }
 
   /* ═══ CORPS ═══ */
   .tour { display: grid; grid-template-columns: var(--rail-w) 1fr; gap: 40px; align-items: start; padding-bottom: 80px; }
@@ -719,7 +691,6 @@
   .block-num { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1.1rem; color: var(--accent); letter-spacing: 0.05em; }
   .block-head h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1.9rem; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1; }
   .block-head .sub { font-family: "JetBrains Mono", monospace; font-size: 0.64rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; margin-left: auto; }
-  .block-head .tape { margin-left: auto; }
   .tape { display: inline-flex; align-items: center; gap: 8px; background: rgb(var(--gold-rgb, 251 191 36) / 0.08); border: 1px dashed rgb(var(--gold-rgb, 251 191 36) / 0.35); color: var(--gold); font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.64rem; letter-spacing: 0.24em; text-transform: uppercase; padding: 5px 12px; transform: rotate(-1deg); }
 
   .case {
@@ -763,6 +734,7 @@
 
   .form-wrap { padding: 20px 24px 16px; margin-top: 16px; }
   .form-wrap svg { width: 100%; height: auto; display: block; }
+  .form-range { color: var(--mid); }
   .form-caption { display: flex; justify-content: space-between; font-family: "JetBrains Mono", monospace; font-size: 0.6rem; color: var(--dim); margin-top: 4px; }
 
   /* Itinéraire */
@@ -782,7 +754,7 @@
   .tier-bar i { display: block; height: 100%; }
   .tier-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px dashed var(--border); font-size: 0.82rem; }
   .tier-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .tier-chip { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; color: var(--on-accent); flex-shrink: 0; }
+  .tier-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .tier-name { flex: 1; color: var(--mid); }
   .tier-count { font-family: "JetBrains Mono", monospace; font-size: 0.66rem; color: var(--dim); }
   .tier-pts { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 0.78rem; }
@@ -807,12 +779,11 @@
 
   @media (prefers-reduced-motion: reduce) {
     .prog-block { transition: none; opacity: 1; transform: none; }
-    .beams i, .pass-holo, .pass-strap, .pass, .name, .scroll-hint .arw::after { animation: none !important; }
+    .beams i, .name { animation: none !important; }
   }
 
   @media (max-width: 1000px) {
     .marquee-grid { grid-template-columns: 1fr; gap: 28px; }
-    .pass-wrap { justify-self: start; }
     .tour { grid-template-columns: 1fr; gap: 0; }
     .rail { position: static; margin-bottom: 36px; }
     .rail-nav { flex-direction: row; flex-wrap: wrap; }
@@ -837,6 +808,6 @@
     .dial { align-self: center; }
     .dial-side { width: 100%; min-width: 0; }
     .block-head { flex-wrap: wrap; }
-    .block-head .sub, .block-head .tape { margin-left: 0; }
+    .block-head .sub { margin-left: 0; }
   }
 </style>
