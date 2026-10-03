@@ -43,6 +43,12 @@
   // onMount ignore la valeur de retour d'un callback async : le nettoyage de la
   // souscription passe par un effet.
   $effect(() => () => authSub?.subscription?.unsubscribe());
+
+  // L'admin est conçu en sombre : on ignore le thème choisi dans les paramètres
+  $effect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    return () => document.documentElement.setAttribute('data-theme', localStorage.getItem('zik_theme') || 'light');
+  });
 </script>
 
 <svelte:head>

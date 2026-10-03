@@ -2,6 +2,10 @@
   import { onMount, getContext } from "svelte";
   import LoadMore from '$lib/components/LoadMore.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import JsonLd from '$lib/components/JsonLd.svelte';
+  import { breadcrumb } from '$lib/seo.js';
+
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Classements', path: '/classements' }]);
 
   let { data } = $props();
 
@@ -195,8 +199,20 @@
 </script>
 
 <svelte:head>
-  <title>Classements — ZIK</title>
-  <meta name="description" content="Classements ZIK — ELO compétitif, scores par mode et par période. Découvrez les meilleurs joueurs de blind test." />
+  <title>Classements blind test - ELO et meilleurs scores | ZIK</title>
+  <meta name="description" content="Classements ZIK : ELO compétitif, meilleurs scores par mode et par période. Découvre les meilleurs joueurs de blind test et ta place parmi eux." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.zik-music.fr/classements" />
+  <meta property="og:title" content="Classements blind test - ELO et meilleurs scores" />
+  <meta property="og:description" content="ELO compétitif, meilleurs scores par mode et par période. Les meilleurs joueurs de blind test sur ZIK." />
+  <meta property="og:url" content="https://www.zik-music.fr/classements" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Classements blind test - ELO et meilleurs scores" />
+  <meta name="twitter:description" content="ELO compétitif, meilleurs scores par mode et par période. Les meilleurs joueurs de blind test sur ZIK." />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <main class="hp-page">
@@ -219,7 +235,7 @@
         </div>
         <span class="hp-sep"></span>
       {/if}
-      <span class="hp-context">{eloAmis ? 'Toi et tes amis · ELO' : 'Rooms officielles · Mode classique · All-time'}</span>
+      <span class="hp-context">{eloAmis ? 'Toi et tes amis · ELO' : 'Rooms officielles · Mode classique · Depuis toujours'}</span>
     {:else}
       <div class="hp-chips">
         <button class="hp-chip" class:on={scoreMode === 'classique'} onclick={() => scoreMode = 'classique'}>Classique</button>
@@ -355,7 +371,7 @@
   {:else if myRank}
     <div class="pb-id">
       {#if myRank.avatar_url}
-        <img class="pb-av" src={myRank.avatar_url} alt={myRank.username} width="46" height="46" />
+        <img class="pb-av" src={myRank.avatar_url} alt={myRank.username} width="46" height="46" loading="lazy" decoding="async" />
       {:else}
         <div class="pb-av pb-av-fb">{myRank.username[0].toUpperCase()}</div>
       {/if}

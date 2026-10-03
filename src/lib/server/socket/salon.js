@@ -15,13 +15,7 @@ import {
   displayString,
   TRACK_ROW_SELECT,
 } from "../services/playlist.js";
-import {
-  makeTeams,
-  cleanTeamName,
-  smallestTeam,
-  spreadPlayers,
-  teamStandings,
-} from "./salonTeams.js";
+import { makeTeams, cleanTeamName, teamStandings } from "./salonTeams.js";
 import { isPro } from "../services/pro.js";
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../proPlans.js";
 
@@ -286,11 +280,10 @@ function makePlayer(username, socketId) {
 }
 
 function addPlayer(salon, username, socketId) {
+  // Pas d'équipe d'office : le joueur la choisit sur son téléphone, ou l'hôte
+  // la lui donne depuis la régie. Coller un arrivant dans l'équipe la moins
+  // remplie cassait les tables déjà constituées.
   const player = makePlayer(username, socketId);
-  player.team = smallestTeam(
-    salon.settings.teams,
-    Object.values(salon.players),
-  );
   salon.players[username] = player;
   return player;
 }
@@ -320,6 +313,20 @@ function sortedScores(salon) {
 // Écrans TV et régie : tout ce que les joueurs ne doivent pas recevoir
 function staff(code, io) {
   return io.to([`salon:screens:${code}`, `salon:ctrl:${code}`]);
+}
+
+/**
+ * Annonce à la régie combien d'écrans TV sont connectés.
+ *
+ * L'information existait déjà côté serveur — elle sert à décider quand
+ * fermer le salon — mais n'était jamais transmise : l'exploitant ne pouvait
+ * pas voir qu'aucune TV n'était branchée, ni que deux l'étaient et que le
+ * son allait jouer en double.
+ */
+function broadcastScreens(code, io) {
+  const count =
+    io.sockets.adapter.rooms.get(`salon:screens:${code}`)?.size ?? 0;
+  io.to(`salon:ctrl:${code}`).emit("salon_screens", { count });
 }
 
 function broadcastRoster(code, io) {
@@ -976,6 +983,7 @@ export function registerSalon(io) {
         prepareSession(code, io);
       else announceNextVideo(salon, io);
       scheduleCleanup(code);
+      broadcastScreens(code, io);
     });
 
     // ── Régie : l'écran de pilotage, à côté de la TV ─────────────────────────
@@ -1016,6 +1024,7 @@ export function registerSalon(io) {
         trackCount: game.fullPlaylist.length,
       });
       scheduleCleanup(code);
+      broadcastScreens(code, io);
     });
 
     socket.on("salon_pause", () => {
@@ -1073,13 +1082,21 @@ export function registerSalon(io) {
     });
 
     // Correction à la main par l'animateur (réponse orale acceptée, triche…)
-    socket.on("salon_adjust_score", ({ username, delta } = {}) => {
+    // `delta` ajuste au pas (boutons + et −) ; `score` fixe une valeur saisie
+    // directement, hors de portée d'un delta plafonné à 1000.
+    socket.on("salon_adjust_score", ({ username, delta, score } = {}) => {
       const salon = adminSalon(socket);
       const player = salon?.players[username];
-      const d = Math.round(Number(delta) || 0);
-      if (!player || !d || Math.abs(d) > 1000) return;
+      if (!player) return;
+
+      const absolu = score != null;
+      const v = Math.round(Number(absolu ? score : delta) || 0);
+      if (absolu) {
+        if (!Number.isFinite(v) || v < 0 || v > 100000) return;
+      } else if (!v || Math.abs(v) > 1000) return;
+
       if (!requirePro(socket, salon, "score")) return;
-      player.score = Math.max(0, player.score + d);
+      player.score = absolu ? v : Math.max(0, player.score + v);
       io.to(`salon:${salon.code}`).emit("salon_scores_update", {
         scores: sortedScores(salon),
         teams: standings(salon),
@@ -1134,8 +1151,14 @@ export function registerSalon(io) {
       if (idle && "teamCount" in patch) {
         if (patch.teamCount > teamLimit(salon))
           return requirePro(socket, salon, "teams");
-        s.teams = makeTeams(patch.teamCount);
-        spreadPlayers(s.teams, Object.values(salon.players));
+        s.teams = makeTeams(patch.teamCount, s.teams);
+        // On ne redistribue pas : ajouter une équipe déplaçait tout le monde
+        // en tourniquet et défaisait les placements choisis. Seuls ceux dont
+        // l'équipe vient de disparaître sont libérés.
+        const existantes = new Set((s.teams ?? []).map((t) => t.id));
+        for (const p of Object.values(salon.players)) {
+          if (p.team != null && !existantes.has(p.team)) p.team = null;
+        }
         broadcastRoster(code, io);
       }
       // Passage en automatique pendant l'affichage d'une réponse
@@ -1599,6 +1622,8 @@ export function registerSalon(io) {
       if (!salon) return;
 
       if (socket.salonRole === "screen" || socket.salonRole === "control") {
+        // Un écran de moins : la régie doit le voir tout de suite.
+        if (socket.salonRole === "screen") broadcastScreens(code, io);
         // Le salon ferme quand plus aucun écran ni régie n'est connecté
         const rooms = io.sockets.adapter.rooms;
         const left =

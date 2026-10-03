@@ -100,8 +100,8 @@
 
     const c = codeInput.trim().toUpperCase();
     const u = usernameInput.trim();
-    if (!c || c.length < 6) { joinError = 'Code invalide.'; joining = false; return; }
-    if (!u) { joinError = 'Pseudo requis.'; joining = false; return; }
+    if (!c || c.length < 6) { joinError = 'Le code fait 6 caractères : il est affiché sur la TV.'; joining = false; return; }
+    if (!u) { joinError = 'Choisis un pseudo pour que les autres te reconnaissent.'; joining = false; return; }
 
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
 
@@ -299,11 +299,11 @@
   <title>Rejoindre un blind test en soirée - ZIK Salon</title>
   <meta name="robots" content="noindex, follow">
   <meta name="description" content="Entre le code affiché sur la TV et ton pseudo pour jouer au blind test depuis ton téléphone. Sans appli, sans compte.">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </svelte:head>
 
 {#if !joined}
-  <a class="salon-back salon-play-backlink" href="/salon">← Retour</a>
+  <a class="salon-back salon-play-backlink" href="/">← Accueil ZIK</a>
   <JoinForm
     bind:codeInput
     bind:usernameInput

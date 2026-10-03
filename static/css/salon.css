@@ -96,7 +96,7 @@ a {
 .sx-btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #000;
+  color: var(--on-accent);
   box-shadow: 4px 4px 0 var(--text);
 }
 .sx-btn-primary:hover:not(:disabled) {

@@ -196,7 +196,7 @@
   />
   <meta property="og:url" content="https://www.zik-music.fr/pro" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
   <JsonLd json={jsonLd} />
   <JsonLd json={faqJsonLd} />
 </svelte:head>
@@ -588,7 +588,7 @@
     padding: 4px 12px;
     border-radius: 999px;
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     font-family: "Barlow Condensed", sans-serif;
     font-size: 0.78rem;
     font-weight: 800;
@@ -667,7 +667,7 @@
   .pro-offer-btn:hover:not(:disabled) {
     background: var(--accent);
     border-color: var(--accent);
-    color: #000;
+    color: var(--on-accent);
   }
   .pro-offer-btn:active:not(:disabled) {
     transform: scale(0.98);
@@ -675,7 +675,7 @@
   .pro-offer.featured .pro-offer-btn {
     background: var(--accent);
     border-color: var(--accent);
-    color: #000;
+    color: var(--on-accent);
   }
   .pro-offer-btn:disabled {
     opacity: 0.55;
@@ -941,7 +941,7 @@
   .pro-cta-btn {
     display: inline-block;
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     font-weight: 800;
     font-family: "Barlow Condensed", sans-serif;
     padding: 12px 28px;

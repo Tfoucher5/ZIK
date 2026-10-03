@@ -2,11 +2,13 @@
   import { dicebear } from '$lib/utils.js';
   import { page } from '$app/state';
   import NotificationsMenu from '$lib/components/NotificationsMenu.svelte';
+  import ThemeMenu from '$lib/components/ThemeMenu.svelte';
 
   /** @type {{ user: any, onLogin: () => void, onRegister: () => void, onLogout: () => void }} */
   let { user, onLogin, onRegister, onLogout } = $props();
 
   let dropdownOpen = $state(false);
+  let themeOpen    = $state(false);
 
   const name   = $derived(user?.profile?.username || user?.email?.split('@')[0] || 'Joueur');
   const avatar = $derived(user?.profile?.avatar_url || dicebear(name));
@@ -24,13 +26,21 @@
     return '';
   });
 
+  // Les deux popovers s'excluent : ouvrir l'un ferme l'autre.
   function toggleDropdown(e) {
     e.stopPropagation();
+    themeOpen = false;
     dropdownOpen = !dropdownOpen;
+  }
+
+  function toggleTheme(e) {
+    e.stopPropagation();
+    dropdownOpen = false;
+    themeOpen = !themeOpen;
   }
 </script>
 
-<svelte:window onclick={() => { dropdownOpen = false; }} />
+<svelte:window onclick={() => { dropdownOpen = false; themeOpen = false; }} />
 
 <nav id="navbar">
   <a href="/" class="nav-logo">ZIK<span>.</span></a>
@@ -46,7 +56,7 @@
     <span class="nav-sep" aria-hidden="true">·</span>
     <a href="/classements" class="nav-link" class:active={activeSection === 'classements'}>Classements</a>
     <span class="nav-sep" aria-hidden="true">·</span>
-    <a href="/docs"        class="nav-link" class:active={activeSection === 'docs'}>Docs</a>
+    <a href="/docs"        class="nav-link" class:active={activeSection === 'docs'}>Aide</a>
   </div>
 
   <div class="nav-right">
@@ -54,6 +64,8 @@
       <span class="nav-salon-dot"></span>
       Mode Salon
     </a>
+
+    <ThemeMenu open={themeOpen} onToggle={toggleTheme} />
 
     {#if user}
       <NotificationsMenu />
@@ -64,18 +76,30 @@
           <span class="nav-chevron">&#x25BE;</span>
         </button>
         <div class="nav-dropdown" class:open={dropdownOpen}>
+          <div class="nav-dd-head">
+            <img src={avatar} alt="" width="34" height="34" class="nav-dd-head-av" loading="lazy" decoding="async">
+            <span class="nav-dd-head-info">
+              <span class="nav-dd-head-name">{name}</span>
+              {#if user?.profile?.elo != null}
+                <span class="nav-dd-head-elo">{user.profile.elo} ELO</span>
+              {/if}
+            </span>
+          </div>
+
+          <span class="nav-dd-group">Mon compte</span>
           <a href="/profile"  class="nav-dd-item">Mon profil</a>
           <a href="/settings" class="nav-dd-item">Param&egrave;tres</a>
-          <hr class="nav-dd-sep nav-dd-mobile-only">
-          <a href="/rooms"        class="nav-dd-item nav-dd-mobile-only">Rooms</a>
-          <a href="/zikle"       class="nav-dd-item nav-dd-mobile-only">Zikle</a>
-          <a href="/playlists"   class="nav-dd-item nav-dd-mobile-only">Playlists</a>
+
+          <span class="nav-dd-group nav-dd-mobile-only">Naviguer</span>
           <a href="/classements" class="nav-dd-item nav-dd-mobile-only">Classements</a>
-          <a href="/salon"       class="nav-dd-item nav-dd-mobile-only">Mode Salon</a>
+          <a href="/docs"        class="nav-dd-item nav-dd-mobile-only">Aide et r&egrave;gles</a>
+          <a href="/soutenir"    class="nav-dd-item nav-dd-mobile-only">Soutenir ZIK</a>
+
           {#if user?.profile?.role === 'super_admin'}
           <hr class="nav-dd-sep">
           <a href="/admin" class="nav-dd-item nav-dd-admin">Admin</a>
           {/if}
+          <hr class="nav-dd-sep">
           <button class="nav-dd-item nav-dd-logout" onclick={onLogout}>D&eacute;connexion</button>
         </div>
       </div>
@@ -109,9 +133,5 @@
   <a href="/salon" class="bottom-nav-item" class:active={activeSection === 'salon'}>
     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
     Salon
-  </a>
-  <a href="/profile" class="bottom-nav-item" class:active={activeSection === 'profile'}>
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-    Profil
   </a>
 </nav>

@@ -3,6 +3,7 @@
   import { toast } from '$lib/toast.svelte.js';
   import Modal from '$lib/components/Modal.svelte';
   import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
+  import { THEMES, getTheme, setTheme } from '$lib/theme.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -11,7 +12,7 @@
 
   let animOn       = $state(true);
   let volVal     = $state(50);
-  let activeTheme = $state('dark');
+  let activeTheme = $state('light');
   let isPrivate  = $state(false);
   let privLoading = $state(false);
   let discordLoading = $state(false);
@@ -117,27 +118,15 @@
     }
   }
 
-  const THEMES = [
-    { id: 'dark',     label: 'Sombre',   bg: '#080808', accent: '#ff00ff' },
-    { id: 'light',    label: 'Clair',    bg: '#e8edf8', accent: '#0ea5e9' },
-    { id: 'violet',   label: 'Violet',   bg: '#0c0814', accent: '#a78bfa' },
-    { id: 'ocean',    label: 'Océan',    bg: '#050b13', accent: '#22d3ee' },
-    { id: 'sunset',   label: 'Sunset',   bg: '#140806', accent: '#fb923c' },
-    { id: 'emeraude', label: 'Émeraude', bg: '#04100a', accent: '#34d399' },
-  ];
-
-  function setTheme(t) {
+  function pickTheme(t) {
     activeTheme = t;
-    localStorage.setItem('zik_theme', t);
-    document.documentElement.setAttribute('data-theme', t);
-    const bg = THEMES.find((th) => th.id === t)?.bg;
-    if (bg) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = bg; });
+    setTheme(t);
   }
 
   onMount(() => {
     animOn = localStorage.getItem('zik_animations') !== 'off';
     volVal = parseInt(localStorage.getItem('zik_vol') ?? '50');
-    activeTheme = localStorage.getItem('zik_theme') || 'dark';
+    activeTheme = getTheme();
     const el = document.getElementById('pref-volume');
     if (el) el.style.setProperty('--vol', volVal + '%');
   });
@@ -223,7 +212,7 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — Paramètres</title>
+  <title>ZIK - Paramètres</title>
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
@@ -245,8 +234,9 @@
             <button
               class="theme-swatch {activeTheme === theme.id ? 'active' : ''}"
               style="--swatch-bg:{theme.bg};--swatch-accent:{theme.accent}"
-              onclick={() => setTheme(theme.id)}
+              onclick={() => pickTheme(theme.id)}
               aria-label="Th&egrave;me {theme.label}"
+              aria-pressed={activeTheme === theme.id}
               title={theme.label}
             >
               <span class="swatch-preview">
@@ -351,6 +341,7 @@
                 alt="Avatar Discord"
                 class="discord-avatar"
                 width="32" height="32"
+                loading="lazy" decoding="async"
               />
             {/if}
             <button class="btn-unlink" onclick={unlinkDiscord} disabled={discordLoading}>
@@ -499,10 +490,10 @@
 .settings-row:last-child { border-bottom: none; }
 .settings-row-info { flex: 1; min-width: 0; }
 .settings-row-label { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
-.settings-row-desc { font-size: 0.75rem; color: var(--dim); line-height: 1.45; }
+.settings-row-desc { font-size: 0.82rem; color: var(--mid); line-height: 1.45; }
 
 /* -- Theme picker -- */
-.settings-row-theme { align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.settings-row-theme { flex-direction: column; align-items: stretch; gap: 14px; }
 .theme-picker { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
 .theme-swatch {
   display: flex;
@@ -677,7 +668,6 @@ a.btn-unlink { text-decoration: none; white-space: nowrap; }
 /* -- Responsive -- */
 @media (max-width: 640px) {
   .settings-row { flex-wrap: wrap; gap: 12px; }
-  .settings-row-theme { flex-direction: column; align-items: stretch; }
   .theme-picker { width: 100%; justify-content: space-between; }
   .theme-swatch { flex: 1; min-width: 0; }
   .swatch-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

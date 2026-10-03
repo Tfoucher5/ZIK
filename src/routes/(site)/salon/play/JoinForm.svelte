@@ -20,19 +20,23 @@
       type="text"
       bind:value={codeInput}
       placeholder="······"
+      autocapitalize="characters"
+      enterkeyhint="next"
       maxlength="6"
       autocomplete="off"
       spellcheck="false"
       oninput={e => { codeInput = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
-      onkeydown={e => { if (e.key === 'Enter') onJoin(); }}
+      onkeydown={e => { if (e.key === 'Enter') { if (usernameInput.trim()) onJoin(); else document.getElementById('sp-username')?.focus(); } }}
     >
   </label>
   <label class="sp-field">
     <span class="sx-kicker">Ton pseudo</span>
     <input
       type="text"
+      id="sp-username"
       bind:value={usernameInput}
-      placeholder="MonPseudo"
+      placeholder="Ex. : Julie"
+      enterkeyhint="go"
       maxlength="20"
       autocomplete="off"
       onkeydown={e => { if (e.key === 'Enter') onJoin(); }}

@@ -12,7 +12,7 @@
   .empty-state {
     text-align: center;
     padding: 48px 20px;
-    color: rgb(var(--c-glass) / 0.4);
+    color: var(--mid);
   }
   .empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
   .empty-title { font-size: 1rem; font-weight: 600; color: rgb(var(--c-glass) / 0.6); margin: 0 0 6px; }

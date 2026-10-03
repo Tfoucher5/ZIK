@@ -90,9 +90,10 @@
   <div class="salon-host-cta">
     <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>
     <a href="/?auth=register&ref=salon-invite" class="sx-btn sx-btn-primary">Créer mon compte</a>
-    <a href="/salon?ref=invite" class="salon-join-link">Ou organiser un salon sans compte</a>
+    <a href="/salon?ref=invite" class="salon-join-link">Ou organiser une soirée sans compte</a>
+    <a href="/zikle" class="salon-join-link">Et demain : devine la chanson du jour sur Zikle</a>
   </div>
-  <button class="salon-join-link" onclick={onLeave}>Rejoindre un autre salon</button>
+  <button class="salon-join-link" onclick={onLeave}>Rejoindre une autre soirée</button>
 {/if}
 
 <style>

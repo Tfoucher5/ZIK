@@ -20,15 +20,15 @@
 </script>
 
 <svelte:head>
-  <title>ZIK vs Blindtest.io — Comparaison des blind tests musicaux en ligne</title>
+  <title>ZIK vs Blindtest.io - Comparaison des blind tests musicaux en ligne</title>
   <meta name="description" content="ZIK ou Blindtest.io ? Comparaison factuelle : ZIK propose l'import Deezer, un classement ELO compétitif et un Mode Salon pour les soirées. Gratuit, sans inscription." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/vs/blindtest-io" />
-  <meta property="og:title" content="ZIK vs Blindtest.io — Comparaison blind test en ligne" />
+  <meta property="og:title" content="ZIK vs Blindtest.io - Comparaison blind test en ligne" />
   <meta property="og:description" content="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. ZIK permet l'import de playlists Deezer et propose un Mode Salon pour les soirées." />
   <meta property="og:url" content="https://www.zik-music.fr/vs/blindtest-io" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
   <JsonLd json={jsonLd} />
 </svelte:head>
 
@@ -93,14 +93,14 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>Import playlists Deezer</td><td class="yes">✓</td><td class="no">✗</td></tr>
-            <tr><td>Multijoueur en temps réel</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Classement ELO compétitif</td><td class="yes">✓</td><td class="no">✗</td></tr>
-            <tr><td>Mode Salon (TV + smartphones)</td><td class="yes">✓</td><td class="no">✗</td></tr>
-            <tr><td>Mode QCM</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Rooms privées avec code</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Sans inscription obligatoire</td><td class="yes">✓</td><td class="partial">Variable</td></tr>
-            <tr><td>Jeu en ligne gratuit</td><td class="yes">✓</td><td class="partial">Variable</td></tr>
+            <tr><td>Import playlists Deezer</td><td class="yes" data-label="ZIK">✓</td><td class="no" data-label="Blindtest.io">✗</td></tr>
+            <tr><td>Multijoueur en temps réel</td><td class="yes" data-label="ZIK">✓</td><td class="yes" data-label="Blindtest.io">✓</td></tr>
+            <tr><td>Classement ELO compétitif</td><td class="yes" data-label="ZIK">✓</td><td class="no" data-label="Blindtest.io">✗</td></tr>
+            <tr><td>Mode Salon (TV + smartphones)</td><td class="yes" data-label="ZIK">✓</td><td class="no" data-label="Blindtest.io">✗</td></tr>
+            <tr><td>Mode QCM</td><td class="yes" data-label="ZIK">✓</td><td class="yes" data-label="Blindtest.io">✓</td></tr>
+            <tr><td>Rooms privées avec code</td><td class="yes" data-label="ZIK">✓</td><td class="yes" data-label="Blindtest.io">✓</td></tr>
+            <tr><td>Sans inscription obligatoire</td><td class="yes" data-label="ZIK">✓</td><td class="partial" data-label="Blindtest.io">Variable</td></tr>
+            <tr><td>Jeu en ligne gratuit</td><td class="yes" data-label="ZIK">✓</td><td class="partial" data-label="Blindtest.io">Variable</td></tr>
           </tbody>
         </table>
       </div>
@@ -128,7 +128,7 @@
   .vs-page {
     max-width: 800px;
     margin: 0 auto;
-    padding: 48px clamp(16px, 5vw, 48px) 80px;
+    padding: calc(var(--nav-h) + 32px) clamp(16px, 5vw, 48px) 80px;
   }
   .vs-back a {
     font-size: 0.82rem;
@@ -214,7 +214,7 @@
   .vs-cta-btn {
     display: inline-block;
     background: var(--accent);
-    color: #000;
+    color: var(--on-accent);
     font-weight: 800;
     font-family: "Barlow Condensed", sans-serif;
     padding: 12px 28px;
@@ -223,4 +223,39 @@
     transition: opacity 0.15s;
   }
   .vs-cta-btn:hover { opacity: 0.85; }
+
+  @media (max-width: 768px) {
+    .vs-page { padding: calc(var(--nav-h) + 20px) 16px 56px; }
+    .vs-back { margin-bottom: 20px; }
+    .vs-header { margin-bottom: 28px; }
+    .vs-logos { gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .vs-logo-zik, .vs-logo-other { font-size: 1.25rem; }
+    .vs-section { margin-bottom: 26px; padding-bottom: 26px; }
+    .vs-cta { margin-top: 32px; padding: 24px 18px; }
+  }
+
+  /* Le tableau comparatif passe en lignes empilées : le scroll horizontal est
+     pénalisé en ergonomie mobile. */
+  @media (max-width: 560px) {
+    .vs-table-wrap { overflow-x: visible; }
+    .vs-table thead { display: none; }
+    .vs-table, .vs-table tbody, .vs-table tr, .vs-table td { display: block; width: 100%; }
+    .vs-table tr {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .vs-table td { border-bottom: none; padding: 3px 0; }
+    .vs-table td:first-child {
+      font-weight: 700;
+      font-size: 0.86rem;
+      margin-bottom: 4px;
+    }
+    .vs-table td:not(:first-child)::before {
+      content: attr(data-label) " : ";
+      color: var(--dim);
+      font-weight: 600;
+    }
+  }
 </style>

@@ -14,12 +14,20 @@ const DEFAULT_NAMES = [
   "Blanche",
 ];
 
-export function makeTeams(count) {
+/**
+ * Construit la liste des équipes.
+ *
+ * `existantes` permet de conserver les noms déjà personnalisés : changer le
+ * nombre d'équipes effaçait sinon tout ce que l'hôte avait saisi, puisque la
+ * liste était reconstruite depuis les noms par défaut.
+ */
+export function makeTeams(count, existantes = null) {
   const n = Math.min(Math.max(Number(count) || 0, 0), MAX_TEAMS);
   if (n < 2) return null;
+  const connues = new Map((existantes ?? []).map((t) => [t.id, t.name]));
   return Array.from({ length: n }, (_, id) => ({
     id,
-    name: DEFAULT_NAMES[id],
+    name: connues.get(id) ?? DEFAULT_NAMES[id],
   }));
 }
 
@@ -29,19 +37,7 @@ export function cleanTeamName(name) {
     .slice(0, 24);
 }
 
-// Équipe la moins remplie, pour qu'un nouvel arrivant ne déséquilibre rien
-export function smallestTeam(teams, players) {
-  if (!teams) return null;
-  const sizes = teams.map((t) => players.filter((p) => p.team === t.id).length);
-  return teams[sizes.indexOf(Math.min(...sizes))].id;
-}
-
 // Répartition à tour de rôle, dans l'ordre d'arrivée
-export function spreadPlayers(teams, players) {
-  players.forEach((p, i) => {
-    p.team = teams ? teams[i % teams.length].id : null;
-  });
-}
 
 export function teamStandings(teams, players) {
   if (!teams) return null;

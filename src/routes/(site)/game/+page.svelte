@@ -720,6 +720,12 @@
         adminLocked = roomConfig.adminBlocked || false;
         if (adminLocked) startDisabled = true;
         if (roomConfig.gameMode) gameMode = roomConfig.gameMode;
+        // Proposée en « Reprendre » sur l'accueil
+        try {
+          localStorage.setItem('zik_last_room', JSON.stringify({
+            id: ROOM_ID, name: roomConfig.name || ROOM_ID, emoji: roomConfig.emoji || '', gameMode,
+          }));
+        } catch { /* stockage indisponible */ }
       }
     });
     socket.on('game_countdown', ({ seconds }) => { startCountdownUI(seconds); });
@@ -958,10 +964,10 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — En jeu</title>
+  <title>ZIK - En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.8.2">
+  <link rel="stylesheet" href="/css/game.css?v=3.12.0">
 </svelte:head>
 
 {#if showDcBanner}
@@ -1015,14 +1021,14 @@
     <div class="g-round-info">{roundInfo}</div>
     <div class="g-header-spacer"></div>
     <div class="g-header-right">
-      <button class="g-chat-toggle" onclick={toggleChat} title="Chat" class:g-chat-active={chatOpen}>
+      <button class="g-chat-toggle" onclick={toggleChat} title="Chat" aria-label="Ouvrir le chat" class:g-chat-active={chatOpen}>
         &#x1F4AC;
         {#if chatUnread > 0}<span class="g-chat-badge">{chatUnread > 9 ? '9+' : chatUnread}</span>{/if}
       </button>
       {#if canInviteFriends}
-        <button class="g-bug-btn" onclick={openInviteFriends} title="Inviter des amis dans cette room">👋</button>
+        <button class="g-bug-btn" onclick={openInviteFriends} title="Inviter des amis dans cette room" aria-label="Inviter des amis dans cette room">👋</button>
       {/if}
-      <button class="g-bug-btn" onclick={openBugReport} title="Signaler un bug">🐛</button>
+      <button class="g-bug-btn" onclick={openBugReport} title="Signaler un bug" aria-label="Signaler un bug">🐛</button>
       <div class="g-vol">
         <span class="g-vol-label">VOL</span>
         <input type="range" id="volSlider" min="0" max="100" value={volValue} oninput={e => setVol(parseInt(e.target.value))} aria-label="Volume">
@@ -1036,7 +1042,7 @@
 
     <!-- Sidebar gauche : classement -->
     <aside class="g-sidebar g-sidebar-scores">
-      <div class="g-sidebar-title">Classement <span class="n">{players.length} J.</span></div>
+      <div class="g-sidebar-title">Classement <span class="n">{players.length} joueur{players.length > 1 ? 's' : ''}</span></div>
       <div class="g-player-list" id="player-list">
         {#each players as p, i (p.name)}
           <div class="g-strip rank-{i+1}" class:me={p.name === USERNAME}>
@@ -1045,8 +1051,8 @@
               <span class="g-strip-name">
                 <a href="/user/{p.name}" class="g-player-link" onclick={e => e.stopPropagation()}>{p.name}</a>
                 <span class="g-badges">
-                  <span class="g-badge {p.foundArtist ? 'found' : ''}">A</span>
-                  <span class="g-badge {p.foundTitle ? 'found' : ''}">T</span>
+                  <span class="g-badge {p.foundArtist ? 'found' : ''}" title={p.foundArtist ? 'Artiste trouvé' : 'Artiste pas encore trouvé'}>A</span>
+                  <span class="g-badge {p.foundTitle ? 'found' : ''}" title={p.foundTitle ? 'Titre trouvé' : 'Titre pas encore trouvé'}>T</span>
                   {#if p.foundFeats?.some(Boolean)}<span class="g-badge found">F</span>{/if}
                 </span>
               </span>
@@ -1382,6 +1388,14 @@
           {/each}
         </div>
 
+        {#if IS_GUEST}
+          {@const myScore = gameoverScores.find(p => p.name === USERNAME)?.score ?? 0}
+          <p class="g-go-guest-note">
+            Tu joues en invité : {myScore > 0 ? `tes ${myScore} pts ne seront pas gardés` : 'ton score n’est pas gardé'}.
+            Un compte gratuit les enregistre et te fait entrer au classement.
+          </p>
+        {/if}
+
         <div class="g-go-actions">
         <div class="g-go-lead">
           {#if rejoinIn > 0}
@@ -1407,7 +1421,7 @@
         {#if IS_GUEST}
           <a href="/?auth=register&ref=room-guest" class="g-go-share">Créer un compte gratuit</a>
         {/if}
-        <a href="/" class="g-go-back">Changer de room</a>
+        <a href="/rooms" class="g-go-back">Changer de room</a>
         <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="g-go-discord">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path fill-rule="evenodd" clip-rule="evenodd" fill="white" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942.0209-.0406.0098-.0895-.0321-.1112a13.201 13.201 0 0 1-1.8735-.8914.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>

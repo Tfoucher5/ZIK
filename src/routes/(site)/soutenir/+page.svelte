@@ -1,5 +1,9 @@
 <script>
   import { KOFI_URL } from '$lib/support.js';
+  import JsonLd from '$lib/components/JsonLd.svelte';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Soutenir ZIK', path: '/soutenir' }]);
+
 
   // Pseudos des personnes qui ont soutenu le projet - ajoutés à la main.
   const SUPPORTERS = [];
@@ -10,6 +14,7 @@
   <meta name="description" content="ZIK est gratuit et le restera. Si le blind test te plaît, tu peux aider à payer le serveur." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/soutenir" />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <main class="sup-root">

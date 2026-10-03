@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>Défi du {range} — Archives | ZIK</title>
+  <title>Défi du {range} - Archives | ZIK</title>
   <meta name="description" content="Défi communautaire {week.label} du {range} : {statusLabel}. Retrouve le classement complet des contributeurs." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/defi/archives/{week.week_start}" />

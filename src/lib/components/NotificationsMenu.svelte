@@ -76,7 +76,7 @@
           {@const uname = n.actor?.username || 'Un joueur'}
           <div class="notif-item">
             <a class="notif-av" href="/user/{uname}">
-              <img src={n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32">
+              <img src={n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async">
             </a>
             <div class="notif-body">
               {#if n.type === 'friend_request'}

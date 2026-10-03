@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   makeTeams,
-  smallestTeam,
-  spreadPlayers,
   teamStandings,
   cleanTeamName,
 } from "../socket/salonTeams.js";
@@ -18,26 +16,35 @@ describe("makeTeams", () => {
   it("plafonne à huit équipes", () => {
     expect(makeTeams(12)).toHaveLength(8);
   });
-});
 
-describe("smallestTeam", () => {
-  it("envoie le nouvel arrivant dans l'équipe la moins remplie", () => {
-    const teams = makeTeams(3);
-    expect(smallestTeam(teams, [p("a", 0), p("b", 0), p("c", 1)])).toBe(2);
-  });
-});
-
-describe("spreadPlayers", () => {
-  it("répartit à tour de rôle", () => {
-    const players = [p("a"), p("b"), p("c"), p("d")];
-    spreadPlayers(makeTeams(2), players);
-    expect(players.map((x) => x.team)).toEqual([0, 1, 0, 1]);
+  it("garde les noms déjà personnalisés quand le nombre change", () => {
+    const avant = makeTeams(2);
+    avant[0].name = "Les Bretons";
+    avant[1].name = "Table du fond";
+    const apres = makeTeams(4, avant);
+    expect(apres[0].name).toBe("Les Bretons");
+    expect(apres[1].name).toBe("Table du fond");
   });
 
-  it("retire les équipes quand il n'y en a plus", () => {
-    const players = [p("a", 1)];
-    spreadPlayers(null, players);
-    expect(players[0].team).toBeNull();
+  it("donne un nom par défaut aux équipes ajoutées", () => {
+    const avant = makeTeams(2);
+    avant[0].name = "Les Bretons";
+    const apres = makeTeams(4, avant);
+    expect(apres[2].name).toBe("Jaune");
+    expect(apres[3].name).toBe("Verte");
+  });
+
+  it("oublie les noms des équipes retirées", () => {
+    const avant = makeTeams(4);
+    avant[3].name = "Supprimée";
+    const apres = makeTeams(2, avant);
+    expect(apres).toHaveLength(2);
+    expect(apres.some((t) => t.name === "Supprimée")).toBe(false);
+  });
+
+  it("repart des noms par défaut sans équipes existantes", () => {
+    expect(makeTeams(2)[0].name).toBe("Rouge");
+    expect(makeTeams(2, null)[0].name).toBe("Rouge");
   });
 });
 

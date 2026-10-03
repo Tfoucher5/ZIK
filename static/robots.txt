@@ -1,11 +1,11 @@
 User-agent: *
 Allow: /
 
+# Seules les routes d'API sont bloquées au crawl.
+# Les pages privées (/game, /settings, /profile, /salon/*, /results/*) portent un
+# <meta name="robots" content="noindex"> : les bloquer ici empêcherait Google de
+# lire ce noindex, et l'URL pourrait apparaître en résultat sans description.
 Disallow: /api/
-Disallow: /game
-Disallow: /settings
-Disallow: /profile
-Disallow: /salon/play
 
 Sitemap: https://www.zik-music.fr/sitemap.xml
 

@@ -209,6 +209,8 @@
   }
 
   onMount(async () => {
+    // Écran TV : sombre par défaut pour ne pas éblouir la pièce, sauf thème choisi
+    if (!localStorage.getItem('zik_theme')) document.documentElement.setAttribute('data-theme', 'dark');
     const params = new URLSearchParams(window.location.search);
     code = params.get('code')?.toUpperCase() || '';
     if (!code) { window.location.href = '/salon'; return; }
@@ -232,6 +234,9 @@
   onDestroy(() => {
     socket?.disconnect();
     clearAutoNext();
+    if (typeof localStorage !== 'undefined' && !localStorage.getItem('zik_theme')) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
   });
 </script>
 

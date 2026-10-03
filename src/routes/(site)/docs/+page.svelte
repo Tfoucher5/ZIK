@@ -73,14 +73,14 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — Documentation | Blind Test Multijoueur</title>
+  <title>ZIK - Documentation | Blind Test Multijoueur</title>
   <meta name="description" content="Guide complet du blind test ZIK : comment jouer, système de points et bonus vitesse, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ. Gratuit en ligne." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/docs" />
-  <meta property="og:title" content="Guide complet — Blind Test ZIK | Règles, Points, Mode Salon" />
+  <meta property="og:title" content="Guide complet - Blind Test ZIK | Règles, Points, Mode Salon" />
   <meta property="og:description" content="Guide complet du blind test ZIK : comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ." />
   <meta property="og:url" content="https://www.zik-music.fr/docs" />
-  <meta name="twitter:title" content="Guide complet — Blind Test ZIK | Règles, Points, Mode Salon" />
+  <meta name="twitter:title" content="Guide complet - Blind Test ZIK | Règles, Points, Mode Salon" />
   <meta name="twitter:description" content="Comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ. Guide complet du blind test ZIK." />
 
   <JsonLd json={jsonLdPage} />
@@ -881,7 +881,7 @@
     <section>
       <h2 id="classement">Classements</h2>
 
-      <h3>ELO all-time</h3>
+      <h3>ELO depuis toujours</h3>
       <p>
         Le classement ELO est le classement de référence de ZIK. Il utilise un <strong>vrai système ELO pairwise</strong> : votre ELO évolue en fonction du niveau de chacun de vos adversaires, pas seulement de votre position finale.
       </p>
@@ -898,7 +898,7 @@
 
       <h3>Classement hebdomadaire</h3>
       <p>
-        En parallèle du classement ELO all-time, un <strong>classement hebdomadaire</strong> repart de zéro chaque lundi à minuit. Il prend en compte le total de points bruts accumulés durant la semaine. Il donne sa chance à tout le monde, même aux joueurs avec un ELO faible, de briller sur une semaine donnée.
+        En parallèle du classement ELO général, un <strong>classement hebdomadaire</strong> repart de zéro chaque lundi à minuit. Il prend en compte le total de points bruts accumulés durant la semaine. Il donne sa chance à tout le monde, même aux joueurs avec un ELO faible, de briller sur une semaine donnée.
       </p>
 
       <div class="doc-tip">

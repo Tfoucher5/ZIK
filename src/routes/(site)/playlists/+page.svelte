@@ -5,6 +5,9 @@
   import TrackRow from './TrackRow.svelte';
   import TrackSearch from './TrackSearch.svelte';
   import { toast } from '$lib/toast.svelte.js';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Playlists', path: '/playlists' }]);
+
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -388,29 +391,30 @@
 </script>
 
 <svelte:head>
-  <title>Playlists de Blind Test — Créer &amp; Importer depuis Deezer | ZIK</title>
+  <title>Playlists de Blind Test - Créer &amp; Importer depuis Deezer | ZIK</title>
   <meta name="description" content="Créez vos playlists de blind test musical. Importez depuis Deezer, ajoutez des titres manuellement. Lancez une room depuis votre playlist en un clic. Gratuit." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/playlists" />
 
-  <meta property="og:title" content="Playlists de Blind Test — Import Deezer | ZIK" />
+  <meta property="og:title" content="Playlists de Blind Test - Import Deezer | ZIK" />
   <meta property="og:description" content="Créez vos playlists de blind test, importez depuis Deezer. Lancez une room directement. Gratuit, sans limite." />
   <meta property="og:url" content="https://www.zik-music.fr/playlists" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Playlists de Blind Test | ZIK" />
   <meta name="twitter:description" content="Importez vos playlists Deezer et jouez au blind test avec vos musiques. Gratuit." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
 
   <JsonLd json={playlistsJsonLd} />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <header class="page-head">
   <div class="page-head-inner">
     <h1 class="page-head-title">Playlists</h1>
-    <p class="page-head-sub">Crée, importe, joue · Deezer ou manuellement</p>
+    <p class="page-head-sub">Importe tes playlists Deezer ou crée-les à la main, puis lance une partie avec.</p>
   </div>
 </header>
 
@@ -451,7 +455,7 @@
               <div class="pl-item-name">{pl.name}</div>
               <div class="pl-item-count">{pl.track_count ?? 0} titre{(pl.track_count ?? 0) !== 1 ? 's' : ''}</div>
             </div>
-            <span class="pl-badge {pl.is_public ? 'pl-badge-pub' : 'pl-badge-priv'}">{pl.is_public ? 'PUB' : 'PRIV'}</span>
+            <span class="pl-badge {pl.is_public ? 'pl-badge-pub' : 'pl-badge-priv'}">{pl.is_public ? 'Publique' : 'Privée'}</span>
           </div>
         {/each}
       </div>
@@ -838,7 +842,7 @@
 .pl-item-count { font-size: 0.62rem; color: var(--dim); margin-top: 2px; }
 
 .pl-badge {
-  font-size: 0.55rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

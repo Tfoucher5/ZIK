@@ -184,7 +184,7 @@
   .bt-cta:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--text); }
   .bt-cta b { font-family: "Barlow Condensed", sans-serif; font-size: 1.35rem; font-weight: 900; text-transform: uppercase; }
   .bt-cta span { font-size: 0.82rem; color: var(--mid); }
-  .bt-cta-main { background: var(--accent); color: #000; box-shadow: 4px 4px 0 var(--text); }
+  .bt-cta-main { background: var(--accent); color: var(--on-accent); box-shadow: 4px 4px 0 var(--text); }
   .bt-cta-main:hover { box-shadow: 6px 6px 0 var(--text); }
   .bt-cta-main span { color: rgb(0 0 0 / 0.7); }
 

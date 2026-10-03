@@ -3,7 +3,11 @@
   import { onMount, getContext } from 'svelte';
   import Toast from '$lib/components/Toast.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
+  import GuestModal from '$lib/components/GuestModal.svelte';
   import { toast } from '$lib/toast.svelte.js';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Rooms', path: '/rooms' }]);
+
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -230,12 +234,17 @@
     }
   }
 
-  function joinRoom(code, gameMode = 'classic') {
-    const username = user?.profile?.username || user?.email?.split('@')[0] || 'Joueur';
-    const userId   = user?.id || '';
-    const isGuest  = user ? '0' : '1';
-    const p = new URLSearchParams({ roomId: code, username, userId, isGuest, gameMode });
+  let guestOpen = $state(false);
+  let pendingJoin = null;
+
+  function goToGame(code, gameMode, username, userId) {
+    const p = new URLSearchParams({ roomId: code, username, userId, isGuest: userId ? '0' : '1', gameMode });
     window.location.href = `/game?${p}`;
+  }
+
+  function joinRoom(code, gameMode = 'classic') {
+    if (!user) { pendingJoin = { code, gameMode }; guestOpen = true; return; }
+    goToGame(code, gameMode, user.profile?.username || user.email?.split('@')[0] || 'Joueur', user.id);
   }
 
   async function openCreate() {
@@ -315,20 +324,21 @@
 </script>
 
 <svelte:head>
-  <title>Rooms de Blind Test Multijoueur en Ligne — ZIK</title>
+  <title>Rooms de Blind Test Multijoueur en Ligne - ZIK</title>
   <meta name="description" content="Rejoins une room de blind test multijoueur gratuit ou crée la tienne. Mode Classique avec classement ELO ou Mode QCM, playlists Deezer. Jusqu'à 20 joueurs en temps réel." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/rooms" />
-  <meta property="og:title" content="Rooms de Blind Test Multijoueur — ZIK" />
+  <meta property="og:title" content="Rooms de Blind Test Multijoueur - ZIK" />
   <meta property="og:description" content="Rejoins une room de blind test en ligne ou crée la tienne. Mode Classique ELO ou QCM casual. Playlists Deezer. Gratuit, sans inscription." />
   <meta property="og:url" content="https://www.zik-music.fr/rooms" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
+  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Rooms de Blind Test Multijoueur — ZIK" />
+  <meta name="twitter:title" content="Rooms de Blind Test Multijoueur - ZIK" />
   <meta name="twitter:description" content="Rejoins ou crée une room de blind test en ligne. Mode Classique ELO ou QCM. Gratuit, sans inscription." />
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.11.0" />
+  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
   <JsonLd json={roomsJsonLd} />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <div class="rooms-page">
@@ -337,11 +347,9 @@
   <div class="rp-head">
     <div>
       <h1>Rooms</h1>
-      <p class="rp-sub">Classique ELO · QCM · Officiel &amp; Custom</p>
+      <p class="rp-sub">Rejoins une partie en ligne, ou crée ta room avec tes playlists.</p>
     </div>
-    {#if user}
-      <button class="btn-accent rp-btn-create" onclick={openCreate}>+ Créer une room</button>
-    {/if}
+    <button class="btn-accent rp-btn-create" onclick={openCreate}>+ Créer une room</button>
   </div>
 
   <!-- TOOLBAR : tabs underline + search inline -->
@@ -355,7 +363,7 @@
     {#if tab === 'public'}
       <div class="rp-search-wrap">
         <span class="rp-search-icon">⌕</span>
-        <input class="rp-search" type="search" bind:value={pubSearch} placeholder="Rechercher une room..." />
+        <input class="rp-search" type="search" bind:value={pubSearch} placeholder="Rechercher une room…" aria-label="Rechercher une room" />
       </div>
     {/if}
   </div>
@@ -363,13 +371,13 @@
   <!-- FILTRES / CHIPS -->
   {#if tab === 'public'}
     <div class="rp-chips">
-      <button class="chip" class:on={filterActive} onclick={() => filterActive = !filterActive}>● Live</button>
-      <button class="chip" class:on={filterAutoStart} onclick={() => filterAutoStart = !filterAutoStart}>Auto-start</button>
-      <button class="chip" class:on={filterQcm} onclick={() => { filterQcm = !filterQcm; if (filterQcm) filterClassic = false; }}>QCM</button>
-      <button class="chip" class:on={filterClassic} onclick={() => { filterClassic = !filterClassic; if (filterClassic) filterQcm = false; }}>Classique</button>
-      <button class="chip" class:on={filterOfficial} onclick={() => filterOfficial = !filterOfficial}>Officielles</button>
+      <button class="chip" class:on={filterActive} aria-pressed={filterActive} onclick={() => filterActive = !filterActive}>● Live</button>
+      <button class="chip" class:on={filterAutoStart} aria-pressed={filterAutoStart} onclick={() => filterAutoStart = !filterAutoStart}>Démarrage auto</button>
+      <button class="chip" class:on={filterQcm} aria-pressed={filterQcm} onclick={() => { filterQcm = !filterQcm; if (filterQcm) filterClassic = false; }}>QCM</button>
+      <button class="chip" class:on={filterClassic} aria-pressed={filterClassic} onclick={() => { filterClassic = !filterClassic; if (filterClassic) filterQcm = false; }}>Classique</button>
+      <button class="chip" class:on={filterOfficial} aria-pressed={filterOfficial} onclick={() => filterOfficial = !filterOfficial}>Officielles</button>
       {#if hasActiveFilters}
-        <button class="chip chip-reset" onclick={() => { filterActive = false; filterAutoStart = false; filterQcm = false; filterClassic = false; filterOfficial = false; }}>✕</button>
+        <button class="chip chip-reset" onclick={() => { filterActive = false; filterAutoStart = false; filterQcm = false; filterClassic = false; filterOfficial = false; }}>✕ Effacer les filtres</button>
       {/if}
     </div>
   {/if}
@@ -403,12 +411,12 @@
                       {#if cover}
                         <img src={cover} alt="" loading="lazy" />
                       {:else}
-                        <div class="cover-fallback" style="background:hsl({(j*47+gi*83)%360}deg,28%,10%)"></div>
+                        <div class="cover-fallback" style="--fb-h:{(j*47+gi*83)%360}"></div>
                       {/if}
                     {/each}
                   </div>
                 {:else}
-                  <div class="pw-cover-empty" style="background:linear-gradient(135deg,hsl({gi*53%360}deg,30%,11%),hsl({(gi*53+120)%360}deg,25%,7%))"></div>
+                  <div class="pw-cover-empty" style="--fb-h:{gi*53%360};--fb-h2:{(gi*53+120)%360}"></div>
                 {/if}
                 <div class="pw-dim"></div>
                 <div class="pw-grad"></div>
@@ -527,10 +535,10 @@
               {#if ci < (sel.covers?.length ?? 0)}
                 <img class="mine-cov" src={sel.covers[ci]} alt="" loading="lazy" decoding="async"
                   style="width:{COV_SIZE}px;height:{COV_SIZE}px;top:{pos.y}px;left:{pos.x}px"
-                  onerror={e => { e.currentTarget.style.background = `hsl(${hue}deg,22%,8%)`; e.currentTarget.removeAttribute('src'); }} />
+                  onerror={e => { e.currentTarget.style.setProperty('--fb-h', hue); e.currentTarget.removeAttribute('src'); }} />
               {:else}
                 <div class="mine-cov"
-                  style="width:{COV_SIZE}px;height:{COV_SIZE}px;top:{pos.y}px;left:{pos.x}px;background:hsl({hue}deg,22%,8%)"></div>
+                  style="width:{COV_SIZE}px;height:{COV_SIZE}px;top:{pos.y}px;left:{pos.x}px;--fb-h:{hue}"></div>
               {/if}
             {/each}
           </div>
@@ -755,9 +763,106 @@
 
 <Toast />
 
+<GuestModal
+  open={guestOpen}
+  onClose={() => guestOpen = false}
+  onConfirm={(name) => { guestOpen = false; goToGame(pendingJoin.code, pendingJoin.gameMode, name, ''); }}
+/>
+
 <style>
   /* ── Page layout ── */
   .rooms-page { width: 100%; padding-top: var(--nav-h); padding-bottom: 0; }
+
+  /* ── Traitement « affiche » ──────────────────────────────────────────────
+     Les tuiles de room et le panneau « Mes rooms » écrivent par-dessus des
+     pochettes. Le voile, le halo du texte et l'encre sont donc regroupés ici
+     pour basculer d'un bloc selon le thème : voile noir + encre blanche en
+     sombre, voile blanc + encre sombre en clair.
+     Le voile clair doit être plus opaque que son équivalent sombre : les
+     pochettes sont majoritairement sombres et contrastées, c'est le prix de
+     la lisibilité du titre.
+  ───────────────────────────────────────────────────────────────────────── */
+  .rooms-page {
+    --pw-ink: #fff;
+    --pw-ink-soft: rgba(255, 255, 255, 0.45);
+    --pw-ink-faint: rgba(255, 255, 255, 0.42);
+    --pw-ink-line: rgba(255, 255, 255, 0.55);
+    --pw-ink-code: rgba(255, 255, 255, 0.65);
+    --pw-halo: rgba(0, 0, 0, 1);
+    --pw-veil: rgba(0, 0, 0, 0.18);
+    --pw-chip-bg: rgba(0, 0, 0, 0.7);
+    --pw-chip-mute: rgba(255, 255, 255, 0.4);
+    --pw-chip-mute-bd: rgba(255, 255, 255, 0.18);
+    --pw-ctl-bg: rgba(255, 255, 255, 0.09);
+    --pw-ctl-bd: rgba(255, 255, 255, 0.22);
+    --pw-ctl-bg-h: rgba(255, 255, 255, 0.16);
+    --pw-ctl-bd-h: rgba(255, 255, 255, 0.4);
+    --pw-ok: #4ade80;
+    --pw-warn: #fbbf24;
+    /* Pavés de repli quand une room n'a pas de pochette */
+    --pw-fb-s: 28%;
+    --pw-fb-l: 10%;
+    /* Panneau de survol et colonne « Mes rooms » : opaques, pas sur photo */
+    --pwh-bg: rgba(4, 4, 4, 0.95);
+    --pwh-ink-sub: rgba(255, 255, 255, 0.32);
+    --pwh-ink-dim: rgba(255, 255, 255, 0.22);
+    --pwh-ink-row: rgba(255, 255, 255, 0.72);
+    /* Dégradés du panneau « Mes rooms », posés sur la mosaïque de pochettes */
+    --mg-1: rgba(0, 0, 0, 1);
+    --mg-2: rgba(0, 0, 0, 0.95);
+    --mg-3: rgba(0, 0, 0, 0.7);
+    --mg-4: rgba(0, 0, 0, 0.1);
+    --mg-5: rgba(0, 0, 0, 0);
+    --mg-6: rgba(0, 0, 0, 0.88);
+    --mg-7: rgba(0, 0, 0, 0.45);
+    --pw-grad: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.97) 0%,
+      rgba(0, 0, 0, 0.88) 22%,
+      rgba(0, 0, 0, 0.5) 42%,
+      rgba(0, 0, 0, 0.08) 62%,
+      rgba(0, 0, 0, 0) 80%
+    );
+  }
+  :global(html[data-theme="light"]) .rooms-page {
+    --pw-ink: var(--text);
+    --pw-ink-soft: rgb(var(--c-glass) / 0.62);
+    --pw-ink-faint: rgb(var(--c-glass) / 0.58);
+    --pw-ink-line: rgb(var(--c-glass) / 0.45);
+    --pw-ink-code: rgb(var(--c-glass) / 0.72);
+    --pw-halo: rgba(255, 255, 255, 1);
+    --pw-veil: rgba(255, 255, 255, 0.34);
+    --pw-chip-bg: rgba(255, 255, 255, 0.86);
+    --pw-chip-mute: rgb(var(--c-glass) / 0.55);
+    --pw-chip-mute-bd: rgb(var(--c-glass) / 0.25);
+    --pw-ctl-bg: rgb(var(--c-glass) / 0.06);
+    --pw-ctl-bd: rgb(var(--c-glass) / 0.22);
+    --pw-ctl-bg-h: rgb(var(--c-glass) / 0.12);
+    --pw-ctl-bd-h: rgb(var(--c-glass) / 0.4);
+    --pw-ok: #15803d;
+    --pw-warn: #b45309;
+    --pw-fb-s: 30%;
+    --pw-fb-l: 86%;
+    --pwh-bg: rgb(var(--bg-rgb) / 0.96);
+    --pwh-ink-sub: rgb(var(--c-glass) / 0.55);
+    --pwh-ink-dim: rgb(var(--c-glass) / 0.38);
+    --pwh-ink-row: rgb(var(--c-glass) / 0.78);
+    --mg-1: rgba(255, 255, 255, 1);
+    --mg-2: rgba(255, 255, 255, 0.97);
+    --mg-3: rgba(255, 255, 255, 0.78);
+    --mg-4: rgba(255, 255, 255, 0.18);
+    --mg-5: rgba(255, 255, 255, 0);
+    --mg-6: rgba(255, 255, 255, 0.92);
+    --mg-7: rgba(255, 255, 255, 0.55);
+    --pw-grad: linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(255, 255, 255, 0.92) 22%,
+      rgba(255, 255, 255, 0.62) 42%,
+      rgba(255, 255, 255, 0.14) 62%,
+      rgba(255, 255, 255, 0) 80%
+    );
+  }
   .rp-inner {
     max-width: 1400px;
     margin: 0 auto;
@@ -784,13 +889,9 @@
     margin: 0;
   }
   .rp-sub {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.65rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.22);
-    margin-top: 4px;
+    font-size: 1rem;
+    color: var(--mid);
+    margin-top: 6px;
   }
   .rp-btn-create { flex-shrink: 0; }
 
@@ -809,7 +910,7 @@
     font-size: 0.8rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.3);
+    color: var(--mid);
     padding: 0 24px 0 0;
     height: 54px;
     display: flex;
@@ -823,7 +924,7 @@
   }
   .rp-tab.on { color: var(--text); border-bottom-color: var(--accent); }
   .rp-search-wrap { display: flex; align-items: center; gap: 8px; }
-  .rp-search-icon { color: rgb(var(--c-glass) / 0.25); font-size: 1.1rem; line-height: 1; }
+  .rp-search-icon { color: var(--mid); font-size: 1.1rem; line-height: 1; }
   .rp-search {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
@@ -832,13 +933,13 @@
     text-transform: uppercase;
     background: none;
     border: none;
-    border-bottom: 1px solid rgb(var(--c-glass) / 0.14);
+    border-bottom: 1px solid rgb(var(--c-glass) / 0.3);
     color: var(--text);
     padding: 8px 0;
     outline: none;
     width: 240px;
   }
-  .rp-search::placeholder { color: rgb(var(--c-glass) / 0.22); }
+  .rp-search::placeholder { color: var(--dim); }
 
   /* ── Chips filtres ── */
   .rp-chips {
@@ -855,14 +956,14 @@
     letter-spacing: 0.16em;
     text-transform: uppercase;
     padding: 7px 16px;
-    border: 1px solid rgb(var(--c-glass) / 0.14);
+    border: 1px solid rgb(var(--c-glass) / 0.25);
     border-radius: 0;
     background: none;
-    color: rgb(var(--c-glass) / 0.35);
+    color: rgb(var(--c-glass) / 0.7);
     cursor: pointer;
     transition: all 0.15s;
   }
-  .chip:hover { border-color: rgb(var(--c-glass) / 0.35); color: rgb(var(--c-glass) / 0.7); }
+  .chip:hover { border-color: rgb(var(--c-glass) / 0.5); color: var(--text); }
   .chip.on { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.05); }
   .chip-reset { color: var(--danger); border-color: rgba(248,113,113,0.25); }
 
@@ -921,13 +1022,13 @@
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    background: #0a0a0a;
-    outline: 2px solid rgba(255, 255, 255, 0.14);
+    background: var(--bg2);
+    outline: 2px solid rgb(var(--c-glass) / 0.14);
     outline-offset: -2px;
     transition: outline-color 0.18s, filter 0.22s;
     z-index: 1;
   }
-  .pw-empty { background: #0a0a0a; opacity: 0.4; }
+  .pw-empty { background: var(--bg2); opacity: 0.4; }
   .patchwork:has(.pw-room:hover) .pw-room:not(:hover) { filter: brightness(0.45) saturate(0.6); }
   .pw-room:hover {
     outline: 2px solid var(--accent);
@@ -954,20 +1055,23 @@
   .cg-3x2 { grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(2,1fr); }
   .cg-4x2 { grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(2,1fr); }
   .cg-5x2 { grid-template-columns: repeat(5,1fr); grid-template-rows: repeat(2,1fr); }
-  .covers-grid img { width: 100%; height: 100%; object-fit: cover; display: block; background: #111; }
-  .cover-fallback { width: 100%; height: 100%; }
+  .covers-grid img { width: 100%; height: 100%; object-fit: cover; display: block; background: hsl(0 0% var(--pw-fb-l)); }
+  .cover-fallback { width: 100%; height: 100%; background: hsl(var(--fb-h, 0) var(--pw-fb-s) var(--pw-fb-l)); }
 
   .pw-cover-empty {
     position: absolute; inset: 0;
+    background: linear-gradient(135deg,
+      hsl(var(--fb-h, 0) var(--pw-fb-s) calc(var(--pw-fb-l) + 1%)),
+      hsl(var(--fb-h2, 0) calc(var(--pw-fb-s) - 5%) calc(var(--pw-fb-l) - 3%)));
     display: flex; align-items: center; justify-content: center;
     transition: transform 0.35s;
   }
   .pw-room:hover .pw-cover-empty { transform: scale(1.03); }
 
-  .pw-dim { position: absolute; inset: 0; background: rgba(0,0,0,0.18); pointer-events: none; z-index: 4; }
+  .pw-dim { position: absolute; inset: 0; background: var(--pw-veil); pointer-events: none; z-index: 4; }
   .pw-grad {
     position: absolute; inset: 0; pointer-events: none; z-index: 5;
-    background: linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.88) 22%, rgba(0,0,0,0.5) 42%, rgba(0,0,0,0.08) 62%, rgba(0,0,0,0) 80%);
+    background: var(--pw-grad);
   }
   .pw-info {
     position: absolute; inset: 0; z-index: 10;
@@ -993,11 +1097,11 @@
     font-weight: 700; font-size: 0.64rem; letter-spacing: 0.2em; text-transform: uppercase;
     border: 1px solid; padding: 3px 10px;
   }
-  .pw-badge-official { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.55); background: rgba(0,0,0,0.7); }
-  .pw-badge-qcm { color: #4ade80; border-color: rgba(74,222,128,0.55); background: rgba(0,0,0,0.7); }
-  .pw-badge-classic { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.18); background: rgba(0,0,0,0.7); }
-  .pw-badge-live { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.5); background: rgba(0,0,0,0.7); }
-  .pw-badge-auto { color: #fbbf24; border-color: rgba(251,191,36,0.45); background: rgba(0,0,0,0.7); }
+  .pw-badge-official { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.55); background: var(--pw-chip-bg); }
+  .pw-badge-qcm { color: var(--pw-ok); border-color: color-mix(in srgb, var(--pw-ok) 55%, transparent); background: var(--pw-chip-bg); }
+  .pw-badge-classic { color: var(--pw-chip-mute); border-color: var(--pw-chip-mute-bd); background: var(--pw-chip-bg); }
+  .pw-badge-live { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.5); background: var(--pw-chip-bg); }
+  .pw-badge-auto { color: var(--pw-warn); border-color: color-mix(in srgb, var(--pw-warn) 45%, transparent); background: var(--pw-chip-bg); }
 
   /* Le nom mène à la fiche de la room : c'est le geste attendu, et le seul
      disponible au doigt puisqu'il n'y a pas de survol sur mobile. */
@@ -1010,29 +1114,29 @@
     pointer-events: auto;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; text-transform: uppercase; line-height: 0.92; letter-spacing: -0.01em;
-    text-shadow: 0 2px 16px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1);
-    color: #fff;
+    text-shadow: 0 2px 16px var(--pw-halo), 0 1px 4px var(--pw-halo);
+    color: var(--pw-ink);
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: border-color 0.15s;
   }
   .pw-name:hover,
   .pw-name:focus-visible {
-    border-bottom-color: rgba(255, 255, 255, 0.55);
+    border-bottom-color: var(--pw-ink-line);
   }
   .pw-name.pw-a { font-size: clamp(1.9rem, 3.2vw, 2.6rem); }
   .pw-name.pw-b { font-size: clamp(1.2rem, 2vw, 1.6rem); }
   .pw-name.pw-c,.pw-name.pw-d,.pw-name.pw-e,.pw-name.pw-f,.pw-name.pw-g,.pw-name.pw-h { font-size: clamp(1rem, 1.8vw, 1.45rem); }
 
-  .pw-owner { font-size: 0.68rem; color: rgba(255, 255, 255, 0.45); margin-top: 1px; text-shadow: 0 1px 6px rgba(0,0,0,1); }
+  .pw-owner { font-size: 0.68rem; color: var(--pw-ink-soft); margin-top: 1px; text-shadow: 0 1px 6px var(--pw-halo); }
   .pw-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 
   .pw-meta {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.42);
+    color: var(--pw-ink-faint);
     display: flex; gap: 10px;
-    text-shadow: 0 1px 5px rgba(0,0,0,1);
+    text-shadow: 0 1px 5px var(--pw-halo);
   }
   .pw-b .pw-meta,.pw-c .pw-meta,.pw-d .pw-meta,.pw-e .pw-meta,.pw-f .pw-meta,.pw-g .pw-meta,.pw-h .pw-meta { display: none; }
 
@@ -1043,7 +1147,7 @@
   .pw-code {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; letter-spacing: 0.22em;
-    text-shadow: 0 2px 10px rgba(0,0,0,1);
+    text-shadow: 0 2px 10px var(--pw-halo);
   }
   /* Au repos sur un écran qui survole, la place manque dans les petites cases :
      l'accès à la fiche passe par l'overlay. Sans survol, il n'y a pas
@@ -1068,7 +1172,7 @@
     .pw-details { display: inline-flex; }
   }
   .pw-code.pw-a { font-size: 1.4rem; color: var(--accent); }
-  .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: rgba(255, 255, 255, 0.3); }
+  .pw-code.pw-b,.pw-code.pw-c,.pw-code.pw-d,.pw-code.pw-e,.pw-code.pw-f,.pw-code.pw-g,.pw-code.pw-h { font-size: 0.88rem; color: var(--pw-ink-code); }
 
   .btn-join {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1080,15 +1184,15 @@
   .btn-dispo {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase;
-    color: #fff; background: rgba(255, 255, 255, 0.09); border: 1px solid rgba(255, 255, 255, 0.22);
+    color: var(--pw-ink); background: var(--pw-ctl-bg); border: 1px solid var(--pw-ctl-bd);
     padding: 11px 22px; cursor: pointer; white-space: nowrap; transition: all 0.15s;
   }
-  .btn-dispo:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.4); }
+  .btn-dispo:hover { background: var(--pw-ctl-bg-h); border-color: var(--pw-ctl-bd-h); }
 
   /* ── Hover overlay ── */
   .pw-hover {
     position: absolute; inset: 0; z-index: 25;
-    background: rgba(4,4,4,0.95);
+    background: var(--pwh-bg);
     display: flex; flex-direction: column; justify-content: space-between;
     padding: 16px;
     opacity: 0;
@@ -1116,29 +1220,29 @@
     font-weight: 900; text-transform: uppercase;
     font-size: clamp(1.15rem, 2.2vw, 1.9rem);
     line-height: 0.92; letter-spacing: -0.01em;
-    color: #fff;
+    color: var(--pw-ink);
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: border-color 0.15s;
   }
   .pwh-name:hover,
   .pwh-name:focus-visible {
-    border-bottom-color: rgba(255, 255, 255, 0.55);
+    border-bottom-color: var(--pw-ink-line);
   }
   .pwh-sub {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.32);
+    color: var(--pwh-ink-sub);
     display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
   }
-  .pwh-dot { color: rgba(255, 255, 255, 0.15); }
+  .pwh-dot { color: var(--pwh-ink-dim); }
   .pwh-tcount {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: 0.78rem;
     color: var(--accent);
   }
   .pwh-titres {
-    font-size: 0.62rem; color: rgba(255, 255, 255, 0.32);
+    font-size: 0.62rem; color: var(--pwh-ink-sub);
     font-family: inherit; font-weight: 400; letter-spacing: 0.04em; text-transform: none;
   }
 
@@ -1158,19 +1262,19 @@
   .pwh-setn {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.72);
+    color: var(--pwh-ink-row);
     flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .pwh-setc {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.58rem; letter-spacing: 0.1em;
-    color: rgba(255, 255, 255, 0.22);
+    color: var(--pwh-ink-dim);
     white-space: nowrap; flex-shrink: 0;
   }
   .pwh-setmore {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.22);
+    color: var(--pwh-ink-dim);
     padding-top: 6px;
   }
 
@@ -1228,7 +1332,7 @@
   .rp-end {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.18);
+    color: var(--dim);
     text-align: center;
     padding: 32px 0 48px;
     border-top: 1px solid rgb(var(--c-glass) / 0.06);
@@ -1239,13 +1343,13 @@
   .mine-empty {
     padding: 60px clamp(16px,3vw,40px);
     display: flex; flex-direction: column; align-items: center; gap: 20px;
-    color: rgba(255, 255, 255, .3); font-size: .88rem; text-align: center;
+    color: var(--mid); font-size: .88rem; text-align: center;
   }
 
   .mine-wrap {
     display: flex; flex-direction: row;
     height: 450px;
-    border-top: 1px solid rgba(255, 255, 255, .08);
+    border-top: 1px solid var(--border);
   }
 
   /* ── Panel détail (droite desktop) ── */
@@ -1258,13 +1362,13 @@
   .mine-g1 {
     position: absolute; inset: 0; z-index: 10;
     background: linear-gradient(to top,
-      rgba(0,0,0,1) 0%, rgba(0,0,0,.95) 18%, rgba(0,0,0,.7) 35%,
-      rgba(0,0,0,.1) 55%, rgba(0,0,0,0) 72%);
+      var(--mg-1) 0%, var(--mg-2) 18%, var(--mg-3) 35%,
+      var(--mg-4) 55%, var(--mg-5) 72%);
   }
   .mine-g2 {
     position: absolute; inset: 0; z-index: 10;
     background: linear-gradient(to right,
-      rgba(0,0,0,.88) 0%, rgba(0,0,0,.45) 28%, rgba(0,0,0,0) 52%);
+      var(--mg-6) 0%, var(--mg-7) 28%, var(--mg-5) 52%);
   }
   .mine-livebar {
     position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
@@ -1280,16 +1384,16 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: clamp(1.9rem, 4.5vw, 3.4rem);
     text-transform: uppercase; letter-spacing: -.02em; line-height: .88;
-    color: #fff; text-shadow: 0 4px 24px rgba(0,0,0,1);
+    color: var(--pw-ink); text-shadow: 0 4px 24px var(--pw-halo);
   }
   .mine-pmeta {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase;
-    color: rgba(255, 255, 255, .65); margin-top: 10px;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, .9);
+    color: var(--pw-ink-code); margin-top: 10px;
+    text-shadow: 0 1px 8px var(--pw-halo);
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
   }
-  .mine-pdot { color: rgba(255, 255, 255, .14); }
+  .mine-pdot { color: var(--pwh-ink-dim); }
   .mine-ptc { color: var(--accent); font-size: .8rem; font-weight: 900; }
   .mine-pactions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
   .mine-pjoin {
@@ -1302,14 +1406,14 @@
   .mine-pedit-btn {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
-    background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .35); color: rgba(255, 255, 255, .85);
+    background: var(--pw-chip-bg); border: 1px solid var(--pw-ctl-bd-h); color: var(--pw-ink);
     padding: 11px 20px; cursor: pointer; transition: all .15s;
   }
-  .mine-pedit-btn:hover { border-color: rgba(255, 255, 255, .6); color: #fff; }
+  .mine-pedit-btn:hover { border-color: var(--pw-ink-line); color: var(--pw-ink); }
   .mine-pdel-btn {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
-    background: rgba(0, 0, 0, .55); border: 1px solid rgba(248,113,113,.45); color: var(--danger);
+    background: var(--pw-chip-bg); border: 1px solid rgba(248,113,113,.45); color: var(--danger);
     padding: 11px 20px; cursor: pointer; transition: all .15s; margin-left: auto;
   }
   .mine-pdel-btn:hover { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.6); }
@@ -1318,13 +1422,13 @@
   .mine-idx {
     width: 280px; flex-shrink: 0; order: 1;
     display: flex; flex-direction: column;
-    border-right: 1px solid rgba(255, 255, 255, .14);
+    border-right: 1px solid var(--border2);
   }
   .mine-idx-head {
     padding: 13px 16px 11px;
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    border-bottom: 1px solid var(--border);
     display: flex; align-items: baseline; justify-content: space-between;
-    background: #0a0a0a; flex-shrink: 0;
+    background: var(--bg2); flex-shrink: 0;
   }
   .mine-idx-title {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1334,7 +1438,7 @@
   .mine-idx-count {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .5rem; letter-spacing: .1em;
-    color: rgba(255, 255, 255, .18);
+    color: var(--dim);
   }
   .mine-list {
     flex: 1; overflow-y: auto;
@@ -1350,10 +1454,10 @@
   .mine-ticket {
     display: flex; align-items: stretch;
     width: 100%; text-align: left; background: none; border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, .07);
+    border-bottom: 1px solid var(--border);
     cursor: pointer; transition: background .12s; position: relative;
   }
-  .mine-ticket:hover { background: rgba(255, 255, 255, .02); }
+  .mine-ticket:hover { background: var(--surface); }
   .mine-ticket.active { background: rgb(var(--accent-rgb) / .04); }
   .mine-ticket.active::after {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
@@ -1367,28 +1471,28 @@
   }
   .mine-punch {
     width: 14px; height: 8px; flex-shrink: 0;
-    background: #050505; border: 1px solid rgba(255, 255, 255, .12); z-index: 2;
+    background: var(--bg); border: 1px solid var(--border2); z-index: 2;
   }
   .mine-punch-t { border-radius: 0 0 8px 8px; border-top: none; margin-top: -1px; }
   .mine-punch-b { border-radius: 8px 8px 0 0; border-bottom: none; margin-bottom: -1px; }
-  .mine-pline { flex: 1; border-left: 1px dashed rgba(255, 255, 255, .14); }
+  .mine-pline { flex: 1; border-left: 1px dashed var(--border2); }
 
   /* Stub */
   .mine-stub {
     width: 52px; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; background: #0a0a0a;
+    gap: 4px; background: var(--bg2);
   }
   .mine-snum {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: 1.22rem; letter-spacing: .04em;
-    color: rgba(255, 255, 255, .16); transition: color .12s;
+    color: var(--dim); transition: color .12s;
   }
   .mine-ticket.active .mine-snum { color: var(--accent); }
   .mine-slabel {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .36rem; letter-spacing: .2em; text-transform: uppercase;
-    color: rgba(255, 255, 255, .1);
+    color: var(--dim);
   }
   .mine-ticket.active .mine-slabel { color: rgb(var(--accent-rgb) / .3); }
 
@@ -1401,11 +1505,11 @@
   .mine-tname {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: 1.18rem; text-transform: uppercase; letter-spacing: -.01em;
-    color: rgba(255, 255, 255, .3);
+    color: var(--mid);
     display: flex; align-items: center; gap: 7px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .mine-ticket.active .mine-tname { color: #fff; }
+  .mine-ticket.active .mine-tname { color: var(--text); }
   .mine-ldot {
     width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
     background: var(--accent); box-shadow: 0 0 8px rgb(var(--accent-rgb) / .9);
@@ -1413,10 +1517,10 @@
   .mine-tmeta {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: .55rem; letter-spacing: .1em; text-transform: uppercase;
-    color: rgba(255, 255, 255, .16);
+    color: var(--dim);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .mine-ticket.active .mine-tmeta { color: rgba(255, 255, 255, .36); }
+  .mine-ticket.active .mine-tmeta { color: var(--mid); }
   .mine-tc { color: rgb(var(--accent-rgb) / .45); }
   .mine-ticket.active .mine-tc { color: var(--accent); }
 
@@ -1424,12 +1528,12 @@
   .mine-add-btn {
     display: flex; align-items: stretch;
     width: 100%; text-align: left; background: none; border: none;
-    border-top: 1px solid rgba(255, 255, 255, .08);
+    border-top: 1px solid var(--border);
     cursor: pointer; transition: background .12s; flex-shrink: 0;
   }
   .mine-add-btn:hover { background: rgb(var(--accent-rgb) / .03); }
   .mine-add-stub {
-    background: #0a0a0a; border-right: 1px solid rgba(255, 255, 255, .07);
+    background: var(--bg2); border-right: 1px solid var(--border);
   }
   .mine-add-plus {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1477,7 +1581,7 @@
   .m2-eyebrow {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.55rem; letter-spacing: 0.28em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.22); margin-bottom: 3px;
+    color: var(--mid); margin-bottom: 3px;
   }
   .m2-room-id { display: flex; align-items: baseline; gap: 10px; }
   .m2-room-name {
@@ -1507,7 +1611,7 @@
   .m2-label {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.25); display: block; margin-bottom: 4px;
+    color: var(--mid); display: block; margin-bottom: 4px;
   }
   .m2-input {
     background: rgb(var(--c-glass) / 0.03); border: 1px solid rgb(var(--c-glass) / 0.1);
@@ -1533,7 +1637,7 @@
     font-weight: 900; font-size: 1.5rem; line-height: 1; color: var(--text);
     padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid rgb(var(--c-glass) / 0.07);
   }
-  .m2-unit { font-size: 0.72rem; color: rgb(var(--c-glass) / 0.22); }
+  .m2-unit { font-size: 0.72rem; color: var(--dim); }
   .m2-param .m2-input { padding: 5px 8px; font-size: 0.76rem; margin-top: 5px; }
   .m2-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 14px; }
   .m2-mode {
@@ -1545,12 +1649,12 @@
   .m2-mode-name {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900; font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase;
-    color: rgb(var(--c-glass) / 0.4);
+    color: var(--mid);
   }
   .m2-mode.active .m2-mode-name { color: var(--accent); }
-  .m2-mode-sub { font-size: 0.64rem; color: rgb(var(--c-glass) / 0.2); }
+  .m2-mode-sub { font-size: 0.64rem; color: var(--dim); }
   .m2-check-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
-  .m2-check-label { font-size: 0.77rem; color: rgb(var(--c-glass) / 0.45); cursor: pointer; }
+  .m2-check-label { font-size: 0.77rem; color: var(--mid); cursor: pointer; }
   .m2-pl-list {
     height: 220px; overflow-y: auto; border: 1px solid rgb(var(--c-glass) / 0.07);
     margin-bottom: 8px; scrollbar-width: thin;
@@ -1568,12 +1672,12 @@
     display: flex; align-items: center; justify-content: center; font-size: 0.54rem; color: var(--accent);
   }
   .m2-pl-ck.on { background: rgb(var(--accent-rgb) / 0.1); border-color: rgb(var(--accent-rgb) / 0.5); }
-  .m2-pl-grp { font-size: 0.64rem; color: rgb(var(--c-glass) / 0.2); white-space: nowrap; }
-  .m2-pl-cnt { font-size: 0.64rem; color: rgb(var(--c-glass) / 0.22); white-space: nowrap; }
-  .m2-note { font-size: 0.68rem; color: rgb(var(--c-glass) / 0.2); margin-bottom: 0; }
+  .m2-pl-grp { font-size: 0.64rem; color: var(--dim); white-space: nowrap; }
+  .m2-pl-cnt { font-size: 0.64rem; color: var(--dim); white-space: nowrap; }
+  .m2-note { font-size: 0.68rem; color: var(--dim); margin-bottom: 0; }
   .m2-info-box {
     display: flex; gap: 8px; background: rgb(var(--accent-rgb) / .04); border: 1px solid rgb(var(--accent-rgb) / .14);
-    padding: 10px 12px; font-size: 0.74rem; color: rgb(var(--c-glass) / 0.38); line-height: 1.5;
+    padding: 10px 12px; font-size: 0.74rem; color: var(--mid); line-height: 1.5;
     margin-top: 10px;
   }
   .m2-alert {
@@ -1628,9 +1732,10 @@
       flex-shrink: 0; width: 110px; align-self: stretch;
       transform: none !important;
     }
-    .pw-name { font-size: 1rem !important; }
+    .pw-name { font-size: 1rem !important; color: var(--text) !important; text-shadow: none !important; }
     .pw-name.pw-a { font-size: 1.1rem !important; }
-    .pw-code { font-size: 0.72rem !important; color: rgb(var(--c-glass) / 0.3) !important; }
+    .pw-owner { color: var(--mid); text-shadow: none; }
+    .pw-code { font-size: 0.72rem !important; color: var(--mid) !important; text-shadow: none !important; }
     .pw-details { display: inline-flex; }
     /* En liste, l'overlay ne sert plus : les infos sont déjà dans la ligne. */
     .pw-hover { display: none; }
@@ -1643,11 +1748,11 @@
     .mine-pcontent { height: auto; gap: 40px; padding: 16px; }
     .mine-g1 {
       background: linear-gradient(to top,
-        rgba(0,0,0,.9) 0%, rgba(0,0,0,.55) 22%, rgba(0,0,0,.08) 45%, rgba(0,0,0,0) 60%);
+        var(--mg-6) 0%, var(--mg-7) 22%, var(--mg-4) 45%, var(--mg-5) 60%);
     }
     .mine-idx { order: 2; width: 100%; border-right: none; border-top: 1px solid rgb(var(--c-glass) / .14); }
     .mine-list { max-height: 300px; }
-    .mine-g2 { background: linear-gradient(to right, rgba(0,0,0,.7) 0%, rgba(0,0,0,0) 40%); }
+    .mine-g2 { background: linear-gradient(to right, var(--mg-3) 0%, var(--mg-5) 40%); }
     .mine-pname { font-size: clamp(1.7rem, 5.5vw, 2.6rem); }
     .mine-pactions { gap: 6px; }
     .mine-pjoin { padding: 10px 20px; font-size: .7rem; }

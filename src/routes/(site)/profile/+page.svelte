@@ -113,7 +113,7 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — Mon Profil | Blind Test Multijoueur</title>
+  <title>ZIK - Mon Profil | Blind Test Multijoueur</title>
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
@@ -157,7 +157,7 @@
 
     <div class="avatar-preview-wrap">
       <span style="font-size:.78rem;color:var(--dim)">Aper&ccedil;u :</span>
-      <img src={avatarPreview} alt="" class="avatar-preview-img">
+      <img src={avatarPreview} alt="" class="avatar-preview-img" width="52" height="52" loading="lazy" decoding="async">
       <button class="btn-ghost sm" onclick={() => { editAvatarUrl = ''; updatePreview(); }}>G&eacute;n&eacute;rer auto</button>
     </div>
 
