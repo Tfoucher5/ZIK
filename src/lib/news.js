@@ -15,10 +15,21 @@ export const NEWS = [
       "Les joueurs ne sont plus rangés d'office dans une équipe : chacun choisit la sienne sur son téléphone, ou vous la lui donnez depuis la régie.",
       "« Terminer la partie » demande une confirmation : plus de soirée coupée par un geste de travers.",
       "Sur la page de préparation, ce que ZIK Pro débloque est enfin visible, et les options qui le nécessitent sont clairement signalées.",
+    ],
+  },
+  {
+    date: "2026-10-03",
+    version: "3.13.0",
+    tag: "Amélioration",
+    title: "Le site s'adapte vraiment au mobile",
+    items: [
       "Le thème se change depuis la barre du haut, sans compte et sans passer par les paramètres.",
-      "Sur mobile, la barre du bas ne masque plus la fin des pages, et le menu du profil ne répète plus ce qui s'y trouve déjà.",
-      "Page de profil allégée : votre rang s'affiche avec son classement complet, et les sections vides ont disparu.",
+      "Sur mobile, la barre du bas ne masque plus la fin des pages, y compris sur les iPhone à encoche.",
+      "Le menu du profil ne répète plus les liens déjà présents dans la barre du bas, et donne accès à l'aide et au soutien.",
+      "Page de profil allégée : votre rang s'affiche avec son classement complet, les répétitions ont disparu et les sections vides ne s'affichent plus.",
       "En thème clair, la page des rooms ne mélange plus les couleurs.",
+      "Les pages de comparaison affichaient leur titre sous le menu : corrigé, et leur tableau se lit enfin sur téléphone.",
+      "Plusieurs pages gagnent un fil d'Ariane et des informations manquantes pour les moteurs de recherche.",
     ],
   },
   {
