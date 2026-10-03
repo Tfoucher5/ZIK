@@ -67,7 +67,9 @@
           location.pathname.indexOf("/admin") === 0
             ? "dark"
             : localStorage.getItem("zik_theme") ||
-              (location.pathname.indexOf("/salon/host") === 0 ? "dark" : "light");
+              (location.pathname.indexOf("/salon/host") === 0
+                ? "dark"
+                : "light");
         document.documentElement.setAttribute("data-theme", t);
         var bgs = {
           dark: "#080808",

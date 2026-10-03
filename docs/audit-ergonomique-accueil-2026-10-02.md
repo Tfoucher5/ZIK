@@ -9,18 +9,18 @@
 
 ## Synthèse
 
-| # | Problème | Critère | Gravité |
-|---|---|---|---|
-| 1 | Trop d'actions de même poids dans l'écran d'accueil | Guidage → Distinction par le format | **Élevé** |
-| 2 | Libellés incohérents : soirée / session / salon, room / code | Homogénéité + Signification | **Élevé** |
-| 3 | Menu principal peu lisible, contenu visible derrière l'en-tête | Guidage → Lisibilité | **Élevé** |
-| 4 | Panneau du défi qui cache le titre principal | Guidage → Lisibilité | Moyen |
-| 5 | Petits textes à faible contraste | Guidage → Lisibilité | Moyen |
-| 6 | Jargon non expliqué : Rooms, ELO, streaks, QCM | Signification des codes | Moyen |
-| 7 | Saisie du code : bouton « → » seul, champ placé loin | Contrôle explicite → Actions explicites | Moyen |
-| 8 | Top joueurs : colonne « — » sans légende, rangs peu visibles | Signification des codes | Moyen |
-| 9 | Cartes des rooms : informations qui n'aident pas à choisir | Charge de travail → Densité informationnelle | Faible |
-| 10 | Grille 01 à 08 : on ne sait pas si c'est cliquable ou ordonné | Guidage → Incitation | Faible |
+| #   | Problème                                                       | Critère                                      | Gravité   |
+| --- | -------------------------------------------------------------- | -------------------------------------------- | --------- |
+| 1   | Trop d'actions de même poids dans l'écran d'accueil            | Guidage → Distinction par le format          | **Élevé** |
+| 2   | Libellés incohérents : soirée / session / salon, room / code   | Homogénéité + Signification                  | **Élevé** |
+| 3   | Menu principal peu lisible, contenu visible derrière l'en-tête | Guidage → Lisibilité                         | **Élevé** |
+| 4   | Panneau du défi qui cache le titre principal                   | Guidage → Lisibilité                         | Moyen     |
+| 5   | Petits textes à faible contraste                               | Guidage → Lisibilité                         | Moyen     |
+| 6   | Jargon non expliqué : Rooms, ELO, streaks, QCM                 | Signification des codes                      | Moyen     |
+| 7   | Saisie du code : bouton « → » seul, champ placé loin           | Contrôle explicite → Actions explicites      | Moyen     |
+| 8   | Top joueurs : colonne « — » sans légende, rangs peu visibles   | Signification des codes                      | Moyen     |
+| 9   | Cartes des rooms : informations qui n'aident pas à choisir     | Charge de travail → Densité informationnelle | Faible    |
+| 10  | Grille 01 à 08 : on ne sait pas si c'est cliquable ou ordonné  | Guidage → Incitation                         | Faible    |
 
 ---
 
@@ -38,6 +38,7 @@
   - le badge `12 %` du défi.
 
   Deux boutons roses pleins ont des libellés presque identiques et semblent mener au même endroit. Discord, un lien vers un site externe, a le même poids visuel que les actions de jeu.
+
 - **Critère impacté :** Guidage → Distinction par le format ; Charge de travail → Densité informationnelle.
 - **Gravité :** Élevé. C'est le premier écran pour 100 % des visiteurs et il conditionne leur parcours.
 - **Risque utilisateur :** hésitation sur le chemin à prendre ; dispersion vers Discord ; un joueur seul ne voit pas en priorité `Jouer en ligne`.
