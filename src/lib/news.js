@@ -3,6 +3,25 @@
 
 export const NEWS = [
   {
+    date: "2026-10-03",
+    version: "3.14.0",
+    tag: "Amélioration",
+    title: "La régie se pilote depuis un téléphone",
+    items: [
+      "La régie du Mode Salon s'utilise maintenant aussi bien sur téléphone et tablette que sur un second écran : le minuteur, les joueurs et les boutons Pause et Révéler restent à portée sans avoir à faire défiler la page.",
+      "Elle prévient quand aucun écran TV n'est connecté - la musique ne jouerait pas - et quand deux le sont, auquel cas le son joue en double.",
+      "Les points d'un joueur se corrigent en tapant directement le chiffre, en plus des boutons plus et moins.",
+      "Changer le nombre d'équipes ne réinitialise plus les noms que vous avez saisis, et ne déplace plus personne d'une équipe à l'autre.",
+      "Les joueurs ne sont plus rangés d'office dans une équipe : chacun choisit la sienne sur son téléphone, ou vous la lui donnez depuis la régie.",
+      "« Terminer la partie » demande une confirmation : plus de soirée coupée par un geste de travers.",
+      "Sur la page de préparation, ce que ZIK Pro débloque est enfin visible, et les options qui le nécessitent sont clairement signalées.",
+      "Le thème se change depuis la barre du haut, sans compte et sans passer par les paramètres.",
+      "Sur mobile, la barre du bas ne masque plus la fin des pages, et le menu du profil ne répète plus ce qui s'y trouve déjà.",
+      "Page de profil allégée : votre rang s'affiche avec son classement complet, et les sections vides ont disparu.",
+      "En thème clair, la page des rooms ne mélange plus les couleurs.",
+    ],
+  },
+  {
     date: "2026-10-02",
     version: "3.12.0",
     tag: "Amélioration",
