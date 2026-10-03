@@ -3,6 +3,7 @@
   import { toast } from '$lib/toast.svelte.js';
   import Modal from '$lib/components/Modal.svelte';
   import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
+  import { THEMES, getTheme, setTheme } from '$lib/theme.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -117,27 +118,15 @@
     }
   }
 
-  const THEMES = [
-    { id: 'light',    label: 'Clair',    bg: '#f7f5fa', accent: '#c026d3' },
-    { id: 'dark',     label: 'Sombre',   bg: '#080808', accent: '#ff00ff' },
-    { id: 'violet',   label: 'Violet',   bg: '#0c0814', accent: '#a78bfa' },
-    { id: 'ocean',    label: 'Océan',    bg: '#050b13', accent: '#22d3ee' },
-    { id: 'sunset',   label: 'Sunset',   bg: '#140806', accent: '#fb923c' },
-    { id: 'emeraude', label: 'Émeraude', bg: '#04100a', accent: '#34d399' },
-  ];
-
-  function setTheme(t) {
+  function pickTheme(t) {
     activeTheme = t;
-    localStorage.setItem('zik_theme', t);
-    document.documentElement.setAttribute('data-theme', t);
-    const bg = THEMES.find((th) => th.id === t)?.bg;
-    if (bg) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = bg; });
+    setTheme(t);
   }
 
   onMount(() => {
     animOn = localStorage.getItem('zik_animations') !== 'off';
     volVal = parseInt(localStorage.getItem('zik_vol') ?? '50');
-    activeTheme = localStorage.getItem('zik_theme') || 'light';
+    activeTheme = getTheme();
     const el = document.getElementById('pref-volume');
     if (el) el.style.setProperty('--vol', volVal + '%');
   });
@@ -223,7 +212,7 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — Paramètres</title>
+  <title>ZIK - Paramètres</title>
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
@@ -245,7 +234,7 @@
             <button
               class="theme-swatch {activeTheme === theme.id ? 'active' : ''}"
               style="--swatch-bg:{theme.bg};--swatch-accent:{theme.accent}"
-              onclick={() => setTheme(theme.id)}
+              onclick={() => pickTheme(theme.id)}
               aria-label="Th&egrave;me {theme.label}"
               aria-pressed={activeTheme === theme.id}
               title={theme.label}
@@ -352,6 +341,7 @@
                 alt="Avatar Discord"
                 class="discord-avatar"
                 width="32" height="32"
+                loading="lazy" decoding="async"
               />
             {/if}
             <button class="btn-unlink" onclick={unlinkDiscord} disabled={discordLoading}>

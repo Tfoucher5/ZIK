@@ -52,7 +52,7 @@
 {/snippet}
 
 <svelte:head>
-  <title>ZIK — Nouveau mot de passe</title>
+  <title>ZIK - Nouveau mot de passe</title>
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 

@@ -118,7 +118,7 @@
   <meta property="og:site_name" content="ZIK">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="fr_FR">
-  <meta property="og:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
+  <meta property="og:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
   <meta property="og:description" content="Blind test multijoueur gratuit en ligne. Import Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
   <meta property="og:url" content="https://www.zik-music.fr/">
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
@@ -128,11 +128,11 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ZIK — Blind Test Multijoueur en Ligne Gratuit">
+  <meta name="twitter:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
-  <link rel="stylesheet" href="/css/base.css?v=3.12.0">
+  <link rel="stylesheet" href="/css/base.css?v=3.13.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
 </svelte:head>
 
@@ -246,7 +246,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.12.0</span>
+    <span class="footer-version-tag">v3.13.0</span>
   </div>
 </footer>
 {/if}

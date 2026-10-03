@@ -5,6 +5,9 @@
   import TrackRow from './TrackRow.svelte';
   import TrackSearch from './TrackSearch.svelte';
   import { toast } from '$lib/toast.svelte.js';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Playlists', path: '/playlists' }]);
+
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -388,12 +391,12 @@
 </script>
 
 <svelte:head>
-  <title>Playlists de Blind Test — Créer &amp; Importer depuis Deezer | ZIK</title>
+  <title>Playlists de Blind Test - Créer &amp; Importer depuis Deezer | ZIK</title>
   <meta name="description" content="Créez vos playlists de blind test musical. Importez depuis Deezer, ajoutez des titres manuellement. Lancez une room depuis votre playlist en un clic. Gratuit." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/playlists" />
 
-  <meta property="og:title" content="Playlists de Blind Test — Import Deezer | ZIK" />
+  <meta property="og:title" content="Playlists de Blind Test - Import Deezer | ZIK" />
   <meta property="og:description" content="Créez vos playlists de blind test, importez depuis Deezer. Lancez une room directement. Gratuit, sans limite." />
   <meta property="og:url" content="https://www.zik-music.fr/playlists" />
   <meta property="og:type" content="website" />
@@ -405,6 +408,7 @@
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
 
   <JsonLd json={playlistsJsonLd} />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <header class="page-head">

@@ -240,7 +240,7 @@
     {#if spImportPreview}
       <div class="import-preview">
         <div class="import-preview-header">
-          {#if spImportPreview.cover}<img class="import-preview-cover" src={spImportPreview.cover} alt="">{/if}
+          {#if spImportPreview.cover}<img class="import-preview-cover" src={spImportPreview.cover} alt="" loading="lazy" decoding="async">{/if}
           <div>
             <div class="import-preview-name">{spImportPreview.name}</div>
             <div class="import-preview-count">{spImportPreview.tracks.length} titres</div>
@@ -267,7 +267,7 @@
   {#if dzImportPreview}
     <div class="import-preview">
       <div class="import-preview-header">
-        {#if dzImportPreview.cover}<img class="import-preview-cover" src={dzImportPreview.cover} alt="">{/if}
+        {#if dzImportPreview.cover}<img class="import-preview-cover" src={dzImportPreview.cover} alt="" loading="lazy" decoding="async">{/if}
         <div>
           <div class="import-preview-name">{dzImportPreview.name}</div>
           <div class="import-preview-count">{dzImportPreview.tracks.length} titres</div>

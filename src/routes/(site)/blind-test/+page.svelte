@@ -1,6 +1,9 @@
 <script>
   import JsonLd from '$lib/components/JsonLd.svelte';
   import { BLIND_TEST_THEMES } from '$lib/blindTestThemes.js';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Blind test par thème', path: '/blind-test' }]);
+
 
   const SITE = 'https://www.zik-music.fr';
   const description = 'Blind test gratuit par thème : années 80, années 2000, rap français, rock, Disney, musiques de films… À jouer en ligne ou en soirée sur la TV avec les téléphones.';
@@ -32,6 +35,7 @@
   <meta property="og:url" content="{SITE}/blind-test" />
   <meta property="og:type" content="website" />
   <JsonLd json={jsonLd} />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <main class="bt-index">

@@ -1,6 +1,10 @@
 <script>
   import { getContext } from "svelte";
   import { MAX_ATTEMPTS, waveformForDate } from "$lib/zikle/shared.js";
+  import JsonLd from '$lib/components/JsonLd.svelte';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Zikle', path: '/zikle' }, { name: 'Archives', path: '/zikle/archives' }]);
+
 
   let { data } = $props();
 
@@ -62,7 +66,7 @@
 </script>
 
 <svelte:head>
-  <title>Archives Zikle — Rejoue les jours passés | ZIK</title>
+  <title>Archives Zikle - Rejoue les jours passés | ZIK</title>
   <meta name="description" content="Retrouve tous les Zikle passés : un extrait audio, six essais, un titre par jour. Rejoue les jours précédents avec ton compte ZIK." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/zikle/archives" />
@@ -71,6 +75,7 @@
   <meta property="og:url" content="https://www.zik-music.fr/zikle/archives" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <main class="za">

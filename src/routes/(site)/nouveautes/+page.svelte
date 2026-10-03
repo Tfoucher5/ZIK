@@ -1,6 +1,9 @@
 <script>
   import JsonLd from '$lib/components/JsonLd.svelte';
   import { NEWS } from '$lib/news.js';
+  import { breadcrumb } from '$lib/seo.js';
+  const breadcrumbJsonLd = breadcrumb([{ name: 'Nouveautés', path: '/nouveautes' }]);
+
 
   const TAG_COLORS = {
     'Nouveauté': 'new',
@@ -26,14 +29,15 @@
 </script>
 
 <svelte:head>
-  <title>ZIK — Nouveautés | Les dernières mises à jour du blind test</title>
+  <title>ZIK - Nouveautés | Les dernières mises à jour du blind test</title>
   <meta name="description" content="Suis les nouveautés du blind test ZIK : nouvelles fonctionnalités, améliorations et correctifs, mise à jour après mise à jour." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/nouveautes" />
-  <meta property="og:title" content="Nouveautés — Blind Test ZIK" />
+  <meta property="og:title" content="Nouveautés - Blind Test ZIK" />
   <meta property="og:description" content="Les dernières mises à jour du blind test multijoueur ZIK." />
   <meta property="og:url" content="https://www.zik-music.fr/nouveautes" />
   <JsonLd json={jsonLd} />
+  <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
 
 <main class="news-root">

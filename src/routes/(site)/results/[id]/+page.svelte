@@ -41,7 +41,7 @@
     </div>
 
     <div class="result-avatar">{r.username[0]?.toUpperCase() ?? '?'}</div>
-    <div class="result-name">{r.username}</div>
+    <h1 class="result-name">{r.username}</h1>
     <time class="result-date" datetime={r.created_at}>{dateLabel}</time>
 
     <div class="result-score">{r.score}<span>pts</span></div>
@@ -67,11 +67,12 @@
 
 <style>
 .result-root {
-  min-height: 100vh;
+  /* dvh : évite le saut de hauteur quand la barre d'adresse mobile se replie */
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 100px 20px 60px;
+  padding: calc(var(--nav-h) + 32px) 20px 60px;
 }
 
 .result-card {
@@ -120,7 +121,7 @@
   background: linear-gradient(135deg, var(--accent), var(--accent2));
 }
 
-.result-name { font-size: 1.3rem; font-weight: 800; color: #fff; }
+.result-name { font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1.3; }
 .result-date { font-size: 0.8rem; color: #9ca3af; }
 
 .result-score {

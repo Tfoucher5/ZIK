@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-  <title>Zikle #{data.dayNumber} — Archives | ZIK</title>
+  <title>Zikle #{data.dayNumber} - Archives | ZIK</title>
   <meta name="description" content="Rejoue le Zikle #{data.dayNumber} ({data.date}). Compte requis pour jouer aux archives." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/zikle/archives/{data.date}" />

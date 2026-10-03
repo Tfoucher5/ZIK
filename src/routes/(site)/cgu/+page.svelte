@@ -1,5 +1,5 @@
 <svelte:head>
-  <title>ZIK — Conditions Générales d'Utilisation</title>
+  <title>ZIK - Conditions Générales d'Utilisation</title>
   <meta name="description" content="Conditions Générales d'Utilisation de ZIK, le blind test musical multijoueur en ligne. Accès, droits, comportement attendu et responsabilités.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.zik-music.fr/cgu">
