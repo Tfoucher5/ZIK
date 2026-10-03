@@ -10,13 +10,32 @@
    *   players: any[], teams: any[]|null, phase: string, code: string,
    *   pro: boolean, step: number, confirmKick: string|null,
    *   onScore: (username: string, delta: number) => void,
+ *   onSetScore: (username: string, score: number) => void,
    *   onKick: (username: string) => void,
    *   onTeam: (username: string, team: number) => void,
    * }}
    */
-  let { players, teams, phase, code, pro, step, confirmKick, onScore, onKick, onTeam } = $props();
+  let { players, teams, phase, code, pro, step, confirmKick, onScore, onSetScore, onKick, onTeam } = $props();
 
   const aRepondu = (p) => phase === 'round' && (p.foundThisRound || p.answeredThisRound);
+
+  // Saisie directe : on ne pousse la valeur qu'à la validation, sinon chaque
+  // frappe enverrait un score intermédiaire à toute la salle.
+  //
+  // Le champ revient toujours à la valeur connue après l'envoi : c'est le
+  // serveur qui fait foi, via salon_scores_update. Sans ça, une demande
+  // refusée — fonction réservée au Pro, valeur hors bornes — laissait le
+  // champ afficher un score que personne n'avait.
+  function valide(e, username, scoreActuel) {
+    const champ = e.currentTarget;
+    const v = Math.round(Number(champ.value));
+    const valable = Number.isFinite(v) && v >= 0 && v !== scoreActuel;
+    champ.value = scoreActuel;
+    if (valable) {
+      onSetScore(username, v);
+      champ.blur();
+    }
+  }
 </script>
 
 {#if teams}
@@ -55,7 +74,16 @@
 
         <span class="tp-score">
           <button onclick={() => onScore(p.username, -step)} aria-label="Retirer {step} point à {p.username}">−</button>
-          <b>{p.score}</b>
+          <input
+            class="tp-saisie"
+            type="number"
+            min="0"
+            inputmode="numeric"
+            value={p.score}
+            aria-label="Score de {p.username}"
+            onkeydown={(e) => { if (e.key === 'Enter') valide(e, p.username, p.score); }}
+            onblur={(e) => valide(e, p.username, p.score)}
+          >
           <button onclick={() => onScore(p.username, step)} aria-label="Ajouter {step} point à {p.username}">+</button>
         </span>
 
@@ -110,7 +138,17 @@
     font-size: 1rem; cursor: pointer;
   }
   .tp-score button:hover { border-color: var(--accent); color: var(--accent); }
-  .tp-score b { min-width: 34px; text-align: center; font-family: var(--s-mono); }
+  .tp-saisie {
+    width: 68px; min-height: 36px; padding: 6px 8px;
+    text-align: center; font-family: var(--s-mono); font-size: 0.88rem;
+    border: 1px solid transparent; border-radius: 2px;
+    background: none; color: var(--text);
+    -moz-appearance: textfield;
+  }
+  .tp-saisie::-webkit-outer-spin-button,
+  .tp-saisie::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .tp-saisie:hover { border-color: var(--border2); }
+  .tp-saisie:focus { outline: none; border-color: var(--accent); background: var(--bg2); }
 
   .tp-kick {
     padding: 7px 12px; border-radius: 2px;

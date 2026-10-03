@@ -14,12 +14,20 @@ const DEFAULT_NAMES = [
   "Blanche",
 ];
 
-export function makeTeams(count) {
+/**
+ * Construit la liste des équipes.
+ *
+ * `existantes` permet de conserver les noms déjà personnalisés : changer le
+ * nombre d'équipes effaçait sinon tout ce que l'hôte avait saisi, puisque la
+ * liste était reconstruite depuis les noms par défaut.
+ */
+export function makeTeams(count, existantes = null) {
   const n = Math.min(Math.max(Number(count) || 0, 0), MAX_TEAMS);
   if (n < 2) return null;
+  const connues = new Map((existantes ?? []).map((t) => [t.id, t.name]));
   return Array.from({ length: n }, (_, id) => ({
     id,
-    name: DEFAULT_NAMES[id],
+    name: connues.get(id) ?? DEFAULT_NAMES[id],
   }));
 }
 

@@ -218,6 +218,7 @@
           <TabPlayers
             {players} {teams} {phase} {code} {pro} {step} {confirmKick}
             onScore={(username, delta) => gate('score', () => send('salon_adjust_score', { username, delta }))}
+            onSetScore={(username, score) => gate('score', () => send('salon_adjust_score', { username, score }))}
             onKick={kick}
             onTeam={(username, team) => send('salon_set_player_team', { username, team })}
           />

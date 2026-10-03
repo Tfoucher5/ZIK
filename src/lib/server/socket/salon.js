@@ -1089,13 +1089,21 @@ export function registerSalon(io) {
     });
 
     // Correction à la main par l'animateur (réponse orale acceptée, triche…)
-    socket.on("salon_adjust_score", ({ username, delta } = {}) => {
+    // `delta` ajuste au pas (boutons + et −) ; `score` fixe une valeur saisie
+    // directement, hors de portée d'un delta plafonné à 1000.
+    socket.on("salon_adjust_score", ({ username, delta, score } = {}) => {
       const salon = adminSalon(socket);
       const player = salon?.players[username];
-      const d = Math.round(Number(delta) || 0);
-      if (!player || !d || Math.abs(d) > 1000) return;
+      if (!player) return;
+
+      const absolu = score != null;
+      const v = Math.round(Number(absolu ? score : delta) || 0);
+      if (absolu) {
+        if (!Number.isFinite(v) || v < 0 || v > 100000) return;
+      } else if (!v || Math.abs(v) > 1000) return;
+
       if (!requirePro(socket, salon, "score")) return;
-      player.score = Math.max(0, player.score + d);
+      player.score = absolu ? v : Math.max(0, player.score + v);
       io.to(`salon:${salon.code}`).emit("salon_scores_update", {
         scores: sortedScores(salon),
         teams: standings(salon),
@@ -1150,7 +1158,7 @@ export function registerSalon(io) {
       if (idle && "teamCount" in patch) {
         if (patch.teamCount > teamLimit(salon))
           return requirePro(socket, salon, "teams");
-        s.teams = makeTeams(patch.teamCount);
+        s.teams = makeTeams(patch.teamCount, s.teams);
         spreadPlayers(s.teams, Object.values(salon.players));
         broadcastRoster(code, io);
       }

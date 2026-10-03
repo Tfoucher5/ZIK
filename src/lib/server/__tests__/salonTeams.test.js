@@ -18,6 +18,36 @@ describe("makeTeams", () => {
   it("plafonne à huit équipes", () => {
     expect(makeTeams(12)).toHaveLength(8);
   });
+
+  it("garde les noms déjà personnalisés quand le nombre change", () => {
+    const avant = makeTeams(2);
+    avant[0].name = "Les Bretons";
+    avant[1].name = "Table du fond";
+    const apres = makeTeams(4, avant);
+    expect(apres[0].name).toBe("Les Bretons");
+    expect(apres[1].name).toBe("Table du fond");
+  });
+
+  it("donne un nom par défaut aux équipes ajoutées", () => {
+    const avant = makeTeams(2);
+    avant[0].name = "Les Bretons";
+    const apres = makeTeams(4, avant);
+    expect(apres[2].name).toBe("Jaune");
+    expect(apres[3].name).toBe("Verte");
+  });
+
+  it("oublie les noms des équipes retirées", () => {
+    const avant = makeTeams(4);
+    avant[3].name = "Supprimée";
+    const apres = makeTeams(2, avant);
+    expect(apres).toHaveLength(2);
+    expect(apres.some((t) => t.name === "Supprimée")).toBe(false);
+  });
+
+  it("repart des noms par défaut sans équipes existantes", () => {
+    expect(makeTeams(2)[0].name).toBe("Rouge");
+    expect(makeTeams(2, null)[0].name).toBe("Rouge");
+  });
 });
 
 describe("smallestTeam", () => {
