@@ -1,7 +1,13 @@
 <script>
   import { dicebear } from '$lib/utils.js';
+  import {
+    fmtScore, fmtSince, fmtDate, pct,
+    xpForNextLevel, xpPercent, eloRatio,
+    buildCurve, buildItinerary, rangOrdinal, rangDetail,
+  } from '$lib/profile/stats.js';
   import AchievementsPanel from '$lib/components/AchievementsPanel.svelte';
   import InviteModal from '$lib/components/InviteModal.svelte';
+  import ProfileSummary from '$lib/components/profile/ProfileSummary.svelte';
 
   let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {} } = $props();
 
@@ -102,46 +108,25 @@
   const name   = $derived(profile?.username || 'Joueur');
   const avatar = $derived(profile?.avatar_url || dicebear(name));
 
-  function fmtSince(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  }
-  function fmtScore(n) {
-    if (n == null) return '—';
-    if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
-    return String(n);
-  }
-  function fmtDate(iso) {
-    if (!iso) return '';
-    const d = new Date(iso), now = new Date();
-    const diff = Math.floor((now - d) / 86400000);
-    if (diff === 0) return `Auj. ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-    if (diff === 1) return 'Hier';
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-  }
 
-  // XP / niveau (mêmes formules que le serveur)
-  function xpForLevel(lvl) { return Math.round(50 * Math.pow(Math.max(0, lvl - 1), 2.5)); }
-  function xpForNextLevel(lvl) { return Math.round(50 * Math.pow(lvl, 2.5)); }
   const lvl = $derived(profile?.level ?? 1);
   const xpMax = $derived(xpForNextLevel(lvl));
-  const xpPct = $derived(Math.min(100, Math.round(((profile?.xp ?? 0) - xpForLevel(lvl)) / (xpMax - xpForLevel(lvl)) * 100)));
+  const xpPct = $derived(xpPercent(profile?.xp, lvl));
   const powerSegs = 26;
   const powerOn = $derived(Math.round(powerSegs * xpPct / 100));
 
   // Cadran ELO : ratio sur une plage 800→2200
   const elo = $derived(profile?.elo ?? 0);
-  const eloRatio = $derived(Math.max(0, Math.min(1, (elo - 800) / 1400)));
+  const ratioElo = $derived(eloRatio(elo));
   const dialCirc = 311;
-  const dialOffset = $derived(dialCirc * (1 - eloRatio));
-  const dialAngle = $derived(-90 + eloRatio * 180);
+  const dialOffset = $derived(dialCirc * (1 - ratioElo));
+  const dialAngle = $derived(-90 + ratioElo * 180);
 
   // Stats du rider selon le mode
   const total   = $derived(m?.winRate?.total ?? 0);
   const wins    = $derived(m?.winRate?.wins ?? 0);
   const podiums = $derived(m?.podiums ?? 0);
   const avg     = $derived(total > 0 ? Math.round((m?.totalScore ?? 0) / total) : 0);
-  const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
   const riderStats = $derived([
     { k: 'Parties jouées', v: total || '—' },
@@ -156,29 +141,9 @@
   // Courbe de forme
   const recent = $derived(m?.recentGames ?? []);
   const curve = $derived(buildCurve(recent));
-  function buildCurve(games) {
-    if (!games?.length) return { line: '', area: '', last: null, min: 0, max: 0 };
-    const pts = [...games].reverse().map(g => g.score);
-    const min = Math.min(...pts), max = Math.max(...pts), range = max - min || 1;
-    const W = 640, H = 130, pad = 14;
-    const coords = pts.map((s, i) => {
-      const x = pts.length === 1 ? W / 2 : (i / (pts.length - 1)) * W;
-      const y = pad + (1 - (s - min) / range) * (H - pad * 2);
-      return [x, y];
-    });
-    const line = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-    const area = `${line} ${W},${H} 0,${H}`;
-    return { line, area, last: coords[coords.length - 1], min, max, lastScore: pts[pts.length - 1] };
-  }
 
   // Meilleurs scores par room officielle
-  const itinerary = $derived(
-    Object.entries(m?.bestByRoom ?? {})
-      .map(([code, score]) => ({ room: m?.roomInfo?.[code], score }))
-      .filter(e => e.room)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-  );
+  const itinerary = $derived(buildItinerary(m?.bestByRoom, m?.roomInfo));
 
   // Types de pass (répartition)
   const byType = $derived(m?.scoreByRoomType ?? { official: { count: 0, totalScore: 0 }, public: { count: 0, totalScore: 0 }, private: { count: 0, totalScore: 0 } });
@@ -207,14 +172,8 @@
   const rank = $derived(stats?.rank);
   const totalPlayers = $derived(stats?.totalPlayers);
   const topPercent = $derived(stats?.topPercent);
-  const rangOrdinal = $derived(rank == null ? null : rank === 1 ? '1er' : `${rank}e`);
-  const rangDetail = $derived.by(() => {
-    if (rank == null) return null;
-    const bouts = [];
-    if (totalPlayers) bouts.push(`sur ${totalPlayers.toLocaleString('fr-FR')}`);
-    if (topPercent) bouts.push(`top ${topPercent} %`);
-    return bouts.join(' · ') || 'Classement';
-  });
+  const ordinal = $derived(rangOrdinal(rank));
+  const detailRang = $derived(rangDetail(rank, totalPlayers, topPercent));
 
   // Nav setlist
   // Sommaire déclaratif : une section n'est rendue que si elle a du contenu,
@@ -288,7 +247,7 @@
           <div class="hs max"><b>{elo || '—'}</b><span>ELO</span></div>
           <div class="hs"><b>{fmtScore(profile?.total_score ?? m?.totalScore ?? 0)}</b><span>Score total</span></div>
           <div class="hs"><b>{pct(podiums, total)}%</b><span>Podiums</span></div>
-          {#if rangOrdinal}<div class="hs gold"><b>{rangOrdinal}</b><span>{rangDetail ?? 'Classement'}</span></div>{/if}
+          {#if ordinal}<div class="hs gold"><b>{ordinal}</b><span>{detailRang}</span></div>{/if}
         </div>
 
         <div class="social-row">
@@ -329,18 +288,7 @@
 
   <!-- ═══ CORPS ═══ -->
   <div class="tour">
-    <aside class="rail">
-      <div class="rail-card">
-        <div class="rail-lbl">Sommaire</div>
-        <nav class="rail-nav">
-          {#each sections as s (s.id)}
-            <button class="rail-link" class:active={activeSection === s.id} onclick={() => goTo(s.id)}>
-              <span class="n">{s.n}</span><span class="t">{s.t}</span>
-            </button>
-          {/each}
-        </nav>
-      </div>
-    </aside>
+    <ProfileSummary {sections} active={activeSection} onGoTo={goTo} />
 
     <main class="program">
 
@@ -455,7 +403,7 @@
         <div class="block-head">
           <span class="block-num">{numDe('log')}</span>
           <h2>Dernières parties</h2>
-          <span class="sub">Dernières parties</span>
+          <span class="sub">{carnet.length} dernière{carnet.length > 1 ? 's' : ''}</span>
         </div>
         <div class="case log">
           {#if carnet.length}
@@ -672,16 +620,6 @@
 
   /* ═══ CORPS ═══ */
   .tour { display: grid; grid-template-columns: var(--rail-w) 1fr; gap: 40px; align-items: start; padding-bottom: 80px; }
-  .rail { position: sticky; top: calc(var(--nav-h) + 16px); }
-  .rail-card { border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg2); padding: 14px; }
-  .rail-lbl { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.58rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim); padding: 0 4px 12px; }
-  .rail-nav { display: flex; flex-direction: column; }
-  .rail-link { display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: var(--radius); background: none; border: none; border-left: 2px solid transparent; color: var(--mid); cursor: pointer; transition: all 0.18s; text-align: left; font-family: inherit; }
-  .rail-link .n { font-family: "JetBrains Mono", monospace; font-size: 0.62rem; color: var(--dim); width: 18px; }
-  .rail-link .t { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.86rem; letter-spacing: 0.06em; text-transform: uppercase; }
-  .rail-link:hover { color: var(--text); background: rgb(var(--c-glass) / 0.03); }
-  .rail-link.active { color: var(--accent); border-left-color: var(--accent); background: rgb(var(--accent-rgb) / 0.07); }
-  .rail-link.active .n { color: var(--accent); }
 
   .program { display: flex; flex-direction: column; gap: 52px; min-width: 0; }
   .prog-block { opacity: 0; transform: translateY(18px); transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1); }
@@ -785,10 +723,6 @@
   @media (max-width: 1000px) {
     .marquee-grid { grid-template-columns: 1fr; gap: 28px; }
     .tour { grid-template-columns: 1fr; gap: 0; }
-    .rail { position: static; margin-bottom: 36px; }
-    .rail-nav { flex-direction: row; flex-wrap: wrap; }
-    .rail-link { border-left: none; border-bottom: 2px solid transparent; }
-    .rail-link.active { border-left: none; border-bottom-color: var(--accent); }
   }
   @media (max-width: 640px) {
     .kv { grid-template-columns: 1fr; }
