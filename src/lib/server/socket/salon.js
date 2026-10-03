@@ -322,6 +322,19 @@ function staff(code, io) {
   return io.to([`salon:screens:${code}`, `salon:ctrl:${code}`]);
 }
 
+/**
+ * Annonce à la régie combien d'écrans TV sont connectés.
+ *
+ * L'information existait déjà côté serveur — elle sert à décider quand
+ * fermer le salon — mais n'était jamais transmise : l'exploitant ne pouvait
+ * pas voir qu'aucune TV n'était branchée, ni que deux l'étaient et que le
+ * son allait jouer en double.
+ */
+function broadcastScreens(code, io) {
+  const count = io.sockets.adapter.rooms.get(`salon:screens:${code}`)?.size ?? 0;
+  io.to(`salon:ctrl:${code}`).emit("salon_screens", { count });
+}
+
 function broadcastRoster(code, io) {
   const salon = salonRooms[code];
   if (!salon) return;
@@ -976,6 +989,7 @@ export function registerSalon(io) {
         prepareSession(code, io);
       else announceNextVideo(salon, io);
       scheduleCleanup(code);
+      broadcastScreens(code, io);
     });
 
     // ── Régie : l'écran de pilotage, à côté de la TV ─────────────────────────
@@ -1016,6 +1030,7 @@ export function registerSalon(io) {
         trackCount: game.fullPlaylist.length,
       });
       scheduleCleanup(code);
+      broadcastScreens(code, io);
     });
 
     socket.on("salon_pause", () => {
@@ -1599,6 +1614,8 @@ export function registerSalon(io) {
       if (!salon) return;
 
       if (socket.salonRole === "screen" || socket.salonRole === "control") {
+        // Un écran de moins : la régie doit le voir tout de suite.
+        if (socket.salonRole === "screen") broadcastScreens(code, io);
         // Le salon ferme quand plus aucun écran ni régie n'est connecté
         const rooms = io.sockets.adapter.rooms;
         const left =
