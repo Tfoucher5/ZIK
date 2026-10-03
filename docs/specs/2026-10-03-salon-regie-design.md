@@ -208,3 +208,23 @@ devront être déclarés en `:global` restreint à la racine `.rg`.
 - **Le choix d'onglets partout** gâche de la largeur sur un second écran.
   Atténué par le centrage à 900 px, mais c'est un compromis assumé en faveur
   de la cohérence entre supports.
+
+---
+
+## Questions ouvertes
+
+### Plafond de huit équipes
+
+`MAX_TEAMS = 8` n'est pas arbitraire : il est adossé à huit couleurs
+(`--q0` à `--q7` dans `salon.css`) et huit noms par défaut.
+
+La limite réelle n'est pas technique. Au-delà de huit à dix couleurs, on ne
+les distingue plus sur une télé à cinq mètres : un bar à quinze équipes
+aurait deux verts que les joueurs confondraient. Monter à douze reste un
+ajout de contenu ; viser vingt demande de changer d'identifiant principal —
+numéro et nom en premier sur l'écran TV, couleur réduite à un liseré.
+
+**Décision du 2026-10-03 :** on garde huit. Aucun client n'a encore demandé
+plus, et dimensionner à l'aveugle coûterait une refonte de l'affichage TV
+pour un besoin supposé. À rouvrir quand un retour terrain le justifie, avec
+le nombre d'équipes réellement observé.
