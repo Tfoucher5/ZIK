@@ -31,6 +31,13 @@ import {
 import { scheduleChatClear, cancelChatClear, addChatMessage } from "./chat.js";
 import { makeChoices, calcQcmPoints } from "./scoring.js";
 import { resolveVideo, getPreview, prefetchNextRound } from "./audio.js";
+import {
+  identifyPlayer,
+  resetCards,
+  onRoundEnd,
+  settleCards,
+  secureAt,
+} from "./cardFlow.js";
 
 // ─── Auto-start countdowns ────────────────────────────────────────────────────
 // Map: roomId -> { timer, startAt, seconds }
@@ -131,6 +138,7 @@ function resetRoundFlags(room) {
     room.players[n].foundExtras = [];
     room.players[n]._fullFoundCounted = false;
     room.players[n]._qcmAnswered = false;
+    room.players[n].guessesThisRound = 0;
   });
 }
 
@@ -139,6 +147,7 @@ function resetScores(room, io) {
     room.players[n].score = 0;
     room.players[n].roundsFullFound = 0;
   });
+  resetCards(room);
   io.to(`room:${room.roomId}`).emit(
     "update_players",
     Object.values(room.players).map(sanitizePlayer),
@@ -197,6 +206,10 @@ function endRound(roomId, reason, io) {
   };
   game.history.push(summary);
 
+  const skipped = !!game._skipped;
+  game._skipped = false;
+  const cards = onRoundEnd(room, track, { skipped });
+
   Object.keys(room.players).forEach((username) => {
     const p = room.players[username];
     const socketId = room.nameToSocket[username];
@@ -207,6 +220,7 @@ function endRound(roomId, reason, io) {
         foundTitle: p.foundTitle,
         foundFeats: p.foundFeats || [],
         foundExtras: p.foundExtras || [],
+        card: cards[username] ?? null,
         correctChoiceIndex:
           room.game_mode === "qcm" ? game.correctChoiceIndex : undefined,
       });
@@ -267,6 +281,7 @@ async function startNextRound(roomId, io) {
 
   game.currentRound++;
   game.firstFullFinder = null;
+  game.fullFinders = [];
   game.totalFullFound = 0;
   resetRoundFlags(room);
   game.currentTrack = game.sessionPlaylist.pop();
@@ -407,6 +422,19 @@ async function saveGameResults(roomId, finalScores, io) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
   // _ended : partie déjà persistée — rejouer elo, stats et succès la compterait deux fois
+  // Cartes provisoires des joueurs encore là : elles deviennent définitives.
+  // Idempotent : une carte déjà attribuée n'est plus en attente.
+  for (const p of finalScores)
+    if (p.userId && !p.isGuest)
+      await settleCards({
+        game: room.game,
+        name: p.name,
+        userId: p.userId,
+        keep: true,
+        io,
+        socketId: room.nameToSocket[p.name],
+      }).catch(() => {});
+
   if (!dbGameId || room.game._ended) return;
 
   try {
@@ -739,6 +767,18 @@ function leaveRoom(socket, roomId, io) {
           ).catch(() => {});
         }
 
+        // Cartes provisoires : gardées si le joueur a fait au moins la moitié
+        // des manches, perdues sinon
+        if (playerSnapshot.userId && !playerSnapshot.isGuest)
+          settleCards({
+            game: gameRef,
+            name,
+            userId: playerSnapshot.userId,
+            keep:
+              (playerSnapshot.roundsPresent || 0) >=
+              secureAt(gameRef.maxRounds),
+          }).catch(() => {});
+
         if (!roomGames[roomId]) return;
         delete room.players[name];
         const active = Object.values(room.players)
@@ -778,7 +818,14 @@ export function register(io) {
   globalThis.__zik_io = io;
   io.on("connection", (socket) => {
     socket.on("join_room", async (payload) => {
-      const { roomId, username: rawName, userId, isGuest, takeover } = payload;
+      const {
+        roomId,
+        username: rawName,
+        userId,
+        isGuest,
+        takeover,
+        token,
+      } = payload;
       let username = rawName;
       if (!username?.trim()) return socket.emit("error", "Pseudo requis");
 
@@ -852,6 +899,14 @@ export function register(io) {
 
       room.socketToName[socket.id] = username;
       room.nameToSocket[username] = socket.id;
+
+      const joined = room.players[username];
+      identifyPlayer(joined, { token, userId }, socket)
+        .then(() => {
+          if (joined.cardsInPlay?.length)
+            socket.emit("cards_in_play", joined.cardsInPlay);
+        })
+        .catch(() => {});
 
       io.to(`room:${roomId}`).emit(
         "update_players",
@@ -1018,6 +1073,15 @@ export function register(io) {
       if (!guess?.trim()) return;
 
       const user = room.players[name];
+
+      // Au plus 4 réponses par seconde : invisible pour un humain, coupe les scripts
+      const now = Date.now();
+      user._guessTimes = (user._guessTimes || []).filter((t) => now - t < 1000);
+      if (user._guessTimes.length >= 4) return;
+      user._guessTimes.push(now);
+      user.guessesThisRound = (user.guessesThisRound || 0) + 1;
+      user.lastAnswerRound = room.game.currentRound;
+
       const input = cleanString(guess);
       const timeTaken = (Date.now() - room.game.startTime) / 1000;
       const speedBonus = calcSpeedBonus(timeTaken);
@@ -1134,6 +1198,7 @@ export function register(io) {
         user._fullFoundCounted = true;
         user.roundsFullFound = (user.roundsFullFound || 0) + 1;
         if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
+        room.game.fullFinders.push({ name: user.name, ms: timeTaken * 1000 });
         room.game.totalFullFound++;
         if (user.userId && !user.isGuest)
           bumpWeeklyChallenge("correct_answers", user.userId, 1);
@@ -1156,6 +1221,7 @@ export function register(io) {
       if (user._qcmAnswered) return;
 
       user._qcmAnswered = true;
+      user.lastAnswerRound = room.game.currentRound;
       const isCorrect = choiceIndex === room.game.correctChoiceIndex;
       const timeTaken = (Date.now() - room.game.startTime) / 1000;
       let pts = 0;
@@ -1167,6 +1233,7 @@ export function register(io) {
         user.foundTitle = true;
         user._fullFoundCounted = true;
         if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
+        room.game.fullFinders.push({ name: user.name, ms: timeTaken * 1000 });
         room.game.totalFullFound++;
         if (user.userId && !user.isGuest)
           bumpWeeklyChallenge("correct_answers", user.userId, 1);
@@ -1343,6 +1410,7 @@ export function adminSkipRound(roomId) {
   const room = roomGames[roomId];
   if (!room || !room.game.isActive) return false;
   const io = globalThis.__zik_io;
+  room.game._skipped = true;
   endRound(roomId, "Round sauté par l'admin", io);
   return true;
 }

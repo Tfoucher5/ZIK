@@ -88,6 +88,7 @@
 
           <span class="nav-dd-group">Mon compte</span>
           <a href="/profile"  class="nav-dd-item">Mon profil</a>
+          <a href="/collection" class="nav-dd-item">Ma collection</a>
           <a href="/settings" class="nav-dd-item">Param&egrave;tres</a>
 
           <span class="nav-dd-group nav-dd-mobile-only">Naviguer</span>

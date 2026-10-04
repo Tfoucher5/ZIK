@@ -134,6 +134,7 @@
 
   <link rel="stylesheet" href="/css/base.css?v=3.13.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
 
 {#if !isGame}
@@ -185,6 +186,7 @@
       <span class="footer-col-head">Compte</span>
       <div class="footer-col-links">
         <a href="/profile">Mon profil</a>
+        <a href="/collection">Ma collection</a>
         <a href="/settings">Paramètres</a>
       </div>
     </div>

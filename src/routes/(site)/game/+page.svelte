@@ -5,6 +5,10 @@
   import ReportModal from '$lib/components/ReportModal.svelte';
   import AchievementToast from '$lib/components/AchievementToast.svelte';
   import Modal from '$lib/components/Modal.svelte';
+  import Card from '$lib/components/card/Card.svelte';
+  import CardDrop from '$lib/components/card/CardDrop.svelte';
+  import CardTray from '$lib/components/card/CardTray.svelte';
+  import CardViewer from '$lib/components/card/CardViewer.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { dicebear } from '$lib/utils.js';
 
@@ -41,10 +45,36 @@
   let takenOver    = $state(false);
   let _joinSocket = null;
 
+  // Le jeton de session prouve au serveur que userId est bien le nôtre :
+  // sans lui, pas de carte (et le serveur ne croit pas le userId sur parole)
+  async function joinPayload(extra = {}) {
+    const token = IS_GUEST ? null : (await sb.auth.getSession())?.data?.session?.access_token ?? null;
+    return { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST, token, ...extra };
+  }
+
   // Reprend la main sur l'autre onglet : il sera déconnecté à notre place
   function takeOverSession() {
     joinConflict = null;
-    _joinSocket?.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST, takeover: true });
+    joinPayload({ takeover: true }).then((p) => _joinSocket?.emit('join_room', p));
+  }
+
+  // Cartes : celle de la manche, celles gagnées depuis le début de la partie
+  let roundCard = $state(null);
+  let cardsInPlay = $state([]);
+  let cardsResult = $state(null);
+  let roundsSeen = $state(0);
+  let roundTotal = $state(10);
+  let quitAsked = $state(false);
+
+  // Cartes encore provisoires : quitter maintenant les ferait perdre
+  function cardsAtRisk() {
+    return cardsInPlay.length > 0 && roundsSeen < Math.ceil(roundTotal / 2) && !gameoverShow;
+  }
+
+  function onBack(e) {
+    if (!cardsAtRisk()) return;
+    e.preventDefault();
+    quitAsked = true;
   }
   let showStart   = $state(true);
   let startDisabled = $state(false);
@@ -703,7 +733,7 @@
 
     socket.on('connect', () => {
       showDcBanner = false;
-      if (_hasJoined) socket.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST });
+      if (_hasJoined) joinPayload().then((p) => socket.emit('join_room', p));
     });
     socket.on('disconnect', () => {
       if (!takenOver) showDcBanner = true;
@@ -744,7 +774,9 @@
       ps.forEach(p => { _prevScores[p.name] = p.score; });
     });
     socket.on('init_history', h => { history = Array.isArray(h) ? [...h].reverse() : []; });
-    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; shareResultId = null; shareCopied = false; });
+    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; shareResultId = null; shareCopied = false; cardsInPlay = []; cardsResult = null; roundsSeen = 0; roundCard = null; });
+    socket.on('cards_in_play', (list) => { cardsInPlay = list; });
+    socket.on('cards_granted', (result) => { cardsResult = result; });
     socket.on('round_loading', () => {
       clearTimeout(_roundLoadingTimer);
       _roundLoadingTimer = setTimeout(() => { roundLoading = true; }, 1500);
@@ -753,6 +785,8 @@
       clearTimeout(_roundLoadingTimer);
       roundLoading = false;
       roundInfo = `Manche ${data.round} / ${data.total}`;
+      roundTotal = data.total;
+      roundCard = null;
       currentRoundInfo = { round: data.round, trackId: data.trackId ?? null, videoId: data.videoId ?? null };
       coverSrc = ''; showCover = false;
       // Une partie relancée par quelqu'un d'autre ne doit pas nous arracher aux
@@ -849,6 +883,9 @@
     });
 
     socket.on('round_end', data => {
+      roundsSeen += 1;
+      roundCard = data.card ?? null;
+      if (data.card?.mode === 'won') cardsInPlay = [...cardsInPlay, { card: data.card.card, round: data.round }];
       if (gameMode === 'qcm' && data.correctChoiceIndex !== undefined) {
         qcmReveal = data.correctChoiceIndex;
       }
@@ -946,7 +983,7 @@
     // Join
     _hasJoined = true;
     _joinSocket = socket;
-    socket.emit('join_room', { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST });
+    joinPayload().then((p) => socket.emit('join_room', p));
 
   });
 
@@ -967,7 +1004,8 @@
   <title>ZIK - En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.12.0">
+  <link rel="stylesheet" href="/css/game.css?v=3.15.0">
+  <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
 
 {#if showDcBanner}
@@ -1013,12 +1051,17 @@
 
   <!-- Header -->
   <header class="g-header">
-    <a href="/" class="g-back">&#x2190; Rooms</a>
+    <a href="/" class="g-back" onclick={onBack}>&#x2190; Rooms</a>
     <div class="g-header-room">
       <span class="g-live"></span>
       <span class="g-room-name">{roomLabel}</span>
     </div>
     <div class="g-round-info">{roundInfo}</div>
+    {#if cardsInPlay.length}
+      <div class="g-cards-pill">
+        <CardTray entries={cardsInPlay} round={roundsSeen} maxRounds={roundTotal} variant="pill" />
+      </div>
+    {/if}
     <div class="g-header-spacer"></div>
     <div class="g-header-right">
       <button class="g-chat-toggle" onclick={toggleChat} title="Chat" aria-label="Ouvrir le chat" class:g-chat-active={chatOpen}>
@@ -1077,6 +1120,11 @@
           </div>
         {/each}
       </div>
+      {#if !IS_GUEST}
+        <div class="g-cards-tray">
+          <CardTray entries={cardsInPlay} round={roundsSeen} maxRounds={roundTotal} />
+        </div>
+      {/if}
     </aside>
 
     <!-- Colonne centrale -->
@@ -1311,14 +1359,20 @@
   <div class="g-reveal">
     <div class="g-rv-bg" style={coverSrc ? `background-image:url(${coverSrc})` : ''}></div>
     <div class="g-rv-inner">
-      <div class="g-rv-sleeve">
-        <div class="g-rv-vinyl"></div>
-        {#if coverSrc}
-          <img class="g-rv-cover" src={coverSrc} alt="Pochette">
-        {:else}
-          <div class="g-rv-cover-fb">&#x266A;</div>
-        {/if}
-      </div>
+      {#if roundCard?.mode === 'won'}
+        <div class="g-rv-card">
+          <Card card={roundCard.card} size="lg" reveal inspectable list={[roundCard.card]} />
+        </div>
+      {:else}
+        <div class="g-rv-sleeve">
+          <div class="g-rv-vinyl"></div>
+          {#if coverSrc}
+            <img class="g-rv-cover" src={coverSrc} alt="Pochette">
+          {:else}
+            <div class="g-rv-cover-fb">&#x266A;</div>
+          {/if}
+        </div>
+      {/if}
       <div class="g-rv-info">
         <div class="g-rv-eyebrow">{roundInfo} — Réponse</div>
         <h1 class="g-rv-artist" class:missed={slotArtist.state === 'missed'}>{slotArtist.val}</h1>
@@ -1332,6 +1386,21 @@
         <div class="g-rv-chips">
           <span class="g-rv-chip" class:none={!summaryFinder.includes('1er')}>{summaryFinder}</span>
         </div>
+        {#if roundCard}
+          <div class="g-rv-drop">
+            <CardDrop
+              card={roundCard.card}
+              mode={roundCard.mode}
+              duplicate={roundCard.duplicate}
+              delayed={roundCard.delayed}
+              winner={roundCard.winner}
+              round={roundCard.roundsPresent ?? roundsSeen}
+              maxRounds={roundTotal}
+              conditions={roundCard.conditions ?? []}
+              onsignup={() => goto('/?auth=register&ref=cards')}
+            />
+          </div>
+        {/if}
         <div class="g-rv-next">{summaryReason}</div>
       </div>
     </div>
@@ -1394,6 +1463,27 @@
             Tu joues en invité : {myScore > 0 ? `tes ${myScore} pts ne seront pas gardés` : 'ton score n’est pas gardé'}.
             Un compte gratuit les enregistre et te fait entrer au classement.
           </p>
+        {/if}
+
+        {#if cardsInPlay.length}
+          {@const fresh = cardsResult?.cards?.filter((c) => c.is_new).length ?? 0}
+          <section class="g-go-cards" aria-label="Tes cartes de la partie">
+            <p class="g-go-cards-title">
+              {cardsInPlay.length} carte{cardsInPlay.length > 1 ? 's' : ''} gagnée{cardsInPlay.length > 1 ? 's' : ''}
+              {#if fresh}<span>dont {fresh} nouvelle{fresh > 1 ? 's' : ''}</span>{/if}
+            </p>
+            <div class="g-go-cards-list">
+              {#each cardsInPlay as entry (entry.card.id)}
+                <Card card={entry.card} size="sm" motion="hover" inspectable list={cardsInPlay.map((e) => e.card)} />
+              {/each}
+            </div>
+            {#each cardsResult?.sets ?? [] as set (set.id)}
+              <p class="g-go-cards-set">
+                {set.kind === 'album' ? 'Album complété' : 'Artiste complété'} : <strong>{set.name}</strong>
+              </p>
+            {/each}
+            <a href="/collection" class="g-go-share">Voir ma collection</a>
+          </section>
         {/if}
 
         <div class="g-go-actions">
@@ -1532,6 +1622,26 @@
 />
 
 <!-- Inviter des amis dans la room courante -->
+<CardViewer />
+
+<Modal open={quitAsked} onClose={() => (quitAsked = false)} maxWidth="440px">
+  <h3 class="gi-title">Quitter la partie ?</h3>
+  <p class="gi-sub">
+    {cardsInPlay.length > 1
+      ? `Tu as ${cardsInPlay.length} cartes en jeu, sécurisées seulement à la manche ${Math.ceil(roundTotal / 2)} : en partant maintenant, tu les perds.`
+      : `Tu as 1 carte en jeu, sécurisée seulement à la manche ${Math.ceil(roundTotal / 2)} : en partant maintenant, tu la perds.`}
+  </p>
+  <div class="g-quit-cards">
+    {#each cardsInPlay as entry (entry.card.id)}
+      <Card card={entry.card} size="mini" motion="none" />
+    {/each}
+  </div>
+  <div class="g-quit-actions">
+    <button class="g-start-btn" onclick={() => (quitAsked = false)}>Rester</button>
+    <button class="g-go-back" onclick={() => { quitAsked = false; goto('/'); }}>Quitter quand même</button>
+  </div>
+</Modal>
+
 <Modal open={inviteOpen} onClose={() => inviteOpen = false} maxWidth="440px">
   <h3 class="gi-title">Inviter des amis</h3>
   <p class="gi-sub">Ils recevront une invitation pour <b>{roomLabel || ROOM_ID}</b>.</p>

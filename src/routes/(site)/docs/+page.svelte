@@ -1,4 +1,5 @@
 <script>
+  import { RARITIES, RARITY_ORDER } from '$lib/components/card/rarity.js';
   import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount } from 'svelte';
 
@@ -15,6 +16,7 @@
     { id: 'playlists', label: 'Playlists' },
     { id: 'rooms', label: 'Rooms' },
     { id: 'compte', label: 'Compte & Profil' },
+    { id: 'cartes', label: 'Cartes musicales' },
     { id: 'amis', label: 'Amis & invitations' },
     { id: 'classement', label: 'Classements' },
     { id: 'faq', label: 'FAQ' },
@@ -838,6 +840,63 @@
       <h3>Défi communautaire hebdomadaire</h3>
       <p>
         Chaque semaine, un objectif collectif est proposé à toute la communauté (bonnes réponses, parties jouées ou victoires Zikle cumulées). S'il est atteint avant la fin de la semaine, tous les participants débloquent le succès collectif, et le joueur ayant le plus contribué devient <strong>top contributeur de la semaine</strong>. Ces deux succès s'affichent avec un ×N sur le profil dès qu'ils sont obtenus plusieurs fois. Le <a href="/defi">défi en cours</a> et son <a href="/defi/archives">historique</a> sont accessibles depuis la page d'accueil.
+      </p>
+    </section>
+
+    <!-- ── CARTES MUSICALES ── -->
+    <section>
+      <h2 id="cartes">Cartes musicales</h2>
+
+      <p>
+        Chaque titre du catalogue ZIK a sa carte, avec sa pochette, son album, son année et sa popularité. Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant, et se rangent dans votre <a href="/collection">collection</a>.
+      </p>
+
+      <h3>Gagner une carte</h3>
+      <ul class="doc-list">
+        <li><strong>Soyez le premier à trouver le titre</strong> : artiste, titre et invités en mode classique, la bonne réponse en mode QCM.</li>
+        <li>Il faut un <strong>compte</strong>, une partie d'au moins <strong>5 manches</strong> et au moins <strong>2 joueurs connectés</strong> qui jouent vraiment. Les cartes ne se gagnent pas en solo.</li>
+        <li>Si le premier à trouver joue en invité, la carte revient au joueur connecté suivant.</li>
+        <li>Sur une playlist que vous avez créée, il faut au moins deux autres joueurs dans la room.</li>
+        <li>Un titre ajouté à une playlist depuis moins de 24 heures ne donne pas encore de carte.</li>
+      </ul>
+
+      <h3>Les six raretés</h3>
+      <p>
+        La rareté d'une carte dépend de la popularité du titre sur Deezer : plus un titre est écouté dans le monde, plus sa carte est rare. Elle est fixée à la création de la carte et ne baisse jamais. Seule exception : un titre sorti depuis moins d'un an peut encore monter de rareté, le temps que sa popularité se stabilise.
+      </p>
+      <table class="doc-table">
+          <thead>
+            <tr><th>Rareté</th><th>Condition en plus d'être premier</th></tr>
+          </thead>
+          <tbody>
+            {#each RARITY_ORDER as r (r)}
+              {@const e = RARITIES[r].exploit}
+              <tr>
+                <td>{RARITIES[r].label}</td>
+                <td>
+                  {e.classic ? `Trouver en moins de ${e.classic / 1000} s (${e.qcm / 1000} s en QCM), ` : ''}{e.players} joueurs connectés{e.notOwnPlaylist ? ', jamais sur sa propre playlist' : ''}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+
+      <h3>Garder ses cartes</h3>
+      <ul class="doc-list">
+        <li>Une carte gagnée en manche est <strong>provisoire</strong>. Elle est <strong>sécurisée</strong> quand vous avez joué la moitié des manches de la partie, par exemple la manche 5 sur 10. Le suivi s'affiche à côté du classement.</li>
+        <li>Si vous quittez la partie avant, vos cartes provisoires sont perdues. ZIK vous prévient avant de partir.</li>
+        <li>Pour un compte créé depuis moins de 24 heures, les cartes gagnées arrivent dans la collection une fois ces 24 heures passées.</li>
+        <li>Gagner une carte que vous avez déjà ajoute un exemplaire (×2, ×3…).</li>
+      </ul>
+
+      <h3>Collection et sets</h3>
+      <p>
+        La collection se parcourt par carte, par artiste ou par album, avec une recherche et des filtres par rareté, genre et décennie. Un artiste ou un album dont ZIK propose au moins trois titres forme un <strong>set</strong> : les cartes qui vous manquent y apparaissent en silhouette, sans dévoiler le titre. Compléter un set l'affiche comme terminé dans votre collection.
+      </p>
+
+      <h3>Partager une carte</h3>
+      <p>
+        Ouvrez une carte en grand pour l'incliner, la retourner, sortir son disque et la partager : ZIK prépare une image de la carte à envoyer, avec le lien vers sa page.
       </p>
     </section>
 
