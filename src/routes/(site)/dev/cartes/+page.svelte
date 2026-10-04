@@ -2,6 +2,7 @@
   import Card from '$lib/components/card/Card.svelte';
   import CardViewer from '$lib/components/card/CardViewer.svelte';
   import CardDrop from '$lib/components/card/CardDrop.svelte';
+  import CardTray from '$lib/components/card/CardTray.svelte';
   import RarityBadge from '$lib/components/card/RarityBadge.svelte';
   import { RARITIES } from '$lib/components/card/rarity.js';
   import { demoCards } from './demo.js';
@@ -44,6 +45,20 @@
   };
 
   const won = $derived(demoCards[wonIndex]);
+
+  // Partie simulée : manches où le joueur gagne une carte
+  const gameWins = [
+    { round: 2, index: 0 },
+    { round: 3, index: 3 },
+    { round: 6, index: 2 },
+    { round: 8, index: 4 },
+  ];
+  let gameRound = $state(3);
+  let quitAsked = $state(false);
+  const trayEntries = $derived(
+    gameWins.filter((w) => w.round <= gameRound).map((w) => ({ card: demoCards[w.index], round: w.round })),
+  );
+  const atRisk = $derived(gameRound < 5 ? trayEntries.length : 0);
   const round = $derived(situation === 'secured' ? 6 : 3);
   const mode = $derived(
     situation === 'taken' ? 'taken' : situation === 'missed' ? 'missed' : situation === 'guest' ? 'guest' : 'won',
@@ -179,6 +194,70 @@
           {/key}
           <p class="rv-next">Manche suivante dans 5 s</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Suivi pendant la partie</h2>
+    <p class="hint">
+      Les cartes gagnées s'accumulent à côté du classement. Elles restent éteintes tant que la partie n'a pas passé la
+      moitié, puis s'allument toutes ensemble. Avance manche par manche.
+    </p>
+    <div class="round-tools">
+      <div class="seg" role="group" aria-label="Manche">
+        <button type="button" onclick={() => (gameRound = Math.max(1, gameRound - 1))}>Manche précédente</button>
+        <button type="button" aria-pressed="true">Manche {gameRound} sur 10</button>
+        <button type="button" onclick={() => (gameRound = Math.min(10, gameRound + 1))}>Manche suivante</button>
+      </div>
+      <button type="button" class="proto-btn" onclick={() => (quitAsked = true)}>Quitter la partie</button>
+    </div>
+
+    <div class="hud">
+      <aside class="hud-side">
+        <p class="hud-label">Classement</p>
+        <ol class="hud-board">
+          <li><span>toi</span><strong>{gameRound * 3 + 2}</strong></li>
+          <li><span>mehdi13</span><strong>{gameRound * 3 - 1}</strong></li>
+          <li><span>nina_vinyle</span><strong>{gameRound * 2}</strong></li>
+        </ol>
+        <CardTray entries={trayEntries} round={gameRound} maxRounds={10} />
+      </aside>
+
+      <div class="hud-main">
+        <div class="hud-phone">
+          <div class="hud-phone-top">
+            <span class="hud-phone-round">{gameRound} / 10</span>
+            {#if trayEntries.length}
+              <CardTray entries={trayEntries} round={gameRound} maxRounds={10} variant="pill" />
+            {/if}
+          </div>
+          <p class="hud-phone-hint">Sur téléphone : bandeau compact en haut de l'écran de jeu.</p>
+        </div>
+
+        {#if quitAsked}
+          <div class="quit" role="alertdialog" aria-labelledby="quit-title">
+            <p id="quit-title" class="quit-title">Quitter la partie ?</p>
+            {#if atRisk}
+              <p class="quit-text">
+                {atRisk > 1
+                  ? `Tu as ${atRisk} cartes en jeu, sécurisées seulement à la manche 5 : en partant maintenant, tu les perds.`
+                  : 'Tu as 1 carte en jeu, sécurisée seulement à la manche 5 : en partant maintenant, tu la perds.'}
+              </p>
+              <div class="quit-cards">
+                {#each trayEntries as e (e.card.id)}
+                  <Card card={e.card} size="mini" motion="none" />
+                {/each}
+              </div>
+            {:else}
+              <p class="quit-text">Tes cartes de la partie sont sécurisées, tu les gardes.</p>
+            {/if}
+            <div class="quit-actions">
+              <button type="button" class="quit-stay" onclick={() => (quitAsked = false)}>Rester</button>
+              <button type="button" class="quit-leave" onclick={() => (quitAsked = false)}>Quitter quand même</button>
+            </div>
+          </div>
+        {/if}
       </div>
     </div>
   </section>
@@ -433,6 +512,152 @@
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: rgb(255 255 255 / 0.4);
+  }
+
+  .hud {
+    display: grid;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 18px;
+    background: #08080b;
+    color: #f5f3f8;
+  }
+
+  @media (max-width: 720px) {
+    .hud {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .hud-side {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+  }
+
+  .hud-label {
+    margin: 0;
+    font: 500 0.66rem/1 ui-monospace, monospace;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .hud-board {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hud-board li {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 0.04);
+    font-size: 0.92rem;
+  }
+
+  .hud-board strong {
+    font: 700 1.05rem/1 'Barlow Condensed', sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hud-main {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 320px;
+    border-radius: 12px;
+    background: radial-gradient(circle at 50% 30%, #1a1424, #08080b 70%);
+  }
+
+  .hud-phone {
+    display: grid;
+    gap: 10px;
+    width: min(100%, 320px);
+    padding: 12px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 22px;
+    background: #0e0e13;
+  }
+
+  .hud-phone-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .hud-phone-round {
+    font: 700 1rem/1 'Barlow Condensed', sans-serif;
+    color: rgb(255 255 255 / 0.7);
+  }
+
+  .hud-phone-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  .quit {
+    position: absolute;
+    inset: auto 16px 16px;
+    display: grid;
+    gap: 12px;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 18px;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 14px;
+    background: #15151c;
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.6);
+  }
+
+  .quit-title {
+    margin: 0;
+    font: 700 1.5rem/1 'Barlow Condensed', sans-serif;
+  }
+
+  .quit-text {
+    margin: 0;
+    font-size: 0.92rem;
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .quit-cards {
+    display: flex;
+    gap: 8px;
+  }
+
+  .quit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .quit-actions button {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 99px;
+    font: 600 0.92rem/1 'Barlow', sans-serif;
+    cursor: pointer;
+  }
+
+  .quit-stay {
+    border: 0;
+    background: #f5f3f8;
+    color: #111;
+  }
+
+  .quit-leave {
+    border: 1px solid rgb(255 255 255 / 0.2);
+    background: none;
+    color: #f5f3f8;
   }
 
   .sizes {

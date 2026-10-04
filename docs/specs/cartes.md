@@ -808,6 +808,22 @@ visionneuse se ferme d'elle-même au démarrage de la manche).
 **Invité premier** : carte en silhouette + « Crée un compte pour gagner tes
 cartes », bouton vers `AuthModal`.
 
+**Pendant la partie** (`CardTray.svelte`) : les cartes gagnées s'accumulent
+à côté du classement (colonne latérale sur ordinateur, bandeau compact en
+haut de l'écran sur téléphone). Elles restent éteintes tant que le joueur
+n'a pas atteint la moitié des manches, avec une barre de progression et
+« Sécurisées à la manche 5, encore 2 manches ». Au seuil, elles s'allument
+toutes ensemble avec « 4 cartes sécurisées ». Une carte gagnée après le seuil
+est sécurisée tout de suite. Le seuil se calcule sur les manches où le joueur
+était présent (`roundsPresent`), pas sur le numéro de manche : un joueur
+arrivé en cours de partie voit son propre compte.
+
+**Quitter avant le seuil** : le bouton Quitter ouvre une confirmation qui
+montre les cartes en jeu (« Tu as 2 cartes en jeu, sécurisées seulement à la
+manche 5 : en partant maintenant, tu les perds. »), avec « Rester » en
+action principale. Une fois les cartes sécurisées, la confirmation l'indique
+et ne retient plus.
+
 **Fin de partie** (`cards_granted`) : bloc « Tes cartes de la partie » dans
 la séquence de révélation existante (`revealStep`), après le podium : cartes
 `sm` côte à côte, la plus rare en premier, clic → visionneuse avec toute la
