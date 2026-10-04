@@ -229,7 +229,10 @@ Deux enseignements :
   nous. Le design de la carte encadre la pochette, il ne la modifie pas (pas
   de recadrage déformant, pas de texte imprimé dessus, pas de filtre qui la
   dénature). Les effets de lumière passent **au-dessus**, dans une couche
-  séparée.
+  séparée. Seule exception : l'étiquette du disque reprend la pochette en
+  rond, comme les étiquettes illustrées des vrais vinyles.
+- Le partage (image PNG de la carte) affiche « zik-music.fr » ; la carte
+  affichée porte aussi l'adresse en petit au recto et au verso.
 - Mention en pied de la collection et au verso de la carte : « Données et
   pochettes : Deezer ».
 

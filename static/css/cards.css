@@ -1,0 +1,68 @@
+/* ── ZIK — Cartes : variables de rareté ─────────────────────────────────────
+  Seule partie globale du système de cartes. Tout le reste (couches, reflets,
+  animations) vit dans src/lib/components/card/.
+*/
+
+@property --sheen {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 35deg;
+}
+
+@property --mx {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --my {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+:root {
+  --rarity-common: #8b9099;
+  --rarity-uncommon: #2fbf71;
+  --rarity-rare: #3b82f6;
+  --rarity-epic: #9b5cf6;
+  --rarity-legendary: #e8b84a;
+  --rarity-mythic: #ff4fc8;
+}
+
+[data-rarity] {
+  --rc: #55585e;
+  --rc-ink: #e4e5e8;
+  --rc-light: color-mix(in oklab, var(--rc) 62%, white);
+  --rc-dark: color-mix(in oklab, var(--rc) 58%, black);
+}
+
+[data-rarity="common"] {
+  --rc: var(--rarity-common);
+  --rc-ink: #17181b;
+}
+
+[data-rarity="uncommon"] {
+  --rc: var(--rarity-uncommon);
+  --rc-ink: #052a16;
+}
+
+[data-rarity="rare"] {
+  --rc: var(--rarity-rare);
+  --rc-ink: #fff;
+}
+
+[data-rarity="epic"] {
+  --rc: var(--rarity-epic);
+  --rc-ink: #fff;
+}
+
+[data-rarity="legendary"] {
+  --rc: var(--rarity-legendary);
+  --rc-ink: #3d2905;
+}
+
+[data-rarity="mythic"] {
+  --rc: var(--rarity-mythic);
+  --rc-ink: #3f0530;
+}

@@ -11,7 +11,7 @@ const BRONZE = "#b06a3b";
 
 const MEDAL_COLORS = { 1: GOLD, 2: SILVER, 3: BRONZE };
 
-function escapeXml(str) {
+export function escapeXml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -29,7 +29,7 @@ function stripEmoji(str) {
     .trim();
 }
 
-function truncate(str, max) {
+export function truncate(str, max) {
   const clean = stripEmoji(str);
   return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
 }
