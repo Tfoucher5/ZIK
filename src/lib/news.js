@@ -3,6 +3,15 @@
 
 export const NEWS = [
   {
+    date: "2026-10-04",
+    version: "3.14.1",
+    tag: "Correctif",
+    title: "Les images de partage retrouvent la police de ZIK",
+    items: [
+      "Les images générées pour partager un résultat de partie s'affichaient avec une police de remplacement au lieu de celle du site. Elles utilisent de nouveau Barlow, comme partout sur ZIK.",
+    ],
+  },
+  {
     date: "2026-10-03",
     version: "3.14.0",
     tag: "Amélioration",
