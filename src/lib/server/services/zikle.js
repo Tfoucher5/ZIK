@@ -2,6 +2,7 @@ export { todayParis } from "../../zikle/shared.js";
 
 import { getFetch } from "./fetch.js";
 import { parseExpFromUrl } from "./deezer.js";
+import { enqueueCardEnrichment } from "./cards.js";
 
 const REFRESH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const DEEZER_CHART_URL = "https://api.deezer.com/chart/0/tracks?limit=100";
@@ -58,6 +59,7 @@ export async function refreshZiklePool(sb, force = false) {
     p_tracks: candidates,
   });
   if (error) throw error;
+  enqueueCardEnrichment(ids);
 
   const rows = (ids || []).map((track_id) => ({ track_id }));
   if (!rows.length) return { refreshed: false, added: 0 };
