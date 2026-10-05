@@ -1,6 +1,7 @@
 <script>
   import { getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
+  import { RARITIES } from '$lib/components/card/rarity.js';
   import { notifState, markAllRead, dismissNotif } from '$lib/notifications.svelte.js';
 
   const ctx = getContext('zik');
@@ -92,6 +93,8 @@
                 <div class="notif-actions">
                   <button class="notif-btn accept" onclick={() => joinRoom(n)}>Rejoindre</button>
                 </div>
+              {:else if n.type === 'card_up'}
+                <p>Ta carte <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> est passée <b>{RARITIES[n.payload?.rarity]?.label ?? ''}</b></p>
               {/if}
               <span class="notif-time">{timeAgo(n.created_at)}</span>
             </div>

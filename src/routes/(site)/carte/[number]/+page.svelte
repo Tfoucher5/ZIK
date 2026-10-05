@@ -14,6 +14,25 @@
     const result = await shareCard(card);
     shareMsg = result === 'downloaded' ? 'Image téléchargée, texte copié' : '';
   }
+
+  let reportMsg = $state('');
+  let reportState = $state('');
+
+  async function report(e) {
+    e.preventDefault();
+    reportState = 'sending';
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'bug',
+        subject: 'card',
+        message: reportMsg.trim(),
+        metadata: { card: card.number },
+      }),
+    }).catch(() => null);
+    reportState = res?.ok ? 'sent' : 'error';
+  }
 </script>
 
 <svelte:head>
@@ -67,6 +86,22 @@
       Les cartes se gagnent en trouvant le titre en premier dans une partie à plusieurs.
       <a href="/docs#cartes">Comment ça marche</a>
     </p>
+
+    <details class="cp-report">
+      <summary>Une erreur sur cette carte ?</summary>
+      {#if reportState === 'sent'}
+        <p class="cp-msg" role="status">Merci, on vérifie et on corrige.</p>
+      {:else}
+        <form onsubmit={report}>
+          <label for="cp-report-msg">Ce qui ne va pas (mauvais titre, mauvais artiste, mauvaise pochette…)</label>
+          <textarea id="cp-report-msg" rows="3" maxlength="500" bind:value={reportMsg}></textarea>
+          <button type="submit" class="cp-btn" disabled={reportState === 'sending'}>
+            {reportState === 'sending' ? 'Envoi…' : 'Signaler'}
+          </button>
+          {#if reportState === 'error'}<p class="cp-msg" role="alert">Envoi impossible, réessaie.</p>{/if}
+        </form>
+      {/if}
+    </details>
   </section>
 </main>
 
@@ -188,5 +223,35 @@
     margin: 22px 0 0;
     font-size: 0.9rem;
     color: var(--mid);
+  }
+
+  .cp-report {
+    margin-top: 18px;
+    font-size: 0.88rem;
+    color: var(--mid);
+  }
+
+  .cp-report summary {
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  .cp-report form {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+    justify-items: start;
+  }
+
+  .cp-report textarea {
+    width: 100%;
+    max-width: 420px;
+    padding: 10px 12px;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
   }
 </style>

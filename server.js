@@ -14,6 +14,7 @@ import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon.js";
 import { registerPresence } from "./src/lib/server/socket/presence.js";
 import { preloadAllPlaylists } from "./src/lib/server/services/playlist.js";
+import { dailyCardsMaintenance } from "./src/lib/server/services/cards.js";
 import { pushError } from "./src/lib/server/state.js";
 
 const _origError = console.error.bind(console);
@@ -94,6 +95,8 @@ registerPresence(io);
 preloadAllPlaylists();
 autoUpdateYtDlp();
 setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h
+setTimeout(dailyCardsMaintenance, 60 * 1000);
+setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () =>

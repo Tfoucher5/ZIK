@@ -1,6 +1,7 @@
 // Contrôle du catalogue de cartes et révocation (spec docs/specs/cartes.md,
 // garde-fou G12). Utilisé par /admin/cards et par les scripts de maintenance :
 // pas d'alias $lib ici.
+import { enrichTrack } from "./cards.js";
 
 async function allRows(sb, table, columns, filter = (q) => q) {
   const rows = [];
@@ -124,4 +125,111 @@ export async function revokeGrants(sb, grantIds) {
         .in("set_id", setIds);
   }
   return (grants || []).length;
+}
+
+/**
+ * Correction admin d'une carte rattachée au mauvais titre (spec I6) : la
+ * carte de la bonne version Deezer la remplace pour les titres du catalogue,
+ * les collections et le journal. La rareté peut donc baisser.
+ * deezerRef : id ou lien d'un titre Deezer.
+ */
+export async function correctCard(sb, cardId, deezerRef) {
+  const deezerId = String(deezerRef).match(/(\d+)\D*$/)?.[1];
+  const t = deezerId
+    ? await fetch(`https://api.deezer.com/track/${deezerId}`)
+        .then((r) => r.json())
+        .catch(() => null)
+    : null;
+  if (!t?.id || t.error) return { error: "Titre Deezer introuvable" };
+
+  const newId = await enrichTrack(sb, {
+    artist: t.artist.name,
+    title: t.title,
+    source: "deezer",
+    external_id: String(t.id),
+  });
+  if (!newId) return { error: "Carte impossible à créer" };
+  if (newId === cardId) return { cardId };
+
+  await sb.from("tracks").update({ card_id: newId }).eq("card_id", cardId);
+  const { data: owners } = await sb
+    .from("user_cards")
+    .select("*")
+    .eq("card_id", cardId);
+  for (const o of owners || []) {
+    const { data: has } = await sb
+      .from("user_cards")
+      .select("copies")
+      .eq("user_id", o.user_id)
+      .eq("card_id", newId)
+      .maybeSingle();
+    if (has)
+      await sb
+        .from("user_cards")
+        .update({ copies: has.copies + o.copies })
+        .eq("user_id", o.user_id)
+        .eq("card_id", newId);
+    else await sb.from("user_cards").insert({ ...o, card_id: newId });
+  }
+  await sb.from("card_grants").update({ card_id: newId }).eq("card_id", cardId);
+  await deleteCards(sb, [cardId]);
+  return { cardId: newId };
+}
+
+/**
+ * Duos suspects (spec G12) : joueurs dont les cartes viennent presque toujours
+ * de parties jouées avec le même partenaire. Signal pour l'admin, jamais une
+ * sanction.
+ */
+export async function suspiciousPairs(
+  sb,
+  { days = 30, minGames = 5, share = 0.8 } = {},
+) {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const grants = await allRows(sb, "card_grants", "id, user_id, game_id", (q) =>
+    q
+      .eq("status", "granted")
+      .gte("created_at", since)
+      .not("game_id", "is", null),
+  );
+  const gamesByUser = new Map();
+  const cardsByUser = new Map();
+  for (const g of grants) {
+    if (!gamesByUser.has(g.user_id)) gamesByUser.set(g.user_id, new Set());
+    gamesByUser.get(g.user_id).add(g.game_id);
+    cardsByUser.set(g.user_id, (cardsByUser.get(g.user_id) || 0) + 1);
+  }
+  const gameIds = [...new Set(grants.map((g) => g.game_id))];
+  const players = new Map();
+  for (let i = 0; i < gameIds.length; i += 200) {
+    const { data } = await sb
+      .from("game_players")
+      .select("game_id, user_id")
+      .in("game_id", gameIds.slice(i, i + 200))
+      .not("user_id", "is", null);
+    for (const p of data || []) {
+      if (!players.has(p.game_id)) players.set(p.game_id, new Set());
+      players.get(p.game_id).add(p.user_id);
+    }
+  }
+
+  const pairs = [];
+  for (const [userId, games] of gamesByUser) {
+    if (games.size < minGames) continue;
+    const partners = new Map();
+    for (const gameId of games)
+      for (const other of players.get(gameId) || [])
+        if (other !== userId)
+          partners.set(other, (partners.get(other) || 0) + 1);
+    for (const [partnerId, together] of partners)
+      if (together / games.size >= share)
+        pairs.push({
+          userId,
+          partnerId,
+          games: games.size,
+          together,
+          cards: cardsByUser.get(userId),
+        });
+  }
+  return pairs.sort((a, b) => b.cards - a.cards);
 }

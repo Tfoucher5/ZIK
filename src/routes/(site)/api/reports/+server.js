@@ -45,11 +45,21 @@ export async function POST({ request }) {
   const safeTracks = metadata?.tracks
     ? sanitizeReportTracks(metadata.tracks)
     : null;
-  const safeMetadata = safeTracks ? { ...metadata, tracks: safeTracks } : {};
+  const cardNumber =
+    type === "bug" && subject === "card" && Number.isInteger(metadata?.card)
+      ? metadata.card
+      : null;
+  const safeMetadata = safeTracks
+    ? { ...metadata, tracks: safeTracks }
+    : cardNumber
+      ? { card: cardNumber }
+      : {};
 
-  // Un titre désigné vaut description : le message n'est alors plus exigé.
+  // Un titre ou une carte désignés valent description : le message n'est
+  // alors plus exigé.
   const titreDesigne =
-    type === "bug" && subject === "audio" && safeTracks?.length > 0;
+    (type === "bug" && subject === "audio" && safeTracks?.length > 0) ||
+    cardNumber != null;
   if (!message?.trim() && !titreDesigne) {
     return json({ error: "Message requis" }, { status: 400 });
   }

@@ -98,6 +98,74 @@
   </div>
 
   <div class="panel block">
+    <h2>Cartes signalées <span class="zk-date">{data.reports.length}</span></h2>
+    {#if form?.error}<p class="hint err">{form.error}</p>{/if}
+    {#if !data.reports.length}
+      <p class="hint">Aucun signalement de carte.</p>
+    {:else}
+      <table>
+        <tbody>
+          {#each data.reports as r (r.id)}
+            <tr>
+              <td class="td-dim">{fmt(r.created_at)}</td>
+              <td>
+                {#if r.card}
+                  <a href="/carte/{r.card.number}" target="_blank" class="tag" data-rarity={r.card.rarity}>{r.card.title}</a>
+                  <span class="td-dim">{r.card.artist}</span>
+                  <a class="td-dim" href="https://www.deezer.com/track/{r.card.deezer_track_id}" target="_blank" rel="noopener">Deezer</a>
+                {:else}
+                  <span class="td-dim">Carte n° {r.metadata?.card} supprimée</span>
+                {/if}
+              </td>
+              <td>{r.message || '-'}</td>
+              <td class="actions">
+                {#if r.card}
+                  <form method="POST" action="?/correctCard" use:enhance={submitting} class="actions">
+                    <input type="hidden" name="_token" value={token} />
+                    <input type="hidden" name="report_id" value={r.id} />
+                    <input type="hidden" name="card_id" value={r.card.id} />
+                    <input class="field-input" name="deezer" placeholder="Bon titre : lien ou id Deezer" required />
+                    <button class="btn btn-primary" disabled={busy}>Corriger</button>
+                  </form>
+                {/if}
+                <form method="POST" action="?/dismissReport" use:enhance={submitting}>
+                  <input type="hidden" name="_token" value={token} />
+                  <input type="hidden" name="id" value={r.id} />
+                  <button class="btn">Rejeter</button>
+                </form>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
+  </div>
+
+  <div class="panel block">
+    <h2>Duos à surveiller <span class="zk-date">30 derniers jours</span></h2>
+    {#if !data.pairs.length}
+      <p class="hint">Aucun joueur ne gagne ses cartes presque toujours avec le même partenaire.</p>
+    {:else}
+      <table>
+        <thead>
+          <tr><th>Joueur</th><th>Partenaire</th><th>Parties avec carte</th><th>Ensemble</th><th>Cartes</th></tr>
+        </thead>
+        <tbody>
+          {#each data.pairs as p (p.userId + p.partnerId)}
+            <tr>
+              <td><a href="?user={p.userId}" class="td-strong">{p.username ?? '?'}</a></td>
+              <td><a href="?user={p.partnerId}" class="td-strong">{p.partner ?? '?'}</a></td>
+              <td>{p.games}</td>
+              <td>{Math.round((p.together / p.games) * 100)} %</td>
+              <td>{p.cards}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
+  </div>
+
+  <div class="panel block">
     <h2>Signaux à examiner <span class="zk-date">{data.signals.length}</span></h2>
     {#if !data.signals.length}
       <p class="hint">Aucun signal ouvert.</p>
@@ -229,6 +297,8 @@
   .audit { margin: 0; padding-left: 18px; font-size: 0.84rem; display: flex; flex-direction: column; gap: 4px; }
   .mono { font: 0.75rem/1.6 ui-monospace, monospace; color: var(--c-muted); max-height: 260px; overflow: auto; }
   .hint { font-size: 0.82rem; color: var(--c-muted); margin: 0; }
+  .err { color: var(--c-red); }
+  .field-input { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--c-border); border-radius: 6px; color: var(--c-text); font: inherit; font-size: 0.78rem; padding: 5px 8px; min-width: 200px; }
 
   table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
   th { text-align: left; font-weight: 500; color: var(--c-muted); font-size: 0.72rem; padding: 6px 8px; }
