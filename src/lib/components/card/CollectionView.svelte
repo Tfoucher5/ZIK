@@ -253,7 +253,9 @@
           <span style:width={pct(cards.length, catalog.total)}></span>
         </div>
       </div>
-      <div class="col-rarities" role="group" aria-label="Filtrer par rareté">
+      <div>
+      <p class="col-rar-title" id="col-rar-title">Par rareté, touche pour filtrer</p>
+      <div class="col-rarities" role="group" aria-labelledby="col-rar-title">
         {#each RARITY_ORDER as r (r)}
           <button
             type="button"
@@ -269,6 +271,7 @@
             <span class="col-rar-bar" aria-hidden="true"><i style:width={pct(counts[r], catalog.byRarity[r])}></i></span>
           </button>
         {/each}
+      </div>
       </div>
     </header>
 
@@ -402,10 +405,12 @@
 </div>
 
 <style>
+  /* Pleine largeur : la grille gagne des colonnes avec l'écran */
   .col {
-    max-width: 1180px;
+    width: 100%;
+    max-width: 1920px;
     margin: 0 auto;
-    padding: calc(var(--nav-h) + 28px) 16px 96px;
+    padding: calc(var(--nav-h) + 28px) clamp(16px, 4vw, 56px) 96px;
     color: var(--text);
   }
 
@@ -433,19 +438,26 @@
     color: var(--mid);
   }
 
+  .col-rar-title {
+    margin: 0 0 8px;
+    font: 600 0.82rem/1.2 'Barlow', sans-serif;
+    color: var(--mid);
+  }
+
   .col-rarities {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 8px;
+    gap: 10px;
   }
 
+  /* Nom, puis possédées / total, puis la barre : rien ne déborde, même étroit */
   .col-rar {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    padding: 8px 12px;
+    gap: 8px 10px;
+    min-width: 0;
+    padding: 12px 14px;
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--surface);
@@ -467,7 +479,14 @@
   }
 
   .col-rar strong {
+    grid-column: 1 / -1;
     white-space: nowrap;
+  }
+
+  .col-rar-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .col-rar strong small {
@@ -675,7 +694,7 @@
 
   .col-groups {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 14px;
     margin: 0;
     padding: 0;
@@ -851,6 +870,29 @@
 
   .col-set-head .col-progress {
     width: min(320px, 70vw);
+  }
+
+  /* Téléphone : la barre d'outils ne colle plus en haut, elle mangerait l'écran */
+  @media (max-width: 640px) {
+    .col-tools {
+      position: static;
+    }
+
+    .col-seg {
+      width: 100%;
+    }
+
+    .col-seg button {
+      flex: 1;
+    }
+
+    .col-selects label:not(.col-check) {
+      flex: 1 1 140px;
+    }
+
+    .col-selects select {
+      width: 100%;
+    }
   }
 
   .col-rar:focus-visible,
