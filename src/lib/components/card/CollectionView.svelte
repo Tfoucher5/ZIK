@@ -18,6 +18,18 @@
     ['artistes', 'Artistes'],
     ['albums', 'Albums'],
   ];
+  // Vues Artistes et Albums : tri et état des sets
+  const GROUP_SORTS = [
+    ['progression', 'Progression'],
+    ['presque', 'Presque terminés'],
+    ['cartes', 'Plus de cartes'],
+    ['nom', 'De A à Z'],
+  ];
+  const STATES = [
+    ['', 'Tous les sets'],
+    ['termines', 'Terminés'],
+    ['a-completer', 'À compléter'],
+  ];
   const SORTS = [
     ['recentes', 'Plus récentes'],
     ['rarete', 'Rareté'],
@@ -41,6 +53,8 @@
   const sort = $derived(params.get('tri') || 'recentes');
   const dupes = $derived(params.get('doublons') === '1');
   const setId = $derived(params.get('set') || '');
+  const groupSort = $derived(params.get('ordre') || 'progression');
+  const setState = $derived(params.get('etat') || '');
 
   function setParam(changes) {
     const url = new URL($page.url);
@@ -164,15 +178,28 @@
       };
       byKey[key].cards.push(c);
     }
-    return Object.values(byKey).sort(
-      (a, b) =>
-        Number(!!b.set?.completedAt) - Number(!!a.set?.completedAt) ||
-        b.cards.length - a.cards.length ||
-        a.name.localeCompare(b.name, 'fr'),
-    );
+    // Progression d'un groupe : 0 à 1 pour un set, -1 sans set (moins de
+    // 3 cartes dans ZIK) pour finir en bas de liste
+    const ratio = (g) => (g.set ? g.set.owned / g.set.total : -1);
+    const left = (g) => (g.set && !g.set.completedAt ? g.set.total - g.set.owned : Infinity);
+    const byName = (a, b) => a.name.localeCompare(b.name, 'fr');
+    const by = {
+      progression: (a, b) =>
+        Number(!!b.set?.completedAt) - Number(!!a.set?.completedAt) || ratio(b) - ratio(a) || byName(a, b),
+      presque: (a, b) => left(a) - left(b) || ratio(b) - ratio(a) || byName(a, b),
+      cartes: (a, b) => b.cards.length - a.cards.length || byName(a, b),
+      nom: byName,
+    }[groupSort] ?? byName;
+    return Object.values(byKey)
+      .filter(
+        (g) =>
+          !setState ||
+          (setState === 'termines' ? !!g.set?.completedAt : !!g.set && !g.set.completedAt),
+      )
+      .sort(by);
   });
 
-  const hasFilters = $derived(!!(q || rarity || genre || decade || dupes));
+  const hasFilters = $derived(!!(q || rarity || genre || decade || dupes || (view !== 'toutes' && setState)));
   const pendingLabel = (c) => {
     const h = Math.max(1, Math.ceil((new Date(c.visibleAt).getTime() - Date.now()) / 36e5));
     return `Disponible dans ${h} h`;
@@ -307,23 +334,38 @@
         </div>
 
         <div class="col-selects">
-          <label>
-            <span class="sr-only">Trier par</span>
-            <select value={sort} onchange={(e) => setParam({ tri: e.currentTarget.value === 'recentes' ? '' : e.currentTarget.value })}>
-              {#each SORTS as [value, text] (value)}<option {value}>{text}</option>{/each}
-            </select>
-          </label>
+          {#if view === 'toutes'}
+            <label>
+              <span class="sr-only">Trier par</span>
+              <select value={sort} onchange={(e) => setParam({ tri: e.currentTarget.value === 'recentes' ? '' : e.currentTarget.value })}>
+                {#each SORTS as [value, text] (value)}<option {value}>{text}</option>{/each}
+              </select>
+            </label>
+          {:else}
+            <label>
+              <span class="sr-only">Trier les sets par</span>
+              <select value={groupSort} onchange={(e) => setParam({ ordre: e.currentTarget.value === 'progression' ? '' : e.currentTarget.value })}>
+                {#each GROUP_SORTS as [value, text] (value)}<option {value}>{text}</option>{/each}
+              </select>
+            </label>
+            <label>
+              <span class="sr-only">État des sets</span>
+              <select value={setState} onchange={(e) => setParam({ etat: e.currentTarget.value })}>
+                {#each STATES as [value, text] (value)}<option {value}>{text}</option>{/each}
+              </select>
+            </label>
+          {/if}
           <label>
             <span class="sr-only">Genre</span>
             <select value={genre} onchange={(e) => setParam({ genre: e.currentTarget.value })}>
-              <option value="">Tous les genres</option>
+              <option value="">Tous genres</option>
               {#each genres as g (g)}<option value={g}>{g}</option>{/each}
             </select>
           </label>
           <label>
             <span class="sr-only">Décennie</span>
             <select value={decade} onchange={(e) => setParam({ decennie: e.currentTarget.value })}>
-              <option value="">Toutes les décennies</option>
+              <option value="">Toutes décennies</option>
               {#each decades as d (d)}<option value={d}>{decadeLabel(d)}</option>{/each}
             </select>
           </label>
@@ -341,7 +383,7 @@
           {groups.length} {view === 'artistes' ? 'artiste' : 'album'}{groups.length > 1 ? 's' : ''}
         {/if}
         {#if hasFilters}
-          <button type="button" class="col-reset" onclick={() => setParam({ q: '', rarete: '', genre: '', decennie: '', doublons: '' })}>
+          <button type="button" class="col-reset" onclick={() => setParam({ q: '', rarete: '', genre: '', decennie: '', doublons: '', etat: '' })}>
             Effacer les filtres
           </button>
         {/if}
@@ -376,6 +418,7 @@
                 disabled={!g.set}
                 onclick={() => setParam({ set: g.set.id })}
               >
+                {#if g.set?.completedAt}<span class="col-done-badge">✓ Set complet</span>{/if}
                 {#if g.photo}
                   <img src={g.photo} alt="" loading="lazy" class="is-artist" onerror={(e) => photoFallback(e, g.cover)} />
                 {:else}
@@ -387,7 +430,7 @@
                     <span style:width={`${(g.set.owned / g.set.total) * 100}%`}></span>
                   </span>
                   <span class="col-group-count">
-                    {g.set.completedAt ? 'Complet' : `${g.set.owned} / ${g.set.total}`}
+                    {g.set.completedAt ? `${g.set.total} / ${g.set.total} cartes` : `${g.set.owned} / ${g.set.total} cartes`}
                   </span>
                 {:else}
                   <span class="col-group-count">{g.cards.length} carte{g.cards.length > 1 ? 's' : ''}</span>
@@ -622,6 +665,12 @@
     gap: 8px;
   }
 
+  /* Les options suivent le thème : sinon texte clair sur fond système blanc */
+  .col-selects option {
+    background-color: var(--bg2);
+    color: var(--text);
+  }
+
   .col-selects select {
     min-height: 38px;
     padding: 0 10px;
@@ -723,8 +772,33 @@
     border-color: var(--border2);
   }
 
+  .col-group {
+    position: relative;
+  }
+
+  /* Set terminé : doré, il doit se repérer d'un coup d'œil */
   .col-group.is-done {
-    border-color: var(--rarity-legendary);
+    border: 2px solid var(--rarity-legendary);
+    background: linear-gradient(160deg, color-mix(in oklab, var(--rarity-legendary) 22%, var(--surface)), var(--surface) 70%);
+    box-shadow: 0 8px 26px color-mix(in oklab, var(--rarity-legendary) 30%, transparent);
+  }
+
+  .col-group.is-done .col-group-count {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .col-done-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1;
+    padding: 5px 10px;
+    border-radius: 99px;
+    background: var(--rarity-legendary);
+    color: #1a1204;
+    font: 700 0.78rem/1 'Barlow', sans-serif;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
   }
 
   .col-group img {
