@@ -37,6 +37,7 @@ import {
   onRoundEnd,
   settleCards,
   secureAt,
+  cardsOffReason,
 } from "./cardFlow.js";
 
 // ─── Auto-start countdowns ────────────────────────────────────────────────────
@@ -384,11 +385,12 @@ async function startNextRound(roomId, io) {
       startSeconds,
       trackId: track.id ?? null,
       round: game.currentRound,
-      total: game.maxRounds,
+      total: game.plannedRounds,
       featCount: track.featArtists.length,
       extraLabels: (track.extraAnswers || []).map((e) => e.label),
       audioUrl,
       choices,
+      cardsOff: cardsOffReason(game),
     };
 
     if (game.isPaused) return;
@@ -671,6 +673,7 @@ async function startAutoCountdown(roomId, io) {
       room.game.sessionPlaylist = [...playlist]
         .sort(() => Math.random() - 0.5)
         .slice(0, room.game.maxRounds);
+      room.game.plannedRounds = room.game.sessionPlaylist.length;
       resetScores(room, io);
       io.to(`room:${roomId}`).emit("init_history", []);
       io.to(`room:${roomId}`).emit("game_starting");
@@ -776,7 +779,7 @@ function leaveRoom(socket, roomId, io) {
             userId: playerSnapshot.userId,
             keep:
               (playerSnapshot.roundsPresent || 0) >=
-              secureAt(gameRef.maxRounds),
+              secureAt(gameRef.plannedRounds),
           }).catch(() => {});
 
         if (!roomGames[roomId]) return;
@@ -1032,6 +1035,7 @@ export function register(io) {
       room.game.sessionPlaylist = [...playlist]
         .sort(() => Math.random() - 0.5)
         .slice(0, room.game.maxRounds);
+      room.game.plannedRounds = room.game.sessionPlaylist.length;
 
       resetScores(room, io);
       io.to(`room:${roomId}`).emit("init_history", []);

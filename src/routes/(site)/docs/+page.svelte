@@ -854,7 +854,7 @@
       <h3>Gagner une carte</h3>
       <ul class="doc-list">
         <li><strong>Soyez le premier à trouver le titre</strong> : artiste, titre et invités en mode classique, la bonne réponse en mode QCM.</li>
-        <li>Il faut un <strong>compte</strong>, une partie d'au moins <strong>5 manches</strong> et au moins <strong>2 joueurs connectés</strong> qui jouent vraiment. Les cartes ne se gagnent pas en solo.</li>
+        <li>Il faut un <strong>compte</strong>, une partie d'au moins <strong>5 manches</strong> dans une room d'au moins <strong>100 titres</strong> (sur une petite playlist, on connaît vite les titres par cœur), et au moins <strong>2 joueurs connectés</strong> qui jouent vraiment. Les cartes ne se gagnent pas en solo.</li>
         <li>Si le premier à trouver joue en invité, la carte revient au joueur connecté suivant.</li>
         <li>Sur une playlist que vous avez créée, il faut au moins deux autres joueurs dans la room.</li>
         <li>Un titre ajouté à une playlist depuis moins de 24 heures ne donne pas encore de carte.</li>

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { getAdminClient } from "../../config.js";
 import { verifyToken } from "../../middleware/auth.js";
 import { dbRooms } from "../../state.js";
-import { pickCardWinner } from "./cards.js";
+import { pickCardWinner, MIN_ROUNDS, MIN_TRACKS } from "./cards.js";
 import { RARITIES } from "../../../components/card/rarity.js";
 
 // Branchement des cartes dans le jeu (spec docs/specs/cartes.md, section 6.2).
@@ -128,7 +128,8 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
     finders: game.fullFinders || [],
     players,
     round,
-    maxRounds: game.maxRounds,
+    maxRounds: game.plannedRounds,
+    playlistSize: game.fullPlaylist?.length ?? 0,
     mode,
     skipped,
     ownerIds: new Set(ownerId ? [ownerId] : []),
@@ -234,6 +235,17 @@ export async function settleCards({ game, name, userId, keep, io, socketId }) {
     return;
   }
   if (keep && io && socketId) io.to(socketId).emit("cards_granted", data);
+}
+
+/** Raison affichée aux joueurs quand la partie ne peut donner aucune carte. */
+export function cardsOffReason(game) {
+  if (!game.fullPlaylist?.some((t) => t.id))
+    return "Pas de cartes dans une room éphémère";
+  if ((game.fullPlaylist?.length ?? 0) < MIN_TRACKS)
+    return `Pas de cartes ici : il faut une playlist d'au moins ${MIN_TRACKS} titres`;
+  if ((game.plannedRounds ?? 0) < MIN_ROUNDS)
+    return `Pas de cartes ici : il faut une partie d'au moins ${MIN_ROUNDS} manches`;
+  return null;
 }
 
 /** Moitié des manches de la partie : seuil où les cartes deviennent acquises. */

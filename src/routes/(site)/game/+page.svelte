@@ -64,6 +64,7 @@
   let cardsResult = $state(null);
   let roundsSeen = $state(0);
   let roundTotal = $state(10);
+  let cardsOff = $state(null);
   let quitAsked = $state(false);
 
   // Cartes encore provisoires : quitter maintenant les ferait perdre
@@ -786,6 +787,7 @@
       roundLoading = false;
       roundInfo = `Manche ${data.round} / ${data.total}`;
       roundTotal = data.total;
+      cardsOff = data.cardsOff ?? null;
       roundCard = null;
       currentRoundInfo = { round: data.round, trackId: data.trackId ?? null, videoId: data.videoId ?? null };
       coverSrc = ''; showCover = false;
@@ -1122,7 +1124,7 @@
       </div>
       {#if !IS_GUEST}
         <div class="g-cards-tray">
-          <CardTray entries={cardsInPlay} round={roundsSeen} maxRounds={roundTotal} />
+          <CardTray entries={cardsInPlay} round={roundsSeen} maxRounds={roundTotal} off={cardsOff} />
         </div>
       {/if}
     </aside>

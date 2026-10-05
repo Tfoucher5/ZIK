@@ -8,7 +8,7 @@
    * partie), puis deviennent toutes définitives en même temps.
    * variant : panel (colonne latérale) ou pill (bandeau compact sur mobile).
    */
-  let { entries = [], round = 1, maxRounds = 10, variant = 'panel' } = $props();
+  let { entries = [], round = 1, maxRounds = 10, variant = 'panel', off = null } = $props();
 
   const secureAt = $derived(Math.ceil(maxRounds / 2));
   const secured = $derived(round >= secureAt);
@@ -81,7 +81,7 @@
         {status}
       </p>
     {:else}
-      <p class="ct-empty">Trouve un titre en premier pour gagner sa carte.</p>
+      <p class="ct-empty">{off ?? 'Trouve un titre en premier pour gagner sa carte.'}</p>
     {/if}
   </section>
 {/if}

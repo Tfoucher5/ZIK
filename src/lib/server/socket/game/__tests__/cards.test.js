@@ -29,6 +29,7 @@ function setup(overrides = {}) {
     },
     round: 6,
     maxRounds: 10,
+    playlistSize: 150,
     mode: "classic",
     skipped: false,
     ownerIds: new Set(),
@@ -170,8 +171,9 @@ describe("pickCardWinner", () => {
     ).toBeNull();
   });
 
-  it("ne donne rien sur une partie trop courte, une manche sautée ou un titre ajouté à l'instant", () => {
+  it("ne donne rien sur une partie trop courte, une petite playlist, une manche sautée ou un titre ajouté à l'instant", () => {
     expect(pickCardWinner(setup({ maxRounds: 3 })).winner).toBeNull();
+    expect(pickCardWinner(setup({ playlistSize: 99 })).winner).toBeNull();
     expect(pickCardWinner(setup({ skipped: true })).winner).toBeNull();
     expect(
       pickCardWinner(

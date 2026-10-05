@@ -182,10 +182,145 @@ async function searchVersions(artist, title) {
     `/search?q=${encodeURIComponent(`artist:"${artist}" track:"${title}"`)}&limit=25`,
   );
   if (strict?.data?.length) return strict.data;
-  const loose = await deezer(
-    `/search?q=${encodeURIComponent(`${artist} ${title}`)}&limit=25`,
+  return searchLoose(`${artist} ${title}`);
+}
+
+async function searchLoose(q) {
+  const res = await deezer(`/search?q=${encodeURIComponent(q)}&limit=25`);
+  return res?.data || [];
+}
+
+// Comparaison tolérante aux saisies approximatives : ponctuation, fautes
+// légères, titre abrégé (« Gimme Gimme Gimme ») ou mention en plus (« - Remix »)
+const compact = (s) =>
+  cleanString(s)
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]/g, "");
+const digits = (s) => s.replace(/\D/g, "");
+function looseTitle(a, b) {
+  const x = compact(a);
+  const y = compact(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  // « Persona 5 » n'est pas « Personal »
+  if (digits(x) !== digits(y)) return false;
+  const [short, long] = x.length < y.length ? [x, y] : [y, x];
+  if (
+    short.length >= 4 &&
+    short.length / long.length >= 0.4 &&
+    long.includes(short)
+  )
+    return true;
+  return stringSimilarity.compareTwoStrings(x, y) >= 0.75;
+}
+const titleOf = (v) => v.title_short || v.title;
+const fullTitleMatch = (v, title) =>
+  looseTitle(titleOf(v), title) || looseTitle(v.title, title);
+
+// Titre YouTube saisi à la place de l'artiste et du titre : on récupère le nom
+// de la vidéo
+async function youtubeTitle(id) {
+  try {
+    const fetchFn = await getFetch();
+    const res = await fetchFn(
+      `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`,
+      { signal: AbortSignal.timeout(8_000) },
+    );
+    if (!res.ok) return null;
+    const { title, author_name } = await res.json();
+    const topic = String(author_name || "").match(/^(.+) - Topic$/);
+    return topic ? `${topic[1]} - ${title}` : title;
+  } catch {
+    return null;
+  }
+}
+
+const NOISE =
+  /\b(official|music|lyrics?|paroles|clip|audio|video|hd|hq|4k|\d{3,4}p?|ost|soundtrack|theme song|full|opening|intro|op ?\d*|ed ?\d*|s\d+|season \d+|saison \d+|restored|extended|romaji|kanji|eng|english|subs|translations?|with|amv)\b/gi;
+
+// « Shingeki no Kyojin S1 OP1 | Linked Horizon - Guren no Yumiya (Lyrics) »
+// → ["Shingeki no Kyojin", "Linked Horizon", "Guren no Yumiya"]
+function segments(text) {
+  return String(text || "")
+    .replace(/[([【][^)\]】]*[)\]】]/g, " ")
+    .replace(/[『』「」•♫"/]/g, " | ")
+    .split(/\s+[-–~|:]\s+|\s*[|~]\s*|:\s+|-\s+|\s+ll\s+/)
+    .map((s) => s.replace(NOISE, " ").replace(/\s+/g, " ").trim())
+    .filter((s) => compact(s).length >= 3);
+}
+
+function looseQueries(parts) {
+  const queries = [parts.join(" ")];
+  for (let i = 0; i < parts.length; i++)
+    for (let j = i + 1; j < parts.length; j++)
+      queries.push(`${parts[i]} ${parts[j]}`);
+  queries.push(...parts);
+  return [...new Set(queries)].slice(0, 6);
+}
+
+// Reprises d'un autre artiste : écartées quand on cherche sans l'artiste
+const TRIBUTE =
+  /\b(cover|covers|karaoke|tribute|emulation|in the style|made famous|8-bit|8 bit|lofi|lo-fi|piano version)\b/i;
+
+const isYoutubeId = (t) => t.artist === t.title && /^[\w-]{11}$/.test(t.artist);
+
+// Versions Deezer d'un titre du catalogue, de la plus sûre à la plus tolérante.
+// Les versions dérivées ne servent que s'il n'existe aucune version originale.
+async function findVersions(track) {
+  const { main } = parseFeaturing(track.artist);
+  const title = stripVersion(displayString(track.title)).replace(
+    /\s+(?:feat\.?|ft\.?|featuring)\s.*$/i,
+    "",
   );
-  return loose?.data || [];
+  const key = titleKey(track.title);
+  const start = await startTrack(track);
+  const pool = [...(start ? [start] : [])];
+  const pick = (list) => {
+    const originals = list.filter((c) => !isDerived(c));
+    return (originals.length ? originals : list).sort(
+      (a, b) => (b.rank || 0) - (a.rank || 0),
+    );
+  };
+
+  const results = await searchVersions(main, title);
+  const strict = results.filter(
+    (v) => sameArtist(v.artist?.name, main) && titleKey(titleOf(v)) === key,
+  );
+  if (strict.length || start)
+    return { start, candidates: pick([...pool, ...strict]) };
+
+  const byArtist = results.filter(
+    (v) => sameArtist(v.artist?.name, main) && fullTitleMatch(v, title),
+  );
+  if (byArtist.length) return { start, candidates: pick(byArtist) };
+
+  // Artiste mal saisi, remplacé par une catégorie (« SERIE TV », un jeu) ou
+  // par l'id d'une vidéo YouTube
+  const video = isYoutubeId(track) && (await youtubeTitle(track.artist));
+  const text =
+    video ||
+    (main === title ? track.title : `${track.artist} - ${track.title}`);
+  const parts = segments(text);
+  if (!parts.length) return { start, candidates: [] };
+  // Le champ artiste ne doit jamais tomber sur un titre (« SERIE TV » de Nayt)
+  const titleParts = video || main === title ? parts : segments(track.title);
+  const whole = parts.join(" ");
+  for (const q of looseQueries(parts)) {
+    const matched = (await searchLoose(q)).filter(
+      (v) =>
+        !TRIBUTE.test(`${v.title} ${v.album?.title}`) &&
+        (titleParts.some(
+          (p) => compact(p).length >= 4 && fullTitleMatch(v, p),
+        ) ||
+          looseTitle(`${v.artist?.name} ${titleOf(v)}`, whole)),
+    );
+    if (!matched.length) continue;
+    const sameName = matched.filter((v) =>
+      parts.some((p) => sameArtist(v.artist?.name, p)),
+    );
+    return { start, candidates: pick(sameName.length ? sameName : matched) };
+  }
+  return { start, candidates: [] };
 }
 
 /** Teinte moyenne d'une pochette, sans dépendance : resvg la réduit à 1 pixel. */
@@ -232,20 +367,7 @@ async function upsertArtist(sb, artist) {
  * Retourne l'id de la carte, ou null si le titre est introuvable sur Deezer.
  */
 export async function enrichTrack(sb, track) {
-  const { main } = parseFeaturing(track.artist);
-  const key = titleKey(track.title);
-
-  const start = await startTrack(track);
-  const versions = (
-    await searchVersions(main, stripVersion(displayString(track.title)))
-  ).filter(
-    (v) =>
-      sameArtist(v.artist?.name, main) &&
-      titleKey(v.title_short || v.title) === key,
-  );
-  const candidates = [...(start ? [start] : []), ...versions]
-    .filter((c) => !isDerived(c))
-    .sort((a, b) => (b.rank || 0) - (a.rank || 0));
+  const { start, candidates } = await findVersions(track);
   if (!candidates.length) return null;
 
   const rank = candidates[0].rank || 0;
@@ -391,23 +513,21 @@ export async function enrichPending({
 
   let done = 0;
   let found = 0;
-  const seen = new Set();
+  // Curseur sur l'id : un titre resté sans carte correspond toujours au filtre
+  let lastId = null;
   for (;;) {
-    const { data: batch, error } = await sb
-      .from("tracks")
-      .select(TRACK_FIELDS)
-      .or(filter)
+    let query = sb.from("tracks").select(TRACK_FIELDS).or(filter);
+    if (lastId !== null) query = query.gt("id", lastId);
+    const { data: batch, error } = await query
       .order("id")
       .limit(concurrency * 10);
     if (error) throw error;
-    // Titres déjà vus : leur mise à jour a échoué, inutile de boucler dessus
-    const fresh = (batch || []).filter((t) => !seen.has(t.id));
-    if (!fresh.length) break;
-    fresh.forEach((t) => seen.add(t.id));
+    if (!batch?.length) break;
+    lastId = batch[batch.length - 1].id;
 
-    for (let i = 0; i < fresh.length; i += concurrency) {
+    for (let i = 0; i < batch.length; i += concurrency) {
       const ids = await Promise.all(
-        fresh.slice(i, i + concurrency).map((t) => enrichOne(sb, t)),
+        batch.slice(i, i + concurrency).map((t) => enrichOne(sb, t)),
       );
       done += ids.length;
       found += ids.filter(Boolean).length;

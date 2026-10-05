@@ -5,7 +5,9 @@ import { RARITIES } from "../../../components/card/rarity.js";
 // quelle playlist), jamais sur la performance. Vitesse et volume de réponses ne
 // produisent que des signaux pour l'admin.
 
-const MIN_ROUNDS = 5;
+export const MIN_ROUNDS = 5;
+// Petite playlist = titres connus par cœur : pas de cartes en dessous
+export const MIN_TRACKS = 100;
 const TRACK_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const NEW_ACCOUNT_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_WINDOW = 3; // manches sans réponse avant de ne plus compter
@@ -40,6 +42,7 @@ export function pickCardWinner({
   players,
   round,
   maxRounds,
+  playlistSize,
   mode,
   skipped,
   ownerIds,
@@ -53,7 +56,8 @@ export function pickCardWinner({
     refusals: [],
     signals: [],
   };
-  if (!card || skipped || maxRounds < MIN_ROUNDS) return result;
+  if (!card || skipped || maxRounds < MIN_ROUNDS || playlistSize < MIN_TRACKS)
+    return result;
   if (
     trackAddedAt &&
     now - new Date(trackAddedAt).getTime() < TRACK_COOLDOWN_MS
