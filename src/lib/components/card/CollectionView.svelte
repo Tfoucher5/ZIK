@@ -134,6 +134,15 @@
     return [...list].sort(by);
   });
 
+  // Photo d'artiste servie par Deezer à partir de son id (rien à stocker) ;
+  // la pochette reprend la place si elle ne charge pas
+  const artistPhoto = (id) => `https://api.deezer.com/artist/${id}/image?size=big`;
+  function photoFallback(e, cover) {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src = cover;
+    e.currentTarget.classList.remove('is-artist');
+  }
+
   // Groupes artiste / album : progression du set quand il existe (3 cartes
   // et plus dans ZIK), sinon simple compte des cartes possédées
   const groups = $derived.by(() => {
@@ -150,6 +159,7 @@
         set: sets.get(key),
         name: sets.get(key)?.name ?? (kind === 'artist' ? c.artist : c.album),
         cover: sets.get(key)?.cover ?? c.coverMd,
+        photo: kind === 'artist' ? artistPhoto(key) : null,
         cards: [],
       };
       byKey[key].cards.push(c);
@@ -201,7 +211,11 @@
       {:else if setDetail}
         {@const owned = setDetail.cards.filter((c) => c.owned).length}
         <header class="col-set-head">
-          {#if setDetail.set.cover_url}<img src={setDetail.set.cover_url} alt="" class="col-set-cover" />{/if}
+          {#if setDetail.set.kind === 'artist'}
+            <img src={artistPhoto(setDetail.set.key)} alt="" class="col-set-cover is-artist" onerror={(e) => photoFallback(e, setDetail.set.cover_url)} />
+          {:else if setDetail.set.cover_url}
+            <img src={setDetail.set.cover_url} alt="" class="col-set-cover" />
+          {/if}
           <div>
             <p class="col-kicker">{setDetail.set.kind === 'album' ? 'Album' : 'Artiste'}</p>
             <h2 id="set-title" class="col-set-title">{setDetail.set.name}</h2>
@@ -209,8 +223,7 @@
               <span style:width={`${(owned / setDetail.cards.length) * 100}%`}></span>
             </div>
             <p class="col-set-count">
-              {owned} / {setDetail.cards.length} cartes
-              {#if owned === setDetail.cards.length}<strong>, set complet</strong>{/if}
+              {owned} / {setDetail.cards.length} cartes{#if owned === setDetail.cards.length}<strong>, set complet</strong>{/if}
             </p>
           </div>
         </header>
@@ -360,7 +373,11 @@
                 disabled={!g.set}
                 onclick={() => setParam({ set: g.set.id })}
               >
-                <img src={g.cover} alt="" loading="lazy" />
+                {#if g.photo}
+                  <img src={g.photo} alt="" loading="lazy" class="is-artist" onerror={(e) => photoFallback(e, g.cover)} />
+                {:else}
+                  <img src={g.cover} alt="" loading="lazy" />
+                {/if}
                 <span class="col-group-name">{g.name}</span>
                 {#if g.set}
                   <span class="col-progress" aria-hidden="true">
@@ -696,6 +713,12 @@
     aspect-ratio: 1;
     border-radius: 8px;
     object-fit: cover;
+  }
+
+  /* Photo d'artiste ronde, comme sur les plateformes de streaming */
+  .col-group img.is-artist,
+  .col-set-cover.is-artist {
+    border-radius: 50%;
   }
 
   .col-group-name {
