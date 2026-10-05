@@ -260,17 +260,17 @@ rareté(p) =
 Seuils **absolus**, fixés une fois au lancement puis gravés en constantes
 (« barème v1 »). Ils ne suivent pas la croissance du catalogue.
 
-Seuils proposés à partir des relevés réels, **à confirmer** sur le catalogue
-enrichi :
+Seuils calibrés le 2026-10-05 sur le catalogue enrichi (12 857 cartes), aux
+centiles des parts visées (les seuils de départ, 700 k à 975 k, donnaient 65 % de Communes) :
 
 | Rareté      | Couleur       | `rank` Deezer     | Exemples relevés                                         | Part visée |
 | ----------- | ------------- | ----------------- | -------------------------------------------------------- | ---------- |
-| Commune     | gris          | < 700 000         | Indochine - 3e sexe                                      | ~35 %      |
-| Peu commune | vert          | 700 000 - 799 999 | Mylène Farmer - Libertine, The Cure - Lovesong           | ~27 %      |
-| Rare        | bleu          | 800 000 - 879 999 | Aya Nakamura - Djadja, Christophe Maé, Radiohead         | ~20 %      |
-| Épique      | violet        | 880 000 - 939 999 | Daft Punk - Veridis Quo, Jul - Tchikita, Angèle, MGMT    | ~12 %      |
-| Légendaire  | doré          | 940 000 - 974 999 | Shape of You, Bohemian Rhapsody, Louise Attaque, Stromae | ~5 %       |
-| Mythique    | rose pailleté | ≥ 975 000         | Blinding Lights                                          | ~1 %       |
+| Commune     | gris          | < 495 000         | Indochine - 3e sexe                                      | ~35 %      |
+| Peu commune | vert          | 495 000 - 679 999 | Mylène Farmer - Libertine, The Cure - Lovesong           | ~27 %      |
+| Rare        | bleu          | 680 000 - 804 999 | Aya Nakamura - Djadja, Christophe Maé, Radiohead         | ~20 %      |
+| Épique      | violet        | 805 000 - 909 999 | Daft Punk - Veridis Quo, Jul - Tchikita, Angèle, MGMT    | ~12 %      |
+| Légendaire  | doré          | 910 000 - 979 999 | Shape of You, Bohemian Rhapsody, Louise Attaque, Stromae | ~5 %       |
+| Mythique    | rose pailleté | ≥ 980 000         | Blinding Lights                                          | ~1 %       |
 
 Calibrage après enrichissement :
 
@@ -313,7 +313,7 @@ et laisse une ligne dans `admin_audit_log`.
 | I5  | Titre absent de Deezer (import manuel, titre retiré, BO).                                                                                                         | Pas de carte (`tracks.card_id` nul), la manche se joue normalement.                                                                                                                                                          |
 | I6  | Mauvaise correspondance (reprise, karaoké, homonyme).                                                                                                             | Correspondance exigée sur artiste **et** titre nettoyés, sinon pas de carte. Bouton « signaler la carte » (table `reports`) et correction admin.                                                                             |
 | I7  | Les hautes raretés sont les titres les plus joués dans ZIK, donc les plus faciles.                                                                                | Conditions d'exploit (section 1).                                                                                                                                                                                            |
-| I8  | L'écart entre deux raretés hautes tient à peu de chose (Légendaire à 974 999, Mythique à 975 000).                                                                | Inévitable avec des seuils ; le gel garantit au moins que personne ne voit sa carte changer de catégorie.                                                                                                                    |
+| I8  | L'écart entre deux raretés hautes tient à peu de chose (Légendaire à 979 999, Mythique à 980 000).                                                                | Inévitable avec des seuils ; le gel garantit au moins que personne ne voit sa carte changer de catégorie.                                                                                                                    |
 
 ---
 
@@ -890,7 +890,7 @@ c'est la carte qui doit donner envie, tout le reste en découle.
 
 | #   | Décision à prendre                                                                                                     | Recommandation                                                                                                                                                                           |
 | --- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Seuils proposés (700 k / 800 k / 880 k / 940 k / 975 k) et parts visées (35 / 27 / 20 / 12 / 5 / 1 %).                 | **Valider après le backfill** avec la requête de calibrage. Une Mythique doit rester un événement : quelques dizaines de titres dans tout le catalogue.                                  |
+| Q1  | Seuils (495 k / 680 k / 805 k / 910 k / 980 k) et parts visées (35 / 27 / 20 / 12 / 5 / 1 %).                          | **Calibré le 2026-10-05** sur les parts visées (environ 125 Mythiques). À ne plus toucher après l'ouverture.                                                                             |
 | Q2  | Conditions d'exploit (temps et nombre de joueurs par rareté).                                                          | **Démarrer avec le tableau proposé**, relire `card_grants` après un mois : si aucune Mythique n'est tombée, desserrer le temps.                                                          |
 | Q3  | Minimum de 2 comptes actifs : avec ~37 actifs par semaine, beaucoup de parties sont en solo et ne donneront rien.      | **Garder le minimum**, c'est le garde-fou le plus efficace. En contrepartie, mettre en avant dans `/rooms` les rooms où des joueurs connectés sont présents, pour regrouper les joueurs. |
 | Q4  | Comptes sur une même IP comptés pour un seul joueur (G3) : une famille sur le même Wi-Fi a besoin d'un joueur de plus. | **Oui.** Le Mode Salon reste l'usage prévu pour jouer à plusieurs dans une même pièce.                                                                                                   |
