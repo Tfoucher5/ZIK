@@ -1,13 +1,13 @@
 import { json } from "@sveltejs/kit";
 import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
 import { getStripe, priceFor } from "$lib/server/stripe.js";
-import { getProRow } from "$lib/server/services/pro.js";
+import { getProRow, isProActive } from "$lib/server/services/pro.js";
 
 // Ouvre une page de paiement Stripe pour la formule choisie
 export async function POST({ request, url, getClientAddress }) {
   checkRateLimit(`checkout:${getClientAddress()}`, 10, 60_000);
   const { user } = await requireAuth(request);
-  const { plan } = await request.json().catch(() => ({}));
+  const { plan, confirm } = await request.json().catch(() => ({}));
   const price = priceFor(plan);
   if (!price) return json({ error: "Formule inconnue." }, { status: 400 });
 
@@ -19,6 +19,16 @@ export async function POST({ request, url, getClientAddress }) {
   if (subscribed)
     return json(
       { error: "Vous avez déjà un abonnement : gérez-le depuis cette page." },
+      { status: 409 },
+    );
+  // Accès déjà actif (passe Soirée, accès offert) : on ne repaie qu'après
+  // une confirmation explicite, pour éviter un double paiement par erreur
+  if (isProActive(row) && confirm !== true)
+    return json(
+      {
+        error: "ZIK Pro est déjà actif sur votre compte.",
+        activeUntil: row.current_period_end,
+      },
       { status: 409 },
     );
 

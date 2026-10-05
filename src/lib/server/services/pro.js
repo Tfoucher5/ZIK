@@ -12,20 +12,20 @@ export async function getProRow(userId) {
   return data;
 }
 
-const isActive = (row) =>
+export const isProActive = (row) =>
   row?.status === "active" && new Date(row.current_period_end) > new Date();
 
 // Abonnement ZIK Pro en cours pour ce compte (payé ou donné par l'admin)
 export async function isPro(userId) {
   if (!userId) return false;
-  return isActive(await getProRow(userId));
+  return isProActive(await getProRow(userId));
 }
 
 // Passe Soirée : 24 h, ajoutées à la suite d'un passe encore en cours
 export async function activateNight(userId, customerId, sessionId) {
   const row = await getProRow(userId);
   const from =
-    isActive(row) && row.plan === "night"
+    isProActive(row) && row.plan === "night"
       ? new Date(row.current_period_end).getTime()
       : Date.now();
   await getAdminClient()

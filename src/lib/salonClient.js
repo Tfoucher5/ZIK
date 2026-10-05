@@ -52,7 +52,9 @@ export async function fetchPro(sb, userId) {
   if (!userId) return null;
   const { data } = await sb
     .from("pro_subscriptions")
-    .select("plan, status, current_period_end, stripe_customer_id")
+    .select(
+      "plan, status, current_period_end, stripe_customer_id, stripe_last_session",
+    )
     .eq("user_id", userId)
     .maybeSingle();
   return data;
@@ -60,10 +62,6 @@ export async function fetchPro(sb, userId) {
 
 export const proActive = (row) =>
   row?.status === "active" && new Date(row.current_period_end) > new Date();
-
-export async function fetchIsPro(sb, userId) {
-  return proActive(await fetchPro(sb, userId));
-}
 
 // Paiement ou espace client : le serveur crée la page Stripe, on y part
 export async function goToStripe(sb, path, body = {}) {

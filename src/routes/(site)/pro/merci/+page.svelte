@@ -1,9 +1,14 @@
 <script>
   import { getContext } from 'svelte';
-  import { fetchIsPro } from '$lib/salonClient.js';
+  import { fetchPro, proActive } from '$lib/salonClient.js';
 
   const zik = getContext('zik');
-  let active = $state(false);
+  let pro = $state(null);
+  const active = $derived(proActive(pro));
+  const PLAN_NAMES = { night: 'Passe Soirée', monthly: 'Abonnement mensuel', yearly: 'Abonnement annuel', manual: 'Accès offert' };
+  const endLabel = $derived(
+    pro ? new Date(pro.current_period_end).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '',
+  );
   let waitedTooLong = $state(false);
 
   // Stripe prévient ZIK par webhook : on attend l'activation quelques secondes
@@ -13,7 +18,11 @@
     let tries = 0;
     let timer;
     const check = async () => {
-      if (await fetchIsPro(zik.sb, user.id).catch(() => false)) { active = true; return; }
+      const row = await fetchPro(zik.sb, user.id).catch(() => null);
+      // Un passe déjà en cours est actif avant même ce paiement : on attend
+      // que la ligne porte la session Stripe de ce paiement-ci
+      const sessionId = new URLSearchParams(location.search).get('session_id');
+      if (proActive(row) && (!sessionId || row.stripe_last_session === sessionId)) { pro = row; return; }
       if (++tries >= 15) { waitedTooLong = true; return; }
       timer = setTimeout(check, 1500);
     };
@@ -34,7 +43,13 @@
     </div>
     <h1>Merci, paiement reçu !</h1>
     {#if active}
-      <p>ZIK Pro est actif sur votre compte. Ouvrez un salon en restant connecté : joueurs illimités, 8 équipes et la régie complète sont débloqués.</p>
+      <dl class="merci-recap">
+        <div><dt>Formule</dt><dd>{PLAN_NAMES[pro.plan] ?? 'ZIK Pro'}</dd></div>
+        <div><dt>{pro.plan === 'night' ? 'Actif jusqu’au' : 'Prochaine échéance'}</dt><dd>{endLabel}</dd></div>
+        <div><dt>Compte</dt><dd>{zik.user?.email}</dd></div>
+      </dl>
+      <p>ZIK Pro est actif. Ouvrez un salon en restant connecté avec ce compte : joueurs illimités, 8 équipes et la régie complète sont débloqués.</p>
+      <p class="merci-note">Votre paiement est bien enregistré : inutile de payer à nouveau.</p>
     {:else if waitedTooLong}
       <p>Le paiement est bien passé, l'activation prend un peu plus de temps que prévu. Rechargez la page dans une minute. Si rien ne bouge, écrivez à <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a> : c'est réglé dans la journée.</p>
     {:else if zik.authReady && !zik.user}
@@ -45,7 +60,7 @@
     <p class="merci-small">Le reçu et la facture arrivent par e-mail, envoyés par Stripe.</p>
     <div class="merci-ctas">
       <a class="merci-btn" href="/salon">Ouvrir un salon</a>
-      <a class="merci-ghost" href="/pro#tarifs">Mon abonnement</a>
+      <a class="merci-ghost" href="/pro#tarifs">Voir mon accès ZIK Pro</a>
     </div>
   </div>
 </main>
@@ -101,6 +116,31 @@
   }
   p a {
     color: var(--accent);
+  }
+  .merci-recap {
+    display: grid;
+    gap: 8px;
+    margin: 4px 0 18px;
+    text-align: left;
+  }
+  .merci-recap div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border2);
+    font-size: 0.92rem;
+  }
+  .merci-recap dt {
+    color: var(--mid);
+  }
+  .merci-recap dd {
+    font-weight: 700;
+    text-align: right;
+  }
+  .merci-note {
+    color: var(--text);
+    font-weight: 600;
   }
   .merci-small {
     font-size: 0.82rem;

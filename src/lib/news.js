@@ -3,6 +3,18 @@
 
 export const NEWS = [
   {
+    date: "2026-10-06",
+    version: "3.14.2",
+    tag: "Correctif",
+    title: "Un paiement ZIK Pro plus clair",
+    items: [
+      "Avant de payer, un récapitulatif confirme la formule, le prix, le compte et la date de fin de l'accès.",
+      "Si un passe Soirée est déjà actif, ZIK le signale avant le paiement : un nouveau passe ajoute 24 h à la suite, pour éviter de payer deux fois par erreur.",
+      "Après le paiement, la page de confirmation affiche la formule et la date exacte de fin de l'accès.",
+      "La page ZIK Pro se met à jour quand on y revient, et rappelle en haut de page que l'accès est actif.",
+    ],
+  },
+  {
     date: "2026-10-04",
     version: "3.14.1",
     tag: "Correctif",
