@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>ZIK - vidéo de présentation</title>
+<style>
+  @font-face { font-family: 'Barlow'; font-weight: 500; src: url('../../static/fonts/barlow-500-latin.woff2') format('woff2'); }
+  @font-face { font-family: 'Barlow'; font-weight: 600; src: url('../../static/fonts/barlow-600-latin.woff2') format('woff2'); }
+  @font-face { font-family: 'Barlow Condensed'; font-weight: 700; src: url('../../static/fonts/barlow-condensed-700-latin.woff2') format('woff2'); }
+  @font-face { font-family: 'Barlow Condensed'; font-weight: 800; src: url('../../static/fonts/barlow-condensed-800-latin.woff2') format('woff2'); }
+
+  :root {
+    --bg: #080808;
+    --accent: #ff00ff;
+    --accent-soft: rgba(255, 0, 255, 0.18);
+    --text: #fafafa;
+    --mid: #8896aa;
+    --line: rgba(255, 255, 255, 0.09);
+    --ok: #22c55e;
+    --ko: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; background: var(--bg); overflow: hidden; }
+  body { font-family: 'Barlow', sans-serif; color: var(--text); }
+
+  #stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+  .layer { position: absolute; inset: 0; will-change: transform, opacity; }
+  .cond { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em; }
+  .mono { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; letter-spacing: 0.18em; text-transform: uppercase; }
+
+  /* Halo d'ambiance */
+  #glow { background: radial-gradient(60% 40% at 50% 38%, rgba(255, 0, 255, 0.22), transparent 70%); }
+  #grain { background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px); background-size: 6px 6px; }
+
+  /* Légendes : toujours dans la zone sûre TikTok (y 270 → 560) */
+  .cap { position: absolute; left: 80px; right: 160px; top: 270px; }
+  .cap .kick { color: var(--accent); font-size: 30px; font-weight: 600; margin-bottom: 14px; }
+  .cap h2 { font-size: 112px; line-height: 0.92; }
+  .cap h2 em { font-style: normal; color: var(--accent); }
+  .cap p { margin-top: 20px; font-size: 40px; line-height: 1.25; color: #c9d1dc; font-weight: 500; }
+
+  /* Mur de pochettes */
+  #wall { transform-origin: 50% 50%; }
+  .col { position: absolute; top: 0; width: 300px; }
+  .col img { display: block; width: 300px; height: 300px; object-fit: cover; border-radius: 22px; margin-bottom: 22px; }
+  #wallShade { background: linear-gradient(180deg, rgba(8,8,8,0.15) 0%, rgba(8,8,8,0.55) 45%, rgba(8,8,8,0.92) 100%); }
+  #hook { position: absolute; left: 80px; right: 120px; top: 560px; }
+  #hook .line { display: block; font-size: 150px; line-height: 0.9; }
+  #hook .line.pink { color: var(--accent); }
+
+  /* Téléphone */
+  #phone { position: absolute; left: 220px; top: 640px; width: 640px; height: 1010px; border-radius: 70px;
+    background: #0b0b0e; border: 3px solid rgba(255,255,255,0.14);
+    box-shadow: 0 60px 140px rgba(0,0,0,0.7), 0 0 120px rgba(255,0,255,0.18); overflow: hidden; }
+  #phone::before { content: ''; position: absolute; left: 50%; top: 22px; width: 150px; height: 36px; margin-left: -75px; border-radius: 20px; background: #000; z-index: 5; }
+  .scr { position: absolute; inset: 0; padding: 92px 38px 40px; }
+  .gh { display: flex; justify-content: space-between; align-items: center; font-size: 24px; color: var(--mid); }
+  .gh b { color: var(--text); font-weight: 600; }
+  .live { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); margin-right: 10px; box-shadow: 0 0 14px var(--accent); }
+  .ring { position: relative; width: 190px; height: 190px; margin: 30px auto 0; }
+  .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .ring .num { position: absolute; inset: 0; display: grid; place-items: center; font-size: 84px; }
+  .eq { display: flex; gap: 8px; justify-content: center; align-items: flex-end; height: 74px; margin-top: 20px; }
+  .eq i { display: block; width: 14px; border-radius: 7px; background: var(--accent); }
+  .slots { margin-top: 26px; display: grid; gap: 14px; }
+  .slot { display: flex; justify-content: space-between; align-items: center; height: 92px; padding: 0 28px; border-radius: 22px;
+    border: 2px solid var(--line); background: rgba(255,255,255,0.04); font-size: 30px; }
+  .slot .lab { color: var(--mid); font-size: 22px; }
+  .slot .val { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 40px; text-transform: uppercase; }
+  .slot.ok { border-color: rgba(34,197,94,0.7); background: rgba(34,197,94,0.14); }
+  .slot .pts { color: var(--ok); font-weight: 600; font-size: 26px; margin-left: 12px; }
+  .input { position: absolute; left: 38px; right: 38px; top: 694px; height: 100px; border-radius: 26px; border: 2px solid rgba(255,0,255,0.6);
+    background: rgba(255,0,255,0.06); display: flex; align-items: center; padding: 0 30px; font-size: 34px; }
+  .input .ph { color: var(--mid); white-space: nowrap; }
+  .input #typed { white-space: nowrap; }
+  .caret { display: inline-block; width: 3px; height: 40px; background: var(--accent); margin-left: 4px; vertical-align: middle; }
+  .feed { position: absolute; left: 38px; right: 38px; top: 820px; display: grid; gap: 10px; font-size: 26px; color: #c9d1dc; }
+  .feed div { display: flex; gap: 12px; align-items: center; }
+  .feed b { color: var(--text); }
+  .feed .tm { margin-left: auto; color: var(--mid); font-size: 22px; }
+  .toast { position: absolute; left: 38px; right: 38px; top: 170px; height: 120px; z-index: 3; border-radius: 26px; background: var(--ok); color: #04210f;
+    display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 44px; }
+  .board { position: absolute; left: 38px; right: 38px; top: 330px; }
+  .board h4 { font-size: 26px; color: var(--mid); font-weight: 600; margin-bottom: 18px; }
+  .row { position: absolute; left: 0; right: 0; height: 104px; border-radius: 22px; background: rgba(255,255,255,0.05); border: 2px solid var(--line);
+    display: flex; align-items: center; padding: 0 26px; gap: 20px; font-size: 34px; }
+  .row .rk { width: 44px; color: var(--mid); font-family: 'Barlow Condensed'; font-weight: 800; font-size: 40px; }
+  .row .nm { flex: 1; font-weight: 600; }
+  .row .sc { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 44px; }
+  .row.me { border-color: var(--accent); background: var(--accent-soft); }
+
+  .cover { width: 220px; height: 220px; border-radius: 26px; margin: 28px auto 0; display: block; object-fit: cover; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  .choices { margin-top: 30px; display: grid; gap: 16px; }
+  .choice { height: 100px; border-radius: 24px; display: flex; align-items: center; gap: 22px; padding: 0 28px; font-size: 38px; font-weight: 600; color: #111; }
+  .choice .sh { width: 40px; height: 40px; flex: none; }
+
+  /* Playlists */
+  .sleeve { position: absolute; width: 430px; height: 430px; border-radius: 30px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+  .sleeve .grid { display: grid; grid-template-columns: 1fr 1fr; width: 100%; height: 100%; }
+  .sleeve .grid img { width: 100%; height: 100%; object-fit: cover; }
+  .sleeve .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 70px 26px 22px; font-size: 54px;
+    background: linear-gradient(0deg, rgba(0,0,0,0.92), transparent); }
+
+  /* Zikle */
+  .zk-title { font-size: 70px; text-align: center; margin-top: 20px; }
+  .zk-title b { color: var(--accent); }
+  .zk-sub { text-align: center; color: var(--mid); font-size: 24px; margin-top: 6px; }
+  .bar { display: flex; gap: 6px; margin: 40px 0 0; height: 30px; }
+  .bar span { position: relative; border-radius: 8px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .bar span i { position: absolute; inset: 0; background: var(--accent); transform-origin: 0 50%; }
+  .ticks { display: flex; justify-content: space-between; color: var(--mid); font-size: 20px; margin-top: 10px; }
+  .tries { margin-top: 36px; display: grid; gap: 14px; }
+  .try { height: 84px; border-radius: 18px; border: 2px solid var(--line); display: flex; align-items: center; padding: 0 24px; gap: 18px; font-size: 30px; }
+  .try .ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 26px; color: #fff; }
+  .try.ko .ic { background: var(--ko); }
+  .try.skip .ic { background: #4b5563; }
+  .try.ok { border-color: rgba(34,197,94,0.7); background: rgba(34,197,94,0.14); }
+  .try.ok .ic { background: var(--ok); }
+  .try .t { color: var(--mid); margin-left: auto; font-size: 24px; }
+  .share { margin: 34px auto 0; text-align: center; font-size: 60px; letter-spacing: 8px; }
+
+  /* Salon */
+  #tv { position: absolute; left: 70px; top: 660px; width: 940px; height: 540px; border-radius: 26px; background: #0b0b0e;
+    border: 4px solid rgba(255,255,255,0.16); box-shadow: 0 40px 120px rgba(0,0,0,0.7), 0 0 120px rgba(255,0,255,0.15); overflow: hidden; }
+  #tvFoot { position: absolute; left: 470px; top: 1200px; width: 140px; height: 26px; background: rgba(255,255,255,0.12); border-radius: 0 0 14px 14px; }
+  .tvs { position: absolute; inset: 0; padding: 34px 40px; }
+  .tvh { display: flex; justify-content: space-between; color: var(--mid); font-size: 22px; }
+  .tvh b { color: var(--accent); font-family: 'Barlow Condensed'; font-weight: 800; font-size: 30px; }
+  .mini { position: absolute; top: 1290px; width: 196px; height: 380px; border-radius: 36px; background: #0b0b0e; border: 3px solid rgba(255,255,255,0.14); overflow: hidden; padding: 30px 14px 14px; }
+  .mini .who { font-size: 20px; color: var(--mid); text-align: center; margin-bottom: 10px; }
+  .mini .who b { color: var(--text); }
+  .mini .q { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mini .q i { display: block; height: 128px; border-radius: 16px; }
+  .mini .joined { text-align: center; margin-top: 70px; font-size: 30px; }
+  .team { position: absolute; height: 92px; border-radius: 18px; display: flex; align-items: center; padding: 0 28px; gap: 18px; font-size: 34px; font-weight: 600; }
+
+  /* Fin */
+  #outro { background: var(--accent); }
+  .logo { position: absolute; left: 0; right: 0; text-align: center; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 380px; line-height: 1; color: #0a0a0a; transform: skewX(-8deg); }
+  .tag { position: absolute; left: 0; right: 0; text-align: center; color: #0a0a0a; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="glow"></div>
+
+  <!-- 1. Accroche -->
+  <div class="layer" id="s1">
+    <div class="layer" id="wall"></div>
+    <div class="layer" id="wallShade"></div>
+    <div id="hook" class="cond">
+      <span class="line" id="h1">Tu la</span>
+      <span class="line" id="h2">reconnais</span>
+      <span class="line pink" id="h3">en combien</span>
+      <span class="line pink" id="h4">de secondes ?</span>
+    </div>
+  </div>
+
+  <!-- Légendes -->
+  <div class="cap" id="cap2"><div class="kick mono">Rooms en ligne</div><h2 class="cond">Blind test <em>en direct</em></h2><p>Affronte d'autres joueurs, manche après manche.</p></div>
+  <div class="cap" id="cap3"><div class="kick mono">Deux façons de jouer</div><h2 class="cond">En tapant ou <em>en 4 choix</em></h2><p>Saisie libre pour les experts, QCM pour tout le monde.</p></div>
+  <div class="cap" id="cap4"><div class="kick mono">Playlists</div><h2 class="cond">Tous les <em>styles</em></h2><p>Des années 70 au rap FR, de Disney au hard techno.</p></div>
+  <div class="cap" id="cap5"><div class="kick mono">Zikle</div><h2 class="cond">Un titre <em>par jour</em></h2><p>La même chanson pour tout le monde, 6 essais pour la trouver.</p></div>
+  <div class="cap" id="cap6"><div class="kick mono">Mode Salon</div><h2 class="cond">Ta TV + <em>vos téléphones</em></h2><p>Le blind test de soirée, gratuit jusqu'à 12 joueurs.</p></div>
+
+  <!-- 2-3. Téléphone -->
+  <div id="phone">
+    <!-- Jeu en saisie libre -->
+    <div class="scr" id="game">
+      <div class="gh"><span><span class="live"></span><b>Électro &amp; Pop</b></span><span id="gRound">Manche 3 / 10</span></div>
+      <div class="ring">
+        <svg viewBox="0 0 220 220" width="190" height="190"><circle cx="110" cy="110" r="96" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+          <circle id="gArc" cx="110" cy="110" r="96" fill="none" stroke="#ff00ff" stroke-width="14" stroke-linecap="round" stroke-dasharray="603" stroke-dashoffset="0"/></svg>
+        <div class="num cond" id="gNum">30</div>
+      </div>
+      <div class="eq" id="gEq"></div>
+      <div class="slots">
+        <div class="slot" id="slotA"><span class="lab mono">Artiste</span><span><span class="val" id="valA">? ? ?</span><span class="pts" id="ptsA"></span></span></div>
+        <div class="slot" id="slotT"><span class="lab mono">Titre</span><span><span class="val" id="valT">? ? ?</span><span class="pts" id="ptsT"></span></span></div>
+      </div>
+      <div class="feed" id="feed"></div>
+      <div class="toast cond" id="toast">Trouvé en 3,4 s · +3</div>
+      <div class="board" id="board"><h4 class="mono">Classement</h4></div>
+      <div class="input" id="input"><span id="typed"></span><span class="caret" id="caret"></span><span class="ph" id="ph">Artiste ou titre… tape ta réponse</span></div>
+    </div>
+
+    <!-- QCM -->
+    <div class="scr" id="qcm">
+      <div class="gh"><span><span class="live"></span><b>Années 2020</b></span><span>Manche 4 / 10 · QCM</span></div>
+      <img class="cover" id="qCover" src="covers/c07.jpg" alt="">
+      <div class="choices" id="choices"></div>
+    </div>
+
+    <!-- Zikle -->
+    <div class="scr" id="zikle">
+      <div class="zk-title cond">Zik<b>le</b></div>
+      <div class="zk-sub mono">La chanson du jour</div>
+      <div class="bar" id="zBar"></div>
+      <div class="ticks"><span>1 s</span><span>2 s</span><span>4 s</span><span>7 s</span><span>11 s</span><span>16 s</span></div>
+      <div class="tries" id="tries"></div>
+      <div class="share" id="share">🟥⬛🟩</div>
+    </div>
+  </div>
+
+  <!-- 4. Playlists -->
+  <div class="layer" id="s4"></div>
+
+  <!-- 6. Salon -->
+  <div class="layer" id="s6">
+    <div id="tv">
+      <div class="tvs" id="tvLobby">
+        <div class="tvh"><span><b>ZIK</b> SALON</span><span class="mono">Code 4821</span></div>
+        <div style="display:flex;gap:50px;align-items:center;margin-top:46px">
+          <div id="qr" style="width:300px;height:300px;background:#fff;border-radius:18px;padding:18px"></div>
+          <div>
+            <div class="cond" style="font-size:76px;line-height:0.95">Scanne<br>pour jouer</div>
+            <div id="tvJoined" style="margin-top:26px;font-size:30px;color:var(--mid)">0 joueur connecté</div>
+          </div>
+        </div>
+      </div>
+      <div class="tvs" id="tvRound">
+        <div class="tvh"><span><b>ZIK</b> SALON</span><span class="mono">Manche 7 / 15</span></div>
+        <div class="cond" id="tvNum" style="text-align:center;font-size:200px;line-height:1;margin-top:30px">12</div>
+        <div class="eq" id="tvEq" style="height:110px;margin-top:6px"></div>
+        <div id="tvAnswered" style="text-align:center;color:var(--mid);font-size:26px;margin-top:14px">2 / 4 ont répondu</div>
+      </div>
+      <div class="tvs" id="tvReveal">
+        <div class="tvh"><span><b>ZIK</b> SALON</span><span class="mono">Réponse</span></div>
+        <div style="display:flex;gap:40px;align-items:center;margin-top:30px">
+          <img src="covers/c08.jpg" alt="" style="width:220px;height:220px;border-radius:20px;object-fit:cover">
+          <div><div class="cond" style="font-size:76px;line-height:0.95">Indochine</div><div style="font-size:40px;color:#c9d1dc;margin-top:8px">L'aventurier</div></div>
+        </div>
+        <div id="teams"></div>
+      </div>
+    </div>
+    <div id="tvFoot"></div>
+    <div id="minis"></div>
+  </div>
+
+  <!-- 7. Fin -->
+  <div class="layer" id="outro">
+    <div class="logo" id="logo" style="top:560px">ZIK</div>
+    <div class="tag mono" id="tag1" style="top:960px;font-size:34px;font-weight:600">Blind test multijoueur</div>
+    <div class="tag cond" id="tag2" style="top:1060px;font-size:84px;line-height:1">Gratuit · sans appli</div>
+    <div class="tag" id="tag3" style="top:1190px"><span class="cond" style="display:inline-block;background:#0a0a0a;color:#ff00ff;font-size:72px;padding:14px 46px;border-radius:999px">zik-music.fr</span></div>
+  </div>
+
+  <div class="layer" id="grain"></div>
+</div>
+
+<script src="timeline.js"></script>
+</body>
+</html>
