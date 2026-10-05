@@ -1,7 +1,7 @@
 // Forme d'une carte telle que l'affichent Card, CardDrop et CardTray, à partir
 // d'une ligne `cards` jointe à son album et son artiste.
 export const CARD_SELECT =
-  "id, number, title, artist, artist_id, album_id, year, rarity, deezer_rank, card_albums(title, genre, cover_url, cover_md_url, dominant_color), card_artists(nb_fan)";
+  "id, number, title, artist, artist_id, album_id, year, rarity, deezer_rank, rarity_locked_at, card_albums(title, genre, cover_url, cover_md_url, dominant_color), card_artists(nb_fan)";
 
 export function toCardView(row, successRate = null) {
   if (!row) return null;
@@ -18,6 +18,8 @@ export function toCardView(row, successRate = null) {
     genre: album.genre || "",
     rarity: row.rarity,
     rank: row.deezer_rank,
+    // Sortie récente : la rareté peut encore monter
+    rising: !row.rarity_locked_at,
     fans: row.card_artists?.nb_fan ?? 0,
     coverMd: album.cover_md_url || album.cover_url || "",
     coverXl: album.cover_url || album.cover_md_url || "",

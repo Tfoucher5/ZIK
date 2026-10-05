@@ -172,8 +172,52 @@ export async function correctCard(sb, cardId, deezerRef) {
     else await sb.from("user_cards").insert({ ...o, card_id: newId });
   }
   await sb.from("card_grants").update({ card_id: newId }).eq("card_id", cardId);
+  const { data: items } = await sb
+    .from("card_set_items")
+    .select("set_id")
+    .in("card_id", [cardId, newId]);
   await deleteCards(sb, [cardId]);
+  const setIds = [...new Set((items || []).map((r) => r.set_id))];
+  for (const o of owners || []) await recheckSets(sb, o.user_id, setIds);
   return { cardId: newId };
+}
+
+// Sets terminés d'un joueur après un changement de cartes : un set n'est
+// terminé que s'il compte au moins 3 cartes, toutes possédées
+async function recheckSets(sb, userId, setIds) {
+  for (const setId of setIds) {
+    const { data: set } = await sb
+      .from("card_sets")
+      .select("card_count")
+      .eq("id", setId)
+      .maybeSingle();
+    const { data: items } = await sb
+      .from("card_set_items")
+      .select("card_id")
+      .eq("set_id", setId);
+    const ids = (items || []).map((r) => r.card_id);
+    const { count } = ids.length
+      ? await sb
+          .from("user_cards")
+          .select("card_id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("card_id", ids)
+      : { count: 0 };
+    const done = !!set && set.card_count >= 3 && count === ids.length;
+    if (done)
+      await sb
+        .from("user_card_sets")
+        .upsert(
+          { user_id: userId, set_id: setId },
+          { onConflict: "user_id,set_id", ignoreDuplicates: true },
+        );
+    else
+      await sb
+        .from("user_card_sets")
+        .delete()
+        .eq("user_id", userId)
+        .eq("set_id", setId);
+  }
 }
 
 /**

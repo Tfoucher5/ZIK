@@ -60,7 +60,7 @@
   <section class="cp-info" aria-labelledby="cp-title">
     <p class="cp-kicker" data-rarity={card.rarity}>
       <span class="cp-disc" aria-hidden="true"></span>
-      Carte {data.rarityLabel}, n° {card.number}
+      Carte {data.rarityLabel}, n° {card.number}{card.rising ? ', en ascension' : ''}
     </p>
     <h1 id="cp-title" class="cp-title">{card.title}</h1>
     <p class="cp-artist">{card.artist}</p>
