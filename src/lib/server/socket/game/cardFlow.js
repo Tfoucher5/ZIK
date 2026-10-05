@@ -22,7 +22,7 @@ const hashIp = (ip) =>
 /**
  * Vérifie l'identité du joueur (garde-fou G1) : le userId envoyé par le client
  * ne compte que s'il correspond au jeton de session. Charge aussi ses cartes
- * déjà possédées pour savoir si une carte gagnée est un doublon.
+ * déjà possédées : une carte qu'il a déjà passe au joueur suivant.
  */
 export async function identifyPlayer(player, { token, userId }, socket) {
   player.ipHash = hashIp(clientIp(socket));
@@ -51,6 +51,8 @@ export function resetCards(room) {
   room.game.pendingGrants = {};
   room.game.grantJobs = [];
   for (const p of Object.values(room.players)) {
+    // Cartes gagnées à la partie précédente : elles sont dans sa collection
+    for (const e of p.cardsInPlay || []) p.ownedCards?.add(e.card.id);
     p.roundsPresent = 0;
     p.cardsInPlay = [];
   }
@@ -120,6 +122,9 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
       lastAnswerRound: p.lastAnswerRound ?? null,
       disconnected: !!p._dcTimer,
       guesses: p.guessesThisRound || 0,
+      owns:
+        !!p.ownedCards?.has(card.id) ||
+        !!p.cardsInPlay?.some((e) => e.card.id === card.id),
     };
 
   const ownerId = dbRooms[room.roomId]?.owner_id;
@@ -143,7 +148,6 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
 
   if (res.winner) {
     const p = room.players[res.winner];
-    const duplicate = !!p.ownedCards?.has(card.id);
     p.cardsInPlay = [...(p.cardsInPlay || []), { card, round }];
     for (const name of Object.keys(room.players))
       payloads[name] = {
@@ -154,7 +158,6 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
     payloads[res.winner] = {
       card,
       mode: "won",
-      duplicate,
       delayed: res.delayed,
       winner: { name: res.winner, ms: winnerMs },
       roundsPresent: p.roundsPresent,
@@ -211,6 +214,13 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
       conditions: missedConditions(card, first),
     };
   if (res.guest) payloads[res.guest] = { card, mode: "guest" };
+  // Déjà dans sa collection : il l'a trouvée, elle passe au suivant
+  for (const name of res.owned)
+    payloads[name] = {
+      card,
+      mode: "owned",
+      winner: res.winner ? { name: res.winner, ms: winnerMs } : null,
+    };
 
   return payloads;
 }

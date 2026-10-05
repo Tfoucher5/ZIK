@@ -44,6 +44,43 @@ describe("pickCardWinner", () => {
     expect(pickCardWinner(setup()).winner).toBe("ana");
   });
 
+  it("laisse la carte au suivant quand le premier l'a déjà", () => {
+    const res = pickCardWinner(
+      setup({
+        finders: [
+          { name: "ana", ms: 3_000 },
+          { name: "bob", ms: 5_000 },
+        ],
+        players: {
+          ana: player("u-ana", "ip-a", { owns: true }),
+          bob: player("u-bob", "ip-b"),
+          cyd: player("u-cyd", "ip-c"),
+        },
+      }),
+    );
+    expect(res.winner).toBe("bob");
+    expect(res.owned).toEqual(["ana"]);
+  });
+
+  it("ne la donne au suivant que s'il remplit les conditions", () => {
+    const res = pickCardWinner(
+      setup({
+        card: { id: "c1", rarity: "epic" },
+        finders: [
+          { name: "ana", ms: 3_000 },
+          { name: "bob", ms: 20_000 },
+        ],
+        players: {
+          ana: player("u-ana", "ip-a", { owns: true }),
+          bob: player("u-bob", "ip-b"),
+          cyd: player("u-cyd", "ip-c"),
+        },
+      }),
+    );
+    expect(res.winner).toBeNull();
+    expect(res.refusals[0]).toMatchObject({ name: "bob", reason: "speed" });
+  });
+
   it("ne donne rien quand le titre n'a pas de carte", () => {
     expect(pickCardWinner(setup({ card: null })).winner).toBeNull();
   });

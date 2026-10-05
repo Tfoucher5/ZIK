@@ -51,7 +51,6 @@
   const genre = $derived(params.get('genre') || '');
   const decade = $derived(params.get('decennie') || '');
   const sort = $derived(params.get('tri') || 'recentes');
-  const dupes = $derived(params.get('doublons') === '1');
   const setId = $derived(params.get('set') || '');
   const groupSort = $derived(params.get('ordre') || 'progression');
   const setState = $derived(params.get('etat') || '');
@@ -152,7 +151,6 @@
         (!rarity || c.rarity === rarity) &&
         (!genre || c.genre === genre) &&
         (!decade || decadeOf(c.year) === decade) &&
-        (!dupes || c.copies > 1) &&
         (!needle || norm(`${c.title} ${c.artist} ${c.album}`).includes(needle)),
     );
     const rank = (c) => RARITY_ORDER.indexOf(c.rarity);
@@ -216,7 +214,7 @@
       .sort(by);
   });
 
-  const hasFilters = $derived(!!(q || rarity || genre || decade || dupes || (view !== 'toutes' && setState)));
+  const hasFilters = $derived(!!(q || rarity || genre || decade || (view !== 'toutes' && setState)));
   const pendingLabel = (c) => {
     const h = Math.max(1, Math.ceil((new Date(c.visibleAt).getTime() - Date.now()) / 36e5));
     return `Disponible dans ${h} h`;
@@ -275,7 +273,7 @@
           {#each setDetail.cards as c (c.id)}
             <li>
               {#if c.owned}
-                <Card card={c} size="sm" copies={c.copies} inspectable list={setDetail.cards.filter((x) => x.owned)} />
+                <Card card={c} size="sm" inspectable list={setDetail.cards.filter((x) => x.owned)} />
               {:else}
                 <Card card={c} size="sm" face="silhouette" motion="none" />
               {/if}
@@ -386,10 +384,6 @@
               {#each decades as d (d)}<option value={d}>{decadeLabel(d)}</option>{/each}
             </select>
           </label>
-          <label class="col-check">
-            <input type="checkbox" checked={dupes} onchange={(e) => setParam({ doublons: e.currentTarget.checked })} />
-            Doublons
-          </label>
         </div>
       </div>
 
@@ -400,7 +394,7 @@
           {groups.length} {view === 'artistes' ? 'artiste' : 'album'}{groups.length > 1 ? 's' : ''}
         {/if}
         {#if hasFilters}
-          <button type="button" class="col-reset" onclick={() => setParam({ q: '', rarete: '', genre: '', decennie: '', doublons: '', etat: '' })}>
+          <button type="button" class="col-reset" onclick={() => setParam({ q: '', rarete: '', genre: '', decennie: '', etat: '' })}>
             Effacer les filtres
           </button>
         {/if}
@@ -411,7 +405,7 @@
           <ul class="col-grid">
             {#each filtered.slice(0, shown) as c (c.id)}
               <li class="col-item">
-                <Card card={c} size="sm" copies={c.copies} inspectable list={filtered} />
+                <Card card={c} size="sm" inspectable list={filtered} />
                 {#if c.pending}<span class="col-pending">{pendingLabel(c)}</span>{/if}
               </li>
             {/each}
@@ -698,13 +692,6 @@
     font: 500 0.88rem/1 'Barlow', sans-serif;
   }
 
-  .col-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font: 600 0.88rem/1 'Barlow', sans-serif;
-    color: var(--mid);
-  }
 
   .col-count {
     display: flex;
@@ -977,7 +964,7 @@
       flex: 1;
     }
 
-    .col-selects label:not(.col-check) {
+    .col-selects label {
       flex: 1 1 140px;
     }
 

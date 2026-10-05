@@ -3,7 +3,7 @@
 - **Date :** 2026-10-04 (v3, après deux relectures de Theo)
 - **Statut :** spec, rien n'est codé
 - **Périmètre MVP :** carte gagnée en fin de manche (classique et QCM), visionneuse de carte, page collection rangée par artiste puis album, 6 raretés, sets artiste et album
-- **Hors MVP :** deck, échanges, bonus en partie, sets thématiques
+- **Hors MVP :** deck, bonus en partie, sets thématiques
 
 ## Principe directeur
 
@@ -89,11 +89,13 @@ temps de réponse de chacun.
 Ces conditions **favorisent** les joueurs rapides : ce sont eux qui
 décrochent les hautes raretés. Valeurs en constantes serveur.
 
-### Doublons
+### Pas de doublons (décision du 2026-10-06)
 
-Une carte déjà possédée incrémente un compteur (`user_cards.copies`) :
-« ×3 » dans la collection. En phase 3, seuls les exemplaires en trop
-(`copies ≥ 2`) s'échangent.
+Une carte se possède une fois : la collection est un objectif à compléter,
+sans autre enjeu. Un trouveur qui possède déjà la carte la laisse au suivant
+dans l'ordre des trouveurs, à condition que celui-ci remplisse les
+conditions d'exploit. Le premier voit « Déjà dans ta collection ».
+`user_cards.copies` reste en base, toujours à 1. Pas d'échanges.
 
 ### Cartes provisoires et départ en cours de partie
 
@@ -115,9 +117,8 @@ passé.
   abonnement. Aucun lien avec `/soutenir` ni avec ZIK Pro.
 - Aucun tirage aléatoire : la carte dépend du titre joué et de la
   performance du joueur.
-- Les échanges (phase 3) restent non monétisables. Une carte revendable
-  contre de l'argent ferait entrer ZIK dans le régime des JONUM (loi SREN
-  2024).
+- Aucun échange ni revente : une carte revendable contre de l'argent
+  ferait entrer ZIK dans le régime des JONUM (loi SREN 2024).
 
 ### Garde-fous
 
@@ -332,7 +333,7 @@ La collection se navigue en entonnoir :
    silhouette.
 
 Vue « Toutes mes cartes » à côté, avec filtres rareté (6 pastilles), genre,
-décennie, recherche artiste, « doublons seulement », et tri par date
+décennie, recherche artiste, et tri par date
 d'obtention, rareté ou artiste.
 
 Cartes manquantes en silhouette seulement, sans titre : sinon la collection
@@ -377,14 +378,6 @@ Pas de monnaie, pas de carte bonus.
 - **Le propriétaire du deck ne gagne aucune carte** dans sa room deck.
 - Usage visé : **défier un ami avec son deck**. L'ami peut gagner les cartes,
   avec les garde-fous habituels.
-
-### Échanges entre amis
-
-- Uniquement entre amis (`friendships`), 1 carte contre 1 carte.
-- Seuls les exemplaires en trop s'échangent (`copies ≥ 2`).
-- Refusé entre deux comptes qui partagent une IP (G3).
-- Transfert atomique en une fonction SQL, journalisé.
-- Jamais contre autre chose qu'une carte (JONUM).
 
 ### Bonus en partie
 
@@ -545,7 +538,7 @@ Fonctions SQL (security definer, `revoke` public comme pour Zikle) :
 - `record_round_stats(p_track_id, p_exposed, p_found)`.
 - `card_pending(p_grant jsonb)` : ligne `card_grants` en `pending`.
 - `card_settle(p_game_id, p_user_id, p_keep boolean)` : passe les lignes
-  `pending` en `granted` (upsert `user_cards`, `copies + 1`,
+  `pending` en `granted` (insertion `user_cards` si absente,
   `first_owner_id` si nul, sets terminés) ou en `lost`. Retourne les cartes
   et les sets terminés. Idempotente.
 - `card_revoke(p_user_id, p_card_id)` : admin, journalisée.
@@ -705,14 +698,14 @@ moment porte.
 Tout le système vit dans `src/lib/components/card/`. Afficher une carte
 n'importe où = importer **un** composant.
 
-| Fichier                | Rôle                                                                                                                                                                                                                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Card.svelte`          | Le composant public. Props : `card`, `size` (`mini` 64 px / `sm` / `md` / `lg` / `xl`), `face` (`front` / `back` / `silhouette`), `copies`, `motion` (`none` / `hover` / `full`), `inspectable` (clic → visionneuse). Contient la carte, ses couches et tout son style scoped. |
-| `CardViewer.svelte`    | La visionneuse plein écran, montée **une seule fois** dans les layouts `(site)` et `/game`.                                                                                                                                                                                    |
-| `cardViewer.svelte.js` | État partagé en runes (`$state`) : `openCard(card, list?)`, `closeCard()`. N'importe quelle page appelle `openCard`, sans monter sa propre modale.                                                                                                                             |
-| `cardReveal.js`        | La séquence d'apparition de fin de manche, réutilisable (fin de manche, fin de partie, ascension de rareté).                                                                                                                                                                   |
-| `rarity.js`            | Libellés, ordre et conditions d'exploit côté client (affichage seulement ; le serveur reste seul juge).                                                                                                                                                                        |
-| `RarityBadge.svelte`   | Petite pastille de rareté pour les lignes de texte, notifications, filtres. Réutilise les mêmes variables.                                                                                                                                                                     |
+| Fichier                | Rôle                                                                                                                                                                                                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Card.svelte`          | Le composant public. Props : `card`, `size` (`mini` 64 px / `sm` / `md` / `lg` / `xl`), `face` (`front` / `back` / `silhouette`), `motion` (`none` / `hover` / `full`), `inspectable` (clic → visionneuse). Contient la carte, ses couches et tout son style scoped. |
+| `CardViewer.svelte`    | La visionneuse plein écran, montée **une seule fois** dans les layouts `(site)` et `/game`.                                                                                                                                                                          |
+| `cardViewer.svelte.js` | État partagé en runes (`$state`) : `openCard(card, list?)`, `closeCard()`. N'importe quelle page appelle `openCard`, sans monter sa propre modale.                                                                                                                   |
+| `cardReveal.js`        | La séquence d'apparition de fin de manche, réutilisable (fin de manche, fin de partie, ascension de rareté).                                                                                                                                                         |
+| `rarity.js`            | Libellés, ordre et conditions d'exploit côté client (affichage seulement ; le serveur reste seul juge).                                                                                                                                                              |
+| `RarityBadge.svelte`   | Petite pastille de rareté pour les lignes de texte, notifications, filtres. Réutilise les mêmes variables.                                                                                                                                                           |
 
 Seule chose globale : les **variables de rareté** dans `static/css/cards.css`
 (couleurs, dégradés de matière, halos), chargée dans les layouts `(site)` et
@@ -793,7 +786,7 @@ tient en **2,5 s** et ne bloque rien.
    « Légendaire ».
 3. 1,4 - 2,0 s : reflet des sillons qui balaie la carte ; paillettes pour une
    Mythique.
-4. Mention : « Nouvelle carte » ou « Doublon ×3 », puis « Reste jusqu'à la
+4. Mention : « Nouvelle carte », puis « Reste jusqu'à la
    manche 5 pour la garder » ou « Carte sécurisée ».
 
 Clic sur la carte : visionneuse (la manche suivante continue derrière ; la
@@ -877,7 +870,6 @@ c'est la carte qui doit donner envie, tout le reste en découle.
 
 1. Pastille « dans ta collection » en fin de manche.
 2. Défi « joue avec mon deck » entre amis.
-3. Échanges de doublons entre amis.
 
 ### Phase 4 - curation
 

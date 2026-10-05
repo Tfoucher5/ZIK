@@ -7,7 +7,6 @@
     card,
     size = 'md',
     face = 'front',
-    copies = 1,
     motion = 'hover',
     inspectable = false,
     list = null,
@@ -64,7 +63,6 @@
             <span class="zc-obi-num">n° {card.number}</span>
             <span class="zc-obi-rarity">{silhouette ? '?' : label}</span>
           </div>
-          {#if copies > 1}<span class="zc-copies">×{copies}</span>{/if}
           <div class="zc-info">
             {#if silhouette}
               <p class="zc-title">Carte à découvrir</p>
@@ -435,17 +433,6 @@
     opacity: 0.75;
   }
 
-  .zc-copies {
-    position: absolute;
-    z-index: 4;
-    top: 3cqw;
-    right: 3cqw;
-    padding: 1cqw 2.2cqw;
-    border-radius: 99px;
-    background: rgb(0 0 0 / 0.6);
-    backdrop-filter: blur(4px);
-    font: 700 4cqw/1 'Barlow Condensed', sans-serif;
-  }
 
   /* ── Textes ───────────────────────────────────────────────────────────── */
   .zc-info,
@@ -900,7 +887,6 @@
   @container (max-width: 120px) {
     .zc-info,
     .zc-stats,
-    .zc-copies,
     .zc-url,
     .zc-obi-num {
       display: none;

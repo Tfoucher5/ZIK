@@ -2677,13 +2677,6 @@ html.no-animations *::after {
   font-size: 1.3rem;
   color: #fff;
 }
-.g-go-cards-title span {
-  margin-left: 8px;
-  font-family: var(--g-mono);
-  font-weight: 400;
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.55);
-}
 .g-go-cards-list {
   display: flex;
   flex-wrap: wrap;

@@ -64,7 +64,7 @@ export async function getCollection(userId, { withPending = false } = {}) {
     let q = sb
       .from("user_cards")
       .select(
-        `copies, first_obtained_at, visible_at, cards(${CARD_SELECT}, first_owner:profiles!cards_first_owner_id_fkey(username))`,
+        `first_obtained_at, visible_at, cards(${CARD_SELECT}, first_owner:profiles!cards_first_owner_id_fkey(username))`,
       )
       .eq("user_id", userId)
       .order("first_obtained_at", { ascending: false });
@@ -76,7 +76,6 @@ export async function getCollection(userId, { withPending = false } = {}) {
     .filter((r) => r.cards)
     .map((r) => ({
       ...toCardView(r.cards),
-      copies: r.copies,
       obtainedAt: r.first_obtained_at,
       firstOwner: r.cards.first_owner?.username ?? null,
       pending: r.visible_at > now,
@@ -152,7 +151,7 @@ export async function getSetCards(setId, userId) {
   const { data: mine } = userId
     ? await sb
         .from("user_cards")
-        .select("card_id, copies, first_obtained_at")
+        .select("card_id, first_obtained_at")
         .eq("user_id", userId)
         .lte("visible_at", new Date().toISOString())
         .in(
@@ -169,7 +168,6 @@ export async function getSetCards(setId, userId) {
         return {
           ...toCardView(c),
           owned: true,
-          copies: own.copies,
           obtainedAt: own.first_obtained_at,
         };
       const view = toCardView(c);

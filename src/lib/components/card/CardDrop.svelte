@@ -4,13 +4,12 @@
   /**
    * Panneau « carte de la manche » de l'écran de fin de manche.
    * mode : won (le joueur la gagne), taken (un autre joueur la gagne),
-   *        missed (premier, mais condition d'exploit ratée), guest (invité premier).
+   *        missed (premier, mais condition d'exploit ratée), guest (invité premier),
+   *        owned (déjà dans sa collection : elle passe au joueur suivant).
    */
   let {
     card,
     mode = 'won',
-    copies = 1,
-    duplicate = false,
     delayed = false,
     winner = null,
     round = 1,
@@ -34,9 +33,7 @@
   {#if mode === 'won'}
     <p class="cd-rarity">
       {label}
-      <span class="cd-status"
-        >{copies > 1 ? `Doublon, ${copies} exemplaires` : duplicate ? 'Doublon' : 'Nouvelle carte'}</span
-      >
+      <span class="cd-status">Nouvelle carte</span>
     </p>
 
     {#if winner}
@@ -90,6 +87,14 @@
       {/each}
     </ul>
     <p class="cd-hint">La carte reste à prendre la prochaine fois que ce titre passe.</p>
+  {:else if mode === 'owned'}
+    <p class="cd-rarity">
+      {label}
+      <span class="cd-status">Déjà dans ta collection</span>
+    </p>
+    <p class="cd-hint">
+      {winner ? `Elle revient à ${winner.name}, qui ne l'avait pas encore.` : 'Personne d’autre ne la gagne cette fois.'}
+    </p>
   {:else if mode === 'guest'}
     <p class="cd-rarity">
       {label}

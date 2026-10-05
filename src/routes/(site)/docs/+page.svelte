@@ -886,7 +886,7 @@
         <li>Une carte gagnée en manche est <strong>provisoire</strong>. Elle est <strong>sécurisée</strong> quand vous avez joué la moitié des manches de la partie, par exemple la manche 5 sur 10. Le suivi s'affiche à côté du classement.</li>
         <li>Si vous quittez la partie avant, vos cartes provisoires sont perdues. ZIK vous prévient avant de partir.</li>
         <li>Pour un compte créé depuis moins de 24 heures, les cartes gagnées arrivent dans la collection une fois ces 24 heures passées.</li>
-        <li>Gagner une carte que vous avez déjà ajoute un exemplaire (×2, ×3…).</li>
+        <li>Une carte se possède une seule fois : si le premier à trouver l'a déjà, elle revient au joueur suivant qui remplit les conditions.</li>
       </ul>
 
       <h3>Collection et sets</h3>

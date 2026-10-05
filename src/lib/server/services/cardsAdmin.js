@@ -74,9 +74,9 @@ export async function deleteCards(sb, ids) {
 }
 
 /**
- * Révoque des cartes gagnées : la ligne du journal passe en « revoked », un
- * exemplaire est retiré de la collection (la carte disparaît au dernier) et
- * les sets qu'elle complétait ne sont plus terminés.
+ * Révoque des cartes gagnées : la ligne du journal passe en « revoked », la
+ * carte quitte la collection et les sets qu'elle complétait ne sont plus
+ * terminés.
  */
 export async function revokeGrants(sb, grantIds) {
   const { data: grants } = await sb
@@ -92,21 +92,6 @@ export async function revokeGrants(sb, grantIds) {
       .eq("id", g.id);
     if (g.status !== "granted") continue;
 
-    const { data: row } = await sb
-      .from("user_cards")
-      .select("copies")
-      .eq("user_id", g.user_id)
-      .eq("card_id", g.card_id)
-      .maybeSingle();
-    if (!row) continue;
-    if (row.copies > 1) {
-      await sb
-        .from("user_cards")
-        .update({ copies: row.copies - 1 })
-        .eq("user_id", g.user_id)
-        .eq("card_id", g.card_id);
-      continue;
-    }
     await sb
       .from("user_cards")
       .delete()
@@ -157,19 +142,13 @@ export async function correctCard(sb, cardId, deezerRef) {
     .select("*")
     .eq("card_id", cardId);
   for (const o of owners || []) {
-    const { data: has } = await sb
+    // Déjà possédée sous sa bonne version : rien à ajouter (pas de doublons)
+    await sb
       .from("user_cards")
-      .select("copies")
-      .eq("user_id", o.user_id)
-      .eq("card_id", newId)
-      .maybeSingle();
-    if (has)
-      await sb
-        .from("user_cards")
-        .update({ copies: has.copies + o.copies })
-        .eq("user_id", o.user_id)
-        .eq("card_id", newId);
-    else await sb.from("user_cards").insert({ ...o, card_id: newId });
+      .upsert(
+        { ...o, card_id: newId },
+        { onConflict: "user_id,card_id", ignoreDuplicates: true },
+      );
   }
   await sb.from("card_grants").update({ card_id: newId }).eq("card_id", cardId);
   const { data: items } = await sb

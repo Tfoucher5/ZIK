@@ -1393,7 +1393,6 @@
             <CardDrop
               card={roundCard.card}
               mode={roundCard.mode}
-              duplicate={roundCard.duplicate}
               delayed={roundCard.delayed}
               winner={roundCard.winner}
               round={roundCard.roundsPresent ?? roundsSeen}
@@ -1468,11 +1467,9 @@
         {/if}
 
         {#if cardsInPlay.length}
-          {@const fresh = cardsResult?.cards?.filter((c) => c.is_new).length ?? 0}
           <section class="g-go-cards" aria-label="Tes cartes de la partie">
             <p class="g-go-cards-title">
-              {cardsInPlay.length} carte{cardsInPlay.length > 1 ? 's' : ''} gagnée{cardsInPlay.length > 1 ? 's' : ''}
-              {#if fresh}<span>dont {fresh} nouvelle{fresh > 1 ? 's' : ''}</span>{/if}
+              {cardsInPlay.length} nouvelle{cardsInPlay.length > 1 ? 's' : ''} carte{cardsInPlay.length > 1 ? 's' : ''} pour ta collection
             </p>
             <div class="g-go-cards-list">
               {#each cardsInPlay as entry (entry.card.id)}

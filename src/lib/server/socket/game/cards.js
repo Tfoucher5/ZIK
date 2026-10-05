@@ -34,7 +34,8 @@ function activeCount(players, round, exceptUserId = null) {
 /**
  * Désigne le joueur qui gagne la carte de la manche.
  * Fonction pure : toutes les données viennent de l'état serveur de la room.
- * Retourne { winner, delayed, guest, refusals, signals }.
+ * Pas de doublons : un joueur qui possède déjà la carte la laisse au suivant.
+ * Retourne { winner, delayed, guest, owned, refusals, signals }.
  */
 export function pickCardWinner({
   card,
@@ -53,6 +54,7 @@ export function pickCardWinner({
     winner: null,
     delayed: false,
     guest: null,
+    owned: [],
     refusals: [],
     signals: [],
   };
@@ -72,6 +74,10 @@ export function pickCardWinner({
     if (!p) continue;
     if (!p.verified) {
       result.guest ??= name;
+      continue;
+    }
+    if (p.owns) {
+      result.owned.push(name);
       continue;
     }
 
