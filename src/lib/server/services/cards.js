@@ -122,7 +122,8 @@ function displayArtist(deezerName, zikArtist, titles) {
     ...titles.flatMap(featsFromTitle),
   ].filter((name) => {
     const k = cleanString(name);
-    if (!k || seen.has(k)) return false;
+    // « Ray Parker, Jr. » : « Jr. » fait partie du nom, pas un invité
+    if (!k || seen.has(k) || cleanString(deezerName).includes(k)) return false;
     seen.add(k);
     return true;
   });
@@ -194,7 +195,7 @@ async function searchLoose(q) {
 // légères, titre abrégé (« Gimme Gimme Gimme ») ou mention en plus (« - Remix »)
 const compact = (s) =>
   cleanString(s)
-    .replace(/&/g, "and")
+    .replace(/&|\bet\b/g, "and")
     .replace(/[^a-z0-9]/g, "");
 const digits = (s) => s.replace(/\D/g, "");
 function looseTitle(a, b) {
@@ -262,6 +263,47 @@ function looseQueries(parts) {
 const TRIBUTE =
   /\b(cover|covers|karaoke|tribute|emulation|in the style|made famous|8-bit|8 bit|lofi|lo-fi|piano version)\b/i;
 
+// Artiste remplacé par une catégorie : seuls les génériques et bandes
+// originales conviennent
+const CATEGORY =
+  /^(s[ée]ries?( tv)?|tv|t[ée]l[ée]|films?|cin[ée]ma|dessins?( anim[ée]s?)?|g[ée]n[ée]riques?( tv)?|musiques? de films?|bandes? originales?|ost)$/i;
+const THEMED =
+  /g[ée]n[ée]rique|theme|th[èe]me|\btv\b|t[ée]l[ée]|s[ée]rie|series|film|movie|soundtrack|\bost\b|bande originale|score|cin[ée]ma|orchestr|from "/i;
+
+function editDistance(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++)
+      cur[j] = Math.min(
+        prev[j] + 1,
+        cur[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+// sameArtist, plus les fautes de frappe (« Idr », « Quenn ») et les sigles (« OMD »)
+function closeArtist(deezerName, name) {
+  if (sameArtist(deezerName, name)) return true;
+  const x = compact(deezerName);
+  const y = compact(name);
+  if (!x || !y) return false;
+  if (
+    y.length >= 3 &&
+    editDistance(x, y) <= Math.max(1, Math.floor(y.length / 5))
+  )
+    return true;
+  const initials = cleanString(deezerName)
+    .split(/\s+/)
+    .filter((w) => !["the", "in", "of", "and", "le", "la", "les"].includes(w))
+    .map((w) => w[0])
+    .join("");
+  return y.length >= 2 && initials === y;
+}
+
 const isYoutubeId = (t) => t.artist === t.title && /^[\w-]{11}$/.test(t.artist);
 
 // Versions Deezer d'un titre du catalogue, de la plus sûre à la plus tolérante.
@@ -294,24 +336,46 @@ async function findVersions(track) {
   );
   if (byArtist.length) return { start, candidates: pick(byArtist) };
 
-  // Artiste mal saisi, remplacé par une catégorie (« SERIE TV », un jeu) ou
-  // par l'id d'une vidéo YouTube
+  const tribute = (v) =>
+    TRIBUTE.test(`${v.artist?.name} ${v.title} ${v.album?.title}`);
   const video = isYoutubeId(track) && (await youtubeTitle(track.artist));
-  const text =
-    video ||
-    (main === title ? track.title : `${track.artist} - ${track.title}`);
+  const category = CATEGORY.test(main.trim());
+
+  // Vrai artiste mal orthographié (« Quenn », « CINDY LAUPER ») : on exige un
+  // artiste Deezer proche, sinon pas de carte plutôt que celle d'un autre
+  if (!video && main !== title && !category) {
+    const names = track.artist.split(/\s*(?:,|&|\bx\b|\bfeat\.?|\bft\.?)\s*/i);
+    // Cas tordus : début du titre saisi comme artiste (« EVE - LEVE TOI »),
+    // artiste et titre inversés (« Flowers - Miley cirus »)
+    const merged = `${track.artist} ${title}`;
+    for (const q of new Set([`${names[0]} ${title}`, title, merged])) {
+      const matched = (await searchLoose(q)).filter(
+        (v) =>
+          !tribute(v) &&
+          ((fullTitleMatch(v, title) &&
+            names.some((n) => closeArtist(v.artist?.name, n))) ||
+            (compact(merged).length >= 6 &&
+              compact(titleOf(v)) === compact(merged)) ||
+            (fullTitleMatch(v, track.artist) &&
+              closeArtist(v.artist?.name, title))),
+      );
+      if (matched.length) return { start, candidates: pick(matched) };
+    }
+    return { start, candidates: [] };
+  }
+
+  // Catégorie (« SERIE TV »), nom du jeu en guise d'artiste, ou id YouTube
+  const text = video || track.title;
   const parts = segments(text);
   if (!parts.length) return { start, candidates: [] };
-  // Le champ artiste ne doit jamais tomber sur un titre (« SERIE TV » de Nayt)
-  const titleParts = video || main === title ? parts : segments(track.title);
   const whole = parts.join(" ");
   for (const q of looseQueries(parts)) {
     const matched = (await searchLoose(q)).filter(
       (v) =>
-        !TRIBUTE.test(`${v.title} ${v.album?.title}`) &&
-        (titleParts.some(
-          (p) => compact(p).length >= 4 && fullTitleMatch(v, p),
-        ) ||
+        !tribute(v) &&
+        (!category ||
+          THEMED.test(`${v.artist?.name} ${v.title} ${v.album?.title}`)) &&
+        (parts.some((p) => compact(p).length >= 4 && fullTitleMatch(v, p)) ||
           looseTitle(`${v.artist?.name} ${titleOf(v)}`, whole)),
     );
     if (!matched.length) continue;

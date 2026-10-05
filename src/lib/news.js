@@ -3,6 +3,20 @@
 
 export const NEWS = [
   {
+    date: "2026-10-05",
+    version: "3.15.0",
+    tag: "Nouveauté",
+    title: "Les cartes musicales arrivent",
+    items: [
+      "Chaque titre du catalogue a maintenant sa carte, avec sa pochette, son album, son année et sa rareté, de Commune à Mythique. Plus un titre est écouté, plus sa carte est rare.",
+      "Trouvez un titre en premier dans une room d'au moins 100 titres, en jouant à au moins deux joueurs connectés : sa carte est pour vous. Les cartes les plus rares demandent en plus de trouver très vite.",
+      "Une carte gagnée est sécurisée quand vous avez joué la moitié de la partie. Le suivi s'affiche à côté du classement, et ZIK vous prévient avant de partir trop tôt.",
+      "Votre collection se range par artiste et par album, avec une recherche et des filtres. Les cartes qui vous manquent apparaissent en silhouette pour compléter vos sets.",
+      "Chaque carte a sa page à partager, et la collection de chaque joueur se consulte depuis son profil.",
+      "Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant.",
+    ],
+  },
+  {
     date: "2026-10-04",
     version: "3.14.1",
     tag: "Correctif",
