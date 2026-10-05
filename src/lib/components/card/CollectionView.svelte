@@ -108,6 +108,11 @@
   const genres = $derived([...new Set(cards.map((c) => c.genre).filter(Boolean))].sort());
   const decades = $derived([...new Set(cards.map((c) => decadeOf(c.year)).filter(Boolean))].sort());
   const completedSets = $derived((data?.sets ?? []).filter((s) => s.completedAt).length);
+  // Objectif : tout le catalogue, et chaque rareté
+  const catalog = $derived(data?.catalog ?? { total: 0, byRarity: {} });
+  const fmt = (n) => n.toLocaleString('fr-FR');
+  // Au moins un trait visible dès la première carte
+  const pct = (n, total) => (total ? `${n ? Math.max(1.5, (n / total) * 100) : 0}%` : '0%');
 
   const filtered = $derived.by(() => {
     const needle = norm(q);
@@ -229,28 +234,29 @@
       <div>
         <h1 class="col-title">{data.isOwner ? 'Ma collection' : `Collection de ${data.profile.username}`}</h1>
         <p class="col-sub">
-          {cards.length} carte{cards.length > 1 ? 's' : ''}
-          {#if completedSets}, {completedSets} set{completedSets > 1 ? 's' : ''} complété{completedSets > 1 ? 's' : ''}{/if}
+          <strong class="col-total">{fmt(cards.length)}</strong> / {fmt(catalog.total)} cartes{#if completedSets}, {completedSets} set{completedSets > 1 ? 's' : ''} complété{completedSets > 1 ? 's' : ''}{/if}
         </p>
-      </div>
-      {#if cards.length}
-        <div class="col-rarities" role="group" aria-label="Filtrer par rareté">
-          {#each RARITY_ORDER as r (r)}
-            <button
-              type="button"
-              class="col-rar"
-              data-rarity={r}
-              aria-pressed={rarity === r}
-              disabled={!counts[r]}
-              onclick={() => setParam({ rarete: rarity === r ? '' : r })}
-            >
-              <span class="col-rar-disc" aria-hidden="true"></span>
-              <span class="col-rar-label">{RARITIES[r].label}</span>
-              <strong>{counts[r]}</strong>
-            </button>
-          {/each}
+        <div class="col-progress col-progress-total" role="img" aria-label={`${cards.length} cartes sur ${catalog.total}`}>
+          <span style:width={pct(cards.length, catalog.total)}></span>
         </div>
-      {/if}
+      </div>
+      <div class="col-rarities" role="group" aria-label="Filtrer par rareté">
+        {#each RARITY_ORDER as r (r)}
+          <button
+            type="button"
+            class="col-rar"
+            data-rarity={r}
+            aria-pressed={rarity === r}
+            disabled={!counts[r]}
+            onclick={() => setParam({ rarete: rarity === r ? '' : r })}
+          >
+            <span class="col-rar-disc" aria-hidden="true"></span>
+            <span class="col-rar-label">{RARITIES[r].label}</span>
+            <strong>{counts[r]}<small>&nbsp;/&nbsp;{fmt(catalog.byRarity[r] ?? 0)}</small></strong>
+            <span class="col-rar-bar" aria-hidden="true"><i style:width={pct(counts[r], catalog.byRarity[r])}></i></span>
+          </button>
+        {/each}
+      </div>
     </header>
 
     {#if !cards.length}
@@ -443,9 +449,44 @@
     background: color-mix(in oklab, var(--rc) 14%, var(--surface));
   }
 
+  .col-rar strong {
+    white-space: nowrap;
+  }
+
+  .col-rar strong small {
+    font: 600 0.8rem/1 'Barlow', sans-serif;
+    color: var(--mid);
+  }
+
+  /* Progression vers toutes les cartes de la rareté */
+  .col-rar-bar {
+    grid-column: 1 / -1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface2);
+    overflow: hidden;
+  }
+
+  .col-rar-bar i {
+    display: block;
+    height: 100%;
+    background: var(--rc);
+  }
+
+  /* Rareté pas encore commencée : l'objectif reste lisible */
   .col-rar:disabled {
-    opacity: 0.45;
+    opacity: 0.7;
     cursor: default;
+  }
+
+  .col-total {
+    color: var(--text);
+    font: 700 1.25rem/1 'Barlow Condensed', sans-serif;
+  }
+
+  .col-progress-total {
+    max-width: 420px;
+    margin-top: 10px;
   }
 
   .col-rar-disc {

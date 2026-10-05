@@ -1,5 +1,6 @@
 import { getAdminClient } from "../config.js";
 import { CARD_SELECT, toCardView } from "../../components/card/cardView.js";
+import { RARITY_ORDER } from "../../components/card/rarity.js";
 
 const PAGE = 1000;
 const CHUNK = 150; // ids par requête .in() : l'URL reste courte
@@ -22,6 +23,32 @@ async function chunked(ids, fetchChunk) {
   for (let i = 0; i < ids.length; i += CHUNK)
     out.push(...(await fetchChunk(ids.slice(i, i + CHUNK))));
   return out;
+}
+
+// Nombre de cartes du catalogue, au total et par rareté : l'objectif affiché
+// en haut de la collection. Recompté au plus toutes les 10 minutes.
+const TOTALS_TTL = 10 * 60_000;
+let totals = null;
+let totalsAt = 0;
+
+async function catalogTotals(sb) {
+  if (totals && Date.now() - totalsAt < TOTALS_TTL) return totals;
+  const byRarity = {};
+  await Promise.all(
+    RARITY_ORDER.map(async (r) => {
+      const { count } = await sb
+        .from("cards")
+        .select("id", { count: "exact", head: true })
+        .eq("rarity", r);
+      byRarity[r] = count ?? 0;
+    }),
+  );
+  totals = {
+    total: Object.values(byRarity).reduce((a, b) => a + b, 0),
+    byRarity,
+  };
+  totalsAt = Date.now();
+  return totals;
 }
 
 /**
@@ -97,7 +124,7 @@ export async function getCollection(userId, { withPending = false } = {}) {
     completedAt: completed.get(s.id) ?? null,
   }));
 
-  return { cards, sets };
+  return { cards, sets, catalog: await catalogTotals(sb) };
 }
 
 /**

@@ -21,7 +21,7 @@ export async function GET({ params, request }) {
   if (profile.is_private && !isOwner)
     return json({ error: "Collection privée" }, { status: 403 });
 
-  const { cards, sets } = await getCollection(profile.id, {
+  const { cards, sets, catalog } = await getCollection(profile.id, {
     withPending: isOwner,
   });
   return json({
@@ -29,5 +29,6 @@ export async function GET({ params, request }) {
     isOwner,
     cards,
     sets,
+    catalog,
   });
 }
