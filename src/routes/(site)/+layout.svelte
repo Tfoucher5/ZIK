@@ -176,6 +176,7 @@
         <a href="/playlists">Playlists</a>
         <a href="/classements">Classements</a>
         <a href="/zikle">Zikle</a>
+        <a href="/cartes">Cartes musicales</a>
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Aide et règles du jeu</a>
         <a href="/nouveautes">Nouveautés</a>

@@ -66,6 +66,23 @@
     goto(url, { replaceState: !('set' in changes), keepFocus: true, noScroll: true });
   }
 
+  // Chargement au fil du défilement : le bouton « Afficher plus » se déclenche
+  // seul quand il approche de l'écran (il reste utilisable au clavier)
+  function autoMore(node) {
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        node.click();
+        // Toujours visible après l'ajout (grand écran) : on revérifie
+        io.unobserve(node);
+        requestAnimationFrame(() => io.observe(node));
+      },
+      { rootMargin: '600px 0px' },
+    );
+    io.observe(node);
+    return { destroy: () => io.disconnect() };
+  }
+
   async function authHeaders() {
     const token = (await sb?.auth.getSession())?.data?.session?.access_token;
     return token ? { Authorization: `Bearer ${token}` } : null;
@@ -400,7 +417,7 @@
             {/each}
           </ul>
           {#if filtered.length > shown}
-            <button type="button" class="col-more" onclick={() => (shown += STEP)}>
+            <button type="button" class="col-more" use:autoMore onclick={() => (shown += STEP)}>
               Afficher {Math.min(STEP, filtered.length - shown)} cartes de plus
             </button>
           {/if}
@@ -440,7 +457,7 @@
           {/each}
         </ul>
         {#if groups.length > shown}
-          <button type="button" class="col-more" onclick={() => (shown += STEP)}>Afficher plus</button>
+          <button type="button" class="col-more" use:autoMore onclick={() => (shown += STEP)}>Afficher plus</button>
         {/if}
       {/if}
     {/if}

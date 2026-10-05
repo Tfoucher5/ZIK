@@ -848,7 +848,7 @@
       <h2 id="cartes">Cartes musicales</h2>
 
       <p>
-        Chaque titre du catalogue ZIK a sa carte, avec sa pochette, son album, son année et sa popularité. Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant, et se rangent dans votre <a href="/collection">collection</a>.
+        Chaque titre du catalogue ZIK a sa carte, avec sa pochette, son album, son année et sa popularité. Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant, et se rangent dans votre <a href="/collection">collection</a>. <a href="/cartes">Découvrir les cartes et leurs raretés</a>.
       </p>
 
       <h3>Gagner une carte</h3>

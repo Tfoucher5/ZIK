@@ -1,7 +1,7 @@
 <script>
   import Card from '$lib/components/card/Card.svelte';
   import CardViewer from '$lib/components/card/CardViewer.svelte';
-  import { shareCard } from '$lib/components/card/shareCard.js';
+  import { shareCard, shareMessage } from '$lib/components/card/shareCard.js';
 
   let { data } = $props();
 
@@ -12,7 +12,7 @@
 
   async function share() {
     const result = await shareCard(card);
-    shareMsg = result === 'downloaded' ? 'Image téléchargée, texte copié' : '';
+    shareMsg = shareMessage(result);
   }
 
   let reportMsg = $state('');
@@ -79,6 +79,7 @@
     <div class="cp-actions">
       <a class="cp-btn cp-btn-main" href="/rooms">Jouer pour la gagner</a>
       <button type="button" class="cp-btn" onclick={share}>Partager</button>
+      <a class="cp-btn" href={card.shareImage} download={`zik-carte-${card.number}.png`}>Télécharger l'image</a>
     </div>
     {#if shareMsg}<p class="cp-msg" role="status">{shareMsg}</p>{/if}
 

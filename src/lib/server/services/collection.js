@@ -31,7 +31,7 @@ const TOTALS_TTL = 10 * 60_000;
 let totals = null;
 let totalsAt = 0;
 
-async function catalogTotals(sb) {
+export async function catalogTotals(sb) {
   if (totals && Date.now() - totalsAt < TOTALS_TTL) return totals;
   const byRarity = {};
   await Promise.all(

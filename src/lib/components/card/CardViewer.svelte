@@ -3,7 +3,7 @@
   import Card from './Card.svelte';
   import { viewer, stepCard, closeCard } from './cardViewer.svelte.js';
   import { requestGyro } from './cardTilt.js';
-  import { shareCard } from './shareCard.js';
+  import { shareCard, shareMessage } from './shareCard.js';
 
   let dialog = $state();
   let flipped = $state(false);
@@ -72,7 +72,7 @@
     sharing = true;
     const result = await shareCard(card);
     sharing = false;
-    shareMsg = result === 'downloaded' ? 'Image téléchargée, texte copié pour la partager' : '';
+    shareMsg = shareMessage(result);
     if (shareMsg) setTimeout(() => (shareMsg = ''), 4000);
   }
 
