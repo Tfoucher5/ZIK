@@ -93,6 +93,8 @@
                 <div class="notif-actions">
                   <button class="notif-btn accept" onclick={() => joinRoom(n)}>Rejoindre</button>
                 </div>
+              {:else if n.type === 'card_mythic'}
+                <p><a href="/user/{uname}"><b>{uname}</b></a> a décroché la carte Mythique <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> 🌟</p>
               {:else if n.type === 'card_up'}
                 <p>Ta carte <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> est passée <b>{RARITIES[n.payload?.rarity]?.label ?? ''}</b></p>
               {/if}

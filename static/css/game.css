@@ -2693,6 +2693,11 @@ html.no-animations *::after {
   gap: 8px;
   margin: 14px 0;
 }
+/* Cartes perdues si le joueur part : grisées */
+.g-quit-cards.is-lost {
+  filter: grayscale(0.7);
+  opacity: 0.75;
+}
 .g-quit-actions {
   display: flex;
   flex-wrap: wrap;

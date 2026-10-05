@@ -4,6 +4,8 @@ import { verifyToken } from "../../middleware/auth.js";
 import { dbRooms } from "../../state.js";
 import { pickCardWinner, MIN_ROUNDS, MIN_TRACKS } from "./cards.js";
 import { RARITIES } from "../../../components/card/rarity.js";
+import { addChatMessage } from "./chat.js";
+import { createNotification } from "../../services/notifications.js";
 
 // Branchement des cartes dans le jeu (spec docs/specs/cartes.md, section 6.2).
 // core.js appelle ces fonctions aux bons moments ; toute la logique carte vit ici.
@@ -149,6 +151,7 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
   if (res.winner) {
     const p = room.players[res.winner];
     p.cardsInPlay = [...(p.cardsInPlay || []), { card, round }];
+    if (card.rarity === "mythic") announceMythic(room, res.winner, card);
     for (const name of Object.keys(room.players))
       payloads[name] = {
         card,
@@ -245,6 +248,56 @@ export async function settleCards({ game, name, userId, keep, io, socketId }) {
     return;
   }
   if (keep && io && socketId) io.to(socketId).emit("cards_granted", data);
+  if (keep)
+    notifyMythics(
+      userId,
+      (data?.cards ?? []).map((c) => c.card_id),
+    );
+}
+
+// Mythique désormais acquise : ses amis sont prévenus
+async function notifyMythics(userId, cardIds) {
+  if (!cardIds.length) return;
+  const { data: mythics } = await db()
+    .from("cards")
+    .select("number, title, artist")
+    .in("id", cardIds)
+    .eq("rarity", "mythic");
+  if (!mythics?.length) return;
+  const { data: links } = await db()
+    .from("friendships")
+    .select("requester_id, addressee_id")
+    .eq("status", "accepted")
+    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`);
+  const friends = (links || []).map((l) =>
+    l.requester_id === userId ? l.addressee_id : l.requester_id,
+  );
+  for (const card of mythics)
+    for (const friend of friends)
+      await createNotification({
+        userId: friend,
+        type: "card_mythic",
+        actorId: userId,
+        payload: {
+          number: card.number,
+          title: card.title,
+          artist: card.artist,
+        },
+      });
+}
+
+// Une Mythique tombe : toute la room le voit dans le chat
+function announceMythic(room, name, card) {
+  const io = globalThis.__zik_io;
+  if (!io) return;
+  const message = {
+    name: "ZIK",
+    system: true,
+    text: `🌟 ${name} décroche une carte Mythique : ${card.title} - ${card.artist} !`,
+    ts: Date.now(),
+  };
+  addChatMessage(room.roomId, message);
+  io.to(`room:${room.roomId}`).emit("chat_message", message);
 }
 
 /** Raison affichée aux joueurs quand la partie ne peut donner aucune carte. */

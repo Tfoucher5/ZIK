@@ -67,15 +67,26 @@
   let cardsOff = $state(null);
   let quitAsked = $state(false);
 
-  // Cartes encore provisoires : quitter maintenant les ferait perdre
-  function cardsAtRisk() {
-    return cardsInPlay.length > 0 && roundsSeen < Math.ceil(roundTotal / 2) && !gameoverShow;
+  // Départ en pleine partie d'une room qui donne des cartes : on confirme en
+  // disant ce que deviennent les cartes du joueur
+  //   lose : cartes en jeu, pas encore sécurisées (perdues en partant)
+  //   keep : cartes en jeu, déjà sécurisées
+  //   none : pas encore de carte dans cette partie
+  function quitCase() {
+    if (IS_GUEST || cardsOff || gameoverShow || roundsSeen === 0) return null;
+    if (!cardsInPlay.length) return 'none';
+    return roundsSeen < Math.ceil(roundTotal / 2) ? 'lose' : 'keep';
   }
 
   function onBack(e) {
-    if (!cardsAtRisk()) return;
+    if (!quitCase()) return;
     e.preventDefault();
     quitAsked = true;
+  }
+
+  // Fermeture de l'onglet avec des cartes à perdre : alerte du navigateur
+  function onBeforeUnload(e) {
+    if (quitCase() === 'lose') e.preventDefault();
   }
   let showStart   = $state(true);
   let startDisabled = $state(false);
@@ -1566,18 +1577,19 @@
         </div>
       {/if}
       {#each chatMessages as m, i (m.ts + m.name)}
-        {@const mine = m.name === USERNAME}
+        {@const mine = !m.system && m.name === USERNAME}
         {@const admin = m.name.endsWith(' - admin')}
+        {@const system = !!m.system}
         {@const grouped = i > 0 && chatMessages[i - 1].name === m.name}
         <div
           class="g-chat-msg"
           class:g-chat-mine={mine}
-          class:g-chat-admin={admin}
+          class:g-chat-admin={admin || system}
           class:g-chat-grouped={grouped}
           style="--h:{chatHue(m.name)}"
         >
           {#if !mine}
-            <span class="g-chat-avatar">{admin ? '★' : m.name[0].toUpperCase()}</span>
+            <span class="g-chat-avatar">{system ? '🃏' : admin ? '★' : m.name[0].toUpperCase()}</span>
           {/if}
           <div class="g-chat-body">
             {#if !grouped && !mine}
@@ -1623,21 +1635,33 @@
 <!-- Inviter des amis dans la room courante -->
 <CardViewer />
 
+<svelte:window onbeforeunload={onBeforeUnload} />
+
 <Modal open={quitAsked} onClose={() => (quitAsked = false)} maxWidth="440px">
+  {@const qc = quitCase()}
+  {@const n = cardsInPlay.length}
+  {@const secureRound = Math.ceil(roundTotal / 2)}
   <h3 class="gi-title">Quitter la partie ?</h3>
   <p class="gi-sub">
-    {cardsInPlay.length > 1
-      ? `Tu as ${cardsInPlay.length} cartes en jeu, sécurisées seulement à la manche ${Math.ceil(roundTotal / 2)} : en partant maintenant, tu les perds.`
-      : `Tu as 1 carte en jeu, sécurisée seulement à la manche ${Math.ceil(roundTotal / 2)} : en partant maintenant, tu la perds.`}
+    {#if qc === 'lose'}
+      {n > 1 ? `Tu as ${n} cartes en jeu` : 'Tu as 1 carte en jeu'}, sécurisée{n > 1 ? 's' : ''} seulement à la manche {secureRound}.
+      <strong>En partant maintenant, tu {n > 1 ? 'les' : 'la'} perds.</strong>
+    {:else if qc === 'keep'}
+      {n > 1 ? `Tes ${n} cartes sont sécurisées` : 'Ta carte est sécurisée'} : <strong>tu {n > 1 ? 'les' : 'la'} gardes</strong>, même en partant maintenant.
+    {:else}
+      Tu n'as pas encore gagné de carte dans cette partie. En restant, chaque titre trouvé en premier peut t'en rapporter une.
+    {/if}
   </p>
-  <div class="g-quit-cards">
-    {#each cardsInPlay as entry (entry.card.id)}
-      <Card card={entry.card} size="mini" motion="none" />
-    {/each}
-  </div>
+  {#if n}
+    <div class="g-quit-cards" class:is-lost={qc === 'lose'}>
+      {#each cardsInPlay as entry (entry.card.id)}
+        <Card card={entry.card} size="mini" motion="none" />
+      {/each}
+    </div>
+  {/if}
   <div class="g-quit-actions">
     <button class="g-start-btn" onclick={() => (quitAsked = false)}>Rester</button>
-    <button class="g-go-back" onclick={() => { quitAsked = false; goto('/'); }}>Quitter quand même</button>
+    <button class="g-go-back" onclick={() => { quitAsked = false; goto('/'); }}>{quitCase() === 'lose' ? 'Quitter quand même' : 'Quitter'}</button>
   </div>
 </Modal>
 
