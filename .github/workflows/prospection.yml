@@ -1,17 +1,51 @@
 name: Prospection ZIK Pro
 
-# Lancé du lundi au vendredi par la routine Claude « ZIK - Prospection » via
-# workflow_dispatch (le cron GitHub sautait des jours) : lit les réponses reçues
-# sur theo@zik-music.fr, puis envoie les mails du jour. La routine trie ensuite
-# les réponses (Supabase).
+# Lit les réponses reçues sur theo@zik-music.fr, puis envoie les mails du jour.
+# La routine Claude « ZIK - Prospection » trie ensuite les réponses (Supabase).
+#
+# Deux horaires le matin en semaine (7h47 et 9h17 à Paris en été) parce que le
+# cron GitHub saute parfois un créneau. Le 2e créneau ne fait rien si un run a
+# déjà réussi aujourd'hui : relancer send.mjs enverrait un 2e lot.
+# Un lancement manuel (Run workflow) passe toujours, sans garde-fou.
 # Dépôt public : les scripts n'écrivent que des compteurs dans les journaux.
 on:
+  schedule:
+    - cron: "47 5 * * 1-5"
+    - cron: "17 7 * * 1-5"
   workflow_dispatch:
 
 concurrency: prospection
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
+  garde:
+    runs-on: ubuntu-latest
+    outputs:
+      deja_fait: ${{ steps.check.outputs.deja_fait }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "deja_fait=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          today=$(date -u +%Y-%m-%d)
+          n=$(gh api "repos/${{ github.repository }}/actions/workflows/prospection.yml/runs?per_page=20" \
+            --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }}) | select(.created_at | startswith(\"$today\")) | select(.conclusion == \"success\")] | length")
+          echo "Runs réussis aujourd'hui : $n"
+          if [ "$n" -gt 0 ]; then
+            echo "deja_fait=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deja_fait=false" >> "$GITHUB_OUTPUT"
+          fi
+
   prospection:
+    needs: garde
+    if: needs.garde.outputs.deja_fait != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
