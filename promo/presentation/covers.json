@@ -1,142 +1,142 @@
 [
- {
-  "f": "covers/c00.jpg",
-  "artist": "Daft Punk",
-  "title": "One More Time"
- },
- {
-  "f": "covers/c01.jpg",
-  "artist": "Stromae",
-  "title": "Alors on danse"
- },
- {
-  "f": "covers/c02.jpg",
-  "artist": "Angèle",
-  "title": "Balance ton quoi"
- },
- {
-  "f": "covers/c03.jpg",
-  "artist": "Queen",
-  "title": "Bohemian Rhapsody"
- },
- {
-  "f": "covers/c04.jpg",
-  "artist": "Michael Jackson",
-  "title": "Thriller"
- },
- {
-  "f": "covers/c05.jpg",
-  "artist": "Aya Nakamura",
-  "title": "Djadja"
- },
- {
-  "f": "covers/c06.jpg",
-  "artist": "ABBA",
-  "title": "Dancing Queen"
- },
- {
-  "f": "covers/c07.jpg",
-  "artist": "The Weeknd",
-  "title": "Blinding Lights"
- },
- {
-  "f": "covers/c08.jpg",
-  "artist": "Indochine",
-  "title": "L'aventurier"
- },
- {
-  "f": "covers/c09.jpg",
-  "artist": "Dua Lipa",
-  "title": "Levitating"
- },
- {
-  "f": "covers/c10.jpg",
-  "artist": "Jul",
-  "title": "Tchikita"
- },
- {
-  "f": "covers/c11.jpg",
-  "artist": "PNL",
-  "title": "Au DD"
- },
- {
-  "f": "covers/c12.jpg",
-  "artist": "Céline Dion",
-  "title": "Pour que tu m'aimes encore"
- },
- {
-  "f": "covers/c13.jpg",
-  "artist": "Nirvana",
-  "title": "Smells Like Teen Spirit"
- },
- {
-  "f": "covers/c14.jpg",
-  "artist": "GIMS",
-  "title": "Bella"
- },
- {
-  "f": "covers/c15.jpg",
-  "artist": "Orelsan",
-  "title": "Basique"
- },
- {
-  "f": "covers/c16.jpg",
-  "artist": "Johnny Hallyday",
-  "title": "Allumer le feu"
- },
- {
-  "f": "covers/c17.jpg",
-  "artist": "Anaïs Delva",
-  "title": "Libérée, Délivrée"
- },
- {
-  "f": "covers/c18.jpg",
-  "artist": "Eminem",
-  "title": "Lose Yourself"
- },
- {
-  "f": "covers/c19.jpg",
-  "artist": "Mylène Farmer",
-  "title": "Libertine"
- },
- {
-  "f": "covers/c20.jpg",
-  "artist": "Billie Eilish",
-  "title": "bad guy"
- },
- {
-  "f": "covers/c21.jpg",
-  "artist": "Rihanna",
-  "title": "Umbrella"
- },
- {
-  "f": "covers/c22.jpg",
-  "artist": "Ninho",
-  "title": "Lettre à une femme"
- },
- {
-  "f": "covers/c23.jpg",
-  "artist": "Indila",
-  "title": "Dernière danse"
- },
- {
-  "f": "covers/c24.jpg",
-  "artist": "Kendji Girac",
-  "title": "Andalouse"
- },
- {
-  "f": "covers/c25.jpg",
-  "artist": "Coldplay",
-  "title": "Viva La Vida"
- },
- {
-  "f": "covers/c26.jpg",
-  "artist": "Gorillaz",
-  "title": "Feel Good Inc."
- },
- {
-  "f": "covers/c27.jpg",
-  "artist": "France Gall",
-  "title": "Ella, elle l'a"
- }
+  {
+    "f": "covers/c00.jpg",
+    "artist": "Daft Punk",
+    "title": "One More Time"
+  },
+  {
+    "f": "covers/c01.jpg",
+    "artist": "Stromae",
+    "title": "Alors on danse"
+  },
+  {
+    "f": "covers/c02.jpg",
+    "artist": "Angèle",
+    "title": "Balance ton quoi"
+  },
+  {
+    "f": "covers/c03.jpg",
+    "artist": "Queen",
+    "title": "Bohemian Rhapsody"
+  },
+  {
+    "f": "covers/c04.jpg",
+    "artist": "Michael Jackson",
+    "title": "Thriller"
+  },
+  {
+    "f": "covers/c05.jpg",
+    "artist": "Aya Nakamura",
+    "title": "Djadja"
+  },
+  {
+    "f": "covers/c06.jpg",
+    "artist": "ABBA",
+    "title": "Dancing Queen"
+  },
+  {
+    "f": "covers/c07.jpg",
+    "artist": "The Weeknd",
+    "title": "Blinding Lights"
+  },
+  {
+    "f": "covers/c08.jpg",
+    "artist": "Indochine",
+    "title": "L'aventurier"
+  },
+  {
+    "f": "covers/c09.jpg",
+    "artist": "Dua Lipa",
+    "title": "Levitating"
+  },
+  {
+    "f": "covers/c10.jpg",
+    "artist": "Jul",
+    "title": "Tchikita"
+  },
+  {
+    "f": "covers/c11.jpg",
+    "artist": "PNL",
+    "title": "Au DD"
+  },
+  {
+    "f": "covers/c12.jpg",
+    "artist": "Céline Dion",
+    "title": "Pour que tu m'aimes encore"
+  },
+  {
+    "f": "covers/c13.jpg",
+    "artist": "Nirvana",
+    "title": "Smells Like Teen Spirit"
+  },
+  {
+    "f": "covers/c14.jpg",
+    "artist": "GIMS",
+    "title": "Bella"
+  },
+  {
+    "f": "covers/c15.jpg",
+    "artist": "Orelsan",
+    "title": "Basique"
+  },
+  {
+    "f": "covers/c16.jpg",
+    "artist": "Johnny Hallyday",
+    "title": "Allumer le feu"
+  },
+  {
+    "f": "covers/c17.jpg",
+    "artist": "Anaïs Delva",
+    "title": "Libérée, Délivrée"
+  },
+  {
+    "f": "covers/c18.jpg",
+    "artist": "Eminem",
+    "title": "Lose Yourself"
+  },
+  {
+    "f": "covers/c19.jpg",
+    "artist": "Mylène Farmer",
+    "title": "Libertine"
+  },
+  {
+    "f": "covers/c20.jpg",
+    "artist": "Billie Eilish",
+    "title": "bad guy"
+  },
+  {
+    "f": "covers/c21.jpg",
+    "artist": "Rihanna",
+    "title": "Umbrella"
+  },
+  {
+    "f": "covers/c22.jpg",
+    "artist": "Ninho",
+    "title": "Lettre à une femme"
+  },
+  {
+    "f": "covers/c23.jpg",
+    "artist": "Indila",
+    "title": "Dernière danse"
+  },
+  {
+    "f": "covers/c24.jpg",
+    "artist": "Kendji Girac",
+    "title": "Andalouse"
+  },
+  {
+    "f": "covers/c25.jpg",
+    "artist": "Coldplay",
+    "title": "Viva La Vida"
+  },
+  {
+    "f": "covers/c26.jpg",
+    "artist": "Gorillaz",
+    "title": "Feel Good Inc."
+  },
+  {
+    "f": "covers/c27.jpg",
+    "artist": "France Gall",
+    "title": "Ella, elle l'a"
+  }
 ]
