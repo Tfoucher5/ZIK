@@ -1,2 +1,3 @@
 rec/
 node_modules/
+.composer.run.html

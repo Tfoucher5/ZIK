@@ -5,53 +5,31 @@
     <style>
       @font-face {
         font-family: "Barlow";
-        font-weight: 500;
-        src: url("../../../static/fonts/barlow-500-latin.woff2") format("woff2");
-      }
-      @font-face {
-        font-family: "Barlow";
         font-weight: 600;
-        src: url("../../../static/fonts/barlow-600-latin.woff2") format("woff2");
-      }
-      @font-face {
-        font-family: "Barlow";
-        font-weight: 500;
-        src: url("../../../static/fonts/barlow-500-latin-ext.woff2")
-          format("woff2");
-        unicode-range: U+0100-024F;
-      }
-      @font-face {
-        font-family: "Barlow Condensed";
-        font-weight: 800;
-        src: url("../../../static/fonts/barlow-condensed-800-latin.woff2")
-          format("woff2");
+        src: url("FONTS/barlow-600-latin.woff2") format("woff2");
       }
       @font-face {
         font-family: "Barlow Condensed";
         font-weight: 900;
-        src: url("../../../static/fonts/barlow-condensed-900-latin.woff2")
-          format("woff2");
+        src: url("FONTS/barlow-condensed-900-latin.woff2") format("woff2");
       }
       @font-face {
         font-family: "Barlow Condensed";
         font-weight: 900;
         font-style: italic;
-        src: url("../../../static/fonts/barlow-condensed-900i-latin.woff2")
-          format("woff2");
+        src: url("FONTS/barlow-condensed-900i-latin.woff2") format("woff2");
       }
       @font-face {
         font-family: "JetBrains Mono";
         font-weight: 700;
-        src: url("../../../static/fonts/jetbrains-mono-700-latin.woff2")
-          format("woff2");
+        src: url("FONTS/jetbrains-mono-700-latin.woff2") format("woff2");
       }
       :root {
-        --bg: #f7f5fa;
-        --bg2: #ece8f2;
-        --ink: #0f172a;
-        --acc: #c026d3;
-        --acc2: #a21caf;
-        --mid: #64748b;
+        --acc: #ff1fd6;
+        --acc2: #c026d3;
+        --ink: #0b0612;
+        --cy: #22e4ff;
+        --yl: #ffe14d;
       }
       * {
         box-sizing: border-box;
@@ -63,235 +41,287 @@
         width: 1080px;
         height: 1920px;
         overflow: hidden;
-        background: var(--bg);
+        background: var(--ink);
       }
       body {
-        font-family: "Barlow", sans-serif;
-        color: var(--ink);
+        font-family: "Barlow", "Noto Color Emoji", sans-serif;
       }
       .layer {
         position: absolute;
         inset: 0;
       }
-      .cond {
-        font-family: "Barlow Condensed", sans-serif;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: -0.01em;
+      #world {
+        transform-origin: 540px 960px;
       }
-      .mono {
-        font-family: "JetBrains Mono", monospace;
-        font-weight: 700;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-      }
-      #bgGrid {
-        background-image:
-          linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
-        background-size: 60px 60px;
-      }
-      #bgGlow {
-        background: radial-gradient(
-          55% 35% at 50% 62%,
-          rgba(192, 38, 211, 0.2),
-          transparent 70%
-        );
-      }
-      /* Légende (zone sûre TikTok : x 60-900, y 150-520) */
-      .cap {
-        position: absolute;
-        left: 70px;
-        right: 150px;
-        top: 150px;
-      }
-      .cap .kick {
-        display: inline-block;
-        color: #fff;
-        background: var(--acc);
-        font-size: 26px;
-        padding: 10px 16px 8px;
-        margin-bottom: 18px;
-      }
-      .cap h2 {
-        font-size: 104px;
-        line-height: 0.9;
-      }
-      .cap h2 em {
-        font-style: normal;
-        color: var(--acc);
-      }
-      .cap p {
-        margin-top: 18px;
-        font-size: 38px;
-        line-height: 1.22;
-        color: #334155;
-        font-weight: 500;
-      }
-      /* Cadre de l'écran */
-      .dev {
+      .pnl {
         position: absolute;
         overflow: hidden;
-        background: #fff;
-        box-shadow:
-          0 40px 120px rgba(15, 23, 42, 0.28),
-          0 0 0 3px #0f172a;
+        background: #000;
       }
-      .dev img {
+      .pnl img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+        will-change: transform;
+      }
+      .pnl.card {
+        border-radius: 40px;
+        box-shadow:
+          0 0 0 8px #fff,
+          0 30px 80px rgba(0, 0, 0, 0.6);
+      }
+      .dim {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      #vig {
+        background: radial-gradient(
+          120% 80% at 50% 50%,
+          transparent 55%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+      }
+      #flash {
+        background: #fff;
+        opacity: 0;
+      }
+      .txt {
+        position: absolute;
+        left: 50px;
+        right: 50px;
+        text-align: center;
+        font-family: "Barlow Condensed", "Noto Color Emoji", sans-serif;
+        font-weight: 900;
+        font-style: italic;
+        text-transform: uppercase;
+        line-height: 1;
+        color: #fff;
+      }
+      .txt .w {
+        display: inline-block;
+        margin: 0 0.12em;
+        -webkit-text-stroke: 0.16em #000;
+        paint-order: stroke fill;
+        text-shadow:
+          0.05em 0.07em 0 #000,
+          0 0 40px rgba(0, 0, 0, 0.35);
+      }
+      .txt .w.acc {
+        color: var(--acc);
+      }
+      .txt .w.yl {
+        color: var(--yl);
+      }
+      .txt .w.cy {
+        color: var(--cy);
+      }
+      .txt.box .w {
+        -webkit-text-stroke: 0;
+        text-shadow: none;
+        background: var(--acc);
+        padding: 0.06em 0.16em 0;
+        margin: 0.04em 0.06em;
+        box-shadow: 0.08em 0.08em 0 #000;
+      }
+      .txt.box .w.ink {
+        background: #000;
+      }
+      .txt.box .w.wh {
+        background: #fff;
+        color: #000;
+      }
+      .fx {
+        position: absolute;
+      }
+      .count {
+        font-family: "Barlow Condensed";
+        font-weight: 900;
+        font-style: italic;
+        color: var(--yl);
+        -webkit-text-stroke: 0.1em #000;
+        paint-order: stroke fill;
+        text-shadow: 0.06em 0.08em 0 #000;
+        white-space: nowrap;
+        text-align: center;
+        transform-origin: 50% 50%;
+      }
+      .big {
+        font-family: "Barlow Condensed";
+        font-weight: 900;
+        font-style: italic;
+        color: #fff;
+        -webkit-text-stroke: 0.05em #000;
+        paint-order: stroke fill;
+        text-shadow: 0.04em 0.05em 0 var(--acc);
+        text-align: center;
+        left: 0;
+        right: 0;
+        line-height: 1;
+      }
+      .stamp {
+        font-family: "Barlow Condensed", "Noto Color Emoji";
+        font-weight: 900;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--acc);
+        padding: 0.1em 0.35em 0.02em;
+        box-shadow: 0.1em 0.1em 0 #000;
+        white-space: nowrap;
+        transform-origin: 50% 50%;
+      }
+      .stamp.ink {
+        background: #000;
+        box-shadow: 0.1em 0.1em 0 var(--acc);
+      }
+      .stamp.yl {
+        background: var(--yl);
+        color: #000;
+      }
+      .stamp.gr {
+        background: #18d26e;
+      }
+      .emo {
+        font-family: "Noto Color Emoji";
+        line-height: 1;
+        transform-origin: 50% 50%;
+      }
+      svg.ring {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: visible;
+      }
+      .conf {
+        position: absolute;
+        width: 22px;
+        height: 34px;
+      }
+      #outro {
+        background: var(--acc2);
+      }
+      #outro .bgi {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        opacity: 0.15;
+        filter: grayscale(1) contrast(1.4);
+        mix-blend-mode: multiply;
+      }
+      #outro .bgi img {
         position: absolute;
         left: 0;
         top: 0;
         transform-origin: 0 0;
       }
-      .dev.phone {
-        border-radius: 56px;
-        box-shadow:
-          0 40px 120px rgba(15, 23, 42, 0.3),
-          0 0 0 14px #0f172a,
-          0 0 0 16px #334155;
-      }
-      .dev.tv {
-        border-radius: 18px;
-        box-shadow:
-          0 40px 120px rgba(15, 23, 42, 0.3),
-          0 0 0 16px #0f172a;
-      }
-      .sticker {
-        position: absolute;
-        z-index: 5;
-        background: var(--acc);
-        color: #fff;
-        font-family: "Barlow Condensed";
-        font-weight: 900;
-        text-transform: uppercase;
-        padding: 14px 26px 10px;
-        font-size: 56px;
-        box-shadow: 8px 8px 0 #0f172a;
-        white-space: nowrap;
-      }
-      .sticker.ink {
-        background: #0f172a;
-        box-shadow: 8px 8px 0 var(--acc);
-      }
-      /* Accroche */
-      .hook {
-        position: absolute;
-        left: 70px;
-        right: 90px;
-        top: 520px;
-      }
-      .hook .l {
-        display: block;
-        font-size: 148px;
-        line-height: 0.88;
-      }
-      .hook .l.acc {
-        color: var(--acc);
-      }
-      .hook .l.out {
-        color: transparent;
-        -webkit-text-stroke: 4px var(--ink);
-      }
-      .hookBg {
-        position: absolute;
-        inset: 0;
-        overflow: hidden;
-      }
-      .hookBg img {
-        position: absolute;
-        filter: blur(3px) saturate(1.1);
-        opacity: 0.16;
-      }
-      /* Fin */
-      .outro {
-        background: var(--acc);
-      }
-      .outro .logo {
+      #outro .logo {
         position: absolute;
         left: 0;
         right: 0;
-        top: 560px;
+        top: 520px;
         text-align: center;
         font-family: "Barlow Condensed";
         font-weight: 900;
         font-style: italic;
-        font-size: 400px;
+        font-size: 430px;
         line-height: 1;
         color: #fff;
+        text-shadow: 14px 14px 0 #000;
       }
-      .outro .logo b {
-        color: #0f172a;
+      #outro .logo b {
+        color: #000;
+        text-shadow: none;
       }
-      .outro .t1 {
+      #outro .l1 {
         position: absolute;
         left: 0;
         right: 0;
-        top: 1000px;
+        top: 1010px;
         text-align: center;
-        color: #fff;
-        font-size: 30px;
       }
-      .outro .t2 {
-        position: absolute;
-        left: 60px;
-        right: 60px;
-        top: 1080px;
-        text-align: center;
-        color: #0f172a;
-        font-size: 92px;
-        line-height: 0.95;
-      }
-      .outro .t3 {
+      #outro .l2 {
         position: absolute;
         left: 0;
         right: 0;
-        top: 1330px;
+        top: 1190px;
         text-align: center;
       }
-      .outro .t3 span {
-        display: inline-block;
-        background: #0f172a;
+      #outro .l3 {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 1390px;
+        text-align: center;
+        font-family: "JetBrains Mono";
+        font-weight: 700;
+        font-size: 34px;
+        letter-spacing: 0.25em;
         color: #fff;
-        font-size: 76px;
-        padding: 18px 52px 12px;
+        text-transform: uppercase;
+      }
+      #beat {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 12px;
+        background: var(--acc);
+        transform-origin: 0 50%;
       }
     </style>
   </head>
   <body>
-    <div id="stage" class="layer">
-      <div id="bgGrid" class="layer"></div>
-      <div id="bgGlow" class="layer"></div>
+    <div id="world" class="layer"><div id="shots" class="layer"></div></div>
+    <div id="vig" class="dim"></div>
+    <div id="over" class="layer"></div>
+    <div id="outro" class="layer" style="visibility: hidden">
+      <div class="bgi"><img /></div>
+      <div class="logo">ZIK<b>.</b></div>
+      <div class="l1"></div>
+      <div class="l2"></div>
+      <div class="l3"></div>
     </div>
+    <div id="flash" class="dim"></div>
+    <div id="beat"></div>
     <script>
       const $ = (s, el = document) => el.querySelector(s);
       const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
       const prog = (t, a, b) => clamp((t - a) / (b - a));
       const eo = (x) => 1 - Math.pow(1 - x, 3);
+      const snap = (x) => 1 - Math.pow(1 - x, 5);
       const eio = (x) =>
         x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-      const back = (x) => {
-        const c1 = 1.70158,
-          c3 = c1 + 1;
+      const back = (x, c1 = 2.2) => {
+        const c3 = c1 + 1;
         return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
       };
+      const EASE = { io: eio, out: eo, snap, lin: (x) => x };
+      const rnd = (i) => {
+        const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
+      };
+      const noise = (t, f, seed) =>
+        Math.sin(t * f + seed) * 0.6 + Math.sin(t * f * 2.3 + seed * 3.1) * 0.4;
       const lerpKeys = (keys, t) => {
-        if (!keys || !keys.length) return null;
+        if (!keys || !keys.length) return {};
         if (t <= keys[0].t) return keys[0];
         for (let i = 1; i < keys.length; i++)
           if (t <= keys[i].t) {
             const a = keys[i - 1],
               b = keys[i],
-              k = eio((t - a.t) / (b.t - a.t));
-            const o = { t };
-            for (const key of Object.keys(b))
-              if (key !== "t") o[key] = a[key] + (b[key] - a[key]) * k;
+              k = (EASE[b.e] || eio)((t - a.t) / (b.t - a.t));
+            const o = {};
+            for (const key of ["s", "x", "y"])
+              o[key] = (a[key] ?? 0) + ((b[key] ?? 0) - (a[key] ?? 0)) * k;
             return o;
           }
         return keys.at(-1);
       };
-      const stage = $("#stage");
-      let SPEC,
-        RECS = {};
+      let SPEC, RECS, DIR;
+      const srcOf = (rec, f) => `${DIR}/${rec}/${f}`;
       function frameAt(rec, t) {
         const fr = RECS[rec].frames;
         let lo = 0,
@@ -304,182 +334,324 @@
         }
         return fr[lo].f;
       }
-      let REC_DIR = "";
-      const srcOf = (rec, f) => `${REC_DIR}/${rec}/${f}`;
-      function build(spec, recs, recDir) {
-        REC_DIR = recDir;
-        SPEC = spec;
-        RECS = recs;
-        for (const sc of spec.scenes) {
-          const el = document.createElement("div");
-          el.className = "layer";
-          sc.el = el;
-          if (sc.type === "hook") {
-            el.innerHTML =
-              (sc.bg ? `<div class="hookBg"><img></div>` : "") +
-              `<div class="hook cond">${sc.lines.map(([txt, cls]) => `<span class="l ${cls || ""}">${txt}</span>`).join("")}</div>` +
-              (sc.sticker
-                ? `<div class="sticker" style="left:${sc.sticker.x}px;top:${sc.sticker.y}px;transform:rotate(${sc.sticker.r || -4}deg)">${sc.sticker.text}</div>`
-                : "");
-          } else if (sc.type === "clip") {
-            const d = sc.dev;
-            el.innerHTML =
-              `<div class="dev ${d.kind || ""}" style="left:${d.x}px;top:${d.y}px;width:${d.w}px;height:${d.h}px"><img></div>` +
-              (sc.cap
-                ? `<div class="cap">${sc.cap.kick ? `<div class="kick mono">${sc.cap.kick}</div><br>` : ""}<h2 class="cond">${sc.cap.title}</h2>${sc.cap.sub ? `<p>${sc.cap.sub}</p>` : ""}</div>`
-                : "") +
-              (sc.stickers || [])
-                .map(
-                  (s) =>
-                    `<div class="sticker ${s.ink ? "ink" : ""}" data-a="${s.a}" data-b="${s.b ?? 999}" style="left:${s.x}px;top:${s.y}px;--r:${s.r ?? -4}deg">${s.text}</div>`,
-                )
-                .join("");
-            if (sc.extra)
-              for (const x of sc.extra) {
-                const dv = document.createElement("div");
-                dv.className = `dev ${x.kind || ""}`;
-                Object.assign(dv.style, {
-                  left: x.x + "px",
-                  top: x.y + "px",
-                  width: x.w + "px",
-                  height: x.h + "px",
-                });
-                dv.innerHTML = "<img>";
-                x.el = dv;
-                el.appendChild(dv);
-              }
-          } else if (sc.type === "outro") {
-            el.className = "layer outro";
-            el.innerHTML = `<div class="logo">ZIK<b>.</b></div><div class="t1 mono">${sc.kick || "Blind test multijoueur"}</div><div class="t2 cond">${sc.line || "Gratuit · sans appli"}</div><div class="t3 cond"><span>zik-music.fr</span></div>`;
-          }
-          el.style.visibility = "hidden";
-          stage.appendChild(el);
-        }
-      }
-      async function placeShot(box, img, rec, t, cam, W, H) {
-        const meta = RECS[rec];
-        const fw = meta.w,
-          fh = meta.h;
-        const c = cam || {};
-        const s = (c.s ?? 1) * (W / fw);
-        const cx = c.x ?? fw / 2,
-          cy = c.y ?? H / 2 / (W / fw) / (c.s ?? 1);
-        const tx = W / 2 - cx * s,
-          ty = H / 2 - cy * s;
+      async function place(img, rec, t, cam, W, H, extraS = 1, dx = 0, dy = 0) {
+        const { w: fw, h: fh } = RECS[rec];
+        const s = (cam.s ?? 1) * extraS * (W / fw);
+        const hw = W / 2 / s,
+          hh = H / 2 / s;
+        const cx = clamp(
+            cam.x ?? fw / 2,
+            Math.min(hw, fw / 2),
+            Math.max(fw - hw, fw / 2),
+          ),
+          cy = clamp(
+            cam.y ?? fh / 2,
+            Math.min(hh, fh / 2),
+            Math.max(fh - hh, fh / 2),
+          );
         img.style.width = fw + "px";
         img.style.height = fh + "px";
-        img.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+        img.style.transform = `translate(${W / 2 - cx * s + dx}px, ${H / 2 - cy * s + dy}px) scale(${s})`;
         const src = srcOf(rec, frameAt(rec, t));
         if (img.getAttribute("src") !== src) {
           img.src = src;
           await img.decode().catch(() => {});
         }
       }
+      const wordsHtml = (str) => {
+        let cur = null;
+        return str
+          .split(" ")
+          .map((w) => {
+            if (!cur && /^[*_~^]/.test(w)) {
+              cur = w[0];
+              w = w.slice(1);
+            }
+            const cls = cur
+              ? { "*": "acc", _: "yl", "~": "cy", "^": "ink" }[cur]
+              : "";
+            if (cur && w.includes(cur)) {
+              w = w.replace(cur, "");
+              cur = null;
+            }
+            return `<span class="w ${cls}">${w}</span>`;
+          })
+          .join("");
+      };
+      function build(spec, recs, dir) {
+        SPEC = spec;
+        RECS = recs;
+        DIR = dir;
+        document.documentElement.style.setProperty("--fonts", "");
+        for (const sh of spec.shots) {
+          const el = document.createElement("div");
+          el.className = "layer";
+          sh.el = el;
+          sh.panels = sh.panels || [
+            {
+              rec: sh.rec,
+              from: sh.from,
+              speed: sh.speed,
+              cam: sh.cam,
+              x: 0,
+              y: 0,
+              w: 1080,
+              h: 1920,
+            },
+          ];
+          for (const p of sh.panels) {
+            const d = document.createElement("div");
+            d.className = "pnl " + (p.card ? "card" : "");
+            Object.assign(d.style, {
+              left: p.x + "px",
+              top: p.y + "px",
+              width: p.w + "px",
+              height: p.h + "px",
+            });
+            d.innerHTML = "<img>";
+            p.el = d;
+            el.appendChild(d);
+          }
+          if (sh.bg) el.style.background = sh.bg;
+          el.style.visibility = "hidden";
+          $("#shots").appendChild(el);
+        }
+        for (const tx of spec.texts || []) {
+          const el = document.createElement("div");
+          el.className = "txt " + (tx.box ? "box" : "");
+          Object.assign(el.style, {
+            top: tx.y + "px",
+            fontSize: (tx.size || 130) + "px",
+          });
+          el.innerHTML = tx.t
+            .split("|")
+            .map((ln) => `<div>${wordsHtml(ln)}</div>`)
+            .join("");
+          tx.el = el;
+          el.style.visibility = "hidden";
+          $("#over").appendChild(el);
+        }
+        for (const f of spec.fx || []) {
+          let el;
+          if (f.type === "ring") {
+            el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            el.setAttribute("class", "ring");
+            el.innerHTML = `<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="${f.rx ?? 30}" fill="none" stroke="${f.color || "#ffe14d"}" stroke-width="14" stroke-linecap="round" pathLength="100" stroke-dasharray="100 100"/>`;
+          } else if (f.type === "confetti") {
+            el = document.createElement("div");
+            el.className = "layer";
+            const cols = ["#ff1fd6", "#ffe14d", "#22e4ff", "#18d26e", "#fff"];
+            el.innerHTML = Array.from(
+              { length: f.n || 70 },
+              (_, i) =>
+                `<div class="conf" style="background:${cols[i % cols.length]}"></div>`,
+            ).join("");
+          } else {
+            el = document.createElement("div");
+            el.className = "fx " + f.type + " " + (f.cls || "");
+            el.innerHTML = f.type === "count" ? "" : f.text;
+            Object.assign(el.style, { fontSize: (f.size || 120) + "px" });
+            if (f.type === "big") el.style.top = f.y + "px";
+            else Object.assign(el.style, { left: f.x + "px", top: f.y + "px" });
+          }
+          f.el = el;
+          el.style.visibility = "hidden";
+          $("#over").appendChild(el);
+        }
+        const o = spec.outro;
+        $("#outro .l1").innerHTML =
+          `<div class="txt" style="position:static;font-size:120px">${(
+            o.l1 || "Joue *gratuit*"
+          )
+            .split("|")
+            .map((l) => `<div>${wordsHtml(l)}</div>`)
+            .join("")}</div>`;
+        $("#outro .l2").innerHTML =
+          `<div class="txt box" style="position:static;font-size:104px"><span class="w ink">zik-music.fr</span></div>`;
+        $("#outro .l3").textContent = o.l3 || "Lien en bio · sans appli";
+        const extra = ((o.l1 || "").split("|").length - 1) * 120;
+        $("#outro .l2").style.top = 1190 + extra + "px";
+        $("#outro .l3").style.top = 1390 + extra + "px";
+        $("#outro .logo").style.top = 520 - extra / 2 + "px";
+        $("#outro .l1").style.top = 1010 - extra / 2 + "px";
+      }
       async function render(t) {
         const loads = [];
-        for (const sc of SPEC.scenes) {
-          const fi = sc.fi ?? 0.35,
-            fo = sc.fo ?? 0.3;
-          const vis = t >= sc.a - 0.001 && t < sc.b;
-          sc.el.style.visibility = vis ? "visible" : "hidden";
+        const beat = 60 / (SPEC.bpm || 120);
+        const bp = (t % beat) / beat;
+        let shake = 0,
+          punch = 0;
+        for (const sh of SPEC.shots) {
+          const vis = t >= sh.a - 1e-4 && t < sh.b;
+          sh.el.style.visibility = vis ? "visible" : "hidden";
           if (!vis) continue;
-          const lt = t - sc.a,
-            dur = sc.b - sc.a;
-          const op = Math.min(
-            sc.a === 0 ? 1 : eo(prog(lt, 0, fi)),
-            sc.b >= SPEC.duration ? 1 : 1 - prog(lt, dur - fo, dur),
-          );
-          sc.el.style.opacity = op;
-          if (sc.type === "hook") {
-            [...sc.el.querySelectorAll(".l")].forEach((l, k) => {
-              const p = back(prog(lt, 0.1 + k * 0.22, 0.5 + k * 0.22));
-              l.style.transform = `translateY(${(1 - p) * 110}px)`;
-              l.style.opacity = clamp(p);
-            });
-            const st = $(".sticker", sc.el);
-            if (st) {
-              const p = back(
-                prog(lt, sc.sticker.at ?? 1.2, (sc.sticker.at ?? 1.2) + 0.35),
-              );
-              st.style.transform = `rotate(${sc.sticker.r ?? -4}deg) scale(${p})`;
-              st.style.opacity = clamp(p * 2);
-            }
-            if (sc.bg) {
-              const img = $(".hookBg img", sc.el),
-                meta = RECS[sc.bg.rec];
-              const s = (1080 / meta.w) * 1.15;
-              img.style.width = meta.w * s + "px";
-              img.style.left = (1080 - meta.w * s) / 2 + "px";
-              img.style.top = -80 - lt * 30 + "px";
-              loads.push(
-                (async () => {
-                  const src = srcOf(
-                    sc.bg.rec,
-                    frameAt(sc.bg.rec, sc.bg.t + lt),
-                  );
-                  if (img.getAttribute("src") !== src) {
-                    img.src = src;
-                    await img.decode().catch(() => {});
-                  }
-                })(),
-              );
-            }
-          } else if (sc.type === "clip") {
-            const d = sc.dev,
-              box = $(".dev", sc.el),
-              img = $("img", box);
-            const ft = sc.from + lt * (sc.speed ?? 1);
-            const enter = sc.enter === false ? 1 : back(prog(lt, 0, 0.6));
-            box.style.transform = `translateY(${(1 - enter) * 700}px)`;
+          const lt = t - sh.a;
+          const pin = sh.punch ?? 0.18;
+          const ps = 1 + pin * (1 - snap(prog(lt, 0, 0.35)));
+          let dx = 0,
+            dy = 0,
+            blur = 0;
+          const wp = prog(lt, 0, sh.whipD ?? 0.16);
+          if (sh.whip && wp < 1) {
+            const d = (1 - snap(wp)) * 900;
+            blur = (1 - wp) * 28;
+            if (sh.whip === "up") dy = d;
+            else if (sh.whip === "down") dy = -d;
+            else if (sh.whip === "left") dx = d;
+            else dx = -d;
+          }
+          sh.el.style.filter = blur > 0.5 ? `blur(${blur}px)` : "";
+          shake = Math.max(shake, sh.shake ?? 0);
+          if (sh.pulse) punch = Math.max(punch, sh.pulse);
+          for (const p of sh.panels) {
+            const pin2 =
+              p.enter != null ? back(prog(lt, p.enter, p.enter + 0.35)) : 1;
+            p.el.style.transform =
+              p.enter != null
+                ? `translateY(${(1 - pin2) * 1200}px) rotate(${p.rot ?? 0}deg)`
+                : `rotate(${p.rot ?? 0}deg)`;
+            const ft = (p.from ?? sh.from) + lt * (p.speed ?? sh.speed ?? 1);
             loads.push(
-              placeShot(box, img, sc.rec, ft, lerpKeys(sc.cam, lt), d.w, d.h),
+              place(
+                $("img", p.el),
+                p.rec ?? sh.rec,
+                ft,
+                lerpKeys(p.cam ?? sh.cam, lt),
+                p.w,
+                p.h,
+                ps,
+                dx,
+                dy,
+              ),
             );
-            for (const x of sc.extra || []) {
-              const p = back(prog(lt, x.at ?? 0, (x.at ?? 0) + 0.5));
-              x.el.style.transform = `translateY(${(1 - p) * 900}px) rotate(${x.r ?? 0}deg)`;
-              loads.push(
-                placeShot(
-                  x.el,
-                  $("img", x.el),
-                  x.rec,
-                  x.from + lt * (x.speed ?? 1),
-                  lerpKeys(x.cam, lt),
-                  x.w,
-                  x.h,
-                ),
-              );
-            }
-            const cap = $(".cap", sc.el);
-            if (cap) {
-              const p = eo(prog(lt, 0.05, 0.55));
-              cap.style.transform = `translateY(${(1 - p) * 40}px)`;
-              cap.style.opacity = p;
-            }
-            [...sc.el.querySelectorAll(".sticker")].forEach((s) => {
-              const a = +s.dataset.a,
-                b = +s.dataset.b;
-              const p =
-                back(prog(lt, a, a + 0.35)) * (1 - prog(lt, b - 0.2, b));
-              s.style.opacity = clamp(p * 2);
-              s.style.transform = `rotate(${getComputedStyle(s).getPropertyValue("--r")}) scale(${Math.max(0, p)})`;
-            });
-          } else if (sc.type === "outro") {
-            const r = eio(prog(lt, 0, 0.5)) * 1400;
-            sc.el.style.clipPath = `circle(${r}px at 50% 45%)`;
-            sc.el.style.opacity = 1;
-            const lp = back(prog(lt, 0.3, 0.8));
-            const lg = $(".logo", sc.el);
-            lg.style.transform = `scale(${0.4 + 0.6 * lp})`;
-            lg.style.opacity = clamp(lp * 1.4);
-            [".t1", ".t2", ".t3"].forEach((q, k) => {
-              const p = back(prog(lt, 0.75 + k * 0.22, 1.15 + k * 0.22));
-              const e = $(q, sc.el);
-              e.style.opacity = clamp(p);
-              e.style.transform = `translateY(${(1 - p) * 50}px)`;
-            });
           }
         }
-        $("#bgGlow").style.opacity = 0.75 + 0.25 * Math.sin(t * 1.3);
+        const sk = shake * 1;
+        const zx = sk ? noise(t, 37, 1) * sk : 0,
+          zy = sk ? noise(t, 41, 7) * sk : 0,
+          zr = sk ? noise(t, 29, 3) * sk * 0.04 : 0;
+        const pulse = 1 + punch * Math.pow(1 - bp, 4);
+        $("#world").style.transform =
+          `translate(${zx}px, ${zy}px) rotate(${zr}deg) scale(${pulse})`;
+        let fl = 0;
+        for (const sh of SPEC.shots)
+          if (sh.flash !== false && sh.a > 0)
+            fl = Math.max(
+              fl,
+              (1 - prog(t, sh.a, sh.a + 0.14)) *
+                (t >= sh.a ? (sh.flash ?? 0.55) : 0),
+            );
+        for (const f of SPEC.fx || [])
+          if (f.type === "flash" && t >= f.a)
+            fl = Math.max(fl, 1 - prog(t, f.a, f.a + 0.2));
+        if (SPEC.outro && t >= SPEC.outro.a)
+          fl = Math.max(fl, 1 - prog(t, SPEC.outro.a, SPEC.outro.a + 0.18));
+        $("#flash").style.opacity = fl;
+        for (const tx of SPEC.texts || []) {
+          const vis = t >= tx.a && t < tx.b;
+          tx.el.style.visibility = vis ? "visible" : "hidden";
+          if (!vis) continue;
+          const lt = t - tx.a,
+            per = tx.per ?? 0.09;
+          const ex = prog(t, tx.b - 0.08, tx.b);
+          [...tx.el.querySelectorAll(".w")].forEach((w, i) => {
+            const p = prog(lt, i * per, i * per + 0.18);
+            const s = p <= 0 ? 0 : 1 + (1 - back(p, 3)) * -0.9 + (1 - p) * 0.8;
+            const wob = tx.wob ? Math.sin(t * 9 + i) * 2 : 0;
+            w.style.opacity = p > 0 ? 1 : 0;
+            w.style.transform = `scale(${s * (1 - ex)}) rotate(${(1 - p) * (i % 2 ? 8 : -8) + wob + (tx.rot ?? 0)}deg)`;
+          });
+          tx.el.style.transform = `scale(${1 + 0.035 * Math.pow(1 - bp, 3)})`;
+        }
+        for (const f of SPEC.fx || []) {
+          if (f.type === "flash") continue;
+          const b = f.b ?? SPEC.duration,
+            vis = t >= f.a && t < b;
+          f.el.style.visibility = vis ? "visible" : "hidden";
+          if (!vis) continue;
+          const lt = t - f.a,
+            ex = prog(t, b - 0.12, b);
+          if (f.type === "ring") {
+            const r = $("rect", f.el);
+            r.setAttribute(
+              "stroke-dashoffset",
+              100 - 100 * eo(prog(lt, 0, 0.35)),
+            );
+            f.el.style.opacity = 1 - ex;
+            f.el.style.transform = `scale(${1 + 0.02 * Math.sin(t * 20)})`;
+            f.el.style.transformOrigin = `${f.x + f.w / 2}px ${f.y + f.h / 2}px`;
+          } else if (f.type === "confetti") {
+            [...f.el.children].forEach((c, i) => {
+              const ang = rnd(i) * Math.PI * 2,
+                sp = 900 + rnd(i + 99) * 1500;
+              const x = f.x + Math.cos(ang) * sp * lt,
+                y = f.y + Math.sin(ang) * sp * lt * 0.8 + 1800 * lt * lt;
+              c.style.transform = `translate(${x}px, ${y}px) rotate(${lt * 900 * (rnd(i + 7) - 0.5)}deg) scaleX(${Math.cos(lt * 14 + i)})`;
+              c.style.opacity = 1 - prog(lt, 0.9, 1.4);
+            });
+          } else if (f.type === "count") {
+            const p = eo(prog(lt, 0.05, f.dur ?? 0.6));
+            f.el.textContent =
+              (f.prefix || "") +
+              Math.round(
+                (f.from ?? 0) + (f.to - (f.from ?? 0)) * p,
+              ).toLocaleString("fr-FR") +
+              (f.suffix || "");
+            const s =
+              back(prog(lt, 0, 0.25), 3) *
+              (1 +
+                0.15 *
+                  (1 - prog(lt, f.dur ?? 0.6, (f.dur ?? 0.6) + 0.2)) *
+                  (p >= 1 ? 1 : 0));
+            f.el.style.transform = `translate(-50%, -50%) rotate(${f.r ?? -6}deg) scale(${s * (1 - ex)})`;
+          } else if (f.type === "big") {
+            const p = prog(lt, 0, 0.2);
+            f.el.style.transform = `scale(${(2.4 - 1.4 * snap(p)) * (1 - ex)})`;
+            f.el.style.opacity = p > 0 ? 1 : 0;
+          } else {
+            const p = back(prog(lt, 0, 0.22), 3.2);
+            const wig = f.wig ? Math.sin(t * 16) * 3 : 0;
+            f.el.style.transform = `translate(-50%, -50%) rotate(${(f.r ?? -6) + wig}deg) scale(${(f.type === "stamp" ? 2.2 - 1.2 * p : p) * (1 - ex)})`;
+            f.el.style.opacity = clamp(lt / 0.06);
+          }
+        }
+        const o = SPEC.outro,
+          oel = $("#outro");
+        if (o && t >= o.a) {
+          const lt = t - o.a;
+          oel.style.visibility = "visible";
+          oel.style.clipPath = `inset(${(1 - snap(prog(lt, 0, 0.22))) * 100}% 0 0 0)`;
+          const bgi = $(".bgi img", oel);
+          loads.push(
+            place(
+              bgi,
+              o.rec,
+              o.from + lt,
+              { s: o.s ?? 1.3, x: o.x, y: o.y },
+              1080,
+              1920,
+            ),
+          );
+          const lg = $(".logo", oel),
+            lp = prog(lt, 0.12, 0.32);
+          lg.style.transform = `scale(${3 - 2 * snap(lp)}) rotate(${(1 - lp) * -8}deg)`;
+          lg.style.opacity = lp > 0 ? 1 : 0;
+          const sh2 = (1 - prog(lt, 0.32, 0.7)) * 18 * (lt > 0.32 ? 1 : 0);
+          oel.style.transform = `translate(${noise(t, 47, 2) * sh2}px, ${noise(t, 53, 5) * sh2}px)`;
+          [
+            [".l1", 0.45],
+            [".l2", 0.7],
+            [".l3", 0.95],
+          ].forEach(([q, a]) => {
+            const p = back(prog(lt, a, a + 0.25), 3);
+            const e = $(q, oel);
+            e.style.opacity = p > 0 ? 1 : 0;
+            e.style.transform = `scale(${p}) rotate(${(1 - p) * 6}deg)`;
+          });
+          $(".l2", oel).style.transform +=
+            ` scale(${1 + 0.06 * Math.pow(1 - bp, 3) * (lt > 1 ? 1 : 0)})`;
+        } else oel.style.visibility = "hidden";
+        $("#beat").style.transform = `scaleX(${t / SPEC.duration})`;
         await Promise.all(loads);
       }
       window.build = build;

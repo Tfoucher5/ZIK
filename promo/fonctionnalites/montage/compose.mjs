@@ -1,35 +1,50 @@
 import { chromium } from "playwright-core";
-import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { spawn, execFileSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL, fileURLToPath } from "node:url";
-import { resolve } from "node:path";
+import { resolve, dirname, basename } from "node:path";
+import { tmpdir } from "node:os";
+const here = dirname(fileURLToPath(import.meta.url));
 const REC = resolve(process.env.REC_DIR || "rec");
-const here = fileURLToPath(new URL(".", import.meta.url));
+const FONTS = resolve(
+  process.env.FONTS_DIR || resolve(here, "../../../static/fonts"),
+);
 const [specFile, out, stillsArg] = process.argv.slice(2);
 const spec = (await import(pathToFileURL(resolve(specFile)).href)).default;
 const recs = {};
 const need = new Set(
-  spec.scenes
-    .flatMap((s) => [s.rec, s.bg?.rec, ...(s.extra || []).map((x) => x.rec)])
-    .filter(Boolean),
+  [
+    ...spec.shots.flatMap((s) => [
+      s.rec,
+      ...(s.panels || []).map((p) => p.rec),
+    ]),
+    spec.outro?.rec,
+  ].filter(Boolean),
 );
-for (const r of need) {
-  const idx = JSON.parse(readFileSync(`${REC}/${r}/index.json`, "utf8"));
-  const dim = JSON.parse(readFileSync(`${REC}/${r}/dim.json`, "utf8"));
-  recs[r] = { frames: idx.frames, ...dim };
-}
+for (const r of need)
+  recs[r] = {
+    frames: JSON.parse(readFileSync(`${REC}/${r}/index.json`, "utf8")).frames,
+    ...JSON.parse(readFileSync(`${REC}/${r}/dim.json`, "utf8")),
+  };
+const html = resolve(here, ".composer.run.html");
+writeFileSync(
+  html,
+  readFileSync(resolve(here, "composer.html"), "utf8").replaceAll(
+    "FONTS/",
+    pathToFileURL(FONTS).href + "/",
+  ),
+);
 const b = await chromium.launch({
   executablePath: process.env.CHROME_PATH || "/opt/pw-browsers/chromium",
   args: ["--allow-file-access-from-files"],
 });
 const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
-await p.goto(pathToFileURL(here + "composer.html").href);
+await p.goto(pathToFileURL(html).href);
 await p.evaluate(
   ([s, r, d]) => window.build(s, r, d),
   [spec, recs, pathToFileURL(REC).href],
 );
 await p.evaluate(() => document.fonts.ready);
-const fps = 30;
 if (stillsArg) {
   for (const t of stillsArg.split(",").map(Number)) {
     await p.evaluate((t) => window.render(t), t);
@@ -38,6 +53,12 @@ if (stillsArg) {
   await b.close();
   process.exit(0);
 }
+const tmp = resolve(tmpdir(), basename(out, ".mp4"));
+const wav = tmp + ".wav",
+  sj = tmp + ".spec.json";
+writeFileSync(sj, JSON.stringify(spec));
+execFileSync("python3", [resolve(here, "beat.py"), sj, wav]);
+const fps = 30;
 const ff = spawn(
   "ffmpeg",
   [
@@ -50,10 +71,8 @@ const ff = spawn(
     String(fps),
     "-i",
     "-",
-    "-f",
-    "lavfi",
     "-i",
-    "anullsrc=channel_layout=stereo:sample_rate=44100",
+    wav,
     "-shortest",
     "-c:v",
     "libx264",
@@ -68,7 +87,7 @@ const ff = spawn(
     "-c:a",
     "aac",
     "-b:a",
-    "128k",
+    "192k",
     "-movflags",
     "+faststart",
     out,
