@@ -1,0 +1,11 @@
+create extension if not exists pgcrypto;
+create schema if not exists auth;
+create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text);
+create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true),'')::uuid $$;
+do $$ begin create role anon nologin; exception when others then null; end $$;
+do $$ begin create role authenticated nologin; exception when others then null; end $$;
+do $$ begin create role service_role nologin bypassrls; exception when others then null; end $$;
+do $$ begin create role authenticator login noinherit; exception when others then null; end $$;
+grant anon, authenticated, service_role to authenticator;
+create sequence if not exists answer_types_id_seq;
+create table public.cards (id uuid primary key default gen_random_uuid());
