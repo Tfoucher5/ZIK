@@ -4,6 +4,16 @@
 export const NEWS = [
   {
     date: "2026-10-06",
+    version: "3.14.3",
+    tag: "Amélioration",
+    title: "ZIK passe en sombre par défaut",
+    items: [
+      "Le thème sombre devient le thème de base. Si tu avais déjà choisi un thème, il est conservé.",
+      "Sur téléphone, les thèmes des paramètres s'affichent sur une grille : les aperçus de couleur ne débordent plus de leur case.",
+    ],
+  },
+  {
+    date: "2026-10-06",
     version: "3.14.2",
     tag: "Correctif",
     title: "Un paiement ZIK Pro plus clair",

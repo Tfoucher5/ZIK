@@ -1,11 +1,11 @@
 <script>
   import { onMount } from 'svelte';
-  import { THEMES, getTheme, setTheme } from '$lib/theme.js';
+  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/theme.js';
 
   /** @type {{ open: boolean, onToggle: (e: MouseEvent) => void }} */
   let { open = false, onToggle } = $props();
 
-  let active = $state('light');
+  let active = $state(DEFAULT_THEME);
 
   onMount(() => { active = getTheme(); });
 

@@ -3,7 +3,7 @@
   import { toast } from '$lib/toast.svelte.js';
   import Modal from '$lib/components/Modal.svelte';
   import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
-  import { THEMES, getTheme, setTheme } from '$lib/theme.js';
+  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/theme.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -12,7 +12,7 @@
 
   let animOn       = $state(true);
   let volVal     = $state(50);
-  let activeTheme = $state('light');
+  let activeTheme = $state(DEFAULT_THEME);
   let isPrivate  = $state(false);
   let privLoading = $state(false);
   let discordLoading = $state(false);
@@ -668,8 +668,8 @@ a.btn-unlink { text-decoration: none; white-space: nowrap; }
 /* -- Responsive -- */
 @media (max-width: 640px) {
   .settings-row { flex-wrap: wrap; gap: 12px; }
-  .theme-picker { width: 100%; justify-content: space-between; }
-  .theme-swatch { flex: 1; min-width: 0; }
+  .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+  .theme-swatch { min-width: 0; }
   .swatch-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 </style>

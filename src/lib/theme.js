@@ -7,7 +7,7 @@ export const THEMES = [
   { id: "emeraude", label: "Émeraude", bg: "#04100a", accent: "#34d399" },
 ];
 
-export const DEFAULT_THEME = "light";
+export const DEFAULT_THEME = "dark";
 
 export function getTheme() {
   try {

@@ -47,7 +47,7 @@
   // L'admin est conçu en sombre : on ignore le thème choisi dans les paramètres
   $effect(() => {
     document.documentElement.setAttribute('data-theme', 'dark');
-    return () => document.documentElement.setAttribute('data-theme', localStorage.getItem('zik_theme') || 'light');
+    return () => document.documentElement.setAttribute('data-theme', localStorage.getItem('zik_theme') || 'dark');
   });
 </script>
 
