@@ -1,9 +1,8 @@
 import { chromium } from "playwright-core";
-import { spawn, execFileSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL, fileURLToPath } from "node:url";
-import { resolve, dirname, basename } from "node:path";
-import { tmpdir } from "node:os";
+import { resolve, dirname } from "node:path";
 const here = dirname(fileURLToPath(import.meta.url));
 const REC = resolve(process.env.REC_DIR || "rec");
 const FONTS = resolve(
@@ -53,11 +52,6 @@ if (stillsArg) {
   await b.close();
   process.exit(0);
 }
-const tmp = resolve(tmpdir(), basename(out, ".mp4"));
-const wav = tmp + ".wav",
-  sj = tmp + ".spec.json";
-writeFileSync(sj, JSON.stringify(spec));
-execFileSync("python3", [resolve(here, "beat.py"), sj, wav]);
 const fps = 30;
 const ff = spawn(
   "ffmpeg",
@@ -71,8 +65,10 @@ const ff = spawn(
     String(fps),
     "-i",
     "-",
+    "-f",
+    "lavfi",
     "-i",
-    wav,
+    "anullsrc=channel_layout=stereo:sample_rate=44100",
     "-shortest",
     "-c:v",
     "libx264",
@@ -87,7 +83,7 @@ const ff = spawn(
     "-c:a",
     "aac",
     "-b:a",
-    "192k",
+    "128k",
     "-movflags",
     "+faststart",
     out,
