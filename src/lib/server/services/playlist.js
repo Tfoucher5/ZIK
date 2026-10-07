@@ -1,4 +1,4 @@
-import { supabase, getAdminClient } from "../config.js";
+import { getAdminClient } from "../config.js";
 import { playlistCache, customRooms, dbRooms } from "../state.js";
 import { CARD_SELECT, toCardView } from "../../components/card/cardView.js";
 import {
@@ -266,10 +266,20 @@ function dedup(tracks) {
   });
 }
 
-export async function loadPlaylist(roomId) {
+// fresh : relit la base (lancement de partie). Les playlists sont modifiées
+// depuis le navigateur, le serveur ne voit pas passer ces changements.
+export async function loadPlaylist(roomId, { fresh = false } = {}) {
   if (customRooms[roomId]) return customRooms[roomId].tracks;
-  if (playlistCache[roomId]?.length > 0) return playlistCache[roomId];
+  const cached = playlistCache[roomId];
+  if (cached?.length > 0 && !fresh) return cached;
+  const tracks = await fetchPlaylist(roomId);
+  // Base indisponible : la dernière version connue plutôt qu'une partie bloquée
+  return tracks.length ? tracks : (cached ?? []);
+}
 
+async function fetchPlaylist(roomId) {
+  // Client service : les playlists d'une room privée sont invisibles en anonyme
+  const db = getAdminClient();
   const dbRoom = dbRooms[roomId];
   if (!dbRoom) {
     console.warn(`Room "${roomId}": aucun fallback disponible`);
@@ -278,7 +288,7 @@ export async function loadPlaylist(roomId) {
 
   // Essayer d'abord room_playlists (multi-playlist)
   try {
-    const { data: links } = await supabase
+    const { data: links } = await db
       .from("room_playlists")
       .select("playlist_id, position")
       .eq("room_id", dbRoom.id)
@@ -286,7 +296,7 @@ export async function loadPlaylist(roomId) {
 
     if (links?.length > 0) {
       const playlistIds = links.map((l) => l.playlist_id);
-      const { data: trackRows } = await supabase
+      const { data: trackRows } = await db
         .from("custom_playlist_tracks")
         .select(TRACK_ROW_SELECT)
         .in("playlist_id", playlistIds)
@@ -308,7 +318,7 @@ export async function loadPlaylist(roomId) {
   // Fallback : playlist_id unique (legacy)
   if (dbRoom.playlist_id) {
     try {
-      const { data: trackRows } = await supabase
+      const { data: trackRows } = await db
         .from("custom_playlist_tracks")
         .select(TRACK_ROW_SELECT)
         .eq("playlist_id", dbRoom.playlist_id)
@@ -329,34 +339,4 @@ export async function loadPlaylist(roomId) {
 
   console.warn(`Room "${roomId}": aucune playlist configurée`);
   return [];
-}
-
-export async function preloadAllPlaylists() {
-  console.log("Prechargement des playlists...");
-  try {
-    const { data: dbRoomsList } = await supabase
-      .from("rooms")
-      .select(
-        "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id",
-      );
-    if (!dbRoomsList?.length) {
-      console.log("Aucune room DB avec playlist configuree.");
-      return;
-    }
-    dbRoomsList.forEach((r) => {
-      dbRooms[r.code] = r;
-    });
-    const results = await Promise.allSettled(
-      dbRoomsList.map((r) => loadPlaylist(r.code)),
-    );
-    const ok = results.filter(
-      (r) => r.status === "fulfilled" && r.value?.length > 0,
-    ).length;
-    const ko = results.length - ok;
-    console.log(
-      `Playlists: ${ok}/${results.length} OK${ko ? ` — ${ko} en erreur` : ""}`,
-    );
-  } catch (e) {
-    console.error("Erreur prechargement:", e.message);
-  }
 }

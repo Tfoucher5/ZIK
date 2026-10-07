@@ -2,7 +2,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const stringSimilarity = require("string-similarity");
 
-import { supabase } from "../../config.js";
+import { supabase, getAdminClient } from "../../config.js";
 import {
   playlistCache,
   customRooms,
@@ -659,7 +659,7 @@ async function startAutoCountdown(roomId, io) {
       const room = roomGames[roomId];
       if (!room || room.game.isActive || room.game.isSyncWaiting) return;
 
-      const playlist = await loadPlaylist(roomId);
+      const playlist = await loadPlaylist(roomId, { fresh: true });
       if (playlist.length === 0) {
         io.to(`room:${roomId}`).emit(
           "server_error",
@@ -832,25 +832,17 @@ export function register(io) {
       let username = rawName;
       if (!username?.trim()) return socket.emit("error", "Pseudo requis");
 
-      // Fetch from DB if not cached, or if cache is stale (missing auto_start/owner_id fields added later)
-      if (
-        !customRooms[roomId] &&
-        (!dbRooms[roomId] ||
-          dbRooms[roomId].owner_id === undefined ||
-          dbRooms[roomId].id === undefined)
-      ) {
-        const { data: freshRoom } = await supabase
+      // Client service : une room privée est invisible pour la clé anonyme
+      if (!customRooms[roomId] && !dbRooms[roomId]) {
+        const { data: freshRoom } = await getAdminClient()
           .from("rooms")
           .select(
             "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id, is_public, game_mode",
           )
           .eq("code", roomId)
           .single();
-        if (freshRoom) {
-          dbRooms[roomId] = { ...dbRooms[roomId], ...freshRoom };
-        } else if (!dbRooms[roomId]) {
-          return socket.emit("error", "Room inconnue ou expiree");
-        }
+        if (!freshRoom) return socket.emit("error", "Room inconnue ou expiree");
+        dbRooms[roomId] = freshRoom;
       }
 
       username = username.trim();
@@ -1025,7 +1017,7 @@ export function register(io) {
       // Cancel any running auto-start countdown
       cancelAutoCountdown(roomId, io);
 
-      const playlist = await loadPlaylist(roomId);
+      const playlist = await loadPlaylist(roomId, { fresh: true });
       if (playlist.length === 0)
         return socket.emit("server_error", "Playlist indisponible, reessaie.");
 
