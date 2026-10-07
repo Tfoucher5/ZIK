@@ -7,6 +7,7 @@
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
+  import { initPush, forgetPushOwner } from '$lib/push.svelte.js';
   import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
@@ -65,6 +66,7 @@
       sessionStorage.setItem('zik_uname', user.email?.split('@')[0] || 'Joueur');
     }
     initNotifications(sb);
+    initPush(async () => (await sb.auth.getSession())?.data?.session?.access_token).catch(() => {});
   }
 
   function openAuthModal(view = 'login') {
@@ -100,6 +102,7 @@
         sessionStorage.removeItem('zik_uid');
         sessionStorage.removeItem('zik_uname');
         teardownNotifications();
+        forgetPushOwner().catch(() => {});
       }
     });
   });

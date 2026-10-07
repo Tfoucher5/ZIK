@@ -6,6 +6,8 @@ import { pickCardWinner, MIN_ROUNDS, MIN_TRACKS } from "./cards.js";
 import { RARITIES } from "../../../components/card/rarity.js";
 import { addChatMessage } from "./chat.js";
 import { createNotification } from "../../services/notifications.js";
+import { notifySetsNearlyDone } from "../../services/cardHunt.js";
+import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
 
 // Branchement des cartes dans le jeu (spec docs/specs/cartes.md, section 6.2).
 // core.js appelle ces fonctions aux bons moments ; toute la logique carte vit ici.
@@ -247,12 +249,18 @@ export async function settleCards({ game, name, userId, keep, io, socketId }) {
     console.error("[cards] attribution :", error.message);
     return;
   }
-  if (keep && io && socketId) io.to(socketId).emit("cards_granted", data);
-  if (keep)
-    notifyMythics(
-      userId,
-      (data?.cards ?? []).map((c) => c.card_id),
-    );
+  if (!keep) return;
+  if (io && socketId) io.to(socketId).emit("cards_granted", data);
+  const cards = data?.cards ?? [];
+  bumpWeeklyChallenge("cards_won", userId, cards.length);
+  notifyMythics(
+    userId,
+    cards.map((c) => c.card_id),
+  );
+  notifySetsNearlyDone(
+    userId,
+    cards.filter((c) => c.is_new).map((c) => c.card_id),
+  ).catch((e) => console.error("[cards] set presque fini :", e.message));
 }
 
 // Mythique désormais acquise : ses amis sont prévenus

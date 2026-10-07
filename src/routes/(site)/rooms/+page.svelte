@@ -1,6 +1,7 @@
 <script>
   import JsonLd from '$lib/components/JsonLd.svelte';
   import { onMount, getContext } from 'svelte';
+  import { page } from '$app/state';
   import Toast from '$lib/components/Toast.svelte';
   import LoadMore from '$lib/components/LoadMore.svelte';
   import GuestModal from '$lib/components/GuestModal.svelte';
@@ -31,7 +32,8 @@
   let filterQcm       = $state(false);
   let filterClassic   = $state(false);
   let filterOfficial  = $state(false);
-  let filterCards     = $state(false);
+  // /rooms?cartes : arrivée depuis le défi « cartes gagnées »
+  let filterCards     = $state(page.url.searchParams.has('cartes'));
 
   const filteredPublic = $derived.by(() => {
     let list = publicRooms;

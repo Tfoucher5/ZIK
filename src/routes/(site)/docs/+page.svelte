@@ -928,6 +928,12 @@
         L'ami invité reçoit une <strong>notification</strong> (cloche en haut du site) avec le nom de la room et son mode de jeu : un clic et il vous rejoint. Les invitations sont réservées aux amis confirmés.
       </p>
 
+      <h3>Notifications sur votre appareil</h3>
+      <p>
+        ZIK peut vous prévenir même quand le site est fermé, sur téléphone comme sur ordinateur. Activez-les depuis la cloche ou dans les <a href="/settings#notifications">paramètres</a>, où vous choisissez aussi ce que vous recevez : amis et invitations, cartes, défi de la semaine, rappel du Zikle du jour.
+        Sur iPhone et iPad, ajoutez d'abord ZIK à votre écran d'accueil (Partager, puis « Sur l'écran d'accueil ») et ouvrez-le depuis l'icône.
+      </p>
+
       <div class="doc-tip">
         <span class="doc-tip-icon">💡</span>
         <div>

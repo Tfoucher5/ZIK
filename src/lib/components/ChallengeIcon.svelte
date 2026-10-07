@@ -23,5 +23,9 @@
     <circle cx="18.5" cy="14.5" r="1" />
   {:else if type === 'zikle_wins'}
     <path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11h2" />
+  {:else if type === 'cards_won'}
+    <rect x="7" y="3.5" width="12" height="16" rx="2" transform="rotate(8 13 11.5)" />
+    <rect x="4" y="4.5" width="12" height="16" rx="2" />
+    <circle cx="10" cy="11" r="2.5" />
   {/if}
 </svg>

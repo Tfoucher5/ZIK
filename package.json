@@ -28,6 +28,7 @@
     "string-similarity": "^4.0.4",
     "stripe": "^22.6.2",
     "svelte": "^5.56.3",
+    "web-push": "^3.6.7",
     "youtube-sr": "^4.3.12"
   },
   "devDependencies": {

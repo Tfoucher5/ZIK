@@ -2,6 +2,7 @@
   import { onMount, getContext } from 'svelte';
   import { toast } from '$lib/toast.svelte.js';
   import Modal from '$lib/components/Modal.svelte';
+  import NotificationSettings from '$lib/components/settings/NotificationSettings.svelte';
   import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
   import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/theme.js';
 
@@ -295,6 +296,11 @@
       </div>
     </section>
 
+    <section class="settings-section" id="notifications">
+      <h2 class="settings-section-title">Notifications</h2>
+      <NotificationSettings getToken={async () => (await sb.auth.getSession())?.data?.session?.access_token} />
+    </section>
+
     {#if proRow}
     <section class="settings-section">
       <h2 class="settings-section-title">ZIK Pro</h2>
@@ -479,7 +485,7 @@
   padding: 14px 20px 10px;
   border-bottom: 1px solid var(--border);
 }
-.settings-row {
+.settings-section :global(.settings-row) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -487,13 +493,13 @@
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
 }
-.settings-row:last-child { border-bottom: none; }
-.settings-row-info { flex: 1; min-width: 0; }
-.settings-row-label { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
-.settings-row-desc { font-size: 0.82rem; color: var(--mid); line-height: 1.45; }
+.settings-section :global(.settings-row:last-child) { border-bottom: none; }
+.settings-section :global(.settings-row-info) { flex: 1; min-width: 0; }
+.settings-section :global(.settings-row-label) { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
+.settings-section :global(.settings-row-desc) { font-size: 0.82rem; color: var(--mid); line-height: 1.45; }
 
 /* -- Theme picker -- */
-.settings-row-theme { flex-direction: column; align-items: stretch; gap: 14px; }
+.settings-section .settings-row-theme { flex-direction: column; align-items: stretch; gap: 14px; }
 .theme-picker { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
 .theme-swatch {
   display: flex;
@@ -530,21 +536,21 @@
 .theme-swatch.active .swatch-label { color: var(--accent); }
 
 /* -- Toggle switch -- */
-.toggle-switch { position: relative; display: inline-block; flex-shrink: 0; cursor: pointer; }
-.toggle-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
-.toggle-track {
+.settings-section :global(.toggle-switch) { position: relative; display: inline-block; flex-shrink: 0; cursor: pointer; }
+.settings-section :global(.toggle-switch input) { position: absolute; opacity: 0; width: 0; height: 0; }
+.settings-section :global(.toggle-track) {
   display: block; width: 44px; height: 24px;
   background: rgb(var(--c-glass) / 0.12);
   border-radius: 99px; transition: background 0.2s; position: relative;
 }
-.toggle-switch input:checked + .toggle-track { background: var(--accent); }
-.toggle-thumb {
+.settings-section :global(.toggle-switch input:checked + .toggle-track) { background: var(--accent); }
+.settings-section :global(.toggle-thumb) {
   position: absolute; top: 3px; left: 3px;
   width: 18px; height: 18px; border-radius: 50%;
   background: #fff; transition: transform 0.2s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
-.toggle-switch input:checked + .toggle-track .toggle-thumb { transform: translateX(20px); }
+.settings-section :global(.toggle-switch input:checked + .toggle-track .toggle-thumb) { transform: translateX(20px); }
 
 /* -- Volume slider -- */
 .settings-vol-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -667,7 +673,7 @@ a.btn-unlink { text-decoration: none; white-space: nowrap; }
 
 /* -- Responsive -- */
 @media (max-width: 640px) {
-  .settings-row { flex-wrap: wrap; gap: 12px; }
+  .settings-section :global(.settings-row) { flex-wrap: wrap; gap: 12px; }
   .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
   .theme-swatch { min-width: 0; }
   .swatch-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

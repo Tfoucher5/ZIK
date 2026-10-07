@@ -19,6 +19,18 @@ export const NEWS = [
     ],
   },
   {
+    date: "2026-10-05",
+    version: "3.15.0",
+    tag: "Nouveauté",
+    title: "Les notifications arrivent sur ton téléphone",
+    items: [
+      "ZIK peut maintenant te prévenir même quand le site est fermé, sur téléphone comme sur ordinateur : active-les depuis la cloche ou dans les paramètres. Sur iPhone et iPad, ajoute d'abord ZIK à ton écran d'accueil.",
+      "Tu choisis ce que tu reçois : amis et invitations, cartes, défi de la semaine, et un rappel quotidien pour le Zikle (coupé par défaut).",
+      "Quand il ne te manque plus qu'une carte pour finir un album ou un artiste, ZIK te le dit et t'indique une room où elle passe.",
+      "Nouveau défi de la semaine : 500 cartes à gagner tous ensemble. Il entre dans la rotation des défis communautaires.",
+    ],
+  },
+  {
     date: "2026-10-07",
     version: "3.14.5",
     tag: "Correctif",
