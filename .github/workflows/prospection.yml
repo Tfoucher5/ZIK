@@ -3,15 +3,17 @@ name: Prospection ZIK Pro
 # Lit les réponses reçues sur theo@zik-music.fr, puis envoie les mails du jour.
 # La routine Claude « ZIK - Prospection » trie ensuite les réponses (Supabase).
 #
-# Deux horaires le matin en semaine (7h47 et 9h17 à Paris en été) parce que le
-# cron GitHub saute parfois un créneau. Le 2e créneau ne fait rien si un run a
-# déjà réussi aujourd'hui : relancer send.mjs enverrait un 2e lot.
+# Trois horaires en semaine (7h47, 9h17 et 12h17 à Paris en été) parce que le
+# cron GitHub saute ou retarde parfois un créneau. Un créneau ne fait rien si un
+# run a déjà réussi aujourd'hui : relancer send.mjs enverrait un 2e lot.
+# La routine Claude trie les réponses à 11h50 UTC, après le dernier créneau.
 # Un lancement manuel (Run workflow) passe toujours, sans garde-fou.
 # Dépôt public : les scripts n'écrivent que des compteurs dans les journaux.
 on:
   schedule:
     - cron: "47 5 * * 1-5"
     - cron: "17 7 * * 1-5"
+    - cron: "17 10 * * 1-5"
   workflow_dispatch:
 
 concurrency: prospection

@@ -2,7 +2,7 @@
 // invalides. Le tri des réponses est fait ensuite par la routine Claude.
 // Usage : node scripts/prospection/inbox.mjs
 import { simpleParser } from "mailparser";
-import { db, imap } from "./lib.mjs";
+import { db, FROM_EMAIL, imap } from "./lib.mjs";
 
 const LOOKBACK_DAYS = 5;
 const STOP_RE =
@@ -17,6 +17,41 @@ function ownText(text = "") {
     if (!line.startsWith(">")) lines.push(line);
   }
   return lines.join("\n").trim().slice(0, 2000);
+}
+
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/g;
+const norm = (s = "") =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+let contacted = null;
+
+// Expéditeur générique (contact@, plateforme de réservation, transfert) : le
+// lieu se retrouve par son adresse ou son nom cité dans le mail
+async function prospectFromContent(sb, mail, from) {
+  const text = `${mail.subject ?? ""}\n${mail.text ?? ""}`;
+  const emails = [...new Set(text.toLowerCase().match(EMAIL_RE) ?? [])].filter(
+    (e) => e !== from && e !== FROM_EMAIL,
+  );
+  if (emails.length) {
+    const { data } = await sb
+      .from("prospects")
+      .select("id, status")
+      .in("email", emails)
+      .neq("status", "new");
+    if (data?.length === 1) return data[0];
+  }
+
+  contacted ??=
+    (await sb.from("prospects").select("id, status, name").neq("status", "new"))
+      .data ?? [];
+  const haystack = norm(text);
+  const hits = contacted.filter(
+    (p) => p.name.length >= 6 && haystack.includes(norm(p.name)),
+  );
+  return hits.length === 1 ? hits[0] : null;
 }
 
 const sb = db();
@@ -47,10 +82,7 @@ try {
     // Adresse invalide : le serveur renvoie le mail avec l'adresse en erreur
     if (/mailer-daemon|postmaster/i.test(from)) {
       const emails = [
-        ...new Set(
-          (mail.text ?? "").toLowerCase().match(/[\w.+-]+@[\w-]+\.[\w.-]+/g) ??
-            [],
-        ),
+        ...new Set((mail.text ?? "").toLowerCase().match(EMAIL_RE) ?? []),
       ];
       const { data: hits } = await sb
         .from("prospects")
@@ -97,6 +129,8 @@ try {
         .maybeSingle();
       prospect = data;
     }
+    if (!prospect && from !== FROM_EMAIL)
+      prospect = await prospectFromContent(sb, mail, from);
     if (!prospect || prospect.status === "new") continue;
 
     const excerpt = ownText(mail.text);
