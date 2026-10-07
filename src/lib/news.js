@@ -19,8 +19,8 @@ export const NEWS = [
     ],
   },
   {
-    date: "2026-10-05",
-    version: "3.15.0",
+    date: "2026-10-07",
+    version: "3.14.5",
     tag: "Correctif",
     title: "Les rooms privées refonctionnent",
     items: [
