@@ -13,7 +13,6 @@ const { handler } = await import("./build/handler.js");
 import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon.js";
 import { registerPresence } from "./src/lib/server/socket/presence.js";
-import { preloadAllPlaylists } from "./src/lib/server/services/playlist.js";
 import { pushError } from "./src/lib/server/state.js";
 
 const _origError = console.error.bind(console);
@@ -91,7 +90,6 @@ globalThis.__zik_io = io;
 register(io);
 registerSalon(io);
 registerPresence(io);
-preloadAllPlaylists();
 autoUpdateYtDlp();
 setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h
 

@@ -3,6 +3,16 @@
 
 export const NEWS = [
   {
+    date: "2026-10-07",
+    version: "3.14.5",
+    tag: "Correctif",
+    title: "Les rooms privées refonctionnent",
+    items: [
+      "Rejoindre une room privée affichait « Room inconnue » : c'est corrigé, les rooms privées se rejoignent de nouveau avec leur code.",
+      "Une playlist modifiée est prise en compte dès la partie suivante, sans attendre une mise à jour du site.",
+    ],
+  },
+  {
     date: "2026-10-06",
     version: "3.14.3",
     tag: "Amélioration",
