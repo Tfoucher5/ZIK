@@ -13,6 +13,7 @@ export const NEWS = [
       "Une carte gagnée est sécurisée quand vous avez joué la moitié de la partie. Le suivi s'affiche à côté du classement, et ZIK vous prévient avant de partir trop tôt.",
       "Votre collection se range par artiste et par album, avec une recherche et des filtres. Les cartes qui vous manquent apparaissent en silhouette pour compléter vos sets.",
       "Chaque carte a sa page à partager, et la collection de chaque joueur se consulte depuis son profil.",
+      "Nouvel onglet Cartes dans les classements : les collectionneurs sont classés par un score qui compte plus pour les cartes rares, avec leur nombre de cartes et de sets terminés.",
       "Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant.",
     ],
   },

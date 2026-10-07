@@ -33,6 +33,12 @@
   let myUserId = $state(null);
   let myRankLoaded = $state(false);
 
+  let cartesData = $state([]);
+  let cartesOffset = $state(0);
+  let cartesHasMore = $state(false);
+  let cartesLoading = $state(false);
+  let cartesInited = $state(false);
+
   let friendsData = $state([]);
   let friendsLoading = $state(false);
   let friendsInited = $state(false);
@@ -40,11 +46,16 @@
   const eloAmis = $derived(activeTab === "elo" && eloScope === "amis");
 
   let list = $derived(
-    activeTab === "elo" ? (eloScope === "amis" ? friendsData : eloData) : scoreData
+    activeTab === "elo" ? (eloScope === "amis" ? friendsData : eloData) : activeTab === "cartes" ? cartesData : scoreData
   );
-  let maxVal = $derived(
-    list.length > 0 ? (activeTab === "elo" ? list[0].elo : Number(list[0].total_score)) : 1
-  );
+
+  function valueOf(p) {
+    if (activeTab === "elo") return p.elo;
+    if (activeTab === "cartes") return p.score;
+    return Number(p.total_score);
+  }
+
+  let maxVal = $derived(list.length > 0 ? valueOf(list[0]) : 1);
 
   let filterSummary = $derived(
     `${scoreMode === 'classique' ? 'Mode Classique' : 'Mode QCM'} · ${scoreRooms === 'officielles' ? 'Rooms officielles' : 'Toutes les rooms'} · ${scorePeriod === 'semaine' ? 'Depuis lundi' : scorePeriod === 'mois' ? 'Depuis le 1er du mois' : 'Depuis le 1er janvier'}`
@@ -53,10 +64,9 @@
   let gapToNext = $derived.by(() => {
     if (!myRank || myRank.rank <= 1) return null;
     const idx = myRank.rank - 2;
-    const above = activeTab === "elo" ? eloData[idx] : scoreData[idx];
+    const above = list[idx];
     if (!above) return null;
-    const aboveScore = activeTab === "elo" ? above.elo : Number(above.total_score);
-    return aboveScore - myRank.score;
+    return valueOf(above) - myRank.score;
   });
 
   let gapToTop = $derived.by(() => {
@@ -88,6 +98,21 @@
     } catch { /* silencieux */ } finally {
       scoreLoading = false;
       scoreInited = true;
+    }
+  }
+
+  async function fetchCartes(reset = false) {
+    cartesLoading = true;
+    try {
+      const res = await fetch(`/api/leaderboard/cartes?offset=${reset ? 0 : cartesOffset}`);
+      const rows = await res.json();
+      const arr = Array.isArray(rows) ? rows : [];
+      if (reset) { cartesData = arr; cartesOffset = arr.length; }
+      else { cartesData = [...cartesData, ...arr]; cartesOffset += arr.length; }
+      cartesHasMore = arr.length === 20;
+    } catch { /* silencieux */ } finally {
+      cartesLoading = false;
+      cartesInited = true;
     }
   }
 
@@ -132,7 +157,7 @@
       return;
     }
     try {
-      const mode = activeTab === "elo" ? "elo" : scoreMode;
+      const mode = activeTab === "score" ? scoreMode : activeTab;
       let qs = `userId=${encodeURIComponent(myUserId)}&mode=${mode}`;
       if (activeTab === "score") qs += `&rooms=${scoreRooms}&periode=${scorePeriod}`;
       const res = await fetch(`/api/leaderboard/my-rank?${qs}`);
@@ -148,6 +173,11 @@
     void scoreRooms;
     void scorePeriod;
     fetchScore(true);
+  });
+
+  $effect(() => {
+    if (activeTab !== "cartes" || cartesInited) return;
+    fetchCartes(true);
   });
 
   $effect(() => {
@@ -173,20 +203,28 @@
   function isMe(u) { return myRank?.username === u; }
 
   function valLabel(p) {
-    return activeTab === "elo" ? String(p.elo) : Number(p.total_score).toLocaleString('fr-FR');
+    return activeTab === "elo" ? String(p.elo) : valueOf(p).toLocaleString('fr-FR');
   }
-  function gamesOf(p) {
+  function plural(n, word) {
+    return `${n} ${word}${n > 1 ? 's' : ''}`;
+  }
+  function metaOf(p) {
+    if (activeTab === "cartes") return `${plural(p.cards, 'carte')} · ${plural(p.sets, 'set')}`;
+    return plural(activeTab === "elo" ? p.games_played : p.games_count, 'partie');
+  }
+  function countOf(p) {
+    if (activeTab === "cartes") return p.cards;
     return activeTab === "elo" ? p.games_played : p.games_count;
   }
   function pct(p) {
-    const v = activeTab === "elo" ? p.elo : Number(p.total_score);
-    return Math.min(100, Math.round((v / maxVal) * 100));
+    return Math.min(100, Math.round((valueOf(p) / maxVal) * 100));
   }
 
   const CERTS = ["💎 Disque de diamant", "Disque de platine", "Disque d'or"];
   let unit = $derived(activeTab === "elo" ? "ELO" : "pts");
   let showLoading = $derived(
     (activeTab === "score" && scoreLoading && scoreData.length === 0) ||
+    (activeTab === "cartes" && cartesLoading && cartesData.length === 0) ||
     (eloAmis && friendsLoading && friendsData.length === 0)
   );
   let showEmpty = $derived(
@@ -194,13 +232,15 @@
       ? eloAmis
         ? friendsData.length <= 1 && friendsInited && !friendsLoading
         : eloData.length === 0 && !eloLoading
-      : scoreData.length === 0 && scoreInited && !scoreLoading
+      : activeTab === "cartes"
+        ? cartesData.length === 0 && cartesInited && !cartesLoading
+        : scoreData.length === 0 && scoreInited && !scoreLoading
   );
 </script>
 
 <svelte:head>
   <title>Classements blind test - ELO et meilleurs scores | ZIK</title>
-  <meta name="description" content="Classements ZIK : ELO compétitif, meilleurs scores par mode et par période. Découvre les meilleurs joueurs de blind test et ta place parmi eux." />
+  <meta name="description" content="Classements ZIK : ELO compétitif, meilleurs scores par mode et par période, collectionneurs de cartes. Découvre les meilleurs joueurs de blind test et ta place parmi eux." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/classements" />
   <meta property="og:title" content="Classements blind test - ELO et meilleurs scores" />
@@ -225,6 +265,7 @@
   <div class="hp-toolbar">
     <button class="hp-tab" class:active={activeTab === 'elo'} onclick={() => activeTab = 'elo'}>ELO</button>
     <button class="hp-tab" class:active={activeTab === 'score'} onclick={() => activeTab = 'score'}>Score</button>
+    <button class="hp-tab" class:active={activeTab === 'cartes'} onclick={() => activeTab = 'cartes'}>Cartes</button>
     <span class="hp-sep"></span>
 
     {#if activeTab === 'elo'}
@@ -236,6 +277,8 @@
         <span class="hp-sep"></span>
       {/if}
       <span class="hp-context">{eloAmis ? 'Toi et tes amis · ELO' : 'Rooms officielles · Mode classique · Depuis toujours'}</span>
+    {:else if activeTab === 'cartes'}
+      <span class="hp-context">Collectionneurs · Score pondéré par rareté</span>
     {:else}
       <div class="hp-chips">
         <button class="hp-chip" class:on={scoreMode === 'classique'} onclick={() => scoreMode = 'classique'}>Classique</button>
@@ -253,12 +296,14 @@
 
   {#if activeTab === 'score'}
     <p class="hp-summary">{filterSummary}</p>
+  {:else if activeTab === 'cartes'}
+    <p class="hp-summary">Commune 1 pt · Peu commune 2 · Rare 4 · Épique 8 · Légendaire 16 · Mythique 32</p>
   {/if}
 
   {#if showLoading}
     <p class="hp-loading">Chargement…</p>
   {:else if showEmpty}
-    <EmptyState icon="🏆" title={eloAmis ? "Ajoute des amis pour te comparer à eux ici." : activeTab === 'elo' ? "Aucun joueur pour l'instant" : "Aucun résultat pour ces filtres."} />
+    <EmptyState icon="🏆" title={eloAmis ? "Ajoute des amis pour te comparer à eux ici." : activeTab === 'elo' ? "Aucun joueur pour l'instant" : activeTab === 'cartes' ? "Aucune carte gagnée pour l'instant." : "Aucun résultat pour ces filtres."} />
   {:else if list.length > 0}
 
     {#if list.length >= 3}
@@ -279,7 +324,7 @@
           <span class="champ-tag">★ N°1 du classement</span>
           <a href="/user/{list[0].username}" class="champ-name" class:is-me={isMe(list[0].username)}>{list[0].username}</a>
           <p class="champ-meta">
-            {#if activeTab === 'elo'}<b>Nv.&nbsp;{list[0].level}</b>&nbsp;·&nbsp;{/if}{gamesOf(list[0])} partie{gamesOf(list[0]) > 1 ? 's' : ''}
+            {#if activeTab === 'elo'}<b>Nv.&nbsp;{list[0].level}</b>&nbsp;·&nbsp;{/if}{metaOf(list[0])}
             {#if isMe(list[0].username)}· <b class="me-flag">C'est toi</b>{/if}
           </p>
         </div>
@@ -306,7 +351,7 @@
             </div>
             <div class="cert-id">
               <a href="/user/{p.username}" class="cert-name" class:is-me={isMe(p.username)}>{p.username}</a>
-              <div class="cert-sub">{CERTS[i + 1]} · {gamesOf(p)} partie{gamesOf(p) > 1 ? 's' : ''}</div>
+              <div class="cert-sub">{CERTS[i + 1]} · {metaOf(p)}</div>
             </div>
             <div class="cert-val">{valLabel(p)}<small>{unit}</small></div>
           </div>
@@ -319,7 +364,7 @@
       {#if list.length >= 3}
         <div class="chart-head">
           <h2>Le reste du chart</h2>
-          <span>Rang · Joueur · {unit === 'ELO' ? 'ELO · Niveau' : 'Score'} · Parties</span>
+          <span>Rang · Joueur · {unit === 'ELO' ? 'ELO · Niveau' : 'Score'} · {activeTab === 'cartes' ? 'Cartes' : 'Parties'}</span>
         </div>
       {/if}
 
@@ -335,7 +380,7 @@
             {/if}
             <div class="row-name-wrap">
               <a href="/user/{p.username}" class="row-name" class:is-me={isMe(p.username)}>{p.username}</a>
-              {#if activeTab === 'elo'}<small>Nv. {p.level}</small>{/if}
+              {#if activeTab === 'elo'}<small>Nv. {p.level}</small>{:else if activeTab === 'cartes'}<small>{plural(p.sets, 'set')} terminé{p.sets > 1 ? 's' : ''}</small>{/if}
             </div>
             {#if isMe(p.username)}<span class="me-badge">Toi</span>{/if}
           </div>
@@ -343,7 +388,7 @@
             <div class="row-num">{valLabel(p)}</div>
             <div class="row-bar"><i style="width:{pct(p)}%"></i></div>
           </div>
-          <span class="row-games">{gamesOf(p)}</span>
+          <span class="row-games">{countOf(p)}</span>
         </div>
       {/each}
 
@@ -351,6 +396,8 @@
         {#if !eloAmis}
           <LoadMore loading={eloLoading} hasMore={eloHasMore} onLoad={loadMoreElo} />
         {/if}
+      {:else if activeTab === 'cartes'}
+        <LoadMore loading={cartesLoading} hasMore={cartesHasMore} onLoad={() => fetchCartes(false)} />
       {:else}
         <LoadMore loading={scoreLoading} hasMore={scoreHasMore} onLoad={() => fetchScore(false)} />
       {/if}
@@ -379,7 +426,7 @@
         <div class="pb-n">{myRank.username}</div>
         <div class="pb-s">
           {activeTab === 'elo' ? `${myRank.score} ELO` : `${Number(myRank.score).toLocaleString('fr-FR')} pts`}
-          · {myRank.games_count} partie{myRank.games_count > 1 ? 's' : ''}
+          · {activeTab === 'cartes' ? plural(myRank.cards, 'carte') : plural(myRank.games_count, 'partie')}
         </div>
       </div>
       <span class="pb-rank">#{myRank.rank}</span>
@@ -403,6 +450,11 @@
       <div class="pb-line"><i style="width:{barPct}%"></i></div>
     </div>
     <a href="/rooms" class="pb-cta">Jouer maintenant →</a>
+  {:else if activeTab === 'cartes'}
+    <div class="pb-guest">
+      <span class="pb-guest-txt">Pas encore de carte : trouve un titre en premier pour gagner la tienne.</span>
+      <a href="/rooms" class="pb-cta">Jouer maintenant →</a>
+    </div>
   {:else}
     <div class="pb-guest">
       <span class="pb-guest-txt">Pas encore classé dans cette catégorie.</span>
