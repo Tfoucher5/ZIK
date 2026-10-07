@@ -839,7 +839,7 @@
 
       <h3>Défi communautaire hebdomadaire</h3>
       <p>
-        Chaque semaine, un objectif collectif est proposé à toute la communauté (bonnes réponses, parties jouées ou victoires Zikle cumulées). S'il est atteint avant la fin de la semaine, tous les participants débloquent le succès collectif, et le joueur ayant le plus contribué devient <strong>top contributeur de la semaine</strong>. Ces deux succès s'affichent avec un ×N sur le profil dès qu'ils sont obtenus plusieurs fois. Le <a href="/defi">défi en cours</a> et son <a href="/defi/archives">historique</a> sont accessibles depuis la page d'accueil.
+        Chaque semaine, un objectif collectif est proposé à toute la communauté (bonnes réponses, parties jouées, victoires Zikle ou cartes gagnées cumulées). S'il est atteint avant la fin de la semaine, tous les participants débloquent le succès collectif, et le joueur ayant le plus contribué devient <strong>top contributeur de la semaine</strong>. Ces deux succès s'affichent avec un ×N sur le profil dès qu'ils sont obtenus plusieurs fois. Le <a href="/defi">défi en cours</a> et son <a href="/defi/archives">historique</a> sont accessibles depuis la page d'accueil.
       </p>
     </section>
 
@@ -859,6 +859,11 @@
         <li>Sur une playlist que vous avez créée, il faut au moins deux autres joueurs dans la room.</li>
         <li>Un titre ajouté à une playlist depuis moins de 24 heures ne donne pas encore de carte.</li>
       </ul>
+
+      <h3>Où gagner des cartes</h3>
+      <p>
+        Sur la page des <a href="/rooms">rooms</a>, une pastille <strong>Cartes</strong> signale les rooms où l'on peut en gagner, et le filtre <strong>Cartes</strong> n'affiche qu'elles. Les rooms où des joueurs connectés sont déjà en train de jouer passent en tête : c'est là que vous trouverez les adversaires qu'il faut pour gagner des cartes.
+      </p>
 
       <h3>Les six raretés</h3>
       <p>
@@ -892,6 +897,10 @@
       <h3>Collection et sets</h3>
       <p>
         La collection se parcourt par carte, par artiste ou par album, avec une recherche et des filtres par rareté, genre et décennie. Un artiste ou un album dont ZIK propose au moins trois titres forme un <strong>set</strong> : les cartes qui vous manquent y apparaissent en silhouette, sans dévoiler le titre. Compléter un set l'affiche comme terminé dans votre collection.
+        Quand il ne vous manque plus qu'une carte pour finir un set, ZIK vous prévient et vous indique une room où elle passe.
+      </p>
+      <p>
+        Une carte Mythique qui tombe est annoncée dans le chat de la room, et vos amis sont prévenus dès qu'elle est à vous pour de bon.
       </p>
 
       <h3>Partager une carte</h3>
@@ -972,6 +981,11 @@
           <strong>Progression ELO :</strong> Pour progresser efficacement, cherchez des adversaires de niveau proche ou supérieur au vôtre. Battre un joueur à 1 400 ELO quand vous êtes à 1 000 rapporte beaucoup plus que battre un débutant. Rappel : il faut une room publique avec au moins 3 joueurs.
         </div>
       </div>
+
+      <h3>Collectionneurs de cartes</h3>
+      <p>
+        L'onglet <strong>Cartes</strong> classe les collectionneurs avec un score qui compte plus pour les cartes rares : 1 point pour une Commune, 2 pour une Peu commune, 4 pour une Rare, 8 pour une Épique, 16 pour une Légendaire et 32 pour une Mythique. Chaque joueur y montre ses plus belles cartes, à ouvrir en grand, et la répartition de sa collection par rareté. Pour un profil privé, seuls les chiffres apparaissent.
+      </p>
 
       <h3>Consulter les classements</h3>
       <p>
