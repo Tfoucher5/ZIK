@@ -17,34 +17,59 @@
   let pro = $state(null);
   let busy = $state(null);
   let payError = $state('');
+  let confirmPlan = $state(null);
 
   const activePro = $derived(proActive(pro));
   const subscribed = $derived(activePro && pro.plan !== 'night' && pro.plan !== 'manual');
-  const endLabel = $derived(pro ? new Date(pro.current_period_end).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }) : '');
+  const nightActive = $derived(activePro && pro.plan === 'night');
+  const fmtDate = (d) =>
+    new Date(d).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  const endLabel = $derived(pro ? fmtDate(pro.current_period_end) : '');
+  const confirmed = $derived(PLANS.find((p) => p.id === confirmPlan));
+  // Un passe Soirée s'ajoute à la suite de celui en cours
+  const nightEnd = $derived(
+    fmtDate((nightActive ? new Date(pro.current_period_end).getTime() : Date.now()) + 24 * 3600_000),
+  );
 
-  $effect(() => {
+  async function loadPro() {
     const user = zik.user;
     if (!user) { pro = null; return; }
-    fetchPro(zik.sb, user.id)
-      .then((data) => {
-        pro = data;
-        // Formule choisie avant de se connecter : on enchaîne sur le paiement
-        let intent = null;
-        try { intent = sessionStorage.getItem(INTENT_KEY); sessionStorage.removeItem(INTENT_KEY); } catch { /* stockage indisponible */ }
-        if (intent) buy(intent);
-      });
+    pro = await fetchPro(zik.sb, user.id).catch(() => pro);
+  }
+
+  $effect(() => {
+    if (!zik.user) { pro = null; return; }
+    loadPro().then(() => {
+      // Formule choisie avant de se connecter : on reprend là où on en était
+      let intent = null;
+      try { intent = sessionStorage.getItem(INTENT_KEY); sessionStorage.removeItem(INTENT_KEY); } catch { /* stockage indisponible */ }
+      if (intent) buy(intent);
+    });
   });
 
-  async function buy(plan) {
+  // Retour depuis Stripe (bouton précédent, autre onglet) : l'état affiché
+  // doit être celui du compte, pas celui d'avant le paiement
+  function refresh(e) {
+    if (e.type === 'visibilitychange' && document.visibilityState !== 'visible') return;
+    busy = null;
+    loadPro();
+  }
+
+  function buy(plan) {
     payError = '';
     if (!zik.user) {
       try { sessionStorage.setItem(INTENT_KEY, plan); } catch { /* stockage indisponible */ }
       zik.openAuthModal('register');
       return;
     }
+    confirmPlan = plan;
+  }
+
+  async function pay() {
+    const plan = confirmPlan;
     busy = plan;
-    try { await goToStripe(zik.sb, '/api/pro/checkout', { plan }); }
-    catch (err) { payError = err.message; busy = null; }
+    try { await goToStripe(zik.sb, '/api/pro/checkout', { plan, confirm: true }); }
+    catch (err) { payError = err.message; busy = null; confirmPlan = null; }
   }
 
   async function openPortal() {
@@ -178,6 +203,9 @@
   ];
 </script>
 
+<svelte:window onpageshow={refresh} onkeydown={(e) => e.key === 'Escape' && busy === null && (confirmPlan = null)} />
+<svelte:document onvisibilitychange={refresh} />
+
 <svelte:head>
   <title>Animation blind test pour bar, camping et entreprise - ZIK Pro</title>
   <meta
@@ -216,8 +244,14 @@
       </p>
       <div class="pro-header-ctas">
         <a class="pro-cta-btn" href="/salon">Essayer gratuitement</a>
-        <a class="pro-cta-ghost" href="#tarifs">Voir les tarifs</a>
+        <a class="pro-cta-ghost" href="#tarifs">{activePro ? 'Mon accès ZIK Pro' : 'Voir les tarifs'}</a>
       </div>
+      {#if activePro}
+        <p class="pro-header-active">
+          <span class="pro-status-dot" aria-hidden="true"></span>
+          {subscribed ? `ZIK Pro est actif sur votre compte, formule ${pro.plan === 'yearly' ? 'annuelle' : 'mensuelle'}.` : `ZIK Pro est actif sur votre compte jusqu'au ${endLabel}.`}
+        </p>
+      {/if}
     </header>
 
     <section class="pro-section">
@@ -337,6 +371,7 @@
             >
               {#if busy === p.id}Redirection vers le paiement…
               {:else if subscribed}Déjà abonné
+              {:else if p.id === 'night' && nightActive}Prolonger de 24 h
               {:else if p.id === 'night'}Prendre la soirée
               {:else}Choisir {p.name.toLowerCase()}{/if}
             </button>
@@ -345,6 +380,40 @@
       </div>
 
       {#if payError}<p class="pro-pay-error" role="alert">{payError}</p>{/if}
+
+      {#if confirmed}
+        <div class="pro-confirm-back" role="presentation" onclick={() => busy === null && (confirmPlan = null)}>
+          <div class="pro-confirm" role="dialog" aria-modal="true" aria-labelledby="pro-confirm-title" tabindex="-1" onclick={(e) => e.stopPropagation()}>
+            <h3 id="pro-confirm-title">Confirmer : ZIK Pro {confirmed.name}</h3>
+            <dl>
+              <div><dt>Prix</dt><dd>{confirmed.price} <span>{confirmed.period}</span></dd></div>
+              <div><dt>Compte</dt><dd>{zik.user?.email}</dd></div>
+              {#if confirmed.id === 'night'}
+                <div><dt>ZIK Pro actif jusqu'au</dt><dd>{nightEnd}</dd></div>
+              {/if}
+            </dl>
+            {#if confirmed.id === 'night' && nightActive}
+              <p class="pro-confirm-warn">
+                Vous avez déjà un passe Soirée actif jusqu'au {endLabel}. Ce nouveau
+                paiement ajoute 24 h à la suite : il n'est utile que si votre événement
+                dure plus longtemps.
+              </p>
+            {:else if activePro && confirmed.id !== 'night'}
+              <p class="pro-confirm-warn">
+                ZIK Pro est déjà actif jusqu'au {endLabel}. L'abonnement prend le relais
+                dès le paiement.
+              </p>
+            {/if}
+            <p class="pro-confirm-small">Vous allez être redirigé vers Stripe pour payer. Le reçu et la facture arrivent par e-mail.</p>
+            <div class="pro-confirm-btns">
+              <button class="pro-confirm-cancel" onclick={() => (confirmPlan = null)} disabled={busy !== null}>Annuler</button>
+              <button class="pro-confirm-pay" onclick={pay} disabled={busy !== null}>
+                {busy ? 'Redirection…' : `Payer ${confirmed.price}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      {/if}
 
       <div class="pro-included">
         <h3>Inclus dans toutes les formules</h3>
@@ -516,6 +585,108 @@
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+  }
+  .pro-header-active .pro-status-dot {
+    flex: none;
+  }
+  .pro-header-active {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .pro-confirm-back {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgb(0 0 0 / 0.6);
+  }
+  .pro-confirm {
+    width: min(460px, 100%);
+    padding: 26px 24px;
+    border: 1px solid rgb(var(--accent-rgb) / 0.45);
+    border-radius: 18px;
+    background: var(--bg2);
+    color: var(--text);
+  }
+  .pro-confirm h3 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .pro-confirm dl {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .pro-confirm dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border2);
+    font-size: 0.92rem;
+  }
+  .pro-confirm dt {
+    color: var(--mid);
+  }
+  .pro-confirm dd {
+    font-weight: 700;
+    text-align: right;
+  }
+  .pro-confirm dd span {
+    display: block;
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: var(--mid);
+  }
+  .pro-confirm-warn {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgb(245 158 11 / 0.12);
+    border: 1px solid rgb(245 158 11 / 0.45);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .pro-confirm-small {
+    font-size: 0.8rem;
+    color: var(--mid);
+    margin-bottom: 18px;
+  }
+  .pro-confirm-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .pro-confirm-cancel,
+  .pro-confirm-pay {
+    padding: 11px 20px;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .pro-confirm-cancel {
+    border: 1px solid var(--border2);
+    background: none;
+    color: var(--text);
+  }
+  .pro-confirm-pay {
+    border: none;
+    background: var(--accent);
+    color: var(--on-accent, #fff);
+  }
+  .pro-confirm button:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
   .pro-offers {
     display: grid;
