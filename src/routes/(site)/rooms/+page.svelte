@@ -31,6 +31,7 @@
   let filterQcm       = $state(false);
   let filterClassic   = $state(false);
   let filterOfficial  = $state(false);
+  let filterCards     = $state(false);
 
   const filteredPublic = $derived.by(() => {
     let list = publicRooms;
@@ -46,10 +47,11 @@
     if (filterQcm)       list = list.filter(r => r.game_mode === 'qcm');
     if (filterClassic)   list = list.filter(r => r.game_mode !== 'qcm');
     if (filterOfficial)  list = list.filter(r => r.is_official);
+    if (filterCards)     list = list.filter(r => r.cards);
     return list;
   });
 
-  const hasActiveFilters = $derived(filterAutoStart || filterActive || filterQcm || filterClassic || filterOfficial);
+  const hasActiveFilters = $derived(filterAutoStart || filterActive || filterQcm || filterClassic || filterOfficial || filterCards);
 
   // Multiple de 8 : chaque patchwork reste complet tant qu'il y a des rooms à charger
   let visibleCount = $state(24);
@@ -58,7 +60,7 @@
 
   $effect(() => {
     // Reset pagination quand les filtres/search changent
-    pubSearch; filterAutoStart; filterActive; filterQcm; filterClassic; filterOfficial;
+    pubSearch; filterAutoStart; filterActive; filterQcm; filterClassic; filterOfficial; filterCards;
     visibleCount = 24;
   });
 
@@ -376,8 +378,9 @@
       <button class="chip" class:on={filterQcm} aria-pressed={filterQcm} onclick={() => { filterQcm = !filterQcm; if (filterQcm) filterClassic = false; }}>QCM</button>
       <button class="chip" class:on={filterClassic} aria-pressed={filterClassic} onclick={() => { filterClassic = !filterClassic; if (filterClassic) filterQcm = false; }}>Classique</button>
       <button class="chip" class:on={filterOfficial} aria-pressed={filterOfficial} onclick={() => filterOfficial = !filterOfficial}>Officielles</button>
+      <button class="chip" class:on={filterCards} aria-pressed={filterCards} title="Rooms où l'on peut gagner des cartes" onclick={() => filterCards = !filterCards}>Cartes</button>
       {#if hasActiveFilters}
-        <button class="chip chip-reset" onclick={() => { filterActive = false; filterAutoStart = false; filterQcm = false; filterClassic = false; filterOfficial = false; }}>✕ Effacer les filtres</button>
+        <button class="chip chip-reset" onclick={() => { filterActive = false; filterAutoStart = false; filterQcm = false; filterClassic = false; filterOfficial = false; filterCards = false; }}>✕ Effacer les filtres</button>
       {/if}
     </div>
   {/if}
@@ -426,6 +429,7 @@
                   <div class="pw-top">
                     {#if r.online > 0}<span class="pw-live-tag"><span class="ldot"></span> Live</span>{/if}
                     {#if r.is_official}<span class="pw-badge pw-badge-official">✓ Officielle</span>{/if}
+                    {#if r.cards}<span class="pw-badge pw-badge-cards" title="On peut gagner des cartes ici">Cartes</span>{/if}
                     {#if r.game_mode === 'qcm'}<span class="pw-badge pw-badge-qcm">QCM</span>{:else}<span class="pw-badge pw-badge-classic">Classique</span>{/if}
                   </div>
                   <div class="pw-bottom">
@@ -481,6 +485,7 @@
                     <div class="pwh-badges">
                       {#if r.online > 0}<span class="pw-live-tag"><span class="ldot"></span>{r.online} en jeu</span>{/if}
                       {#if r.is_official}<span class="pw-badge pw-badge-official">✓ Off.</span>{/if}
+                      {#if r.cards}<span class="pw-badge pw-badge-cards">Cartes</span>{/if}
                       {#if r.game_mode === 'qcm'}<span class="pw-badge pw-badge-qcm">QCM</span>{:else}<span class="pw-badge pw-badge-classic">Classique</span>{/if}
                     </div>
                     <a
@@ -1099,6 +1104,7 @@
   }
   .pw-badge-official { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.55); background: var(--pw-chip-bg); }
   .pw-badge-qcm { color: var(--pw-ok); border-color: color-mix(in srgb, var(--pw-ok) 55%, transparent); background: var(--pw-chip-bg); }
+  .pw-badge-cards { color: var(--rarity-epic); border-color: color-mix(in srgb, var(--rarity-epic) 55%, transparent); background: var(--pw-chip-bg); }
   .pw-badge-classic { color: var(--pw-chip-mute); border-color: var(--pw-chip-mute-bd); background: var(--pw-chip-bg); }
   .pw-badge-live { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.5); background: var(--pw-chip-bg); }
   .pw-badge-auto { color: var(--pw-warn); border-color: color-mix(in srgb, var(--pw-warn) 45%, transparent); background: var(--pw-chip-bg); }

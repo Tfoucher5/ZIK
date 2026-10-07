@@ -10,6 +10,7 @@ export const NEWS = [
     items: [
       "Chaque titre du catalogue a maintenant sa carte, avec sa pochette, son album, son année et sa rareté, de Commune à Mythique. Plus un titre est écouté, plus sa carte est rare.",
       "Trouvez un titre en premier dans une room d'au moins 100 titres, en jouant à au moins deux joueurs connectés : sa carte est pour vous. Les cartes les plus rares demandent en plus de trouver très vite.",
+      "Sur la page des rooms, une pastille Cartes signale celles où l'on peut en gagner, avec un filtre pour n'afficher qu'elles. Les rooms où des joueurs connectés sont déjà présents passent en tête.",
       "Une carte gagnée est sécurisée quand vous avez joué la moitié de la partie. Le suivi s'affiche à côté du classement, et ZIK vous prévient avant de partir trop tôt.",
       "Votre collection se range par artiste et par album, avec une recherche et des filtres. Les cartes qui vous manquent apparaissent en silhouette pour compléter vos sets.",
       "Chaque carte a sa page à partager, et la collection de chaque joueur se consulte depuis son profil.",

@@ -19,6 +19,7 @@
     if (path.startsWith('/rooms')) return 'rooms';
     if (path.startsWith('/playlists')) return 'playlists';
     if (path.startsWith('/classements')) return 'classements';
+    if (path.startsWith('/cartes') || path.startsWith('/carte/') || path.startsWith('/collection')) return 'cartes';
     if (path.startsWith('/zikle')) return 'zikle';
     if (path.startsWith('/salon')) return 'salon';
     if (path.startsWith('/docs')) return 'docs';
@@ -54,9 +55,11 @@
     <span class="nav-sep" aria-hidden="true">·</span>
     <a href="/playlists"   class="nav-link" class:active={activeSection === 'playlists'}>Playlists</a>
     <span class="nav-sep" aria-hidden="true">·</span>
+    <a href="/cartes"      class="nav-link" class:active={activeSection === 'cartes'}>Cartes</a>
+    <span class="nav-sep" aria-hidden="true">·</span>
     <a href="/classements" class="nav-link" class:active={activeSection === 'classements'}>Classements</a>
     <span class="nav-sep" aria-hidden="true">·</span>
-    <a href="/docs"        class="nav-link" class:active={activeSection === 'docs'}>Aide</a>
+    <a href="/docs"        class="nav-link nav-link-aide" class:active={activeSection === 'docs'}>Aide</a>
   </div>
 
   <div class="nav-right">
@@ -92,6 +95,7 @@
           <a href="/settings" class="nav-dd-item">Param&egrave;tres</a>
 
           <span class="nav-dd-group nav-dd-mobile-only">Naviguer</span>
+          <a href="/cartes"      class="nav-dd-item nav-dd-mobile-only">Cartes</a>
           <a href="/classements" class="nav-dd-item nav-dd-mobile-only">Classements</a>
           <a href="/docs"        class="nav-dd-item nav-dd-mobile-only">Aide et r&egrave;gles</a>
           <a href="/soutenir"    class="nav-dd-item nav-dd-mobile-only">Soutenir ZIK</a>
