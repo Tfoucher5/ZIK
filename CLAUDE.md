@@ -37,6 +37,7 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 - **Supabase côté serveur** : `supabase` utilise la clé anonyme et subit les RLS (rooms et playlists privées invisibles). Lire avec `getAdminClient()` quand le serveur doit tout voir
 - **Vérifier avant de livrer** : `npx eslint .`, `npx vitest run`, `npx svelte-check`, et pour toute modif d'interface un contrôle visuel en desktop et en mobile (390 px)
 - **Tests locaux** : le serveur de dev tape sur la BDD de prod. Ne pas créer de données de test (une room `auto_start` lance une partie dès qu'on la rejoint) ; si ça arrive, les supprimer
+- Fais des fichiers réduits en taille, pas de gros fichiers. Privilégie les composants et modules réutilisables.
 
 ## Avant de coder
 
@@ -53,4 +54,4 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 
 - **Supabase** : pour inspecter/modifier la BDD (tables, SQL, migrations)
 - **Notion** : pour consulter les tâches et la doc projet
-- **Vercel** : pour les déploiements et logs
+- **Stripe** : pour le systeme de paiement (abonnements, factures)
