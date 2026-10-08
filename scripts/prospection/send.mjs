@@ -2,7 +2,7 @@
 // premiers contacts. Par défaut, affiche seulement ce qui partirait.
 // Usage : node scripts/prospection/send.mjs          (aperçu)
 //         node scripts/prospection/send.mjs --send   (envoi réel)
-import MailComposer from "nodemailer/lib/mail-composer/index.js";
+import MailComposer from "nodemailer/lib/mail-composer";
 import { db, smtp, imap, sleep, FROM_EMAIL } from "./lib.mjs";
 import { firstMail, followUp } from "./templates.mjs";
 

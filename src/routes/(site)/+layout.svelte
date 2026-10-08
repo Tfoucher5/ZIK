@@ -246,7 +246,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.14.5</span>
+    <span class="footer-version-tag">v3.14.6</span>
   </div>
 </footer>
 {/if}
