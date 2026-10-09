@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { sanitizeReportTracks, asUuidOrNull } from "$lib/reports/bug-report.js";
+import { reportTrackIssue } from "$lib/server/services/trackIssues.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -83,6 +84,22 @@ export async function POST({ request }) {
   });
 
   if (error) return json({ error: error.message }, { status: 500 });
+
+  // Un titre désigné part aussi dans la file « Réparer » de l'admin
+  if (type === "bug" && safeTracks) {
+    const kind = subject === "mauvaise-reponse" ? "answer" : "audio";
+    for (const t of safeTracks)
+      reportTrackIssue(
+        asUuidOrNull(t.trackId),
+        kind,
+        "player",
+        message?.trim() || null,
+        {
+          room: room_id || null,
+          videoId: t.videoId,
+        },
+      );
+  }
 
   // Notif email via Edge Function Supabase (non bloquant)
   sendReportNotification({

@@ -30,7 +30,13 @@ import {
 } from "./config.js";
 import { scheduleChatClear, cancelChatClear, addChatMessage } from "./chat.js";
 import { makeChoices, calcQcmPoints } from "./scoring.js";
-import { resolveVideo, getPreview, prefetchNextRound } from "./audio.js";
+import {
+  resolveVideo,
+  getPreview,
+  prefetchNextRound,
+  videoStart,
+} from "./audio.js";
+import { reportTrackIssue } from "../../services/trackIssues.js";
 
 // ─── Auto-start countdowns ────────────────────────────────────────────────────
 // Map: roomId -> { timer, startAt, seconds }
@@ -308,13 +314,7 @@ async function startNextRound(roomId, io) {
       const video = await resolveVideo(artist, track);
       if (video) {
         videoId = video.id;
-        const durationSec = Math.round((video.duration || 0) / 1000);
-        startSeconds = Math.max(
-          0,
-          Math.floor(
-            Math.random() * Math.max(1, durationSec - game.roundDuration - 10),
-          ),
-        );
+        startSeconds = videoStart(track, video, game.roundDuration);
       }
     }
 
@@ -397,6 +397,15 @@ async function startNextRound(roomId, io) {
     }
   } catch (err) {
     console.error(`Skip "${game.currentTrack?.title}":`, err.message);
+    reportTrackIssue(
+      game.currentTrack?.id,
+      "audio",
+      "auto",
+      "Aucune source audio en room",
+      {
+        room: roomId,
+      },
+    );
     // Titre sans source audio : on ne consomme pas la manche, on passe au titre suivant
     game.currentRound--;
     startNextRound(roomId, io);

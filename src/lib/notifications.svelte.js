@@ -49,6 +49,7 @@ export async function initNotifications(sb) {
     const t = await _getToken();
     if (t) _socket.emit("presence:hello", t);
   });
+  _socket.on("notify:refresh", refresh);
   _socket.on("notify", (n) => {
     _list = [n, ..._list].slice(0, 50);
     _unread += 1;

@@ -9,9 +9,24 @@
    *   phase: string, code: string, track: any, answerMode: string,
    *   volume: number, pro: boolean, history: any[],
    *   onVolume: (v: number) => void,
+   *   onReport: (reason: string) => void,
    * }}
    */
-  let { phase, code, track, answerMode, volume, pro, history, onVolume } = $props();
+  let { phase, code, track, answerMode, volume, pro, history, onVolume, onReport } = $props();
+
+  const RAISONS = ['Mauvaise version', 'Pas le bon titre', 'Démarre sur un blanc', 'Pas de son'];
+  let signale = $state(null);
+
+  // Un signalement par titre : on repart de zéro à la manche suivante
+  $effect(() => {
+    void track?.title;
+    signale = null;
+  });
+
+  function signaler(raison) {
+    signale = raison;
+    onReport(raison);
+  }
 </script>
 
 {#if phase === 'lobby'}
@@ -38,6 +53,20 @@
         {#if phase === 'round'}<small class="td-secret">Visible sur cet écran uniquement</small>{/if}
       </div>
     </div>
+    {#if phase === 'round' || phase === 'summary'}
+      <div class="td-report">
+        {#if signale}
+          <p>Merci, c'est noté : « {signale} ». On corrige la vidéo pour les prochaines fois.</p>
+        {:else}
+          <span>Un souci avec la vidéo ?</span>
+          <div class="td-report-btns">
+            {#each RAISONS as r (r)}
+              <button type="button" onclick={() => signaler(r)}>{r}</button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
   </section>
 {/if}
 
@@ -73,6 +102,15 @@
   .td-track-id b { display: block; font-size: 1.05rem; line-height: 1.3; }
   .td-track-id small { display: block; font-size: 0.76rem; color: var(--dim); margin-top: 4px; }
   .td-secret { font-style: italic; }
+
+  .td-report { margin-top: 14px; font-size: 0.82rem; color: var(--dim); }
+  .td-report p { color: var(--mid); }
+  .td-report-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .td-report-btns button {
+    padding: 6px 10px; border: 1px solid var(--border); border-radius: 3px;
+    background: var(--surface); color: var(--text); font: inherit; font-size: 0.78rem; cursor: pointer;
+  }
+  .td-report-btns button:hover { border-color: var(--accent); }
 
   .td-volume { display: block; }
   .td-volume span { display: block; font-size: 0.86rem; color: var(--mid); margin-bottom: 8px; }

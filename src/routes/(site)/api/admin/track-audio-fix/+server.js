@@ -17,7 +17,15 @@ async function checkAdmin(token) {
 export async function POST({ url, request }) {
   await checkAdmin(url.searchParams.get("token"));
 
-  const { trackId, previewUrl, externalId, youtubeId } = await request.json();
+  const {
+    trackId,
+    previewUrl,
+    externalId,
+    youtubeId,
+    youtubeStart,
+    artist,
+    title,
+  } = await request.json();
   if (!trackId) return json({ error: "trackId requis" }, { status: 400 });
 
   const patch = {};
@@ -34,6 +42,11 @@ export async function POST({ url, request }) {
       : null;
   }
   if (externalId) patch.external_id = externalId;
+  if (youtubeStart !== undefined)
+    patch.youtube_start =
+      Number.isInteger(youtubeStart) && youtubeStart >= 0 ? youtubeStart : null;
+  if (typeof artist === "string" && artist.trim()) patch.artist = artist.trim();
+  if (typeof title === "string" && title.trim()) patch.title = title.trim();
 
   if (!Object.keys(patch).length) {
     return json({ error: "Rien à mettre à jour" }, { status: 400 });
@@ -43,7 +56,14 @@ export async function POST({ url, request }) {
     .from("tracks")
     .update(patch)
     .eq("id", trackId);
-  if (dbError) return json({ error: dbError.message }, { status: 500 });
+  if (dbError) {
+    if (dbError.code === "23505")
+      return json(
+        { error: "Un titre identique (artiste + titre) existe déjà." },
+        { status: 409 },
+      );
+    return json({ error: dbError.message }, { status: 500 });
+  }
 
   return json({ ok: true });
 }

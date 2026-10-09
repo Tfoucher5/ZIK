@@ -4,6 +4,7 @@ import { ytdlAudioCache, audioUrlFor } from "../../ytdlCache.js";
 import { YTDLP_BIN, getYtAudioUrl } from "../../ytdlAudio.js";
 import { roomGames } from "../../state.js";
 import { fetchDeezerTrackPreview } from "../../services/deezer.js";
+import { pickStart } from "../../services/trackIssues.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -79,6 +80,17 @@ export async function resolveVideo(artist, track) {
     return info ?? { id: track.youtube_id, duration: 0, channel: { name: "" } };
   }
   return ytsSearch(artist, track.title);
+}
+
+// Départ de l'extrait : celui réglé dans l'admin pour une vidéo épinglée,
+// sinon au hasard dans la vidéo.
+export function videoStart(track, video, roundDuration) {
+  return pickStart({
+    pinned: track.youtube_id === video.id ? track.youtube_start : null,
+    durationSec: Math.round((video.duration || 0) / 1000),
+    roundDuration,
+    minStart: 0,
+  });
 }
 
 export function previewCacheKey(track) {
@@ -179,13 +191,7 @@ export async function prefetchNextRound(roomId, io) {
 
     if (video) {
       videoId = video.id;
-      const durationSec = Math.round((video.duration || 0) / 1000);
-      startSeconds = Math.max(
-        0,
-        Math.floor(
-          Math.random() * Math.max(1, durationSec - game.roundDuration - 10),
-        ),
-      );
+      startSeconds = videoStart(nextTrack, video, game.roundDuration);
       ytAudio = await Promise.race([
         getYtAudioUrl(videoId).catch(() => null),
         new Promise((resolve) => setTimeout(() => resolve(null), 12000)),

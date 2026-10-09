@@ -213,6 +213,7 @@
             {phase} {code} {track} answerMode={settings.answerMode}
             {volume} {pro} {history}
             onVolume={setVolume}
+            onReport={(reason) => send('salon_report_video', { reason })}
           />
         {:else if onglet === 'joueurs'}
           <TabPlayers

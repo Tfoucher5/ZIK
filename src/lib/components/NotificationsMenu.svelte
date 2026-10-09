@@ -74,12 +74,29 @@
       {:else}
         {#each notifState.list as n (n.id)}
           {@const uname = n.actor?.username || 'Un joueur'}
+          {@const fromZik = n.type === 'announcement' || n.type === 'news'}
           <div class="notif-item">
-            <a class="notif-av" href="/user/{uname}">
-              <img src={n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async">
-            </a>
+            {#if fromZik}
+              <span class="notif-av notif-zik" aria-hidden="true">Z</span>
+            {:else}
+              <a class="notif-av" href="/user/{uname}">
+                <img src={n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async">
+              </a>
+            {/if}
             <div class="notif-body">
-              {#if n.type === 'friend_request'}
+              {#if n.type === 'news'}
+                <p><b>Nouveau sur ZIK</b> : {n.payload?.title}</p>
+                <div class="notif-actions">
+                  <a class="notif-btn accept" href="/nouveautes">Voir</a>
+                </div>
+              {:else if n.type === 'announcement'}
+                <p><b>{n.payload?.title}</b>{#if n.payload?.body}<br>{n.payload.body}{/if}</p>
+                {#if n.payload?.url}
+                  <div class="notif-actions">
+                    <a class="notif-btn accept" href={n.payload.url}>Voir</a>
+                  </div>
+                {/if}
+              {:else if n.type === 'friend_request'}
                 <p><a href="/user/{uname}"><b>{uname}</b></a> t'a envoyé une demande d'ami</p>
                 <div class="notif-actions">
                   <button class="notif-btn accept" onclick={() => friendAction(n, 'accept')} disabled={busyId === n.id}>Accepter</button>
@@ -145,6 +162,10 @@
     width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
     border: 1px solid rgb(var(--accent-rgb) / 0.4); display: block;
   }
+  .notif-zik {
+    display: grid; place-items: center; background: var(--accent); color: var(--on-accent);
+    font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1rem;
+  }
   .notif-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   .notif-body { flex: 1; min-width: 0; }
@@ -159,7 +180,7 @@
     letter-spacing: 0.1em; text-transform: uppercase;
     padding: 5px 12px; border-radius: 99px; cursor: pointer;
     border: 1.5px solid var(--border2); background: none; color: var(--mid);
-    transition: all 0.15s;
+    transition: all 0.15s; text-decoration: none;
   }
   .notif-btn:hover { color: var(--text); border-color: rgb(var(--c-glass) / 0.4); }
   .notif-btn.accept { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }

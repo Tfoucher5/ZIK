@@ -17,6 +17,12 @@ import {
 } from "../services/playlist.js";
 import { makeTeams, cleanTeamName, teamStandings } from "./salonTeams.js";
 import { isPro } from "../services/pro.js";
+import {
+  reportTrackIssue,
+  getVideoSettings,
+  filterVideos,
+  pickStart,
+} from "../services/trackIssues.js";
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../proPlans.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -43,6 +49,7 @@ async function recordSalonGameStart(salon) {
         mode: salon.settings.answerMode === "multiple" ? "qcm" : "classic",
         source: "salon",
         origin: salon.origin,
+        host_id: salon.hostUserId,
       })
       .select("id")
       .single();
@@ -56,11 +63,14 @@ function recordSalonGameEnd(salon) {
   const id = salon.game.dbGameId;
   if (!id) return;
   salon.game.dbGameId = null;
+  const limitHits = salon.limitHits ?? 0;
+  salon.limitHits = 0;
   supabase
     .from("games")
     .update({
       ended_at: new Date().toISOString(),
       player_count: Object.keys(salon.players).length,
+      limit_hits: limitHits,
     })
     .eq("id", id)
     .then(({ error }) => {
@@ -631,20 +641,42 @@ function endRound(code, reason, io) {
 }
 
 async function searchTrackVideo(track, roundDuration) {
+  const { exclude, minStart } = await getVideoSettings();
+  // Vidéo choisie dans l'admin : elle prime sur la recherche
+  if (track.youtube_id) {
+    const pinned = await YouTube.getVideo(
+      `https://www.youtube.com/watch?v=${track.youtube_id}`,
+    ).catch(() => null);
+    return {
+      video: { id: track.youtube_id },
+      safeStart: pickStart({
+        pinned: track.youtube_start,
+        durationSec: Math.round((pinned?.duration || 0) / 1000),
+        roundDuration,
+        minStart,
+      }),
+    };
+  }
   const artist = track.mainArtist || track.artist;
-  const results = await YouTube.search(`${artist} - ${track.title}`, {
-    type: "video",
-    limit: 5,
-  });
+  const results = filterVideos(
+    await YouTube.search(`${artist} - ${track.title}`, {
+      type: "video",
+      limit: 5,
+    }),
+    exclude,
+  );
   if (!results.length) throw new Error("No video");
   const video =
     results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
-  const durationSec = Math.round((video.duration || 0) / 1000);
-  const safeStart = Math.max(
-    0,
-    Math.floor(Math.random() * Math.max(1, durationSec - roundDuration - 10)),
-  );
-  return { video, safeStart };
+  return {
+    video,
+    safeStart: pickStart({
+      pinned: null,
+      durationSec: Math.round((video.duration || 0) / 1000),
+      roundDuration,
+      minStart,
+    }),
+  };
 }
 
 // Cherche la vidéo du prochain titre et l'annonce à l'hôte, qui la met en
@@ -736,6 +768,7 @@ async function startNextRound(code, io) {
       ));
     }
 
+    game.currentVideo = { id: video.id, start: safeStart };
     game.phase = "round";
     game.timerActive = false;
     game.timerValue = 0;
@@ -779,6 +812,15 @@ async function startNextRound(code, io) {
     prefetchNextVideo(code, io);
   } catch (err) {
     console.error(`Salon skip "${track.title}":`, err.message);
+    reportTrackIssue(
+      track.id,
+      "video",
+      "auto",
+      "Aucune vidéo trouvée en salon",
+      {
+        salon: code,
+      },
+    );
     // Titre sans source : on ne consomme pas la manche, on passe au titre suivant
     game.currentRound--;
     startNextRound(code, io);
@@ -1226,6 +1268,7 @@ export function registerSalon(io) {
         !salon.pro &&
         Object.keys(salon.players).length >= FREE_MAX_PLAYERS
       ) {
+        salon.limitHits = (salon.limitHits ?? 0) + 1;
         io.to(`salon:ctrl:${code}`).emit("salon_pro_required", {
           feature: "players",
         });
@@ -1371,6 +1414,25 @@ export function registerSalon(io) {
       clearTimeout(salon.game.breakTimer);
       salon.game.breakTimer = null;
       startNextRound(code, io);
+    });
+
+    // La régie signale une vidéo fausse ou mal calée : elle part dans la file
+    // « Réparer » de l'admin avec la vidéo exacte qui passait.
+    socket.on("salon_report_video", ({ reason } = {}) => {
+      const salon = adminSalon(socket);
+      const track = salon?.game.currentTrack;
+      if (!track || !["round", "summary"].includes(salon.game.phase)) return;
+      reportTrackIssue(
+        track.id,
+        "video",
+        "host",
+        String(reason ?? "").slice(0, 200) || null,
+        {
+          salon: salon.code,
+          videoId: salon.game.currentVideo?.id ?? null,
+          start: salon.game.currentVideo?.start ?? null,
+        },
+      );
     });
 
     // ── Player submits free text answer ──────────────────────────────────────
