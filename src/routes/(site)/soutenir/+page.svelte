@@ -12,7 +12,6 @@
 <svelte:head>
   <title>ZIK - Soutenir le projet</title>
   <meta name="description" content="ZIK est gratuit et le restera. Si le blind test te plaît, tu peux aider à payer le serveur." />
-  <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/soutenir" />
   <JsonLd json={breadcrumbJsonLd} />
 </svelte:head>
