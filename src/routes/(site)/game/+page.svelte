@@ -1529,6 +1529,17 @@
   reporterName={USERNAME}
   {history}
   currentRound={currentRoundInfo}
+  getGameContext={() => ({
+    room: roomLabel || ROOM_ID,
+    mode: gameMode,
+    round: roundInfo,
+    timer: timerSecs,
+    players: players.length,
+    guest: IS_GUEST,
+    connected: socket?.connected ?? false,
+    screen: gameoverShow ? 'scores de fin' : summaryShow ? 'résumé de manche' : 'manche',
+    answer: { artist: slotArtist.state, title: slotTitle.state },
+  })}
 />
 
 <!-- Inviter des amis dans la room courante -->

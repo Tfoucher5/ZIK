@@ -5,6 +5,10 @@
   import RoundPlay from './RoundPlay.svelte';
   import SummaryView from './SummaryView.svelte';
   import FeedbackOverlay from './FeedbackOverlay.svelte';
+  import { createSupabaseClient } from '$lib/supabase.js';
+
+  let { data } = $props();
+  const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
 
   // Join form
   let codeInput     = $state('');
@@ -105,11 +109,12 @@
 
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
 
-    socket.on('connect', () => {
+    socket.on('connect', async () => {
       // Jeton de ce téléphone : lui seul peut reprendre sa place après une coupure
       let token = null;
       try { token = localStorage.getItem('zik_salon_player_' + c); } catch { /* stockage indisponible */ }
-      socket.emit('salon_join_player', { code: c, username: u, token });
+      const auth = sb ? (await sb.auth.getSession().catch(() => null))?.data.session?.access_token : null;
+      socket.emit('salon_join_player', { code: c, username: u, token, auth });
     });
 
     socket.on('salon_joined', (data) => {

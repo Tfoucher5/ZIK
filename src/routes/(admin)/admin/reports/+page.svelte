@@ -6,7 +6,7 @@
   import Sheet from '$lib/admin/Sheet.svelte';
   import { ago } from '$lib/admin/stats-utils.js';
   import { avatarOf } from '$lib/admin/players.js';
-  import { REPORT_TYPES, TRACK_SUBJECTS, subjectLabel } from '$lib/admin/reports.js';
+  import { REPORT_TYPES, TRACK_SUBJECTS, subjectLabel, contextRows } from '$lib/admin/reports.js';
 
   let { data, form } = $props();
 
@@ -138,6 +138,29 @@
     </dl>
 
     <blockquote class="msg" class:empty={!r.message}>{r.message || 'Pas de message : le joueur a seulement désigné un titre.'}</blockquote>
+
+    {#if r.context}
+      {@const rows = contextRows(r.context)}
+      <section class="ctx">
+        <h4>Contexte au moment de l’envoi</h4>
+        <dl class="facts">
+          {#each rows as [k, v] (k + v)}
+            <div><dt>{k}</dt><dd>{v}</dd></div>
+          {/each}
+        </dl>
+        {#if r.context.errors?.length}
+          <h4>Erreurs juste avant</h4>
+          <ul class="errs">
+            {#each r.context.errors as e, i (i)}
+              <li><span class="a-muted">{new Date(e.at).toLocaleTimeString('fr-FR')}</span> {e.msg}</li>
+            {/each}
+          </ul>
+        {/if}
+        {#if r.context.userAgent}<p class="a-muted ua">{r.context.userAgent}</p>{/if}
+      </section>
+    {:else if r.type !== 'contact'}
+      <p class="a-muted ua">Envoyé avant l’ajout du contexte automatique.</p>
+    {/if}
 
     {#if r.tracks.length}
       <section class="tracks">
@@ -310,6 +333,10 @@
   .person .a-avatar { width: 24px; height: 24px; }
   .mail { color: var(--a-cyan); }
   .extra { font-size: 0.8rem; color: var(--a-muted); }
+  .ctx { display: grid; gap: 10px; }
+  .ctx h4 { font-size: 0.8rem; font-weight: 700; color: var(--a-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .errs { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-family: ui-monospace, monospace; font-size: 0.78rem; color: var(--a-bad); overflow-wrap: anywhere; }
+  .ua { font-size: 0.72rem; overflow-wrap: anywhere; }
   .msg { padding: 14px 16px; border-left: 3px solid var(--a-accent); border-radius: 4px 12px 12px 4px; background: var(--a-surface2); font-size: 1rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
   .msg.empty { color: var(--a-dim); font-style: italic; }
   .tracks { display: grid; gap: 10px; }

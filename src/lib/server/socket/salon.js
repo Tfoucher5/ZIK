@@ -6,7 +6,7 @@ import { randomBytes } from "crypto";
 import { YouTube } from "youtube-sr";
 
 import { supabase } from "../config.js";
-import { userClient } from "../middleware/auth.js";
+import { userClient, verifyToken } from "../middleware/auth.js";
 import { salonRooms, setIO, getIO } from "../state.js";
 import {
   buildTrackFromRow,
@@ -59,10 +59,33 @@ async function recordSalonGameStart(salon) {
   }
 }
 
+function recordSalonPlayers(gameId, salon) {
+  const teamName = (id) =>
+    salon.settings.teams?.find((t) => t.id === id)?.name ?? null;
+  const rows = Object.values(salon.players)
+    .sort((a, b) => b.score - a.score)
+    .map((p, i) => ({
+      game_id: gameId,
+      user_id: p.userId ?? null,
+      username: p.username,
+      score: p.score,
+      rank: i + 1,
+      team: teamName(p.team),
+    }));
+  if (!rows.length) return;
+  supabase
+    .from("salon_players")
+    .insert(rows)
+    .then(({ error }) => {
+      if (error) console.error("[salon] joueurs de la partie:", error.message);
+    });
+}
+
 function recordSalonGameEnd(salon) {
   const id = salon.game.dbGameId;
   if (!id) return;
   salon.game.dbGameId = null;
+  recordSalonPlayers(id, salon);
   const limitHits = salon.limitHits ?? 0;
   salon.limitHits = 0;
   supabase
@@ -1248,7 +1271,9 @@ export function registerSalon(io) {
     });
 
     // ── Player joins ──────────────────────────────────────────────────────────
-    socket.on("salon_join_player", ({ code, username, token }) => {
+    socket.on("salon_join_player", async ({ code, username, token, auth }) => {
+      // Compte du joueur s'il est connecté : sa fiche admin liste ses salons
+      const account = auth ? await verifyToken(auth).catch(() => null) : null;
       username = cleanUsername(username);
       if (!username)
         return socket.emit("salon_error", { message: "Pseudo requis." });
@@ -1300,6 +1325,7 @@ export function registerSalon(io) {
         existing._dcTimer = null;
         existing._disconnected = false;
         existing.socketId = socket.id;
+        if (account) existing.userId = account.id;
 
         socket.join(`salon:${code}`);
         socket.join(`salon:players:${code}`);
@@ -1350,6 +1376,7 @@ export function registerSalon(io) {
       }
 
       const player = addPlayer(salon, username, socket.id);
+      if (account) player.userId = account.id;
 
       socket.join(`salon:${code}`);
       socket.join(`salon:players:${code}`);

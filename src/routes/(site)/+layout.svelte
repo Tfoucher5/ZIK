@@ -8,6 +8,7 @@
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
   import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
+  import { watchClientErrors } from '$lib/reports/context.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -73,6 +74,7 @@
   }
 
   onMount(async () => {
+    watchClientErrors();
     if (!sb) { authReady = true; return; }
     try {
       const { data: { session } } = await sb.auth.getSession();
@@ -258,4 +260,4 @@
   onClose={() => { authOpen = false; }}
 />
 
-<ContactModal bind:open={contactOpen} />
+<ContactModal bind:open={contactOpen} userId={currentUser?.id ?? null} />

@@ -1,7 +1,9 @@
 <script>
   import Modal from '$lib/components/Modal.svelte';
+  import { MIN_REPORT_MESSAGE } from '$lib/reports/bug-report.js';
+  import { collectReportContext } from '$lib/reports/context.js';
 
-  let { open = $bindable(false) } = $props();
+  let { open = $bindable(false), userId = null } = $props();
 
   let name    = $state('');
   let email   = $state('');
@@ -12,7 +14,11 @@
   let error   = $state('');
 
   async function submit() {
-    if (!email.trim() || !message.trim()) { error = 'Email et message requis.'; return; }
+    if (!email.trim()) { error = 'Email requis pour pouvoir te répondre.'; return; }
+    if (message.trim().length < MIN_REPORT_MESSAGE) {
+      error = `Explique ta demande en quelques mots (${MIN_REPORT_MESSAGE} caractères minimum).`;
+      return;
+    }
     error = '';
     loading = true;
     try {
@@ -21,10 +27,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'contact',
+          reporter_id: userId,
           reporter_name: name.trim() || null,
           reporter_email: email.trim(),
           subject: subject.trim() || null,
           message: message.trim(),
+          metadata: { context: collectReportContext() },
         }),
       });
       if (!res.ok) { const d = await res.json(); error = d.error || 'Erreur.'; }

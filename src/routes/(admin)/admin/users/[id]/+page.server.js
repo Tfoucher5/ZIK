@@ -28,6 +28,8 @@ export async function load({ params, locals }) {
     unlockedRes,
     catalogRes,
     auditRes,
+    hostedRes,
+    salonPlayedRes,
   ] = await Promise.all([
     sb.from("profiles").select("*").eq("id", id).single(),
     sb.auth.admin.getUserById(id),
@@ -84,6 +86,23 @@ export async function load({ params, locals }) {
       .eq("target_id", id)
       .order("created_at", { ascending: false })
       .limit(30),
+    sb
+      .from("games")
+      .select(
+        "id, room_id, started_at, ended_at, rounds, player_count, limit_hits",
+      )
+      .eq("source", "salon")
+      .eq("host_id", id)
+      .order("started_at", { ascending: false })
+      .limit(500),
+    sb
+      .from("salon_players")
+      .select(
+        "id, score, rank, team, games(id, room_id, started_at, player_count)",
+      )
+      .eq("user_id", id)
+      .order("created_at", { ascending: false })
+      .limit(500),
   ]);
 
   if (profileRes.error || !profileRes.data)
@@ -154,6 +173,10 @@ export async function load({ params, locals }) {
       code: g.games.room_id,
       room: rooms[g.games.room_id] ?? null,
     })),
+    salon: {
+      hosted: hostedRes.data ?? [],
+      played: (salonPlayedRes.data ?? []).filter((p) => p.games),
+    },
     achievements: (unlockedRes.data ?? []).map((u) => ({
       ...u,
       name: catalog[u.achievement_id]?.name ?? u.achievement_id,

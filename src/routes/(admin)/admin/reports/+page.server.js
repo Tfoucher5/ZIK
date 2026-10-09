@@ -88,13 +88,14 @@ export async function load() {
 
   return {
     reports: rows.map((r) => {
-      const { tracks: reported, ...extra } = r.metadata ?? {};
+      const { tracks: reported, context, ...extra } = r.metadata ?? {};
       return {
         ...r,
         reporter: profiles[r.reporter_id] ?? null,
         reported: profiles[r.reported_user_id] ?? null,
         room: rooms[r.room_id] ?? null,
         extra,
+        context: context ?? null,
         tracks: (reported ?? []).map((t) => ({
           round: t.round,
           answer: t.answer,

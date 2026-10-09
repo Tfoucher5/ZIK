@@ -11,8 +11,10 @@
    *   reporterName    — username de celui qui signale
    *   history         — manches terminées de la partie en cours
    *   currentRound    — { round, trackId, videoId } de la manche active, ou null
+   *   getGameContext  — renvoie l'état de la partie au moment du signalement
    */
-  import { BUG_MOTIFS, buildTrackChoices, motifCibleUnTitre } from '$lib/reports/bug-report.js';
+  import { BUG_MOTIFS, buildTrackChoices, motifCibleUnTitre, MIN_REPORT_MESSAGE } from '$lib/reports/bug-report.js';
+  import { collectReportContext } from '$lib/reports/context.js';
 
   let {
     open            = $bindable(false),
@@ -24,6 +26,7 @@
     reporterName    = '',
     history         = [],
     currentRound    = null,
+    getGameContext  = null,
   } = $props();
 
   const MOTIFS_USER = [
@@ -56,13 +59,14 @@
   });
 
   async function submit() {
-    // Un titre muet désigné vaut description. Pour une mauvaise réponse, le
-    // titre ne dit pas ce qui est faux : le message reste nécessaire.
-    const messageRequis = type !== 'bug' || bugMotif !== 'audio' || selection.length === 0;
-    if (messageRequis && !message.trim()) { error = 'Décris le problème.'; return; }
+    if (message.trim().length < MIN_REPORT_MESSAGE) {
+      error = `Explique le problème en quelques mots (${MIN_REPORT_MESSAGE} caractères minimum).`;
+      return;
+    }
     error = '';
     loading = true;
     try {
+      const context = collectReportContext({ game: getGameContext?.() ?? null });
       const body = type === 'user'
         ? {
             type: 'user',
@@ -73,6 +77,7 @@
             room_id: roomId || null,
             subject: motif,
             message: message.trim(),
+            metadata: { context },
           }
         : {
             type: 'bug',
@@ -81,16 +86,17 @@
             room_id: roomId || null,
             subject: bugMotif,
             message: message.trim(),
-            metadata: cibleUnTitre
-              ? {
-                  tracks: selection.map(c => ({
-                    trackId: c.trackId,
-                    videoId: c.videoId,
-                    round: c.round,
-                    answer: c.answer,
-                  })),
-                }
-              : {},
+            metadata: {
+              context,
+              ...(cibleUnTitre && {
+                tracks: selection.map(c => ({
+                  trackId: c.trackId,
+                  videoId: c.videoId,
+                  round: c.round,
+                  answer: c.answer,
+                })),
+              }),
+            },
           };
 
       const res = await fetch('/api/reports', {
@@ -205,12 +211,7 @@
 
       <div class="rm-field">
         <label class="rm-label" for="rm-message">
-          Description
-          {#if type === 'bug' && bugMotif === 'audio' && selection.length}
-            <span class="rm-opt">(facultatif)</span>
-          {:else}
-            <span class="rm-req">*</span>
-          {/if}
+          Description <span class="rm-req">*</span>
         </label>
         <textarea
           id="rm-message"
@@ -391,7 +392,6 @@
   background: var(--border, rgb(var(--c-glass) / 0.1));
 }
 .rm-req { color: var(--accent, #ff00ff); }
-.rm-opt { color: var(--dim, #64748b); font-weight: 400; }
 
 .rm-tracks {
   display: flex;

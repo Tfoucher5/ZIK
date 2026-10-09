@@ -1,7 +1,14 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
-import { sanitizeReportTracks, asUuidOrNull } from "$lib/reports/bug-report.js";
+import {
+  sanitizeReportTracks,
+  sanitizeReportContext,
+  asUuidOrNull,
+  MIN_REPORT_MESSAGE,
+} from "$lib/reports/bug-report.js";
 import { reportTrackIssue } from "$lib/server/services/trackIssues.js";
+import { roomGames, salonRooms } from "$lib/server/state.js";
+import { NEWS } from "$lib/news.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -16,6 +23,40 @@ async function sendReportNotification(report) {
     },
     body: JSON.stringify(report),
   });
+}
+
+// Ce que le serveur sait de la room au moment du signalement
+function roomSnapshot(code) {
+  const room = code && roomGames[code];
+  if (room) {
+    const g = room.game;
+    return {
+      kind: "room",
+      active: g.isActive,
+      round: `${g.currentRound}/${g.maxRounds}`,
+      mode: room.game_mode,
+      players: Object.keys(room.players).length,
+      track: g.currentTrack
+        ? `${g.currentTrack.artist} · ${g.currentTrack.title}`
+        : null,
+      trackId: g.currentTrack?.id ?? null,
+    };
+  }
+  const salon = code && salonRooms[code];
+  if (salon) {
+    const g = salon.game;
+    return {
+      kind: "salon",
+      phase: g.phase,
+      round: `${g.currentRound}/${salon.settings.maxRounds}`,
+      players: Object.keys(salon.players).length,
+      pro: salon.pro,
+      track: g.currentTrack
+        ? `${g.currentTrack.artist} · ${g.currentTrack.title}`
+        : null,
+    };
+  }
+  return null;
 }
 
 export async function POST({ request }) {
@@ -46,13 +87,25 @@ export async function POST({ request }) {
   const safeTracks = metadata?.tracks
     ? sanitizeReportTracks(metadata.tracks)
     : null;
-  const safeMetadata = safeTracks ? { ...metadata, tracks: safeTracks } : {};
+  const safeMetadata = {
+    ...(safeTracks && { tracks: safeTracks }),
+    context: {
+      ...sanitizeReportContext(metadata?.context),
+      version: NEWS[0]?.version ?? null,
+      userAgent:
+        metadata?.context?.userAgent ?? request.headers.get("user-agent"),
+      server: roomSnapshot(room_id),
+    },
+  };
 
-  // Un titre désigné vaut description : le message n'est alors plus exigé.
-  const titreDesigne =
-    type === "bug" && subject === "audio" && safeTracks?.length > 0;
-  if (!message?.trim() && !titreDesigne) {
-    return json({ error: "Message requis" }, { status: 400 });
+  if (
+    typeof message !== "string" ||
+    message.trim().length < MIN_REPORT_MESSAGE
+  ) {
+    return json(
+      { error: "Explique le problème en quelques mots." },
+      { status: 400 },
+    );
   }
   if (type === "contact" && !reporter_email?.trim()) {
     return json({ error: "Email requis pour un contact" }, { status: 400 });
