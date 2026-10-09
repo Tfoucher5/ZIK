@@ -7,8 +7,49 @@ import {
   clearVideoSettingsCache,
 } from "$lib/server/services/trackIssues.js";
 import { broadcastNotification } from "$lib/server/services/notifications.js";
+import { ADMIN_ALERTS } from "$lib/server/services/adminAlerts.js";
+import { ready as pushReady, deliver } from "$lib/server/services/push.js";
 
 export const actions = {
+  alerts: async ({ request, locals }) => {
+    const form = await request.formData();
+    const sb = getAdminClient();
+    const { data } = await sb
+      .from("profiles")
+      .select("notif_prefs")
+      .eq("id", locals.adminId)
+      .maybeSingle();
+    const prefs = { ...(data?.notif_prefs ?? {}) };
+    for (const key of Object.keys(ADMIN_ALERTS))
+      prefs[key] = form.get(key) === "on";
+    const { error } = await sb
+      .from("profiles")
+      .update({ notif_prefs: prefs })
+      .eq("id", locals.adminId);
+    if (error) return fail(500, { alertsError: error.message });
+    return { alertsSaved: true };
+  },
+
+  alertTest: async ({ locals }) => {
+    if (!pushReady())
+      return fail(500, { alertsError: "Clés VAPID absentes du serveur." });
+    const { data } = await getAdminClient()
+      .from("push_subscriptions")
+      .select("id, endpoint, p256dh, auth")
+      .eq("user_id", locals.adminId);
+    if (!data?.length)
+      return fail(400, {
+        alertsError: "Aucun appareil abonné : active d'abord les alertes ici.",
+      });
+    const sent = await deliver(data, {
+      title: "Test des alertes ZIK",
+      body: "Si tu lis ça, les alertes arrivent bien sur cet appareil.",
+      url: "/admin",
+      tag: `test:${Date.now()}`,
+    });
+    return { alertTestSent: sent };
+  },
+
   maintenance: async ({ request, locals }) => {
     const form = await request.formData();
     const enabled = form.get("enabled") === "on";
@@ -87,9 +128,34 @@ export const actions = {
   },
 };
 
-export async function load() {
+export async function load({ locals }) {
+  const sb = getAdminClient();
+  const [maintenance, video, profileRes, devicesRes] = await Promise.all([
+    getMaintenance(),
+    getVideoSettings(),
+    sb
+      .from("profiles")
+      .select("notif_prefs")
+      .eq("id", locals.adminId)
+      .maybeSingle(),
+    sb
+      .from("push_subscriptions")
+      .select("user_agent, last_success_at, created_at")
+      .eq("user_id", locals.adminId)
+      .order("created_at", { ascending: false }),
+  ]);
+  const prefs = profileRes.data?.notif_prefs ?? {};
   return {
-    maintenance: await getMaintenance(),
-    video: await getVideoSettings(),
+    maintenance,
+    video,
+    alerts: {
+      ready: pushReady(),
+      kinds: Object.entries(ADMIN_ALERTS).map(([key, label]) => ({
+        key,
+        label,
+        on: prefs[key] === true,
+      })),
+      devices: devicesRes.data ?? [],
+    },
   };
 }

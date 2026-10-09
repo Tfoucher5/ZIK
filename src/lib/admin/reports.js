@@ -11,6 +11,8 @@ const MOTIFS = Object.fromEntries(BUG_MOTIFS.map((m) => [m.value, m.label]));
 export const TRACK_SUBJECTS = ["audio", "mauvaise-reponse"];
 
 export function subjectLabel(r) {
+  if (r.type === "bug" && r.subject === "salon")
+    return `Aide demandée depuis le salon ${r.room_id ?? ""}`.trim();
   if (r.type === "bug" && r.subject === "card")
     return `Carte n° ${r.metadata?.card ?? r.extra?.card ?? "?"} à corriger`;
   if (r.type === "bug" && r.subject)
@@ -48,6 +50,24 @@ export function describeDevice(ua) {
   const app = /FBAN|FBAV|Instagram|TikTok/.test(ua) ? " (dans une appli)" : "";
   return `${browser} sur ${os}${app}`;
 }
+
+// Report d'un salon dont l'hôte a le Pro : il passe avant les autres
+export function isPrioritySalon(r) {
+  return (
+    r.type === "bug" &&
+    r.subject === "salon" &&
+    (r.context ?? r.metadata?.context)?.server?.pro === true
+  );
+}
+
+const SALON_ROLES = { host: "écran TV", regie: "régie", player: "téléphone" };
+const SALON_PHASES = {
+  lobby: "en attente",
+  starting: "lancement",
+  round: "manche en cours",
+  summary: "réponse affichée",
+  gameover: "partie finie",
+};
 
 const SLOT = { found: "trouvé", wrong: "faux", revealed: "révélé" };
 const yes = (v) => (v ? "oui" : "non");
@@ -95,7 +115,7 @@ export function contextRows(c) {
       s.kind &&
         [
           s.kind === "salon"
-            ? `salon ${s.phase}`
+            ? `salon ${SALON_PHASES[s.phase] ?? s.phase}${s.paused ? ", en pause" : ""}`
             : s.active
               ? "partie en cours"
               : "pas de partie",
@@ -107,6 +127,55 @@ export function contextRows(c) {
     ],
     ["Titre en cours", s.track],
   ];
+  if (c.salon)
+    rows.push([
+      "Envoyé depuis",
+      [
+        SALON_ROLES[c.salon.role] ?? c.salon.role,
+        c.salon.connected === false && "déconnecté du salon",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    ]);
+  if (s.kind === "salon") {
+    rows.push(
+      [
+        "Hôte",
+        s.hostConnected == null
+          ? null
+          : s.hostConnected
+            ? `connecté (${s.screens} écran TV, ${s.controls} régie)`
+            : "aucun écran ni régie connecté",
+      ],
+      [
+        "Musique",
+        s.playlistIds &&
+          `${s.playlistIds.length} playlist${s.playlistIds.length > 1 ? "s" : ""} · ${s.trackCount} titres`,
+      ],
+      [
+        "Réglages",
+        s.settings &&
+          [
+            s.settings.answerMode === "multiple" ? "QCM" : "réponse libre",
+            `${s.settings.roundDuration} s par manche`,
+            s.settings.manualNext ? "suite à la main" : "suite auto",
+            s.settings.teams?.length && `${s.settings.teams.length} équipes`,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+      ],
+      [
+        "Joueurs du salon",
+        s.roster?.length
+          ? s.roster
+              .map(
+                (p) => `${p.username} ${p.score}${p.offline ? " (parti)" : ""}`,
+              )
+              .join(", ")
+          : null,
+      ],
+    );
+  }
   for (const a of c.audio ?? [])
     rows.push([
       a.kind === "video" ? "Vidéo" : "Son",

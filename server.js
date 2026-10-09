@@ -17,6 +17,7 @@ import { dailyCardsMaintenance } from "./src/lib/server/services/cards.js";
 import { startPushSchedule } from "./src/lib/server/services/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
 import { announceLatestNews } from "./src/lib/server/services/notifications.js";
+import { startErrorWatch } from "./src/lib/server/services/adminAlerts.js";
 
 const _origError = console.error.bind(console);
 const _origWarn = console.warn.bind(console);
@@ -98,6 +99,7 @@ setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toute
 setTimeout(dailyCardsMaintenance, 60 * 1000);
 setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
 startPushSchedule();
+startErrorWatch();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

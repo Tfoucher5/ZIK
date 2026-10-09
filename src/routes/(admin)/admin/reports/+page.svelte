@@ -18,6 +18,7 @@
   const TYPES = [
     ['all', 'Tous'],
     ['titre', 'Titres'],
+    ['salon', 'Salons'],
     ['bug', 'Bugs'],
     ['contact', 'Contacts'],
     ['user', 'Joueurs signalés'],
@@ -40,8 +41,10 @@
   let armDel = $state(false);
 
   const isTrack = (r) => r.tracks.length > 0 || (r.type === 'bug' && TRACK_SUBJECTS.includes(r.subject));
+  const isSalon = (r) => r.type === 'bug' && r.subject === 'salon';
   const matchType = (r, t) =>
-    t === 'all' || (t === 'titre' ? isTrack(r) : t === 'bug' ? r.type === 'bug' && !isTrack(r) : r.type === t);
+    t === 'all' ||
+    (t === 'titre' ? isTrack(r) : t === 'salon' ? isSalon(r) : t === 'bug' ? r.type === 'bug' && !isTrack(r) && !isSalon(r) : r.type === t);
   const matchState = (r, s) => s === 'all' || (s === 'todo' ? r.status === 'pending' : r.status !== 'pending');
 
   const shown = $derived(data.reports.filter((r) => matchState(r, etat) && matchType(r, type)));
@@ -96,9 +99,17 @@
       <div class="tags">
         <em class="a-tag accent">{REPORT_TYPES[r.type] ?? r.type}</em>
         <em class="a-tag {STATUS[r.status]?.[1] ?? ''}">{STATUS[r.status]?.[0] ?? r.status}</em>
+        {#if r.priority}<em class="a-tag bad">Pro · prioritaire</em>{/if}
       </div>
       <h3>{subjectLabel(r)}</h3>
       <p class="a-muted when">{full(r.created_at)} · {ago(r.created_at)}</p>
+      {#if isSalon(r)}
+        {#if r.salonLive}
+          <a class="a-btn primary live-btn" href="/admin/salons?code={r.room_id}"><span class="live-dot"></span>Ouvrir le salon en direct</a>
+        {:else}
+          <p class="a-muted when">Le salon {r.room_id} est terminé.</p>
+        {/if}
+      {/if}
     </header>
 
     <dl class="facts">
@@ -125,7 +136,7 @@
       {/if}
       {#if r.room_id}
         <div>
-          <dt>Room</dt>
+          <dt>{isSalon(r) ? 'Salon' : 'Room'}</dt>
           <dd>{#if r.room}{r.room.emoji ?? ''} {r.room.name} <span class="a-muted">· {r.room_id}</span>{:else}{r.room_id}{/if}</dd>
         </div>
       {/if}
@@ -261,7 +272,7 @@
           <ul class="a-list">
             {#each shown as r (r.id)}
               <li>
-                <button class="a-row msg-row" class:on={isDesk && r.id === selId} class:unread={r.status === 'pending'} type="button" onclick={() => pick(r)} aria-current={isDesk && r.id === selId ? 'true' : undefined}>
+                <button class="a-row msg-row" class:prio={r.priority && r.status === 'pending'} class:on={isDesk && r.id === selId} class:unread={r.status === 'pending'} type="button" onclick={() => pick(r)} aria-current={isDesk && r.id === selId ? 'true' : undefined}>
                   <span class="dot" aria-hidden="true"></span>
                   <span class="a-row-main">
                     <span class="a-row-title">{who(r)}</span>
@@ -270,6 +281,8 @@
                   </span>
                   <span class="right">
                     <span class="a-muted t">{ago(r.created_at)}</span>
+                    {#if r.priority}<em class="a-tag accent">Pro</em>{/if}
+                    {#if r.salonLive}<em class="a-tag good">En direct</em>{/if}
                     {#if r.tracks.some((t) => t.toFix)}<em class="a-tag warn">Titre</em>{/if}
                     {#if r.admin_reply}<em class="a-tag good">Répondu</em>{/if}
                   </span>
@@ -308,7 +321,11 @@
   .a-kpi.hot { border-color: rgba(251, 191, 36, 0.4); background: var(--a-warn-soft); }
 
   .msg-row { align-items: flex-start; }
+  .msg-row.prio { border-color: rgba(248, 113, 113, 0.45); background: var(--a-bad-soft); }
   .msg-row.on { border-color: var(--a-accent); background: var(--a-accent-soft); }
+  .live-btn { justify-self: start; gap: 8px; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: live 1.4s ease-in-out infinite; }
+  @keyframes live { 50% { opacity: 0.3; } }
   .dot { flex: 0 0 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: transparent; }
   .unread .dot { background: var(--a-warn); }
   .unread .a-row-title { color: var(--a-fg); }

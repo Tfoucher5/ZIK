@@ -3,7 +3,7 @@
 
 export const NEWS = [
   {
-    date: "2026-10-05",
+    date: "2026-10-09",
     version: "3.15.0",
     tag: "Nouveauté",
     title: "Les cartes musicales arrivent",
@@ -19,7 +19,7 @@ export const NEWS = [
     ],
   },
   {
-    date: "2026-10-05",
+    date: "2026-10-09",
     version: "3.15.0",
     tag: "Nouveauté",
     title: "Les notifications arrivent sur ton téléphone",
@@ -28,6 +28,27 @@ export const NEWS = [
       "Tu choisis ce que tu reçois : amis et invitations, cartes, défi de la semaine, et un rappel quotidien pour le Zikle (coupé par défaut).",
       "Quand il ne te manque plus qu'une carte pour finir un album ou un artiste, ZIK te le dit et t'indique une room où elle passe.",
       "Nouveau défi de la semaine : 500 cartes à gagner tous ensemble. Il entre dans la rotation des défis communautaires.",
+    ],
+  },
+  {
+    date: "2026-10-09",
+    version: "3.15.0",
+    tag: "Amélioration",
+    title: "Mode Salon : de l'aide pendant la soirée",
+    items: [
+      "Un bouton Besoin d'aide est disponible sur l'écran de l'hôte et dans la régie. Le message part directement à l'équipe ZIK, avec l'état du salon pour comprendre tout de suite ce qui se passe.",
+      "Les salons ZIK Pro sont traités en priorité : en cas de souci en pleine soirée, l'équipe peut intervenir à distance et afficher un message sur l'écran de l'hôte.",
+      "Un joueur connecté à son compte sur son téléphone voit maintenant ses parties de salon rattachées à son compte.",
+    ],
+  },
+  {
+    date: "2026-10-09",
+    version: "3.15.0",
+    tag: "Amélioration",
+    title: "Des signalements plus utiles",
+    items: [
+      "Chaque signalement demande maintenant quelques mots d'explication : un signalement vide ne permettait pas de savoir quoi corriger.",
+      "Le signalement joint automatiquement ce qui aide à comprendre le problème : la page, l'appareil, l'état de la partie et du son. Ni mot de passe ni donnée personnelle en plus de ton pseudo.",
     ],
   },
   {

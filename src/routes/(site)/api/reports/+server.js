@@ -7,8 +7,10 @@ import {
   MIN_REPORT_MESSAGE,
 } from "$lib/reports/bug-report.js";
 import { reportTrackIssue } from "$lib/server/services/trackIssues.js";
-import { roomGames, salonRooms } from "$lib/server/state.js";
+import { roomGames } from "$lib/server/state.js";
+import { salonLiveState } from "$lib/server/socket/salon.js";
 import { NEWS } from "$lib/news.js";
+import { alertAdminsSafe } from "$lib/server/services/adminAlerts.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -42,18 +44,28 @@ function roomSnapshot(code) {
       trackId: g.currentTrack?.id ?? null,
     };
   }
-  const salon = code && salonRooms[code];
+  const salon = salonLiveState(code);
   if (salon) {
-    const g = salon.game;
     return {
       kind: "salon",
-      phase: g.phase,
-      round: `${g.currentRound}/${salon.settings.maxRounds}`,
-      players: Object.keys(salon.players).length,
+      phase: salon.phase,
+      paused: salon.paused,
+      round: `${salon.round}/${salon.maxRounds}`,
+      players: salon.players,
       pro: salon.pro,
-      track: g.currentTrack
-        ? `${g.currentTrack.artist} · ${g.currentTrack.title}`
+      proGift: salon.proGift,
+      hostId: salon.hostId,
+      hostConnected: salon.hostConnected,
+      screens: salon.screens,
+      controls: salon.controls,
+      playlistIds: salon.playlistIds,
+      trackCount: salon.trackCount,
+      settings: salon.settings,
+      roster: salon.roster.slice(0, 40),
+      track: salon.track
+        ? `${salon.track.artist} · ${salon.track.title}`
         : null,
+      trackId: salon.track?.id ?? null,
     };
   }
   return null;
@@ -142,6 +154,17 @@ export async function POST({ request }) {
   });
 
   if (error) return json({ error: error.message }, { status: 500 });
+
+  const fromSalon = type === "bug" && subject === "salon";
+  const pro = fromSalon && safeMetadata.context.server?.pro;
+  alertAdminsSafe(fromSalon ? "admin_salons" : "admin_reports", {
+    title: fromSalon
+      ? `${pro ? "Salon Pro" : "Salon"} ${room_id ?? ""} : besoin d'aide`
+      : `${{ bug: "Bug", user: "Joueur signalé", contact: "Message" }[type]} de ${reporter_name?.trim() || "un invité"}`,
+    body: message.trim().slice(0, 140),
+    url:
+      fromSalon && room_id ? `/admin/salons?code=${room_id}` : "/admin/reports",
+  });
 
   // Un titre désigné part aussi dans la file « Réparer » de l'admin
   if (type === "bug" && safeTracks) {

@@ -1,6 +1,10 @@
 <script>
   import { enhance } from '$app/forms';
   import PageHeader from '$lib/admin/PageHeader.svelte';
+  import { getContext, onMount } from 'svelte';
+  import { push, initPush, enablePush, disablePush } from '$lib/push.svelte.js';
+  import { ago } from '$lib/admin/stats-utils.js';
+  import { describeDevice } from '$lib/admin/reports.js';
 
   let { data, form } = $props();
 
@@ -11,6 +15,22 @@
   let title = $state('');
   let body = $state('');
   let url = $state('');
+
+  const tokenCtx = getContext('adminToken');
+  const getToken = async () => tokenCtx.token;
+  let pushError = $state('');
+  onMount(() => { initPush(getToken).catch(() => {}); });
+
+  async function togglePush() {
+    pushError = '';
+    try {
+      if (push.subscribed) await disablePush();
+      else await enablePush(getToken);
+      if (push.permission === 'denied') pushError = 'Notifications bloquées : autorise-les dans les réglages du navigateur pour zik-music.fr.';
+    } catch (e) {
+      pushError = e.message;
+    }
+  }
 
   const submit = (name) => () => {
     busy = name;
@@ -26,6 +46,53 @@
   <PageHeader title="Réglages" />
 
   <div class="a-stack">
+    <h2 class="a-h2">Alertes sur mon téléphone</h2>
+    <section class="a-card grid">
+      <p class="a-muted small">Les évènements importants arrivent en notification sur cet appareil, même site fermé. Active-les sur chaque téléphone ou ordinateur où tu veux les recevoir.</p>
+      {#if !data.alerts.ready}
+        <p class="a-err">Le serveur n'a pas les clés VAPID (PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY) : aucune alerte ne peut partir.</p>
+      {:else if push.needsInstall}
+        <p class="a-card warn small">Sur iPhone : ouvre zik-music.fr dans Safari, touche Partager puis « Sur l'écran d'accueil », et ouvre l'admin depuis cette icône pour activer les alertes.</p>
+      {:else if !push.supported}
+        <p class="a-muted small">Ce navigateur ne gère pas les notifications.</p>
+      {:else}
+        <div class="m-head">
+          <div>
+            <b>Cet appareil</b>
+            <p class="a-muted small">{push.subscribed ? 'Reçoit les alertes' : 'Ne reçoit rien'}</p>
+          </div>
+          <button class="a-btn {push.subscribed ? '' : 'primary'}" type="button" disabled={push.busy} onclick={togglePush}>{push.subscribed ? 'Désactiver' : 'Activer les alertes'}</button>
+        </div>
+      {/if}
+      {#if pushError}<p class="a-err">{pushError}</p>{/if}
+
+      <form method="POST" action="?/alerts" class="grid" use:enhance={submit('alerts')}>
+        {#each data.alerts.kinds as k (k.key)}
+          <label class="a-check"><input type="checkbox" name={k.key} checked={k.on} /> {k.label}</label>
+        {/each}
+        <div class="a-btns">
+          <button class="a-btn primary" type="submit" disabled={busy === 'alerts'}>{busy === 'alerts' ? 'Enregistrement…' : 'Enregistrer'}</button>
+          <button class="a-btn" formaction="?/alertTest" disabled={busy === 'alerts'}>Envoyer un test</button>
+        </div>
+      </form>
+      {#if form?.alertsSaved}<p class="a-ok">Enregistré.</p>{/if}
+      {#if form?.alertTestSent !== undefined}<p class="a-ok">Test envoyé à {form.alertTestSent} appareil{form.alertTestSent > 1 ? 's' : ''}.</p>{/if}
+      {#if form?.alertsError}<p class="a-err">{form.alertsError}</p>{/if}
+
+      {#if data.alerts.devices.length}
+        <ul class="a-list">
+          {#each data.alerts.devices as d, i (i)}
+            <li class="a-row">
+              <span class="a-row-main">
+                <span class="a-row-title">{describeDevice(d.user_agent) ?? 'Appareil inconnu'}</span>
+                <span class="a-row-sub">Ajouté {ago(d.created_at)}{d.last_success_at ? ` · dernière alerte reçue ${ago(d.last_success_at)}` : ''}</span>
+              </span>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
+
     <h2 class="a-h2">Prévenir tout le monde</h2>
     <form method="POST" action="?/broadcast" class="a-card grid" use:enhance={submit('broadcast')}>
       <p class="a-muted small">Une notification dans la cloche de chaque joueur inscrit. Elle disparaît au bout de 24 h. Les nouveautés de /nouveautes sont déjà annoncées toutes seules à chaque mise en ligne.</p>

@@ -1,6 +1,8 @@
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
+import { salonRooms } from "$lib/server/state.js";
+import { isPrioritySalon } from "$lib/admin/reports.js";
 
 const STATUSES = ["pending", "resolved", "dismissed"];
 
@@ -44,8 +46,11 @@ export async function load() {
       .order("created_at", { ascending: false })
       .limit(200),
   ]);
+  // Les demandes d'aide des salons Pro à traiter passent en tête
+  const urgent = (r) => r.status === "pending" && isPrioritySalon(r);
   const rows = [...(pendingRes.data ?? []), ...(doneRes.data ?? [])].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    (a, b) =>
+      urgent(b) - urgent(a) || new Date(b.created_at) - new Date(a.created_at),
   );
 
   const uniq = (xs) => [...new Set(xs.filter(Boolean))];
@@ -93,6 +98,8 @@ export async function load() {
         ...r,
         reporter: profiles[r.reporter_id] ?? null,
         reported: profiles[r.reported_user_id] ?? null,
+        priority: isPrioritySalon(r),
+        salonLive: r.subject === "salon" && !!salonRooms[r.room_id],
         room: rooms[r.room_id] ?? null,
         extra,
         context: context ?? null,

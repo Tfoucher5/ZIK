@@ -11,7 +11,7 @@ const CHUNK = 20;
 const TTL_SECONDS = 12 * 60 * 60;
 
 let configured = null;
-function ready() {
+export function ready() {
   if (configured !== null) return configured;
   const { PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env;
   configured = !!(PUBLIC_VAPID_KEY && VAPID_PRIVATE_KEY);
@@ -24,7 +24,7 @@ function ready() {
   return configured;
 }
 
-async function deliver(subs, payload) {
+export async function deliver(subs, payload) {
   const body = JSON.stringify(payload);
   const sb = getAdminClient();
   const delivered = [];

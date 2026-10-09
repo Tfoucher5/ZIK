@@ -16,12 +16,13 @@
    *   tvUrl: string, regieUrl: string,
    *   onCopy: (url: string, quoi: string) => void,
    *   onUpsell: (f: string) => void,
+   *   onHelp: () => void,
    * }}
    */
   let {
     code, phase, phaseLabel, paused, round, maxRounds,
     timerVal, timerMax, timerOn, screens, joueurs, repondu,
-    pro, maxGratuit, tvUrl, regieUrl, onCopy, onUpsell,
+    pro, maxGratuit, tvUrl, regieUrl, onCopy, onUpsell, onHelp,
   } = $props();
 
   let menuOuvert = $state(false);
@@ -51,6 +52,7 @@
           Gratuit · {joueurs} / {maxGratuit} <b>Passer à Pro</b>
         </button>
       {/if}
+      <button class="sx-btn rh-sm rh-aide" onclick={onHelp} title="Besoin d'aide ou un problème à signaler">Aide</button>
       <div class="rh-menu-wrap">
         <button class="sx-btn rh-sm" onclick={(e) => { e.stopPropagation(); menuOuvert = !menuOuvert; }} aria-haspopup="true" aria-expanded={menuOuvert}>
           Liens
@@ -106,6 +108,7 @@
 
   .rh-droite { margin-left: auto; display: flex; align-items: center; gap: 8px; }
   .rh-sm { padding: 7px 12px; font-size: 0.82rem; }
+  .rh-aide { border-color: var(--accent); color: var(--accent); }
   .rh-free {
     background: none; border: 1px dashed rgb(var(--accent-rgb) / 0.5); color: var(--accent);
     border-radius: 2px; padding: 5px 10px; font: inherit; font-size: 0.75rem; cursor: pointer;
