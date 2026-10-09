@@ -131,9 +131,20 @@ try {
     }
     if (!prospect && from !== FROM_EMAIL)
       prospect = await prospectFromContent(sb, mail, from);
-    if (!prospect || prospect.status === "new") continue;
-
     const excerpt = ownText(mail.text);
+    if (!prospect || prospect.status === "new") {
+      if (from === FROM_EMAIL) continue;
+      await sb.from("prospect_replies").insert({
+        message_id: messageId,
+        received_at,
+        from_email: from,
+        subject: mail.subject,
+        excerpt,
+      });
+      added++;
+      continue;
+    }
+
     const isStop = STOP_RE.test(excerpt) || STOP_RE.test(mail.subject ?? "");
     await sb.from("prospect_replies").insert({
       prospect_id: prospect.id,
