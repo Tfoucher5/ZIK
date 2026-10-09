@@ -1,417 +1,413 @@
 <script>
   import { enhance } from '$app/forms';
-  import { goto } from '$app/navigation';
-  import { getContext } from 'svelte';
+  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import Sheet from '$lib/admin/Sheet.svelte';
+  import { ago } from '$lib/admin/stats-utils.js';
+  import { avatarOf, lastSeen, PLAN_LABELS, ACTION_LABELS } from '$lib/admin/players.js';
+  import { subjectLabel } from '$lib/admin/reports.js';
 
   let { data, form } = $props();
 
-  const adminCtx = getContext('adminToken');
-  const token = $derived(adminCtx?.token ?? '');
+  const p = $derived(data.profile);
+  const proActive = $derived(
+    data.pro?.status === 'active' && new Date(data.pro.current_period_end) > new Date(),
+  );
+  const proDaysLeft = $derived(
+    proActive ? Math.ceil((new Date(data.pro.current_period_end) - Date.now()) / 86400000) : 0,
+  );
 
-  const profile     = $derived(data.profile);
-  const games       = $derived(data.games);
-  const reports     = $derived(data.reports);
-  const isBanned    = $derived(data.isBanned);
-  const following   = $derived(data.following);
-  const followers   = $derived(data.followers);
-  const friendships = $derived(data.friendships);
+  const BANS = [
+    ['24h', '24 heures'],
+    ['168h', '7 jours'],
+    ['720h', '30 jours'],
+    ['8760h', '1 an'],
+    ['87600h', 'Définitif (10 ans)'],
+  ];
+  const TIERS = { bronze: 'Bronze', silver: 'Argent', gold: 'Or' };
+  const PRO_DAYS = [1, 7, 30, 90, 365];
+  const TITLES = {
+    pro: 'Offrir du Pro',
+    unpro: 'Retirer le Pro',
+    username: 'Changer le pseudo',
+    stats: 'Modifier les stats',
+    reset: 'Remettre à zéro',
+    role: 'Changer le rôle',
+    ban: 'Bannir le joueur',
+    unban: 'Débannir le joueur',
+    delete: 'Supprimer le compte',
+  };
 
-  let confirmUsername = $state('');
-  let showDeleteModal = $state(false);
-  let showResetModal = $state(false);
-  let banDuration = $state('87600h');
+  let sheetOpen = $state(false);
+  let mode = $state('');
+  let busy = $state(false);
+  let banDuration = $state('168h');
+  let proDays = $state(30);
+  let confirmName = $state('');
+  let social = $state('friends');
+  let armed = $state('');
 
-  function fmt(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  function openSheet(m) {
+    mode = m;
+    confirmName = '';
+    sheetOpen = true;
   }
 
-  $effect(() => {
-    if (form?.deleted) goto('/admin/users');
+  const submit = () => {
+    busy = true;
+    return async ({ result, update }) => {
+      busy = false;
+      armed = '';
+      await update({ reset: false });
+      if (result.type === 'success') sheetOpen = false;
+    };
+  };
+
+  function arm(e, key) {
+    if (armed !== key) {
+      e.preventDefault();
+      armed = key;
+    }
+  }
+
+  const date = (iso, withTime = false) =>
+    iso
+      ? new Date(iso).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+        })
+      : '—';
+  const proEnd = $derived(
+    new Date(Math.max(Date.now(), proActive ? new Date(data.pro.current_period_end).getTime() : 0) + (Number(proDays) || 0) * 86400000),
+  );
+
+  function detail(a) {
+    const x = a.payload ?? {};
+    if (a.action === 'ban_user') return BANS.find(([k]) => k === x.duration)?.[1];
+    if (a.action === 'set_pro') return x.days ? `${x.days} jour${x.days > 1 ? 's' : ''} offert${x.days > 1 ? 's' : ''}` : 'accès retiré';
+    if (a.action === 'set_role') return x.role === 'super_admin' ? 'nommé admin' : 'joueur simple';
+    if (a.action === 'edit_username' || a.action === 'delete_user') return x.username;
+    if (a.action === 'edit_stats') return `niveau ${x.level}, ${x.xp} XP, ELO ${x.elo}`;
+    return '';
+  }
+
+  const socialLists = $derived({
+    friends: data.friendships,
+    following: data.following,
+    followers: data.followers,
   });
 </script>
 
-<div class="zk">
-  <a href="/admin/users" class="back">← Retour</a>
+<div class="adm-page">
+  <PageHeader title="Joueur">
+    <a class="a-btn small" href="/admin/users">Tous les joueurs</a>
+  </PageHeader>
 
-  <div class="panel user-header">
-    <img src={profile.avatar_url || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${profile.username}`} alt="" class="avatar">
-    <div class="user-info">
-      <div class="user-name">
-        {profile.username}
-        <a href="/user/{profile.username}" target="_blank" rel="noreferrer" class="link">↗ Profil public</a>
-      </div>
-      <div class="user-meta">
-        <span class="tag" class:tag-amber={profile.role === 'super_admin'}>{profile.role === 'super_admin' ? 'Admin' : 'User'}</span>
-        {#if isBanned}<span class="tag tag-red">Banni</span>{/if}
-        <span class="user-id">ID: {profile.id}</span>
-      </div>
-    </div>
-    <div class="stat-grid">
-      <div class="stat-block"><span class="stat-lbl">ELO</span><span class="stat-val">{profile.elo}</span></div>
-      <div class="stat-block"><span class="stat-lbl">XP</span><span class="stat-val">{profile.xp}</span></div>
-      <div class="stat-block"><span class="stat-lbl">Niveau</span><span class="stat-val">{profile.level}</span></div>
-      <div class="stat-block"><span class="stat-lbl">Parties</span><span class="stat-val">{profile.games_played}</span></div>
-    </div>
-  </div>
+  <div class="a-stack">
+    {#if form?.error}<p class="a-card bad a-err" role="alert">{form.error}</p>{/if}
+    {#if form?.message}<p class="a-card good a-ok" role="status">{form.message}</p>{/if}
 
-  {#if form && !form.success}
-    <div class="alert alert-err">{form.error ?? 'Action échouée'}</div>
-  {/if}
-  {#if form?.success && !form?.deleted}
-    <div class="alert alert-ok">Action appliquée.</div>
-  {/if}
-
-  <div class="grid">
-
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Bannissement</span></div>
-      {#if isBanned}
-        <form method="POST" action="?/unban" use:enhance>
-          <input type="hidden" name="_token" value={token}>
-          <button class="btn btn-ok">Débannir</button>
-        </form>
-      {:else}
-        <form method="POST" action="?/ban" use:enhance class="form-inline">
-          <input type="hidden" name="_token" value={token}>
-          <label class="field">
-            <span class="field-label">Durée</span>
-            <select name="duration" bind:value={banDuration} class="field-input">
-              <option value="24h">24 heures</option>
-              <option value="168h">7 jours</option>
-              <option value="720h">30 jours</option>
-              <option value="8760h">1 an</option>
-              <option value="87600h">10 ans</option>
-            </select>
-          </label>
-          <button class="btn btn-danger">Bannir</button>
-        </form>
-      {/if}
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Statistiques</span></div>
-      <form method="POST" action="?/editStats" use:enhance class="form-inline">
-        <input type="hidden" name="_token" value={token}>
-        <label class="field"><span class="field-label">XP</span><input class="field-input" type="number" name="xp" value={profile.xp} min="0"></label>
-        <label class="field"><span class="field-label">ELO</span><input class="field-input" type="number" name="elo" value={profile.elo} min="0"></label>
-        <label class="field"><span class="field-label">Niveau</span><input class="field-input" type="number" name="level" value={profile.level} min="1"></label>
-        <button class="btn btn-primary">Appliquer</button>
-      </form>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Pseudo</span></div>
-      <form method="POST" action="?/editUsername" use:enhance class="form-inline">
-        <input type="hidden" name="_token" value={token}>
-        <label class="field"><span class="field-label">Nouveau pseudo</span><input class="field-input" type="text" name="username" value={profile.username} minlength="3" maxlength="20"></label>
-        <button class="btn btn-primary">Renommer</button>
-      </form>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Réinitialiser les stats</span></div>
-      <p class="hint">Remet XP=0, ELO=1000, Niveau=1, parties=0, score=0.</p>
-      {#if showResetModal}
-        <form method="POST" action="?/resetStats" use:enhance onsubmit={() => showResetModal = false}>
-          <input type="hidden" name="_token" value={token}>
-          <div class="actions">
-            <button class="btn btn-danger">Confirmer</button>
-            <button type="button" class="btn" onclick={() => showResetModal = false}>Annuler</button>
-          </div>
-        </form>
-      {:else}
-        <button class="btn btn-danger" onclick={() => showResetModal = true}>Réinitialiser</button>
-      {/if}
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">ZIK Pro</span></div>
-      <p class="hint">
-        {#if data.pro && new Date(data.pro.current_period_end) > new Date()}
-          Actif ({data.pro.plan}) jusqu'au {new Date(data.pro.current_period_end).toLocaleDateString('fr-FR')}
-        {:else}
-          Pas d'accès Pro
-        {/if}
-      </p>
-      <form method="POST" action="?/setPro" use:enhance class="form-inline">
-        <input type="hidden" name="_token" value={token}>
-        <select name="days" class="field-input">
-          <option value="1">Offrir 1 soirée (24 h)</option>
-          <option value="30">Offrir 30 jours</option>
-          <option value="90">Offrir 90 jours</option>
-          <option value="365">Offrir 1 an</option>
-          <option value="0">Retirer l'accès</option>
-        </select>
-        <button class="btn btn-primary">Appliquer</button>
-      </form>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Rôle</span></div>
-      <form method="POST" action="?/setRole" use:enhance class="form-inline">
-        <input type="hidden" name="_token" value={token}>
-        <select name="role" class="field-input">
-          <option value="user" selected={profile.role === 'user'}>User</option>
-          <option value="super_admin" selected={profile.role === 'super_admin'}>Admin (super_admin)</option>
-        </select>
-        <button class="btn btn-primary">Définir</button>
-      </form>
-    </div>
-
-    <div class="panel panel-danger">
-      <div class="panel-head"><span class="panel-label">Supprimer le compte</span></div>
-      <p class="hint">Suppression définitive et irréversible.</p>
-      <button class="btn btn-danger" onclick={() => showDeleteModal = true}>Supprimer le compte</button>
-    </div>
-
-  </div>
-
-  {#if showDeleteModal}
-    <div class="modal-overlay" onclick={() => showDeleteModal = false} role="presentation">
-      <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-        <div class="modal-title">Supprimer le compte</div>
-        <p class="modal-warn">Tape le pseudo <strong>{profile.username}</strong> pour confirmer.</p>
-        <form method="POST" action="?/deleteUser" use:enhance>
-          <input type="hidden" name="_token" value={token}>
-          <input class="field-input" type="text" name="confirm_username" bind:value={confirmUsername} placeholder={profile.username} autocomplete="off">
-          <div class="modal-btns">
-            <button type="button" class="btn" onclick={() => showDeleteModal = false}>Annuler</button>
-            <button class="btn btn-danger" disabled={confirmUsername !== profile.username}>Confirmer la suppression</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  {/if}
-
-  <div class="grid">
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Suit ({following.length})</span></div>
-      {#if following.length === 0}
-        <p class="hint">Ne suit personne.</p>
-      {:else}
-        <div class="history-list">
-          {#each following as f (f.id)}
-            <div class="history-row">
-              <span class="td-strong">{f.profiles?.username ?? '—'}</span>
-              <form method="POST" action="?/deleteFollow" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                <input type="hidden" name="_token" value={token}>
-                <input type="hidden" name="id" value={f.id}>
-                <button class="link link-danger">Retirer</button>
-              </form>
-            </div>
-          {/each}
+    <section class="a-card hero">
+      <img class="a-avatar big" src={avatarOf(p)} alt="" />
+      <div class="id">
+        <h2>{p.username}</h2>
+        <div class="tags">
+          {#if p.role === 'super_admin'}<em class="a-tag warn">Admin</em>{/if}
+          {#if proActive}<em class="a-tag accent">Pro</em>{/if}
+          {#if data.isBanned}<em class="a-tag bad">Banni jusqu'au {date(data.account.bannedUntil)}</em>{/if}
+          {#if p.is_private}<em class="a-tag">Profil privé</em>{/if}
+          {#if p.discord_username}<em class="a-tag">Discord : {p.discord_username}</em>{/if}
         </div>
-      {/if}
+        <p class="meta">
+          Inscrit le {date(p.created_at)}
+          {#if data.account.lastSignIn}· connecté {ago(data.account.lastSignIn)}{/if}
+          {#if data.account.provider && data.account.provider !== 'email'}· via {data.account.provider}{/if}
+        </p>
+        {#if data.account.email}<p class="meta"><a href="mailto:{data.account.email}">{data.account.email}</a></p>{/if}
+      </div>
+      <a class="a-btn small public" href="/user/{encodeURIComponent(p.username)}" target="_blank" rel="noreferrer">Profil public</a>
+    </section>
+
+    <div class="a-kpis">
+      <div class="a-kpi"><span class="a-kpi-label">Niveau</span><span class="a-kpi-value">{p.level}</span><span class="a-kpi-sub">{p.xp.toLocaleString('fr-FR')} XP</span></div>
+      <div class="a-kpi"><span class="a-kpi-label">Parties</span><span class="a-kpi-value">{p.games_played}</span><span class="a-kpi-sub">{data.stats.month} sur 30 jours</span></div>
+      <div class="a-kpi"><span class="a-kpi-label">Victoires</span><span class="a-kpi-value">{data.stats.wins}</span><span class="a-kpi-sub">{data.stats.podiums} podiums</span></div>
+      <div class="a-kpi"><span class="a-kpi-label">ELO</span><span class="a-kpi-value">{p.elo}</span><span class="a-kpi-sub">score total {(p.total_score ?? 0).toLocaleString('fr-FR')}</span></div>
+      <div class="a-kpi"><span class="a-kpi-label">Dernière partie</span><span class="a-kpi-value small">{lastSeen(p.last_played_date) ?? 'jamais'}</span><span class="a-kpi-sub">série record : {p.best_streak ?? 0} j</span></div>
     </div>
 
-    <div class="panel">
-      <div class="panel-head"><span class="panel-label">Suivi par ({followers.length})</span></div>
-      {#if followers.length === 0}
-        <p class="hint">Personne ne le suit.</p>
-      {:else}
-        <div class="history-list">
-          {#each followers as f (f.id)}
-            <div class="history-row">
-              <span class="td-strong">{f.profiles?.username ?? '—'}</span>
-              <form method="POST" action="?/deleteFollow" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                <input type="hidden" name="_token" value={token}>
-                <input type="hidden" name="id" value={f.id}>
-                <button class="link link-danger">Retirer</button>
-              </form>
-            </div>
-          {/each}
-        </div>
-      {/if}
+    <div class="a-cols">
+      <div>
+        <section class="a-section">
+          <div class="a-section-head"><h3>Dernières parties</h3><span class="a-muted">{data.stats.games} au total</span></div>
+          {#if data.games.length}
+            <ul class="a-list">
+              {#each data.games as g (g.id)}
+                <li class="a-row">
+                  <span class="rank" class:first={g.rank === 1}>{g.rank ? `${g.rank}e` : '—'}</span>
+                  <span class="a-row-main">
+                    <span class="a-row-title">{g.room ? `${g.room.emoji ?? ''} ${g.room.name}` : `Partie ${g.code ?? ''}`}</span>
+                    <span class="a-row-sub">{g.startedAt ? ago(g.startedAt) : 'date inconnue'}{g.rounds ? ` · ${g.rounds} manches` : ''}{g.players ? ` · ${g.players} joueurs` : ''}</span>
+                  </span>
+                  <b class="score">{g.score ?? 0} pts</b>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="a-empty">Aucune partie enregistrée.</p>
+          {/if}
+        </section>
+
+        <section class="a-section">
+          <div class="a-section-head"><h3>Succès obtenus</h3><span class="a-muted">{data.achievements.length}</span></div>
+          {#if data.achievements.length}
+            <ul class="ach">
+              {#each data.achievements as a (a.id)}
+                <li title="Obtenu {date(a.unlocked_at)}">
+                  <span aria-hidden="true">{a.icon}</span>
+                  <span>{a.name}{#if a.tier}<em class="tier {a.tier}">{TIERS[a.tier] ?? a.tier}</em>{/if}</span>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="a-empty">Aucun succès pour l'instant.</p>
+          {/if}
+        </section>
+
+        <section class="a-section">
+          <div class="a-section-head"><h3>Amis et abonnements</h3></div>
+          <div class="a-chips" role="group" aria-label="Liste affichée">
+            <button class="a-chip" aria-pressed={social === 'friends'} onclick={() => (social = 'friends')}>Amis<b>{data.friendships.length}</b></button>
+            <button class="a-chip" aria-pressed={social === 'following'} onclick={() => (social = 'following')}>Il suit<b>{data.following.length}</b></button>
+            <button class="a-chip" aria-pressed={social === 'followers'} onclick={() => (social = 'followers')}>Le suivent<b>{data.followers.length}</b></button>
+          </div>
+          {#if socialLists[social].length}
+            <ul class="a-list">
+              {#each socialLists[social] as s (s.id)}
+                {@const key = `${social}-${s.id}`}
+                <li class="a-row">
+                  <img class="a-avatar" src={avatarOf(s.user)} alt="" loading="lazy" />
+                  <span class="a-row-main">
+                    {#if s.user}<a class="a-row-title" href="/admin/users/{s.user.id}">{s.user.username}</a>{:else}<span class="a-row-title">Compte supprimé</span>{/if}
+                    <span class="a-row-sub">
+                      {#if social === 'friends'}{s.status === 'accepted' ? 'Amis' : 'Demande en attente'} · {/if}{ago(s.at)}
+                    </span>
+                  </span>
+                  <form method="POST" action={social === 'friends' ? '?/deleteFriendship' : '?/deleteFollow'} use:enhance={submit}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <button class="a-btn small" class:danger={armed === key} onclick={(e) => arm(e, key)} disabled={busy}>
+                      {armed === key ? 'Confirmer' : social === 'friends' ? 'Supprimer' : 'Retirer'}
+                    </button>
+                  </form>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="a-empty">Rien ici.</p>
+          {/if}
+        </section>
+
+        <section class="a-section">
+          <div class="a-section-head"><h3>Messages et signalements</h3><span class="a-muted">{data.reports.length}</span></div>
+          {#if data.reports.length}
+            <ul class="a-list">
+              {#each data.reports as r (r.id)}
+                <li>
+                  <a class="a-row" href="/admin/reports?id={r.id}">
+                    <span class="a-row-main">
+                      <span class="a-row-title">{subjectLabel(r)}</span>
+                      <span class="a-row-sub">{r.reporter_id === p.id ? 'Envoyé par ce joueur' : 'Vise ce joueur'} · {ago(r.created_at)}{r.message ? ` · « ${r.message} »` : ''}</span>
+                    </span>
+                    <em class="a-tag {r.status === 'pending' ? 'warn' : r.status === 'resolved' ? 'good' : ''}">{r.status === 'pending' ? 'À traiter' : r.status === 'resolved' ? 'Traité' : 'Classé'}</em>
+                  </a>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="a-empty">Aucun message de ce joueur.</p>
+          {/if}
+        </section>
+
+        <section class="a-section">
+          <div class="a-section-head"><h3>Actions de l'admin</h3><span class="a-muted">{data.audit.length}</span></div>
+          {#if data.audit.length}
+            <ol class="log">
+              {#each data.audit as a (a.id)}
+                <li>
+                  <b>{ACTION_LABELS[a.action] ?? a.action}</b>
+                  {#if detail(a)}<span>{detail(a)}</span>{/if}
+                  <span class="a-muted">{a.admin ? `par ${a.admin} · ` : ''}{date(a.created_at, true)}</span>
+                </li>
+              {/each}
+            </ol>
+          {:else}
+            <p class="a-empty">Aucune action admin sur ce compte.</p>
+          {/if}
+        </section>
+      </div>
+
+      <aside class="side">
+        <section class="a-section pro" class:on={proActive}>
+          <div class="a-section-head"><h3>ZIK Pro</h3>{#if proActive}<em class="a-tag accent">Actif</em>{:else}<em class="a-tag">Gratuit</em>{/if}</div>
+          {#if proActive}
+            <p class="big-line"><span class="a-big">{proDaysLeft}</span> jour{proDaysLeft > 1 ? 's' : ''} restant{proDaysLeft > 1 ? 's' : ''}</p>
+            <p class="a-muted">{PLAN_LABELS[data.pro.plan] ?? data.pro.plan} · jusqu'au {date(data.pro.current_period_end)}</p>
+            {#if data.pro.stripe_subscription_id}<p class="note">Abonnement payé par carte : un cadeau le remplace par un accès offert.</p>{/if}
+          {:else if data.pro}
+            <p class="a-muted">Ancien accès {PLAN_LABELS[data.pro.plan] ?? data.pro.plan}, terminé le {date(data.pro.current_period_end)}.</p>
+          {:else}
+            <p class="a-muted">Ce joueur n'a jamais eu ZIK Pro.</p>
+          {/if}
+          <div class="a-btns">
+            <button class="a-btn primary" onclick={() => openSheet('pro')}>Offrir du Pro</button>
+            {#if data.pro}<button class="a-btn danger" onclick={() => openSheet('unpro')}>Retirer</button>{/if}
+          </div>
+        </section>
+
+        <section class="a-section">
+          <div class="a-section-head"><h3>Gérer le compte</h3></div>
+          <div class="manage">
+            <button class="a-btn" onclick={() => openSheet('username')}>Changer le pseudo</button>
+            <button class="a-btn" onclick={() => openSheet('stats')}>Modifier niveau, XP, ELO</button>
+            <button class="a-btn" onclick={() => openSheet('reset')}>Remettre les stats à zéro</button>
+            <button class="a-btn" onclick={() => openSheet('role')} disabled={data.isSelf} title={data.isSelf ? 'Impossible de modifier son propre rôle' : undefined}>
+              {p.role === 'super_admin' ? 'Retirer les droits admin' : 'Nommer admin'}
+            </button>
+            {#if data.isBanned}
+              <button class="a-btn good" onclick={() => openSheet('unban')}>Débannir</button>
+            {:else}
+              <button class="a-btn danger" onclick={() => openSheet('ban')}>Bannir</button>
+            {/if}
+            <button class="a-btn danger" onclick={() => openSheet('delete')}>Supprimer le compte</button>
+          </div>
+          <p class="a-muted uid">Identifiant : {p.id}</p>
+        </section>
+      </aside>
     </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-head"><span class="panel-label">Amitiés</span><span class="panel-sub">{friendships.length}</span></div>
-    {#if friendships.length === 0}
-      <p class="hint">Aucune amitié.</p>
-    {:else}
-      <div class="history-list">
-        {#each friendships as f (f.id)}
-          <div class="history-row">
-            <span class="td-strong">{f.other_username ?? '—'}</span>
-            <span class="tag" class:tag-amber={f.status === 'pending'}>{f.status === 'accepted' ? 'Amis' : 'En attente'}</span>
-            <span class="td-dim history-date">{fmt(f.accepted_at ?? f.created_at)}</span>
-            <form method="POST" action="?/deleteFriendship" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-              <input type="hidden" name="_token" value={token}>
-              <input type="hidden" name="id" value={f.id}>
-              <button class="link link-danger">Supprimer</button>
-            </form>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
-
-  <div class="panel">
-    <div class="panel-head"><span class="panel-label">Historique de parties</span><span class="panel-sub">{games.length}</span></div>
-    {#if games.length === 0}
-      <p class="hint">Aucune partie.</p>
-    {:else}
-      <div class="history-list">
-        {#each games as g (g.id)}
-          <div class="history-row">
-            <span class="td-strong">{g.games?.room_id ?? '?'}</span>
-            <span class="td-dim">score: {g.score}</span>
-            <span class="td-dim">{g.rank ? `#${g.rank}` : '—'}</span>
-            <span class="td-dim history-date">{fmt(g.games?.started_at)}</span>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
-
-  <div class="panel">
-    <div class="panel-head"><span class="panel-label">Signalements</span><span class="panel-sub">{reports.length}</span></div>
-    {#if reports.length === 0}
-      <p class="hint">Aucun signalement.</p>
-    {:else}
-      <div class="history-list">
-        {#each reports as r (r.id)}
-          <div class="history-row">
-            <span class="td-strong">{r.type}</span>
-            <span class="td-dim">{r.status}</span>
-            <span class="td-dim">{r.reporter_id === profile.id ? 'auteur' : 'signalé'}</span>
-            <span class="td-dim history-date">{fmt(r.created_at)}</span>
-          </div>
-        {/each}
-      </div>
-    {/if}
   </div>
 </div>
 
+<Sheet bind:open={sheetOpen} title={TITLES[mode] ?? ''}>
+  {#if mode === 'pro'}
+    <form class="a-form" method="POST" action="?/setPro" use:enhance={submit}>
+      <div class="a-chips" role="group" aria-label="Durée">
+        {#each PRO_DAYS as d (d)}
+          <button type="button" class="a-chip" aria-pressed={Number(proDays) === d} onclick={() => (proDays = d)}>
+            {d === 1 ? '1 soirée' : d === 365 ? '1 an' : `${d} jours`}
+          </button>
+        {/each}
+      </div>
+      <label class="a-label">Nombre de jours<input class="a-input" type="number" name="days" min="1" max="3650" bind:value={proDays} required /></label>
+      <p class="a-muted">{proActive ? 'Ajouté à la suite de son accès actuel.' : 'Démarre maintenant.'} Fin le <b>{date(proEnd.toISOString())}</b>.</p>
+      <button class="a-btn primary" disabled={busy || !(proDays > 0)}>Offrir {proDays} jour{proDays > 1 ? 's' : ''}</button>
+    </form>
+  {:else if mode === 'unpro'}
+    <form class="a-form" method="POST" action="?/setPro" use:enhance={submit}>
+      <input type="hidden" name="days" value="0" />
+      <p>{p.username} perd tout de suite son accès ZIK Pro.{#if data.pro?.stripe_subscription_id} Son abonnement par carte n'est pas résilié chez Stripe.{/if}</p>
+      <button class="a-btn danger" disabled={busy}>Retirer l'accès Pro</button>
+    </form>
+  {:else if mode === 'username'}
+    <form class="a-form" method="POST" action="?/editUsername" use:enhance={submit}>
+      <label class="a-label">Nouveau pseudo<input class="a-input" name="username" value={p.username} minlength="3" maxlength="20" required autocomplete="off" /></label>
+      <button class="a-btn primary" disabled={busy}>Enregistrer</button>
+    </form>
+  {:else if mode === 'stats'}
+    <form class="a-form" method="POST" action="?/editStats" use:enhance={submit}>
+      <div class="a-form-row">
+        <label class="a-label">Niveau<input class="a-input" type="number" name="level" value={p.level} min="1" max="1000" /></label>
+        <label class="a-label">XP<input class="a-input" type="number" name="xp" value={p.xp} min="0" /></label>
+        <label class="a-label">ELO<input class="a-input" type="number" name="elo" value={p.elo} min="0" max="99999" /></label>
+      </div>
+      <button class="a-btn primary" disabled={busy}>Enregistrer</button>
+    </form>
+  {:else if mode === 'reset'}
+    <form class="a-form" method="POST" action="?/resetStats" use:enhance={submit}>
+      <p>Niveau 1, 0 XP, ELO 1000, 0 partie et score total à 0. L'historique des parties et les succès restent.</p>
+      <button class="a-btn danger" disabled={busy}>Remettre à zéro</button>
+    </form>
+  {:else if mode === 'role'}
+    <form class="a-form" method="POST" action="?/setRole" use:enhance={submit}>
+      <input type="hidden" name="role" value={p.role === 'super_admin' ? 'user' : 'super_admin'} />
+      <p>
+        {#if p.role === 'super_admin'}{p.username} n'aura plus accès à l'admin.{:else}{p.username} aura accès à toute l'admin, comme toi.{/if}
+      </p>
+      <button class="a-btn {p.role === 'super_admin' ? 'danger' : 'primary'}" disabled={busy}>
+        {p.role === 'super_admin' ? 'Retirer les droits admin' : 'Nommer admin'}
+      </button>
+    </form>
+  {:else if mode === 'ban'}
+    <form class="a-form" method="POST" action="?/ban" use:enhance={submit}>
+      <p>{p.username} ne pourra plus se connecter pendant la durée choisie.</p>
+      <label class="a-label">Durée
+        <select class="a-select" name="duration" bind:value={banDuration}>
+          {#each BANS as [v, label] (v)}<option value={v}>{label}</option>{/each}
+        </select>
+      </label>
+      <button class="a-btn danger" disabled={busy}>Bannir</button>
+    </form>
+  {:else if mode === 'unban'}
+    <form class="a-form" method="POST" action="?/unban" use:enhance={submit}>
+      <p>{p.username} pourra de nouveau se connecter.</p>
+      <button class="a-btn good" disabled={busy}>Débannir</button>
+    </form>
+  {:else if mode === 'delete'}
+    <form class="a-form" method="POST" action="?/deleteUser" use:enhance={submit}>
+      <p>Le compte, le profil et les données liées sont supprimés pour de bon. Impossible de revenir en arrière.</p>
+      <label class="a-label">Tape <b class="name">{p.username}</b> pour confirmer
+        <input class="a-input" name="confirm_username" bind:value={confirmName} placeholder={p.username} autocomplete="off" />
+      </label>
+      <button class="a-btn danger" disabled={busy || confirmName.trim() !== p.username}>Supprimer définitivement</button>
+    </form>
+  {/if}
+</Sheet>
+
 <style>
-  .zk {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-green: #22c55e;
-    --c-red: #ef4444;
-    --c-amber: #f59e0b;
-    --c-indigo: #6366f1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--c-text);
+  .hero { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+  .a-avatar.big { width: 72px; height: 72px; }
+  .id { flex: 1 1 200px; display: grid; gap: 6px; min-width: 0; }
+  .id h2 { font-family: var(--a-display); font-size: 2rem; font-weight: 800; line-height: 1; overflow-wrap: anywhere; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .meta { font-size: 0.85rem; color: var(--a-muted); overflow-wrap: anywhere; }
+  .meta a { color: var(--a-cyan); }
+  .public { align-self: flex-start; }
+  .a-kpi-value.small { font-size: 1.3rem; }
+
+  .rank { flex: 0 0 38px; font-family: var(--a-display); font-size: 1.3rem; font-weight: 800; color: var(--a-dim); text-align: center; }
+  .rank.first { color: var(--a-warn); }
+  .score { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+  .a-row-title { color: var(--a-fg); }
+  a.a-row-title:hover { color: var(--a-accent); }
+
+  .ach { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+  .ach li { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--a-line); border-radius: 99px; background: var(--a-surface2); font-size: 0.85rem; font-weight: 600; }
+  .tier { margin-left: 6px; font-size: 0.72rem; font-style: normal; color: var(--a-muted); }
+  .tier.bronze { color: #d08a4c; }
+  .tier.silver { color: #c9d1dc; }
+  .tier.gold { color: var(--a-warn); }
+
+  .log { display: grid; gap: 0; list-style: none; }
+  .log li { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--a-line); font-size: 0.88rem; }
+  .log li:last-child { border-bottom: 0; }
+  .log li > .a-muted { margin-left: auto; font-size: 0.8rem; }
+
+  .pro.on { border-color: var(--a-accent); background: linear-gradient(160deg, var(--a-accent-soft), var(--a-surface) 70%); }
+  .big-line { display: flex; align-items: baseline; gap: 8px; font-weight: 600; }
+  .note { font-size: 0.82rem; color: var(--a-warn); }
+  .manage { display: grid; gap: 8px; }
+  .manage .a-btn { justify-content: flex-start; }
+  .uid { font-size: 0.75rem; overflow-wrap: anywhere; }
+  .name { color: var(--a-fg); }
+
+  @media (max-width: 1099px) {
+    .side { order: -1; }
   }
-
-  .back { font-size: 0.8rem; color: var(--c-muted); transition: color 0.15s; width: fit-content; }
-  .back:hover { color: var(--c-text); }
-
-  .panel {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  @media (min-width: 700px) {
+    .manage { grid-template-columns: 1fr 1fr; }
   }
-  .panel-danger { border-color: rgba(239, 68, 68, 0.25); }
-  .panel-head { display: flex; align-items: baseline; gap: 10px; }
-  .panel-label { font-size: 0.82rem; font-weight: 600; color: var(--c-text); }
-  .panel-sub { font-size: 0.75rem; color: var(--c-muted); }
-
-  .user-header { flex-direction: row; align-items: center; gap: 20px; flex-wrap: wrap; }
-  .avatar { width: 56px; height: 56px; border-radius: 10px; flex-shrink: 0; }
-  .user-info { flex: 1; min-width: 0; }
-  .user-name { font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .user-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-  .user-id { font-size: 0.72rem; color: var(--c-muted); }
-
-  .stat-grid { display: flex; gap: 20px; }
-  .stat-block { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .stat-lbl { font-size: 0.68rem; color: var(--c-muted); }
-  .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; color: var(--c-text); }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-
-  .hint { font-size: 0.82rem; color: var(--c-muted); }
-
-  .form-inline { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-  .field { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-  .field-label { font-size: 0.72rem; color: var(--c-muted); }
-  .field-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.84rem;
-    padding: 7px 10px;
-    outline: none;
+  @media (min-width: 1100px) {
+    .manage { grid-template-columns: 1fr; }
+    .side { position: sticky; top: 80px; }
   }
-  .field-input:focus { border-color: rgba(255, 255, 255, 0.2); }
-
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-  .btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-primary { border-color: rgba(99, 102, 241, 0.4); color: var(--c-indigo); }
-  .btn-primary:hover:not(:disabled) { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.6); }
-  .btn-ok { border-color: rgba(34, 197, 94, 0.4); color: var(--c-green); }
-  .btn-ok:hover:not(:disabled) { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.6); }
-  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
-  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
-
-  .link { font-size: 0.75rem; color: var(--c-muted); transition: color 0.15s; }
-  .link:hover { color: var(--c-text); }
-
-  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); }
-  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
-  .tag-red { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
-
-  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
-  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
-  .alert-ok { color: var(--c-green); border-color: rgba(34, 197, 94, 0.3); }
-
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
-    display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px;
-  }
-  .modal {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-red: #ef4444;
-    background: var(--c-panel); border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 10px; padding: 24px; max-width: 420px; width: 100%;
-    display: flex; flex-direction: column; gap: 16px;
-    color: var(--c-text);
-  }
-  .modal-title { font-size: 0.95rem; font-weight: 600; color: var(--c-red); }
-  .modal-warn { font-size: 0.84rem; color: var(--c-muted); line-height: 1.5; }
-  .modal-warn strong { color: var(--c-text); }
-  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-
-  .history-list { display: flex; flex-direction: column; gap: 4px; }
-  .history-row {
-    display: flex; align-items: center; gap: 16px;
-    font-size: 0.82rem; padding: 8px 10px;
-    border-bottom: 1px solid var(--c-border);
-  }
-  .history-row:last-child { border-bottom: none; }
-  .td-strong { font-weight: 500; min-width: 90px; }
-  .td-dim { color: var(--c-muted); font-size: 0.78rem; }
-  .history-date { margin-left: auto; }
 </style>

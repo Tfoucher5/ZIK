@@ -1,6 +1,7 @@
 import { error, redirect } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
-import { requireAdmin, logAdminAction } from "$lib/server/middleware/auth.js";
+import { logAdminAction } from "$lib/server/middleware/auth.js";
+import { forgetPlaylists, loadAnswerTypes } from "$lib/admin/contenu.server.js";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -10,45 +11,69 @@ function assertUuid(id) {
 }
 
 export async function load({ params }) {
-  const sb = getAdminClient();
   assertUuid(params.id);
+  const sb = getAdminClient();
 
-  const [playlistRes, tracksRes] = await Promise.all([
+  const [playlistRes, tracksRes, types] = await Promise.all([
     sb
       .from("custom_playlists")
       .select(
-        "id, name, emoji, owner_id, is_public, is_official, track_count, created_at, updated_at, profiles!owner_id(username)",
+        "id, name, emoji, owner_id, is_public, is_official, linked_room_id, track_count, created_at, updated_at, profiles!owner_id(username)",
       )
       .eq("id", params.id)
       .single(),
     sb
       .from("custom_playlist_tracks")
       .select(
-        "id, playlist_id, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, preview_url, cover_url, source)",
+        "id, position, custom_artist, custom_title, custom_feats, track_answers(id, answer_type_id, value), tracks(id, artist, title, preview_url, cover_url, source, youtube_id, youtube_start)",
       )
       .eq("playlist_id", params.id)
       .order("position", { ascending: true }),
+    loadAnswerTypes(),
   ]);
 
   if (playlistRes.error || !playlistRes.data)
     throw error(404, "Playlist introuvable");
+  const playlist = playlistRes.data;
+  const rows = tracksRes.data ?? [];
+
+  const trackIds = rows.map((r) => r.tracks?.id).filter(Boolean);
+  const [issuesRes, playsRes] = await Promise.all([
+    trackIds.length
+      ? sb
+          .from("track_issues")
+          .select("track_id")
+          .eq("status", "open")
+          .in("track_id", trackIds)
+      : Promise.resolve({ data: [] }),
+    playlist.linked_room_id
+      ? sb
+          .from("games")
+          .select("id", { count: "exact", head: true })
+          .eq("room_id", playlist.linked_room_id)
+      : Promise.resolve({ count: null }),
+  ]);
+  const reported = new Set((issuesRes.data ?? []).map((i) => i.track_id));
 
   return {
-    playlist: playlistRes.data,
-    tracks: (tracksRes.data ?? []).map(({ tracks: meta, ...rest }) => ({
-      ...rest,
-      ...meta,
-      id: rest.id,
+    playlist,
+    plays: playsRes.count,
+    types,
+    tracks: rows.map(({ tracks: track, track_answers, ...entry }) => ({
+      ...entry,
+      answers: track_answers ?? [],
+      track,
+      reported: reported.has(track?.id),
     })),
   };
 }
 
 export const actions = {
-  addTrack: async ({ request, params }) => {
+  addTrack: async ({ request, params, locals }) => {
     assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const trackId = formData.get("track_id");
-    if (!trackId) return { success: false, error: "track_id requis" };
+    const fd = await request.formData();
+    const trackId = fd.get("track_id");
+    if (!trackId) return { success: false, error: "Choisis un titre." };
     const sb = getAdminClient();
 
     const { data: last } = await sb
@@ -58,7 +83,6 @@ export const actions = {
       .order("position", { ascending: false })
       .limit(1)
       .maybeSingle();
-    const nextPosition = (last?.position ?? -1) + 1;
 
     const { data: track } = await sb
       .from("tracks")
@@ -69,10 +93,11 @@ export const actions = {
     const { error: err } = await sb.from("custom_playlist_tracks").insert({
       playlist_id: params.id,
       track_id: trackId,
-      position: nextPosition,
+      position: (last?.position ?? -1) + 1,
     });
     if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "add_track", params.id, "playlist", {
+    await forgetPlaylists([params.id]);
+    await logAdminAction(locals.adminId, "add_track", params.id, "playlist", {
       track_id: trackId,
       artist: track?.artist,
       title: track?.title,
@@ -80,55 +105,58 @@ export const actions = {
     return { success: true };
   },
 
-  deleteTrack: async ({ request, params }) => {
+  deleteTrack: async ({ request, params, locals }) => {
     assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const trackId = formData.get("track_id");
+    const fd = await request.formData();
+    const entryId = fd.get("track_id");
     const sb = getAdminClient();
-    const { data: track } = await sb
+    const { data: row } = await sb
       .from("custom_playlist_tracks")
       .select("tracks(artist, title)")
-      .eq("id", trackId)
+      .eq("id", entryId)
       .single();
-    const trackMeta = track?.tracks;
     const { error: err } = await sb
       .from("custom_playlist_tracks")
       .delete()
-      .eq("id", trackId);
+      .eq("id", entryId);
     if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "delete_track", params.id, "playlist", {
-      track_id: trackId,
-      artist: trackMeta?.artist,
-      title: trackMeta?.title,
-    });
+    await forgetPlaylists([params.id]);
+    await logAdminAction(
+      locals.adminId,
+      "delete_track",
+      params.id,
+      "playlist",
+      {
+        track_id: entryId,
+        artist: row?.tracks?.artist,
+        title: row?.tracks?.title,
+      },
+    );
     return { success: true };
   },
 
-  reorderTrack: async ({ request, params }) => {
+  reorderTrack: async ({ request, params, locals }) => {
     assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const trackId = formData.get("track_id");
-    const direction = formData.get("direction"); // 'up' | 'down'
+    const fd = await request.formData();
+    const entryId = fd.get("track_id");
+    const direction = fd.get("direction");
     if (!["up", "down"].includes(direction))
       throw error(400, "Direction invalide");
     const sb = getAdminClient();
-    const { data: tracks } = await sb
+    const { data: rows } = await sb
       .from("custom_playlist_tracks")
       .select("id, position")
       .eq("playlist_id", params.id)
       .order("position", { ascending: true });
+    if (!rows) return { success: false, error: "Titres introuvables" };
 
-    if (!tracks) return { success: false, error: "Tracks introuvables" };
-
-    const idx = tracks.findIndex((t) => t.id === trackId);
-    if (idx === -1) return { success: false, error: "Track introuvable" };
-
+    const idx = rows.findIndex((t) => t.id === entryId);
+    if (idx === -1) return { success: false, error: "Titre introuvable" };
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= tracks.length) return { success: true };
+    if (swapIdx < 0 || swapIdx >= rows.length) return { success: true };
 
-    const a = tracks[idx];
-    const b = tracks[swapIdx];
-
+    const a = rows[idx];
+    const b = rows[swapIdx];
     await sb
       .from("custom_playlist_tracks")
       .update({ position: b.position })
@@ -137,14 +165,14 @@ export const actions = {
       .from("custom_playlist_tracks")
       .update({ position: a.position })
       .eq("id", b.id);
-
+    await forgetPlaylists([params.id]);
     await logAdminAction(
-      adminUser.id,
+      locals.adminId,
       "reorder_tracks",
       params.id,
       "playlist",
       {
-        moved_track_id: trackId,
+        moved_track_id: entryId,
         direction,
         old_position: a.position,
         new_position: b.position,
@@ -153,15 +181,13 @@ export const actions = {
     return { success: true };
   },
 
-  editTrackMeta: async ({ request, params }) => {
+  editTrackMeta: async ({ request, params, locals }) => {
     assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const trackId = formData.get("track_id");
-    const sb = getAdminClient();
-
-    const custom_artist = formData.get("custom_artist")?.trim() || null;
-    const custom_title = formData.get("custom_title")?.trim() || null;
-    const featsRaw = formData.get("custom_feats")?.trim() || "";
+    const fd = await request.formData();
+    const entryId = fd.get("track_id");
+    const custom_artist = fd.get("custom_artist")?.trim() || null;
+    const custom_title = fd.get("custom_title")?.trim() || null;
+    const featsRaw = fd.get("custom_feats")?.trim() || "";
     const custom_feats = featsRaw
       ? featsRaw
           .split(",")
@@ -169,49 +195,42 @@ export const actions = {
           .filter(Boolean)
       : null;
 
-    const { error: err } = await sb
+    const { error: err } = await getAdminClient()
       .from("custom_playlist_tracks")
       .update({ custom_artist, custom_title, custom_feats })
-      .eq("id", trackId);
+      .eq("id", entryId);
     if (err) return { success: false, error: err.message };
+    await forgetPlaylists([params.id]);
     await logAdminAction(
-      adminUser.id,
+      locals.adminId,
       "edit_track_meta",
       params.id,
       "playlist",
-      {
-        track_id: trackId,
-        custom_artist,
-        custom_title,
-        custom_feats,
-      },
+      { track_id: entryId, custom_artist, custom_title, custom_feats },
     );
     return { success: true };
   },
 
-  deletePlaylist: async ({ request, params }) => {
+  deletePlaylist: async ({ params, locals }) => {
     assertUuid(params.id);
-    const { adminUser } = await requireAdmin(request);
     const sb = getAdminClient();
     const { data: playlist } = await sb
       .from("custom_playlists")
       .select("name, track_count")
       .eq("id", params.id)
       .single();
+    await forgetPlaylists([params.id]);
     const { error: err } = await sb
       .from("custom_playlists")
       .delete()
       .eq("id", params.id);
     if (err) return { success: false, error: err.message };
     await logAdminAction(
-      adminUser.id,
+      locals.adminId,
       "delete_playlist",
       params.id,
       "playlist",
-      {
-        name: playlist?.name,
-        track_count: playlist?.track_count,
-      },
+      { name: playlist?.name, track_count: playlist?.track_count },
     );
     redirect(302, "/admin/playlists");
   },

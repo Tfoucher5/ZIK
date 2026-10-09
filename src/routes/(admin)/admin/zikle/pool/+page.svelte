@@ -1,273 +1,140 @@
 <script>
   import { enhance } from '$app/forms';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import { getContext } from 'svelte';
-  import TrackPickerModal from '$lib/components/admin/TrackPickerModal.svelte';
+  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import Sheet from '$lib/admin/Sheet.svelte';
+  import ZikleTrackSearch from '$lib/admin/ZikleTrackSearch.svelte';
+  import { ago } from '$lib/admin/stats-utils.js';
 
   let { data, form } = $props();
-  const adminCtx = getContext('adminToken');
-  const token = $derived(adminCtx?.token ?? '');
 
-  let pickerOpen = $state(false);
-  let removeModal = $state(null);
-  let busy = $state(false);
+  const day = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' });
+  const totalPages = $derived(Math.max(1, Math.ceil(data.total / data.pageSize)));
+  const lowStock = $derived(data.available < 30);
 
-  function setParam(key, value) {
+  function go(params) {
     const p = new SvelteURLSearchParams(page.url.searchParams);
-    if (value) p.set(key, value); else p.delete(key);
-    if (key !== 'page') p.set('page', '1');
-    goto(`?${p.toString()}`);
+    for (const [k, v] of Object.entries(params)) v ? p.set(k, v) : p.delete(k);
+    goto(`?${p}`, { keepFocus: true, noScroll: true });
   }
 
-  let searchInput = $state(data.q);
-  let searchTimer = $state(undefined);
-  function onSearch(e) {
-    clearTimeout(searchTimer);
-    const val = e.target.value;
-    searchTimer = setTimeout(() => setParam('q', val), 300);
-  }
-  $effect(() => () => clearTimeout(searchTimer));
+  let search = $state(page.url.searchParams.get('q') ?? '');
+  $effect(() => {
+    const v = search;
+    if (v === (page.url.searchParams.get('q') ?? '')) return;
+    const id = setTimeout(() => go({ q: v, page: '' }), 300);
+    return () => clearTimeout(id);
+  });
 
-  const totalPages = $derived(Math.ceil(data.total / data.pageSize));
+  let addOpen = $state(false);
+  let toRemove = $state(null);
+  let removeOpen = $state(false);
+  let busy = $state('');
 
-  function fmt(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('fr-FR');
-  }
-
-  async function addTrack(track) {
-    pickerOpen = false;
-    busy = true;
-    const fd = new FormData();
-    fd.set('_token', token);
-    fd.set('track_id', track.id);
-    await fetch('/admin/zikle/pool?/addToPool', { method: 'POST', body: fd });
-    busy = false;
-    invalidateAll();
-  }
+  const submit = (name) => () => {
+    busy = name;
+    return async ({ result, update }) => {
+      await update({ reset: false });
+      busy = '';
+      if (result.type === 'success') {
+        addOpen = false;
+        removeOpen = false;
+      }
+    };
+  };
 </script>
 
-<div class="zk">
-  <a href="/admin/zikle" class="back">← Retour</a>
+<div class="adm-page">
+  <PageHeader title="Pool Zikle">
+    <a class="a-btn small" href="/admin/zikle">Calendrier</a>
+  </PageHeader>
 
-  <div class="zk-head">
-    <h1>Pool Zikle</h1>
-    <span class="zk-date">{data.total} morceaux</span>
-  </div>
+  <div class="a-stack">
+    <p class="a-muted intro">Le titre du jour est tiré au hasard dans ce pool, parmi ceux qui n'ont pas servi depuis un an.</p>
 
-  {#if form && !form.success}
-    <div class="alert alert-err">{form.error ?? 'Action échouée'}</div>
-  {/if}
-  {#if form?.success}
-    <div class="alert alert-ok">Action appliquée.</div>
-  {/if}
-
-  <div class="toolbar">
-    <input
-      class="search-input"
-      type="text"
-      placeholder="Rechercher un artiste ou un titre…"
-      value={searchInput}
-      oninput={onSearch}
-    />
-    <button class="btn" onclick={() => pickerOpen = true} disabled={busy}>+ Ajouter un morceau</button>
-  </div>
-
-  <div class="panel">
-    {#if data.error}
-      <div class="alert alert-err">{data.error}</div>
-    {:else}
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Artiste</th>
-              <th>Titre</th>
-              <th>Extrait</th>
-              <th>Ajouté</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each data.rows as r (r.track_id)}
-              <tr>
-                <td class="td-strong">{r.tracks?.artist}</td>
-                <td>{r.tracks?.title}</td>
-                <td class="td-dim">
-                  {#if r.tracks?.preview_url}
-                    <a href={r.tracks.preview_url} target="_blank" rel="noreferrer" class="link">Écouter</a>
-                  {:else}
-                    —
-                  {/if}
-                </td>
-                <td class="td-dim">{fmt(r.added_at)}</td>
-                <td class="td-actions">
-                  <button class="link link-danger" onclick={() => removeModal = r}>Retirer</button>
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
+    <div class="a-kpis">
+      <div class="a-kpi"><span class="a-kpi-label">Titres dans le pool</span><span class="a-kpi-value">{data.poolTotal}</span><span class="a-kpi-sub">{data.addedThisWeek ? `+${data.addedThisWeek} cette semaine` : data.lastAdded ? `dernier ajout ${ago(data.lastAdded)}` : 'vide'}</span></div>
+      <div class="a-kpi" class:warn={lowStock}>
+        <span class="a-kpi-label">Encore disponibles</span>
+        <span class="a-kpi-value">{data.available}</span>
+        <span class="a-kpi-sub" class:down={lowStock}>{lowStock ? 'Bientôt à court : ajoute des titres' : `environ ${data.available} jours de réserve`}</span>
       </div>
+    </div>
 
-      {#if totalPages > 1}
-        <div class="pagination">
-          <button class="btn" disabled={data.page <= 1} onclick={() => setParam('page', String(data.page - 1))}>◀ Précédent</button>
-          <span class="page-count">{data.page} / {totalPages}</span>
-          <button class="btn" disabled={data.page >= totalPages} onclick={() => setParam('page', String(data.page + 1))}>Suivant ▶</button>
-        </div>
-      {/if}
+    <div class="a-toolbar">
+      <label class="a-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+        <span class="a-sr">Chercher dans le pool</span>
+        <input type="search" placeholder="Chercher un artiste ou un titre…" bind:value={search} />
+      </label>
+      <button class="a-btn primary" type="button" onclick={() => (addOpen = true)}>Ajouter un titre</button>
+      <form method="POST" action="?/refreshPool" use:enhance={submit('refresh')}>
+        <button class="a-btn" type="submit" disabled={busy === 'refresh'}>{busy === 'refresh' ? 'Mise à jour…' : 'Ajouter le top Deezer'}</button>
+      </form>
+    </div>
+
+    {#if form?.done}<p class="a-card good">{form.done}</p>{/if}
+    {#if form?.error}<p class="a-card bad">{form.error}</p>{/if}
+    {#if data.error}<p class="a-card bad">{data.error}</p>{/if}
+
+    <p class="a-muted count">{data.total} titre{data.total > 1 ? 's' : ''}{data.q ? ` pour « ${data.q} »` : ''}</p>
+    <ul class="a-list">
+      {#each data.rows as r (r.track_id)}
+        <li class="a-row">
+          {#if r.tracks?.cover_url}<img class="a-cover" src={r.tracks.cover_url} alt="" />{:else}<span class="a-cover"></span>{/if}
+          <span class="a-row-main">
+            <span class="a-row-title">{r.tracks?.title}</span>
+            <span class="a-row-sub">{r.tracks?.artist} · ajouté {ago(r.added_at)}</span>
+          </span>
+          {#if r.playedOn}
+            <em class="a-tag {r.playedOn > data.today ? 'good' : ''}">{r.playedOn > data.today ? 'Programmé' : 'Joué'} le {day(r.playedOn)}</em>
+          {/if}
+          {#if r.tracks?.preview_url}
+            <a class="a-btn small hide-sm" href={r.tracks.preview_url} target="_blank" rel="noreferrer">Écouter</a>
+          {/if}
+          <button class="a-btn small" type="button" onclick={() => { toRemove = r; removeOpen = true; }}>Retirer</button>
+        </li>
+      {:else}
+        <li class="a-empty">{data.q ? 'Aucun titre ne correspond.' : 'Le pool est vide.'}</li>
+      {/each}
+    </ul>
+
+    {#if totalPages > 1}
+      <div class="a-pager">
+        <button class="a-btn small" type="button" disabled={data.page <= 1} onclick={() => go({ page: String(data.page - 1) })}>← Précédent</button>
+        <span>{data.page} / {totalPages}</span>
+        <button class="a-btn small" type="button" disabled={data.page >= totalPages} onclick={() => go({ page: String(data.page + 1) })}>Suivant →</button>
+      </div>
     {/if}
   </div>
 </div>
 
-{#if pickerOpen}
-  <TrackPickerModal onPick={addTrack} onClose={() => pickerOpen = false} />
-{/if}
+<Sheet bind:open={addOpen} title="Ajouter au pool">
+  <form method="POST" action="?/addToPool" use:enhance={submit('add')}>
+    <ZikleTrackSearch disabled={busy === 'add'} />
+  </form>
+</Sheet>
 
-{#if removeModal}
-  <div class="modal-overlay" onclick={() => removeModal = null} role="presentation">
-    <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Retirer du pool</div>
-      <p class="modal-warn">Retirer <strong>{removeModal.tracks?.artist} — {removeModal.tracks?.title}</strong> du pool ?</p>
-      <form method="POST" action="?/removeFromPool" use:enhance={() => async ({ update }) => { await update({ reset: false }); removeModal = null; }}>
-        <input type="hidden" name="_token" value={token}>
-        <input type="hidden" name="track_id" value={removeModal.track_id}>
-        <div class="modal-btns">
-          <button type="button" class="btn" onclick={() => removeModal = null}>Annuler</button>
-          <button type="submit" class="btn btn-danger">Retirer</button>
-        </div>
-      </form>
-    </div>
-  </div>
-{/if}
+<Sheet bind:open={removeOpen} title="Retirer du pool">
+  {#if toRemove}
+    <p>Retirer <b>{toRemove.tracks?.title}</b> de {toRemove.tracks?.artist} ? Il ne pourra plus être tiré au hasard. Les jours déjà programmés ne changent pas.</p>
+    <form method="POST" action="?/removeFromPool" class="a-btns confirm" use:enhance={submit('remove')}>
+      <input type="hidden" name="track_id" value={toRemove.track_id} />
+      <button class="a-btn danger" type="submit" disabled={busy === 'remove'}>Retirer</button>
+    </form>
+  {/if}
+</Sheet>
 
 <style>
-  .zk {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-green: #22c55e;
-    --c-red: #ef4444;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--c-text);
+  .intro { font-size: 0.88rem; }
+  .a-kpi.warn { border-color: rgba(251, 191, 36, 0.35); background: var(--a-warn-soft); }
+  .count { font-size: 0.82rem; }
+  span.a-cover { display: inline-block; }
+  .confirm { margin-top: 14px; }
+  @media (max-width: 520px) {
+    .hide-sm { display: none; }
+    .a-row .a-tag { display: none; }
   }
-
-  .back { font-size: 0.8rem; color: var(--c-muted); transition: color 0.15s; width: fit-content; }
-  .back:hover { color: var(--c-text); }
-
-  .zk-head { display: flex; align-items: baseline; gap: 12px; }
-  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
-  .zk-date { font-size: 0.78rem; color: var(--c-muted); }
-
-  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .search-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.84rem;
-    padding: 8px 12px;
-    outline: none;
-    min-width: 280px;
-    flex: 1;
-  }
-  .search-input::placeholder { color: var(--c-muted); }
-  .search-input:focus { border-color: rgba(255, 255, 255, 0.2); }
-
-  .panel {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    white-space: nowrap;
-  }
-  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
-  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
-
-  .link { background: none; border: none; font-family: inherit; font-size: 0.8rem; color: var(--c-muted); cursor: pointer; padding: 0; transition: color 0.15s; }
-  .link:hover { color: var(--c-text); }
-  .link-danger { color: rgba(239, 68, 68, 0.6); }
-  .link-danger:hover { color: var(--c-red); }
-
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-  th {
-    text-align: left;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--c-muted);
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--c-border);
-  }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255, 255, 255, 0.02); }
-
-  .td-strong { font-weight: 500; }
-  .td-dim { color: var(--c-muted); font-size: 0.8rem; }
-  .td-actions { text-align: right; }
-
-  .pagination { display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .page-count { font-size: 0.8rem; color: var(--c-muted); }
-
-  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
-  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
-  .alert-ok { color: var(--c-green); border-color: rgba(34, 197, 94, 0.3); }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-  }
-  .modal {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 24px;
-    width: 400px;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    color: var(--c-text);
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-  .modal-title { font-size: 0.95rem; font-weight: 600; }
-  .modal-warn { font-size: 0.84rem; color: var(--c-muted); }
-  .modal-warn strong { color: var(--c-text); }
-  .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
 </style>

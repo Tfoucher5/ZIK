@@ -1,353 +1,324 @@
 <script>
+  import { untrack } from 'svelte';
   import { enhance } from '$app/forms';
-  import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import { getContext } from 'svelte';
-  import TrackAudioDebugger from '$lib/components/admin/TrackAudioDebugger.svelte';
+  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import Sheet from '$lib/admin/Sheet.svelte';
+  import { ago } from '$lib/admin/stats-utils.js';
+  import { avatarOf } from '$lib/admin/players.js';
+  import { REPORT_TYPES, TRACK_SUBJECTS, subjectLabel } from '$lib/admin/reports.js';
 
-  let { data } = $props();
-  const adminCtx = getContext('adminToken');
-  const token = $derived(adminCtx?.token ?? '');
+  let { data, form } = $props();
 
-  let expandedId = $state(null);
-  let noteValues = $state({});
-  let replyValues = $state({});
-  let sentIds = $state({});
-  let deleteModal = $state(null);
+  const STATES = [
+    ['todo', 'À traiter'],
+    ['done', 'Traités'],
+    ['all', 'Tout'],
+  ];
+  const TYPES = [
+    ['all', 'Tous'],
+    ['titre', 'Titres'],
+    ['bug', 'Bugs'],
+    ['contact', 'Contacts'],
+    ['user', 'Joueurs signalés'],
+  ];
+  const STATUS = {
+    pending: ['À traiter', 'warn'],
+    resolved: ['Traité', 'good'],
+    dismissed: ['Classé sans suite', ''],
+  };
 
-  const TYPE_LABELS = { bug: 'Bug', user: 'Utilisateur', contact: 'Contact' };
+  const linked = untrack(() => data.reports.find((r) => r.id === page.url.searchParams.get('id')));
+  let etat = $state(linked && linked.status !== 'pending' ? 'all' : (page.url.searchParams.get('etat') ?? 'todo'));
+  let type = $state(page.url.searchParams.get('type') ?? 'all');
+  let selId = $state(linked?.id ?? null);
+  let note = $state(linked?.admin_note ?? '');
+  let reply = $state(linked?.admin_reply ?? '');
+  let isDesk = $state(false);
+  let sheetOpen = $state(false);
+  let busy = $state(false);
+  let armDel = $state(false);
 
-  function fmt(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const isTrack = (r) => r.tracks.length > 0 || (r.type === 'bug' && TRACK_SUBJECTS.includes(r.subject));
+  const matchType = (r, t) =>
+    t === 'all' || (t === 'titre' ? isTrack(r) : t === 'bug' ? r.type === 'bug' && !isTrack(r) : r.type === t);
+  const matchState = (r, s) => s === 'all' || (s === 'todo' ? r.status === 'pending' : r.status !== 'pending');
+
+  const shown = $derived(data.reports.filter((r) => matchState(r, etat) && matchType(r, type)));
+  const sel = $derived(data.reports.find((r) => r.id === selId) ?? null);
+  const pending = $derived(data.reports.filter((r) => r.status === 'pending'));
+  const week = $derived(data.reports.filter((r) => Date.now() - new Date(r.created_at) < 7 * 86400000).length);
+  const typeCount = (t) => data.reports.filter((r) => matchState(r, etat) && matchType(r, t)).length;
+
+  $effect(() => {
+    const mq = matchMedia('(min-width: 1100px)');
+    isDesk = mq.matches;
+    if (isDesk && linked) sheetOpen = false;
+    else if (linked) sheetOpen = true;
+    const on = (e) => {
+      isDesk = e.matches;
+      if (isDesk) sheetOpen = false;
+    };
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  });
+
+  $effect(() => {
+    if (isDesk && shown.length && !shown.some((r) => r.id === selId)) pick(shown[0], false);
+  });
+
+  function pick(r, openSheet = true) {
+    selId = r.id;
+    note = r.admin_note ?? '';
+    reply = r.admin_reply ?? '';
+    armDel = false;
+    if (openSheet && !isDesk) sheetOpen = true;
   }
 
-  function setFilter(key, value) {
-    const p = new SvelteURLSearchParams(page.url.searchParams);
-    if (value) p.set(key, value); else p.delete(key);
-    goto(`?${p.toString()}`);
-  }
+  const submit = () => {
+    busy = true;
+    return async ({ result, update }) => {
+      busy = false;
+      armDel = false;
+      await update({ reset: false });
+      if (result.type === 'success' && !isDesk) sheetOpen = false;
+    };
+  };
+
+  const who = (r) => r.reporter?.username ?? r.reporter_name ?? r.reporter_email ?? 'Anonyme';
+  const full = (iso) =>
+    new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 </script>
 
-<div class="zk">
-  <div class="zk-head">
-    <h1>Signalements</h1>
-    <span class="zk-date">{data.reports.length} résultats</span>
-    <div class="toolbar">
-      <select onchange={e => setFilter('status', e.target.value)} value={data.filters.status} class="field-input">
-        <option value="pending">En attente</option>
-        <option value="resolved">Résolus</option>
-        <option value="dismissed">Rejetés</option>
-        <option value="">Tous</option>
-      </select>
-      <select onchange={e => setFilter('type', e.target.value)} value={data.filters.type} class="field-input">
-        <option value="">Tous types</option>
-        <option value="bug">Bug</option>
-        <option value="user">Utilisateur</option>
-        <option value="contact">Contact</option>
-      </select>
-    </div>
-  </div>
+{#snippet reader(r)}
+  <article class="reader">
+    <header class="rh">
+      <div class="tags">
+        <em class="a-tag accent">{REPORT_TYPES[r.type] ?? r.type}</em>
+        <em class="a-tag {STATUS[r.status]?.[1] ?? ''}">{STATUS[r.status]?.[0] ?? r.status}</em>
+      </div>
+      <h3>{subjectLabel(r)}</h3>
+      <p class="a-muted when">{full(r.created_at)} · {ago(r.created_at)}</p>
+    </header>
 
-  {#if data.error}
-    <div class="alert alert-err">{data.error}</div>
-  {:else if data.reports.length === 0}
-    <p class="hint">Aucun signalement.</p>
-  {:else}
-    <div class="list">
-      {#each data.reports as r (r.id)}
-        <div class="panel card" data-status={r.status}>
-          <button type="button" class="card-head" onclick={() => expandedId = expandedId === r.id ? null : r.id}>
-            <span class="tag" class:tag-amber={r.status === 'pending'} class:tag-green={r.status === 'resolved'}>{TYPE_LABELS[r.type] || r.type}</span>
-            <span class="card-from">{r.resolved_username || r.reporter_email || 'Anonyme'}</span>
-            {#if r.reported_username}
-              <span class="td-dim">→ {r.reported_username}</span>
-            {/if}
-            {#if r.resolved_room}
-              <span class="td-dim">{r.resolved_room.emoji} {r.resolved_room.name}</span>
-            {:else if r.room_id}
-              <span class="td-dim">#{r.room_id}</span>
-            {/if}
-            <span class="td-dim card-date">{fmt(r.created_at)}</span>
-            <span class="chevron">{expandedId === r.id ? '▲' : '▼'}</span>
-          </button>
-
-          {#if expandedId === r.id}
-            <div class="card-body">
-              {#if r.subject}
-                <div class="field-label">Sujet : <span class="td-strong">{r.subject}</span></div>
-              {/if}
-              <div class="message">{r.message}</div>
-
-              {#if r.metadata?.tracks?.length}
-                {#each r.metadata.tracks as t (t.trackId ?? t.round)}
-                  {#if t.trackId}
-                    <div class="field-label">
-                      Manche {t.round}{t.answer ? ` · ${t.answer}` : ' · titre masqué en jeu'}
-                    </div>
-                    <TrackAudioDebugger trackId={t.trackId} {token} />
-                  {:else}
-                    <div class="field-label">
-                      Manche {t.round} — titre non identifiable (room personnalisée)
-                    </div>
-                  {/if}
-                {/each}
-              {/if}
-
-              {#if r.metadata && Object.keys(r.metadata).length}
-                <pre class="meta">{JSON.stringify(r.metadata, null, 2)}</pre>
-              {/if}
-
-              <form method="POST" action="?/updateStatus" use:enhance={({ formElement }) => {
-                const isReply = formElement.getAttribute('data-reply') === 'true';
-                return async ({ result, update }) => {
-                  if (isReply && result.type === 'success') sentIds = { ...sentIds, [r.id]: true };
-                  setTimeout(() => { sentIds = { ...sentIds, [r.id]: false }; }, 3000);
-                  await update({ reset: false });
-                };
-              }} class="form-col">
-                <input type="hidden" name="_token" value={token}>
-                <input type="hidden" name="id" value={r.id}>
-
-                <label class="field">
-                  <span class="field-label">Note interne</span>
-                  <textarea
-                    name="admin_note"
-                    class="field-input"
-                    placeholder="Note interne…"
-                    rows="2"
-                    bind:value={noteValues[r.id]}
-                  >{r.admin_note || ''}</textarea>
-                </label>
-
-                {#if r.reporter_email || r.resolved_username}
-                  <label class="field">
-                    <span class="field-label">
-                      Réponse{r.reporter_email ? ` → ${r.reporter_email}` : ' (pas d\'email — stockée seulement)'}
-                    </span>
-                    <textarea
-                      name="admin_reply"
-                      class="field-input"
-                      placeholder="Réponse…"
-                      rows="3"
-                      bind:value={replyValues[r.id]}
-                    >{r.admin_reply || ''}</textarea>
-                    {#if r.reporter_email}
-                      <button
-                        type="submit"
-                        formaction="?/sendReply"
-                        data-reply="true"
-                        class="btn btn-primary"
-                        disabled={!replyValues[r.id]?.trim()}
-                      >{sentIds[r.id] ? 'Envoyé ✓' : 'Envoyer la réponse'}</button>
-                    {/if}
-                  </label>
-                {/if}
-
-                {#if r.admin_reply}
-                  <div class="saved-reply">Réponse enregistrée : {r.admin_reply}</div>
-                {/if}
-
-                <div class="actions">
-                  <button name="status" value="resolved" class="btn btn-ok">Résoudre</button>
-                  <button name="status" value="dismissed" class="btn">Rejeter</button>
-                  {#if r.status !== 'pending'}
-                    <button name="status" value="pending" class="btn">Rouvrir</button>
-                  {/if}
-                  <button type="button" class="btn btn-danger" onclick={() => deleteModal = r}>Supprimer</button>
-                </div>
-              </form>
-            </div>
+    <dl class="facts">
+      <div>
+        <dt>De</dt>
+        <dd>
+          {#if r.reporter}
+            <a class="person" href="/admin/users/{r.reporter.id}"><img class="a-avatar" src={avatarOf(r.reporter)} alt="" />{r.reporter.username}</a>
+          {:else}
+            {r.reporter_name ?? 'Invité sans compte'}
           {/if}
+          {#if r.reporter_email}<a class="mail" href="mailto:{r.reporter_email}">{r.reporter_email}</a>{/if}
+        </dd>
+      </div>
+      {#if r.reported || r.reported_username}
+        <div>
+          <dt>Joueur visé</dt>
+          <dd>
+            {#if r.reported}
+              <a class="person" href="/admin/users/{r.reported.id}"><img class="a-avatar" src={avatarOf(r.reported)} alt="" />{r.reported.username}</a>
+            {:else}{r.reported_username}{/if}
+          </dd>
+        </div>
+      {/if}
+      {#if r.room_id}
+        <div>
+          <dt>Room</dt>
+          <dd>{#if r.room}{r.room.emoji ?? ''} {r.room.name} <span class="a-muted">· {r.room_id}</span>{:else}{r.room_id}{/if}</dd>
+        </div>
+      {/if}
+      {#each Object.entries(r.extra) as [k, v] (k)}
+        <div>
+          <dt>{k}</dt>
+          <dd class="extra">{typeof v === 'string' ? v : JSON.stringify(v)}</dd>
         </div>
       {/each}
-    </div>
-  {/if}
-</div>
+    </dl>
 
-{#if deleteModal}
-  <div class="modal-overlay" onclick={() => deleteModal = null} role="presentation">
-    <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Supprimer le signalement</div>
-      <p class="modal-warn">Supprimer définitivement ce signalement ({TYPE_LABELS[deleteModal.type] || deleteModal.type}) ?</p>
-      <form method="POST" action="?/deleteReport" use:enhance={() => async ({ update }) => { await update({ reset: false }); deleteModal = null; }}>
-        <input type="hidden" name="_token" value={token}>
-        <input type="hidden" name="id" value={deleteModal.id}>
-        <div class="modal-btns">
-          <button type="button" class="btn" onclick={() => deleteModal = null}>Annuler</button>
-          <button type="submit" class="btn btn-danger">Supprimer</button>
+    <blockquote class="msg" class:empty={!r.message}>{r.message || 'Pas de message : le joueur a seulement désigné un titre.'}</blockquote>
+
+    {#if r.tracks.length}
+      <section class="tracks">
+        <h4>Titres concernés</h4>
+        <ul class="a-list">
+          {#each r.tracks as t, i (i)}
+            <li class="a-row">
+              {#if t.track?.cover_url}<img class="a-cover" src={t.track.cover_url} alt="" loading="lazy" />{:else}<span class="a-cover"></span>{/if}
+              <span class="a-row-main">
+                <span class="a-row-title">{t.track ? `${t.track.artist} · ${t.track.title}` : (t.answer ?? 'Titre non identifié (room personnalisée)')}</span>
+                <span class="a-row-sub">Manche {t.round}{t.track && !t.answer ? ' · titre caché au joueur' : ''}</span>
+              </span>
+              {#if t.track}<em class="a-tag {t.toFix ? 'warn' : 'good'}">{t.toFix ? 'À réparer' : 'Réglé'}</em>{/if}
+            </li>
+          {/each}
+        </ul>
+        {#if r.tracks.some((t) => t.track)}
+          <a class="a-btn" href="/admin/reparer">Ouvrir dans Réparer</a>
+        {/if}
+      </section>
+    {/if}
+
+    <form class="a-form" method="POST" action="?/updateStatus" use:enhance={submit}>
+      <input type="hidden" name="id" value={r.id} />
+      <label class="a-label">
+        {r.reporter_email ? `Réponse à ${r.reporter_email}` : 'Réponse (pas d’email : elle est seulement gardée ici)'}
+        <textarea class="a-textarea" name="admin_reply" rows="4" bind:value={reply} placeholder="Bonjour, merci pour ton message…"></textarea>
+      </label>
+      {#if r.reporter_email}
+        <p class="hint a-muted">Une réponse nouvelle ou modifiée part aussi par email quand tu changes l’état.</p>
+      {/if}
+      <label class="a-label">
+        Note interne (jamais envoyée)
+        <textarea class="a-textarea" name="admin_note" rows="2" bind:value={note}></textarea>
+      </label>
+      <div class="a-btns">
+        {#if r.reporter_email}
+          <button class="a-btn primary" formaction="?/sendReply" disabled={busy || !reply.trim()}>Envoyer la réponse</button>
+        {/if}
+        {#if r.status === 'pending'}
+          <button class="a-btn good" name="status" value="resolved" disabled={busy}>Traité</button>
+          <button class="a-btn" name="status" value="dismissed" disabled={busy}>Classer sans suite</button>
+        {:else}
+          <button class="a-btn" name="status" value="pending" disabled={busy}>Remettre à traiter</button>
+        {/if}
+        <button class="a-btn" name="status" value={r.status} disabled={busy}>Enregistrer</button>
+      </div>
+    </form>
+
+    <form method="POST" action="?/deleteReport" use:enhance={submit} class="del">
+      <input type="hidden" name="id" value={r.id} />
+      {#if armDel}
+        <span class="a-err">Supprimer ce message pour de bon ?</span>
+        <button type="button" class="a-btn small" onclick={() => (armDel = false)}>Annuler</button>
+        <button class="a-btn small danger" disabled={busy}>Confirmer</button>
+      {:else}
+        <button type="button" class="a-btn small danger" onclick={() => (armDel = true)}>Supprimer</button>
+      {/if}
+    </form>
+  </article>
+{/snippet}
+
+<div class="adm-page">
+  <PageHeader title="Messages" />
+
+  <div class="a-stack">
+    {#if form?.error}<p class="a-card bad a-err" role="alert">{form.error}</p>{/if}
+    {#if form?.message}<p class="a-card good a-ok" role="status">{form.message}</p>{/if}
+    {#if data.error}<p class="a-card bad a-err">{data.error}</p>{/if}
+
+    <div class="a-kpis">
+      <button class="a-kpi" class:hot={pending.length} onclick={() => { etat = 'todo'; type = 'all'; }}>
+        <span class="a-kpi-label">À traiter</span><span class="a-kpi-value">{pending.length}</span><span class="a-kpi-sub">{pending.length ? `le plus ancien ${ago(pending.at(-1).created_at)}` : 'tout est lu'}</span>
+      </button>
+      <div class="a-kpi"><span class="a-kpi-label">Reçus</span><span class="a-kpi-value">{week}</span><span class="a-kpi-sub">sur 7 jours</span></div>
+      <button class="a-kpi" onclick={() => { etat = 'todo'; type = 'titre'; }}>
+        <span class="a-kpi-label">Titres signalés</span><span class="a-kpi-value">{pending.filter(isTrack).length}</span><span class="a-kpi-sub">à traiter</span>
+      </button>
+    </div>
+
+    <div class="filters">
+      <div class="a-chips" role="group" aria-label="État">
+        {#each STATES as [k, label] (k)}
+          <button class="a-chip" aria-pressed={etat === k} onclick={() => (etat = k)}>{label}{#if k === 'todo' && pending.length}<b>{pending.length}</b>{/if}</button>
+        {/each}
+      </div>
+      <div class="a-chips" role="group" aria-label="Type">
+        {#each TYPES as [k, label] (k)}
+          {@const n = typeCount(k)}
+          <button class="a-chip" aria-pressed={type === k} onclick={() => (type = k)}>{label}{#if n}<b>{n}</b>{/if}</button>
+        {/each}
+      </div>
+    </div>
+
+    <div class="a-cols inbox">
+      <div>
+        {#if shown.length}
+          <ul class="a-list">
+            {#each shown as r (r.id)}
+              <li>
+                <button class="a-row msg-row" class:on={isDesk && r.id === selId} class:unread={r.status === 'pending'} type="button" onclick={() => pick(r)} aria-current={isDesk && r.id === selId ? 'true' : undefined}>
+                  <span class="dot" aria-hidden="true"></span>
+                  <span class="a-row-main">
+                    <span class="a-row-title">{who(r)}</span>
+                    <span class="a-row-sub subj">{subjectLabel(r)}{r.room ? ` · ${r.room.name}` : ''}</span>
+                    {#if r.message}<span class="a-row-sub">{r.message}</span>{/if}
+                  </span>
+                  <span class="right">
+                    <span class="a-muted t">{ago(r.created_at)}</span>
+                    {#if r.tracks.some((t) => t.toFix)}<em class="a-tag warn">Titre</em>{/if}
+                    {#if r.admin_reply}<em class="a-tag good">Répondu</em>{/if}
+                  </span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <p class="a-card a-empty">{etat === 'todo' ? 'Aucun message à traiter. Bravo !' : 'Aucun message ici.'}</p>
+        {/if}
+      </div>
+
+      {#if isDesk}
+        <div class="pane">
+          {#if sel}
+            <div class="a-section">{@render reader(sel)}</div>
+          {:else}
+            <p class="a-card a-empty">Choisis un message à gauche.</p>
+          {/if}
         </div>
-      </form>
+      {/if}
     </div>
   </div>
+</div>
+
+{#if !isDesk}
+  <Sheet bind:open={sheetOpen} title="Message" wide>
+    {#if sel}{@render reader(sel)}{/if}
+  </Sheet>
 {/if}
 
 <style>
-  .zk {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-green: #22c55e;
-    --c-red: #ef4444;
-    --c-amber: #f59e0b;
-    --c-indigo: #6366f1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--c-text);
+  .filters { display: grid; gap: 8px; }
+  button.a-kpi { font: inherit; text-align: left; cursor: pointer; color: inherit; }
+  button.a-kpi:hover { border-color: var(--a-dim); }
+  .a-kpi.hot { border-color: rgba(251, 191, 36, 0.4); background: var(--a-warn-soft); }
+
+  .msg-row { align-items: flex-start; }
+  .msg-row.on { border-color: var(--a-accent); background: var(--a-accent-soft); }
+  .dot { flex: 0 0 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: transparent; }
+  .unread .dot { background: var(--a-warn); }
+  .unread .a-row-title { color: var(--a-fg); }
+  .msg-row:not(.unread) .a-row-title { color: var(--a-muted); }
+  .subj { color: var(--a-muted); font-weight: 600; }
+  .right { flex: 0 0 auto; display: grid; justify-items: end; gap: 4px; }
+  .t { font-size: 0.78rem; white-space: nowrap; }
+
+  .pane { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; }
+
+  .reader { display: grid; gap: 16px; min-width: 0; }
+  .rh { display: grid; gap: 6px; }
+  .rh h3 { font-family: var(--a-display); font-size: 1.6rem; font-weight: 800; line-height: 1.05; overflow-wrap: anywhere; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .when { font-size: 0.85rem; }
+  .facts { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--a-bg); }
+  .facts > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 0.9rem; }
+  dt { font-size: 0.78rem; font-weight: 700; color: var(--a-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  dd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; overflow-wrap: anywhere; }
+  .person { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--a-fg); }
+  .person:hover { color: var(--a-accent); }
+  .person .a-avatar { width: 24px; height: 24px; }
+  .mail { color: var(--a-cyan); }
+  .extra { font-size: 0.8rem; color: var(--a-muted); }
+  .msg { padding: 14px 16px; border-left: 3px solid var(--a-accent); border-radius: 4px 12px 12px 4px; background: var(--a-surface2); font-size: 1rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.empty { color: var(--a-dim); font-style: italic; }
+  .tracks { display: grid; gap: 10px; }
+  .tracks h4 { font-size: 0.8rem; font-weight: 700; color: var(--a-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .tracks .a-btn { justify-self: start; }
+  .hint { margin-top: -6px; font-size: 0.8rem; }
+  .del { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid var(--a-line); }
+
+  @media (min-width: 1100px) {
+    .a-cols.inbox { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
   }
-
-  .zk-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
-  .zk-date { font-size: 0.78rem; color: var(--c-muted); }
-  .toolbar { display: flex; gap: 8px; margin-left: auto; }
-
-  .field-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.82rem;
-    padding: 7px 10px;
-    outline: none;
-  }
-  .field-input:focus { border-color: rgba(255, 255, 255, 0.2); }
-
-  .hint { font-size: 0.82rem; color: var(--c-muted); }
-
-  .list { display: flex; flex-direction: column; gap: 8px; }
-
-  .panel {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-  }
-  .card[data-status="pending"] { border-left: 3px solid var(--c-amber); }
-  .card[data-status="resolved"] { border-left: 3px solid var(--c-green); }
-
-  .card-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    cursor: pointer;
-    background: none;
-    border: none;
-    text-align: left;
-    font-family: inherit;
-    color: var(--c-text);
-    font-size: 0.84rem;
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  .card-head:hover { background: rgba(255, 255, 255, 0.02); }
-
-  .card-from { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .card-date { margin-left: auto; }
-  .chevron { font-size: 0.68rem; color: var(--c-muted); }
-
-  .card-body {
-    padding: 0 16px 18px;
-    border-top: 1px solid var(--c-border);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 4px;
-    padding-top: 14px;
-  }
-
-  .message {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--c-border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 0.84rem;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    color: var(--c-text);
-  }
-
-  .meta {
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 0.72rem;
-    color: var(--c-muted);
-    overflow-x: auto;
-  }
-
-  .form-col { display: flex; flex-direction: column; gap: 10px; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field-label { font-size: 0.75rem; color: var(--c-muted); }
-  .td-strong { color: var(--c-text); font-weight: 500; }
-  .td-dim { color: var(--c-muted); font-size: 0.78rem; white-space: nowrap; }
-
-  .saved-reply { font-size: 0.75rem; color: var(--c-muted); border-left: 2px solid var(--c-border); padding-left: 8px; }
-
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-  .btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-primary { border-color: rgba(99, 102, 241, 0.4); color: var(--c-indigo); }
-  .btn-primary:hover:not(:disabled) { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.6); }
-  .btn-ok { border-color: rgba(34, 197, 94, 0.4); color: var(--c-green); }
-  .btn-ok:hover:not(:disabled) { background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.6); }
-  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
-  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
-
-  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); white-space: nowrap; }
-  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
-  .tag-green { color: var(--c-green); border-color: rgba(34, 197, 94, 0.3); }
-
-  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
-  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-  }
-  .modal {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-red: #ef4444;
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 24px;
-    width: 400px;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    color: var(--c-text);
-  }
-  .modal-title { font-size: 0.95rem; font-weight: 600; }
-  .modal-warn { font-size: 0.84rem; color: var(--c-muted); }
-  .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
 </style>

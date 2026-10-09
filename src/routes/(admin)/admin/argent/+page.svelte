@@ -57,6 +57,12 @@
       <p class="a-card bad">Stripe ne répond pas : {data.stripeError}</p>
     {/if}
 
+    <div class="a-cols">
+
+    <section class="a-card">
+      <h2 class="a-h2">Encaissé par mois (€)</h2>
+      <BarChart bars={months} partialLast />
+    </section>
     <div class="a-grid2">
       <div class="a-card kpi">
         <span class="vl">Encaissé ce mois</span>
@@ -69,11 +75,7 @@
         <span class="vs">par mois · {subsBy.active.length} actif{subsBy.active.length > 1 ? 's' : ''}</span>
       </div>
     </div>
-
-    <section class="a-card">
-      <h2 class="a-h2">Encaissé par mois (€)</h2>
-      <BarChart bars={months} partialLast />
-    </section>
+    </div>
 
     {#if failed.length || subsBy.past_due.length}
       <h2 class="a-h2">Paiements refusés</h2>
@@ -99,6 +101,8 @@
       </ul>
     {/if}
 
+    <div class="a-cols even">
+    <div>
     <h2 class="a-h2">Abonnés</h2>
     <div class="a-chips" role="group" aria-label="État des abonnés">
       {#each FILTERS as f (f.key)}
@@ -124,6 +128,8 @@
     </ul>
     <p class="hint a-muted">Pour offrir le Pro à quelqu'un, ouvre son profil dans Joueurs.</p>
 
+    </div>
+    <div>
     <h2 class="a-h2">Derniers paiements</h2>
     <ul class="a-list">
       {#each recent as c (c.id)}
@@ -141,11 +147,15 @@
         <li class="a-empty">Aucun paiement sur 6 mois.</li>
       {/each}
     </ul>
+    </div>
+    </div>
   </div>
 </div>
 
 <style>
   .kpi { display: grid; gap: 6px; }
+  .a-cols > .a-grid2 { order: -1; }
+  @media (min-width: 1100px) { .a-cols > .a-grid2 { order: 0; } }
   .kpi .a-big { font-size: 1.7rem; }
   .vl { font-size: 0.8rem; font-weight: 600; color: var(--a-muted); }
   .vs { font-size: 0.78rem; color: var(--a-dim); }

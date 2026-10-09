@@ -1,369 +1,452 @@
 <script>
   import { enhance } from '$app/forms';
+  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import Sheet from '$lib/admin/Sheet.svelte';
+  import TrackAnswers from '$lib/admin/TrackAnswers.svelte';
+  import TrackRepair from '$lib/admin/TrackRepair.svelte';
   import { invalidateAll } from '$app/navigation';
   import { getContext } from 'svelte';
-  import TrackPickerModal from '$lib/components/admin/TrackPickerModal.svelte';
+  import { ago } from '$lib/admin/stats-utils.js';
 
   let { data, form } = $props();
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');
 
   const playlist = $derived(data.playlist);
-  const tracks   = $derived(data.tracks);
+  const tracks = $derived(data.tracks);
 
-  let deletePlaylistModal = $state(false);
-  let editMetaModal = $state(null); // track object
-  let pickerOpen = $state(false);
-  let addingTrack = $state(false);
-  let searchQuery = $state('');
+  const VIEWS = [
+    ['all', 'Tous'],
+    ['nopreview', 'Sans extrait'],
+    ['reported', 'Signalés'],
+    ['answers', 'Réponses en plus'],
+  ];
 
-  const filteredTracks = $derived.by(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return tracks;
+  let query = $state('');
+  let view = $state('all');
+  let player = $state();
+  let playing = $state(null);
+  let arming = $state(null);
+  let busy = $state(false);
+
+  let editId = $state(null);
+  let editOpen = $state(false);
+  let repairId = $state(null);
+  let repairOpen = $state(false);
+  let addOpen = $state(false);
+  let plOpen = $state(false);
+  let deleteOpen = $state(false);
+
+  let found = $state([]);
+  let searching = $state(false);
+  let added = $state([]);
+  let searchTimer;
+
+  const editing = $derived(tracks.find((t) => t.id === editId));
+  const repairing = $derived(tracks.find((t) => t.id === repairId));
+  const counts = $derived({
+    all: tracks.length,
+    nopreview: tracks.filter((t) => !t.track?.preview_url).length,
+    reported: tracks.filter((t) => t.reported).length,
+    answers: tracks.filter((t) => t.answers.length).length,
+  });
+  const shown = $derived.by(() => {
+    const q = query.trim().toLowerCase();
     return tracks.filter((t) => {
-      const artist = (t.custom_artist || t.artist || '').toLowerCase();
-      const title = (t.custom_title || t.title || '').toLowerCase();
-      const feats = (t.custom_feats || []).join(' ').toLowerCase();
-      return artist.includes(q) || title.includes(q) || feats.includes(q);
+      if (view === 'nopreview' && t.track?.preview_url) return false;
+      if (view === 'reported' && !t.reported) return false;
+      if (view === 'answers' && !t.answers.length) return false;
+      if (!q) return true;
+      return [artistOf(t), titleOf(t), ...(t.custom_feats ?? []), ...t.answers.map((a) => a.value)]
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
     });
   });
+  const canReorder = $derived(view === 'all' && !query.trim());
+  const typeName = $derived(Object.fromEntries(data.types.map((t) => [t.id, t.name])));
 
-  function fmt(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('fr-FR');
+  function artistOf(t) {
+    return t.custom_artist || t.track?.artist || '?';
+  }
+  function titleOf(t) {
+    return t.custom_title || t.track?.title || '?';
   }
 
-  async function addTrack(track) {
-    pickerOpen = false;
-    addingTrack = true;
-    const fd = new FormData();
-    fd.set('_token', token);
-    fd.set('track_id', track.id);
-    await fetch(`/admin/playlists/${playlist.id}?/addTrack`, { method: 'POST', body: fd });
-    addingTrack = false;
-    invalidateAll();
+  function toggle(t) {
+    if (playing === t.id) {
+      player.pause();
+      playing = null;
+      return;
+    }
+    player.src = t.track.preview_url;
+    player.play().catch(() => (playing = null));
+    playing = t.id;
+  }
+
+  function openEdit(t) {
+    editId = t.id;
+    editOpen = true;
+  }
+  function openRepair(t) {
+    repairId = t.id;
+    repairOpen = true;
+  }
+
+  function onSearch(e) {
+    clearTimeout(searchTimer);
+    const v = e.currentTarget.value.trim();
+    if (v.length < 2) {
+      found = [];
+      return;
+    }
+    searchTimer = setTimeout(async () => {
+      searching = true;
+      try {
+        const r = await fetch(`/api/tracks/search?q=${encodeURIComponent(v)}`);
+        found = r.ok ? await r.json() : [];
+      } finally {
+        searching = false;
+      }
+    }, 300);
+  }
+  $effect(() => () => clearTimeout(searchTimer));
+
+  const inPlaylist = $derived(new Set(tracks.map((t) => t.track?.id)));
+
+  const keep = () => async ({ update }) => {
+    await update({ reset: false });
+  };
+  const closing = (close) => () => {
+    busy = true;
+    return async ({ result, update }) => {
+      busy = false;
+      await update({ reset: false });
+      if (result.type === 'success' && result.data?.success) close();
+    };
+  };
+
+  function armRemove(e, id) {
+    if (arming !== id) {
+      e.preventDefault();
+      arming = id;
+    }
   }
 </script>
 
-<div class="zk">
-  <a href="/admin/playlists" class="back">← Retour</a>
+<!-- svelte-ignore a11y_media_has_caption -->
+<audio bind:this={player} onended={() => (playing = null)} preload="none"></audio>
 
-  <div class="panel pl-header">
-    <div class="pl-title">{playlist.emoji} {playlist.name}</div>
-    <div class="pl-meta">
-      <span class="meta-item">Propriétaire : <strong>{playlist.profiles?.username ?? '—'}</strong></span>
-      <span class="meta-item">Tracks : <strong>{playlist.track_count}</strong></span>
-      <span class="meta-item">Créée : <strong>{fmt(playlist.created_at)}</strong></span>
-      <span class="meta-item">MàJ : <strong>{fmt(playlist.updated_at)}</strong></span>
-      {#if playlist.is_official}<span class="tag tag-amber">★ Officielle</span>{/if}
-      {#if !playlist.is_public}<span class="tag">🔒 Privée</span>{/if}
-    </div>
-  </div>
+<div class="adm-page">
+  <PageHeader title="Playlist">
+    <button class="a-btn primary small" type="button" onclick={() => (addOpen = true)}>+ Ajouter</button>
+  </PageHeader>
 
-  {#if form && !form.success}
-    <div class="alert alert-err">{form.error ?? 'Action échouée'}</div>
-  {/if}
-  {#if form?.success}
-    <div class="alert alert-ok">Action appliquée.</div>
-  {/if}
+  <div class="a-stack">
+    <a class="back" href="/admin/playlists">← Toutes les playlists</a>
 
-  <div class="panel">
-    <div class="panel-head">
-      <span class="panel-label">Tracks</span>
-      <span class="panel-sub">{filteredTracks.length} / {tracks.length}</span>
-      <button class="btn btn-primary panel-head-action" onclick={() => pickerOpen = true} disabled={addingTrack}>+ Ajouter un morceau</button>
-    </div>
-
-    <input
-      class="field-input search-input"
-      type="text"
-      placeholder="Rechercher un artiste, un titre ou un feat…"
-      bind:value={searchQuery}
-    />
-
-    {#if tracks.length === 0}
-      <p class="hint">Aucune track.</p>
-    {:else if filteredTracks.length === 0}
-      <p class="hint">Aucun résultat pour « {searchQuery} ».</p>
-    {:else}
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Pos</th>
-              <th>Artiste</th>
-              <th>Titre</th>
-              <th>Source</th>
-              <th>Extrait</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each filteredTracks as t, i (t.id)}
-              <tr>
-                <td class="td-dim">{t.position}</td>
-                <td class="td-strong">
-                  {t.custom_artist || t.artist}
-                  {#if t.custom_artist}<span class="custom-badge" title="Nom custom">✎</span>{/if}
-                </td>
-                <td>
-                  {t.custom_title || t.title}
-                  {#if t.custom_title}<span class="custom-badge" title="Titre custom">✎</span>{/if}
-                  {#if t.custom_feats?.length}<span class="tag feat-tag">feat: {t.custom_feats.join(', ')}</span>{/if}
-                </td>
-                <td class="td-dim">{t.source}</td>
-                <td class="td-dim">
-                  {#if t.preview_url}
-                    <a href={t.preview_url} target="_blank" rel="noreferrer" class="link">Écouter</a>
-                  {:else}
-                    —
-                  {/if}
-                </td>
-                <td class="td-actions">
-                  {#if !searchQuery.trim()}
-                  <!-- Réordonner ▲ -->
-                  <form method="POST" action="?/reorderTrack" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                    <input type="hidden" name="_token" value={token}>
-                    <input type="hidden" name="track_id" value={t.id}>
-                    <input type="hidden" name="direction" value="up">
-                    <button class="icon-btn" disabled={i === 0}>▲</button>
-                  </form>
-                  <!-- Réordonner ▼ -->
-                  <form method="POST" action="?/reorderTrack" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                    <input type="hidden" name="_token" value={token}>
-                    <input type="hidden" name="track_id" value={t.id}>
-                    <input type="hidden" name="direction" value="down">
-                    <button class="icon-btn" disabled={i === filteredTracks.length - 1}>▼</button>
-                  </form>
-                  {/if}
-                  <button class="link" onclick={() => editMetaModal = { ...t }}>Éditer</button>
-                  <form method="POST" action="?/deleteTrack" use:enhance={() => async ({ update }) => { await update({ reset: false }); }}>
-                    <input type="hidden" name="_token" value={token}>
-                    <input type="hidden" name="track_id" value={t.id}>
-                    <button class="link link-danger">Supprimer</button>
-                  </form>
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
+    <section class="hero a-section">
+      <span class="big-tile" class:official={playlist.is_official}>{playlist.emoji}</span>
+      <div class="hero-main">
+        <h2>{playlist.name}</h2>
+        <p class="by">
+          par {#if playlist.owner_id}<a href="/admin/users/{playlist.owner_id}">{playlist.profiles?.username ?? 'inconnu'}</a>{:else}inconnu{/if}
+          · créée {ago(playlist.created_at)} · modifiée {ago(playlist.updated_at)}
+        </p>
+        <div class="tags">
+          {#if playlist.is_official}<em class="a-tag warn">★ Officielle</em>{/if}
+          <em class="a-tag {playlist.is_public ? 'good' : ''}">{playlist.is_public ? 'Publique' : 'Privée'}</em>
+          {#if playlist.linked_room_id}<em class="a-tag accent">Room {playlist.linked_room_id}</em>{/if}
+        </div>
       </div>
-    {/if}
-  </div>
+      <div class="hero-stats">
+        <div><span class="a-big">{tracks.length}</span><small>titres</small></div>
+        {#if data.plays !== null}<div><span class="a-big">{data.plays.toLocaleString('fr-FR')}</span><small>parties</small></div>{/if}
+        {#if counts.nopreview}<div><span class="a-big warn">{counts.nopreview}</span><small>sans extrait</small></div>{/if}
+        {#if counts.reported}<div><span class="a-big bad">{counts.reported}</span><small>signalés</small></div>{/if}
+      </div>
+      <div class="a-btns hero-actions">
+        <form method="POST" action="/admin/playlists?/toggleFlag" use:enhance={keep}>
+          <input type="hidden" name="id" value={playlist.id} />
+          <input type="hidden" name="field" value="is_official" />
+          <input type="hidden" name="value" value={String(!playlist.is_official)} />
+          <button class="a-btn small">{playlist.is_official ? 'Retirer des officielles' : '★ Rendre officielle'}</button>
+        </form>
+        <form method="POST" action="/admin/playlists?/toggleFlag" use:enhance={keep}>
+          <input type="hidden" name="id" value={playlist.id} />
+          <input type="hidden" name="field" value="is_public" />
+          <input type="hidden" name="value" value={String(!playlist.is_public)} />
+          <button class="a-btn small">{playlist.is_public ? 'Rendre privée' : 'Rendre publique'}</button>
+        </form>
+        <button class="a-btn small" type="button" onclick={() => (plOpen = true)}>Modifier</button>
+        <button class="a-btn small danger" type="button" onclick={() => (deleteOpen = true)}>Supprimer</button>
+      </div>
+    </section>
 
-  <div class="panel panel-danger">
-    <div class="panel-head"><span class="panel-label">Zone dangereuse</span></div>
-    <button class="btn btn-danger" onclick={() => deletePlaylistModal = true}>
-      Supprimer la playlist
-    </button>
+    {#if form?.error}<p class="a-card bad">{form.error}</p>{/if}
+
+    <div class="a-toolbar">
+      <label class="a-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        <span class="a-sr">Rechercher dans la playlist</span>
+        <input type="search" placeholder="Artiste, titre, feat, réponse…" bind:value={query} />
+      </label>
+    </div>
+    <div class="a-chips" role="group" aria-label="Filtrer les titres">
+      {#each VIEWS as [k, l] (k)}
+        <button class="a-chip" type="button" aria-pressed={view === k} onclick={() => (view = k)}>{l}<b>{counts[k]}</b></button>
+      {/each}
+    </div>
+
+    {#if !tracks.length}
+      <div class="a-card a-empty">
+        <p>Cette playlist est vide.</p>
+        <button class="a-btn primary" type="button" onclick={() => (addOpen = true)}>Ajouter un titre</button>
+      </div>
+    {:else if !shown.length}
+      <p class="a-card a-empty">Aucun titre ne correspond.</p>
+    {:else}
+      <ol class="a-list">
+        {#each shown as t, i (t.id)}
+          <li class="trk" class:on={playing === t.id}>
+            <span class="pos">{t.position + 1}</span>
+            {#if t.track?.preview_url}
+              <button class="cover-btn" type="button" aria-label={playing === t.id ? 'Pause' : 'Écouter l’extrait'} onclick={() => toggle(t)}>
+                {#if t.track.cover_url}<img class="a-cover" src={t.track.cover_url} alt="" loading="lazy" />{:else}<span class="a-cover"></span>{/if}
+                <span class="play">{playing === t.id ? '❚❚' : '▶'}</span>
+              </button>
+            {:else if t.track?.cover_url}
+              <img class="a-cover" src={t.track.cover_url} alt="" loading="lazy" />
+            {:else}
+              <span class="a-cover"></span>
+            {/if}
+            <div class="a-row-main">
+              <span class="a-row-title">
+                {titleOf(t)}{#if t.custom_title}<span class="mark" title="Titre modifié pour cette playlist">✎</span>{/if}
+              </span>
+              <span class="a-row-sub">
+                {artistOf(t)}{#if t.custom_artist}<span class="mark" title="Artiste modifié pour cette playlist">✎</span>{/if}
+                {#if t.custom_feats?.length} · feat. {t.custom_feats.join(', ')}{/if}
+              </span>
+              {#if t.answers.length || t.reported || !t.track?.preview_url || t.track?.youtube_id}
+                <span class="tags">
+                  {#if t.reported}<em class="a-tag bad">signalé</em>{/if}
+                  {#if !t.track?.preview_url}<em class="a-tag warn">sans extrait</em>{/if}
+                  {#if t.track?.youtube_id}<em class="a-tag good">vidéo épinglée</em>{/if}
+                  {#each t.answers as a (a.id)}<em class="a-tag accent">{typeName[a.answer_type_id]} : {a.value}</em>{/each}
+                </span>
+              {/if}
+            </div>
+            <div class="acts">
+              {#if canReorder}
+                <form method="POST" action="?/reorderTrack" use:enhance={keep}>
+                  <input type="hidden" name="track_id" value={t.id} />
+                  <input type="hidden" name="direction" value="up" />
+                  <button class="a-btn small icon" aria-label="Monter" disabled={i === 0}>▲</button>
+                </form>
+                <form method="POST" action="?/reorderTrack" use:enhance={keep}>
+                  <input type="hidden" name="track_id" value={t.id} />
+                  <input type="hidden" name="direction" value="down" />
+                  <button class="a-btn small icon" aria-label="Descendre" disabled={i === shown.length - 1}>▼</button>
+                </form>
+              {/if}
+              <button class="a-btn small" type="button" onclick={() => openEdit(t)}>Modifier</button>
+              <button class="a-btn small" type="button" disabled={!t.track} onclick={() => openRepair(t)}>Réparer</button>
+              <form method="POST" action="?/deleteTrack" use:enhance={keep}>
+                <input type="hidden" name="track_id" value={t.id} />
+                <button
+                  class="a-btn small"
+                  class:danger={arming === t.id}
+                  onclick={(e) => armRemove(e, t.id)}
+                  onblur={() => arming === t.id && (arming = null)}
+                >{arming === t.id ? 'Confirmer' : 'Retirer'}</button>
+              </form>
+            </div>
+          </li>
+        {/each}
+      </ol>
+    {/if}
   </div>
 </div>
 
-{#if pickerOpen}
-  <TrackPickerModal onPick={addTrack} onClose={() => pickerOpen = false} />
-{/if}
-
-<!-- Modal edit track meta -->
-{#if editMetaModal}
-  <div class="modal-overlay" onclick={() => editMetaModal = null} role="presentation">
-    <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Éditer les métadonnées</div>
-      <p class="modal-sub">{editMetaModal.artist} — {editMetaModal.title}</p>
-      <form method="POST" action="?/editTrackMeta" use:enhance={() => async ({ update }) => { await update({ reset: false }); editMetaModal = null; }}>
-        <input type="hidden" name="_token" value={token}>
-        <input type="hidden" name="track_id" value={editMetaModal.id}>
-        <label class="field">
-          <span class="field-label">Artiste custom (vide = original)</span>
-          <input class="field-input" type="text" name="custom_artist" value={editMetaModal.custom_artist ?? ''} placeholder={editMetaModal.artist}>
-        </label>
-        <label class="field">
-          <span class="field-label">Titre custom (vide = original)</span>
-          <input class="field-input" type="text" name="custom_title" value={editMetaModal.custom_title ?? ''} placeholder={editMetaModal.title}>
-        </label>
-        <label class="field">
-          <span class="field-label">Featurings / noms alternatifs (séparés par des virgules)</span>
-          <input class="field-input" type="text" name="custom_feats" value={editMetaModal.custom_feats?.join(', ') ?? ''} placeholder="ex: feat. Nekfeu, film: Titanic">
-        </label>
-        <div class="modal-btns">
-          <button type="button" class="btn" onclick={() => editMetaModal = null}>Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
-        </div>
-      </form>
-    </div>
+<Sheet bind:open={addOpen} title="Ajouter un titre">
+  <div class="add">
+    <label class="a-search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      <span class="a-sr">Chercher dans le catalogue</span>
+      <input type="search" placeholder="Artiste ou titre…" oninput={onSearch} />
+    </label>
+    {#if searching}<p class="a-muted">Recherche…</p>{/if}
+    <ul class="a-list">
+      {#each found as r (r.id)}
+        <li class="a-row">
+          {#if r.cover_url}<img class="a-cover" src={r.cover_url} alt="" loading="lazy" />{:else}<span class="a-cover"></span>{/if}
+          <span class="a-row-main">
+            <span class="a-row-title">{r.title}</span>
+            <span class="a-row-sub">{r.artist}</span>
+          </span>
+          {#if inPlaylist.has(r.id) || added.includes(r.id)}
+            <em class="a-tag good">dans la playlist</em>
+          {:else}
+            <form method="POST" action="?/addTrack" use:enhance={() => { added = [...added, r.id]; return keep(); }}>
+              <input type="hidden" name="track_id" value={r.id} />
+              <button class="a-btn small primary">Ajouter</button>
+            </form>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+    <p class="a-muted small">Seuls les titres déjà dans le catalogue apparaissent ici.</p>
   </div>
-{/if}
+</Sheet>
 
-<!-- Modal delete playlist -->
-{#if deletePlaylistModal}
-  <div class="modal-overlay" onclick={() => deletePlaylistModal = false} role="presentation">
-    <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Supprimer la playlist</div>
-      <p class="modal-warn">
-        Supprimer définitivement <strong>{playlist.emoji} {playlist.name}</strong> et ses {playlist.track_count} tracks ?
+<Sheet bind:open={editOpen} title="Modifier le titre" wide>
+  {#if editing}
+    <div class="edit">
+      <p class="who">
+        {#if editing.track?.cover_url}<img class="a-cover" src={editing.track.cover_url} alt="" />{/if}
+        <span><b>{editing.track?.title}</b><br /><span class="a-muted">{editing.track?.artist}</span></span>
+        {#if editing.track}<a class="a-btn small" href="/admin/tracks?open={editing.track.id}">Fiche du titre</a>{/if}
       </p>
-      <form method="POST" action="?/deletePlaylist" use:enhance>
-        <input type="hidden" name="_token" value={token}>
-        <div class="modal-btns">
-          <button type="button" class="btn" onclick={() => deletePlaylistModal = false}>Annuler</button>
-          <button type="submit" class="btn btn-danger">Supprimer</button>
+      <h3 class="a-h2">Dans cette playlist</h3>
+      <form class="a-form" method="POST" action="?/editTrackMeta" use:enhance={closing(() => (editOpen = false))}>
+        <input type="hidden" name="track_id" value={editing.id} />
+        <div class="a-form-row">
+          <label class="a-label">Artiste affiché<input class="a-input" name="custom_artist" value={editing.custom_artist ?? ''} placeholder={editing.track?.artist} /></label>
+          <label class="a-label">Titre affiché<input class="a-input" name="custom_title" value={editing.custom_title ?? ''} placeholder={editing.track?.title} /></label>
         </div>
+        <label class="a-label">
+          Artistes en featuring (séparés par des virgules)
+          <input class="a-input" name="custom_feats" value={editing.custom_feats?.join(', ') ?? ''} placeholder="ex : Nekfeu, Damso" />
+        </label>
+        <p class="a-muted small">Laisse vide pour garder le nom du catalogue.</p>
+        <button class="a-btn primary" type="submit" disabled={busy}>Enregistrer</button>
       </form>
+      <h3 class="a-h2">Réponses acceptées en plus</h3>
+      <TrackAnswers
+        trackId={editing.track?.id}
+        entries={[{ id: editing.id, label: playlist.name, answers: editing.answers }]}
+        types={data.types}
+        {token}
+        onchange={invalidateAll}
+      />
     </div>
-  </div>
-{/if}
+  {/if}
+</Sheet>
+
+<Sheet bind:open={repairOpen} title="Réparer le titre" wide>
+  {#if repairing?.track}
+    <p class="who-line"><b>{repairing.track.artist}</b> · {repairing.track.title}</p>
+    <TrackRepair track={repairing.track} {token} />
+  {/if}
+</Sheet>
+
+<Sheet bind:open={plOpen} title="Modifier la playlist">
+  <form class="a-form" method="POST" action="/admin/playlists?/editPlaylist" use:enhance={closing(() => (plOpen = false))}>
+    <input type="hidden" name="id" value={playlist.id} />
+    <div class="edit-name">
+      <label class="a-label emoji">Emoji<input class="a-input" name="emoji" value={playlist.emoji} maxlength="4" /></label>
+      <label class="a-label">Nom<input class="a-input" name="name" value={playlist.name} required /></label>
+    </div>
+    <label class="a-label">
+      Room liée (code)
+      <input class="a-input" name="linked_room_id" value={playlist.linked_room_id ?? ''} placeholder="ex : KDP2G9" maxlength="12" />
+      <span class="a-muted small">La room du site qui joue cette playlist. Sert aussi à compter ses parties.</span>
+    </label>
+    <button class="a-btn primary" type="submit" disabled={busy}>Enregistrer</button>
+  </form>
+</Sheet>
+
+<Sheet bind:open={deleteOpen} title="Supprimer la playlist ?">
+  <form class="a-form" method="POST" action="?/deletePlaylist" use:enhance>
+    <p><b>{playlist.emoji} {playlist.name}</b> et ses {tracks.length} titres seront supprimés pour de bon. Les titres restent dans le catalogue.</p>
+    <button class="a-btn danger" type="submit">Supprimer définitivement</button>
+  </form>
+</Sheet>
 
 <style>
-  .zk {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-green: #22c55e;
-    --c-red: #ef4444;
-    --c-amber: #f59e0b;
-    --c-indigo: #6366f1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--c-text);
+  .back { width: fit-content; font-size: 0.85rem; color: var(--a-muted); }
+  .back:hover { color: var(--a-fg); }
+
+  .hero { grid-template-columns: auto 1fr; align-items: center; gap: 14px; }
+  .big-tile {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--a-surface2), var(--a-accent-soft));
+    font-size: 2.4rem;
+  }
+  .big-tile.official { box-shadow: inset 0 0 0 2px var(--a-warn); }
+  .hero-main { display: grid; gap: 6px; min-width: 0; }
+  .hero-main h2 {
+    font-family: var(--a-display);
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+  .by { font-size: 0.82rem; color: var(--a-dim); }
+  .by a { color: var(--a-cyan); }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .hero-stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 22px; }
+  .hero-stats div { display: grid; gap: 2px; }
+  .hero-stats small { font-size: 0.75rem; color: var(--a-dim); }
+  .a-big.warn { color: var(--a-warn); }
+  .a-big.bad { color: var(--a-bad); }
+  .hero-actions { grid-column: 1 / -1; }
+  .hero-actions form { display: contents; }
+  @media (min-width: 900px) {
+    .hero { grid-template-columns: auto 1fr auto; padding: 22px; }
+    .big-tile { width: 96px; height: 96px; font-size: 3.2rem; }
+    .hero-main h2 { font-size: 2.2rem; }
+    .hero-stats { grid-column: auto; }
   }
 
-  .back { font-size: 0.8rem; color: var(--c-muted); transition: color 0.15s; width: fit-content; }
-  .back:hover { color: var(--c-text); }
-
-  .panel {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .panel-danger { border-color: rgba(239, 68, 68, 0.25); }
-  .panel-head { display: flex; align-items: baseline; gap: 10px; }
-  .panel-head-action { margin-left: auto; }
-  .panel-label { font-size: 0.82rem; font-weight: 600; color: var(--c-text); }
-  .panel-sub { font-size: 0.75rem; color: var(--c-muted); }
-
-  .pl-title { font-size: 1.15rem; font-weight: 600; }
-  .pl-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .meta-item { font-size: 0.78rem; color: var(--c-muted); }
-  .meta-item strong { color: var(--c-text); }
-
-  .hint { font-size: 0.82rem; color: var(--c-muted); }
-
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-  th {
-    text-align: left;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--c-muted);
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--c-border);
-  }
-  td { padding: 9px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255, 255, 255, 0.02); }
-
-  .td-strong { font-weight: 500; }
-  .td-dim { color: var(--c-muted); font-size: 0.8rem; }
-  .td-actions { display: flex; gap: 8px; align-items: center; }
-
-  .custom-badge { font-size: 0.68rem; color: var(--c-amber); margin-left: 4px; }
-  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); }
-  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
-  .feat-tag { margin-left: 6px; }
-
-  .link { background: none; border: none; font-family: inherit; font-size: 0.8rem; color: var(--c-muted); cursor: pointer; padding: 0; transition: color 0.15s; }
-  .link:hover { color: var(--c-text); }
-  .link-danger { color: rgba(239, 68, 68, 0.6); }
-  .link-danger:hover { color: var(--c-red); }
-
-  .icon-btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    border-radius: 4px;
-    color: var(--c-muted);
-    font-size: 0.68rem;
-    padding: 2px 6px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .icon-btn:hover:not(:disabled) { color: var(--c-text); border-color: rgba(255, 255, 255, 0.2); }
-  .icon-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-
-  .btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    width: fit-content;
-  }
-  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
-  .btn-primary { border-color: rgba(99, 102, 241, 0.4); color: var(--c-indigo); }
-  .btn-primary:hover:not(:disabled) { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.6); }
-  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
-  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
-
-  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
-  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
-  .alert-ok { color: var(--c-green); border-color: rgba(34, 197, 94, 0.3); }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
+  .trk {
+    display: grid;
+    grid-template-columns: 22px 44px minmax(0, 1fr);
     align-items: center;
-    justify-content: center;
-    z-index: 200;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--a-line);
+    border-radius: 14px;
+    background: var(--a-surface);
   }
-  .modal {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 24px;
-    width: 420px;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    color: var(--c-text);
+  .trk.on { border-color: var(--a-accent); }
+  .pos { font-size: 0.75rem; text-align: right; color: var(--a-dim); font-variant-numeric: tabular-nums; }
+  .cover-btn { position: relative; padding: 0; border: 0; background: none; cursor: pointer; }
+  .cover-btn .a-cover { display: block; }
+  .play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 0.9rem;
   }
-  .modal-title { font-size: 0.95rem; font-weight: 600; }
-  .modal-sub { font-size: 0.8rem; color: var(--c-muted); }
-  .modal-warn { font-size: 0.84rem; color: var(--c-muted); }
-  .modal-warn strong { color: var(--c-text); }
+  .trk.on .play { background: rgba(255, 61, 240, 0.55); }
+  .mark { margin-left: 4px; font-size: 0.75rem; color: var(--a-warn); }
+  .trk .tags { margin-top: 2px; }
+  .acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .acts form { display: contents; }
+  .icon { min-width: 32px; padding-inline: 6px; }
+  @media (min-width: 900px) {
+    .trk { grid-template-columns: 26px 44px minmax(0, 1fr) auto; }
+    .acts { grid-column: auto; flex-wrap: nowrap; }
+  }
 
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field-label { font-size: 0.72rem; color: var(--c-muted); }
-  .field-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.84rem;
-    padding: 7px 10px;
-    outline: none;
-  }
-  .field-input:focus { border-color: rgba(255, 255, 255, 0.2); }
-  .field-input::placeholder { color: var(--c-muted); }
-  .search-input { width: 100%; }
+  .add { display: grid; gap: 12px; }
+  .add form { display: contents; }
+  .small { font-size: 0.78rem; font-weight: 400; }
 
-  .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
+  .edit { display: grid; gap: 14px; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .who > span { flex: 1; min-width: 0; }
+  .who-line { margin-bottom: 12px; }
+  .edit-name { display: grid; grid-template-columns: 84px 1fr; gap: 10px; }
+  .emoji input { text-align: center; font-size: 1.2rem; }
 </style>

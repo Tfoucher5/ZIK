@@ -1,53 +1,118 @@
 <script>
-  import { getContext, onDestroy } from 'svelte';
+  import { getContext } from 'svelte';
+  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import Sheet from '$lib/admin/Sheet.svelte';
+  import { ago } from '$lib/admin/stats-utils.js';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');
 
+  const HOUR = 3600_000;
+  const LEVELS = [
+    { key: 'all', label: 'Tout' },
+    { key: 'error', label: 'Erreurs' },
+    { key: 'warn', label: 'Avertissements' },
+  ];
+
   let entries = $state([]);
   let loading = $state(false);
+  let failed = $state(false);
   let lastFetch = $state(null);
   let autoRefresh = $state(true);
-  let filterLevel = $state('all');
-  let searchText = $state('');
-  let clearModal = $state(false);
-  let interval = null;
+  let level = $state('all');
+  let q = $state('');
+  let sort = $state('count');
+  let clearOpen = $state(false);
+  let copied = $state(null);
+  let W = $state(600);
+  let now = $state(Date.now());
 
-  const filtered = $derived(
-    entries.filter(e => {
-      if (filterLevel !== 'all' && e.level !== filterLevel) return false;
-      if (searchText.trim() && !e.msg.toLowerCase().includes(searchText.toLowerCase())) return false;
-      return true;
-    })
-  );
+  const normalize = (msg) =>
+    msg
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '…')
+      .replace(/\d+/g, '#');
 
-  const errorCount = $derived(entries.filter(e => e.level === 'error').length);
-  const warnCount  = $derived(entries.filter(e => e.level === 'warn').length);
+  const groups = $derived.by(() => {
+    const map = {};
+    for (const e of entries) {
+      const key = `${e.level}|${normalize(e.msg)}`;
+      const g = map[key];
+      if (g) {
+        g.count++;
+        if (e.ts > g.last) {
+          g.last = e.ts;
+          g.msg = e.msg;
+        }
+        if (e.ts < g.first) g.first = e.ts;
+      } else {
+        map[key] = { key, level: e.level, msg: e.msg, count: 1, first: e.ts, last: e.ts };
+      }
+    }
+    return Object.values(map);
+  });
+  const counts = $derived({
+    all: groups.length,
+    error: groups.filter((g) => g.level === 'error').length,
+    warn: groups.filter((g) => g.level === 'warn').length,
+  });
+  const shown = $derived.by(() => {
+    const needle = q.trim().toLowerCase();
+    return groups
+      .filter((g) => (level === 'all' || g.level === level) && (!needle || g.msg.toLowerCase().includes(needle)))
+      .sort(sort === 'count' ? (a, b) => b.count - a.count || b.last - a.last : (a, b) => b.last - a.last);
+  });
 
-  function fmtTs(ts) {
-    return new Date(ts).toLocaleString('fr-FR', {
-      month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
+  const hours = $derived.by(() => {
+    const end = Math.floor(now / HOUR) * HOUR + HOUR;
+    const out = Array.from({ length: 24 }, (_, i) => {
+      const start = end - (24 - i) * HOUR;
+      return { start, h: new Date(start).getHours(), error: 0, warn: 0 };
     });
-  }
+    for (const e of entries) {
+      const i = 23 - Math.floor((end - 1 - e.ts) / HOUR);
+      if (i >= 0 && i < 24) out[i][e.level === 'warn' ? 'warn' : 'error']++;
+    }
+    return out;
+  });
+  const last24 = $derived(hours.reduce((n, b) => ({ error: n.error + b.error, warn: n.warn + b.warn }), { error: 0, warn: 0 }));
+  const lastHour = $derived(hours[23].error + hours[23].warn);
+  const peak = $derived(hours.reduce((m, b) => (b.error + b.warn > m.error + m.warn ? b : m), hours[0]));
+  const maxH = $derived(Math.max(1, ...hours.map((b) => b.error + b.warn)));
+  const CH = 110;
+  const bw = $derived(W / 24);
+  const yh = (v) => (v / maxH) * (CH - 14);
 
   async function fetchLog() {
     if (!token) return;
     loading = true;
     try {
       const res = await fetch(`/api/admin/errors?token=${encodeURIComponent(token)}`);
-      const data = await res.json();
-      entries = data.entries ?? [];
+      if (!res.ok) throw new Error();
+      entries = (await res.json()).entries ?? [];
+      failed = false;
       lastFetch = Date.now();
-    } catch { /* ignore */ } finally {
+      now = lastFetch;
+    } catch {
+      failed = true;
+    } finally {
       loading = false;
     }
   }
 
   async function clearLog() {
-    clearModal = false;
-    await fetch(`/api/admin/errors?token=${encodeURIComponent(token)}`, { method: 'DELETE' });
-    entries = [];
+    const res = await fetch(`/api/admin/errors?token=${encodeURIComponent(token)}`, { method: 'DELETE' });
+    if (res.ok) entries = [];
+    clearOpen = false;
+  }
+
+  async function copy(g) {
+    try {
+      await navigator.clipboard.writeText(g.msg);
+      copied = g.key;
+      setTimeout(() => copied === g.key && (copied = null), 1500);
+    } catch {
+      copied = null;
+    }
   }
 
   $effect(() => {
@@ -55,221 +120,161 @@
   });
 
   $effect(() => {
-    if (interval) clearInterval(interval);
-    if (autoRefresh && token) {
-      interval = setInterval(fetchLog, 5000);
-    }
-    return () => clearInterval(interval);
+    if (!autoRefresh || !token) return;
+    const id = setInterval(fetchLog, 5000);
+    return () => clearInterval(id);
   });
 
-  onDestroy(() => clearInterval(interval));
+  const firstLine = (msg) => msg.split('\n')[0];
+  const fmtTs = (ts) => new Date(ts).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 </script>
 
-<div class="zk">
-  <div class="zk-head">
-    <h1>Logs</h1>
-    <span class="tag tag-red">{errorCount} erreurs</span>
-    <span class="tag tag-amber">{warnCount} warns</span>
-    {#if loading}<span class="loading-dot">●</span>{/if}
-    {#if lastFetch}<span class="zk-date">dernière MàJ {new Date(lastFetch).toLocaleTimeString('fr-FR')}</span>{/if}
-  </div>
+<div class="adm-page">
+  <PageHeader title="Erreurs">
+    <button class="a-btn small" type="button" onclick={fetchLog} disabled={loading}>{loading ? '…' : 'Actualiser'}</button>
+  </PageHeader>
 
-  <div class="panel toolbar">
-    <div class="filters">
-      <button class="chip" class:active={filterLevel === 'all'} onclick={() => filterLevel = 'all'}>Tous ({entries.length})</button>
-      <button class="chip chip-red" class:active={filterLevel === 'error'} onclick={() => filterLevel = 'error'}>Erreurs ({errorCount})</button>
-      <button class="chip chip-amber" class:active={filterLevel === 'warn'} onclick={() => filterLevel = 'warn'}>Warns ({warnCount})</button>
-    </div>
-    <input class="search-input" type="text" placeholder="Filtrer les messages…" bind:value={searchText} />
-    <label class="checkbox">
-      <input type="checkbox" bind:checked={autoRefresh} />
-      Auto-refresh 5s
-    </label>
-    <button class="btn" onclick={fetchLog}>↺ Rafraîchir</button>
-    <button class="btn btn-danger" onclick={() => clearModal = true}>✕ Tout vider</button>
-  </div>
+  <div class="a-stack">
+    {#if failed}<p class="a-card bad">Impossible de lire le journal du serveur.</p>{/if}
 
-  {#if filtered.length === 0}
-    <p class="hint hint-center">
-      {entries.length === 0 ? 'Aucune erreur enregistrée.' : 'Aucune entrée ne correspond aux filtres.'}
-    </p>
-  {:else}
-    <div class="panel log-list">
-      {#each filtered as e (e.ts + e.msg.slice(0, 20))}
-        <div class="log-entry" class:is-error={e.level === 'error'} class:is-warn={e.level === 'warn'}>
-          <span class="log-ts">{fmtTs(e.ts)}</span>
-          <span class="log-level" class:lvl-err={e.level === 'error'} class:lvl-wrn={e.level === 'warn'}>
-            {e.level.toUpperCase()}
-          </span>
-          <span class="log-msg">{e.msg}</span>
-        </div>
-      {/each}
-    </div>
-  {/if}
-</div>
-
-{#if clearModal}
-  <div class="modal-overlay" onclick={() => clearModal = false} role="presentation">
-    <div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
-      <div class="modal-title">Vider les logs</div>
-      <p class="modal-warn">Supprimer définitivement les {entries.length} entrées du journal ?</p>
-      <div class="modal-btns">
-        <button type="button" class="btn" onclick={() => clearModal = false}>Annuler</button>
-        <button type="button" class="btn btn-danger" onclick={clearLog}>Tout vider</button>
+    <div class="a-kpis">
+      <div class="a-kpi">
+        <span class="a-kpi-label">Erreurs sur 24 h</span>
+        <span class="a-kpi-value bad-v">{last24.error}</span>
+        <span class="a-kpi-sub">{counts.error} problème{counts.error > 1 ? 's' : ''} différent{counts.error > 1 ? 's' : ''}</span>
+      </div>
+      <div class="a-kpi">
+        <span class="a-kpi-label">Avertissements sur 24 h</span>
+        <span class="a-kpi-value warn-v">{last24.warn}</span>
+        <span class="a-kpi-sub">{counts.warn} différent{counts.warn > 1 ? 's' : ''}</span>
+      </div>
+      <div class="a-kpi">
+        <span class="a-kpi-label">Dernière heure</span>
+        <span class="a-kpi-value">{lastHour}</span>
+        <span class="a-kpi-sub">{peak.error + peak.warn ? `pic à ${peak.h} h (${peak.error + peak.warn})` : 'aucun pic'}</span>
       </div>
     </div>
+
+    <section class="a-section">
+      <div class="a-section-head">
+        <h2>Par heure</h2>
+        <span class="legend"><i class="e"></i>erreurs <i class="w"></i>avertissements</span>
+      </div>
+      <div class="chart" bind:clientWidth={W}>
+        <svg viewBox="0 0 {W} {CH + 18}" role="img" aria-label="Erreurs et avertissements par heure sur 24 heures">
+          <line x1="0" x2={W} y1={CH} y2={CH} class="axis" />
+          {#each hours as b, i (b.start)}
+            {@const x = i * bw + bw * 0.15}
+            {@const w = bw * 0.7}
+            <rect {x} y={CH - yh(b.error)} width={w} height={yh(b.error)} class="e"><title>{b.h} h : {b.error} erreur(s), {b.warn} avertissement(s)</title></rect>
+            <rect {x} y={CH - yh(b.error) - yh(b.warn)} width={w} height={yh(b.warn)} class="w"><title>{b.h} h : {b.error} erreur(s), {b.warn} avertissement(s)</title></rect>
+            {#if i % 4 === 3}<text x={x + w / 2} y={CH + 14} text-anchor="middle">{b.h} h</text>{/if}
+          {/each}
+          <text x={W} y="10" text-anchor="end" class="max">max {maxH}</text>
+        </svg>
+      </div>
+      <p class="a-muted note">Le serveur garde les 300 derniers messages. Le journal repart de zéro à chaque redémarrage.</p>
+    </section>
+
+    <div class="a-toolbar">
+      <label class="a-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        <span class="a-sr">Rechercher</span>
+        <input type="search" placeholder="Chercher dans les messages…" bind:value={q} />
+      </label>
+      <select class="a-select sort" bind:value={sort} aria-label="Trier">
+        <option value="count">Les plus fréquentes</option>
+        <option value="last">Les plus récentes</option>
+      </select>
+    </div>
+    <div class="bar">
+      <div class="a-chips" role="group" aria-label="Filtrer">
+        {#each LEVELS as l (l.key)}
+          <button class="a-chip" type="button" aria-pressed={level === l.key} onclick={() => (level = l.key)}>{l.label}<b>{counts[l.key]}</b></button>
+        {/each}
+      </div>
+      <label class="a-check auto"><input type="checkbox" bind:checked={autoRefresh} /> Mise à jour auto</label>
+    </div>
+
+    {#if shown.length === 0}
+      <p class="a-card a-empty">{entries.length ? 'Aucun message ne correspond.' : 'Aucune erreur enregistrée. 🎉'}</p>
+    {:else}
+      <ul class="a-list">
+        {#each shown as g (g.key)}
+          <li>
+            <details class="err {g.level}">
+              <summary>
+                <span class="count">{g.count}<small>×</small></span>
+                <span class="a-row-main">
+                  <span class="title">{firstLine(g.msg)}</span>
+                  <span class="a-row-sub">
+                    <em class="a-tag {g.level === 'error' ? 'bad' : 'warn'}">{g.level === 'error' ? 'Erreur' : 'Avertissement'}</em>
+                    dernière fois {ago(g.last, now)}{g.count > 1 ? ` · première ${ago(g.first, now)}` : ''}
+                  </span>
+                </span>
+              </summary>
+              <div class="body">
+                <pre>{g.msg}</pre>
+                <div class="foot">
+                  <span class="a-muted">{fmtTs(g.last)}</span>
+                  <button class="a-btn small" type="button" onclick={() => copy(g)}>{copied === g.key ? 'Copié' : 'Copier le message'}</button>
+                </div>
+              </div>
+            </details>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    <div class="end">
+      {#if lastFetch}<span class="a-muted">Mis à jour à {new Date(lastFetch).toLocaleTimeString('fr-FR')}</span>{/if}
+      <button class="a-btn small danger" type="button" disabled={!entries.length} onclick={() => (clearOpen = true)}>Vider le journal</button>
+    </div>
   </div>
-{/if}
+</div>
+
+<Sheet bind:open={clearOpen} title="Vider le journal">
+  <p>Effacer définitivement les {entries.length} messages enregistrés ? Les nouvelles erreurs continueront d’arriver.</p>
+  <div class="a-btns confirm">
+    <button class="a-btn" type="button" onclick={() => (clearOpen = false)}>Annuler</button>
+    <button class="a-btn danger" type="button" onclick={clearLog}>Tout effacer</button>
+  </div>
+</Sheet>
 
 <style>
-  .zk {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-green: #22c55e;
-    --c-red: #ef4444;
-    --c-amber: #f59e0b;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--c-text);
-  }
+  .bad-v { color: var(--a-bad); }
+  .warn-v { color: var(--a-warn); }
 
-  .zk-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
-  .zk-date { font-size: 0.75rem; color: var(--c-muted); margin-left: auto; }
+  .legend { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--a-muted); }
+  .legend i { width: 10px; height: 10px; margin-left: 6px; border-radius: 3px; }
+  .legend i.e { background: var(--a-bad); }
+  .legend i.w { background: var(--a-warn); }
+  .chart { min-width: 0; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart svg text { fill: var(--a-dim); font-size: 11px; font-family: inherit; }
+  .axis { stroke: var(--a-line); }
+  rect.e { fill: var(--a-bad); }
+  rect.w { fill: var(--a-warn); }
+  .note { font-size: 0.78rem; }
 
-  .loading-dot { color: var(--c-green); animation: blink 0.8s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .sort { flex: 0 1 220px; width: auto; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  .bar .a-chips { min-width: 0; }
+  .auto { font-size: 0.85rem; color: var(--a-muted); }
 
-  .panel {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+  .err { border: 1px solid var(--a-line); border-left: 3px solid var(--a-bad); border-radius: 14px; background: var(--a-surface); }
+  .err.warn { border-left-color: var(--a-warn); }
+  .err[open] { border-color: var(--a-dim); }
+  summary { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .count { flex: 0 0 auto; min-width: 48px; font-family: var(--a-display); font-size: 1.5rem; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+  .count small { font-size: 0.9rem; color: var(--a-dim); }
+  .title { display: -webkit-box; overflow: hidden; font-size: 0.9rem; font-weight: 600; overflow-wrap: anywhere; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+  .a-row-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; white-space: normal; }
+  .body { display: grid; gap: 10px; padding: 0 14px 14px; }
+  pre { max-height: 320px; overflow: auto; padding: 12px; border-radius: 10px; background: var(--a-bg); font-size: 0.78rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; }
 
-  .toolbar { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 10px; }
-  .filters { display: flex; gap: 4px; }
-  .chip {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-muted);
-    font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .chip:hover, .chip.active { background: rgba(255, 255, 255, 0.05); color: var(--c-text); border-color: rgba(255, 255, 255, 0.15); }
-  .chip-red.active { color: var(--c-red); border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.06); }
-  .chip-amber.active { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.06); }
-
-  .search-input {
-    flex: 1;
-    min-width: 160px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.82rem;
-    padding: 6px 10px;
-    outline: none;
-  }
-  .search-input::placeholder { color: var(--c-muted); }
-  .search-input:focus { border-color: rgba(255, 255, 255, 0.2); }
-
-  .checkbox {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.78rem;
-    color: var(--c-muted);
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-  }
-
-  .btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    white-space: nowrap;
-  }
-  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
-  .btn-danger { border-color: rgba(239, 68, 68, 0.3); color: var(--c-red); }
-  .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.5); }
-
-  .hint { font-size: 0.82rem; color: var(--c-muted); }
-  .hint-center { text-align: center; padding: 32px 0; }
-
-  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); }
-  .tag-red { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
-  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
-
-  .log-list { padding: 0; gap: 0; overflow: hidden; }
-  .log-entry {
-    display: grid;
-    grid-template-columns: 130px 56px 1fr;
-    gap: 10px;
-    align-items: baseline;
-    padding: 8px 16px;
-    border-bottom: 1px solid var(--c-border);
-    font-size: 0.8rem;
-    line-height: 1.5;
-  }
-  .log-entry:last-child { border-bottom: none; }
-  .log-entry:hover { background: rgba(255, 255, 255, 0.02); }
-  .log-entry.is-error { border-left: 3px solid var(--c-red); }
-  .log-entry.is-warn { border-left: 3px solid var(--c-amber); }
-
-  .log-ts { color: var(--c-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; flex-shrink: 0; }
-  .log-level { font-weight: 600; font-size: 0.68rem; flex-shrink: 0; color: var(--c-muted); }
-  .lvl-err { color: var(--c-red); }
-  .lvl-wrn { color: var(--c-amber); }
-  .log-msg { color: var(--c-text); word-break: break-word; white-space: pre-wrap; }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-  }
-  .modal {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 24px;
-    width: 400px;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    color: var(--c-text);
-  }
-  .modal-title { font-size: 0.95rem; font-weight: 600; }
-  .modal-warn { font-size: 0.84rem; color: var(--c-muted); }
-  .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
+  .end { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; }
+  .confirm { margin-top: 14px; }
 </style>

@@ -62,27 +62,7 @@ export function userClient(token) {
 
 // ─── Admin helpers ────────────────────────────────────────────────────────────
 
-export async function requireAdmin(request) {
-  const formData = await request.formData();
-  const token = formData.get("_token");
-  if (!token) throw error(403, "Token manquant");
-
-  const user = await verifyToken(token);
-  if (!user) throw error(403, "Token invalide");
-
-  const { data: profile } = await getAdminClient()
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "super_admin") throw error(403, "Accès refusé");
-
-  return { adminUser: user, formData };
-}
-
-// Variante pour les endpoints GET, où l'admin s'authentifie par un token en
-// query string plutôt que par un formulaire.
+// Endpoints /api/admin : l'admin s'authentifie par un token en query string.
 export async function requireAdminToken(token) {
   if (!token) throw error(403, "Token manquant");
 

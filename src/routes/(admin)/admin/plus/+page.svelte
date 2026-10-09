@@ -24,6 +24,7 @@
         { href: '/admin/tracks', name: 'Titres', desc: 'Catalogue, audio, métadonnées' },
         { href: '/admin/rooms', name: 'Rooms', desc: 'Rooms publiques et officielles' },
         { href: '/admin/zikle', name: 'Zikle', desc: 'Calendrier et pool de titres' },
+        { href: '/admin/defi', name: 'Défi de la semaine', desc: 'Objectif collectif, historique, prochain défi' },
         { href: '/admin/achievements', name: 'Succès', desc: 'Badges et déblocages' },
       ],
     },

@@ -1,5 +1,5 @@
 <script>
-  let { open = $bindable(false), title, children } = $props();
+  let { open = $bindable(false), title, wide = false, children } = $props();
   let closeBtn = $state();
 
   $effect(() => {
@@ -11,7 +11,7 @@
 
 {#if open}
   <button class="scrim" type="button" aria-label="Fermer" tabindex="-1" onclick={() => (open = false)}></button>
-  <div class="sheet" role="dialog" aria-modal="true" aria-label={title}>
+  <div class="sheet" class:wide role="dialog" aria-modal="true" aria-label={title}>
     <h2>{title}</h2>
     {@render children()}
     <button class="close" type="button" bind:this={closeBtn} onclick={() => (open = false)}>Fermer</button>
@@ -68,12 +68,22 @@
     font-weight: 600;
     cursor: pointer;
   }
+  /* Sur grand écran : une fenêtre centrée plutôt qu'un tiroir */
   @media (min-width: 900px) {
     .sheet {
+      top: 50%;
+      bottom: auto;
       left: 50%;
       right: auto;
-      width: 520px;
-      transform: translateX(-50%);
+      width: 560px;
+      max-height: 86vh;
+      padding: 24px 28px;
+      border: 1px solid var(--a-line);
+      border-radius: 20px;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
     }
+    .sheet.wide { width: min(880px, 92vw); }
+    .sheet::before { display: none; }
   }
 </style>

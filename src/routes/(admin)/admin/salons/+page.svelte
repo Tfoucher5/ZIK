@@ -38,6 +38,7 @@
 
   <div class="a-stack">
     <h2 class="a-h2">En direct</h2>
+    <div class="live-grid">
     {#each data.live as s (s.code)}
       <article class="a-card salon">
         <header>
@@ -66,6 +67,7 @@
     {:else}
       <p class="a-card a-empty">Aucun salon en cours.</p>
     {/each}
+    </div>
 
     {#if data.videoIssues}
       <a class="a-card warn issues" href="/admin/reparer">
@@ -74,14 +76,8 @@
       </a>
     {/if}
 
-    <h2 class="a-h2">Ces 30 derniers jours</h2>
-    <div class="a-grid2 a-grid4">
-      <div class="a-card stat"><span class="a-big">{data.month.games}</span><span class="lbl">parties de salon</span></div>
-      <div class="a-card stat"><span class="a-big">{String(data.month.avgPlayers).replace('.', ',')}</span><span class="lbl">joueurs en moyenne</span></div>
-      <div class="a-card stat" class:bad={data.month.limitHits}><span class="a-big">{data.month.limitHits}</span><span class="lbl">refusés par la limite de {FREE_MAX_PLAYERS}</span></div>
-      <div class="a-card stat"><span class="a-big">{data.month.guests}</span><span class="lbl">parties d'hôtes sans compte</span></div>
-    </div>
-
+    <div class="a-cols">
+    <div>
     <h2 class="a-h2">Hôtes</h2>
     <p class="a-muted hint">Les hôtes gratuits qui butent sur la limite sont les meilleurs candidats au Pro.</p>
     <ul class="a-list">
@@ -103,6 +99,18 @@
         <li class="a-empty">Aucun salon avec un hôte connecté ce mois-ci.</li>
       {/each}
     </ul>
+    </div>
+    <div>
+    <h2 class="a-h2">Ces 30 derniers jours</h2>
+    <div class="a-grid2">
+      <div class="a-card stat"><span class="a-big">{data.month.games}</span><span class="lbl">parties de salon</span></div>
+      <div class="a-card stat"><span class="a-big">{String(data.month.avgPlayers).replace('.', ',')}</span><span class="lbl">joueurs en moyenne</span></div>
+      <div class="a-card stat" class:bad={data.month.limitHits}><span class="a-big">{data.month.limitHits}</span><span class="lbl">refusés par la limite de {FREE_MAX_PLAYERS}</span></div>
+      <div class="a-card stat"><span class="a-big">{data.month.guests}</span><span class="lbl">parties d'hôtes sans compte</span></div>
+    </div>
+    </div>
+    </div>
+
   </div>
 </div>
 
@@ -116,6 +124,8 @@
 </Sheet>
 
 <style>
+  .live-grid { display: grid; gap: 12px; }
+  @media (min-width: 900px) { .live-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
   .salon { display: grid; gap: 8px; }
   .salon header { display: flex; align-items: center; gap: 8px; }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--a-good); }

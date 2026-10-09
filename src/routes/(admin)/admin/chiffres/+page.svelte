@@ -3,11 +3,13 @@
   import PageHeader from '$lib/admin/PageHeader.svelte';
   import BarChart from '$lib/admin/BarChart.svelte';
   import Sheet from '$lib/admin/Sheet.svelte';
+  import LineChart from '$lib/admin/LineChart.svelte';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');
 
-  let days = $state(30);
+  let { data } = $props();
+  const days = $derived(data.days);
   let pulse = $state(null);
   let error = $state('');
   let info = $state(null);
@@ -93,6 +95,19 @@
 
   const ZIKLE_COLORS = ['var(--a-good)', '#2fb366', 'var(--a-warn)', '#b7791f', 'var(--a-bad)'];
 
+  const MEDIUM = {
+    direct: { label: 'Direct', color: 'var(--a-violet)' },
+    search: { label: 'Moteurs de recherche', color: 'var(--a-cyan)' },
+    social: { label: 'Réseaux sociaux', color: 'var(--a-accent)' },
+    referral: { label: 'Autres sites', color: 'var(--a-warn)' },
+    campagne: { label: 'IA et campagnes', color: 'var(--a-good)' },
+  };
+  const dayLabel = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const signupTotal = $derived(data.signups.reduce((n, d) => n + d.n, 0));
+  const trafficTotal = $derived(data.traffic.reduce((n, d) => n + d.n, 0));
+  const mediumTotal = $derived(data.mediums.reduce((n, m) => n + m.n, 0) || 1);
+  const breakdownMax = $derived(Math.max(1, ...data.breakdown.map((w) => w.new_users + w.returning_users + w.resurrected)));
+
   const fmtPct = (v) => `${String(v).replace('.', ',')} %`;
   const fmtWeek = (w) => new Date(w).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   const northBars = $derived(
@@ -102,9 +117,9 @@
 
 <div class="adm-page">
   <PageHeader title="Chiffres">
-    <div class="seg" role="group" aria-label="Période des objectifs">
+    <div class="seg" role="group" aria-label="Période">
       {#each [7, 30, 90] as d (d)}
-        <button type="button" class:on={days === d} aria-pressed={days === d} onclick={() => (days = d)}>{d} j</button>
+        <a href="?j={d}" class:on={days === d} aria-current={days === d ? 'page' : undefined}>{d} j</a>
       {/each}
     </div>
   </PageHeader>
@@ -188,6 +203,112 @@
         <a class="more" href="/admin/zikle">Gérer le Zikle</a>
       </article>
     {/if}
+
+    <h2 class="a-h2">Audience</h2>
+    <div class="a-cols">
+      <section class="a-section">
+        <div class="a-section-head"><h3>Joueurs actifs par jour</h3><span class="a-muted small">{days} derniers jours</span></div>
+        <LineChart points={data.actives.map((d) => ({ label: dayLabel(d.day), value: d.n }))} />
+      </section>
+      <div class="a-kpis">
+        <div class="a-kpi"><span class="a-kpi-label">Aujourd'hui</span><span class="a-kpi-value">{data.audience?.dau ?? '–'}</span><span class="a-kpi-sub">joueurs actifs</span></div>
+        <div class="a-kpi"><span class="a-kpi-label">Cette semaine</span><span class="a-kpi-value">{data.audience?.wau ?? '–'}</span><span class="a-kpi-sub">joueurs actifs</span></div>
+        <div class="a-kpi"><span class="a-kpi-label">Ce mois</span><span class="a-kpi-value">{data.audience?.mau ?? '–'}</span><span class="a-kpi-sub">joueurs actifs</span></div>
+        <div class="a-kpi"><span class="a-kpi-label">Inscriptions</span><span class="a-kpi-value">{signupTotal}</span><span class="a-kpi-sub">sur {days} jours</span></div>
+      </div>
+    </div>
+
+    <div class="a-cols even">
+      <section class="a-section">
+        <div class="a-section-head"><h3>Qui joue chaque semaine</h3></div>
+        <div class="stack-bars">
+          {#each data.breakdown as w (w.week)}
+            {@const total = w.new_users + w.returning_users + w.resurrected}
+            <div class="sb-row">
+              <span class="sb-lbl">{dayLabel(w.week)}</span>
+              <span class="sb-bar">
+                <i class="new" style:width="{(w.new_users / breakdownMax) * 100}%"></i>
+                <i class="ret" style:width="{(w.returning_users / breakdownMax) * 100}%"></i>
+                <i class="back" style:width="{(w.resurrected / breakdownMax) * 100}%"></i>
+              </span>
+              <b>{total}</b>
+            </div>
+          {/each}
+        </div>
+        <div class="keys">
+          <span><i class="new"></i>Nouveaux</span>
+          <span><i class="ret"></i>Fidèles</span>
+          <span><i class="back"></i>Revenus après une pause</span>
+        </div>
+      </section>
+
+      <section class="a-section">
+        <div class="a-section-head"><h3>Reviennent-ils ?</h3></div>
+        <p class="a-muted small">Part des inscrits de chaque semaine qui rejouent 1, 2, 3 et 4 semaines après.</p>
+        <div class="a-table-wrap">
+          <table class="a-table cohort">
+            <thead><tr><th>Inscrits la semaine du</th><th class="num">Inscrits</th><th class="num">S+1</th><th class="num">S+2</th><th class="num">S+3</th><th class="num">S+4</th></tr></thead>
+            <tbody>
+              {#each data.cohorts as c (c.cohort_week)}
+                <tr>
+                  <td>{dayLabel(c.cohort_week)}</td>
+                  <td class="num">{c.cohort_size}</td>
+                  {#each [c.w1, c.w2, c.w3, c.w4] as v, i (i)}
+                    {@const p = c.cohort_size ? Math.round((v / c.cohort_size) * 100) : 0}
+                    {@const done = new Date(c.cohort_week).getTime() + (i + 2) * 7 * 86400000 <= Date.now()}
+                    <td class="num heat" style:--h={done ? Math.min(1, p / 30) : 0}>{done ? `${p} %` : '·'}</td>
+                  {/each}
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="a-h2">D'où viennent les visiteurs</h2>
+    <div class="a-cols">
+      <section class="a-section">
+        <div class="a-section-head"><h3>Visites par jour</h3><span class="a-muted small">{trafficTotal.toLocaleString('fr-FR')} sur {days} jours</span></div>
+        <LineChart points={data.traffic.map((d) => ({ label: dayLabel(d.day), value: d.n }))} color="var(--a-cyan)" />
+        <div class="medium-bar" aria-hidden="true">
+          {#each data.mediums as m (m.medium)}
+            <i style:width="{(m.n / mediumTotal) * 100}%" style:background={MEDIUM[m.medium]?.color ?? 'var(--a-dim)'}></i>
+          {/each}
+        </div>
+        <div class="keys">
+          {#each data.mediums as m (m.medium)}
+            <span><i style:background={MEDIUM[m.medium]?.color ?? 'var(--a-dim)'}></i>{MEDIUM[m.medium]?.label ?? m.medium} <b>{Math.round((m.n / mediumTotal) * 100)} %</b></span>
+          {/each}
+        </div>
+      </section>
+      <section class="a-section">
+        <div class="a-section-head"><h3>Meilleures sources</h3></div>
+        <ul class="ranks">
+          {#each data.sources as s (s.source + s.medium)}
+            <li>
+              <span class="r-name">{s.source}<em>{MEDIUM[s.medium]?.label ?? s.medium}</em></span>
+              <span class="a-meter"><i style:width="{(s.n / (data.sources[0]?.n || 1)) * 100}%" style:background={MEDIUM[s.medium]?.color}></i></span>
+              <b>{s.n}</b>
+            </li>
+          {:else}
+            <li class="a-muted">Aucune visite enregistrée.</li>
+          {/each}
+        </ul>
+      </section>
+    </div>
+    <section class="a-section">
+      <div class="a-section-head"><h3>Pages d'arrivée</h3></div>
+      <ul class="ranks">
+        {#each data.landings as l (l.path)}
+          <li>
+            <a class="r-name" href={l.path} target="_blank" rel="noopener noreferrer">{l.path}</a>
+            <span class="a-meter"><i style:width="{(l.n / (data.landings[0]?.n || 1)) * 100}%"></i></span>
+            <b>{l.n}</b>
+          </li>
+        {/each}
+      </ul>
+    </section>
   </div>
 </div>
 
@@ -206,7 +327,7 @@
   .cols { display: grid; gap: 14px; }
 
   .seg { display: flex; padding: 3px; border: 1px solid var(--a-line); border-radius: 99px; background: var(--a-surface); }
-  .seg button {
+  .seg a {
     padding: 5px 11px;
     border: 0;
     border-radius: 99px;
@@ -217,7 +338,7 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .seg button.on { background: var(--a-accent); color: #1a0018; }
+  .seg a.on { background: var(--a-accent); color: #1a0018; }
 
   .card { min-width: 0; padding: 16px; border: 1px solid var(--a-line); border-radius: 16px; background: var(--a-surface); }
   h2 {
@@ -311,6 +432,25 @@
   .keys b { color: var(--a-fg); }
   .more { display: inline-block; margin-top: 14px; font-size: 0.85rem; font-weight: 600; color: var(--a-accent); }
 
+  .small { font-size: 0.8rem; }
+  .stack-bars { display: grid; gap: 6px; }
+  .sb-row { display: grid; grid-template-columns: 56px 1fr 36px; align-items: center; gap: 8px; font-size: 0.8rem; }
+  .sb-lbl { color: var(--a-dim); }
+  .sb-row b { text-align: right; font-variant-numeric: tabular-nums; }
+  .sb-bar { display: flex; height: 14px; border-radius: 4px; background: var(--a-surface2); overflow: hidden; }
+  .sb-bar i, .keys i.new, .keys i.ret, .keys i.back { display: block; height: 100%; }
+  .new { background: var(--a-accent); }
+  .ret { background: var(--a-cyan); }
+  .back { background: var(--a-warn); }
+  .cohort td.heat { background: rgba(74, 222, 128, calc(var(--h) * 0.45)); }
+  .medium-bar { display: flex; gap: 2px; height: 12px; margin-top: 6px; border-radius: 6px; overflow: hidden; }
+  .medium-bar i { display: block; height: 100%; }
+  .ranks { display: grid; gap: 10px; list-style: none; }
+  .ranks li { display: grid; grid-template-columns: minmax(0, 1.2fr) 1fr 44px; align-items: center; gap: 10px; font-size: 0.85rem; }
+  .ranks b { text-align: right; font-variant-numeric: tabular-nums; }
+  .r-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-name em { margin-left: 6px; font-size: 0.72rem; font-style: normal; color: var(--a-dim); }
+  a.r-name:hover { color: var(--a-accent); }
   .msg { padding: 24px 0; color: var(--a-muted); }
   .msg.err { color: var(--a-bad); }
 

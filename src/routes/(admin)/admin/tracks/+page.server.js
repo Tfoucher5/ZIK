@@ -1,32 +1,69 @@
 import { getAdminClient } from "$lib/server/config.js";
-import { requireAdmin, logAdminAction } from "$lib/server/middleware/auth.js";
+import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { escapeIlike } from "$lib/zikle/shared.js";
 
 const PAGE_SIZE = 50;
-const ALLOWED_SORT = ["created_at", "artist"];
+const SORTS = {
+  recent: ["created_at", false],
+  artist: ["artist", true],
+  title: ["title", true],
+};
+const FILTERS = ["all", "nopin", "nopreview", "reported"];
 
 export async function load({ url }) {
   const sb = getAdminClient();
   const q = url.searchParams.get("q") || "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-  const sortParam = url.searchParams.get("sort");
-  const sort = ALLOWED_SORT.includes(sortParam) ? sortParam : "created_at";
+  const sort = SORTS[url.searchParams.get("sort")]
+    ? url.searchParams.get("sort")
+    : "recent";
+  const filter = FILTERS.includes(url.searchParams.get("f"))
+    ? url.searchParams.get("f")
+    : "all";
 
+  const head = (fn) =>
+    fn(sb.from("tracks").select("id", { count: "exact", head: true })).then(
+      (r) => r.count ?? 0,
+    );
+
+  const [total, pinned, noPreview, answers, issuesRes] = await Promise.all([
+    head((x) => x),
+    head((x) => x.not("youtube_id", "is", null)),
+    head((x) => x.is("preview_url", null)),
+    sb
+      .from("track_answers")
+      .select("id", { count: "exact", head: true })
+      .then((r) => r.count ?? 0),
+    sb.from("track_issues").select("track_id").eq("status", "open"),
+  ]);
+  const reportedIds = [
+    ...new Set((issuesRes.data ?? []).map((i) => i.track_id)),
+  ];
+
+  const [col, asc] = SORTS[sort];
   let query = sb
     .from("tracks")
-    .select("id, artist, title, cover_url, preview_url, source, created_at", {
-      count: "exact",
-    })
-    .order(sort, { ascending: sort === "artist" })
+    .select(
+      "id, artist, title, cover_url, preview_url, youtube_id, source, created_at",
+      { count: "exact" },
+    )
+    .order(col, { ascending: asc })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-
+  if (filter === "nopin") query = query.is("youtube_id", null);
+  if (filter === "nopreview") query = query.is("preview_url", null);
+  if (filter === "reported") query = query.in("id", reportedIds);
   if (q) {
     const pattern = `%${escapeIlike(q)}%`;
     query = query.or(`artist.ilike.${pattern},title.ilike.${pattern}`);
   }
 
-  const { data: tracks, count, error: err } = await query;
-  const ids = (tracks || []).map((t) => t.id);
+  const nothing = filter === "reported" && !reportedIds.length;
+  const {
+    data: tracks,
+    count,
+    error: err,
+  } = nothing ? { data: [], count: 0 } : await query;
+  const ids = (tracks ?? []).map((t) => t.id);
 
   const [{ data: plRows }, { data: dsRows }] = await Promise.all([
     ids.length
@@ -37,60 +74,75 @@ export async function load({ url }) {
       : Promise.resolve({ data: [] }),
   ]);
 
-  const plCount = new Map();
-  for (const r of plRows || [])
-    plCount.set(r.track_id, (plCount.get(r.track_id) || 0) + 1);
-  const dsCount = new Map();
-  for (const r of dsRows || [])
-    dsCount.set(r.track_id, (dsCount.get(r.track_id) || 0) + 1);
+  const tally = (rows) => {
+    const m = new Map();
+    for (const r of rows ?? []) m.set(r.track_id, (m.get(r.track_id) || 0) + 1);
+    return m;
+  };
+  const plCount = tally(plRows);
+  const dsCount = tally(dsRows);
+  const reported = new Set(reportedIds);
 
   return {
-    tracks: (tracks || []).map((t) => ({
+    tracks: (tracks ?? []).map((t) => ({
       ...t,
       playlistCount: plCount.get(t.id) || 0,
       zikleDays: dsCount.get(t.id) || 0,
+      reported: reported.has(t.id),
     })),
-    total: count ?? 0,
+    count: count ?? 0,
     page,
     pageSize: PAGE_SIZE,
     q,
     sort,
+    filter,
+    kpis: {
+      total,
+      pinned,
+      nopin: total - pinned,
+      nopreview: noPreview,
+      reported: reportedIds.length,
+      answers,
+    },
     error: err?.message || null,
   };
 }
 
 export const actions = {
-  editTrack: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
-    const id = formData.get("id");
-    const artist = formData.get("artist")?.trim();
-    const title = formData.get("title")?.trim();
-    const coverUrl = formData.get("cover_url")?.trim() || null;
+  editTrack: async ({ request, locals }) => {
+    const fd = await request.formData();
+    const id = fd.get("id");
+    const artist = fd.get("artist")?.trim();
+    const title = fd.get("title")?.trim();
+    const coverUrl = fd.get("cover_url")?.trim() || null;
     if (!artist || !title)
-      return { success: false, error: "Artiste et titre requis" };
-    const sb = getAdminClient();
-    const { error: err } = await sb
+      return {
+        success: false,
+        error: "L'artiste et le titre sont obligatoires.",
+      };
+    const { error: err } = await getAdminClient()
       .from("tracks")
       .update({ artist, title, cover_url: coverUrl })
       .eq("id", id);
     if (err) {
-      if (err.code === "23505")
-        return {
-          success: false,
-          error: "Un morceau identique (artiste + titre) existe déjà.",
-        };
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error:
+          err.code === "23505"
+            ? "Un titre identique (artiste + titre) existe déjà."
+            : err.message,
+      };
     }
-    await logAdminAction(adminUser.id, "edit_track", id, "track", {
+    await logAdminAction(locals.adminId, "edit_track", id, "track", {
       artist,
       title,
     });
     return { success: true };
   },
 
-  deleteTrack: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
-    const id = formData.get("id");
+  deleteTrack: async ({ request, locals }) => {
+    const fd = await request.formData();
+    const id = fd.get("id");
     const sb = getAdminClient();
     const { data: track } = await sb
       .from("tracks")
@@ -99,18 +151,18 @@ export const actions = {
       .single();
     const { error: err } = await sb.from("tracks").delete().eq("id", id);
     if (err) {
-      if (err.code === "23503")
-        return {
-          success: false,
-          error:
-            "Impossible de supprimer : ce morceau est utilisé dans une playlist ou dans l'historique Zikle.",
-        };
-      return { success: false, error: err.message };
+      return {
+        success: false,
+        error:
+          err.code === "23503"
+            ? "Impossible : ce titre est encore dans une playlist ou dans l'historique Zikle."
+            : err.message,
+      };
     }
-    await logAdminAction(adminUser.id, "delete_track", id, "track", {
+    await logAdminAction(locals.adminId, "delete_track", id, "track", {
       artist: track?.artist,
       title: track?.title,
     });
-    return { success: true };
+    return { success: true, deleted: true };
   },
 };

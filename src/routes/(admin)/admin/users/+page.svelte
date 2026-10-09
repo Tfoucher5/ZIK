@@ -2,220 +2,171 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
+  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import { avatarOf, lastSeen } from '$lib/admin/players.js';
 
   let { data } = $props();
 
-  function setParam(key, value) {
+  const FILTERS = [
+    ['all', 'Tous', null],
+    ['new', 'Nouveaux', 'new7'],
+    ['pro', 'Pro', 'pro'],
+    ['admin', 'Admins', null],
+    ['banned', 'Bannis', 'banned'],
+  ];
+  const SORTS = [
+    ['recent', 'Inscrits récemment'],
+    ['old', 'Plus anciens'],
+    ['seen', 'Dernière activité'],
+    ['xp', 'Niveau'],
+    ['games', 'Parties jouées'],
+    ['elo', 'ELO'],
+  ];
+
+  function href(changes) {
     const p = new SvelteURLSearchParams(page.url.searchParams);
-    if (value) p.set(key, value); else p.delete(key);
-    if (key !== 'page') p.set('page', '1');
-    goto(`?${p.toString()}`);
+    for (const [k, v] of Object.entries(changes)) {
+      if (v && !(k === 'f' && v === 'all') && !(k === 'sort' && v === 'recent') && !(k === 'page' && v === 1)) p.set(k, String(v));
+      else p.delete(k);
+    }
+    if (!('page' in changes)) p.delete('page');
+    const s = p.toString();
+    return s ? `?${s}` : page.url.pathname;
   }
 
-  let searchInput = $state(data.q);
-  let searchTimer = $state(undefined);
-  function onSearch(e) {
-    clearTimeout(searchTimer);
-    const val = e.target.value;
-    searchTimer = setTimeout(() => setParam('q', val), 300);
+  let search = $state(page.url.searchParams.get('q') ?? '');
+  let timer;
+  function onSearch() {
+    clearTimeout(timer);
+    timer = setTimeout(() => goto(href({ q: search.trim() }), { keepFocus: true, noScroll: true, replaceState: true }), 300);
   }
-  $effect(() => () => clearTimeout(searchTimer));
+  $effect(() => () => clearTimeout(timer));
 
-  const totalPages = $derived(Math.ceil(data.total / data.pageSize));
-
-  function fmt(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('fr-FR');
-  }
+  const pages = $derived(Math.max(1, Math.ceil(data.total / data.pageSize)));
+  const day = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
-<div class="zk">
-  <div class="zk-head">
-    <h1>Utilisateurs</h1>
-    <span class="zk-date">{data.total} enregistrements</span>
-  </div>
+<div class="adm-page">
+  <PageHeader title="Joueurs" />
 
-  <div class="toolbar">
-    <input
-      class="search-input"
-      type="text"
-      placeholder="Rechercher un pseudo…"
-      value={searchInput}
-      oninput={onSearch}
-    >
-    <div class="sort-btns">
-      {#each [['', 'Tous'], ['user', 'Users'], ['super_admin', 'Admins']] as [key, label] (key)}
-        <button
-          class="chip"
-          class:active={data.role === key}
-          onclick={() => setParam('role', key)}
-        >{label}</button>
-      {/each}
+  <div class="a-stack">
+    <div class="a-kpis">
+      <a class="a-kpi" href={href({ f: 'all' })}><span class="a-kpi-label">Inscrits</span><span class="a-kpi-value">{data.kpis.total}</span><span class="a-kpi-sub">au total</span></a>
+      <a class="a-kpi" href={href({ f: 'new' })}><span class="a-kpi-label">Nouveaux</span><span class="a-kpi-value">{data.kpis.new7}</span><span class="a-kpi-sub">sur 7 jours</span></a>
+      <div class="a-kpi"><span class="a-kpi-label">Actifs</span><span class="a-kpi-value">{data.kpis.active7}</span><span class="a-kpi-sub">ont joué sur 7 jours</span></div>
+      <a class="a-kpi" href={href({ f: 'pro' })}><span class="a-kpi-label">Pro actifs</span><span class="a-kpi-value accent">{data.kpis.pro}</span><span class="a-kpi-sub">payés ou offerts</span></a>
+      <a class="a-kpi" href={href({ f: 'banned' })}><span class="a-kpi-label">Bannis</span><span class="a-kpi-value" class:bad={data.kpis.banned}>{data.kpis.banned}</span><span class="a-kpi-sub">en ce moment</span></a>
     </div>
-    <div class="sort-btns">
-      {#each [['elo','ELO'],['level','Niveau'],['games_played','Parties'],['created_at','Date']] as [key, label] (key)}
-        <button
-          class="chip"
-          class:active={data.sort === key}
-          onclick={() => setParam('sort', key)}
-        >{label}</button>
-      {/each}
-    </div>
-  </div>
 
-  <div class="panel">
+    <div class="a-toolbar">
+      <label class="a-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        <span class="a-sr">Rechercher un pseudo</span>
+        <input type="search" placeholder="Rechercher un pseudo…" bind:value={search} oninput={onSearch} autocomplete="off" />
+      </label>
+      <label class="sort">
+        <span class="a-sr">Trier par</span>
+        <select class="a-select" value={data.sort} onchange={(e) => goto(href({ sort: e.currentTarget.value }), { noScroll: true })}>
+          {#each SORTS as [k, label] (k)}<option value={k}>{label}</option>{/each}
+        </select>
+      </label>
+    </div>
+
+    <nav class="a-chips" aria-label="Filtrer les joueurs">
+      {#each FILTERS as [k, label, kpi] (k)}
+        <a class="a-chip" href={href({ f: k })} aria-current={data.f === k ? 'page' : undefined}>{label}{#if kpi && data.kpis[kpi]}<b>{data.kpis[kpi]}</b>{/if}</a>
+      {/each}
+    </nav>
+
     {#if data.error}
-      <div class="alert alert-err">{data.error}</div>
+      <p class="a-card bad a-err">{data.error}</p>
+    {:else if !data.users.length}
+      <p class="a-card a-empty">Aucun joueur ne correspond{data.q ? ` à « ${data.q} »` : ''}.</p>
     {:else}
-      <div class="table-wrap">
-        <table>
+      <p class="count a-muted">{data.total} joueur{data.total > 1 ? 's' : ''}{data.q ? ` pour « ${data.q} »` : ''}</p>
+
+      <ul class="a-list mob">
+        {#each data.users as u (u.id)}
+          <li>
+            <a class="a-row" href="/admin/users/{u.id}">
+              <img class="a-avatar" src={avatarOf(u)} alt="" loading="lazy" />
+              <span class="a-row-main">
+                <span class="a-row-title">{u.username}</span>
+                <span class="a-row-sub">Niv. {u.level} · {u.games_played} partie{u.games_played > 1 ? 's' : ''} · {lastSeen(u.last_played_date) ?? `inscrit ${day(u.created_at)}`}</span>
+              </span>
+              <span class="tags">
+                {#if u.banned}<em class="a-tag bad">Banni</em>{/if}
+                {#if u.pro}<em class="a-tag accent">Pro</em>{/if}
+                {#if u.role === 'super_admin'}<em class="a-tag warn">Admin</em>{/if}
+              </span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+
+      <div class="a-table-wrap desk">
+        <table class="a-table">
           <thead>
             <tr>
-              <th>Utilisateur</th>
-              <th>Rôle</th>
-              <th>ELO</th>
-              <th>Niveau</th>
-              <th>Parties</th>
-              <th>Inscrit</th>
+              <th>Joueur</th>
+              <th>Inscription</th>
+              <th class="num">Niveau</th>
+              <th class="num">XP</th>
+              <th class="num">ELO</th>
+              <th class="num">Parties</th>
+              <th>Dernière partie</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {#each data.users as u (u.id)}
               <tr>
-                <td class="td-user">
-                  <img src={u.avatar_url || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${u.username}`} alt="" width="26" height="26" class="avatar">
-                  <span class="td-strong">{u.username}</span>
+                <td>
+                  <a class="who" href="/admin/users/{u.id}">
+                    <img class="a-avatar" src={avatarOf(u)} alt="" loading="lazy" />
+                    <b>{u.username}</b>
+                  </a>
                 </td>
-                <td><span class="tag" class:tag-amber={u.role === 'super_admin'}>{u.role === 'super_admin' ? 'Admin' : 'User'}</span></td>
-                <td class="td-num">{u.elo}</td>
-                <td class="td-num">{u.level}</td>
-                <td class="td-num">{u.games_played}</td>
-                <td class="td-dim">{fmt(u.created_at)}</td>
-                <td class="td-actions"><a href="/admin/users/{u.id}" class="link">Ouvrir →</a></td>
+                <td class="a-muted">{day(u.created_at)}</td>
+                <td class="num">{u.level}</td>
+                <td class="num a-muted">{u.xp.toLocaleString('fr-FR')}</td>
+                <td class="num a-muted">{u.elo}</td>
+                <td class="num">{u.games_played}</td>
+                <td class="a-muted">{lastSeen(u.last_played_date) ?? '—'}</td>
+                <td><span class="tags">
+                  {#if u.banned}<em class="a-tag bad">Banni</em>{/if}
+                  {#if u.pro}<em class="a-tag accent">Pro</em>{/if}
+                  {#if u.role === 'super_admin'}<em class="a-tag warn">Admin</em>{/if}
+                </span></td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
 
-      {#if totalPages > 1}
-        <div class="pagination">
-          <button class="btn" disabled={data.page <= 1} onclick={() => setParam('page', String(data.page - 1))}>◀ Précédent</button>
-          <span class="page-count">{data.page} / {totalPages}</span>
-          <button class="btn" disabled={data.page >= totalPages} onclick={() => setParam('page', String(data.page + 1))}>Suivant ▶</button>
-        </div>
+      {#if pages > 1}
+        <nav class="a-pager" aria-label="Pages">
+          {#if data.page > 1}<a class="a-btn small" href={href({ page: data.page - 1 })}>Précédent</a>{/if}
+          <span>Page {data.page} sur {pages}</span>
+          {#if data.page < pages}<a class="a-btn small" href={href({ page: data.page + 1 })}>Suivant</a>{/if}
+        </nav>
       {/if}
     {/if}
   </div>
 </div>
 
 <style>
-  .zk {
-    --c-panel: #13161e;
-    --c-border: rgba(255, 255, 255, 0.07);
-    --c-text: #e2e8f0;
-    --c-muted: #6b7280;
-    --c-red: #ef4444;
-    --c-amber: #f59e0b;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--c-text);
+  .sort { flex: 0 1 220px; }
+  .accent { color: var(--a-accent); }
+  .bad { color: var(--a-bad); }
+  .count { font-size: 0.82rem; margin-bottom: -6px; }
+  .tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+  .a-row .tags { flex: 0 0 auto; max-width: 40%; }
+  .who { display: flex; align-items: center; gap: 10px; }
+  .who .a-avatar { width: 32px; height: 32px; }
+  .desk { display: none; }
+  @media (min-width: 900px) {
+    .mob { display: none; }
+    .desk { display: block; }
   }
-
-  .zk-head { display: flex; align-items: baseline; gap: 12px; }
-  .zk-head h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
-  .zk-date { font-size: 0.78rem; color: var(--c-muted); }
-
-  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .search-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.84rem;
-    padding: 8px 12px;
-    outline: none;
-    min-width: 220px;
-    flex: 1;
-  }
-  .search-input::placeholder { color: var(--c-muted); }
-  .search-input:focus { border-color: rgba(255, 255, 255, 0.2); }
-
-  .sort-btns { display: flex; gap: 4px; }
-  .chip {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    border-radius: 6px;
-    color: var(--c-muted);
-    font-family: inherit;
-    font-size: 0.78rem;
-    font-weight: 500;
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .chip:hover, .chip.active { background: rgba(255, 255, 255, 0.05); color: var(--c-text); border-color: rgba(255, 255, 255, 0.15); }
-
-  .panel {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .btn {
-    background: transparent;
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .link { font-size: 0.8rem; color: var(--c-muted); transition: color 0.15s; }
-  .link:hover { color: var(--c-text); }
-
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-  th {
-    text-align: left;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--c-muted);
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--c-border);
-  }
-  td { padding: 9px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255, 255, 255, 0.02); }
-
-  .td-user { display: flex; align-items: center; gap: 8px; }
-  .avatar { border-radius: 6px; flex-shrink: 0; }
-  .td-strong { font-weight: 500; }
-  .td-num { font-family: 'JetBrains Mono', monospace; }
-  .td-dim { color: var(--c-muted); font-size: 0.8rem; }
-  .td-actions { text-align: right; }
-
-  .tag { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--c-border); color: var(--c-muted); }
-  .tag-amber { color: var(--c-amber); border-color: rgba(245, 158, 11, 0.3); }
-
-  .pagination { display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .page-count { font-size: 0.8rem; color: var(--c-muted); }
-
-  .alert { font-size: 0.84rem; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--c-border); }
-  .alert-err { color: var(--c-red); border-color: rgba(239, 68, 68, 0.3); }
 </style>

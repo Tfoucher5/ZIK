@@ -54,80 +54,85 @@
       </div>
     </section>
 
-    {#if data.todo.length}
-      <h2 class="a-h2">À faire</h2>
-      <ul class="a-list">
-        {#each data.todo as t (t.key)}
-          <li>
-            <a class="a-row todo {t.tone}" href={t.href}>
-              <span class="t-mark"></span>
-              <span class="a-row-main"><span class="t-label">{t.label}</span></span>
-              <span class="a-btn small">{t.action}</span>
-            </a>
-          </li>
-        {/each}
-      </ul>
-    {/if}
+    <div class="a-cols">
+      <div>
+      {#if data.todo.length}
+        <h2 class="a-h2">À faire</h2>
+        <ul class="a-list">
+          {#each data.todo as t (t.key)}
+            <li>
+              <a class="a-row todo {t.tone}" href={t.href}>
+                <span class="t-mark"></span>
+                <span class="a-row-main"><span class="t-label">{t.label}</span></span>
+                <span class="a-btn small">{t.action}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      <h2 class="a-h2">
+        Dernières 48 h
+        {#if fresh}<em class="a-tag accent">{fresh} nouveau{fresh > 1 ? 'x' : ''} depuis ta visite</em>{/if}
+      </h2>
+      {#if data.journal.length}
+        <ol class="journal">
+          {#each data.journal as e, i (i)}
+            <li class:new={seen && e.ts > seen}>
+              <a href={e.href}>
+                <span class="j-ico" aria-hidden="true">{ICON[e.kind]}</span>
+                <span class="j-text">{e.text}</span>
+                <span class="j-ts">{ago(e.ts)}</span>
+              </a>
+            </li>
+          {/each}
+        </ol>
+        <a class="a-btn" href="/admin/journal">Tout le journal</a>
+      {:else}
+        <p class="a-empty">Rien de neuf depuis 48 h.</p>
+      {/if}
+      </div>
+      <div>
+      <h2 class="a-h2">En ce moment</h2>
+      <a class="a-card live" href="/admin/salons">
+        <span class="l-dot" class:on={live.players > 0}></span>
+        <span class="l-main">
+          {#if live.players > 0}
+            <b>{live.players} joueur{live.players > 1 ? 's' : ''} en ligne</b>
+            <span class="a-muted">{live.salons} salon{live.salons > 1 ? 's' : ''} · {live.rooms} room{live.rooms > 1 ? 's' : ''} active{live.rooms > 1 ? 's' : ''}</span>
+          {:else}
+            <b>Personne ne joue</b>
+            <span class="a-muted">Aucun salon ni room active</span>
+          {/if}
+        </span>
+        <span class="a-muted">›</span>
+      </a>
 
-    <h2 class="a-h2">En ce moment</h2>
-    <a class="a-card live" href="/admin/salons">
-      <span class="l-dot" class:on={live.players > 0}></span>
-      <span class="l-main">
-        {#if live.players > 0}
-          <b>{live.players} joueur{live.players > 1 ? 's' : ''} en ligne</b>
-          <span class="a-muted">{live.salons} salon{live.salons > 1 ? 's' : ''} · {live.rooms} room{live.rooms > 1 ? 's' : ''} active{live.rooms > 1 ? 's' : ''}</span>
-        {:else}
-          <b>Personne ne joue</b>
-          <span class="a-muted">Aucun salon ni room active</span>
-        {/if}
-      </span>
-      <span class="a-muted">›</span>
-    </a>
+      <h2 class="a-h2">Cette semaine</h2>
+      <div class="a-grid2">
+        <a class="a-card vital" href="/admin/chiffres">
+          <span class="vl">Parties à plusieurs</span>
+          <span class="a-big">{pulse?.north.value ?? '…'}</span>
+          <span class="vs">objectif {pulse?.north.target ?? 60}</span>
+        </a>
+        <a class="a-card vital" href="/admin/chiffres">
+          <span class="vl">Joueurs actifs</span>
+          <span class="a-big">{pulse?.week.players.value ?? '…'}</span>
+          <span class="vs {pulse?.week.players.delta.dir}">{pulse ? trend(pulse.week.players.delta) : ''}</span>
+        </a>
+        <a class="a-card vital" href="/admin/chiffres">
+          <span class="vl">Inscriptions</span>
+          <span class="a-big">{pulse?.week.signups.value ?? '…'}</span>
+          <span class="vs {pulse?.week.signups.delta.dir}">{pulse ? trend(pulse.week.signups.delta) : ''}</span>
+        </a>
+        <a class="a-card vital" href="/admin/argent">
+          <span class="vl">Abonnés Pro</span>
+          <span class="a-big">{data.pro}</span>
+          <span class="vs">actifs aujourd'hui</span>
+        </a>
+      </div>
 
-    <h2 class="a-h2">Cette semaine</h2>
-    <div class="a-grid2 a-grid4">
-      <a class="a-card vital" href="/admin/chiffres">
-        <span class="vl">Parties à plusieurs</span>
-        <span class="a-big">{pulse?.north.value ?? '…'}</span>
-        <span class="vs">objectif {pulse?.north.target ?? 60}</span>
-      </a>
-      <a class="a-card vital" href="/admin/chiffres">
-        <span class="vl">Joueurs actifs</span>
-        <span class="a-big">{pulse?.week.players.value ?? '…'}</span>
-        <span class="vs {pulse?.week.players.delta.dir}">{pulse ? trend(pulse.week.players.delta) : ''}</span>
-      </a>
-      <a class="a-card vital" href="/admin/chiffres">
-        <span class="vl">Inscriptions</span>
-        <span class="a-big">{pulse?.week.signups.value ?? '…'}</span>
-        <span class="vs {pulse?.week.signups.delta.dir}">{pulse ? trend(pulse.week.signups.delta) : ''}</span>
-      </a>
-      <a class="a-card vital" href="/admin/argent">
-        <span class="vl">Abonnés Pro</span>
-        <span class="a-big">{data.pro}</span>
-        <span class="vs">actifs aujourd'hui</span>
-      </a>
+      </div>
     </div>
-
-    <h2 class="a-h2">
-      Dernières 48 h
-      {#if fresh}<em class="a-tag accent">{fresh} nouveau{fresh > 1 ? 'x' : ''} depuis ta visite</em>{/if}
-    </h2>
-    {#if data.journal.length}
-      <ol class="journal">
-        {#each data.journal as e, i (i)}
-          <li class:new={seen && e.ts > seen}>
-            <a href={e.href}>
-              <span class="j-ico" aria-hidden="true">{ICON[e.kind]}</span>
-              <span class="j-text">{e.text}</span>
-              <span class="j-ts">{ago(e.ts)}</span>
-            </a>
-          </li>
-        {/each}
-      </ol>
-      <a class="a-btn" href="/admin/journal">Tout le journal</a>
-    {:else}
-      <p class="a-empty">Rien de neuf depuis 48 h.</p>
-    {/if}
   </div>
 </div>
 

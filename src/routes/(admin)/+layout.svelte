@@ -28,6 +28,18 @@
     if (p === '/admin') return '/admin';
     return TABS.find((t) => t.href !== '/admin' && p.startsWith(t.href))?.href ?? '/admin/plus';
   });
+  // Sur PC, la barre latérale montre directement ce que « Plus » regroupe
+  const MORE = [
+    { title: 'Suivre', links: [
+      ['/admin/chiffres', 'Chiffres'], ['/admin/journal', 'Journal'], ['/admin/live', 'Rooms en direct'], ['/admin/errors', 'Erreurs'],
+    ] },
+    { title: 'Gérer', links: [
+      ['/admin/users', 'Joueurs'], ['/admin/reports', 'Messages'], ['/admin/prospection', 'Prospection'],
+      ['/admin/playlists', 'Playlists'], ['/admin/tracks', 'Titres'], ['/admin/rooms', 'Rooms'],
+      ['/admin/zikle', 'Zikle'], ['/admin/defi', 'Défi de la semaine'], ['/admin/achievements', 'Succès'],
+    ] },
+    { title: 'Site', links: [['/admin/reglages', 'Réglages']] },
+  ];
   const isLogin = $derived(page.url.pathname === LOGIN);
   const badges = $derived({
     '/admin': alerts?.todo ?? 0,
@@ -136,6 +148,14 @@
         {/if}
       </a>
     {/each}
+    {#each MORE as g (g.title)}
+      <div class="adm-group">
+        <span>{g.title}</span>
+        {#each g.links as [href, label] (href)}
+          <a {href} class:on={page.url.pathname.startsWith(href)}>{label}</a>
+        {/each}
+      </div>
+    {/each}
   </nav>
 
   <main class="adm-main">
@@ -191,7 +211,7 @@
     backdrop-filter: blur(12px);
     border-top: 1px solid var(--a-line);
   }
-  .adm-logo { display: none; }
+  .adm-logo, .adm-group { display: none; }
   .adm-tab {
     position: relative;
     display: grid;
@@ -249,7 +269,7 @@
   .adm-main {
     padding: 0 16px calc(var(--a-tabs-h) + 24px + env(safe-area-inset-bottom, 0px));
     width: 100%;
-    max-width: 1240px;
+    max-width: 1400px;
     margin: 0 auto;
     min-width: 0;
   }
@@ -260,7 +280,7 @@
     .adm-root {
       --a-tabs-h: 0px;
       display: grid;
-      grid-template-columns: 210px minmax(0, 1fr);
+      grid-template-columns: 230px minmax(0, 1fr);
     }
     .adm-tabs {
       position: sticky;
@@ -294,6 +314,20 @@
     .adm-tab.on { background: var(--a-accent-soft); }
     .adm-tab.on::before { display: none; }
     .adm-badge, .adm-live { position: static; }
+    .adm-tab[href='/admin/plus'] { display: none; }
+    .adm-tabs { overflow-y: auto; }
+    .adm-group { display: grid; gap: 1px; margin-top: 14px; }
+    .adm-group span {
+      padding: 0 12px 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--a-dim);
+    }
+    .adm-group a { padding: 6px 12px; border-radius: 8px; font-size: 0.86rem; color: var(--a-muted); }
+    .adm-group a:hover { background: var(--a-surface); color: var(--a-fg); }
+    .adm-group a.on { background: var(--a-accent-soft); color: var(--a-fg); }
     .adm-main { padding: 0 28px 32px; }
   }
 </style>
