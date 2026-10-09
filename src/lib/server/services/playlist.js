@@ -1,5 +1,6 @@
 import { getAdminClient } from "../config.js";
 import { playlistCache, customRooms, dbRooms } from "../state.js";
+import { CARD_SELECT, toCardView } from "../../components/card/cardView.js";
 import {
   fetchDeezerTrackPreview,
   iTunesPreviewSearch,
@@ -94,6 +95,9 @@ export function buildTrack({
   id,
   external_id,
   youtube_id,
+  youtube_start,
+  card = null,
+  addedAt = null,
 }) {
   const effectiveArtist = custom_artist || artist;
   const { main, feats: parsedFeats } = parseFeaturing(effectiveArtist || "");
@@ -119,7 +123,11 @@ export function buildTrack({
     id,
     external_id,
     youtube_id,
+    youtube_start: youtube_start ?? null,
     extraAnswers: extras,
+    // Jamais envoyés au client pendant la manche (règle anti-spoiler)
+    card,
+    addedAt,
   };
 }
 
@@ -145,11 +153,13 @@ export function buildTrackFromRow(row) {
     id: meta.id,
     external_id: meta.external_id,
     youtube_id: meta.youtube_id,
+    youtube_start: meta.youtube_start,
+    card: toCardView(meta.cards),
+    addedAt: row.created_at,
   });
 }
 
-export const TRACK_ROW_SELECT =
-  "id, position, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, youtube_id, source, preview_expires_at), track_answers(value, answer_types(name))";
+export const TRACK_ROW_SELECT = `id, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, youtube_id, youtube_start, source, preview_expires_at, cards(${CARD_SELECT})), track_answers(value, answer_types(name))`;
 
 export function calcSpeedBonus(timeTaken) {
   if (timeTaken < 10) return 2;

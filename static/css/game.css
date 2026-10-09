@@ -2646,3 +2646,68 @@ html.no-animations *::after {
   font-size: 0.7rem;
   color: var(--mid);
 }
+
+/* ── Cartes musicales ─────────────────────────────────────────────────────── */
+.g-rv-card {
+  flex-shrink: 0;
+  animation: sleeveIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.g-rv-drop {
+  margin-top: 22px;
+}
+.g-cards-tray {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+.g-cards-pill {
+  display: none;
+  align-items: center;
+  padding: 0 8px;
+}
+.g-go-cards {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  margin: 18px 0 6px;
+}
+.g-go-cards-title {
+  margin: 0;
+  font-family: var(--g-cond);
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #fff;
+}
+.g-go-cards-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.g-go-cards-set {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.g-quit-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+/* Cartes perdues si le joueur part : grisées */
+.g-quit-cards.is-lost {
+  filter: grayscale(0.7);
+  opacity: 0.75;
+}
+.g-quit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 800px) {
+  .g-cards-pill {
+    display: flex;
+  }
+  .g-cards-pill .ct-pill .ct-pill-text {
+    display: none;
+  }
+}

@@ -1,6 +1,16 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
-import { sanitizeReportTracks, asUuidOrNull } from "$lib/reports/bug-report.js";
+import {
+  sanitizeReportTracks,
+  sanitizeReportContext,
+  asUuidOrNull,
+  MIN_REPORT_MESSAGE,
+} from "$lib/reports/bug-report.js";
+import { reportTrackIssue } from "$lib/server/services/trackIssues.js";
+import { roomGames } from "$lib/server/state.js";
+import { salonLiveState } from "$lib/server/socket/salonAdmin.js";
+import { NEWS } from "$lib/news.js";
+import { alertAdminsSafe } from "$lib/server/services/adminAlerts.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -15,6 +25,51 @@ async function sendReportNotification(report) {
     },
     body: JSON.stringify(report),
   });
+}
+
+// Ce que le serveur sait de la room au moment du signalement
+function roomSnapshot(code) {
+  const room = code && roomGames[code];
+  if (room) {
+    const g = room.game;
+    return {
+      kind: "room",
+      active: g.isActive,
+      round: `${g.currentRound}/${g.maxRounds}`,
+      mode: room.game_mode,
+      players: Object.keys(room.players).length,
+      track: g.currentTrack
+        ? `${g.currentTrack.artist} · ${g.currentTrack.title}`
+        : null,
+      trackId: g.currentTrack?.id ?? null,
+    };
+  }
+  const salon = salonLiveState(code);
+  if (salon) {
+    return {
+      kind: "salon",
+      phase: salon.phase,
+      paused: salon.paused,
+      round: `${salon.round}/${salon.maxRounds}`,
+      players: salon.players,
+      pro: salon.pro,
+      proGift: salon.proGift,
+      hostId: salon.hostId,
+      hostConnected: salon.hostConnected,
+      screens: salon.screens,
+      controls: salon.controls,
+      playlistIds: salon.playlistIds,
+      trackCount: salon.trackCount,
+      settings: salon.settings,
+      roster: salon.roster.slice(0, 40),
+      track: salon.track
+        ? `${salon.track.artist} · ${salon.track.title}`
+        : null,
+      trackId: salon.track?.id ?? null,
+      supportOpen: !!salon.support?.open,
+    };
+  }
+  return null;
 }
 
 export async function POST({ request }) {
@@ -45,13 +100,30 @@ export async function POST({ request }) {
   const safeTracks = metadata?.tracks
     ? sanitizeReportTracks(metadata.tracks)
     : null;
-  const safeMetadata = safeTracks ? { ...metadata, tracks: safeTracks } : {};
+  const cardNumber =
+    type === "bug" && subject === "card" && Number.isInteger(metadata?.card)
+      ? metadata.card
+      : null;
+  const safeMetadata = {
+    ...(safeTracks && { tracks: safeTracks }),
+    ...(cardNumber != null && { card: cardNumber }),
+    context: {
+      ...sanitizeReportContext(metadata?.context),
+      version: NEWS[0]?.version ?? null,
+      userAgent:
+        metadata?.context?.userAgent ?? request.headers.get("user-agent"),
+      server: roomSnapshot(room_id),
+    },
+  };
 
-  // Un titre désigné vaut description : le message n'est alors plus exigé.
-  const titreDesigne =
-    type === "bug" && subject === "audio" && safeTracks?.length > 0;
-  if (!message?.trim() && !titreDesigne) {
-    return json({ error: "Message requis" }, { status: 400 });
+  if (
+    typeof message !== "string" ||
+    message.trim().length < MIN_REPORT_MESSAGE
+  ) {
+    return json(
+      { error: "Explique le problème en quelques mots." },
+      { status: 400 },
+    );
   }
   if (type === "contact" && !reporter_email?.trim()) {
     return json({ error: "Email requis pour un contact" }, { status: 400 });
@@ -83,6 +155,38 @@ export async function POST({ request }) {
   });
 
   if (error) return json({ error: error.message }, { status: 500 });
+
+  const fromSalon = type === "bug" && subject === "salon";
+  const pro = fromSalon && safeMetadata.context.server?.pro;
+  // Un appel d'admin depuis le salon a déjà prévenu : le report sert de trace
+  const called = fromSalon && safeMetadata.context.server?.supportOpen;
+  if (!called)
+    alertAdminsSafe(fromSalon ? "admin_salons" : "admin_reports", {
+      title: fromSalon
+        ? `${pro ? "Salon Pro" : "Salon"} ${room_id ?? ""} : besoin d'aide`
+        : `${{ bug: "Bug", user: "Joueur signalé", contact: "Message" }[type]} de ${reporter_name?.trim() || "un invité"}`,
+      body: message.trim().slice(0, 140),
+      url:
+        fromSalon && room_id
+          ? `/admin/salons?code=${room_id}`
+          : "/admin/reports",
+    });
+
+  // Un titre désigné part aussi dans la file « Réparer » de l'admin
+  if (type === "bug" && safeTracks) {
+    const kind = subject === "mauvaise-reponse" ? "answer" : "audio";
+    for (const t of safeTracks)
+      reportTrackIssue(
+        asUuidOrNull(t.trackId),
+        kind,
+        "player",
+        message?.trim() || null,
+        {
+          room: room_id || null,
+          videoId: t.videoId,
+        },
+      );
+  }
 
   // Notif email via Edge Function Supabase (non bloquant)
   sendReportNotification({

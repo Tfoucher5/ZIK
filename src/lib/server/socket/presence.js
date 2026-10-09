@@ -59,3 +59,11 @@ export function pushNotify(userId, notification) {
   if (!io || !sockets) return;
   for (const sid of sockets) io.to(sid).emit("notify", notification);
 }
+
+// Demande à tous les joueurs connectés de recharger leurs notifications.
+export function refreshAllNotifications() {
+  const io = globalThis.__zik_io;
+  if (!io) return;
+  for (const sockets of presence.values())
+    for (const sid of sockets) io.to(sid).emit("notify:refresh");
+}

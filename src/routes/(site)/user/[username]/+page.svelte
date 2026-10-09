@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import ProfileView from '$lib/components/ProfileView.svelte';
+  import ReportModal from '$lib/components/ReportModal.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -14,6 +15,7 @@
   let stats    = $state(null);
   let loading  = $state(true);
   let notFound = $state(false);
+  let reportOpen = $state(false);
 
   const username     = $derived($page.params.username);
   const isOwnProfile = $derived(user?.profile?.username === profile?.username);
@@ -105,10 +107,21 @@
       <h2>Acc&egrave;s refus&eacute;</h2>
       <p><strong>{profile.username}</strong> a rendu son backstage priv&eacute;.</p>
       <a href="/" class="btn-ghost" style="margin-top:16px">&larr; Retour &agrave; l&apos;accueil</a>
+      <button class="wall-report" onclick={() => (reportOpen = true)}>&#x2691; Signaler ce joueur</button>
     </div>
   </div>
 {:else if profile}
-  <ProfileView {profile} {stats} {sb} userId={profile.id} viewerId={user?.id ?? null} editable={isOwnProfile} onEdit={() => goto('/profile')} />
+  <ProfileView {profile} {stats} {sb} userId={profile.id} viewerId={user?.id ?? null} editable={isOwnProfile} onEdit={() => goto('/profile')} onReport={isOwnProfile ? null : () => (reportOpen = true)} />
+{/if}
+{#if user && profile && !isOwnProfile}
+  <ReportModal
+    bind:open={reportOpen}
+    type="user"
+    reportedUsername={profile.username}
+    reportedUserId={profile.id}
+    reporterId={user.id}
+    reporterName={user.profile?.username ?? ''}
+  />
 {/if}
 </div>
 
@@ -134,6 +147,8 @@
   gap: 8px;
 }
 .wall-private { position: relative; padding: 40px 32px 32px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg2); overflow: hidden; }
+.wall-report { margin-top: 10px; background: none; border: none; color: var(--dim); font-size: 0.78rem; cursor: pointer; text-decoration: underline; }
+.wall-report:hover { color: var(--danger); }
 .wall-tape { position: absolute; top: 0; left: 0; right: 0; height: 22px; background: repeating-linear-gradient(-45deg, var(--bg) 0 14px, var(--gold) 14px 28px); opacity: 0.85; }
 #profile-page {
   padding-top: var(--nav-h);

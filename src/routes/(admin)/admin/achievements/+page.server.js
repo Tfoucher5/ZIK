@@ -1,9 +1,11 @@
+import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
-import { requireAdmin, logAdminAction } from "$lib/server/middleware/auth.js";
+import { logAdminAction } from "$lib/server/middleware/auth.js";
+import { fetchAllRows } from "$lib/admin/paginate.server.js";
 
 const TYPES = ["one_time", "tiered"];
 const RARITIES = ["common", "rare", "epic", "legendary"];
-const CATEGORIES = ["streak", "wins", "score", "social"];
+const CATEGORIES = ["streak", "wins", "score", "social", "challenge"];
 const UNLOCKS_LIMIT = 100;
 
 function parseTiers(raw) {
@@ -13,15 +15,13 @@ function parseTiers(raw) {
   try {
     parsed = JSON.parse(trimmed);
   } catch {
-    throw new Error("Paliers : JSON invalide");
+    throw new Error("Paliers illisibles");
   }
   if (
     !Array.isArray(parsed) ||
     !parsed.every((t) => t?.level && Number.isFinite(t?.target))
   ) {
-    throw new Error(
-      "Paliers : chaque entrée doit avoir au moins level et target",
-    );
+    throw new Error("Chaque palier doit avoir un niveau et un objectif.");
   }
   return parsed;
 }
@@ -31,163 +31,175 @@ export async function load() {
 
   const [
     { data: defs, error: defsErr },
-    { data: holderRows },
+    owned,
+    { count: players },
     { data: unlocks, error: unlocksErr },
   ] = await Promise.all([
     sb.from("achievements").select("*").order("category").order("id"),
-    sb.from("user_achievements").select("achievement_id"),
+    fetchAllRows(() =>
+      sb
+        .from("user_achievements")
+        .select("user_id, achievement_id, tier")
+        .order("id"),
+    ),
+    sb.from("profiles").select("id", { count: "exact", head: true }),
     sb
       .from("user_achievements")
       .select(
-        "id, user_id, achievement_id, tier, unlocked_at, profiles(username), achievements(name, icon)",
+        "id, user_id, achievement_id, tier, count, unlocked_at, profiles(username), achievements(name, icon)",
       )
       .order("unlocked_at", { ascending: false })
       .limit(UNLOCKS_LIMIT),
   ]);
 
-  const holderCounts = new Map();
-  for (const r of holderRows || [])
-    holderCounts.set(
-      r.achievement_id,
-      (holderCounts.get(r.achievement_id) || 0) + 1,
-    );
+  const holders = new Map();
+  const tiers = new Map();
+  for (const r of owned) {
+    if (!holders.has(r.achievement_id))
+      holders.set(r.achievement_id, new Set());
+    holders.get(r.achievement_id).add(r.user_id);
+    if (r.tier) {
+      const key = `${r.achievement_id}:${r.tier}`;
+      tiers.set(key, (tiers.get(key) || 0) + 1);
+    }
+  }
 
   return {
+    players: players ?? 0,
+    playersWithBadge: new Set(owned.map((r) => r.user_id)).size,
+    totalUnlocks: owned.length,
     achievements: (defs || []).map((a) => ({
       ...a,
-      holders: holderCounts.get(a.id) || 0,
+      holders: holders.get(a.id)?.size || 0,
+      tierHolders: Object.fromEntries(
+        (a.tiers || []).map((t) => [
+          t.level,
+          tiers.get(`${a.id}:${t.level}`) || 0,
+        ]),
+      ),
     })),
     unlocks: unlocks || [],
     error: defsErr?.message || unlocksErr?.message || null,
   };
 }
 
+function readDef(formData) {
+  const def = {
+    name: formData.get("name")?.trim(),
+    description: formData.get("description")?.trim() || "",
+    icon: formData.get("icon")?.trim() || "🏅",
+    type: formData.get("type"),
+    rarity: formData.get("rarity"),
+    category: formData.get("category"),
+  };
+  if (!def.name) return { error: "Le nom est obligatoire." };
+  if (!TYPES.includes(def.type)) return { error: "Type invalide" };
+  if (!RARITIES.includes(def.rarity)) return { error: "Rareté invalide" };
+  if (!CATEGORIES.includes(def.category))
+    return { error: "Catégorie invalide" };
+  try {
+    def.tiers =
+      def.type === "tiered" ? parseTiers(formData.get("tiers_json")) : null;
+  } catch (e) {
+    return { error: e.message };
+  }
+  if (def.type === "tiered" && !def.tiers?.length)
+    return { error: "Ajoute au moins un palier." };
+  return { def };
+}
+
 export const actions = {
-  createAchievement: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
+  createAchievement: async ({ request, locals }) => {
+    const formData = await request.formData();
     const id = formData.get("id")?.trim();
-    const name = formData.get("name")?.trim();
-    const description = formData.get("description")?.trim() || "";
-    const icon = formData.get("icon")?.trim() || "🏅";
-    const type = formData.get("type");
-    const rarity = formData.get("rarity");
-    const category = formData.get("category");
-
-    if (!id || !name) return { success: false, error: "id et nom requis" };
-    if (!TYPES.includes(type))
-      return { success: false, error: "Type invalide" };
-    if (!RARITIES.includes(rarity))
-      return { success: false, error: "Rareté invalide" };
-    if (!CATEGORIES.includes(category))
-      return { success: false, error: "Catégorie invalide" };
-
-    let tiers;
-    try {
-      tiers = type === "tiered" ? parseTiers(formData.get("tiers_json")) : null;
-    } catch (e) {
-      return { success: false, error: e.message };
-    }
-
-    const sb = getAdminClient();
-    const { error: err } = await sb.from("achievements").insert({
-      id,
-      name,
-      description,
-      icon,
-      type,
-      rarity,
-      category,
-      tiers,
-    });
-    if (err) {
-      if (err.code === "23505")
-        return { success: false, error: "Un succès avec cet id existe déjà" };
-      return { success: false, error: err.message };
-    }
+    if (!id || !/^[a-z0-9_]+$/.test(id))
+      return fail(400, {
+        defError: "Identifiant : lettres minuscules, chiffres et _ uniquement.",
+      });
+    const { def, error } = readDef(formData);
+    if (error) return fail(400, { defError: error });
+    const { error: err } = await getAdminClient()
+      .from("achievements")
+      .insert({ id, ...def });
+    if (err)
+      return fail(400, {
+        defError:
+          err.code === "23505"
+            ? "Un succès avec cet identifiant existe déjà."
+            : err.message,
+      });
     await logAdminAction(
-      adminUser.id,
+      locals.adminId,
       "create_achievement",
       id,
       "achievement",
-      {
-        name,
-      },
+      { name: def.name },
     );
-    return { success: true };
+    return { done: `Succès « ${def.name} » créé.` };
   },
 
-  editAchievement: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
+  editAchievement: async ({ request, locals }) => {
+    const formData = await request.formData();
     const id = formData.get("id");
-    const name = formData.get("name")?.trim();
-    const description = formData.get("description")?.trim() || "";
-    const icon = formData.get("icon")?.trim() || "🏅";
-    const type = formData.get("type");
-    const rarity = formData.get("rarity");
-    const category = formData.get("category");
-
-    if (!id || !name) return { success: false, error: "id et nom requis" };
-    if (!TYPES.includes(type))
-      return { success: false, error: "Type invalide" };
-    if (!RARITIES.includes(rarity))
-      return { success: false, error: "Rareté invalide" };
-    if (!CATEGORIES.includes(category))
-      return { success: false, error: "Catégorie invalide" };
-
-    let tiers;
-    try {
-      tiers = type === "tiered" ? parseTiers(formData.get("tiers_json")) : null;
-    } catch (e) {
-      return { success: false, error: e.message };
-    }
-
-    const sb = getAdminClient();
-    const { error: err } = await sb
+    if (!id) return fail(400, { defError: "Succès introuvable" });
+    const { def, error } = readDef(formData);
+    if (error) return fail(400, { defError: error });
+    const { error: err } = await getAdminClient()
       .from("achievements")
-      .update({ name, description, icon, type, rarity, category, tiers })
+      .update(def)
       .eq("id", id);
-    if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "edit_achievement", id, "achievement", {
-      name,
-    });
-    return { success: true };
+    if (err) return fail(400, { defError: err.message });
+    await logAdminAction(
+      locals.adminId,
+      "edit_achievement",
+      id,
+      "achievement",
+      { name: def.name },
+    );
+    return { done: `Succès « ${def.name} » enregistré.` };
   },
 
-  deleteAchievement: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
+  deleteAchievement: async ({ request, locals }) => {
+    const formData = await request.formData();
     const id = formData.get("id");
-    const sb = getAdminClient();
-    const { error: err } = await sb.from("achievements").delete().eq("id", id);
-    if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "delete_achievement", id, "achievement");
-    return { success: true };
+    const { error: err } = await getAdminClient()
+      .from("achievements")
+      .delete()
+      .eq("id", id);
+    if (err) return fail(400, { error: err.message });
+    await logAdminAction(
+      locals.adminId,
+      "delete_achievement",
+      id,
+      "achievement",
+    );
+    return { done: "Succès supprimé." };
   },
 
-  revokeUnlock: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
+  revokeUnlock: async ({ request, locals }) => {
+    const formData = await request.formData();
     const id = formData.get("id");
-    const sb = getAdminClient();
-    const { error: err } = await sb
+    const { error: err } = await getAdminClient()
       .from("user_achievements")
       .delete()
       .eq("id", id);
-    if (err) return { success: false, error: err.message };
+    if (err) return fail(400, { error: err.message });
     await logAdminAction(
-      adminUser.id,
+      locals.adminId,
       "revoke_achievement",
       id,
       "user_achievement",
     );
-    return { success: true };
+    return { done: "Succès retiré au joueur." };
   },
 
-  grantUnlock: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
+  grantUnlock: async ({ request, locals }) => {
+    const formData = await request.formData();
     const username = formData.get("username")?.trim();
     const achievementId = formData.get("achievement_id");
     const tier = formData.get("tier")?.trim() || null;
     if (!username || !achievementId)
-      return { success: false, error: "Pseudo et succès requis" };
+      return fail(400, { grantError: "Pseudo et succès requis." });
 
     const sb = getAdminClient();
     const { data: profile } = await sb
@@ -195,28 +207,29 @@ export const actions = {
       .select("id")
       .eq("username", username)
       .maybeSingle();
-    if (!profile) return { success: false, error: "Utilisateur introuvable" };
+    if (!profile)
+      return fail(400, { grantError: `Aucun joueur nommé « ${username} ».` });
 
-    const { error: err } = await sb.from("user_achievements").insert({
-      user_id: profile.id,
-      achievement_id: achievementId,
-      tier,
-    });
-    if (err) {
-      if (err.code === "23505")
-        return {
-          success: false,
-          error: "Ce joueur a déjà ce succès (à ce palier)",
-        };
-      return { success: false, error: err.message };
-    }
+    const { error: err } = await sb
+      .from("user_achievements")
+      .insert({ user_id: profile.id, achievement_id: achievementId, tier });
+    if (err)
+      return fail(400, {
+        grantError:
+          err.code === "23505"
+            ? "Ce joueur a déjà ce succès (à ce palier)."
+            : err.message,
+      });
     await logAdminAction(
-      adminUser.id,
+      locals.adminId,
       "grant_achievement",
       profile.id,
       "user_achievement",
-      { achievement_id: achievementId, tier },
+      {
+        achievement_id: achievementId,
+        tier,
+      },
     );
-    return { success: true };
+    return { done: `Succès attribué à ${username}.` };
   },
 };

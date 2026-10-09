@@ -42,6 +42,12 @@ const STATIC_PAGES = [
     lastmod: "2026-10-02",
   },
   {
+    loc: "/cartes",
+    changefreq: "weekly",
+    priority: "0.7",
+    lastmod: "2026-10-06",
+  },
+  {
     loc: "/nouveautes",
     changefreq: "weekly",
     priority: "0.5",

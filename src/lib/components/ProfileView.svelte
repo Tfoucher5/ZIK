@@ -12,10 +12,13 @@
   import SectionHistory from '$lib/components/profile/SectionHistory.svelte';
   import SectionFriends from '$lib/components/profile/SectionFriends.svelte';
   import SectionBestScores from '$lib/components/profile/SectionBestScores.svelte';
+  import SectionCards from '$lib/components/profile/SectionCards.svelte';
+  import CardViewer from '$lib/components/card/CardViewer.svelte';
   import SectionPerformances from '$lib/components/profile/SectionPerformances.svelte';
   import ProfileHeader from '$lib/components/profile/ProfileHeader.svelte';
+  import { authToken, fetchSocial, sendFollow, sendFriend } from '$lib/components/player/social.js';
 
-  let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {} } = $props();
+  let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {}, onReport = null } = $props();
 
   const isOwn = $derived(viewerId != null && viewerId === profile?.id);
   const canFollow = $derived(viewerId != null && !isOwn);
@@ -31,11 +34,8 @@
   async function loadSocial() {
     if (!sb || !profile?.id) return;
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch(`/api/social/${profile.id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (r.ok) social = await r.json();
+      const data = await fetchSocial(sb, profile.id);
+      if (data) social = data;
       loadPresence();
     } catch { /* réseau indisponible */ }
   }
@@ -46,9 +46,8 @@
     const ids = isOwn ? social.friends.map(f => f.id) : social.isFriend ? [profile.id] : [];
     if (!ids.length) { presenceMap = {}; return; }
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
       const r = await fetch(`/api/presence?ids=${ids.join(',')}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${await authToken(sb)}` },
       });
       if (r.ok) presenceMap = await r.json();
     } catch { /* réseau indisponible */ }
@@ -75,13 +74,7 @@
     if (followBusy || !canFollow) return;
     followBusy = true;
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch('/api/follow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ targetId: profile.id }),
-      });
-      if (r.ok) await loadSocial();
+      if (await sendFollow(sb, profile.id)) await loadSocial();
     } finally {
       followBusy = false;
     }
@@ -91,13 +84,7 @@
     if (friendBusy) return;
     friendBusy = true;
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch('/api/friend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ targetId, action }),
-      });
-      if (r.ok) await loadSocial();
+      if (await sendFriend(sb, targetId, action)) await loadSocial();
     } finally {
       friendBusy = false;
     }
@@ -176,6 +163,7 @@
     { id: 'tour',  t: 'Meilleurs scores', quand: () => itinerary.length > 0 || typeTotal > 0 },
     { id: 'log',   t: 'Dernières parties', quand: () => carnet.length > 0 },
     { id: 'case',  t: 'Badges', quand: () => true },
+    { id: 'cards', t: 'Cartes', quand: () => !!profile?.username },
     { id: 'guests', t: 'Amis', quand: () => true },
   ];
   const sections = $derived(
@@ -218,7 +206,7 @@
     {ordinal} {detailRang} {social} presence={presenceMap} profilId={profile?.id}
     estLeSien={editable || isOwn} peutSuivre={canFollow}
     {followBusy} {friendBusy}
-    {onEdit}
+    {onEdit} {onReport}
     onFriendAction={friendAction}
     onToggleFollow={toggleFollow}
     onJoinRoom={joinFriendRoom}
@@ -256,6 +244,11 @@
         <AchievementsPanel {sb} {userId} />
       </ProfileSection>
     {/if}
+    {#if visible.has('cards')}
+      <ProfileSection id="cards" num={numDe('cards')} titre="Cartes" sub="Collection">
+        <SectionCards username={profile.username} {sb} />
+      </ProfileSection>
+    {/if}
     {#if visible.has('guests')}
       <ProfileSection id="guests" num={numDe('guests')} titre="Amis" sub={`${social.friendsCount} ami${social.friendsCount > 1 ? 's' : ''}`}>
         <SectionFriends
@@ -270,6 +263,8 @@
     </main>
   </div>
 </div>
+
+<CardViewer />
 
 <InviteModal
   open={inviteOpen}

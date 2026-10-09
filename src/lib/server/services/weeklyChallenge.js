@@ -18,6 +18,7 @@ export const CHALLENGE_TYPES = {
   correct_answers: { label: "Bonnes réponses", unit: "réponses" },
   games_played: { label: "Parties jouées", unit: "parties" },
   zikle_wins: { label: "Zikle gagnés", unit: "victoires Zikle" },
+  cards_won: { label: "Cartes gagnées", unit: "cartes" },
 };
 
 /**
@@ -143,4 +144,132 @@ export function bumpWeeklyChallenge(type, userId, amount = 1) {
   } catch (e) {
     console.error("bumpWeeklyChallenge:", e.message);
   }
+}
+
+// ── Admin ────────────────────────────────────────────────────────────────────
+// Contrairement aux fonctions ci-dessus, celles-ci remontent leurs erreurs :
+// l'admin doit savoir quand une action n'a pas marché.
+
+export const CHALLENGE_ROTATION = [
+  "correct_answers",
+  "games_played",
+  "zikle_wins",
+];
+export const AUTO_TARGETS = {
+  correct_answers: 5000,
+  games_played: 300,
+  zikle_wins: 150,
+};
+
+/** Type que pick_weekly_challenge() choisira après `lastType` si rien n'est programmé. */
+export function nextAutoType(lastType) {
+  const i = CHALLENGE_ROTATION.indexOf(lastType);
+  return CHALLENGE_ROTATION[(i + 1) % CHALLENGE_ROTATION.length];
+}
+
+/** Lundi (YYYY-MM-DD) de la semaine d'une date YYYY-MM-DD, décalé de `weeks`. */
+export function mondayOf(dateStr, weeks = 0) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7) + weeks * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+function roundNice(n) {
+  const step = n < 50 ? 5 : n < 500 ? 10 : n < 5000 ? 50 : 100;
+  return Math.max(step, Math.round(n / step) * step);
+}
+
+/**
+ * Objectif réaliste : moyenne des 3 dernières semaines closes du même type
+ * (semaines à 0 ignorées) + 20 %. `null` s'il n'y a pas d'historique.
+ */
+export function suggestTarget(weeks, type) {
+  const past = weeks
+    .filter(
+      (w) => w.type === type && w.status !== "active" && w.current_value > 0,
+    )
+    .slice(0, 3);
+  if (!past.length) return null;
+  const avg = past.reduce((s, w) => s + w.current_value, 0) / past.length;
+  return {
+    target: roundNice(avg * 1.2),
+    basedOn: past.map((w) => w.current_value),
+  };
+}
+
+export async function getWeeklyChallengesForAdmin(limit = 26) {
+  const { data, error } = await db()
+    .from("weekly_challenges")
+    .select(
+      "id, week_start, week_end, type, target, current_value, status, top_contributor_amount, closed_at, top_contributor:profiles(id, username)",
+    )
+    .order("week_start", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+/** Contributeurs d'un défi, profils privés compris (vue admin). */
+export async function getWeeklyContributorsForAdmin(challengeId, limit = 10) {
+  const { data, error, count } = await db()
+    .from("weekly_challenge_contributions")
+    .select("user_id, amount, profiles(username, avatar_url)", {
+      count: "exact",
+    })
+    .eq("challenge_id", challengeId)
+    .order("amount", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return { top: data || [], total: count ?? 0 };
+}
+
+/**
+ * Change l'objectif du défi en cours. Changer le type remet le compteur et les
+ * contributions à zéro : ce qui a été compté ne correspond plus au nouveau défi.
+ */
+export async function updateActiveWeeklyChallenge(id, type, target) {
+  const sb = db();
+  const { data: row, error } = await sb
+    .from("weekly_challenges")
+    .select("type, status")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  if (row.status !== "active") throw new Error("Ce défi est déjà terminé.");
+  const reset = row.type !== type;
+  if (reset) {
+    const { error: delErr } = await sb
+      .from("weekly_challenge_contributions")
+      .delete()
+      .eq("challenge_id", id);
+    if (delErr) throw delErr;
+  }
+  const { error: upErr } = await sb
+    .from("weekly_challenges")
+    .update(reset ? { type, target, current_value: 0 } : { target })
+    .eq("id", id);
+  if (upErr) throw upErr;
+  return { reset };
+}
+
+/** Programme (ou remplace) le défi d'une semaine future. Voir 20261010_admin_defi_semaine.sql. */
+export async function scheduleWeeklyChallenge(weekStart, type, target) {
+  const { error } = await db().rpc("admin_schedule_weekly_challenge", {
+    p_week_start: weekStart,
+    p_type: type,
+    p_target: target,
+  });
+  if (error) throw error;
+}
+
+export async function cancelScheduledWeeklyChallenge(weekStart, today) {
+  if (weekStart <= mondayOf(today))
+    throw new Error("Seule une semaine à venir peut être annulée.");
+  const { error } = await db()
+    .from("weekly_challenges")
+    .delete()
+    .eq("week_start", weekStart)
+    .eq("status", "active")
+    .eq("current_value", 0);
+  if (error) throw error;
 }

@@ -228,6 +228,31 @@ img {
   color: var(--accent);
 }
 
+/* Écrans moyens : liens resserrés pour que la nav tienne sur une ligne */
+@media (max-width: 1180px) {
+  .nav-link {
+    font-size: 1rem;
+    padding: 0 9px;
+  }
+  #nav-username {
+    display: none;
+  }
+}
+@media (max-width: 960px) {
+  .nav-sep {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .nav-link {
+    font-size: 0.88rem;
+    padding: 0 5px;
+  }
+  .nav-link-aide {
+    display: none;
+  }
+}
+
 /* Mobile: hide desktop-only nav items */
 .nav-dd-mobile-only {
   display: none;

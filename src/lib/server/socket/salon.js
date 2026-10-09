@@ -6,7 +6,7 @@ import { randomBytes } from "crypto";
 import { YouTube } from "youtube-sr";
 
 import { supabase } from "../config.js";
-import { userClient } from "../middleware/auth.js";
+import { userClient, verifyToken } from "../middleware/auth.js";
 import { salonRooms, setIO, getIO } from "../state.js";
 import {
   buildTrackFromRow,
@@ -17,7 +17,15 @@ import {
 } from "../services/playlist.js";
 import { makeTeams, cleanTeamName, teamStandings } from "./salonTeams.js";
 import { isPro } from "../services/pro.js";
+import {
+  reportTrackIssue,
+  getVideoSettings,
+  filterVideos,
+  pickStart,
+} from "../services/trackIssues.js";
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../proPlans.js";
+import { alertAdminsSafe } from "../services/adminAlerts.js";
+import { supportView, registerSupport } from "./salonSupport.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -43,6 +51,7 @@ async function recordSalonGameStart(salon) {
         mode: salon.settings.answerMode === "multiple" ? "qcm" : "classic",
         source: "salon",
         origin: salon.origin,
+        host_id: salon.hostUserId,
       })
       .select("id")
       .single();
@@ -52,15 +61,41 @@ async function recordSalonGameStart(salon) {
   }
 }
 
+function recordSalonPlayers(gameId, salon) {
+  const teamName = (id) =>
+    salon.settings.teams?.find((t) => t.id === id)?.name ?? null;
+  const rows = Object.values(salon.players)
+    .sort((a, b) => b.score - a.score)
+    .map((p, i) => ({
+      game_id: gameId,
+      user_id: p.userId ?? null,
+      username: p.username,
+      score: p.score,
+      rank: i + 1,
+      team: teamName(p.team),
+    }));
+  if (!rows.length) return;
+  supabase
+    .from("salon_players")
+    .insert(rows)
+    .then(({ error }) => {
+      if (error) console.error("[salon] joueurs de la partie:", error.message);
+    });
+}
+
 function recordSalonGameEnd(salon) {
   const id = salon.game.dbGameId;
   if (!id) return;
   salon.game.dbGameId = null;
+  recordSalonPlayers(id, salon);
+  const limitHits = salon.limitHits ?? 0;
+  salon.limitHits = 0;
   supabase
     .from("games")
     .update({
       ended_at: new Date().toISOString(),
       player_count: Object.keys(salon.players).length,
+      limit_hits: limitHits,
     })
     .eq("id", id)
     .then(({ error }) => {
@@ -311,7 +346,7 @@ function sortedScores(salon) {
 }
 
 // Écrans TV et régie : tout ce que les joueurs ne doivent pas recevoir
-function staff(code, io) {
+export function staff(code, io) {
   return io.to([`salon:screens:${code}`, `salon:ctrl:${code}`]);
 }
 
@@ -444,7 +479,7 @@ function runTimer(code, io) {
 
 // ─── Pause ────────────────────────────────────────────────────────────────────
 
-function pauseGame(code, io) {
+export function pauseGame(code, io) {
   const game = salonRooms[code]?.game;
   if (!game || game.paused || !["round", "summary"].includes(game.phase))
     return;
@@ -469,7 +504,7 @@ function clearPause(code, io) {
   return true;
 }
 
-function resumeGame(code, io) {
+export function resumeGame(code, io) {
   const salon = salonRooms[code];
   if (!salon || !clearPause(code, io)) return;
   const game = salon.game;
@@ -513,6 +548,40 @@ function finishGame(code, io) {
   });
   prepareSession(code, io);
   scheduleCleanup(code);
+}
+
+export function revealRound(code, reason, io) {
+  clearPause(code, io);
+  clearTimeout(salonRooms[code].game.musicReadyTimer);
+  endRound(code, reason, io);
+}
+
+export function nextRound(code, io) {
+  const game = salonRooms[code].game;
+  clearPause(code, io);
+  clearTimeout(game.breakTimer);
+  game.breakTimer = null;
+  startNextRound(code, io);
+}
+
+export function kickPlayer(salon, username, io) {
+  const player = salon.players[username];
+  if (!player) return false;
+  clearTimeout(player._dcTimer);
+  delete salon.players[username];
+  // Ni ce pseudo ni ce téléphone ne reviennent dans la soirée
+  salon.banned.add(username.toLowerCase());
+  salon.banned.add(player.token);
+  const target = player.socketId && io.sockets.sockets.get(player.socketId);
+  if (target) {
+    target.emit("salon_kicked");
+    target.leave(`salon:${salon.code}`);
+    target.leave(`salon:players:${salon.code}`);
+    target.salonCode = null;
+  }
+  broadcastRoster(salon.code, io);
+  checkEveryoneDone(salon.code, io);
+  return true;
 }
 
 function endRound(code, reason, io) {
@@ -631,20 +700,42 @@ function endRound(code, reason, io) {
 }
 
 async function searchTrackVideo(track, roundDuration) {
+  const { exclude, minStart } = await getVideoSettings();
+  // Vidéo choisie dans l'admin : elle prime sur la recherche
+  if (track.youtube_id) {
+    const pinned = await YouTube.getVideo(
+      `https://www.youtube.com/watch?v=${track.youtube_id}`,
+    ).catch(() => null);
+    return {
+      video: { id: track.youtube_id },
+      safeStart: pickStart({
+        pinned: track.youtube_start,
+        durationSec: Math.round((pinned?.duration || 0) / 1000),
+        roundDuration,
+        minStart,
+      }),
+    };
+  }
   const artist = track.mainArtist || track.artist;
-  const results = await YouTube.search(`${artist} - ${track.title}`, {
-    type: "video",
-    limit: 5,
-  });
+  const results = filterVideos(
+    await YouTube.search(`${artist} - ${track.title}`, {
+      type: "video",
+      limit: 5,
+    }),
+    exclude,
+  );
   if (!results.length) throw new Error("No video");
   const video =
     results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
-  const durationSec = Math.round((video.duration || 0) / 1000);
-  const safeStart = Math.max(
-    0,
-    Math.floor(Math.random() * Math.max(1, durationSec - roundDuration - 10)),
-  );
-  return { video, safeStart };
+  return {
+    video,
+    safeStart: pickStart({
+      pinned: null,
+      durationSec: Math.round((video.duration || 0) / 1000),
+      roundDuration,
+      minStart,
+    }),
+  };
 }
 
 // Cherche la vidéo du prochain titre et l'annonce à l'hôte, qui la met en
@@ -736,6 +827,7 @@ async function startNextRound(code, io) {
       ));
     }
 
+    game.currentVideo = { id: video.id, start: safeStart };
     game.phase = "round";
     game.timerActive = false;
     game.timerValue = 0;
@@ -779,6 +871,15 @@ async function startNextRound(code, io) {
     prefetchNextVideo(code, io);
   } catch (err) {
     console.error(`Salon skip "${track.title}":`, err.message);
+    reportTrackIssue(
+      track.id,
+      "video",
+      "auto",
+      "Aucune vidéo trouvée en salon",
+      {
+        salon: code,
+      },
+    );
     // Titre sans source : on ne consomme pas la manche, on passe au titre suivant
     game.currentRound--;
     startNextRound(code, io);
@@ -944,12 +1045,85 @@ function cleanUsername(name) {
     .slice(0, 20);
 }
 
+// Réglages de la régie, aussi appliqués par l'admin. allow(fonction) dit si
+// une fonction Pro est permise.
+export function applySettings(code, patch, io, allow) {
+  const salon = salonRooms[code];
+  const s = salon.settings;
+  const game = salon.game;
+  const idle = game.phase === "lobby" || game.phase === "gameover";
+  if (!idle && !allow("liveSettings")) return;
+  const clamp = (v, lo, hi, d) =>
+    Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
+
+  if ("roundDuration" in patch)
+    s.roundDuration = clamp(patch.roundDuration, 15, 60, s.roundDuration);
+  if ("showAnswerDuration" in patch)
+    s.showAnswerDuration = clamp(
+      patch.showAnswerDuration,
+      3,
+      15,
+      s.showAnswerDuration,
+    );
+  if ("manualNext" in patch) s.manualNext = patch.manualNext === true;
+  if (idle && "answerMode" in patch)
+    s.answerMode = patch.answerMode === "multiple" ? "multiple" : "free";
+  if ("maxRounds" in patch) {
+    const n = clamp(
+      patch.maxRounds,
+      idle ? 5 : Math.max(5, game.currentRound),
+      20,
+      s.maxRounds,
+    );
+    if (n !== s.maxRounds) {
+      s.maxRounds = n;
+      if (idle) prepareSession(code, io);
+      else {
+        // Les titres déjà joués ne reviennent pas
+        game.sessionPlaylist = buildSessionPlaylist(
+          game.fullPlaylist.filter((t) => !game.played.includes(t)),
+          n - game.currentRound,
+        );
+        game.prefetchedRound = null;
+        prefetchNextVideo(code, io);
+      }
+    }
+  }
+  if (idle && "teamCount" in patch) {
+    if (patch.teamCount > teamLimit(salon) && !allow("teams")) return;
+    s.teams = makeTeams(patch.teamCount, s.teams);
+    // On ne redistribue pas : ajouter une équipe déplaçait tout le monde
+    // en tourniquet et défaisait les placements choisis. Seuls ceux dont
+    // l'équipe vient de disparaître sont libérés.
+    const existantes = new Set((s.teams ?? []).map((t) => t.id));
+    for (const p of Object.values(salon.players)) {
+      if (p.team != null && !existantes.has(p.team)) p.team = null;
+    }
+    broadcastRoster(code, io);
+  }
+  // Passage en automatique pendant l'affichage d'une réponse
+  if (
+    game.phase === "summary" &&
+    !s.manualNext &&
+    !game.breakTimer &&
+    !game.paused
+  ) {
+    game.breakTimer = setTimeout(() => {
+      game.breakTimer = null;
+      startNextRound(code, io);
+    }, s.showAnswerDuration * 1000);
+  }
+  io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+}
+
 // ─── Socket registration ──────────────────────────────────────────────────────
 
 export function registerSalon(io) {
   setIO(io);
 
   io.on("connection", (socket) => {
+    registerSupport(socket);
+
     // ── Host connects to their salon ──────────────────────────────────────────
     // ── Écran TV : public avec le code, pilotable seulement avec la clé ──────
     socket.on("salon_join_host", ({ code, key }) => {
@@ -978,6 +1152,7 @@ export function registerSalon(io) {
         phase: salon.game.phase,
         paused: salon.game.paused,
         currentRound: salon.game.currentRound,
+        support: supportView(salon),
       });
       if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
         prepareSession(code, io);
@@ -1022,6 +1197,7 @@ export function registerSalon(io) {
             : null,
         history: game.history,
         trackCount: game.fullPlaylist.length,
+        support: supportView(salon),
       });
       scheduleCleanup(code);
       broadcastScreens(code, io);
@@ -1042,9 +1218,7 @@ export function registerSalon(io) {
       const salon = adminSalon(socket);
       if (!salon || salon.game.phase !== "round") return;
       if (!requirePro(socket, salon, "reveal")) return;
-      clearPause(salon.code, io);
-      clearTimeout(salon.game.musicReadyTimer);
-      endRound(salon.code, "Réponse révélée", io);
+      revealRound(salon.code, "Réponse révélée", io);
     });
 
     socket.on("salon_end_game", () => {
@@ -1063,22 +1237,7 @@ export function registerSalon(io) {
 
     socket.on("salon_kick", ({ username } = {}) => {
       const salon = adminSalon(socket);
-      const player = salon?.players[username];
-      if (!player) return;
-      clearTimeout(player._dcTimer);
-      delete salon.players[username];
-      // Ni ce pseudo ni ce téléphone ne reviennent dans la soirée
-      salon.banned.add(username.toLowerCase());
-      salon.banned.add(player.token);
-      const target = player.socketId && io.sockets.sockets.get(player.socketId);
-      if (target) {
-        target.emit("salon_kicked");
-        target.leave(`salon:${salon.code}`);
-        target.leave(`salon:players:${salon.code}`);
-        target.salonCode = null;
-      }
-      broadcastRoster(salon.code, io);
-      checkEveryoneDone(salon.code, io);
+      if (salon) kickPlayer(salon, username, io);
     });
 
     // Correction à la main par l'animateur (réponse orale acceptée, triche…)
@@ -1106,74 +1265,10 @@ export function registerSalon(io) {
 
     socket.on("salon_update_settings", (patch = {}) => {
       const salon = adminSalon(socket);
-      if (!salon) return;
-      const code = salon.code;
-      const s = salon.settings;
-      const game = salon.game;
-      const idle = game.phase === "lobby" || game.phase === "gameover";
-      if (!idle && !requirePro(socket, salon, "liveSettings")) return;
-      const clamp = (v, lo, hi, d) =>
-        Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
-
-      if ("roundDuration" in patch)
-        s.roundDuration = clamp(patch.roundDuration, 15, 60, s.roundDuration);
-      if ("showAnswerDuration" in patch)
-        s.showAnswerDuration = clamp(
-          patch.showAnswerDuration,
-          3,
-          15,
-          s.showAnswerDuration,
+      if (salon)
+        applySettings(salon.code, patch, io, (f) =>
+          requirePro(socket, salon, f),
         );
-      if ("manualNext" in patch) s.manualNext = patch.manualNext === true;
-      if (idle && "answerMode" in patch)
-        s.answerMode = patch.answerMode === "multiple" ? "multiple" : "free";
-      if ("maxRounds" in patch) {
-        const n = clamp(
-          patch.maxRounds,
-          idle ? 5 : Math.max(5, game.currentRound),
-          20,
-          s.maxRounds,
-        );
-        if (n !== s.maxRounds) {
-          s.maxRounds = n;
-          if (idle) prepareSession(code, io);
-          else {
-            // Les titres déjà joués ne reviennent pas
-            game.sessionPlaylist = buildSessionPlaylist(
-              game.fullPlaylist.filter((t) => !game.played.includes(t)),
-              n - game.currentRound,
-            );
-            game.prefetchedRound = null;
-            prefetchNextVideo(code, io);
-          }
-        }
-      }
-      if (idle && "teamCount" in patch) {
-        if (patch.teamCount > teamLimit(salon))
-          return requirePro(socket, salon, "teams");
-        s.teams = makeTeams(patch.teamCount, s.teams);
-        // On ne redistribue pas : ajouter une équipe déplaçait tout le monde
-        // en tourniquet et défaisait les placements choisis. Seuls ceux dont
-        // l'équipe vient de disparaître sont libérés.
-        const existantes = new Set((s.teams ?? []).map((t) => t.id));
-        for (const p of Object.values(salon.players)) {
-          if (p.team != null && !existantes.has(p.team)) p.team = null;
-        }
-        broadcastRoster(code, io);
-      }
-      // Passage en automatique pendant l'affichage d'une réponse
-      if (
-        game.phase === "summary" &&
-        !s.manualNext &&
-        !game.breakTimer &&
-        !game.paused
-      ) {
-        game.breakTimer = setTimeout(() => {
-          game.breakTimer = null;
-          startNextRound(code, io);
-        }, s.showAnswerDuration * 1000);
-      }
-      io.to(`salon:${code}`).emit("salon_settings", { settings: s });
     });
 
     socket.on("salon_rename_team", ({ team, name } = {}) => {
@@ -1206,7 +1301,9 @@ export function registerSalon(io) {
     });
 
     // ── Player joins ──────────────────────────────────────────────────────────
-    socket.on("salon_join_player", ({ code, username, token }) => {
+    socket.on("salon_join_player", async ({ code, username, token, auth }) => {
+      // Compte du joueur s'il est connecté : sa fiche admin liste ses salons
+      const account = auth ? await verifyToken(auth).catch(() => null) : null;
       username = cleanUsername(username);
       if (!username)
         return socket.emit("salon_error", { message: "Pseudo requis." });
@@ -1226,6 +1323,17 @@ export function registerSalon(io) {
         !salon.pro &&
         Object.keys(salon.players).length >= FREE_MAX_PLAYERS
       ) {
+        salon.limitHits = (salon.limitHits ?? 0) + 1;
+        alertAdminsSafe(
+          "admin_upsell",
+          {
+            title: `Salon ${code} plein`,
+            body: `Un joueur de plus a été refusé (limite gratuite de ${FREE_MAX_PLAYERS}).`,
+            url: `/admin/salons?code=${code}`,
+            tag: `full:${code}`,
+          },
+          { throttleMs: 60 * 60 * 1000 },
+        );
         io.to(`salon:ctrl:${code}`).emit("salon_pro_required", {
           feature: "players",
         });
@@ -1257,6 +1365,7 @@ export function registerSalon(io) {
         existing._dcTimer = null;
         existing._disconnected = false;
         existing.socketId = socket.id;
+        if (account) existing.userId = account.id;
 
         socket.join(`salon:${code}`);
         socket.join(`salon:players:${code}`);
@@ -1307,6 +1416,7 @@ export function registerSalon(io) {
       }
 
       const player = addPlayer(salon, username, socket.id);
+      if (account) player.userId = account.id;
 
       socket.join(`salon:${code}`);
       socket.join(`salon:players:${code}`);
@@ -1365,12 +1475,26 @@ export function registerSalon(io) {
     socket.on("salon_next_round", () => {
       const salon = adminSalon(socket);
       if (!salon || salon.game.phase !== "summary") return;
-      const code = salon.code;
-      clearPause(code, io);
+      nextRound(salon.code, io);
+    });
 
-      clearTimeout(salon.game.breakTimer);
-      salon.game.breakTimer = null;
-      startNextRound(code, io);
+    // La régie signale une vidéo fausse ou mal calée : elle part dans la file
+    // « Réparer » de l'admin avec la vidéo exacte qui passait.
+    socket.on("salon_report_video", ({ reason } = {}) => {
+      const salon = adminSalon(socket);
+      const track = salon?.game.currentTrack;
+      if (!track || !["round", "summary"].includes(salon.game.phase)) return;
+      reportTrackIssue(
+        track.id,
+        "video",
+        "host",
+        String(reason ?? "").slice(0, 200) || null,
+        {
+          salon: salon.code,
+          videoId: salon.game.currentVideo?.id ?? null,
+          start: salon.game.currentVideo?.start ?? null,
+        },
+      );
     });
 
     // ── Player submits free text answer ──────────────────────────────────────

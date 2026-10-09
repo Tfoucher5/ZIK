@@ -1,6 +1,6 @@
-import { error } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
-import { requireAdmin, logAdminAction } from "$lib/server/middleware/auth.js";
+import { logAdminAction } from "$lib/server/middleware/auth.js";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -9,7 +9,9 @@ function assertUuid(id) {
   if (!UUID_RE.test(id)) throw error(400, "ID invalide");
 }
 
-export async function load({ params }) {
+const BAN_DURATIONS = ["24h", "168h", "720h", "8760h", "87600h"];
+
+export async function load({ params, locals }) {
   const sb = getAdminClient();
   const { id } = params;
   assertUuid(id);
@@ -23,244 +25,429 @@ export async function load({ params }) {
     followersRes,
     friendshipsRes,
     proRes,
+    unlockedRes,
+    catalogRes,
+    auditRes,
+    hostedRes,
+    salonPlayedRes,
   ] = await Promise.all([
     sb.from("profiles").select("*").eq("id", id).single(),
     sb.auth.admin.getUserById(id),
     sb
       .from("game_players")
       .select(
-        "id, score, rank, is_guest, games(id, room_id, started_at, ended_at, rounds)",
+        "id, score, rank, games(id, room_id, started_at, rounds, mode, player_count)",
       )
       .eq("user_id", id)
-      .limit(50),
+      .limit(2000),
     sb
       .from("reports")
-      .select("*")
+      .select(
+        "id, type, subject, status, message, created_at, reporter_id, reported_user_id, room_id",
+      )
       .or(`reporter_id.eq.${id},reported_user_id.eq.${id}`)
       .order("created_at", { ascending: false })
       .limit(20),
     sb
       .from("follows")
-      .select("id, created_at, profiles!follows_following_id_fkey(username)")
+      .select(
+        "id, created_at, user:profiles!follows_following_id_fkey(id, username, avatar_url)",
+      )
       .eq("follower_id", id)
       .order("created_at", { ascending: false }),
     sb
       .from("follows")
-      .select("id, created_at, profiles!follows_follower_id_fkey(username)")
+      .select(
+        "id, created_at, user:profiles!follows_follower_id_fkey(id, username, avatar_url)",
+      )
       .eq("following_id", id)
       .order("created_at", { ascending: false }),
     sb
       .from("friendships")
       .select(
-        "id, status, created_at, accepted_at, requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey(username), addressee:profiles!friendships_addressee_id_fkey(username)",
+        "id, status, created_at, accepted_at, requester_id, requester:profiles!friendships_requester_id_fkey(id, username, avatar_url), addressee:profiles!friendships_addressee_id_fkey(id, username, avatar_url)",
       )
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
       .order("created_at", { ascending: false }),
     sb
       .from("pro_subscriptions")
-      .select("plan, status, current_period_end")
+      .select("plan, status, current_period_end, stripe_subscription_id")
       .eq("user_id", id)
       .maybeSingle(),
+    sb
+      .from("user_achievements")
+      .select("id, achievement_id, tier, unlocked_at")
+      .eq("user_id", id)
+      .order("unlocked_at", { ascending: false }),
+    sb.from("achievements").select("id, name, icon"),
+    sb
+      .from("admin_audit_log")
+      .select("id, admin_id, action, payload, created_at")
+      .eq("target_id", id)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    sb
+      .from("games")
+      .select(
+        "id, room_id, started_at, ended_at, rounds, player_count, limit_hits",
+      )
+      .eq("source", "salon")
+      .eq("host_id", id)
+      .order("started_at", { ascending: false })
+      .limit(500),
+    sb
+      .from("salon_players")
+      .select(
+        "id, score, rank, team, games(id, room_id, started_at, player_count)",
+      )
+      .eq("user_id", id)
+      .order("created_at", { ascending: false })
+      .limit(500),
   ]);
 
   if (profileRes.error || !profileRes.data)
-    throw error(404, "User introuvable");
+    throw error(404, "Joueur introuvable");
 
   const authUser = authUserRes.data?.user;
   const isBanned = authUser?.banned_until
     ? new Date(authUser.banned_until) > new Date()
     : false;
 
-  const games = (gamesRes.data ?? []).sort((a, b) => {
-    const da = a.games?.started_at ? new Date(a.games.started_at).getTime() : 0;
-    const db = b.games?.started_at ? new Date(b.games.started_at).getTime() : 0;
-    return db - da;
-  });
+  const played = (gamesRes.data ?? [])
+    .filter((g) => g.games)
+    .sort(
+      (a, b) =>
+        new Date(b.games.started_at ?? 0) - new Date(a.games.started_at ?? 0),
+    );
+  const monthAgo = Date.now() - 30 * 86400000;
+  const recent = played.slice(0, 15);
 
-  const friendships = (friendshipsRes.data ?? []).map((f) => ({
-    id: f.id,
-    status: f.status,
-    created_at: f.created_at,
-    accepted_at: f.accepted_at,
-    other_username:
-      f.requester_id === id ? f.addressee?.username : f.requester?.username,
-  }));
+  const audit = auditRes.data ?? [];
+  const roomCodes = [...new Set(recent.map((g) => g.games.room_id))].filter(
+    Boolean,
+  );
+  const adminIds = [...new Set(audit.map((a) => a.admin_id))].filter(Boolean);
+  const [roomsRes, adminsRes] = await Promise.all([
+    roomCodes.length
+      ? sb.from("rooms").select("code, name, emoji").in("code", roomCodes)
+      : { data: [] },
+    adminIds.length
+      ? sb.from("profiles").select("id, username").in("id", adminIds)
+      : { data: [] },
+  ]);
+  const rooms = Object.fromEntries(
+    (roomsRes.data ?? []).map((r) => [r.code, r]),
+  );
+  const admins = Object.fromEntries(
+    (adminsRes.data ?? []).map((a) => [a.id, a.username]),
+  );
+  const catalog = Object.fromEntries(
+    (catalogRes.data ?? []).map((a) => [a.id, a]),
+  );
 
   return {
     profile: profileRes.data,
+    isSelf: locals.adminId === id,
+    account: {
+      email: authUser?.email ?? null,
+      provider: authUser?.app_metadata?.provider ?? null,
+      lastSignIn: authUser?.last_sign_in_at ?? null,
+      bannedUntil: isBanned ? authUser.banned_until : null,
+    },
     isBanned,
-    bannedUntil: authUser?.banned_until ?? null,
-    games,
+    stats: {
+      games: played.length,
+      wins: played.filter((g) => g.rank === 1).length,
+      podiums: played.filter((g) => g.rank && g.rank <= 3).length,
+      month: played.filter(
+        (g) => new Date(g.games.started_at).getTime() > monthAgo,
+      ).length,
+    },
+    games: recent.map((g) => ({
+      id: g.id,
+      score: g.score,
+      rank: g.rank,
+      startedAt: g.games.started_at,
+      rounds: g.games.rounds,
+      players: g.games.player_count,
+      code: g.games.room_id,
+      room: rooms[g.games.room_id] ?? null,
+    })),
+    salon: {
+      hosted: hostedRes.data ?? [],
+      played: (salonPlayedRes.data ?? []).filter((p) => p.games),
+    },
+    achievements: (unlockedRes.data ?? []).map((u) => ({
+      ...u,
+      name: catalog[u.achievement_id]?.name ?? u.achievement_id,
+      icon: catalog[u.achievement_id]?.icon ?? "🏅",
+    })),
     reports: reportsRes.data ?? [],
-    following: followingRes.data ?? [],
-    followers: followersRes.data ?? [],
-    friendships,
+    audit: audit.map((a) => ({ ...a, admin: admins[a.admin_id] ?? null })),
+    following: (followingRes.data ?? []).map((f) => ({
+      id: f.id,
+      at: f.created_at,
+      user: f.user,
+    })),
+    followers: (followersRes.data ?? []).map((f) => ({
+      id: f.id,
+      at: f.created_at,
+      user: f.user,
+    })),
+    friendships: (friendshipsRes.data ?? []).map((f) => ({
+      id: f.id,
+      status: f.status,
+      at: f.accepted_at ?? f.created_at,
+      user: f.requester_id === id ? f.addressee : f.requester,
+    })),
     pro: proRes.data ?? null,
   };
 }
 
+async function setup({ request, params }) {
+  assertUuid(params.id);
+  return { fd: await request.formData(), sb: getAdminClient() };
+}
+
 export const actions = {
-  ban: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const ALLOWED_DURATIONS = ["24h", "168h", "720h", "8760h", "87600h"];
-    const duration = formData.get("duration") || "87600h";
-    if (!ALLOWED_DURATIONS.includes(duration))
-      return { success: false, error: "Durée invalide" };
-    const sb = getAdminClient();
-    await sb.auth.admin.updateUserById(params.id, { ban_duration: duration });
-    await logAdminAction(adminUser.id, "ban_user", params.id, "user", {
-      duration,
+  ban: async (event) => {
+    const { fd, sb } = await setup(event);
+    const duration = fd.get("duration") || "87600h";
+    if (!BAN_DURATIONS.includes(duration))
+      return fail(400, { error: "Durée invalide" });
+    const { error: err } = await sb.auth.admin.updateUserById(event.params.id, {
+      ban_duration: duration,
     });
-    return { success: true };
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "ban_user",
+      event.params.id,
+      "user",
+      {
+        duration,
+      },
+    );
+    return { message: "Joueur banni." };
   },
 
-  unban: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser } = await requireAdmin(request);
-    const sb = getAdminClient();
-    await sb.auth.admin.updateUserById(params.id, { ban_duration: "none" });
-    await logAdminAction(adminUser.id, "unban_user", params.id, "user", {});
-    return { success: true };
+  unban: async (event) => {
+    const { sb } = await setup(event);
+    const { error: err } = await sb.auth.admin.updateUserById(event.params.id, {
+      ban_duration: "none",
+    });
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "unban_user",
+      event.params.id,
+      "user",
+    );
+    return { message: "Joueur débanni." };
   },
 
-  editStats: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const sb = getAdminClient();
-    const xp = Math.max(0, parseInt(formData.get("xp"), 10) || 0);
+  editStats: async (event) => {
+    const { fd, sb } = await setup(event);
+    const xp = Math.max(0, parseInt(fd.get("xp"), 10) || 0);
     const elo = Math.max(
       0,
-      Math.min(99999, parseInt(formData.get("elo"), 10) || 1000),
+      Math.min(99999, parseInt(fd.get("elo"), 10) || 1000),
     );
     const level = Math.max(
       1,
-      Math.min(1000, parseInt(formData.get("level"), 10) || 1),
+      Math.min(1000, parseInt(fd.get("level"), 10) || 1),
     );
-    await sb.from("profiles").update({ xp, elo, level }).eq("id", params.id);
-    await logAdminAction(adminUser.id, "edit_stats", params.id, "user", {
-      xp,
-      elo,
-      level,
-    });
-    return { success: true };
+    const { error: err } = await sb
+      .from("profiles")
+      .update({ xp, elo, level })
+      .eq("id", event.params.id);
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "edit_stats",
+      event.params.id,
+      "user",
+      {
+        xp,
+        elo,
+        level,
+      },
+    );
+    return { message: "Stats enregistrées." };
   },
 
-  editUsername: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const sb = getAdminClient();
-    const username = formData.get("username")?.trim();
-    if (!username || username.length < 3)
-      return { success: false, error: "Username invalide" };
+  editUsername: async (event) => {
+    const { fd, sb } = await setup(event);
+    const username = fd.get("username")?.trim();
+    if (!username || username.length < 3 || username.length > 20)
+      return fail(400, { error: "Le pseudo doit faire de 3 à 20 caractères." });
     const { error: err } = await sb
       .from("profiles")
       .update({ username })
-      .eq("id", params.id);
-    if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "edit_username", params.id, "user", {
-      username,
-    });
-    return { success: true };
+      .eq("id", event.params.id);
+    if (err)
+      return fail(400, {
+        error: err.code === "23505" ? "Ce pseudo est déjà pris." : err.message,
+      });
+    await logAdminAction(
+      event.locals.adminId,
+      "edit_username",
+      event.params.id,
+      "user",
+      {
+        username,
+      },
+    );
+    return { message: "Pseudo modifié." };
   },
 
-  resetStats: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser } = await requireAdmin(request);
-    const sb = getAdminClient();
-    await sb
+  resetStats: async (event) => {
+    const { sb } = await setup(event);
+    const { error: err } = await sb
       .from("profiles")
-      .update({
-        xp: 0,
-        elo: 1000,
-        level: 1,
-        games_played: 0,
-        total_score: 0,
-      })
-      .eq("id", params.id);
-    await logAdminAction(adminUser.id, "reset_stats", params.id, "user", {});
-    return { success: true };
+      .update({ xp: 0, elo: 1000, level: 1, games_played: 0, total_score: 0 })
+      .eq("id", event.params.id);
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "reset_stats",
+      event.params.id,
+      "user",
+    );
+    return { message: "Stats remises à zéro." };
   },
 
-  // Accès ZIK Pro offert (lieux testeurs), en attendant le paiement en ligne
-  setPro: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const days = Number(formData.get("days"));
-    if (![0, 1, 30, 90, 365].includes(days)) return { success: false };
-    const sb = getAdminClient();
+  setPro: async (event) => {
+    const { fd, sb } = await setup(event);
+    const days = parseInt(fd.get("days"), 10);
+    if (!(days >= 0 && days <= 3650))
+      return fail(400, { error: "Nombre de jours invalide" });
     if (days === 0) {
-      await sb.from("pro_subscriptions").delete().eq("user_id", params.id);
+      await sb
+        .from("pro_subscriptions")
+        .delete()
+        .eq("user_id", event.params.id);
     } else {
-      await sb.from("pro_subscriptions").upsert({
-        user_id: params.id,
+      const { data: cur } = await sb
+        .from("pro_subscriptions")
+        .select("status, current_period_end")
+        .eq("user_id", event.params.id)
+        .maybeSingle();
+      const curEnd =
+        cur?.status === "active"
+          ? new Date(cur.current_period_end).getTime()
+          : 0;
+      const from = Math.max(Date.now(), curEnd);
+      const { error: err } = await sb.from("pro_subscriptions").upsert({
+        user_id: event.params.id,
         plan: "manual",
         status: "active",
-        current_period_end: new Date(
-          Date.now() + days * 86400000,
-        ).toISOString(),
+        current_period_end: new Date(from + days * 86400000).toISOString(),
         updated_at: new Date().toISOString(),
       });
+      if (err) return fail(500, { error: err.message });
     }
-    await logAdminAction(adminUser.id, "set_pro", params.id, "user", { days });
-    return { success: true };
+    await logAdminAction(
+      event.locals.adminId,
+      "set_pro",
+      event.params.id,
+      "user",
+      {
+        days,
+      },
+    );
+    return {
+      message: days
+        ? `${days} jour${days > 1 ? "s" : ""} de Pro offert${days > 1 ? "s" : ""}.`
+        : "Accès Pro retiré.",
+    };
   },
 
-  setRole: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    if (params.id === adminUser.id)
-      return {
-        success: false,
-        error: "Impossible de modifier son propre rôle",
-      };
-    const role = formData.get("role");
-    if (!["user", "super_admin"].includes(role)) return { success: false };
-    const sb = getAdminClient();
-    await sb.from("profiles").update({ role }).eq("id", params.id);
-    await logAdminAction(adminUser.id, "set_role", params.id, "user", { role });
-    return { success: true };
+  setRole: async (event) => {
+    const { fd, sb } = await setup(event);
+    if (event.params.id === event.locals.adminId)
+      return fail(400, { error: "Impossible de modifier son propre rôle" });
+    const role = fd.get("role");
+    if (!["user", "super_admin"].includes(role))
+      return fail(400, { error: "Rôle invalide" });
+    const { error: err } = await sb
+      .from("profiles")
+      .update({ role })
+      .eq("id", event.params.id);
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "set_role",
+      event.params.id,
+      "user",
+      {
+        role,
+      },
+    );
+    return {
+      message:
+        role === "super_admin"
+          ? "Joueur nommé admin."
+          : "Droits admin retirés.",
+    };
   },
 
-  deleteUser: async ({ request, params }) => {
-    assertUuid(params.id);
-    const { adminUser, formData } = await requireAdmin(request);
-    const confirm = formData.get("confirm_username")?.trim();
-    const sb = getAdminClient();
+  deleteUser: async (event) => {
+    const { fd, sb } = await setup(event);
     const { data: profile } = await sb
       .from("profiles")
       .select("username")
-      .eq("id", params.id)
+      .eq("id", event.params.id)
       .single();
-    if (confirm !== profile?.username)
-      return {
-        success: false,
-        error: "Username incorrect — suppression annulée",
-      };
-    await sb.auth.admin.deleteUser(params.id);
-    await logAdminAction(adminUser.id, "delete_user", params.id, "user", {
-      username: profile.username,
-    });
-    return { success: true, deleted: true };
+    if (fd.get("confirm_username")?.trim() !== profile?.username)
+      return fail(400, { error: "Pseudo incorrect, suppression annulée." });
+    const { error: err } = await sb.auth.admin.deleteUser(event.params.id);
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "delete_user",
+      event.params.id,
+      "user",
+      {
+        username: profile.username,
+      },
+    );
+    throw redirect(303, "/admin/users");
   },
 
-  deleteFollow: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
-    const id = formData.get("id");
-    const sb = getAdminClient();
+  deleteFollow: async (event) => {
+    const { fd, sb } = await setup(event);
+    const id = fd.get("id");
+    if (!/^\d+$/.test(id ?? "")) return fail(400, { error: "id invalide" });
     const { error: err } = await sb.from("follows").delete().eq("id", id);
-    if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "delete_follow", id, "follow");
-    return { success: true };
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "delete_follow",
+      event.params.id,
+      "user",
+      {
+        follow_id: id,
+      },
+    );
+    return { message: "Abonnement retiré." };
   },
 
-  deleteFriendship: async ({ request }) => {
-    const { adminUser, formData } = await requireAdmin(request);
-    const id = formData.get("id");
-    const sb = getAdminClient();
+  deleteFriendship: async (event) => {
+    const { fd, sb } = await setup(event);
+    const id = fd.get("id");
+    if (!/^\d+$/.test(id ?? "")) return fail(400, { error: "id invalide" });
     const { error: err } = await sb.from("friendships").delete().eq("id", id);
-    if (err) return { success: false, error: err.message };
-    await logAdminAction(adminUser.id, "delete_friendship", id, "friendship");
-    return { success: true };
+    if (err) return fail(500, { error: err.message });
+    await logAdminAction(
+      event.locals.adminId,
+      "delete_friendship",
+      event.params.id,
+      "user",
+      {
+        friendship_id: id,
+      },
+    );
+    return { message: "Amitié supprimée." };
   },
 };

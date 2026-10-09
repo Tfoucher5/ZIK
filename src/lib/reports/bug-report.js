@@ -1,3 +1,5 @@
+export const MIN_REPORT_MESSAGE = 10;
+
 export const BUG_MOTIFS = [
   { value: "audio", label: "Je n'entends pas la musique" },
   { value: "mauvaise-reponse", label: "Un titre a une mauvaise réponse" },
@@ -60,4 +62,12 @@ export function sanitizeReportTracks(value) {
     round: typeof t?.round === "number" ? t.round : null,
     answer: typeof t?.answer === "string" ? t.answer : null,
   }));
+}
+
+// Contexte technique envoyé par le navigateur : on le garde tel quel mais
+// borné, pour qu'un client ne puisse pas remplir la table.
+export function sanitizeReportContext(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const json = JSON.stringify(value);
+  return json.length <= 12000 ? JSON.parse(json) : null;
 }

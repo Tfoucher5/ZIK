@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
+import { supabase, getAdminClient } from "$lib/server/config.js";
 
-const VALID_MODES = ["classique", "qcm", "elo"];
+const VALID_MODES = ["classique", "qcm", "elo", "cartes"];
 const VALID_ROOMS = ["officielles", "toutes"];
 const VALID_PERIODS = ["semaine", "mois", "alltime"];
 
@@ -37,6 +37,22 @@ export async function GET({ url }) {
         rank: (count ?? 0) + 1,
         score: me.elo,
         games_count: me.games_played,
+        username: me.username,
+        avatar_url: me.avatar_url,
+      });
+    }
+
+    if (mode === "cartes") {
+      const { data } = await getAdminClient().rpc("cards_leaderboard_my_rank", {
+        p_user_id: userId,
+      });
+      const me = data?.[0];
+      if (!me) return json(null);
+      return json({
+        rank: me.rank,
+        score: me.score,
+        cards: me.cards,
+        sets: me.sets,
         username: me.username,
         avatar_url: me.avatar_url,
       });

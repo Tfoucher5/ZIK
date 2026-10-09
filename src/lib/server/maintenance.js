@@ -7,41 +7,44 @@ import { supabase, getAdminClient } from "./config.js";
 let _cache = { value: null, at: 0 };
 const TTL = 15_000;
 
-// ─── Bypass super_admin ───────────────────────────────────────────────────────
+// ─── Session admin ────────────────────────────────────────────────────────────
 // L'auth est côté client (pas de session serveur), donc le hook ne peut pas
-// identifier l'admin. À la place, le layout admin pose un cookie signé HMAC
-// via /api/admin/maintenance-bypass : le hook laisse passer ce cookie.
+// identifier l'admin. À la place, l'admin reçoit un cookie signé HMAC via
+// /api/admin/session : il ouvre les pages /admin et passe la maintenance.
 
-export const BYPASS_COOKIE = "zik_maint_bypass";
-const BYPASS_TTL_MS = 12 * 60 * 60 * 1000;
+export const ADMIN_COOKIE = "zik_admin";
+export const ADMIN_TTL_MS = 12 * 60 * 60 * 1000;
 
-function bypassSecret() {
+function adminSecret() {
   return (
     process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || "zik"
   );
 }
 
-function sign(exp) {
+function sign(exp, uid) {
   return crypto
-    .createHmac("sha256", bypassSecret())
-    .update(`maint:${exp}`)
+    .createHmac("sha256", adminSecret())
+    .update(`admin:${exp}:${uid}`)
     .digest("hex")
     .slice(0, 32);
 }
 
-export function makeBypassToken() {
-  const exp = Date.now() + BYPASS_TTL_MS;
-  return `${exp}.${sign(exp)}`;
+export function makeAdminToken(uid) {
+  const exp = Date.now() + ADMIN_TTL_MS;
+  return `${exp}.${uid}.${sign(exp, uid)}`;
 }
 
-export function isValidBypassToken(token) {
-  if (!token) return false;
-  const [expStr, sig] = String(token).split(".");
+// Renvoie l'id de l'admin si le cookie est valide, sinon null
+export function readAdminToken(token) {
+  if (!token) return null;
+  const [expStr, uid, sig] = String(token).split(".");
   const exp = Number(expStr);
-  if (!exp || exp < Date.now() || !sig) return false;
-  const expected = sign(exp);
-  if (sig.length !== expected.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+  if (!exp || exp < Date.now() || !uid || !sig) return null;
+  const expected = sign(exp, uid);
+  if (sig.length !== expected.length) return null;
+  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
+    ? uid
+    : null;
 }
 
 export async function getMaintenance() {

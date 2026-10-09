@@ -1,5 +1,6 @@
 <script>
   import { FREE_MAX_TEAMS } from '$lib/proPlans.js';
+  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '$lib/salonOptions.js';
 
   /**
    * Onglet « Réglages ». Secondaire : la configuration se fait en amont sur
@@ -28,7 +29,7 @@
 <div class="ts-field">
   <span>Manches</span>
   <div class="ts-seg">
-    {#each [5, 10, 15, 20] as n (n)}
+    {#each SALON_ROUNDS as n (n)}
       <button class:on={settings.maxRounds === n} disabled={!idle && n < round} onclick={() => onSet({ maxRounds: n })}>{n}</button>
     {/each}
   </div>
@@ -37,7 +38,7 @@
 <div class="ts-field">
   <span>Temps pour répondre</span>
   <div class="ts-seg">
-    {#each [15, 20, 30, 45, 60] as n (n)}
+    {#each SALON_DURATIONS as n (n)}
       <button class:on={settings.roundDuration === n} onclick={() => onSet({ roundDuration: n })}>{n} s</button>
     {/each}
   </div>
@@ -55,7 +56,7 @@
   <div class="ts-field">
     <span>Réponse affichée</span>
     <div class="ts-seg">
-      {#each [5, 7, 10, 15] as n (n)}
+      {#each SALON_REVEALS as n (n)}
         <button class:on={settings.showAnswerDuration === n} onclick={() => onSet({ showAnswerDuration: n })}>{n} s</button>
       {/each}
     </div>
@@ -73,7 +74,7 @@
 <div class="ts-field">
   <span>Équipes {#if !idle}<small>entre deux parties</small>{/if}</span>
   <div class="ts-seg">
-    {#each [0, 2, 3, 4, 6, 8] as n (n)}
+    {#each SALON_TEAMS as n (n)}
       {@const locked = !pro && n > FREE_MAX_TEAMS}
       <button
         class:on={(settings.teams?.length ?? 0) === n}

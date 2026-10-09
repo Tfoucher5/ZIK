@@ -25,6 +25,20 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 - **Supabase** : client browser dans `src/lib/supabase.js`, serveur dans `src/lib/supabaseServer.js`
 - **CSS** : pas de framework CSS, styles dans `static/css/` ou `<style>` scoped dans les composants
 
+## Bonnes pratiques de développement
+
+- **Taille des fichiers** : viser moins de 300 lignes par fichier. Au-delà, découper avant d'ajouter du code
+- **Où ranger quoi** :
+  - `+page.svelte` assemble des composants, sans grosse logique ni gros bloc de styles
+  - Composants d'un domaine dans `src/lib/components/<domaine>/` (ex : `card/`, `leaderboard/`), un composant = une responsabilité, avec ses styles scoped
+  - État et chargement de données partagés par plusieurs composants : module `.svelte.js` (classe avec runes) à côté des composants
+  - Accès BDD et logique métier serveur dans `src/lib/server/services/`, les `+server.js` restent fins (lecture des paramètres, appel du service, réponse)
+- **Pas de duplication** : chercher un composant, un utilitaire ou une variable CSS existants avant d'en créer (ex : couleurs de rareté `--rc` dans `static/css/cards.css`)
+- **Supabase côté serveur** : `supabase` utilise la clé anonyme et subit les RLS (rooms et playlists privées invisibles). Lire avec `getAdminClient()` quand le serveur doit tout voir
+- **Vérifier avant de livrer** : `npx eslint .`, `npx vitest run`, `npx svelte-check`, et pour toute modif d'interface un contrôle visuel en desktop et en mobile (390 px)
+- **Tests locaux** : le serveur de dev tape sur la BDD de prod. Ne pas créer de données de test (une room `auto_start` lance une partie dès qu'on la rejoint) ; si ça arrive, les supprimer
+- Fais des fichiers réduits en taille, pas de gros fichiers. Privilégie les composants et modules réutilisables.
+
 ## Avant de coder
 
 - Toujours lire le fichier avant de le modifier
@@ -40,4 +54,4 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 
 - **Supabase** : pour inspecter/modifier la BDD (tables, SQL, migrations)
 - **Notion** : pour consulter les tâches et la doc projet
-- **Vercel** : pour les déploiements et logs
+- **Stripe** : pour le systeme de paiement (abonnements, factures)

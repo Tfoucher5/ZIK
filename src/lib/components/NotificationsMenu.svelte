@@ -1,7 +1,11 @@
 <script>
   import { getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
+  import { RARITIES } from '$lib/components/card/rarity.js';
   import { notifState, markAllRead, dismissNotif } from '$lib/notifications.svelte.js';
+  import { push, enablePush } from '$lib/push.svelte.js';
+  import { toast } from '$lib/toast.svelte.js';
+  import { sendFriend } from '$lib/components/player/social.js';
 
   const ctx = getContext('zik');
   const sb = ctx.sb;
@@ -28,15 +32,18 @@
     if (busyId) return;
     busyId = n.id;
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch('/api/friend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ targetId: n.actor_id, action }),
-      });
-      if (r.ok) dismissNotif(n.id);
+      if (await sendFriend(sb, n.actor_id, action)) dismissNotif(n.id);
     } finally {
       busyId = null;
+    }
+  }
+
+  async function enableDevicePush() {
+    try {
+      await enablePush(async () => (await sb.auth.getSession())?.data?.session?.access_token);
+      if (push.subscribed) toast('Notifications activées sur cet appareil', 'success');
+    } catch {
+      toast("Impossible d'activer les notifications sur cet appareil", 'error');
     }
   }
 
@@ -69,17 +76,39 @@
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="notif-panel" onclick={(e) => e.stopPropagation()}>
       <div class="notif-head">Notifications</div>
+      {#if push.supported && !push.subscribed && push.permission !== 'denied'}
+        <button class="notif-push" onclick={enableDevicePush} disabled={push.busy}>
+          🔔 Être prévenu même quand ZIK est fermé
+        </button>
+      {/if}
       {#if notifState.list.length === 0}
         <p class="notif-empty">Aucune notification.</p>
       {:else}
         {#each notifState.list as n (n.id)}
           {@const uname = n.actor?.username || 'Un joueur'}
+          {@const fromZik = n.type === 'announcement' || n.type === 'news'}
           <div class="notif-item">
-            <a class="notif-av" href="/user/{uname}">
-              <img src={n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async">
-            </a>
+            {#if fromZik}
+              <span class="notif-av notif-zik" aria-hidden="true">Z</span>
+            {:else}
+              <a class="notif-av" href={n.actor ? `/user/${uname}` : '/collection'}>
+                <img src={n.payload?.cover || n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </a>
+            {/if}
             <div class="notif-body">
-              {#if n.type === 'friend_request'}
+              {#if n.type === 'news'}
+                <p><b>Nouveau sur ZIK</b> : {n.payload?.title}</p>
+                <div class="notif-actions">
+                  <a class="notif-btn accept" href="/nouveautes">Voir</a>
+                </div>
+              {:else if n.type === 'announcement'}
+                <p><b>{n.payload?.title}</b>{#if n.payload?.body}<br>{n.payload.body}{/if}</p>
+                {#if n.payload?.url}
+                  <div class="notif-actions">
+                    <a class="notif-btn accept" href={n.payload.url}>Voir</a>
+                  </div>
+                {/if}
+              {:else if n.type === 'friend_request'}
                 <p><a href="/user/{uname}"><b>{uname}</b></a> t'a envoyé une demande d'ami</p>
                 <div class="notif-actions">
                   <button class="notif-btn accept" onclick={() => friendAction(n, 'accept')} disabled={busyId === n.id}>Accepter</button>
@@ -92,6 +121,20 @@
                 <div class="notif-actions">
                   <button class="notif-btn accept" onclick={() => joinRoom(n)}>Rejoindre</button>
                 </div>
+              {:else if n.type === 'card_mythic'}
+                <p><a href="/user/{uname}"><b>{uname}</b></a> a décroché la carte Mythique <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> 🌟</p>
+              {:else if n.type === 'card_up'}
+                <p>Ta carte <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> est passée <b>{RARITIES[n.payload?.rarity]?.label ?? ''}</b></p>
+              {:else if n.type === 'card_set_near'}
+                <p>
+                  Plus qu'une carte pour finir {n.payload?.kind === 'artist' ? "l'artiste" : "l'album"} <b>{n.payload?.setName}</b>
+                  {#if n.payload?.roomName}. Elle passe dans <b>{n.payload.roomName}</b>{/if}
+                </p>
+                {#if n.payload?.roomId}
+                  <div class="notif-actions">
+                    <button class="notif-btn accept" onclick={() => joinRoom(n)}>Aller la chercher</button>
+                  </div>
+                {/if}
               {/if}
               <span class="notif-time">{timeAgo(n.created_at)}</span>
             </div>
@@ -133,6 +176,14 @@
     letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim);
     padding: 12px 16px 8px; border-bottom: 1px solid var(--border);
   }
+  .notif-push {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    padding: 11px 16px; border: none; border-bottom: 1px solid var(--border);
+    background: rgb(var(--accent-rgb) / 0.08); color: var(--text);
+    font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    transition: background 0.15s;
+  }
+  .notif-push:hover { background: rgb(var(--accent-rgb) / 0.16); }
   .notif-empty { color: var(--dim); font-size: 0.82rem; padding: 20px 16px; }
 
   .notif-item {
@@ -144,6 +195,10 @@
   .notif-av {
     width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
     border: 1px solid rgb(var(--accent-rgb) / 0.4); display: block;
+  }
+  .notif-zik {
+    display: grid; place-items: center; background: var(--accent); color: var(--on-accent);
+    font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 1rem;
   }
   .notif-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -159,7 +214,7 @@
     letter-spacing: 0.1em; text-transform: uppercase;
     padding: 5px 12px; border-radius: 99px; cursor: pointer;
     border: 1.5px solid var(--border2); background: none; color: var(--mid);
-    transition: all 0.15s;
+    transition: all 0.15s; text-decoration: none;
   }
   .notif-btn:hover { color: var(--text); border-color: rgb(var(--c-glass) / 0.4); }
   .notif-btn.accept { border-color: var(--accent); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }

@@ -7,6 +7,12 @@
   const challenge = data.challenge;
   const ranking = data.ranking ?? [];
 
+  const CTA = {
+    zikle_wins: { href: '/zikle', label: 'Jouer au Zikle du jour →' },
+    cards_won: { href: '/rooms?cartes', label: 'Gagner des cartes →' },
+    default: { href: '/rooms', label: 'Jouer pour contribuer →' },
+  };
+
   const _ctx = getContext('zik');
   const user = $derived(_ctx.user);
 
@@ -55,9 +61,8 @@
       </p>
       <div class="wd-meta">
         {#if challenge}
-          <a class="btn-accent" href={challenge.type === 'zikle_wins' ? '/zikle' : '/rooms'}>
-            {challenge.type === 'zikle_wins' ? 'Jouer au Zikle du jour →' : 'Jouer pour contribuer →'}
-          </a>
+          {@const cta = CTA[challenge.type] ?? CTA.default}
+          <a class="btn-accent" href={cta.href}>{cta.label}</a>
         {/if}
         <a class="wd-archives-link" href="/defi/archives">Voir l'historique des défis →</a>
       </div>
