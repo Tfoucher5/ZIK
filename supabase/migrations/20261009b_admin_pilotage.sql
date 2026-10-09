@@ -99,7 +99,11 @@ on conflict do nothing;
 alter table public.notifications alter column actor_id drop not null;
 alter table public.notifications drop constraint if exists notifications_type_check;
 alter table public.notifications add constraint notifications_type_check
-  check (type in ('friend_request', 'friend_accept', 'room_invite', 'announcement', 'news'));
+  check (type in (
+    'friend_request', 'friend_accept', 'room_invite',
+    'card_up', 'card_mythic', 'card_set_near',
+    'announcement', 'news'
+  ));
 
 create or replace function public.admin_broadcast_notification(p_type text, p_payload jsonb)
 returns integer
