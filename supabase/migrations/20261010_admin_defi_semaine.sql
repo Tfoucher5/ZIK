@@ -10,6 +10,8 @@
 -- `for update skip locked` évite que deux visites simultanées ne clôturent
 -- (et ne distribuent les badges) deux fois.
 -- La rotation automatique ignore aussi les semaines futures déjà programmées.
+-- Reprend le type cards_won de 20261008_weekly_challenge_cards : à rejouer
+-- après elle si elle est appliquée plus tard.
 -- Idempotent.
 
 create or replace function public.pick_weekly_challenge()
@@ -27,8 +29,8 @@ declare
   prev_row public.weekly_challenges%rowtype;
   top_row record;
   last_type text;
-  types text[] := array['correct_answers','games_played','zikle_wins'];
-  targets int[] := array[5000, 300, 150];
+  types text[] := array['correct_answers','games_played','zikle_wins','cards_won'];
+  targets int[] := array[5000, 300, 150, 500];
   next_idx int;
 begin
   for prev_row in
@@ -107,7 +109,7 @@ begin
   if p_week_start <= cur_start then
     raise exception 'Seule une semaine à venir peut être programmée';
   end if;
-  if p_type not in ('correct_answers','games_played','zikle_wins') or p_target is null or p_target <= 0 then
+  if p_type not in ('correct_answers','games_played','zikle_wins','cards_won') or p_target is null or p_target <= 0 then
     raise exception 'Type ou objectif invalide';
   end if;
 

@@ -87,8 +87,13 @@ export async function POST({ request }) {
   const safeTracks = metadata?.tracks
     ? sanitizeReportTracks(metadata.tracks)
     : null;
+  const cardNumber =
+    type === "bug" && subject === "card" && Number.isInteger(metadata?.card)
+      ? metadata.card
+      : null;
   const safeMetadata = {
     ...(safeTracks && { tracks: safeTracks }),
+    ...(cardNumber != null && { card: cardNumber }),
     context: {
       ...sanitizeReportContext(metadata?.context),
       version: NEWS[0]?.version ?? null,

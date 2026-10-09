@@ -1,7 +1,10 @@
 <script>
   import { getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
+  import { RARITIES } from '$lib/components/card/rarity.js';
   import { notifState, markAllRead, dismissNotif } from '$lib/notifications.svelte.js';
+  import { push, enablePush } from '$lib/push.svelte.js';
+  import { toast } from '$lib/toast.svelte.js';
 
   const ctx = getContext('zik');
   const sb = ctx.sb;
@@ -40,6 +43,15 @@
     }
   }
 
+  async function enableDevicePush() {
+    try {
+      await enablePush(async () => (await sb.auth.getSession())?.data?.session?.access_token);
+      if (push.subscribed) toast('Notifications activées sur cet appareil', 'success');
+    } catch {
+      toast("Impossible d'activer les notifications sur cet appareil", 'error');
+    }
+  }
+
   function joinRoom(n) {
     const username = user?.profile?.username || user?.email?.split('@')[0] || 'Joueur';
     const p = new URLSearchParams({
@@ -69,6 +81,11 @@
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="notif-panel" onclick={(e) => e.stopPropagation()}>
       <div class="notif-head">Notifications</div>
+      {#if push.supported && !push.subscribed && push.permission !== 'denied'}
+        <button class="notif-push" onclick={enableDevicePush} disabled={push.busy}>
+          🔔 Être prévenu même quand ZIK est fermé
+        </button>
+      {/if}
       {#if notifState.list.length === 0}
         <p class="notif-empty">Aucune notification.</p>
       {:else}
@@ -79,8 +96,8 @@
             {#if fromZik}
               <span class="notif-av notif-zik" aria-hidden="true">Z</span>
             {:else}
-              <a class="notif-av" href="/user/{uname}">
-                <img src={n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async">
+              <a class="notif-av" href={n.actor ? `/user/${uname}` : '/collection'}>
+                <img src={n.payload?.cover || n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="no-referrer">
               </a>
             {/if}
             <div class="notif-body">
@@ -109,6 +126,20 @@
                 <div class="notif-actions">
                   <button class="notif-btn accept" onclick={() => joinRoom(n)}>Rejoindre</button>
                 </div>
+              {:else if n.type === 'card_mythic'}
+                <p><a href="/user/{uname}"><b>{uname}</b></a> a décroché la carte Mythique <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> 🌟</p>
+              {:else if n.type === 'card_up'}
+                <p>Ta carte <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> est passée <b>{RARITIES[n.payload?.rarity]?.label ?? ''}</b></p>
+              {:else if n.type === 'card_set_near'}
+                <p>
+                  Plus qu'une carte pour finir {n.payload?.kind === 'artist' ? "l'artiste" : "l'album"} <b>{n.payload?.setName}</b>
+                  {#if n.payload?.roomName}. Elle passe dans <b>{n.payload.roomName}</b>{/if}
+                </p>
+                {#if n.payload?.roomId}
+                  <div class="notif-actions">
+                    <button class="notif-btn accept" onclick={() => joinRoom(n)}>Aller la chercher</button>
+                  </div>
+                {/if}
               {/if}
               <span class="notif-time">{timeAgo(n.created_at)}</span>
             </div>
@@ -150,6 +181,14 @@
     letter-spacing: 0.24em; text-transform: uppercase; color: var(--dim);
     padding: 12px 16px 8px; border-bottom: 1px solid var(--border);
   }
+  .notif-push {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    padding: 11px 16px; border: none; border-bottom: 1px solid var(--border);
+    background: rgb(var(--accent-rgb) / 0.08); color: var(--text);
+    font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    transition: background 0.15s;
+  }
+  .notif-push:hover { background: rgb(var(--accent-rgb) / 0.16); }
   .notif-empty { color: var(--dim); font-size: 0.82rem; padding: 20px 16px; }
 
   .notif-item {

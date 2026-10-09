@@ -12,6 +12,8 @@
   import SectionHistory from '$lib/components/profile/SectionHistory.svelte';
   import SectionFriends from '$lib/components/profile/SectionFriends.svelte';
   import SectionBestScores from '$lib/components/profile/SectionBestScores.svelte';
+  import SectionCards from '$lib/components/profile/SectionCards.svelte';
+  import CardViewer from '$lib/components/card/CardViewer.svelte';
   import SectionPerformances from '$lib/components/profile/SectionPerformances.svelte';
   import ProfileHeader from '$lib/components/profile/ProfileHeader.svelte';
 
@@ -176,6 +178,7 @@
     { id: 'tour',  t: 'Meilleurs scores', quand: () => itinerary.length > 0 || typeTotal > 0 },
     { id: 'log',   t: 'Dernières parties', quand: () => carnet.length > 0 },
     { id: 'case',  t: 'Badges', quand: () => true },
+    { id: 'cards', t: 'Cartes', quand: () => !!profile?.username },
     { id: 'guests', t: 'Amis', quand: () => true },
   ];
   const sections = $derived(
@@ -256,6 +259,11 @@
         <AchievementsPanel {sb} {userId} />
       </ProfileSection>
     {/if}
+    {#if visible.has('cards')}
+      <ProfileSection id="cards" num={numDe('cards')} titre="Cartes" sub="Collection">
+        <SectionCards username={profile.username} {sb} />
+      </ProfileSection>
+    {/if}
     {#if visible.has('guests')}
       <ProfileSection id="guests" num={numDe('guests')} titre="Amis" sub={`${social.friendsCount} ami${social.friendsCount > 1 ? 's' : ''}`}>
         <SectionFriends
@@ -270,6 +278,8 @@
     </main>
   </div>
 </div>
+
+<CardViewer />
 
 <InviteModal
   open={inviteOpen}

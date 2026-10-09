@@ -7,6 +7,7 @@
   import Toast from '$lib/components/Toast.svelte';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
+  import { initPush, forgetPushOwner } from '$lib/push.svelte.js';
   import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
   import { watchClientErrors } from '$lib/reports/context.js';
 
@@ -66,6 +67,7 @@
       sessionStorage.setItem('zik_uname', user.email?.split('@')[0] || 'Joueur');
     }
     initNotifications(sb);
+    initPush(async () => (await sb.auth.getSession())?.data?.session?.access_token).catch(() => {});
   }
 
   function openAuthModal(view = 'login') {
@@ -102,6 +104,7 @@
         sessionStorage.removeItem('zik_uid');
         sessionStorage.removeItem('zik_uname');
         teardownNotifications();
+        forgetPushOwner().catch(() => {});
       }
     });
   });
@@ -134,8 +137,9 @@
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
-  <link rel="stylesheet" href="/css/base.css?v=3.13.0">
+  <link rel="stylesheet" href="/css/base.css?v=3.15.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
 
 {#if !isGame}
@@ -177,6 +181,7 @@
         <a href="/playlists">Playlists</a>
         <a href="/classements">Classements</a>
         <a href="/zikle">Zikle</a>
+        <a href="/cartes">Cartes musicales</a>
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Aide et règles du jeu</a>
         <a href="/nouveautes">Nouveautés</a>
@@ -187,6 +192,7 @@
       <span class="footer-col-head">Compte</span>
       <div class="footer-col-links">
         <a href="/profile">Mon profil</a>
+        <a href="/collection">Ma collection</a>
         <a href="/settings">Paramètres</a>
       </div>
     </div>
@@ -248,7 +254,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.14.7</span>
+    <span class="footer-version-tag">v3.15.0</span>
   </div>
 </footer>
 {/if}

@@ -11,6 +11,8 @@ const MOTIFS = Object.fromEntries(BUG_MOTIFS.map((m) => [m.value, m.label]));
 export const TRACK_SUBJECTS = ["audio", "mauvaise-reponse"];
 
 export function subjectLabel(r) {
+  if (r.type === "bug" && r.subject === "card")
+    return `Carte n° ${r.metadata?.card ?? r.extra?.card ?? "?"} à corriger`;
   if (r.type === "bug" && r.subject)
     return MOTIFS[r.subject] ?? `Bug : ${r.subject}`;
   if (r.type === "user" && r.subject) return `Joueur signalé : ${r.subject}`;

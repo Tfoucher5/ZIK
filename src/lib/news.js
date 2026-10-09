@@ -3,6 +3,34 @@
 
 export const NEWS = [
   {
+    date: "2026-10-05",
+    version: "3.15.0",
+    tag: "Nouveauté",
+    title: "Les cartes musicales arrivent",
+    items: [
+      "Chaque titre du catalogue a maintenant sa carte, avec sa pochette, son album, son année et sa rareté, de Commune à Mythique. Plus un titre est écouté, plus sa carte est rare.",
+      "Trouvez un titre en premier dans une room d'au moins 100 titres, en jouant à au moins deux joueurs connectés : sa carte est pour vous. Les cartes les plus rares demandent en plus de trouver très vite.",
+      "Sur la page des rooms, une pastille Cartes signale celles où l'on peut en gagner, avec un filtre pour n'afficher qu'elles. Les rooms où des joueurs connectés sont déjà présents passent en tête.",
+      "Une carte gagnée est sécurisée quand vous avez joué la moitié de la partie. Le suivi s'affiche à côté du classement, et ZIK vous prévient avant de partir trop tôt.",
+      "Votre collection se range par artiste et par album, avec une recherche et des filtres. Les cartes qui vous manquent apparaissent en silhouette pour compléter vos sets.",
+      "Chaque carte a sa page à partager, et la collection de chaque joueur se consulte depuis son profil.",
+      "Nouvel onglet Cartes dans les classements : les collectionneurs sont classés par un score qui compte plus pour les cartes rares. Chacun montre ses plus belles cartes, à ouvrir en grand, et la répartition de sa collection par rareté.",
+      "Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant.",
+    ],
+  },
+  {
+    date: "2026-10-05",
+    version: "3.15.0",
+    tag: "Nouveauté",
+    title: "Les notifications arrivent sur ton téléphone",
+    items: [
+      "ZIK peut maintenant te prévenir même quand le site est fermé, sur téléphone comme sur ordinateur : active-les depuis la cloche ou dans les paramètres. Sur iPhone et iPad, ajoute d'abord ZIK à ton écran d'accueil.",
+      "Tu choisis ce que tu reçois : amis et invitations, cartes, défi de la semaine, et un rappel quotidien pour le Zikle (coupé par défaut).",
+      "Quand il ne te manque plus qu'une carte pour finir un album ou un artiste, ZIK te le dit et t'indique une room où elle passe.",
+      "Nouveau défi de la semaine : 500 cartes à gagner tous ensemble. Il entre dans la rotation des défis communautaires.",
+    ],
+  },
+  {
     date: "2026-10-07",
     version: "3.14.5",
     tag: "Correctif",

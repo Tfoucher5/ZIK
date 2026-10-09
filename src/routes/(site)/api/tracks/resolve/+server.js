@@ -2,6 +2,7 @@ import { json } from "@sveltejs/kit";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { parseExpFromUrl } from "$lib/server/services/deezer.js";
+import { enqueueCardEnrichment } from "$lib/server/services/cards.js";
 
 const PERMANENT_EXPIRY = "2099-01-01T00:00:00.000Z";
 
@@ -61,5 +62,6 @@ export async function POST({ request }) {
   });
   if (error) return json({ error: error.message }, { status: 400 });
 
+  enqueueCardEnrichment(data);
   return json({ ids: data });
 }

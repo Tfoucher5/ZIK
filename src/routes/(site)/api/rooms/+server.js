@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { supabase, getAdminClient } from "$lib/server/config.js";
-import { roomGames } from "$lib/server/state.js";
+import { roomGames, playlistCache } from "$lib/server/state.js";
+import { MIN_ROUNDS, MIN_TRACKS } from "$lib/server/socket/game/cards.js";
 import {
   requireAuth,
   userClient,
@@ -28,6 +29,17 @@ export async function GET({ request }) {
       .reduce(
         (acc, g) =>
           acc + Object.values(g.players).filter((p) => !p._dcTimer).length,
+        0,
+      );
+
+    // Joueurs connectés à un compte : ceux qui comptent pour les cartes
+    const connected = Object.values(roomGames)
+      .filter((g) => g.roomId === r.code)
+      .reduce(
+        (acc, g) =>
+          acc +
+          Object.values(g.players).filter((p) => !p._dcTimer && p.verified)
+            .length,
         0,
       );
 
@@ -76,6 +88,11 @@ export async function GET({ request }) {
       playlist_ids,
       track_count,
       online,
+      connected,
+      // Titres dédoublonnés quand la playlist est en cache, comme en partie
+      cards:
+        (playlistCache[r.code]?.length ?? track_count) >= MIN_TRACKS &&
+        r.max_rounds >= MIN_ROUNDS,
     };
   });
 
@@ -90,6 +107,9 @@ export async function GET({ request }) {
       coverMap[pid] = new Set(covers);
     }
   }
+
+  // Rooms avec des joueurs connectés en tête : on y gagne des cartes à plusieurs
+  result.sort((a, b) => (b.connected > 0) - (a.connected > 0));
 
   return json(
     result.map((r) => ({

@@ -13,6 +13,8 @@ const { handler } = await import("./build/handler.js");
 import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon.js";
 import { registerPresence } from "./src/lib/server/socket/presence.js";
+import { dailyCardsMaintenance } from "./src/lib/server/services/cards.js";
+import { startPushSchedule } from "./src/lib/server/services/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
 import { announceLatestNews } from "./src/lib/server/services/notifications.js";
 
@@ -93,6 +95,9 @@ registerSalon(io);
 registerPresence(io);
 autoUpdateYtDlp();
 setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h
+setTimeout(dailyCardsMaintenance, 60 * 1000);
+setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
+startPushSchedule();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

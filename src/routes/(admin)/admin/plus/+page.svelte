@@ -22,6 +22,7 @@
         { href: '/admin/prospection', name: 'Prospection', desc: 'Emails, réponses, clients' },
         { href: '/admin/playlists', name: 'Playlists', desc: 'Playlists et leurs titres' },
         { href: '/admin/tracks', name: 'Titres', desc: 'Catalogue, audio, métadonnées' },
+        { href: '/admin/cards', name: 'Cartes', desc: 'Raretés, sets, collections' },
         { href: '/admin/rooms', name: 'Rooms', desc: 'Rooms publiques et officielles' },
         { href: '/admin/zikle', name: 'Zikle', desc: 'Calendrier et pool de titres' },
         { href: '/admin/defi', name: 'Défi de la semaine', desc: 'Objectif collectif, historique, prochain défi' },

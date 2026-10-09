@@ -18,6 +18,7 @@ export const CHALLENGE_TYPES = {
   correct_answers: { label: "Bonnes réponses", unit: "réponses" },
   games_played: { label: "Parties jouées", unit: "parties" },
   zikle_wins: { label: "Zikle gagnés", unit: "victoires Zikle" },
+  cards_won: { label: "Cartes gagnées", unit: "cartes" },
 };
 
 /**

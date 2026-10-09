@@ -35,7 +35,7 @@
     ] },
     { title: 'Gérer', links: [
       ['/admin/users', 'Joueurs'], ['/admin/reports', 'Messages'], ['/admin/prospection', 'Prospection'],
-      ['/admin/playlists', 'Playlists'], ['/admin/tracks', 'Titres'], ['/admin/rooms', 'Rooms'],
+      ['/admin/playlists', 'Playlists'], ['/admin/tracks', 'Titres'], ['/admin/cards', 'Cartes'], ['/admin/rooms', 'Rooms'],
       ['/admin/zikle', 'Zikle'], ['/admin/defi', 'Défi de la semaine'], ['/admin/achievements', 'Succès'],
     ] },
     { title: 'Site', links: [['/admin/reglages', 'Réglages']] },
