@@ -1,6 +1,7 @@
 <script>
   import Card from '$lib/components/card/Card.svelte';
   import RarityBar from './RarityBar.svelte';
+  import PlayerActions from '$lib/components/player/PlayerActions.svelte';
 
   /** N°1 du classement : disque de diamant, ou ses plus belles cartes sur l'onglet Cartes. */
   let { lb, p } = $props();
@@ -50,6 +51,7 @@
     <div class="unit">{lb.unit}</div>
     <div class="cert">💎 Disque de diamant</div>
   </div>
+  {#if !lb.isMe(p.username)}<div class="acts"><PlayerActions username={p.username} userId={p.id} /></div>{/if}
 </section>
 
 <style>
@@ -69,6 +71,12 @@
   .champ.has-cards {
     grid-template-columns: 340px 1fr auto;
     min-height: 280px;
+  }
+  .acts {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
   }
 
   /* Disque de diamant */
@@ -242,6 +250,9 @@
   }
 
   @media (max-width: 960px) {
+    .info {
+      padding-right: 44px;
+    }
     .champ,
     .champ.has-cards {
       grid-template-columns: 150px 1fr;

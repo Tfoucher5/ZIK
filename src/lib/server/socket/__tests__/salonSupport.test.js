@@ -1,214 +1,150 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
-vi.mock("../../config.js", () => ({
-  supabase: {
-    from: () => ({
-      select: () => ({
-        eq: () => ({ maybeSingle: async () => ({ data: null }) }),
-        in: async () => ({ data: [] }),
-      }),
-      insert: () => ({
-        select: () => ({ single: async () => ({ data: { id: "g1" } }) }),
-        then: (r) => r({ error: null }),
-      }),
-      update: () => ({ eq: async () => ({ error: null }) }),
-    }),
-    rpc: async () => ({ data: null, error: null }),
-  },
-  getAdminClient: () => ({ rpc: async () => ({ error: null }) }),
-}));
-vi.mock("youtube-sr", () => ({ YouTube: { search: async () => [] } }));
+const alertAdminsSafe = vi.fn();
+vi.mock("../../services/adminAlerts.js", () => ({ alertAdminsSafe }));
 
-const { salonRooms } = await import("../../state.js");
+const { salonRooms, setIO } = await import("../../state.js");
 const {
-  registerSalon,
-  salonLiveState,
-  supportPause,
-  supportResume,
-  supportSkip,
-  supportKick,
-  supportGiftPro,
-  supportMessage,
-} = await import("../salon.js");
+  callSupport,
+  sendSupportMessage,
+  markAdminJoined,
+  closeSupport,
+  openSupportCount,
+  supportView,
+  registerSupport,
+  SUPPORT_MAX_MESSAGES,
+} = await import("../salonSupport.js");
 
-const CODE = "AIDE01";
+const CODE = "CHAT01";
+let emissions;
 
-function makeIo() {
-  const rooms = new Map();
-  const emissions = [];
-  const io = {
-    on: () => {},
+function fakeIo() {
+  emissions = [];
+  setIO({
     to: (cible) => ({
       emit: (event, payload) =>
         emissions.push({ cibles: [].concat(cible), event, payload }),
     }),
-    sockets: { adapter: { rooms }, sockets: new Map() },
-  };
-  return { io, rooms, emissions };
+  });
 }
 
-function joueur(username, score, extra = {}) {
-  return {
-    username,
-    socketId: null,
-    score,
-    foundArtist: false,
-    foundTitle: false,
-    foundFeats: [],
-    foundExtras: [],
-    _fullFoundCounted: false,
-    team: null,
-    stats: { found: 0, first: 0 },
-    token: `tok-${username}`,
-    ...extra,
-  };
-}
+const dernier = () => emissions.at(-1).payload;
 
-function salonDeTest(phase = "round") {
-  salonRooms[CODE] = {
-    code: CODE,
-    adminKey: "cle",
-    pro: false,
-    hostUserId: null,
-    settings: {
-      maxRounds: 10,
-      roundDuration: 30,
-      showAnswerDuration: 7,
-      manualNext: true,
-      answerMode: "free",
-      playlistIds: ["p1", "p2"],
-    },
-    players: {
-      Camille: joueur("Camille", 12),
-      Mehdi: joueur("Mehdi", 30, { _disconnected: true }),
-    },
-    banned: new Set(),
-    game: {
-      phase,
-      currentRound: 3,
-      sessionPlaylist: [],
-      fullPlaylist: [{}, {}, {}],
-      currentTrack: {
-        id: "t1",
-        artist: "Daft Punk",
-        title: "One More Time",
-        cover: null,
-        featArtists: [],
-      },
-      currentVideo: { id: "vid", start: 40 },
-      interval: null,
-      breakTimer: null,
-      musicReadyTimer: null,
-      timerValue: 18,
-      timerActive: true,
-      startTime: Date.now(),
-      history: [],
-      played: [],
-      paused: false,
-    },
-  };
-}
-
-const vus = (h, event) => h.emissions.filter((e) => e.event === event);
-
-describe("dépannage d'un salon depuis l'admin", () => {
-  let h;
-
+describe("chat de support d'un salon", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
     for (const k of Object.keys(salonRooms)) delete salonRooms[k];
-    salonDeTest();
-    h = makeIo();
-    registerSalon(h.io);
+    salonRooms[CODE] = { code: CODE };
+    alertAdminsSafe.mockClear();
+    fakeIo();
   });
 
-  afterEach(() => vi.useRealTimers());
-
-  it("décrit l'état en direct du salon", () => {
-    h.rooms.set(`salon:ctrl:${CODE}`, new Set(["regie"]));
-    const s = salonLiveState(CODE);
-    expect(s).toMatchObject({
-      code: CODE,
-      pro: false,
-      phase: "round",
-      round: 3,
-      timer: 18,
-      screens: 0,
-      controls: 1,
-      hostConnected: true,
-      players: 2,
-      playlistIds: ["p1", "p2"],
-      trackCount: 3,
-      track: { id: "t1", title: "One More Time" },
-      video: { id: "vid", start: 40 },
+  it("ouvre une demande, prévient l'admin et la régie", () => {
+    const v = callSupport(CODE, "  La TV ne joue plus rien  ");
+    expect(v).toMatchObject({ open: true, adminJoined: false });
+    expect(v.requestedAt).toBeTypeOf("number");
+    expect(v.messages).toEqual([
+      expect.objectContaining({
+        from: "host",
+        text: "La TV ne joue plus rien",
+      }),
+    ]);
+    expect(alertAdminsSafe).toHaveBeenCalledWith(
+      "admin_salons",
+      expect.objectContaining({
+        title: `Salon ${CODE} : un organisateur appelle un admin`,
+        url: `/admin/salons?code=${CODE}`,
+        tag: `call:${CODE}`,
+      }),
+      { throttleMs: 2 * 60 * 1000 },
+    );
+    expect(emissions[0]).toMatchObject({
+      event: "salon_support",
+      cibles: [`salon:screens:${CODE}`, `salon:ctrl:${CODE}`],
     });
-    expect(s.roster.map((p) => [p.username, p.offline])).toEqual([
-      ["Mehdi", true],
-      ["Camille", false],
+    expect(openSupportCount()).toBe(1);
+  });
+
+  it("accepte un appel sans message", () => {
+    expect(callSupport(CODE, "   ").messages).toEqual([]);
+    expect(alertAdminsSafe.mock.calls[0][1].body).toMatch(/chat/);
+  });
+
+  it("échange dans les deux sens et signale l'admin connecté", () => {
+    callSupport(CODE, "Bonjour");
+    markAdminJoined(CODE);
+    expect(dernier().adminJoined).toBe(true);
+    sendSupportMessage(CODE, "admin", "Je regarde ton salon");
+    sendSupportMessage(CODE, "host", "Merci !");
+    expect(dernier().messages.map((m) => [m.from, m.text])).toEqual([
+      ["host", "Bonjour"],
+      ["admin", "Je regarde ton salon"],
+      ["host", "Merci !"],
     ]);
+    expect(() => sendSupportMessage(CODE, "host", "  ")).toThrow(/vide/);
   });
 
-  it("renvoie null pour un salon inconnu", () => {
-    expect(salonLiveState("NOPE00")).toBeNull();
+  it("l'admin peut écrire le premier, sans compter comme un appel", () => {
+    const v = sendSupportMessage(CODE, "admin", "Le support ZIK est là");
+    expect(v).toMatchObject({
+      open: true,
+      adminJoined: true,
+      requestedAt: null,
+    });
+    expect(openSupportCount()).toBe(0);
+    expect(alertAdminsSafe).not.toHaveBeenCalled();
   });
 
-  it("met en pause puis relance la partie", () => {
-    supportPause(CODE);
-    expect(salonRooms[CODE].game.paused).toBe(true);
-    expect(() => supportPause(CODE)).toThrow();
-    supportResume(CODE);
-    expect(salonRooms[CODE].game.paused).toBe(false);
-    expect(vus(h, "salon_paused").map((e) => e.payload.paused)).toEqual([
-      true,
-      false,
-    ]);
+  it("clôt la demande en gardant l'historique", () => {
+    callSupport(CODE, "Aide");
+    closeSupport(CODE);
+    expect(dernier()).toMatchObject({ open: false });
+    expect(dernier().closedAt).toBeTypeOf("number");
+    expect(dernier().messages).toHaveLength(1);
+    expect(openSupportCount()).toBe(0);
+    expect(() => closeSupport(CODE)).toThrow(/Aucune demande/);
   });
 
-  it("refuse la pause hors d'une partie", () => {
-    salonRooms[CODE].game.phase = "lobby";
-    expect(() => supportPause(CODE)).toThrow();
+  it("un message de l'organisateur après la clôture rappelle un admin", () => {
+    callSupport(CODE, "Aide");
+    closeSupport(CODE);
+    sendSupportMessage(CODE, "host", "Encore un souci");
+    expect(dernier().open).toBe(true);
+    expect(alertAdminsSafe).toHaveBeenCalledTimes(2);
   });
 
-  it("passe le titre en révélant la réponse", () => {
-    expect(supportSkip(CODE)).toBe("revealed");
-    expect(salonRooms[CODE].game.phase).toBe("summary");
-    expect(vus(h, "salon_round_end")[0].payload.reason).toMatch(/support/);
+  it("garde les 100 derniers messages", () => {
+    callSupport(CODE);
+    for (let i = 1; i <= SUPPORT_MAX_MESSAGES + 20; i++)
+      sendSupportMessage(CODE, i % 2 ? "host" : "admin", `message ${i}`);
+    const { messages } = supportView(salonRooms[CODE]);
+    expect(messages).toHaveLength(SUPPORT_MAX_MESSAGES);
+    expect(messages[0].text).toBe("message 21");
+    expect(messages.at(-1).text).toBe(`message ${SUPPORT_MAX_MESSAGES + 20}`);
   });
 
-  it("lance la suite quand la réponse est affichée", () => {
-    salonRooms[CODE].game.phase = "summary";
-    expect(supportSkip(CODE)).toBe("next");
-    // Plus aucun titre en réserve : la partie se termine
-    expect(salonRooms[CODE].game.phase).toBe("gameover");
+  it("coupe les messages trop longs", () => {
+    callSupport(CODE, "x".repeat(2000));
+    expect(dernier().messages[0].text).toHaveLength(500);
   });
 
-  it("retire un joueur et le bannit pour la soirée", () => {
-    supportKick(CODE, "Camille");
-    expect(salonRooms[CODE].players.Camille).toBeUndefined();
-    expect(salonRooms[CODE].banned.has("camille")).toBe(true);
-    expect(() => supportKick(CODE, "Inconnu")).toThrow();
+  it("refuse un salon fermé", () => {
+    expect(() => callSupport("NOPE00", "Aide")).toThrow(/plus en cours/);
+    expect(supportView(salonRooms[CODE])).toBeNull();
   });
 
-  it("offre le Pro et prévient la régie et la TV", () => {
-    supportGiftPro(CODE);
-    expect(salonRooms[CODE].pro).toBe(true);
-    expect(salonLiveState(CODE).proGift).toBe(true);
-    expect(vus(h, "salon_pro")[0].cibles).toEqual([
-      `salon:screens:${CODE}`,
-      `salon:ctrl:${CODE}`,
-    ]);
-    expect(() => supportGiftPro(CODE)).toThrow();
-  });
+  it("n'écoute que la régie et l'écran de l'hôte", () => {
+    const handlers = {};
+    const socket = { on: (ev, fn) => (handlers[ev] = fn), salonCode: CODE };
+    registerSupport(socket);
 
-  it("affiche un message sur l'écran choisi", () => {
-    supportMessage(CODE, "  Le support ZIK est là : on regarde  ", "control");
-    const [m] = vus(h, "salon_support");
-    expect(m.cibles).toEqual([`salon:ctrl:${CODE}`]);
-    expect(m.payload.message).toBe("Le support ZIK est là : on regarde");
-    expect(() => supportMessage(CODE, "   ")).toThrow();
-  });
+    const ack = vi.fn();
+    handlers.salon_support_call({ message: "Aide" }, ack);
+    expect(ack).toHaveBeenCalledWith({ ok: false, error: expect.any(String) });
 
-  it("refuse d'agir sur un salon fermé", () => {
-    expect(() => supportPause("NOPE00")).toThrow(/plus en cours/);
+    socket.salonAdmin = true;
+    handlers.salon_support_call({ message: "Aide" }, ack);
+    expect(ack.mock.calls[1][0]).toMatchObject({ ok: true });
+    handlers.salon_support_send({ text: "Toujours là ?" }, ack);
+    expect(ack.mock.calls[2][0].support.messages).toHaveLength(2);
   });
 });

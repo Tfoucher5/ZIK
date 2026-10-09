@@ -25,6 +25,7 @@ import {
 } from "../services/trackIssues.js";
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../proPlans.js";
 import { alertAdminsSafe } from "../services/adminAlerts.js";
+import { supportView, registerSupport } from "./salonSupport.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -345,7 +346,7 @@ function sortedScores(salon) {
 }
 
 // Écrans TV et régie : tout ce que les joueurs ne doivent pas recevoir
-function staff(code, io) {
+export function staff(code, io) {
   return io.to([`salon:screens:${code}`, `salon:ctrl:${code}`]);
 }
 
@@ -478,7 +479,7 @@ function runTimer(code, io) {
 
 // ─── Pause ────────────────────────────────────────────────────────────────────
 
-function pauseGame(code, io) {
+export function pauseGame(code, io) {
   const game = salonRooms[code]?.game;
   if (!game || game.paused || !["round", "summary"].includes(game.phase))
     return;
@@ -503,7 +504,7 @@ function clearPause(code, io) {
   return true;
 }
 
-function resumeGame(code, io) {
+export function resumeGame(code, io) {
   const salon = salonRooms[code];
   if (!salon || !clearPause(code, io)) return;
   const game = salon.game;
@@ -549,13 +550,13 @@ function finishGame(code, io) {
   scheduleCleanup(code);
 }
 
-function revealRound(code, reason, io) {
+export function revealRound(code, reason, io) {
   clearPause(code, io);
   clearTimeout(salonRooms[code].game.musicReadyTimer);
   endRound(code, reason, io);
 }
 
-function nextRound(code, io) {
+export function nextRound(code, io) {
   const game = salonRooms[code].game;
   clearPause(code, io);
   clearTimeout(game.breakTimer);
@@ -563,7 +564,7 @@ function nextRound(code, io) {
   startNextRound(code, io);
 }
 
-function kickPlayer(salon, username, io) {
+export function kickPlayer(salon, username, io) {
   const player = salon.players[username];
   if (!player) return false;
   clearTimeout(player._dcTimer);
@@ -1044,146 +1045,75 @@ function cleanUsername(name) {
     .slice(0, 20);
 }
 
-// ─── Support ZIK : dépannage à distance depuis l'admin ────────────────────────
-// Les actions de /admin/salons passent par les mêmes fonctions que la régie.
-
-const SUPPORT_MESSAGE_TTL = 10 * 60 * 1000;
-const PLAYING = ["round", "summary"];
-
-function recentSupport(salon, role) {
-  const s = salon.support;
-  if (!s || Date.now() - s.at > SUPPORT_MESSAGE_TTL) return null;
-  return s.target === "both" || s.target === role
-    ? { message: s.message, at: s.at }
-    : null;
-}
-
-function socketCount(io, room) {
-  return io?.sockets.adapter.rooms.get(room)?.size ?? 0;
-}
-
-function liveSalon(code) {
+// Réglages de la régie, aussi appliqués par l'admin. allow(fonction) dit si
+// une fonction Pro est permise.
+export function applySettings(code, patch, io, allow) {
   const salon = salonRooms[code];
-  const io = getIO();
-  if (!salon || !io) throw new Error("Ce salon n'est plus en cours.");
-  return { salon, io };
-}
-
-/** État complet d'un salon, pour l'admin et les signalements. */
-export function salonLiveState(code) {
-  const salon = code && salonRooms[code];
-  if (!salon) return null;
-  const io = getIO();
-  const g = salon.game;
   const s = salon.settings;
-  const t = PLAYING.includes(g.phase) ? g.currentTrack : null;
-  const screens = socketCount(io, `salon:screens:${code}`);
-  const controls = socketCount(io, `salon:ctrl:${code}`);
-  return {
-    code,
-    pro: !!salon.pro,
-    proGift: !!salon.proGift,
-    hostId: salon.hostUserId ?? null,
-    phase: g.phase,
-    paused: !!g.paused,
-    round: g.currentRound,
-    maxRounds: s.maxRounds,
-    timer: g.timerActive ? g.timerValue : null,
-    screens,
-    controls,
-    hostConnected: screens + controls > 0,
-    players: Object.keys(salon.players).length,
-    roster: Object.values(salon.players)
-      .map((p) => ({
-        username: p.username,
-        score: p.score,
-        team: p.team,
-        offline: !!p._disconnected,
-      }))
-      .sort((a, b) => b.score - a.score),
-    settings: {
-      answerMode: s.answerMode,
-      roundDuration: s.roundDuration,
-      showAnswerDuration: s.showAnswerDuration,
-      manualNext: !!s.manualNext,
-      teams: s.teams?.map((x) => x.name) ?? [],
-    },
-    playlistIds: [].concat(s.playlistIds ?? []),
-    trackCount: g.fullPlaylist.length,
-    limitHits: salon.limitHits ?? 0,
-    track: t
-      ? {
-          id: t.id ?? null,
-          artist: displayString(t.mainArtist || t.artist),
-          title: displayString(t.title),
-          youtube_id: t.youtube_id ?? null,
-          youtube_start: t.youtube_start ?? null,
-        }
-      : null,
-    video: t ? (g.currentVideo ?? null) : null,
-    support: salon.support ?? null,
-  };
-}
+  const game = salon.game;
+  const idle = game.phase === "lobby" || game.phase === "gameover";
+  if (!idle && !allow("liveSettings")) return;
+  const clamp = (v, lo, hi, d) =>
+    Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
 
-export function supportPause(code) {
-  const { salon, io } = liveSalon(code);
-  if (salon.game.paused || !PLAYING.includes(salon.game.phase))
-    throw new Error("Aucune manche en cours à mettre en pause.");
-  pauseGame(code, io);
-}
-
-export function supportResume(code) {
-  const { salon, io } = liveSalon(code);
-  if (!salon.game.paused) throw new Error("Le salon n'est pas en pause.");
-  resumeGame(code, io);
-}
-
-/** Manche en cours : on révèle la réponse. Réponse affichée : manche suivante. */
-export function supportSkip(code) {
-  const { salon, io } = liveSalon(code);
-  if (salon.game.phase === "round") {
-    revealRound(code, "Titre passé par le support ZIK", io);
-    return "revealed";
+  if ("roundDuration" in patch)
+    s.roundDuration = clamp(patch.roundDuration, 15, 60, s.roundDuration);
+  if ("showAnswerDuration" in patch)
+    s.showAnswerDuration = clamp(
+      patch.showAnswerDuration,
+      3,
+      15,
+      s.showAnswerDuration,
+    );
+  if ("manualNext" in patch) s.manualNext = patch.manualNext === true;
+  if (idle && "answerMode" in patch)
+    s.answerMode = patch.answerMode === "multiple" ? "multiple" : "free";
+  if ("maxRounds" in patch) {
+    const n = clamp(
+      patch.maxRounds,
+      idle ? 5 : Math.max(5, game.currentRound),
+      20,
+      s.maxRounds,
+    );
+    if (n !== s.maxRounds) {
+      s.maxRounds = n;
+      if (idle) prepareSession(code, io);
+      else {
+        // Les titres déjà joués ne reviennent pas
+        game.sessionPlaylist = buildSessionPlaylist(
+          game.fullPlaylist.filter((t) => !game.played.includes(t)),
+          n - game.currentRound,
+        );
+        game.prefetchedRound = null;
+        prefetchNextVideo(code, io);
+      }
+    }
   }
-  if (salon.game.phase === "summary") {
-    nextRound(code, io);
-    return "next";
+  if (idle && "teamCount" in patch) {
+    if (patch.teamCount > teamLimit(salon) && !allow("teams")) return;
+    s.teams = makeTeams(patch.teamCount, s.teams);
+    // On ne redistribue pas : ajouter une équipe déplaçait tout le monde
+    // en tourniquet et défaisait les placements choisis. Seuls ceux dont
+    // l'équipe vient de disparaître sont libérés.
+    const existantes = new Set((s.teams ?? []).map((t) => t.id));
+    for (const p of Object.values(salon.players)) {
+      if (p.team != null && !existantes.has(p.team)) p.team = null;
+    }
+    broadcastRoster(code, io);
   }
-  throw new Error("Aucun titre en cours.");
-}
-
-export function supportKick(code, username) {
-  const { salon, io } = liveSalon(code);
-  if (!kickPlayer(salon, username, io)) throw new Error("Joueur introuvable.");
-}
-
-export function supportGiftPro(code) {
-  const { salon, io } = liveSalon(code);
-  if (salon.pro) throw new Error("Ce salon est déjà en Pro.");
-  salon.pro = true;
-  salon.proGift = true;
-  staff(code, io).emit("salon_pro", { pro: true });
-}
-
-const SUPPORT_TARGETS = {
-  both: (code) => [`salon:screens:${code}`, `salon:ctrl:${code}`],
-  screen: (code) => [`salon:screens:${code}`],
-  control: (code) => [`salon:ctrl:${code}`],
-};
-
-export function supportMessage(code, text, target = "both") {
-  const { salon, io } = liveSalon(code);
-  const message = String(text ?? "")
-    .replace(/[\p{Cc}\p{Cf}]/gu, " ")
-    .trim()
-    .slice(0, 280);
-  if (!message) throw new Error("Le message est vide.");
-  if (!SUPPORT_TARGETS[target]) target = "both";
-  salon.support = { message, target, at: Date.now() };
-  io.to(SUPPORT_TARGETS[target](code)).emit("salon_support", {
-    message,
-    at: salon.support.at,
-  });
+  // Passage en automatique pendant l'affichage d'une réponse
+  if (
+    game.phase === "summary" &&
+    !s.manualNext &&
+    !game.breakTimer &&
+    !game.paused
+  ) {
+    game.breakTimer = setTimeout(() => {
+      game.breakTimer = null;
+      startNextRound(code, io);
+    }, s.showAnswerDuration * 1000);
+  }
+  io.to(`salon:${code}`).emit("salon_settings", { settings: s });
 }
 
 // ─── Socket registration ──────────────────────────────────────────────────────
@@ -1192,6 +1122,8 @@ export function registerSalon(io) {
   setIO(io);
 
   io.on("connection", (socket) => {
+    registerSupport(socket);
+
     // ── Host connects to their salon ──────────────────────────────────────────
     // ── Écran TV : public avec le code, pilotable seulement avec la clé ──────
     socket.on("salon_join_host", ({ code, key }) => {
@@ -1220,7 +1152,7 @@ export function registerSalon(io) {
         phase: salon.game.phase,
         paused: salon.game.paused,
         currentRound: salon.game.currentRound,
-        support: recentSupport(salon, "screen"),
+        support: supportView(salon),
       });
       if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
         prepareSession(code, io);
@@ -1265,7 +1197,7 @@ export function registerSalon(io) {
             : null,
         history: game.history,
         trackCount: game.fullPlaylist.length,
-        support: recentSupport(salon, "control"),
+        support: supportView(salon),
       });
       scheduleCleanup(code);
       broadcastScreens(code, io);
@@ -1333,74 +1265,10 @@ export function registerSalon(io) {
 
     socket.on("salon_update_settings", (patch = {}) => {
       const salon = adminSalon(socket);
-      if (!salon) return;
-      const code = salon.code;
-      const s = salon.settings;
-      const game = salon.game;
-      const idle = game.phase === "lobby" || game.phase === "gameover";
-      if (!idle && !requirePro(socket, salon, "liveSettings")) return;
-      const clamp = (v, lo, hi, d) =>
-        Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
-
-      if ("roundDuration" in patch)
-        s.roundDuration = clamp(patch.roundDuration, 15, 60, s.roundDuration);
-      if ("showAnswerDuration" in patch)
-        s.showAnswerDuration = clamp(
-          patch.showAnswerDuration,
-          3,
-          15,
-          s.showAnswerDuration,
+      if (salon)
+        applySettings(salon.code, patch, io, (f) =>
+          requirePro(socket, salon, f),
         );
-      if ("manualNext" in patch) s.manualNext = patch.manualNext === true;
-      if (idle && "answerMode" in patch)
-        s.answerMode = patch.answerMode === "multiple" ? "multiple" : "free";
-      if ("maxRounds" in patch) {
-        const n = clamp(
-          patch.maxRounds,
-          idle ? 5 : Math.max(5, game.currentRound),
-          20,
-          s.maxRounds,
-        );
-        if (n !== s.maxRounds) {
-          s.maxRounds = n;
-          if (idle) prepareSession(code, io);
-          else {
-            // Les titres déjà joués ne reviennent pas
-            game.sessionPlaylist = buildSessionPlaylist(
-              game.fullPlaylist.filter((t) => !game.played.includes(t)),
-              n - game.currentRound,
-            );
-            game.prefetchedRound = null;
-            prefetchNextVideo(code, io);
-          }
-        }
-      }
-      if (idle && "teamCount" in patch) {
-        if (patch.teamCount > teamLimit(salon))
-          return requirePro(socket, salon, "teams");
-        s.teams = makeTeams(patch.teamCount, s.teams);
-        // On ne redistribue pas : ajouter une équipe déplaçait tout le monde
-        // en tourniquet et défaisait les placements choisis. Seuls ceux dont
-        // l'équipe vient de disparaître sont libérés.
-        const existantes = new Set((s.teams ?? []).map((t) => t.id));
-        for (const p of Object.values(salon.players)) {
-          if (p.team != null && !existantes.has(p.team)) p.team = null;
-        }
-        broadcastRoster(code, io);
-      }
-      // Passage en automatique pendant l'affichage d'une réponse
-      if (
-        game.phase === "summary" &&
-        !s.manualNext &&
-        !game.breakTimer &&
-        !game.paused
-      ) {
-        game.breakTimer = setTimeout(() => {
-          game.breakTimer = null;
-          startNextRound(code, io);
-        }, s.showAnswerDuration * 1000);
-      }
-      io.to(`salon:${code}`).emit("salon_settings", { settings: s });
     });
 
     socket.on("salon_rename_team", ({ team, name } = {}) => {

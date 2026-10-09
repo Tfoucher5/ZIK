@@ -10,7 +10,7 @@
   import TabPlayers from '$lib/components/salon/TabPlayers.svelte';
   import TabSettings from '$lib/components/salon/TabSettings.svelte';
   import SalonHelp from '$lib/components/salon/SalonHelp.svelte';
-  import SupportBanner from '$lib/components/salon/SupportBanner.svelte';
+  import { SupportChat } from '$lib/components/salon/supportChat.svelte.js';
   import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
@@ -47,7 +47,7 @@
   let screens  = $state(null);
   let onglet   = $state('direct');
   let helpOpen = $state(false);
-  let support  = $state(null);
+  const chat   = new SupportChat();
   let userId   = $state(null);
 
   let allPlaylists = $state([]);
@@ -112,6 +112,7 @@
   function connect() {
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity });
     socket.on('connect', () => send('salon_join_control', { code, key }));
+    chat.attach(socket);
 
     socket.on('salon_control_joined', (d) => {
       ready = true;
@@ -129,7 +130,7 @@
       track = d.track;
       history = d.history;
       pickerIds = [...(d.settings.playlistIds || [])];
-      if (d.support) support = d.support;
+      chat.update(d.support);
     });
 
     socket.on('salon_roster', ({ players: p, teams: t }) => { mergeRoster(p); teams = t; });
@@ -170,7 +171,6 @@
       flash(`Playlist changée (${trackCount} titres), ${appliedNow ? 'dès la manche suivante' : 'pour la prochaine partie'}.`));
     socket.on('salon_screens', ({ count }) => { screens = count; });
     socket.on('salon_pro_required', ({ feature }) => { upsell = feature; });
-    socket.on('salon_support', (m) => { support = m; });
     socket.on('salon_pro', ({ pro: p }) => { pro = p; upsell = null; flash('ZIK Pro activé pour ce salon.'); });
     socket.on('salon_error', ({ message }) => { error = message; });
   }
@@ -254,13 +254,12 @@
 
   {#if notice}<p class="rg-notice" role="status">{notice}</p>{/if}
 
-  {#if support}<SupportBanner message={support.message} onClose={() => (support = null)} />{/if}
-
   <SalonHelp
     bind:open={helpOpen}
     {code}
     role="regie"
     {pro}
+    {chat}
     reporterId={userId}
     getState={() => ({
       connected: socket?.connected ?? false,

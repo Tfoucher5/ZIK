@@ -14,7 +14,7 @@
    *   social: any, presence: any, profilId: string,
    *   estLeSien: boolean, peutSuivre: boolean,
    *   followBusy: boolean, friendBusy: boolean,
-   *   onEdit: () => void, onFriendAction: (a: string) => void,
+   *   onEdit: () => void, onReport: (() => void)|null, onFriendAction: (a: string) => void,
    *   onToggleFollow: () => void, onJoinRoom: (r: any) => void, onInvite: (c: any) => void,
    * }}
    */
@@ -22,7 +22,7 @@
     nom, avatar, niveau, elo, membreDepuis, parties, scoreTotal, podiumsPct,
     ordinal, detailRang, social, presence, profilId,
     estLeSien, peutSuivre, followBusy, friendBusy,
-    onEdit, onFriendAction, onToggleFollow, onJoinRoom, onInvite,
+    onEdit, onReport = null, onFriendAction, onToggleFollow, onJoinRoom, onInvite,
   } = $props();
 </script>
 
@@ -67,6 +67,9 @@
           {social.viewerFollows ? '✓ Suivi' : '+ Suivre'}
         </button>
         {#if social.followsViewer && !social.viewerFollows}<span class="follows-you">Vous suit</span>{/if}
+        {#if onReport}
+          <button class="btn btn-report" onclick={onReport} title="Signaler ce joueur">⚑ Signaler ce joueur</button>
+        {/if}
       {/if}
     </div>
   </div>
@@ -128,6 +131,8 @@
   .btn-following { border-color: rgb(var(--accent-rgb) / 0.6); color: var(--accent); background: rgb(var(--accent-rgb) / 0.08); }
   .btn-friend { border-color: rgb(var(--gold-rgb) / 0.6); color: var(--gold); background: rgb(var(--gold-rgb) / 0.08); }
   .btn:disabled { opacity: 0.55; cursor: default; }
+  .btn-report { padding: 8px 16px; font-size: 0.78rem; border-color: var(--border); color: var(--mid); }
+  .btn-report:hover { border-color: rgb(248 113 113 / 0.55); color: var(--danger); }
   .follows-you { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--border2); border-radius: 99px; padding: 4px 10px; }
 
   .social-row { display: inline-flex; margin-top: 18px; border: 1px solid var(--border2); border-radius: 99px; overflow: hidden; max-width: 100%; }

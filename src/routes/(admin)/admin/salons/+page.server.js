@@ -9,14 +9,21 @@ import {
   supportSkip,
   supportKick,
   supportGiftPro,
-  supportMessage,
-} from "$lib/server/socket/salon.js";
+  supportSettings,
+} from "$lib/server/socket/salonAdmin.js";
+import { closeSupport } from "$lib/server/socket/salonSupport.js";
 
 const DAY = 24 * 3600_000;
 
 export async function load() {
   const sb = getAdminClient();
-  const live = Object.keys(salonRooms).map(salonLiveState).filter(Boolean);
+  // Les salons qui appellent un admin passent en tête, le plus ancien d'abord
+  const callAt = (s) =>
+    s.support?.open && s.support.requestedAt ? s.support.requestedAt : Infinity;
+  const live = Object.keys(salonRooms)
+    .map(salonLiveState)
+    .filter(Boolean)
+    .sort((a, b) => callAt(a) - callAt(b));
   const playlistIds = [...new Set(live.flatMap((s) => s.playlistIds))];
 
   const since = new Date(Date.now() - 30 * DAY).toISOString();
@@ -115,15 +122,29 @@ function supportAction(action, run, done) {
     const code = String(fd.get("code") ?? "").toUpperCase();
     try {
       const result = run(code, fd);
-      await logAdminAction(locals.adminId, action, code, "salon", {
-        ...(fd.get("username") && { username: fd.get("username") }),
-        ...(fd.get("message") && { message: fd.get("message") }),
-      });
+      const payload = Object.fromEntries(fd);
+      delete payload.code;
+      await logAdminAction(locals.adminId, action, code, "salon", payload);
       return { code, message: done(result, fd) };
     } catch (e) {
       return fail(400, { code, error: e.message });
     }
   };
+}
+
+// Seuls les champs envoyés changent : le reste du salon ne bouge pas
+function settingsPatch(fd) {
+  const patch = {};
+  for (const k of [
+    "maxRounds",
+    "roundDuration",
+    "showAnswerDuration",
+    "teamCount",
+  ])
+    if (fd.has(k)) patch[k] = Number(fd.get(k));
+  if (fd.has("answerMode")) patch.answerMode = fd.get("answerMode");
+  if (fd.has("manualNext")) patch.manualNext = fd.get("manualNext") === "1";
+  return patch;
 }
 
 export const actions = {
@@ -155,10 +176,14 @@ export const actions = {
     (code) => supportGiftPro(code),
     () => "ZIK Pro offert à ce salon pour la soirée.",
   ),
-  message: supportAction(
-    "salon_support_message",
-    (code, fd) =>
-      supportMessage(code, fd.get("message"), String(fd.get("target") ?? "")),
-    () => "Message affiché.",
+  settings: supportAction(
+    "salon_settings",
+    (code, fd) => supportSettings(code, settingsPatch(fd)),
+    () => "Réglages appliqués.",
+  ),
+  closeSupport: supportAction(
+    "salon_support_close",
+    (code) => closeSupport(code),
+    () => "Demande d'aide close.",
   ),
 };

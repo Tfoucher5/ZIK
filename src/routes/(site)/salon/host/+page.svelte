@@ -5,7 +5,7 @@
   import PlayerSidebar from './PlayerSidebar.svelte';
   import PlaylistModal from '$lib/components/salon/PlaylistModal.svelte';
   import SalonHelp from '$lib/components/salon/SalonHelp.svelte';
-  import SupportBanner from '$lib/components/salon/SupportBanner.svelte';
+  import { SupportChat } from '$lib/components/salon/supportChat.svelte.js';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
   import { takeSalonKeyFromUrl, patchSalonPlaylists } from '$lib/salonClient.js';
@@ -48,15 +48,8 @@
   let autoNextTimer = null;
   let volume        = $state(100);
   let helpOpen      = $state(false);
-  let support       = $state(null);
+  const chat        = new SupportChat();
   let userId        = $state(null);
-
-  // La TV reste souvent sans personne devant : le message s'efface tout seul
-  $effect(() => {
-    if (!support) return;
-    const id = setTimeout(() => (support = null), 90_000);
-    return () => clearTimeout(id);
-  });
 
   /** @type {HostCenter} */
   let hostCenter;
@@ -114,6 +107,7 @@
     socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
 
     socket.on('connect', () => socket.emit('salon_join_host', { code: roomCode, key }));
+    chat.attach(socket);
 
     socket.on('salon_host_joined', (data) => {
       joined   = true;
@@ -125,10 +119,9 @@
       phase    = data.phase || 'lobby';
       round    = data.currentRound || 0;
       total    = settings.maxRounds || 10;
-      if (data.support) support = data.support;
+      chat.update(data.support);
     });
 
-    socket.on('salon_support', (m) => { support = m; });
     socket.on('salon_pro', ({ pro: p }) => { pro = p; });
 
     socket.on('salon_roster', ({ players: p, teams: t }) => { mergeRoster(p); teams = t; });
@@ -300,7 +293,7 @@
       {#if canChangePlaylists && phase !== 'starting'}
         <button class="sh-icon-btn" title="Changer de playlist" aria-label="Changer de playlist" onclick={openPicker}>♫</button>
       {/if}
-      <button class="sh-icon-btn" title="Besoin d'aide ou un problème à signaler" aria-label="Besoin d'aide" onclick={() => (helpOpen = true)}>?</button>
+      <button class="sh-icon-btn" title="Appeler un admin ZIK" aria-label="Appeler un admin" onclick={() => (helpOpen = true)}>?</button>
       <a class="sx-btn sh-regie-btn" href="/salon/regie?code={code}" target="_blank" rel="noopener" title="Piloter la soirée depuis un autre écran">Régie</a>
     </div>
   </header>
@@ -343,13 +336,12 @@
   <p class="sh-toast" class:err={!!error} role="status">{error || playlistNotice}</p>
 {/if}
 
-{#if support}<SupportBanner message={support.message} onClose={() => (support = null)} />{/if}
-
 <SalonHelp
   bind:open={helpOpen}
   {code}
   role="host"
   {pro}
+  {chat}
   reporterId={userId}
   getState={() => ({
     connected: socket?.connected ?? false,

@@ -44,6 +44,7 @@
   const badges = $derived({
     '/admin': alerts?.todo ?? 0,
     '/admin/reparer': alerts?.issues ?? 0,
+    '/admin/salons': alerts?.live.calls ?? 0,
   });
 
   async function openSession(token) {
@@ -141,10 +142,10 @@
           {/if}
         </svg>
         <span>{t.label}</span>
-        {#if t.href === '/admin/salons' && alerts?.live.salons > 0}
+        {#if badges[t.href] > 0}
+          <em class="adm-badge" title={t.href === '/admin/salons' ? 'Salon qui appelle un admin' : null}>{badges[t.href]}</em>
+        {:else if t.href === '/admin/salons' && alerts?.live.salons > 0}
           <i class="adm-live" title="Salon en cours"></i>
-        {:else if badges[t.href] > 0}
-          <em class="adm-badge">{badges[t.href]}</em>
         {/if}
       </a>
     {/each}

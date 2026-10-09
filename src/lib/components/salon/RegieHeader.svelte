@@ -52,7 +52,7 @@
           Gratuit · {joueurs} / {maxGratuit} <b>Passer à Pro</b>
         </button>
       {/if}
-      <button class="sx-btn rh-sm rh-aide" onclick={onHelp} title="Besoin d'aide ou un problème à signaler">Aide</button>
+      <button class="sx-btn rh-sm rh-aide" onclick={onHelp} title="Un admin ZIK te répond en direct"><span class="rh-long">Appeler un </span>admin</button>
       <div class="rh-menu-wrap">
         <button class="sx-btn rh-sm" onclick={(e) => { e.stopPropagation(); menuOuvert = !menuOuvert; }} aria-haspopup="true" aria-expanded={menuOuvert}>
           Liens
@@ -164,7 +164,7 @@
 
   @media (max-width: 640px) {
     .rh-ligne { gap: 10px; padding: 9px 12px; }
-    .rh-free { display: none; }
+    .rh-free, .rh-long { display: none; }
     .rh-tv, .rh-direct { padding-left: 12px; padding-right: 12px; }
     .rh-tv-ok { margin-left: 0; width: 100%; }
   }

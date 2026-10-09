@@ -8,7 +8,7 @@ import {
 } from "$lib/reports/bug-report.js";
 import { reportTrackIssue } from "$lib/server/services/trackIssues.js";
 import { roomGames } from "$lib/server/state.js";
-import { salonLiveState } from "$lib/server/socket/salon.js";
+import { salonLiveState } from "$lib/server/socket/salonAdmin.js";
 import { NEWS } from "$lib/news.js";
 import { alertAdminsSafe } from "$lib/server/services/adminAlerts.js";
 
@@ -66,6 +66,7 @@ function roomSnapshot(code) {
         ? `${salon.track.artist} · ${salon.track.title}`
         : null,
       trackId: salon.track?.id ?? null,
+      supportOpen: !!salon.support?.open,
     };
   }
   return null;
@@ -157,14 +158,19 @@ export async function POST({ request }) {
 
   const fromSalon = type === "bug" && subject === "salon";
   const pro = fromSalon && safeMetadata.context.server?.pro;
-  alertAdminsSafe(fromSalon ? "admin_salons" : "admin_reports", {
-    title: fromSalon
-      ? `${pro ? "Salon Pro" : "Salon"} ${room_id ?? ""} : besoin d'aide`
-      : `${{ bug: "Bug", user: "Joueur signalé", contact: "Message" }[type]} de ${reporter_name?.trim() || "un invité"}`,
-    body: message.trim().slice(0, 140),
-    url:
-      fromSalon && room_id ? `/admin/salons?code=${room_id}` : "/admin/reports",
-  });
+  // Un appel d'admin depuis le salon a déjà prévenu : le report sert de trace
+  const called = fromSalon && safeMetadata.context.server?.supportOpen;
+  if (!called)
+    alertAdminsSafe(fromSalon ? "admin_salons" : "admin_reports", {
+      title: fromSalon
+        ? `${pro ? "Salon Pro" : "Salon"} ${room_id ?? ""} : besoin d'aide`
+        : `${{ bug: "Bug", user: "Joueur signalé", contact: "Message" }[type]} de ${reporter_name?.trim() || "un invité"}`,
+      body: message.trim().slice(0, 140),
+      url:
+        fromSalon && room_id
+          ? `/admin/salons?code=${room_id}`
+          : "/admin/reports",
+    });
 
   // Un titre désigné part aussi dans la file « Réparer » de l'admin
   if (type === "bug" && safeTracks) {

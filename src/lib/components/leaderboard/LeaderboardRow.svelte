@@ -2,6 +2,7 @@
   import CardThumbs from './CardThumbs.svelte';
   import RarityBar from './RarityBar.svelte';
   import { plural } from './leaderboard.svelte.js';
+  import PlayerActions from '$lib/components/player/PlayerActions.svelte';
 
   /** Une ligne du classement à partir du 4e. */
   let { lb, p, rank } = $props();
@@ -40,12 +41,13 @@
     {/if}
   </div>
   <span class="count">{lb.countOf(p)}</span>
+  <div class="acts">{#if !me}<PlayerActions username={p.username} userId={p.id} />{/if}</div>
 </div>
 
 <style>
   .row {
     display: grid;
-    grid-template-columns: 80px 1fr 130px 80px;
+    grid-template-columns: 80px 1fr 130px 80px 34px;
     gap: 14px;
     align-items: center;
     padding: 12px 6px;
@@ -55,7 +57,7 @@
     contain-intrinsic-size: auto 63px;
   }
   .row.with-cards {
-    grid-template-columns: 80px 1fr auto 150px 80px;
+    grid-template-columns: 80px 1fr auto 150px 80px 34px;
   }
   .row:hover {
     background: var(--surface);
@@ -173,10 +175,10 @@
 
   @media (max-width: 960px) {
     .row {
-      grid-template-columns: 56px 1fr 110px 60px;
+      grid-template-columns: 56px 1fr 110px 60px 34px;
     }
     .row.with-cards {
-      grid-template-columns: 56px 1fr auto 110px 60px;
+      grid-template-columns: 56px 1fr auto 110px 60px 34px;
     }
     .rank {
       font-size: 1.9rem;
@@ -185,8 +187,8 @@
   @media (max-width: 640px) {
     .row,
     .row.with-cards {
-      grid-template-columns: 40px 1fr 90px;
-      gap: 12px;
+      grid-template-columns: 40px 1fr 90px 34px;
+      gap: 10px;
       padding: 13px 2px;
     }
     .count,

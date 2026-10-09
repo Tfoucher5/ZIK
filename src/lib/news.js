@@ -34,10 +34,12 @@ export const NEWS = [
     date: "2026-10-09",
     version: "3.15.0",
     tag: "Amélioration",
-    title: "Mode Salon : de l'aide pendant la soirée",
+    title: "Mode Salon : un admin en direct pendant la soirée",
     items: [
-      "Un bouton Besoin d'aide est disponible sur l'écran de l'hôte et dans la régie. Le message part directement à l'équipe ZIK, avec l'état du salon pour comprendre tout de suite ce qui se passe.",
-      "Les salons ZIK Pro sont traités en priorité : en cas de souci en pleine soirée, l'équipe peut intervenir à distance et afficher un message sur l'écran de l'hôte.",
+      "Un bouton Appeler un admin est disponible dans la régie et sur l'écran du salon. L'équipe ZIK est prévenue tout de suite, avec l'état du salon pour comprendre ce qui se passe.",
+      "On vous répond dans un chat en direct qui s'affiche sur votre écran, sans quitter la partie.",
+      "Si besoin, l'équipe peut vous dépanner à distance : pause, titre suivant, vidéo corrigée, réglages ajustés.",
+      "Les salons ZIK Pro passent en priorité.",
       "Un joueur connecté à son compte sur son téléphone voit maintenant ses parties de salon rattachées à son compte.",
     ],
   },
@@ -47,6 +49,7 @@ export const NEWS = [
     tag: "Amélioration",
     title: "Des signalements plus utiles",
     items: [
+      "Depuis le profil d'un joueur ou le classement, un nouveau menu permet de l'ajouter en ami, de le suivre ou de le signaler.",
       "Chaque signalement demande maintenant quelques mots d'explication : un signalement vide ne permettait pas de savoir quoi corriger.",
       "Le signalement joint automatiquement ce qui aide à comprendre le problème : la page, l'appareil, l'état de la partie et du son. Ni mot de passe ni donnée personnelle en plus de ton pseudo.",
     ],

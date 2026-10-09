@@ -1,9 +1,10 @@
 <script>
   import PageHeader from '$lib/admin/PageHeader.svelte';
   import BarChart from '$lib/admin/BarChart.svelte';
+  import ProMailing from '$lib/admin/ProMailing.svelte';
   import { ago, euros } from '$lib/admin/stats-utils.js';
 
-  let { data } = $props();
+  let { data, form } = $props();
 
   const PLAN = { night: 'Soirée', monthly: 'Mensuel', yearly: 'Annuel', manual: 'Offert' };
   const now = Date.now();
@@ -149,6 +150,8 @@
     </ul>
     </div>
     </div>
+
+    <ProMailing mailing={data.mailing} {form} />
   </div>
 </div>
 

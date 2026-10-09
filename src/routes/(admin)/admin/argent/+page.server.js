@@ -1,5 +1,12 @@
 import { getAdminClient } from "$lib/server/config.js";
 import { getStripe } from "$lib/server/stripe.js";
+import { fail } from "@sveltejs/kit";
+import { logAdminAction } from "$lib/server/middleware/auth.js";
+import {
+  proMailingStatus,
+  sendProMailing,
+  sendProMailingTest,
+} from "$lib/server/services/proMailing.js";
 
 const TTL = 5 * 60_000;
 let cache = null;
@@ -59,5 +66,26 @@ export async function load({ url }) {
     subs: (subs ?? []).map((s) => ({ ...s, username: name[s.user_id] ?? "?" })),
     charges,
     stripeError,
+    mailing: proMailingStatus(),
   };
 }
+
+export const actions = {
+  mailTest: async () => {
+    if (!(await sendProMailingTest()))
+      return fail(500, {
+        mailError: "Envoi impossible (clé Resend absente ?).",
+      });
+    return { mailTestSent: true };
+  },
+  mailSend: async ({ request, locals }) => {
+    const scope =
+      (await request.formData()).get("scope") === "all" ? "all" : "active";
+    const sent = await sendProMailing(scope);
+    await logAdminAction(locals.adminId, "pro_mailing", null, "site", {
+      scope,
+      sent,
+    });
+    return { mailSent: sent };
+  },
+};

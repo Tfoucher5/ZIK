@@ -5,6 +5,7 @@
   import { notifState, markAllRead, dismissNotif } from '$lib/notifications.svelte.js';
   import { push, enablePush } from '$lib/push.svelte.js';
   import { toast } from '$lib/toast.svelte.js';
+  import { sendFriend } from '$lib/components/player/social.js';
 
   const ctx = getContext('zik');
   const sb = ctx.sb;
@@ -31,13 +32,7 @@
     if (busyId) return;
     busyId = n.id;
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch('/api/friend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ targetId: n.actor_id, action }),
-      });
-      if (r.ok) dismissNotif(n.id);
+      if (await sendFriend(sb, n.actor_id, action)) dismissNotif(n.id);
     } finally {
       busyId = null;
     }

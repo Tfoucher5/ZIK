@@ -1,5 +1,6 @@
 import { getAdminClient } from "../config.js";
 import { getMaintenance } from "../maintenance.js";
+import { openSupportCount } from "../socket/salonSupport.js";
 
 const DAY = 24 * 3600_000;
 
@@ -17,6 +18,7 @@ export function liveCounts() {
   return {
     rooms: rooms.filter((g) => Object.keys(g.socketToName ?? {}).length).length,
     salons: salons.length,
+    calls: openSupportCount(),
     players: roomPlayers + salonPlayers,
   };
 }
@@ -57,7 +59,17 @@ export async function getTodo() {
     (e) => e.ts >= Date.now() - DAY && e.level === "error",
   ).length;
 
+  const calls = openSupportCount();
+
   const items = [
+    calls && {
+      key: "calls",
+      tone: "bad",
+      n: calls,
+      label: `${calls} salon${calls > 1 ? "s appellent" : " appelle"} un admin`,
+      action: "Répondre",
+      href: "/admin/salons",
+    },
     maintenance?.enabled && {
       key: "maintenance",
       tone: "bad",

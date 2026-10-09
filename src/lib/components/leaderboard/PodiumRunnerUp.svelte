@@ -1,6 +1,7 @@
 <script>
   import CardThumbs from './CardThumbs.svelte';
   import RarityBar from './RarityBar.svelte';
+  import PlayerActions from '$lib/components/player/PlayerActions.svelte';
 
   /** 2e (disque de platine) ou 3e (disque d'or) du classement. */
   let { lb, p, rank } = $props();
@@ -31,6 +32,7 @@
     <CardThumbs cards={p.best} />
   {/if}
   <div class="val">{lb.valueLabel(p)}<small>{lb.unit}</small></div>
+  {#if !lb.isMe(p.username)}<PlayerActions username={p.username} userId={p.id} />{/if}
 </div>
 
 <style>
