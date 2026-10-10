@@ -1,6 +1,9 @@
-import { supabase } from "$lib/server/config.js";
+import { getAdminClient } from "$lib/server/config.js";
 import { error } from "@sveltejs/kit";
 import { topArtists, artistFromRow } from "$lib/rooms/room-content.js";
+
+// Client service : le lien d'invitation doit aussi ouvrir les rooms privées
+const supabase = getAdminClient();
 
 async function loadTrackCount(playlistId) {
   if (!playlistId) return null;
@@ -39,10 +42,9 @@ export async function load({ params, setHeaders }) {
       "code, name, emoji, description, is_public, is_official, game_mode, max_rounds, round_duration, playlist_id, last_active_at, profiles!owner_id(username)",
     )
     .eq("code", code)
-    .eq("is_public", true)
     .single();
 
-  if (!room) throw error(404, "Room introuvable ou privée");
+  if (!room) throw error(404, "Room introuvable");
 
   const [trackCount, artists, leaderboard] = await Promise.all([
     loadTrackCount(room.playlist_id),
@@ -50,7 +52,11 @@ export async function load({ params, setHeaders }) {
     loadLeaderboard(room.code),
   ]);
 
-  setHeaders({ "cache-control": "public, max-age=600" });
+  setHeaders({
+    "cache-control": room.is_public
+      ? "public, max-age=600"
+      : "private, no-store",
+  });
 
   return { room, trackCount, artists, leaderboard };
 }

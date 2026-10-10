@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
+import { supabase, getAdminClient } from "$lib/server/config.js";
 import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
 import { customRooms, dbRooms } from "$lib/server/state.js";
 import { createNotification } from "$lib/server/services/notifications.js";
@@ -8,7 +8,7 @@ async function findRoom(code) {
   const mem = customRooms[code] || dbRooms[code];
   if (mem)
     return { name: mem.name || code, gameMode: mem.game_mode || "classic" };
-  const { data } = await supabase
+  const { data } = await getAdminClient()
     .from("rooms")
     .select("name, game_mode")
     .eq("code", code)
