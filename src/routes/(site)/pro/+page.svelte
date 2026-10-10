@@ -92,7 +92,7 @@
     "@type": "WebPage",
     name: "Organiser un blind test - ZIK pour les bars, associations et entreprises",
     description:
-      "Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à 12 joueurs, ZIK Pro pour les bars et événements.",
+      "Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à 8 joueurs, ZIK Pro pour les bars et événements.",
     url: "https://www.zik-music.fr/pro",
     inLanguage: "fr-FR",
     isPartOf: {
@@ -128,7 +128,7 @@
         name: "Combien de personnes peuvent jouer en même temps ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Jusqu'à 12 joueurs en version gratuite, sans limite avec ZIK Pro. Chacun joue sur son propre téléphone, il n'y a rien à installer.",
+          text: "Jusqu'à 8 joueurs en version gratuite, sans limite avec ZIK Pro. Chacun joue sur son propre téléphone, il n'y a rien à installer.",
         },
       },
       {
@@ -144,7 +144,7 @@
         name: "Est-ce que c'est payant ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Le Mode Salon est gratuit jusqu'à 12 joueurs et 2 équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € la soirée.",
+          text: "Le Mode Salon est gratuit jusqu'à 8 joueurs et 2 équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € la soirée.",
         },
       },
       {
@@ -210,7 +210,7 @@
   <title>Animation blind test pour bar, camping et entreprise - ZIK Pro</title>
   <meta
     name="description"
-    content="Animez une soirée blind test sans animateur. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit jusqu'à 12 joueurs, ZIK Pro pour les bars, campings et événements."
+    content="Animez une soirée blind test sans animateur. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit jusqu'à 8 joueurs, ZIK Pro pour les bars, campings et événements."
   />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/pro" />

@@ -6,7 +6,7 @@ ZIK propose plusieurs façons de jouer :
 
 - **Rooms multijoueur** — parties en temps réel, en saisie libre (artiste + titre) ou en QCM. Classement ELO pour les joueurs inscrits.
 - **Zikle** — jeu quotidien solo : une seule chanson par jour, la même pour tout le monde, à deviner en 6 essais. L'extrait audio s'allonge à chaque erreur (1s, 2s, 4s, 7s, 11s, 16s). Sans compte.
-- **Mode Salon** — le blind test de soirée : l'écran (TV, vidéoprojecteur) diffuse la musique, le chrono et le classement, les joueurs répondent sur leur téléphone après avoir scanné un QR code. Jeu en solo ou en équipes, régie sur un second écran pour l'organisateur. Gratuit jusqu'à 12 joueurs ; ZIK Pro (bars, campings, événements) : joueurs illimités, 8 équipes, régie complète, dès 7,90 € HT la soirée.
+- **Mode Salon** — le blind test de soirée : l'écran (TV, vidéoprojecteur) diffuse la musique, le chrono et le classement, les joueurs répondent sur leur téléphone après avoir scanné un QR code. Jeu en solo ou en équipes, régie sur un second écran pour l'organisateur. Gratuit jusqu'à 8 joueurs ; ZIK Pro (bars, campings, événements) : joueurs illimités, 8 équipes, régie complète, dès 7,90 € HT la soirée.
 - **Playlists** — création de playlists personnalisées, import depuis Deezer.
 
 ## Pages principales

@@ -30,7 +30,7 @@ Le blind test version soirée. La musique et le classement s'affichent sur la t�
 
 - Jeu en solo ou **en équipes**
 - Une **régie** pour piloter la soirée depuis un second écran ou un téléphone (pause, manche suivante, réglages)
-- Gratuit jusqu'à 12 joueurs. Pour les bars, campings et événements, **ZIK Pro** débloque les joueurs illimités, plus d'équipes et la régie complète.
+- Gratuit jusqu'à 8 joueurs. Pour les bars, campings et événements, **ZIK Pro** débloque les joueurs illimités, plus d'équipes et la régie complète.
 
 ### Zikle 🗓️
 

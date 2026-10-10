@@ -359,7 +359,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien d'invités peuvent jouer en même temps ?",
-        a: "Jusqu'à 12 téléphones en version gratuite, sans limite avec ZIK Pro. Pour un grand mariage, le jeu en équipes (une équipe par table) reste le plus lisible.",
+        a: "Jusqu'à 8 téléphones en version gratuite, sans limite avec ZIK Pro. Pour un grand mariage, le jeu en équipes (une équipe par table) reste le plus lisible.",
       },
       {
         q: "Faut-il une connexion internet dans la salle ?",
@@ -389,7 +389,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien de joueurs peuvent participer ?",
-        a: "Jusqu'à 12 joueurs gratuitement, chacun sur son téléphone. Au-delà, ZIK Pro accueille autant de joueurs que vous voulez.",
+        a: "Jusqu'à 8 joueurs gratuitement, chacun sur son téléphone. Au-delà, ZIK Pro accueille autant de joueurs que vous voulez.",
       },
       {
         q: "Faut-il installer une application ?",
@@ -419,7 +419,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien coûte une soirée blind test avec ZIK ?",
-        a: "La version gratuite accueille 12 joueurs et 2 équipes, idéale pour tester. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète : 7,90 € la soirée, 19 € par mois ou 190 € par an.",
+        a: "La version gratuite accueille 8 joueurs et 2 équipes, idéale pour tester. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète : 7,90 € la soirée, 19 € par mois ou 190 € par an.",
       },
       {
         q: "De quel matériel a-t-on besoin ?",
@@ -458,7 +458,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Combien de participants au maximum ?",
-        a: "12 joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.",
+        a: "8 joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.",
       },
     ],
     playlists: [PL.disney, PL.annees8090, PL.annees2000],

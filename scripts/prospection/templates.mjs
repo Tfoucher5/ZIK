@@ -34,7 +34,7 @@ Je m'appelle Théo, je suis étudiant à Angers et passionné de musique. Sur mo
 
 ${p.use}
 
-Je vous écris surtout pour avoir l'avis de personnes qui organisent vraiment des soirées. Si vous avez dix minutes pour l'essayer (c'est gratuit jusqu'à 12 joueurs), votre retour m'aiderait beaucoup, même s'il est critique. Et si un jour ça vous sert pour une vraie soirée, tant mieux !
+Je vous écris surtout pour avoir l'avis de personnes qui organisent vraiment des soirées. Si vous avez dix minutes pour l'essayer (c'est gratuit jusqu'à 8 joueurs), votre retour m'aiderait beaucoup, même s'il est critique. Et si un jour ça vous sert pour une vraie soirée, tant mieux !
 
 Tout est expliqué ici : https://www.zik-music.fr/pro
 

@@ -1,7 +1,7 @@
 // ZIK Pro : ce que la version gratuite du mode salon permet, et les formules.
 // Partagé client (affichage des verrous) et serveur (seul juge des limites).
 
-export const FREE_MAX_PLAYERS = 12;
+export const FREE_MAX_PLAYERS = 8;
 export const FREE_MAX_TEAMS = 2;
 
 // Ce que débloque n'importe quelle formule Pro
