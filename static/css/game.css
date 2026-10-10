@@ -1447,11 +1447,11 @@ a {
     rgba(5, 5, 5, 0.97);
   backdrop-filter: blur(14px);
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
   padding: 24px;
   animation: rvFade 0.4s ease;
-  overflow: hidden;
+  overflow-y: auto;
 }
 .g-go-inner {
   display: flex;
@@ -1459,6 +1459,7 @@ a {
   justify-content: center;
   gap: clamp(30px, 6vw, 80px);
   width: 100%;
+  min-width: 0;
   max-width: 1000px;
   max-height: 100%;
   animation: goCardIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -2669,6 +2670,12 @@ html.no-animations *::after {
   justify-items: start;
   gap: 12px;
   margin: 18px 0 6px;
+  grid-template-columns: minmax(0, 100%);
+}
+@media (min-width: 861px) {
+  .g-go-credits:has(.g-go-cards) .g-go-tracklist {
+    max-height: 24vh;
+  }
 }
 .g-go-cards-title {
   margin: 0;
@@ -2679,8 +2686,15 @@ html.no-animations *::after {
 }
 .g-go-cards-list {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.g-go-cards-list > * {
+  flex-shrink: 0;
 }
 .g-go-cards-set {
   margin: 0;
