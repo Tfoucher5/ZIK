@@ -846,7 +846,7 @@ export function register(io) {
         const { data: freshRoom } = await getAdminClient()
           .from("rooms")
           .select(
-            "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id, is_public, game_mode",
+            "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id, is_public, is_official, game_mode",
           )
           .eq("code", roomId)
           .single();

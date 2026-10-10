@@ -131,7 +131,8 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
         !!p.cardsInPlay?.some((e) => e.card.id === card.id),
     };
 
-  const ownerId = dbRooms[room.roomId]?.owner_id;
+  const dbRoom = dbRooms[room.roomId];
+  const ownerId = dbRoom?.is_official ? null : dbRoom?.owner_id;
   const res = pickCardWinner({
     card,
     finders: game.fullFinders || [],
