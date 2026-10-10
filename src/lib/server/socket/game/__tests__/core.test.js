@@ -26,6 +26,11 @@ vi.mock("../../../services/achievements.js", () => ({
 vi.mock("../../../services/weeklyChallenge.js", () => ({
   bumpWeeklyChallenge: () => {},
 }));
+const loadPlaylist = vi.fn(async () => []);
+vi.mock("../../../services/playlist.js", async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadPlaylist: (...args) => loadPlaylist(...args),
+}));
 
 const { roomGames, dbRooms, customRooms } = await import("../../../state.js");
 const { register, adminEndGame } = await import("../core.js");
@@ -286,5 +291,45 @@ describe("partie coupée par l'admin", () => {
     await adminEndGame("TESTRM");
 
     expect(inserted).toHaveLength(1);
+  });
+});
+
+describe("relance d'une partie", () => {
+  let handlers;
+
+  beforeEach(() => {
+    loadPlaylist.mockClear();
+    vi.useFakeTimers();
+    Object.keys(roomGames).forEach((k) => delete roomGames[k]);
+    Object.keys(dbRooms).forEach((k) => delete dbRooms[k]);
+    Object.keys(customRooms).forEach((k) => delete customRooms[k]);
+    customRooms.TESTRM = { id: "TESTRM", name: "Test", tracks: [] };
+    const io = makeIo();
+    handlers = io.handlers;
+    register(io.io);
+  });
+
+  it("ne lance qu'une partie quand tous les joueurs demandent à rejouer en même temps", async () => {
+    const a = connect(handlers);
+    await a.events.join_room({ roomId: "TESTRM", username: "Alice" });
+    const b = connect(handlers);
+    await b.events.join_room({ roomId: "TESTRM", username: "Bob" });
+
+    await Promise.all([
+      a.events.request_new_game(),
+      b.events.request_new_game(),
+    ]);
+
+    expect(loadPlaylist).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuse une nouvelle partie pendant la pause entre deux manches", async () => {
+    const a = connect(handlers);
+    await a.events.join_room({ roomId: "TESTRM", username: "Alice" });
+    roomGames.TESTRM.game.inProgress = true;
+
+    await a.events.request_new_game();
+
+    expect(loadPlaylist).not.toHaveBeenCalled();
   });
 });

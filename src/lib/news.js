@@ -4,6 +4,16 @@
 export const NEWS = [
   {
     date: "2026-10-10",
+    version: "3.15.2",
+    tag: "Correctif",
+    title: "Relance de partie en QCM et cartes",
+    items: [
+      "Relancer une partie ne bloque plus le premier titre : les réponses du QCM ne changent plus en boucle et la manche se termine normalement.",
+      "Un nom d'album trop long ne dépasse plus du dos de la carte.",
+    ],
+  },
+  {
+    date: "2026-10-10",
     version: "3.15.1",
     tag: "Correctif",
     title: "Liens d'invitation et vidéos du salon",
