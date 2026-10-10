@@ -83,6 +83,8 @@ function getOrCreateRoom(roomId) {
     nameToSocket: {},
     game: {
       isActive: false,
+      // Vrai du lancement au game_over, pauses entre manches comprises
+      inProgress: false,
       currentRound: 0,
       maxRounds: cust?.max_rounds || cust?.maxRounds || 10,
       roundDuration:
@@ -276,6 +278,7 @@ async function startNextRound(roomId, io) {
     game.sessionPlaylist.length === 0
   ) {
     game.isActive = false;
+    game.inProgress = false;
     const finalScores = Object.values(room.players)
       .sort((a, b) => b.score - a.score)
       .map(sanitizePlayer);
@@ -666,10 +669,12 @@ async function startAutoCountdown(roomId, io) {
     timer: setTimeout(async () => {
       delete autoStartCountdowns[roomId];
       const room = roomGames[roomId];
-      if (!room || room.game.isActive || room.game.isSyncWaiting) return;
+      if (!room || room.game.inProgress) return;
+      room.game.inProgress = true;
 
       const playlist = await loadPlaylist(roomId, { fresh: true });
       if (playlist.length === 0) {
+        room.game.inProgress = false;
         io.to(`room:${roomId}`).emit(
           "server_error",
           "Playlist indisponible, reessaie.",
@@ -976,7 +981,7 @@ export function register(io) {
           });
         }
         // Si isSyncWaiting, le client émettra player_ready quand YouTube sera prêt
-      } else if (autoStart && !room.game.isActive && !room.game.isSyncWaiting) {
+      } else if (autoStart && !room.game.inProgress) {
         if (autoStartCountdowns[roomId]) {
           // Countdown already running — tell this player the remaining time
           const elapsed =
@@ -998,7 +1003,7 @@ export function register(io) {
       const roomId = socket.currentRoom;
       if (!roomId) return;
       const room = getOrCreateRoom(roomId);
-      if (room.game.isActive || room.game.isSyncWaiting) return;
+      if (room.game.inProgress) return;
       if (room.game.adminBlocked) {
         socket.emit("server_error", "Partie bloquée par un administrateur.");
         return;
@@ -1023,12 +1028,16 @@ export function register(io) {
         }
       }
 
-      // Cancel any running auto-start countdown
+      // Posé avant les await : sinon chaque joueur qui demande à rejouer
+      // lance sa propre boucle de manches en parallèle
+      room.game.inProgress = true;
       cancelAutoCountdown(roomId, io);
 
       const playlist = await loadPlaylist(roomId, { fresh: true });
-      if (playlist.length === 0)
+      if (playlist.length === 0) {
+        room.game.inProgress = false;
         return socket.emit("server_error", "Playlist indisponible, reessaie.");
+      }
 
       room.game.history = [];
       room.game.currentRound = 0;
@@ -1429,6 +1438,7 @@ export async function adminEndGame(roomId) {
   room.game.interval = null;
   room.game.breakTimer = null;
   room.game.isActive = false;
+  room.game.inProgress = false;
   const finalScores = Object.values(room.players)
     .sort((a, b) => b.score - a.score)
     .map(sanitizePlayer);

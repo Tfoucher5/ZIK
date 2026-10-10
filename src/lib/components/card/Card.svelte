@@ -561,6 +561,7 @@
     right: 8cqw;
     left: 8cqw;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.8cqw;
     margin: 0;
   }
@@ -580,6 +581,7 @@
   }
 
   .zc-details dd {
+    min-width: 0;
     overflow: hidden;
     margin: 0;
     font: 600 3.6cqw/1.2 'Barlow', sans-serif;
