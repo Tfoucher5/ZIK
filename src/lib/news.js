@@ -3,6 +3,16 @@
 
 export const NEWS = [
   {
+    date: "2026-10-10",
+    version: "3.15.1",
+    tag: "Correctif",
+    title: "Liens d'invitation et vidéos du salon",
+    items: [
+      "Le lien d'invitation d'une room privée mène enfin à la room, au lieu d'une page introuvable. Inviter un ami dans une room privée fonctionne aussi.",
+      "La recherche de vidéo du Mode Salon ne bloque plus sur certains titres sortis en collaboration entre plusieurs chaînes.",
+    ],
+  },
+  {
     date: "2026-10-09",
     version: "3.15.0",
     tag: "Nouveauté",

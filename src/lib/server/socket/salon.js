@@ -3,7 +3,7 @@ const require = createRequire(import.meta.url);
 const stringSimilarity = require("string-similarity");
 
 import { randomBytes } from "crypto";
-import { YouTube } from "youtube-sr";
+import { YouTube } from "../youtube.js";
 
 import { supabase } from "../config.js";
 import { userClient, verifyToken } from "../middleware/auth.js";

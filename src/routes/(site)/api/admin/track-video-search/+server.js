@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { YouTube } from "youtube-sr";
+import { YouTube } from "$lib/server/youtube.js";
 import { requireAdminToken } from "$lib/server/middleware/auth.js";
 
 // Vidéos YouTube candidates pour un titre, avec de quoi les regarder dans

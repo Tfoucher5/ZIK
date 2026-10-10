@@ -19,7 +19,7 @@ vi.mock("../../config.js", () => ({
   },
   getAdminClient: () => ({ rpc: async () => ({ error: null }) }),
 }));
-vi.mock("youtube-sr", () => ({ YouTube: { search: async () => [] } }));
+vi.mock("../../youtube.js", () => ({ YouTube: { search: async () => [] } }));
 
 const { salonRooms } = await import("../../state.js");
 const { registerSalon } = await import("../salon.js");
