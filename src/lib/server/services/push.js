@@ -4,7 +4,13 @@ import { getAdminClient } from "../config.js";
 // Notifications sur l'appareil (Web Push), même site fermé. Sans clés VAPID
 // dans l'environnement, rien n'est envoyé (les notifications du site restent).
 
-export const PUSH_CATEGORIES = ["social", "cards", "challenge", "zikle"];
+export const PUSH_CATEGORIES = [
+  "social",
+  "cards",
+  "challenge",
+  "zikle",
+  "updates",
+];
 
 const CHUNK = 20;
 // Une notification qui n'a pas pu être livrée en 12 h n'a plus d'intérêt

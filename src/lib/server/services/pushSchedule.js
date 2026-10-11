@@ -4,6 +4,8 @@ import {
   getOrCreateWeeklyChallenge,
   getWeeklyChallengeArchives,
 } from "./weeklyChallenge.js";
+import { releaseMessage } from "./pushMessages.js";
+import { NEWS } from "../../news.js";
 
 // Notifications d'appareil planifiées (heure de Paris). Lancé par server.js
 // seulement : en dev, la base est celle de la prod et ces envois partiraient
@@ -96,6 +98,18 @@ async function zikleReminder(now) {
   );
 }
 
+// Nouvelle version : annoncée une seule fois, en journée (une mise en ligne
+// le soir part le lendemain matin). Les correctifs ne dérangent personne.
+const inReleaseWindow = (hour) => hour >= 10 && hour < 21;
+
+async function releaseNews() {
+  const latest = NEWS[0];
+  const msg = releaseMessage(latest);
+  if (!msg || !(await firstTime(`release:${latest.version}`))) return;
+  const n = await pushToAll("updates", msg);
+  console.log(`[push] version ${latest.version} annoncée sur ${n} appareils`);
+}
+
 async function tick() {
   const now = parisNow();
   const jobs = [];
@@ -104,6 +118,7 @@ async function tick() {
   if (now.weekday === "Sun" && inWindow(now.hour, 18))
     jobs.push(challengeLastDay());
   if (inWindow(now.hour, 18)) jobs.push(zikleReminder(now));
+  if (inReleaseWindow(now.hour)) jobs.push(releaseNews());
   const results = await Promise.allSettled(jobs);
   for (const r of results)
     if (r.status === "rejected")
