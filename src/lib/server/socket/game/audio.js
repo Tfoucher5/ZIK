@@ -5,10 +5,12 @@ import { YTDLP_BIN, getYtAudioUrl } from "../../ytdlAudio.js";
 import { roomGames } from "../../state.js";
 import { fetchDeezerTrackPreview } from "../../services/deezer.js";
 import { pickStart } from "../../services/trackIssues.js";
+import { pickAutoIndex } from "../../../youtube.js";
 
 const execFileAsync = promisify(execFile);
 
-export async function ytsSearch(artist, title) {
+// Les 5 premiers résultats YouTube et l'index que le jeu choisirait.
+export async function ytsCandidates(artist, title) {
   try {
     const { stdout } = await execFileAsync(
       YTDLP_BIN,
@@ -33,19 +35,23 @@ export async function ytsSearch(artist, title) {
         }
       })
       .filter(Boolean);
-    if (!results.length) return null;
-    const topic = results.find(
-      (v) => v.channel?.endsWith("- Topic") || v.uploader?.endsWith("- Topic"),
-    );
-    const picked = topic || results[0];
     return {
-      id: picked.id,
-      duration: (picked.duration || 0) * 1000,
-      channel: { name: picked.channel || picked.uploader || "" },
+      results: results.map((v) => ({
+        id: v.id,
+        title: v.title || "",
+        duration: (v.duration || 0) * 1000,
+        channel: { name: v.channel || v.uploader || "" },
+      })),
+      autoIndex: pickAutoIndex(results),
     };
   } catch {
-    return null;
+    return { results: [], autoIndex: -1 };
   }
+}
+
+export async function ytsSearch(artist, title) {
+  const { results, autoIndex } = await ytsCandidates(artist, title);
+  return results[autoIndex] ?? null;
 }
 
 // Infos d'une vidéo précise, au format de `ytsSearch` pour être substituable.
@@ -66,6 +72,7 @@ export async function ytVideoInfo(videoId) {
   const info = JSON.parse(stdout);
   return {
     id: info.id,
+    title: info.title || "",
     duration: (info.duration || 0) * 1000,
     channel: { name: info.channel || info.uploader || "" },
   };

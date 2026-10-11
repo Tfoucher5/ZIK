@@ -1,0 +1,16 @@
+import { json } from "@sveltejs/kit";
+import { checkRateLimit } from "$lib/server/middleware/auth.js";
+import { artistPage } from "$lib/server/services/deezerCatalog.js";
+
+export async function GET({ request, params }) {
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  checkRateLimit(`dz-browse:${ip}`, 30, 60_000);
+  if (!/^\d+$/.test(params.id))
+    return json({ error: "ID invalide" }, { status: 400 });
+
+  try {
+    return json(await artistPage(params.id));
+  } catch (e) {
+    return json({ error: e.message }, { status: 502 });
+  }
+}

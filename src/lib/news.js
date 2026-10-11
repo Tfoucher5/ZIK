@@ -3,6 +3,21 @@
 
 export const NEWS = [
   {
+    date: "2026-10-11",
+    version: "3.16.0",
+    tag: "Nouveauté",
+    title: "Playlists et rooms entièrement refaites",
+    items: [
+      "Une seule barre pour remplir vos playlists : tapez un titre, les résultats s'affichent pendant la frappe et Entrée ajoute le premier (les flèches pour en choisir un autre).",
+      "Collez une liste de titres, une par ligne, même copiée d'un site ou d'une note : ZIK retrouve chaque morceau et vous laisse corriger les douteux avant l'ajout. Un lien de playlist, d'album ou d'artiste Deezer marche aussi.",
+      "Explorez la discographie d'un artiste ou un album pour tout ajouter en un clic, et piochez dans les suggestions calculées à partir de votre playlist.",
+      "Le bouton ▶ d'un titre fait écouter la version qui sera jouée en partie. Mauvaise version ? Choisissez-en une autre ou collez un lien YouTube, même pour un remix ou une version 8-bit. Merci à Ludhiel pour l'idée !",
+      "Les réponses acceptées d'un titre (artiste, featurings, titre, film ou série) se modifient dans une fenêtre plus claire.",
+      "La page Rooms fait peau neuve : les parties en cours en tête, des cartes lisibles avec toutes les infos, et des filtres qui affichent leur nombre de rooms.",
+      "Créer une room va plus vite : préréglages Rapide, Classique ou Marathon, durée estimée de la partie, indication des cartes à gagner, et le code à partager dès la création.",
+    ],
+  },
+  {
     date: "2026-10-10",
     version: "3.15.2",
     tag: "Correctif",
