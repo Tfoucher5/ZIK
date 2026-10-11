@@ -1,13 +1,12 @@
 import { RARITIES } from "../../../components/card/rarity.js";
+import { MIN_ROUNDS, MIN_TRACKS } from "../../../components/card/rules.js";
 
 // Garde-fous d'attribution (spec docs/specs/cartes.md, section 1). Règle de
 // conception : on bloque sur la structure de la partie (qui joue, combien, sur
 // quelle playlist), jamais sur la performance. Vitesse et volume de réponses ne
 // produisent que des signaux pour l'admin.
 
-export const MIN_ROUNDS = 5;
-// Petite playlist = titres connus par cœur : pas de cartes en dessous
-export const MIN_TRACKS = 100;
+export { MIN_ROUNDS, MIN_TRACKS };
 const TRACK_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const NEW_ACCOUNT_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_WINDOW = 3; // manches sans réponse avant de ne plus compter

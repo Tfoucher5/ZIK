@@ -705,14 +705,30 @@
       <ol class="doc-list">
         <li>Rendez-vous sur <a href="/playlists">Playlists</a> → "Créer une playlist"</li>
         <li>Donnez-lui un nom et une description</li>
-        <li>Ajoutez des titres manuellement (recherche intégrée) ou importez depuis Deezer</li>
+        <li>Ajoutez des titres depuis la barre d'ajout : recherche instantanée, liste collée, lien Deezer ou YouTube</li>
         <li>Choisissez si la playlist est publique ou privée</li>
         <li>Sauvegardez</li>
       </ol>
 
+      <h3 id="ajout-rapide">Remplir une playlist rapidement</h3>
+      <p>
+        Une seule barre sert à tout ajouter. <strong>Tapez un titre</strong> : les résultats s'affichent pendant la frappe, <strong>Entrée</strong> ajoute le premier et les flèches permettent d'en choisir un autre. Cliquez sur un artiste ou un album pour parcourir ses titres et tout ajouter d'un coup.
+      </p>
+      <p>
+        Vous avez déjà une liste ? <strong>Collez-la</strong> (une ligne par titre, « Artiste - Titre » de préférence) : ZIK retrouve chaque morceau et signale ceux à vérifier. Quand la barre est vide, des suggestions basées sur votre playlist vous attendent.
+      </p>
+
+      <h3 id="choisir-version">Choisir la version d'un titre</h3>
+      <p>
+        Le bouton <strong>▶</strong> d'un titre de votre playlist fait écouter la vidéo YouTube qui sera jouée en partie. Si ce n'est pas la bonne, « Changer de version » propose d'autres résultats, ou collez directement un lien YouTube. Pour une version spéciale (live, remix, 8-bit...), collez son lien YouTube dans la barre d'ajout et précisez-la dans le titre.
+      </p>
+      <p>
+        Une version vérifiée vaut pour toutes les playlists : si elle est fausse, signalez-la depuis ce même panneau.
+      </p>
+
       <h3>Importer depuis Deezer</h3>
       <p>
-        Même principe avec Deezer : copiez le lien de votre playlist Deezer (Format : <code>https://www.deezer.com/fr/playlist/...</code>) et collez-le dans le champ d'import correspondant. La synchronisation est instantanée.
+        Même principe avec Deezer : copiez le lien de votre playlist Deezer (Format : <code>https://www.deezer.com/fr/playlist/...</code>) et collez-le dans la barre d'ajout : un aperçu s'affiche, puis un clic importe tous les titres.
       </p>
 
       <div class="doc-tip">

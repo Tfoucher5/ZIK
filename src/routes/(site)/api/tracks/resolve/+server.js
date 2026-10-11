@@ -3,13 +3,17 @@ import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { parseExpFromUrl } from "$lib/server/services/deezer.js";
 import { enqueueCardEnrichment } from "$lib/server/services/cards.js";
+import {
+  checkVideo,
+  pinVideoIfEmpty,
+} from "$lib/server/services/trackVideo.js";
 
 const PERMANENT_EXPIRY = "2099-01-01T00:00:00.000Z";
 
 // POST /api/tracks/resolve
 // Upsert des titres dans le catalogue partagé `tracks` (clé norm_key).
-// Body: { tracks: [{ artist, title, preview_url, cover_url, external_id, source }] }
-// Réponse: { ids: [track_id, ...] } dans le même ordre.
+// Body: { tracks: [{ artist, title, preview_url, cover_url, external_id, source, youtube_id? }] }
+// Réponse: { ids: [track_id, ...], pinned? } dans le même ordre.
 export async function POST({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
   if (!token) return json({ error: "Non authentifié" }, { status: 401 });
@@ -57,11 +61,27 @@ export async function POST({ request }) {
     });
   }
 
+  // Vidéo choisie par le joueur dans le panneau de version (ajout unitaire)
+  if (tracks.filter((t) => t.youtube_id).length > 1)
+    return json({ error: "Une seule vidéo par appel" }, { status: 400 });
+  const videos = [];
+  for (const [i, t] of tracks.entries()) {
+    if (!t.youtube_id) continue;
+    const id = await checkVideo(t.youtube_id);
+    if (!id)
+      return json({ error: "Vidéo YouTube introuvable." }, { status: 400 });
+    videos.push([i, id]);
+  }
+
   const { data, error } = await getAdminClient().rpc("resolve_tracks", {
     p_tracks: rows,
   });
   if (error) return json({ error: error.message }, { status: 400 });
 
+  // false : le titre avait déjà une version vérifiée, la vidéo collée est ignorée
+  let pinned;
+  for (const [i, id] of videos) pinned = await pinVideoIfEmpty(data[i], id);
+
   enqueueCardEnrichment(data);
-  return json({ ids: data });
+  return json({ ids: data, pinned });
 }

@@ -10,7 +10,7 @@ export async function GET({ request }) {
   const { data, error } = await userClient(token)
     .from("rooms")
     .select(
-      "id, code, name, emoji, description, is_public, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, playlist_id, custom_playlists!playlist_id(track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
+      "id, code, name, emoji, description, is_public, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, playlist_id, custom_playlists!playlist_id(id, name, track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
     )
     .eq("owner_id", user.id)
     .order("last_active_at", { ascending: false });
