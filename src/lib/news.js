@@ -1,7 +1,24 @@
 // Mur d'actualité — entrées affichées sur /nouveautes (la plus récente en premier).
 // tag : 'Nouveauté' | 'Amélioration' | 'Correctif'
+// summary (facultatif) : texte de la notification envoyée aux appareils, sinon le premier point.
 
 export const NEWS = [
+  {
+    date: "2026-10-11",
+    version: "3.17.0",
+    tag: "Nouveauté",
+    title: "Une visite guidée du site",
+    summary:
+      "Une visite guidée pour tout découvrir, un chapitre dédié au Mode Salon, et des notifications à chaque nouvelle version.",
+    items: [
+      "À la première visite, un guide fait le tour du site avec vous : il change de page tout seul, met en lumière les rooms, le Zikle, les playlists, les cartes et les classements, et vous laisse cliquer vous-même.",
+      "Un chapitre entier pour le Mode Salon : une TV et des téléphones animés montrent comment se passe une soirée, du QR code au podium.",
+      "Tout est à essayer pendant la visite : les filtres des rooms, l'extrait du Zikle, les onglets du classement. Le bouton « Montre-moi » fait le geste à votre place.",
+      "La visite se passe en un clic, et se relance quand vous voulez depuis les Paramètres.",
+      "Nouvelle notification « Nouveautés de ZIK » : soyez prévenu à chaque nouvelle version. Les réglages de notifications se rangent dans un menu dépliant des Paramètres.",
+      "Le Zikle, le défi, votre profil et cette page vous proposent d'activer les notifications qui vont avec, en un clic.",
+    ],
+  },
   {
     date: "2026-10-11",
     version: "3.16.0",

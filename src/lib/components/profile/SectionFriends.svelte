@@ -1,5 +1,6 @@
 <script>
   import { dicebear } from '$lib/utils.js';
+  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
 
   /**
    * Liste d'amis, avec la présence en direct et les demandes reçues.
@@ -17,6 +18,14 @@
    */
   let { social, presenceMap, isOwn, friendBusy, onFriendAction, onJoinRoom, onInvite } = $props();
 </script>
+
+{#if isOwn}
+  <NotifyPrompt
+    categories={['social']}
+    title="Ne rate aucune invitation"
+    text="Sois prévenu quand quelqu'un t'ajoute en ami ou t'invite dans sa room, même quand ZIK est fermé."
+  />
+{/if}
 
 {#if isOwn && social.pendingRequests.length}
   <div class="tape" style="margin-bottom:12px">Demandes reçues · {social.pendingCount}</div>

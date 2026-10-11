@@ -5,9 +5,12 @@
   import AuthModal from '$lib/components/AuthModal.svelte';
   import ContactModal from '$lib/components/ContactModal.svelte';
   import Toast from '$lib/components/Toast.svelte';
+  import Onboarding from '$lib/components/onboarding/Onboarding.svelte';
+  import { onboarding, shouldAutoStart } from '$lib/components/onboarding/onboarding.svelte.js';
   import { createSupabaseClient } from '$lib/supabase.js';
   import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
   import { initPush, forgetPushOwner } from '$lib/push.svelte.js';
+  import { notifPrefs } from '$lib/components/notify/notifPrefs.svelte.js';
   import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
   import { watchClientErrors } from '$lib/reports/context.js';
 
@@ -92,6 +95,8 @@
     if (!currentUser && (wanted === 'register' || wanted === 'login')) {
       if (params.get('ref')) rememberSignupRef(params.get('ref'));
       openAuthModal(wanted);
+    } else if (shouldAutoStart(window.location.pathname)) {
+      onboarding.start();
     }
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
@@ -104,6 +109,7 @@
         sessionStorage.removeItem('zik_uid');
         sessionStorage.removeItem('zik_uname');
         teardownNotifications();
+        notifPrefs.reset();
         forgetPushOwner().catch(() => {});
       }
     });
@@ -155,6 +161,8 @@
 {@render children()}
 
 <Toast />
+
+{#if !isGame}<Onboarding />{/if}
 
 {#if !isGame}
 <footer class="site-footer">
@@ -254,7 +262,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.16.0</span>
+    <span class="footer-version-tag">v3.17.0</span>
   </div>
 </footer>
 {/if}

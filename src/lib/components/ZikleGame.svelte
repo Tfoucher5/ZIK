@@ -9,6 +9,7 @@
     buildShareSquares,
     waveformForDate,
   } from "$lib/zikle/shared.js";
+  import NotifyPrompt from "$lib/components/notify/NotifyPrompt.svelte";
 
   let { date, dayNumber, previewUrl } = $props();
 
@@ -555,6 +556,12 @@
         </div>
       </div>
     </div>
+
+    <NotifyPrompt
+      categories={["zikle"]}
+      title="Ne rate plus le Zikle"
+      text="Un petit rappel vers 18 h les jours où tu n'as pas encore joué. Ta série ne s'arrêtera plus par oubli."
+    />
 
     <!-- Aperçu de ce qui sera partagé : on voit sa performance avant d'envoyer. -->
     <div class="zk-card">

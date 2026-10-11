@@ -1,4 +1,5 @@
 <script>
+  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
   import { dicebear } from '$lib/utils.js';
   import {
     fmtScore, fmtSince, pct,
@@ -246,6 +247,13 @@
     {/if}
     {#if visible.has('cards')}
       <ProfileSection id="cards" num={numDe('cards')} titre="Cartes" sub="Collection">
+        {#if isOwn}
+          <NotifyPrompt
+            categories={['cards']}
+            title="Suis ta collection"
+            text="Prévenu quand une de tes cartes monte en rareté, qu'un ami décroche une Mythique ou qu'il te manque une carte pour finir un set."
+          />
+        {/if}
         <SectionCards username={profile.username} {sb} />
       </ProfileSection>
     {/if}

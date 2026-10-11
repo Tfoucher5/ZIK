@@ -1,4 +1,5 @@
 <script>
+  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
   import { getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
   import ChallengeIcon from '$lib/components/ChallengeIcon.svelte';
@@ -67,6 +68,12 @@
         <a class="wd-archives-link" href="/defi/archives">Voir l'historique des défis →</a>
       </div>
     </header>
+
+    <NotifyPrompt
+      categories={['challenge']}
+      title="Suis le défi de près"
+      text="Une notification le lundi quand le nouveau défi tombe, et une le dimanche pour le dernier coup de collier."
+    />
 
     {#if challenge}
       <section class="wd-card">

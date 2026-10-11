@@ -1,33 +1,20 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/state';
   import { toast } from '$lib/toast.svelte.js';
   import { push, enablePush, disablePush } from '$lib/push.svelte.js';
+  import { notifPrefs, NOTIF_CATEGORIES } from '$lib/components/notify/notifPrefs.svelte.js';
 
-  /** Réglages des notifications : cet appareil, puis chaque catégorie. */
+  /** Réglages des notifications : cet appareil, puis chaque catégorie dans un menu dépliant. */
   let { getToken } = $props();
 
-  const CATEGORIES = [
-    { id: 'social', label: 'Amis et invitations', desc: "Demandes d'ami et invitations à rejoindre une room." },
-    { id: 'cards', label: 'Cartes', desc: 'Carte qui monte de rareté, Mythique d’un ami, set presque terminé.' },
-    { id: 'challenge', label: 'Défi de la semaine', desc: 'Nouveau défi le lundi, dernier jour le dimanche.' },
-    { id: 'zikle', label: 'Rappel Zikle', desc: "Vers 18 h, si tu n'as pas encore fait le Zikle du jour." },
-  ];
+  // Arrivée depuis une invitation (lien /settings#notifications) : menu déjà ouvert.
+  let open = $state(page.url.hash === '#notifications');
 
-  let prefs = $state(null);
+  const prefs = $derived(notifPrefs.value);
+  const activeCount = $derived(prefs ? NOTIF_CATEGORIES.filter((c) => prefs[c.id]).length : 0);
 
-  async function api(method, body) {
-    const r = await fetch('/api/push/prefs', {
-      method,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await getToken()}` },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    if (!r.ok) throw new Error();
-    return r.json();
-  }
-
-  onMount(async () => {
-    prefs = await api('GET').catch(() => null);
-  });
+  onMount(() => notifPrefs.load(getToken));
 
   async function toggleDevice(e) {
     try {
@@ -40,12 +27,9 @@
   }
 
   async function toggleCategory(id, on) {
-    const before = prefs[id];
-    prefs[id] = on;
     try {
-      prefs = await api('PUT', { [id]: on });
+      await notifPrefs.set(getToken, { [id]: on });
     } catch {
-      prefs[id] = before;
       toast('Réglage non enregistré, réessaie', 'error');
     }
   }
@@ -83,16 +67,69 @@
 </div>
 
 {#if prefs}
-  {#each CATEGORIES as c (c.id)}
-    <div class="settings-row">
-      <div class="settings-row-info">
-        <div class="settings-row-label">{c.label}</div>
-        <div class="settings-row-desc">{c.desc}</div>
-      </div>
-      <label class="toggle-switch" aria-label={c.label}>
-        <input type="checkbox" checked={!!prefs[c.id]} onchange={(e) => toggleCategory(c.id, e.currentTarget.checked)} />
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
+  <details class="ns" bind:open>
+    <summary class="ns-sum">
+      <span class="ns-sum-info">
+        <span class="settings-row-label">Choisir mes notifications</span>
+        <span class="settings-row-desc">{activeCount} sur {NOTIF_CATEGORIES.length} activées</span>
+      </span>
+      <span class="ns-chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="ns-list">
+      {#each NOTIF_CATEGORIES as c (c.id)}
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">{c.label}</div>
+            <div class="settings-row-desc">{c.desc}</div>
+          </div>
+          <label class="toggle-switch" aria-label={c.label}>
+            <input type="checkbox" checked={!!prefs[c.id]} onchange={(e) => toggleCategory(c.id, e.currentTarget.checked)} />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      {/each}
     </div>
-  {/each}
+  </details>
 {/if}
+
+<style>
+  .ns {
+    border-bottom: 1px solid var(--border);
+  }
+  .ns-sum {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .ns-sum::-webkit-details-marker {
+    display: none;
+  }
+  .ns-sum-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .ns-chevron {
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-right: 2px solid var(--mid);
+    border-bottom: 2px solid var(--mid);
+    transform: rotate(45deg) translateY(-3px);
+    transition: transform 0.25s ease;
+  }
+  .ns[open] .ns-chevron {
+    transform: rotate(-135deg) translateY(-3px);
+  }
+  .ns-list {
+    margin: 0 20px 14px;
+    border-left: 2px solid rgb(var(--accent-rgb) / 0.35);
+    animation: ns-in 0.25s ease;
+  }
+  @keyframes ns-in {
+    from { opacity: 0; transform: translateY(-6px); }
+  }
+</style>

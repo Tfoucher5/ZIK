@@ -69,3 +69,20 @@ export function pushMessageFor(n) {
       return null;
   }
 }
+
+const RELEASE_BODY_MAX = 140;
+
+/** Entrée de /nouveautes annoncée sur les appareils ; null pour un correctif. */
+export function releaseMessage(entry) {
+  if (!entry || entry.tag === "Correctif") return null;
+  const text = entry.summary ?? entry.items?.[0] ?? "";
+  return {
+    tag: "release",
+    title: `Nouveau sur ZIK : ${entry.title}`,
+    body:
+      text.length > RELEASE_BODY_MAX
+        ? `${text.slice(0, RELEASE_BODY_MAX - 1)}…`
+        : text,
+    url: "/nouveautes",
+  };
+}

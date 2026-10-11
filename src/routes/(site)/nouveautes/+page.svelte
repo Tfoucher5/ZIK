@@ -1,5 +1,6 @@
 <script>
   import JsonLd from '$lib/components/JsonLd.svelte';
+  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
   import { NEWS } from '$lib/news.js';
   import { breadcrumb } from '$lib/seo.js';
   const breadcrumbJsonLd = breadcrumb([{ name: 'Nouveautés', path: '/nouveautes' }]);
@@ -51,6 +52,12 @@
   <p class="news-subtitle">
     ZIK évolue en permanence. Retrouve ici les dernières fonctionnalités, améliorations et correctifs du site.
   </p>
+
+  <NotifyPrompt
+    categories={['updates']}
+    title="Sois le premier au courant"
+    text="Une notification à chaque nouvelle version de ZIK, pour découvrir les nouveautés dès leur sortie."
+  />
 
   <div class="news-timeline">
     {#each NEWS as entry (entry.date + entry.title)}

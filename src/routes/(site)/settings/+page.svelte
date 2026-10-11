@@ -5,6 +5,7 @@
   import NotificationSettings from '$lib/components/settings/NotificationSettings.svelte';
   import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
   import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/theme.js';
+  import { onboarding } from '$lib/components/onboarding/onboarding.svelte.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
@@ -272,6 +273,17 @@
           <input id="pref-volume" type="range" min="0" max="100" step="5" value={volVal} oninput={changeVol}>
           <span class="settings-vol-val">{volVal}%</span>
         </div>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h2 class="settings-section-title">Aide</h2>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Parcours d&apos;accueil</div>
+          <div class="settings-row-desc">Refais la visite guid&eacute;e de ZIK, page par page.</div>
+        </div>
+        <button class="btn-unlink" onclick={onboarding.start}>Relancer la visite</button>
       </div>
     </section>
 
