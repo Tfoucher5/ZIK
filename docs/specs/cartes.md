@@ -579,7 +579,7 @@ Mode Salon (`salon.js`) : hors périmètre.
 
 ### 6.4 Enrichissement : création des cartes
 
-Nouveau service `src/lib/server/services/cards.js`, qui réutilise
+Nouveau service `src/lib/server/services/cards/` (enrich.js, versions.js…), qui réutilise
 `deezer.js` et `spotify.js`. Pour un titre du catalogue sans
 `card_checked_at` :
 

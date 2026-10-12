@@ -105,3 +105,13 @@ export async function handle({ event, resolve }) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }
+
+// Les 404 (robots qui sondent /.git, /wp-admin…) ne sont pas des erreurs
+// serveur : sans ça ils remplissent le journal d'erreurs de l'admin
+export function handleError({ error, event, status }) {
+  if (status === 404) return;
+  console.error(
+    `[${status}] ${event.request.method} ${event.url.pathname}\n`,
+    error,
+  );
+}

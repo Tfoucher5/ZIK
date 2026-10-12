@@ -1,6 +1,6 @@
 import { getAdminClient } from "../config.js";
 import { getMaintenance } from "../maintenance.js";
-import { openSupportCount } from "../socket/salonSupport.js";
+import { openSupportCount } from "../socket/salon/support.js";
 
 const DAY = 24 * 3600_000;
 

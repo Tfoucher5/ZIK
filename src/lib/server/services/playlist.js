@@ -167,23 +167,6 @@ export function calcSpeedBonus(timeTaken) {
   return 0;
 }
 
-export function makeCache(ttlMs) {
-  let _data = null,
-    _exp = 0;
-  return {
-    get() {
-      return _exp > Date.now() ? _data : null;
-    },
-    set(v) {
-      _data = v;
-      _exp = Date.now() + ttlMs;
-    },
-    clear() {
-      _exp = 0;
-    },
-  };
-}
-
 // ─── Deezer preview refresh ───────────────────────────────────────────────────
 
 const PREVIEW_REFRESH_MARGIN_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours de marge

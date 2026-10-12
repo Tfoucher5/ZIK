@@ -1,27 +1,13 @@
 import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
+import { makeCache } from "$lib/server/cache.js";
 
 const VALID_MODES = ["classique", "qcm"];
 const VALID_ROOMS = ["officielles", "toutes"];
 const VALID_PERIODS = ["semaine", "mois", "alltime"];
 
-const _caches = {};
-function getCache(key) {
-  if (!_caches[key]) {
-    let _data = null,
-      _exp = 0;
-    _caches[key] = {
-      get() {
-        return _exp > Date.now() ? _data : null;
-      },
-      set(v) {
-        _data = v;
-        _exp = Date.now() + 60_000;
-      },
-    };
-  }
-  return _caches[key];
-}
+const caches = {};
+const cacheFor = (key) => (caches[key] ??= makeCache(60_000));
 
 export async function GET({ url }) {
   const mode = VALID_MODES.includes(url.searchParams.get("mode"))
@@ -37,7 +23,7 @@ export async function GET({ url }) {
   const limit = 20;
 
   const cacheKey = `${mode}:${rooms}:${periode}:${offset}`;
-  const cache = getCache(cacheKey);
+  const cache = cacheFor(cacheKey);
   const cached = cache.get();
   if (cached) return json(cached);
 

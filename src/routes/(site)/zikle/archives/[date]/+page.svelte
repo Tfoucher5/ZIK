@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte";
-  import ZikleGame from "$lib/components/ZikleGame.svelte";
+  import ZikleGame from "$lib/components/zikle/ZikleGame.svelte";
+  import ZikleStage from "$lib/components/zikle/ZikleStage.svelte";
 
   let { data } = $props();
 
@@ -17,57 +18,25 @@
   <link rel="canonical" href="https://www.zik-music.fr/zikle/archives/{data.date}" />
 </svelte:head>
 
-<main class="zikle-page">
-  <div class="zikle-glow" aria-hidden="true"></div>
-
-  {#if !authReady}
-    <p class="zikle-empty">Chargement…</p>
-  {:else if !user}
-    <div class="zikle-wall">
-      <p class="zikle-wall-kicker">Archive · {data.date}</p>
-      <h1 class="zikle-wall-title">Zikle #{data.dayNumber}</h1>
-      <p class="zikle-wall-txt">Les jours passés sont réservés aux comptes. Le Zikle du jour reste libre.</p>
-      <div class="zikle-wall-actions">
-        <button class="zikle-wall-btn" onclick={() => openAuthModal("login")}>Se connecter</button>
-        <a class="zikle-wall-link" href="/zikle">Jouer le Zikle du jour</a>
+<ZikleStage empty={authReady ? "" : "Chargement…"}>
+  {#if authReady}
+    {#if !user}
+      <div class="zikle-wall">
+        <p class="zikle-wall-kicker">Archive · {data.date}</p>
+        <h1 class="zikle-wall-title">Zikle #{data.dayNumber}</h1>
+        <p class="zikle-wall-txt">Les jours passés sont réservés aux comptes. Le Zikle du jour reste libre.</p>
+        <div class="zikle-wall-actions">
+          <button class="zikle-wall-btn" onclick={() => openAuthModal("login")}>Se connecter</button>
+          <a class="zikle-wall-link" href="/zikle">Jouer le Zikle du jour</a>
+        </div>
       </div>
-    </div>
-  {:else}
-    <ZikleGame date={data.date} dayNumber={data.dayNumber} previewUrl={data.previewUrl} />
+    {:else}
+      <ZikleGame date={data.date} dayNumber={data.dayNumber} previewUrl={data.previewUrl} />
+    {/if}
   {/if}
-</main>
+</ZikleStage>
 
 <style>
-  .zikle-page {
-    position: relative;
-    min-height: calc(100dvh - var(--nav-h));
-    margin-top: var(--nav-h);
-    padding: 32px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .zikle-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: min(120vw, 900px);
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgb(var(--accent-rgb) / 0.09), transparent 62%);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .zikle-empty {
-    color: var(--mid);
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
   .zikle-wall {
     position: relative;
     z-index: 1;
@@ -153,11 +122,6 @@
     }
   }
 
-  @media (max-width: 768px) {
-    .zikle-page {
-      padding-bottom: 64px;
-    }
-  }
   @media (prefers-reduced-motion: reduce) {
     .zikle-wall {
       animation: none;

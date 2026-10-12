@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 import { getAdminClient } from "../../config.js";
 import { verifyToken } from "../../middleware/auth.js";
-import { dbRooms } from "../../state.js";
+import { dbRooms, getIO } from "../../state.js";
 import { pickCardWinner, MIN_ROUNDS, MIN_TRACKS } from "./cards.js";
 import { RARITIES } from "../../../components/card/rarity.js";
 import { addChatMessage } from "./chat.js";
 import { createNotification } from "../../services/notifications.js";
-import { notifySetsNearlyDone } from "../../services/cardHunt.js";
+import { notifySetsNearlyDone } from "../../services/cards/hunt.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
 
 // Branchement des cartes dans le jeu (spec docs/specs/cartes.md, section 6.2).
@@ -297,7 +297,7 @@ async function notifyMythics(userId, cardIds) {
 
 // Une Mythique tombe : toute la room le voit dans le chat
 function announceMythic(room, name, card) {
-  const io = globalThis.__zik_io;
+  const io = getIO();
   if (!io) return;
   const message = {
     name: "ZIK",

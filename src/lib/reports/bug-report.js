@@ -1,3 +1,5 @@
+import { isUuid } from "../utils.js";
+
 export const MIN_REPORT_MESSAGE = 10;
 
 export const BUG_MOTIFS = [
@@ -45,13 +47,9 @@ export function buildTrackChoices({ history = [], current = null }) {
 
 // Les invités ont un identifiant local (« guest_1712… ») que la colonne uuid
 // refuse : l'insertion échouait alors entièrement. On ne garde qu'un uuid.
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export function asUuidOrNull(value) {
-  return typeof value === "string" && UUID_RE.test(value.trim())
-    ? value.trim()
-    : null;
+  const v = typeof value === "string" ? value.trim() : value;
+  return isUuid(v) ? v : null;
 }
 
 export function sanitizeReportTracks(value) {

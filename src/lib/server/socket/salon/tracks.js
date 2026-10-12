@@ -1,0 +1,103 @@
+import { supabase } from "../../config.js";
+import { YouTube } from "../../youtube.js";
+import {
+  buildTrackFromRow,
+  TRACK_ROW_SELECT,
+} from "../../services/playlist.js";
+import {
+  getVideoSettings,
+  filterVideos,
+  pickStart,
+} from "../../services/trackIssues.js";
+
+async function loadTracksForPlaylist(playlistId, client = supabase) {
+  try {
+    const { data: rows } = await client
+      .from("custom_playlist_tracks")
+      .select(TRACK_ROW_SELECT)
+      .eq("playlist_id", playlistId)
+      .order("position");
+    if (rows?.length) {
+      return rows.map(buildTrackFromRow);
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+// Accepts a single ID or an array of IDs — returns combined, deduplicated, shuffled tracks
+export async function loadSalonTracks(playlistIds, client = supabase) {
+  const ids = Array.isArray(playlistIds) ? playlistIds : [playlistIds];
+  const seen = new Set();
+  const all = [];
+  for (const id of ids) {
+    const tracks = await loadTracksForPlaylist(id, client);
+    for (const t of tracks) {
+      const key = `${t.artist}|${t.title}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        all.push(t);
+      }
+    }
+  }
+  // Fisher-Yates shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
+
+/**
+ * Tire au hasard les titres d'une session dans le pool complet.
+ * Les manches consomment le tableau par la fin (pop), l'ordre est donc deja
+ * celui du jeu.
+ */
+export function buildSessionPlaylist(fullPlaylist, count) {
+  const pool = [...fullPlaylist];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, Math.max(0, count));
+}
+
+export async function searchTrackVideo(track, roundDuration) {
+  const { exclude, minStart } = await getVideoSettings();
+  // Vidéo choisie dans l'admin : elle prime sur la recherche
+  if (track.youtube_id) {
+    const pinned = await YouTube.getVideo(
+      `https://www.youtube.com/watch?v=${track.youtube_id}`,
+    ).catch(() => null);
+    return {
+      video: { id: track.youtube_id },
+      safeStart: pickStart({
+        pinned: track.youtube_start,
+        durationSec: Math.round((pinned?.duration || 0) / 1000),
+        roundDuration,
+        minStart,
+      }),
+    };
+  }
+  const artist = track.mainArtist || track.artist;
+  const results = filterVideos(
+    await YouTube.search(`${artist} - ${track.title}`, {
+      type: "video",
+      limit: 5,
+    }),
+    exclude,
+  );
+  if (!results.length) throw new Error("No video");
+  const video =
+    results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
+  return {
+    video,
+    safeStart: pickStart({
+      pinned: null,
+      durationSec: Math.round((video.duration || 0) / 1000),
+      roundDuration,
+      minStart,
+    }),
+  };
+}

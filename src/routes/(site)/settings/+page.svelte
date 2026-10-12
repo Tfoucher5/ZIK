@@ -1,216 +1,22 @@
 <script>
-  import { onMount, getContext } from 'svelte';
-  import { toast } from '$lib/toast.svelte.js';
-  import Modal from '$lib/components/Modal.svelte';
-  import NotificationSettings from '$lib/components/settings/NotificationSettings.svelte';
-  import { fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
-  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/theme.js';
+  import { getContext } from 'svelte';
   import { onboarding } from '$lib/components/onboarding/onboarding.svelte.js';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import AppearanceSettings from '$lib/components/settings/AppearanceSettings.svelte';
+  import VolumeSetting from '$lib/components/settings/VolumeSetting.svelte';
+  import PrivacySetting from '$lib/components/settings/PrivacySetting.svelte';
+  import NotificationSettings from '$lib/components/settings/NotificationSettings.svelte';
+  import ProSetting from '$lib/components/settings/ProSetting.svelte';
+  import DiscordSetting from '$lib/components/settings/DiscordSetting.svelte';
+  import DangerZone from '$lib/components/settings/DangerZone.svelte';
+  import DeleteAccountModal from '$lib/components/settings/DeleteAccountModal.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;
   const user = $derived(_ctx.user);
   const authReady = $derived(_ctx.authReady);
 
-  let animOn       = $state(true);
-  let volVal     = $state(50);
-  let activeTheme = $state(DEFAULT_THEME);
-  let isPrivate  = $state(false);
-  let privLoading = $state(false);
-  let discordLoading = $state(false);
-  let _discordScrollDone = $state(false);
-
-  async function linkDiscord() {
-    if (!sb) return;
-    discordLoading = true;
-    try {
-      const { error } = await sb.auth.linkIdentity({
-        provider: 'discord',
-        options: { redirectTo: window.location.origin + '/settings?discord=linked' },
-      });
-      if (error) throw error;
-    } catch (e) {
-      toast('Erreur : ' + e.message, 'error');
-      discordLoading = false;
-    }
-  }
-
-  async function unlinkDiscord() {
-    if (!sb || !user) return;
-    discordLoading = true;
-    try {
-      const { data: { identities } } = await sb.auth.getUserIdentities();
-      if (identities.length <= 1) {
-        toast('Impossible de délier : c\'est ta seule méthode de connexion.', 'error');
-        discordLoading = false;
-        return;
-      }
-      const discordIdentity = identities.find(i => i.provider === 'discord');
-      if (!discordIdentity) {
-        discordLoading = false;
-        return;
-      }
-      const { error } = await sb.auth.unlinkIdentity(discordIdentity);
-      if (error) throw error;
-      const { data: { session } } = await sb.auth.getSession();
-      const r = await fetch('/api/profile/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ discord_id: null, discord_username: null, discord_avatar: null }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      if (user.profile) {
-        user.profile.discord_id = null;
-        user.profile.discord_username = null;
-        user.profile.discord_avatar = null;
-      }
-      toast('Compte Discord délié.', 'success');
-    } catch (e) {
-      toast('Erreur : ' + e.message, 'error');
-    } finally {
-      discordLoading = false;
-    }
-  }
-
-  // ── Account deletion state ───────────────────────────────────────────────
-  let deleteModalOpen   = $state(false);
-  let deleteConfirmText = $state('');
-  let deleteLoading     = $state(false);
-  let deleteError       = $state('');
-
-  function openDeleteModal() {
-    deleteConfirmText = '';
-    deleteError = '';
-    deleteModalOpen = true;
-    // Focus the input after the modal renders
-    setTimeout(() => document.getElementById('delete-confirm-input')?.focus(), 80);
-  }
-
-  function closeDeleteModal() {
-    if (deleteLoading) return;
-    deleteModalOpen = false;
-    deleteConfirmText = '';
-    deleteError = '';
-  }
-
-  async function confirmDeleteAccount() {
-    if (!sb || !user) return;
-    const expectedUsername = user.profile?.username || user.email?.split('@')[0] || '';
-    if (deleteConfirmText.trim() !== expectedUsername) {
-      deleteError = 'Le pseudo ne correspond pas.';
-      return;
-    }
-    deleteLoading = true;
-    deleteError = '';
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      const r = await fetch('/api/profile/delete', {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-      const d = await r.json();
-      if (!r.ok && !d.partial) throw new Error(d.error || `HTTP ${r.status}`);
-      // Sign out locally regardless
-      await sb.auth.signOut();
-      window.location.href = '/?deleted=1';
-    } catch (e) {
-      deleteError = e.message;
-      deleteLoading = false;
-    }
-  }
-
-  function pickTheme(t) {
-    activeTheme = t;
-    setTheme(t);
-  }
-
-  onMount(() => {
-    animOn = localStorage.getItem('zik_animations') !== 'off';
-    volVal = parseInt(localStorage.getItem('zik_vol') ?? '50');
-    activeTheme = getTheme();
-    const el = document.getElementById('pref-volume');
-    if (el) el.style.setProperty('--vol', volVal + '%');
-  });
-
-  let proRow = $state(null);
-  let portalBusy = $state(false);
-
-  $effect(() => {
-    if (!user) { proRow = null; return; }
-    fetchPro(sb, user.id).then((r) => (proRow = r)).catch(() => {});
-  });
-
-  async function openPortal() {
-    portalBusy = true;
-    try { await goToStripe(sb, '/api/pro/portal'); }
-    catch (e) { toast(e.message, 'error'); portalBusy = false; }
-  }
-
-  // Load privacy setting from profile when user is available
-  $effect(() => {
-    if (user?.profile) {
-      isPrivate = user.profile.is_private ?? false;
-    }
-  });
-
-  $effect(() => {
-    if (authReady && user && !_discordScrollDone) {
-      const params = new URLSearchParams(window.location.search);
-      const discordParam = params.get('discord');
-
-      if (discordParam === 'linked') {
-        _discordScrollDone = true;
-        // Vider le cache profil pour forcer un rechargement depuis la BDD
-        try { sessionStorage.removeItem('zik_profile_' + user.id); } catch {}
-        sb.from('profiles').select('*').eq('id', user.id).single().then(({ data: p }) => {
-          if (p) {
-            user.profile = p;
-          }
-        });
-        setTimeout(() => document.getElementById('discord-section')?.scrollIntoView({ behavior: 'smooth' }), 300);
-      } else if (discordParam === 'link') {
-        _discordScrollDone = true;
-        setTimeout(() => document.getElementById('discord-section')?.scrollIntoView({ behavior: 'smooth' }), 200);
-      }
-    }
-  });
-
-  function toggleAnim(e) {
-    animOn = e.target.checked;
-    localStorage.setItem('zik_animations', animOn ? 'on' : 'off');
-    document.documentElement.classList.toggle('no-animations', !animOn);
-  }
-
-  function changeVol(e) {
-    volVal = parseInt(e.target.value);
-    e.target.style.setProperty('--vol', volVal + '%');
-    localStorage.setItem('zik_vol', volVal);
-  }
-
-  async function togglePrivacy(e) {
-    const newVal = e.target.checked;
-    if (!sb || !user) return;
-    privLoading = true;
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      const r = await fetch('/api/profile/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ is_private: newVal }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      isPrivate = newVal;
-      // Update cached profile
-      if (user.profile) user.profile.is_private = newVal;
-      toast(newVal ? 'Profil mis en priv\u00e9' : 'Profil mis en public', 'success');
-    } catch (e) {
-      toast('Erreur : ' + e.message, 'error');
-    } finally {
-      privLoading = false;
-    }
-  }
+  let deleteModalOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -224,60 +30,15 @@
     <h1 class="settings-title">Param&egrave;tres</h1>
     <p class="settings-sub">Personnalise ton exp&eacute;rience ZIK.</p>
 
-    <section class="settings-section">
-      <h2 class="settings-section-title">Visuel</h2>
-      <div class="settings-row settings-row-theme">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Th&egrave;me</div>
-          <div class="settings-row-desc">Choisis l&apos;apparence de l&apos;interface.</div>
-        </div>
-        <div class="theme-picker">
-          {#each THEMES as theme (theme.id)}
-            <button
-              class="theme-swatch {activeTheme === theme.id ? 'active' : ''}"
-              style="--swatch-bg:{theme.bg};--swatch-accent:{theme.accent}"
-              onclick={() => pickTheme(theme.id)}
-              aria-label="Th&egrave;me {theme.label}"
-              aria-pressed={activeTheme === theme.id}
-              title={theme.label}
-            >
-              <span class="swatch-preview">
-                <span class="swatch-bar"></span>
-                <span class="swatch-dot"></span>
-              </span>
-              <span class="swatch-label">{theme.label}</span>
-            </button>
-          {/each}
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Animations</div>
-          <div class="settings-row-desc">Active ou d&eacute;sactive les animations de l&apos;interface (cartes, scores, transitions). D&eacute;sactivez si vous ressentez des ralentissements.</div>
-        </div>
-        <label class="toggle-switch" aria-label="Activer les animations">
-          <input type="checkbox" checked={animOn} onchange={toggleAnim}>
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
-      </div>
-    </section>
+    <SettingsSection title="Visuel">
+      <AppearanceSettings />
+    </SettingsSection>
 
-    <section class="settings-section">
-      <h2 class="settings-section-title">Jeu</h2>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Volume par d&eacute;faut</div>
-          <div class="settings-row-desc">Volume de la musique au d&eacute;marrage d&apos;une partie.</div>
-        </div>
-        <div class="settings-vol-wrap">
-          <input id="pref-volume" type="range" min="0" max="100" step="5" value={volVal} oninput={changeVol}>
-          <span class="settings-vol-val">{volVal}%</span>
-        </div>
-      </div>
-    </section>
+    <SettingsSection title="Jeu">
+      <VolumeSetting />
+    </SettingsSection>
 
-    <section class="settings-section">
-      <h2 class="settings-section-title">Aide</h2>
+    <SettingsSection title="Aide">
       <div class="settings-row">
         <div class="settings-row-info">
           <div class="settings-row-label">Parcours d&apos;accueil</div>
@@ -285,156 +46,28 @@
         </div>
         <button class="btn-unlink" onclick={onboarding.start}>Relancer la visite</button>
       </div>
-    </section>
+    </SettingsSection>
 
     {#if authReady && user}
-    <section class="settings-section">
-      <h2 class="settings-section-title">Confidentialit&eacute;</h2>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Profil priv&eacute; &#x1F510;</div>
-          <div class="settings-row-desc">
-            {#if isPrivate}
-              Ton profil est <strong>priv&eacute;</strong> : seul toi peux voir tes stats et meilleurs scores.
-            {:else}
-              Ton profil est <strong>public</strong> : n&apos;importe quel joueur connect&eacute; peut voir tes stats.
-            {/if}
-          </div>
-        </div>
-        <label class="toggle-switch" aria-label="Profil priv&eacute;">
-          <input type="checkbox" checked={isPrivate} onchange={togglePrivacy} disabled={privLoading}>
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
-      </div>
-    </section>
+    <SettingsSection title="Confidentialité">
+      <PrivacySetting />
+    </SettingsSection>
 
-    <section class="settings-section" id="notifications">
-      <h2 class="settings-section-title">Notifications</h2>
+    <SettingsSection title="Notifications" id="notifications">
       <NotificationSettings getToken={async () => (await sb.auth.getSession())?.data?.session?.access_token} />
-    </section>
+    </SettingsSection>
 
-    {#if proRow}
-    <section class="settings-section">
-      <h2 class="settings-section-title">ZIK Pro</h2>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">{proActive(proRow) ? 'ZIK Pro actif' : 'ZIK Pro terminé'}</div>
-          <div class="settings-row-desc">
-            {proActive(proRow) ? "Actif jusqu'au" : 'Terminé le'}
-            {new Date(proRow.current_period_end).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}.
-          </div>
-        </div>
-        {#if proRow.stripe_customer_id}
-          <button class="btn-unlink" onclick={openPortal} disabled={portalBusy}>
-            {portalBusy ? 'Ouverture…' : 'Gérer mon abonnement'}
-          </button>
-        {:else}
-          <a class="btn-unlink" href="/pro#tarifs">Voir les formules</a>
-        {/if}
-      </div>
-    </section>
-    {/if}
+    <ProSetting />
 
-    <section class="settings-section" id="discord-section">
-      <h2 class="settings-section-title">Compte Discord</h2>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Liaison Discord</div>
-          {#if user?.profile?.discord_id}
-            <div class="settings-row-desc">
-              Connecté en tant que <strong>{user.profile.discord_username}</strong>.
-              Tes parties Discord comptent pour ton XP.
-            </div>
-          {:else}
-            <div class="settings-row-desc">
-              Lie ton compte Discord pour gagner de l'XP via le bot ZIK et utiliser /stats.
-            </div>
-          {/if}
-        </div>
-        {#if user?.profile?.discord_id}
-          <div class="discord-linked">
-            {#if user.profile.discord_avatar}
-              <img
-                src="https://cdn.discordapp.com/avatars/{user.profile.discord_id}/{user.profile.discord_avatar}.png"
-                alt="Avatar Discord"
-                class="discord-avatar"
-                width="32" height="32"
-                loading="lazy" decoding="async"
-              />
-            {/if}
-            <button class="btn-unlink" onclick={unlinkDiscord} disabled={discordLoading}>
-              {discordLoading ? 'Déliaison...' : 'Délier'}
-            </button>
-          </div>
-        {:else}
-          <button class="btn-discord-link" onclick={linkDiscord} disabled={discordLoading}>
-            <svg width="16" height="16" viewBox="0 0 127.14 96.36"><path fill="currentColor" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
-            Connecter mon Discord
-          </button>
-        {/if}
-      </div>
-    </section>
+    <DiscordSetting />
 
-    <section class="settings-section settings-section-danger">
-      <h2 class="settings-section-title danger-title">&#x26A0;&#xFE0F; Zone dangereuse</h2>
-      <div class="settings-row settings-row-danger">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Supprimer mon compte</div>
-          <div class="settings-row-desc">
-            Supprime d&eacute;finitivement ton compte, ton profil, tes playlists et tous tes scores. <strong>Cette action est irr&eacute;versible.</strong>
-          </div>
-        </div>
-        <button class="btn-danger" onclick={openDeleteModal}>
-          Supprimer
-        </button>
-      </div>
-    </section>
+    <DangerZone onDelete={() => (deleteModalOpen = true)} />
     {/if}
 
   </div>
 </main>
 
-<!-- ── Delete account confirmation modal ──────────────────────────────────── -->
-<Modal open={deleteModalOpen} onClose={closeDeleteModal} maxWidth="420px">
-  <h2 class="delete-modal-title" id="delete-modal-title">&#x1F6A8; Supprimer mon compte</h2>
-  <p class="delete-modal-desc">
-    Cette action est <strong>irr&eacute;versible</strong>. Ton profil, tes playlists, tes scores et toutes tes donn&eacute;es seront supprim&eacute;s d&eacute;finitivement.
-  </p>
-  <div class="delete-modal-confirm-label">
-    Pour confirmer, tape ton pseudo&nbsp;:
-    <strong class="delete-modal-username">{user?.profile?.username || user?.email?.split('@')[0] || '…'}</strong>
-  </div>
-  <input
-    id="delete-confirm-input"
-    class="delete-modal-input"
-    type="text"
-    bind:value={deleteConfirmText}
-    placeholder="Ton pseudo ici"
-    autocomplete="off"
-    spellcheck="false"
-    disabled={deleteLoading}
-    onkeydown={e => { if (e.key === 'Enter') confirmDeleteAccount(); if (e.key === 'Escape') closeDeleteModal(); }}
-  >
-  {#if deleteError}
-    <p class="delete-modal-error">{deleteError}</p>
-  {/if}
-  <div class="delete-modal-actions">
-    <button class="btn-delete-cancel" onclick={closeDeleteModal} disabled={deleteLoading}>
-      Annuler
-    </button>
-    <button
-      class="btn-delete-confirm"
-      onclick={confirmDeleteAccount}
-      disabled={deleteLoading || deleteConfirmText.trim() !== (user?.profile?.username || user?.email?.split('@')[0] || '')}
-    >
-      {#if deleteLoading}
-        Suppression…
-      {:else}
-        Supprimer d&eacute;finitivement
-      {/if}
-    </button>
-  </div>
-</Modal>
+<DeleteAccountModal bind:open={deleteModalOpen} />
 
 <style>
 .settings-page {
@@ -469,225 +102,5 @@
   font-size: 0.9rem;
   color: var(--mid);
   margin-bottom: 40px;
-}
-
-/* -- Sections -- */
-.settings-section {
-  margin-bottom: 24px;
-  background: rgb(var(--c-glass) / 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  position: relative;
-}
-.settings-section::before {
-  content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(var(--c-glass) / 0.08), transparent);
-  pointer-events: none;
-}
-.settings-section-title {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--dim);
-  padding: 14px 20px 10px;
-  border-bottom: 1px solid var(--border);
-}
-.settings-section :global(.settings-row) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-.settings-section :global(.settings-row:last-child) { border-bottom: none; }
-.settings-section :global(.settings-row-info) { flex: 1; min-width: 0; }
-.settings-section :global(.settings-row-label) { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
-.settings-section :global(.settings-row-desc) { font-size: 0.82rem; color: var(--mid); line-height: 1.45; }
-
-/* -- Theme picker -- */
-.settings-section .settings-row-theme { flex-direction: column; align-items: stretch; gap: 14px; }
-.theme-picker { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
-.theme-swatch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  padding: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s, transform 0.15s;
-  font-family: inherit;
-}
-.theme-swatch:hover { border-color: var(--mid); transform: translateY(-2px); }
-.theme-swatch.active { border-color: var(--accent); }
-.swatch-preview {
-  width: 52px; height: 36px; border-radius: 7px;
-  background: var(--swatch-bg);
-  position: relative; overflow: hidden;
-  display: flex; align-items: flex-end; padding: 5px;
-}
-.swatch-bar {
-  position: absolute; top: 0; left: 0; right: 0; height: 8px;
-  background: var(--swatch-accent); opacity: 0.55;
-}
-.swatch-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--swatch-accent);
-  box-shadow: 0 0 6px var(--swatch-accent);
-  margin-left: auto;
-}
-.swatch-label { font-size: 0.72rem; font-weight: 600; color: var(--mid); letter-spacing: 0.3px; }
-.theme-swatch.active .swatch-label { color: var(--accent); }
-
-/* -- Toggle switch -- */
-.settings-section :global(.toggle-switch) { position: relative; display: inline-block; flex-shrink: 0; cursor: pointer; }
-.settings-section :global(.toggle-switch input) { position: absolute; opacity: 0; width: 0; height: 0; }
-.settings-section :global(.toggle-track) {
-  display: block; width: 44px; height: 24px;
-  background: rgb(var(--c-glass) / 0.12);
-  border-radius: 99px; transition: background 0.2s; position: relative;
-}
-.settings-section :global(.toggle-switch input:checked + .toggle-track) { background: var(--accent); }
-.settings-section :global(.toggle-thumb) {
-  position: absolute; top: 3px; left: 3px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: #fff; transition: transform 0.2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-.settings-section :global(.toggle-switch input:checked + .toggle-track .toggle-thumb) { transform: translateX(20px); }
-
-/* -- Volume slider -- */
-.settings-vol-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-#pref-volume {
-  -webkit-appearance: none; appearance: none;
-  width: 140px; height: 4px; cursor: pointer; border-radius: 99px;
-  background: linear-gradient(to right, var(--accent) var(--vol, 50%), rgb(var(--c-glass) / 0.12) var(--vol, 50%));
-  outline: none; border: none;
-}
-#pref-volume::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 14px; height: 14px; border-radius: 50%;
-  background: var(--accent); cursor: pointer;
-  box-shadow: 0 0 6px rgb(var(--accent-rgb) / 0.5);
-}
-#pref-volume::-moz-range-thumb {
-  width: 14px; height: 14px; border-radius: 50%;
-  border: none; background: var(--accent); cursor: pointer;
-}
-.settings-vol-val { font-size: 0.82rem; font-weight: 600; color: var(--accent); min-width: 36px; text-align: right; }
-
-/* -- Discord -- */
-.discord-linked {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.discord-avatar {
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.btn-discord-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #5865f2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-.btn-discord-link:hover:not(:disabled) { background: #4752c4; }
-.btn-discord-link:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-unlink {
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--clr-border, rgb(var(--c-glass) / 0.12));
-  color: var(--text);
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-unlink:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.08); }
-.btn-unlink:disabled { opacity: 0.6; cursor: not-allowed; }
-a.btn-unlink { text-decoration: none; white-space: nowrap; }
-
-/* -- Danger zone -- */
-.settings-section-danger { border-color: rgba(239,68,68,0.35); }
-.settings-section-danger .danger-title { color: var(--danger); border-bottom-color: rgba(239,68,68,0.2); }
-.settings-row-danger { background: rgba(239,68,68,0.04); }
-.btn-danger {
-  flex-shrink: 0;
-  background: rgba(239,68,68,0.12);
-  border: 1px solid rgba(239,68,68,0.4);
-  color: var(--danger);
-  font-size: 0.82rem; font-weight: 600;
-  padding: 7px 16px; border-radius: 8px;
-  cursor: pointer; font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
-}
-.btn-danger:hover { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.65); }
-
-/* -- Delete modal -- */
-.delete-modal-title {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.25rem; font-weight: 800;
-  color: var(--danger); margin-bottom: 12px;
-}
-.delete-modal-desc { font-size: 0.88rem; color: var(--mid); line-height: 1.55; margin-bottom: 20px; }
-.delete-modal-confirm-label { font-size: 0.82rem; color: var(--dim); margin-bottom: 8px; }
-.delete-modal-username { color: var(--text); }
-.delete-modal-input {
-  width: 100%;
-  background: rgb(var(--c-glass) / 0.05);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text); font-size: 0.9rem; font-family: inherit;
-  padding: 10px 14px; outline: none;
-  transition: border-color 0.2s; box-sizing: border-box; margin-bottom: 6px;
-}
-.delete-modal-input:focus { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
-.delete-modal-error { font-size: 0.78rem; color: var(--danger); margin: 4px 0 12px; }
-.delete-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.btn-delete-cancel {
-  flex: 1;
-  background: rgb(var(--c-glass) / 0.06);
-  border: 1px solid var(--border); color: var(--mid);
-  font-size: 0.88rem; font-family: inherit; font-weight: 500;
-  padding: 10px 16px; border-radius: 10px; cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-delete-cancel:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.1); }
-.btn-delete-cancel:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-delete-confirm {
-  flex: 2;
-  background: linear-gradient(135deg, #b91c1c, #ef4444);
-  border: none; color: #fff;
-  font-size: 0.88rem; font-family: inherit; font-weight: 700;
-  padding: 10px 16px; border-radius: 10px; cursor: pointer;
-  transition: opacity 0.15s, filter 0.15s;
-}
-.btn-delete-confirm:hover:not(:disabled) { filter: brightness(1.12); }
-.btn-delete-confirm:disabled { opacity: 0.35; cursor: not-allowed; filter: none; }
-
-/* -- Responsive -- */
-@media (max-width: 640px) {
-  .settings-section :global(.settings-row) { flex-wrap: wrap; gap: 12px; }
-  .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
-  .theme-swatch { min-width: 0; }
-  .swatch-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 </style>

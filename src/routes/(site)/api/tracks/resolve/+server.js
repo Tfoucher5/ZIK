@@ -2,7 +2,7 @@ import { json } from "@sveltejs/kit";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { parseExpFromUrl } from "$lib/server/services/deezer.js";
-import { enqueueCardEnrichment } from "$lib/server/services/cards.js";
+import { enqueueCardEnrichment } from "$lib/server/services/cards/maintenance.js";
 import {
   checkVideo,
   pinVideoIfEmpty,

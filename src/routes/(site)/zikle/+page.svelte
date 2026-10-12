@@ -1,6 +1,7 @@
 <script>
   import JsonLd from '$lib/components/JsonLd.svelte';
-  import ZikleGame from "$lib/components/ZikleGame.svelte";
+  import ZikleGame from "$lib/components/zikle/ZikleGame.svelte";
+  import ZikleStage from "$lib/components/zikle/ZikleStage.svelte";
 
   let { data } = $props();
 
@@ -64,62 +65,15 @@
   <JsonLd json={jsonLd} />
 </svelte:head>
 
-<main class="zikle-page">
-  <div class="zikle-glow" aria-hidden="true"></div>
-
-  <!-- La scène est volontairement centrée sans en-tête visible (cf. styles).
+<ZikleStage safeArea empty={data.date ? "" : "Pas de chanson aujourd'hui. Reviens un peu plus tard."}>
+  <!-- La scène est volontairement centrée sans en-tête visible (cf. ZikleStage).
        Le h1 reste nécessaire pour la structure du document et le référencement :
        on le sort du flux visuel au lieu de l'empiler au-dessus du jeu. -->
   <h1 class="sr-only">
     Zikle{data.dayNumber ? ` #${data.dayNumber}` : ''} - devine la chanson du jour
   </h1>
 
-  {#if !data.date}
-    <p class="zikle-empty">Pas de chanson aujourd'hui. Reviens un peu plus tard.</p>
-  {:else}
+  {#if data.date}
     <ZikleGame date={data.date} dayNumber={data.dayNumber} previewUrl={data.previewUrl} />
   {/if}
-</main>
-
-<style>
-  /* Une seule zone plein écran : la scène est centrée dans le viewport,
-     sans en-tête empilé au-dessus (sinon le jeu est poussé hors de l'écran). */
-  .zikle-page {
-    position: relative;
-    /* La nav est fixe : on réserve sa hauteur sans dépasser le viewport,
-       sinon la page défile dès qu'on interagit. */
-    min-height: calc(100dvh - var(--nav-h));
-    margin-top: var(--nav-h);
-    padding: 32px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .zikle-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: min(120vw, 900px);
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgb(var(--accent-rgb) / 0.09), transparent 62%);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .zikle-empty {
-    color: var(--mid);
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  @media (max-width: 768px) {
-    .zikle-page {
-      /* Laisse la place à la bottom-nav mobile */
-      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    }
-  }
-</style>
+</ZikleStage>

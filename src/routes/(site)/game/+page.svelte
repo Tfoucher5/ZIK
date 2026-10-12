@@ -1,62 +1,89 @@
 <script>
   import { onMount, onDestroy, tick } from 'svelte';
-  import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
-  import ReportModal from '$lib/components/ReportModal.svelte';
+  import ReportModal from '$lib/components/report/ReportModal.svelte';
   import AchievementToast from '$lib/components/AchievementToast.svelte';
-  import Modal from '$lib/components/Modal.svelte';
-  import Card from '$lib/components/card/Card.svelte';
-  import CardDrop from '$lib/components/card/CardDrop.svelte';
-  import CardTray from '$lib/components/card/CardTray.svelte';
   import CardViewer from '$lib/components/card/CardViewer.svelte';
+  import GameHeader from '$lib/components/game/GameHeader.svelte';
+  import PlayerList from '$lib/components/game/PlayerList.svelte';
+  import Deck from '$lib/components/game/Deck.svelte';
+  import AnswerSlots from '$lib/components/game/AnswerSlots.svelte';
+  import StartPanel from '$lib/components/game/StartPanel.svelte';
+  import AnswerBar from '$lib/components/game/AnswerBar.svelte';
+  import HistoryList from '$lib/components/game/HistoryList.svelte';
+  import RoundReveal from '$lib/components/game/RoundReveal.svelte';
+  import GameOver from '$lib/components/game/GameOver.svelte';
+  import GameChat from '$lib/components/game/GameChat.svelte';
+  import QuitModal from '$lib/components/game/QuitModal.svelte';
+  import InviteFriendsModal from '$lib/components/game/InviteFriendsModal.svelte';
+  import { GameAudio, savedVolume } from '$lib/components/game/gameAudio.js';
+  import { joinRoom } from '$lib/components/game/gameSocket.js';
   import { createSupabaseClient } from '$lib/supabase.js';
-  import { dicebear } from '$lib/utils.js';
 
   let { data } = $props();
   const sb = createSupabaseClient(data.env?.supabaseUrl, data.env?.supabaseAnonKey);
 
-  // URL params — read once on mount
-  let ROOM_ID  = 'pop';
-  let USERNAME = 'Joueur';
-  let USER_ID  = null;
-  let IS_GUEST = true;
+  // Paramètres d'URL, lus au montage
+  let ROOM_ID = $state('pop');
+  let USERNAME = $state('Joueur');
+  let USER_ID = $state(null);
+  let IS_GUEST = $state(true);
 
-  // ── Game state ───────────────────────────────────────────────────────────────
-  let roomLabel   = $state('');
-  let roundInfo   = $state('En attente\u2026');
-  let timerPct    = $state(100);
-  let timerSecs   = $state(null);
-  let deckSpin    = $state(false);
-  let players     = $state([]);
-  let history     = $state([]);
+  const emptySlots = () => ({ artist: { val: '???', state: null }, title: { val: '???', state: null }, feats: [], extras: [] });
+  const emptyQcm = () => ({ choices: [], chosen: null, reveal: null, result: null, answered: 0, total: 0 });
+
+  // ── État de la partie ──
+  let roomLabel = $state('');
+  let roundInfo = $state('En attente…');
+  let timerPct = $state(100);
+  let timerSecs = $state(null);
+  let deckSpin = $state(false);
+  let players = $state([]);
+  let history = $state([]);
   let currentRoundInfo = $state(null);
-  let slotArtist  = $state({ val: '???', state: null });
-  let slotTitle   = $state({ val: '???', state: null });
-  let featSlots   = $state([]);
-  let extraSlots  = $state([]);
-  let coverSrc    = $state('');
-  let showCover   = $state(false);
-  let feedback    = $state({ msg: '', cls: '' });
+  let slots = $state(emptySlots());
+  let coverSrc = $state('');
+  let showCover = $state(false);
+  let feedback = $state({ msg: '', cls: '' });
   let summaryShow = $state(false);
-  let summaryReason  = $state('');
-  let summaryFinder  = $state('');
-  let errorMsg    = $state('');
+  let summaryReason = $state('');
+  let summaryFinder = $state('');
+  let errorMsg = $state('');
   let joinConflict = $state(null);
-  let takenOver    = $state(false);
-  let _joinSocket = null;
+  let takenOver = $state(false);
+  let gameMode = $state('classic');
+  let qcm = $state(emptyQcm());
+  let guessVal = $state('');
+  let guessDisabled = $state(true);
+  let showDcBanner = $state(false);
+  let volume = $state(50);
+  let roundLoading = $state(false);
+  let syncWaiting = $state(false);
+  let syncReady = $state(0);
+  let syncTotal = $state(0);
 
-  // Le jeton de session prouve au serveur que userId est bien le nôtre :
-  // sans lui, pas de carte (et le serveur ne croit pas le userId sur parole)
-  async function joinPayload(extra = {}) {
-    const token = IS_GUEST ? null : (await sb.auth.getSession())?.data?.session?.access_token ?? null;
-    return { roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST, token, ...extra };
-  }
-
-  // Reprend la main sur l'autre onglet : il sera déconnecté à notre place
-  function takeOverSession() {
-    joinConflict = null;
-    joinPayload({ takeover: true }).then((p) => _joinSocket?.emit('join_room', p));
-  }
+  // Lancement et relance
+  let showStart = $state(true);
+  let startDisabled = $state(false);
+  let startLoading = $state(false);
+  let adminLocked = $state(false);
+  let adminAnnounceMsg = $state('');
+  let isAdmin = $state(false);
+  let autoStart = $state(false);
+  let hasOwner = $state(false);
+  let countdownVal = $state(0);
+  let showCountdown = $state(false);
+  let gameoverShow = $state(false);
+  let gameoverScores = $state([]);
+  let shareResultId = $state(null);
+  // Une partie relancée par un autre peut tourner pendant qu'on lit encore les
+  // scores : on retient la manche au lieu d'y basculer de force
+  const REJOIN_DELAY = 15;
+  let heldRound = $state(null);
+  let rejoinIn = $state(0);
+  // 'replay' : la partie va se relancer ; 'rejoin' : une partie tourne déjà
+  let countdownMode = $state(null);
+  let iRequestedReplay = false;
 
   // Cartes : celle de la manche, celles gagnées depuis le début de la partie
   let roundCard = $state(null);
@@ -65,137 +92,76 @@
   let roundsSeen = $state(0);
   let roundTotal = $state(10);
   let cardsOff = $state(null);
-  let quitAsked = $state(false);
 
-  // Départ en pleine partie d'une room qui donne des cartes : on confirme en
-  // disant ce que deviennent les cartes du joueur
-  //   lose : cartes en jeu, pas encore sécurisées (perdues en partant)
-  //   keep : cartes en jeu, déjà sécurisées
-  //   none : pas encore de carte dans cette partie
+  // Fenêtres
+  let quitAsked = $state(false);
+  let inviteOpen = $state(false);
+  let canInviteFriends = $state(false);
+  let reportOpen = $state(false);
+  let reportType = $state('user');
+  let reportUsername = $state('');
+  let reportUserId = $state(null);
+  let achToasts = $state([]);
+  let chatOpen = $state(false);
+  let chatMessages = $state([]);
+  let chatUnread = $state(0);
+
+  let socket = null;
+  let player = null;
+  let prevScores = {};
+  const timers = {};
+
+  const canReplay = $derived(!hasOwner || autoStart || isAdmin);
+  const getToken = async () => (await sb.auth.getSession())?.data?.session?.access_token ?? null;
+
+  function later(key, ms, fn) {
+    clearTimeout(timers[key]);
+    timers[key] = setTimeout(fn, ms);
+  }
+
+  function showFeedback(msg, cls) {
+    feedback = { msg, cls };
+    later('feedback', 2600, () => { feedback = { msg: '', cls: '' }; });
+  }
+
+  // Départ en pleine partie d'une room qui donne des cartes
   function quitCase() {
     if (IS_GUEST || cardsOff || gameoverShow || roundsSeen === 0) return null;
     if (!cardsInPlay.length) return 'none';
     return roundsSeen < Math.ceil(roundTotal / 2) ? 'lose' : 'keep';
   }
-
   function onBack(e) {
     if (!quitCase()) return;
     e.preventDefault();
     quitAsked = true;
   }
-
   // Fermeture de l'onglet avec des cartes à perdre : alerte du navigateur
   function onBeforeUnload(e) {
     if (quitCase() === 'lose') e.preventDefault();
   }
-  let showStart   = $state(true);
-  let startDisabled = $state(false);
-  let startLabel  = $state('&#x1F3AE; Lancer la partie');
-  let adminLocked   = $state(false);
-  let adminAnnounceMsg = $state('');
-  let _announceTimer = null;
-  let gameoverShow = $state(false);
-  let gameoverScores = $state([]);
-  // Relance : une nouvelle partie peut tourner pendant qu'on lit encore les
-  // scores. On retient la manche en cours au lieu d'y basculer de force.
-  const REJOIN_DELAY = 15;
-  let heldRound = $state(null);
-  let rejoinIn = $state(0);
-  // 'replay'  : la partie va se relancer toute seule
-  // 'rejoin'  : une partie tourne déjà, on va y entrer
-  let countdownMode = $state(null);
-  let iRequestedReplay = false;
-  let _rejoinTimer = null;
-  let achToasts = $state([]);
-  let shareResultId = $state(null);
-  let shareCopied = $state(false);
-  let guessVal    = $state('');
-  let guessDisabled = $state(true);
-  let gameMode    = $state('classic');
-  let qcmChoices       = $state([]);
-  let qcmChosen        = $state(null);
-  let qcmReveal        = $state(null);
-  let qcmChoiceResult  = $state(null);   // { correct, pts } after submitting
-  let qcmAnsweredCount = $state(0);
-  let qcmTotalPlayers  = $state(0);
-  let showDcBanner = $state(false);
-  let volValue    = $state(50);
 
-  // Signalement
-  let reportOpen     = $state(false);
-  let reportType     = $state('user');
-  let reportUsername = $state('');
-  let reportUserId   = $state(null);
-  let openMenuFor    = $state(null); // nom du joueur dont le dropdown est ouvert
+  function setVolume(v) {
+    volume = v;
+    player?.setVolume(v);
+  }
 
   function openUserReport(p) {
-    reportType     = 'user';
+    reportType = 'user';
     reportUsername = p.name;
-    reportUserId   = p.userId || null;
-    reportOpen     = true;
-    openMenuFor    = null;
+    reportUserId = p.userId || null;
+    reportOpen = true;
   }
   function openBugReport() {
     reportType = 'bug';
     reportOpen = true;
   }
 
-  // ── Inviter ses amis dans la room courante ──
-  let canInviteFriends = $state(false);
-  let inviteOpen      = $state(false);
-  let roomLinkCopied  = $state(false);
-
-  async function copyRoomLink() {
-    await navigator.clipboard.writeText(`https://www.zik-music.fr/room/${ROOM_ID}`);
-    roomLinkCopied = true;
-    setTimeout(() => (roomLinkCopied = false), 2000);
-  }
-  let friendsList     = $state([]);
-  let friendsLoading  = $state(false);
-  let invitedIds      = $state([]);
-  let invitingId      = $state(null);
-
-  async function openInviteFriends() {
-    inviteOpen = true;
-    friendsLoading = true;
-    invitedIds = [];
-    try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch(`/api/social/${USER_ID}`, { headers: { Authorization: `Bearer ${token}` } });
-      const d = await r.json();
-      friendsList = d.friends || [];
-    } catch {
-      friendsList = [];
-    }
-    friendsLoading = false;
-  }
-
-  async function inviteFriend(f) {
-    if (invitingId) return;
-    invitingId = f.id;
-    try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
-      const r = await fetch('/api/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ targetId: f.id, roomId: ROOM_ID }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      invitedIds = [...invitedIds, f.id];
-    } catch (e) {
-      showFeedback(e.message, 'cold');
-    }
-    invitingId = null;
-  }
-
-  let _friendSending = false;
+  let friendSending = false;
   async function addFriend(p) {
-    openMenuFor = null;
-    if (_friendSending || !sb) return;
-    _friendSending = true;
+    if (friendSending) return;
+    friendSending = true;
     try {
-      const token = (await sb.auth.getSession())?.data?.session?.access_token;
+      const token = await getToken();
       if (!token) throw new Error('Connecte-toi pour ajouter des amis.');
       const r = await fetch('/api/friend', {
         method: 'POST',
@@ -204,395 +170,11 @@
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      showFeedback(
-        d.friendStatus === 'friends'
-          ? `\u{1F91D} Vous êtes amis avec ${p.name} !`
-          : `✅ Demande d'ami envoyée à ${p.name}`,
-        'good'
-      );
+      showFeedback(d.friendStatus === 'friends' ? `\u{1F91D} Vous êtes amis avec ${p.name} !` : `✅ Demande d'ami envoyée à ${p.name}`, 'good');
     } catch (e) {
       showFeedback(e.message, 'cold');
     }
-    _friendSending = false;
-  }
-  let isAdmin     = $state(false);
-  let autoStart   = $state(false);
-  let hasOwner    = $state(false);
-  let countdownVal = $state(0);
-  let showCountdown = $state(false);
-  let revealStep = $state(0);
-  let _revealTimers = [];
-
-  let socket = null;
-  let ytPlayer = null;
-  let ytReady  = false;
-  let pendingLoad = null;
-  let _roundActive = false;
-  let _hasJoined   = false;
-  let _lastVideo   = null;
-  let _prevScores  = {};
-  let feedTimer    = null;
-  let countdownInterval = null;
-  let syncWaiting  = $state(false);
-  let syncReady    = $state(0);
-  let syncTotal    = $state(0);
-  let roundLoading = $state(false);
-  let _roundLoadingTimer = null;
-  let _waitingForSync = false;
-  let _syncPaused    = false;
-  // Extrait de la manche suivante, téléchargé pendant la manche en cours
-  let _nextAudio   = null;
-  let _playingBlob = null;
-  let _adminPaused   = false;
-  let _usingIframe   = false;
-  let _metaGuardInterval = null;
-  let _syncAnchor    = null; // timestamp (ms) où la lecture était à startSeconds — référence commune
-  let _driftInterval = null;
-
-  // Chat
-  let chatOpen     = $state(false);
-  let chatMessages = $state([]);
-  let chatInput    = $state('');
-  let chatUnread   = $state(0);
-  let chatEl       = null;
-
-  // Chat déplaçable / redimensionnable (desktop uniquement)
-  const CHAT_W_MIN = 260, CHAT_W_MAX = 560, CHAT_W_DEFAULT = 300;
-  let chatPos      = $state(null);   // { x, y } — null = position par défaut (ancré en bas à droite)
-  let chatW        = $state(CHAT_W_DEFAULT);
-  let isMobileView = $state(false);
-  let _chatDrag    = null;
-  let _chatResize  = null;
-
-  const maxScore = $derived(Math.max(1, ...players.map(p => p.score)));
-  const clockStr = $derived(
-    timerSecs === null
-      ? '--:--'
-      : `${String(Math.floor(timerSecs / 60)).padStart(2, '0')}:${String(timerSecs % 60).padStart(2, '0')}`
-  );
-
-  const chatStyle = $derived(
-    isMobileView ? '' :
-    chatPos ? `left:${chatPos.x}px;top:${chatPos.y}px;right:auto;bottom:auto;width:${chatW}px;` :
-    chatW !== CHAT_W_DEFAULT ? `width:${chatW}px;` : ''
-  );
-
-  function clampChatPos(p) {
-    const maxX = Math.max(0, window.innerWidth - 80);
-    const maxY = Math.max(0, window.innerHeight - 60);
-    return { x: Math.min(Math.max(0, p.x), maxX), y: Math.min(Math.max(0, p.y), maxY) };
-  }
-
-  function initChatPrefs() {
-    isMobileView = window.innerWidth <= 640;
-    try {
-      const w = parseInt(localStorage.getItem('zik_chat_w'));
-      if (w >= CHAT_W_MIN && w <= CHAT_W_MAX) chatW = w;
-      const p = JSON.parse(localStorage.getItem('zik_chat_pos') || 'null');
-      if (p && typeof p.x === 'number' && typeof p.y === 'number') chatPos = clampChatPos(p);
-    } catch { /* localStorage indisponible */ }
-  }
-
-  function saveChatPrefs() {
-    try {
-      localStorage.setItem('zik_chat_w', String(chatW));
-      if (chatPos) localStorage.setItem('zik_chat_pos', JSON.stringify(chatPos));
-    } catch { /* localStorage indisponible */ }
-  }
-
-  function chatDragStart(e) {
-    if (isMobileView || e.target.closest('.g-chat-close')) return;
-    const rect = e.currentTarget.parentElement.getBoundingClientRect();
-    _chatDrag = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-  function chatDragMove(e) {
-    if (!_chatDrag) return;
-    chatPos = clampChatPos({ x: e.clientX - _chatDrag.dx, y: e.clientY - _chatDrag.dy });
-  }
-  function chatDragEnd() {
-    if (!_chatDrag) return;
-    _chatDrag = null;
-    saveChatPrefs();
-  }
-
-  function chatResizeStart(e) {
-    if (isMobileView) return;
-    _chatResize = { startX: e.clientX, startW: chatW, startPosX: chatPos?.x ?? null };
-    e.currentTarget.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  }
-  function chatResizeMove(e) {
-    if (!_chatResize) return;
-    const dx = e.clientX - _chatResize.startX;
-    const w = Math.min(CHAT_W_MAX, Math.max(CHAT_W_MIN, _chatResize.startW - dx));
-    if (_chatResize.startPosX !== null) {
-      chatPos = { x: _chatResize.startPosX + (_chatResize.startW - w), y: chatPos.y };
-    }
-    chatW = w;
-  }
-  function chatResizeEnd() {
-    if (!_chatResize) return;
-    _chatResize = null;
-    saveChatPrefs();
-  }
-
-  async function shareResult() {
-    if (!shareResultId) return;
-    const url = `${location.origin}/results/${shareResultId}`;
-    const me = gameoverScores.find(p => p.name === USERNAME);
-    const text = me ? `J'ai marqué ${me.score} pts au blind test "${roomLabel}" sur ZIK ! Tu fais mieux ?` : 'Défie-moi au blind test sur ZIK !';
-    if (navigator.share) {
-      try { await navigator.share({ title: 'Mon score ZIK', text, url }); return; } catch { /* annulé */ }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      shareCopied = true;
-      setTimeout(() => { shareCopied = false; }, 2500);
-    } catch { /* clipboard indisponible */ }
-  }
-
-  function savedVol() { return browser ? parseInt(localStorage.getItem('zik_vol') ?? '50') : 50; }
-  function setVol(v) {
-    volValue = v;
-    if (ytPlayer?.setVolume) ytPlayer.setVolume(v);
-    const previewAudio = browser ? document.getElementById('previewAudio') : null;
-    if (previewAudio) previewAudio.volume = v / 100;
-    document.getElementById('volSlider')?.style.setProperty('--vol', v + '%');
-    if (browser) localStorage.setItem('zik_vol', v);
-  }
-
-  function _createYTPlayer() {
-    window.onYouTubeIframeAPIReady = () => {
-      ytPlayer = new window.YT.Player('yt-player', {
-        height: '1', width: '1',
-        playerVars: { autoplay: 1, controls: 0, enablejsapi: 1, playsinline: 1 },
-        events: {
-          onReady(e) {
-            ytReady = true;
-            e.target.setVolume(savedVol());
-            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-              document.addEventListener('touchstart', function iosUnlock() {
-                document.removeEventListener('touchstart', iosUnlock, true);
-                ytPlayer.mute();
-                ytPlayer.playVideo();
-                setTimeout(() => { if (!_roundActive) ytPlayer.pauseVideo(); }, 200);
-              }, { capture: true, once: true });
-            }
-            if (pendingLoad) { loadVideo(pendingLoad.id, pendingLoad.start); pendingLoad = null; }
-          },
-          onStateChange(e) {
-            if (e.data === window.YT.PlayerState.PLAYING) {
-              ytPlayer.setVolume(savedVol());
-              ytPlayer.unMute();
-              startMediaGuard();
-              if (_waitingForSync && socket) {
-                socket.emit('player_ready');
-                _syncPaused = true;
-                ytPlayer.pauseVideo();
-              } else if (_syncAnchor !== null && _lastVideo && ytPlayer?.getCurrentTime) {
-                // Arrivée en cours de round : on recale direct sur la référence
-                const expected = _lastVideo.startSeconds + (Date.now() - _syncAnchor) / 1000;
-                if (Math.abs(ytPlayer.getCurrentTime() - expected) > 2) ytPlayer.seekTo(expected, true);
-              }
-            }
-            if (!_syncPaused && !_adminPaused && _roundActive && _lastVideo && (e.data === window.YT.PlayerState.ENDED || e.data === window.YT.PlayerState.PAUSED)) {
-              const elapsed = _syncAnchor !== null
-                ? (Date.now() - _syncAnchor) / 1000
-                : (Date.now() - _lastVideo.startedAt) / 1000;
-              loadVideo(_lastVideo.videoId, _lastVideo.startSeconds + elapsed);
-            }
-          }
-        }
-      });
-    };
-    if (!document.getElementById('yt-api-script')) {
-      const s = document.createElement('script');
-      s.id  = 'yt-api-script';
-      s.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(s);
-    } else if (window.YT?.Player) {
-      window.onYouTubeIframeAPIReady();
-    }
-  }
-
-  function loadVideo(videoId, startSeconds) {
-    if (!ytReady || !ytPlayer) {
-      pendingLoad = { id: videoId, start: startSeconds };
-      _createYTPlayer();
-      return;
-    }
-    ytPlayer.mute();
-    ytPlayer.loadVideoById({ videoId, startSeconds });
-  }
-  const _FAKE_META = { title: '♪ ♪ ♪', artist: '???', album: 'ZIK — Blind Test', artwork: [{ src: '/favicon/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' }] };
-
-  function lockMediaSession() {
-    if (!('mediaSession' in navigator)) return;
-    try {
-      const fake = new MediaMetadata(_FAKE_META);
-      Object.defineProperty(navigator.mediaSession, 'metadata', {
-        get: () => fake,
-        set: () => {},
-        configurable: true,
-      });
-    } catch {}
-    navigator.mediaSession.playbackState = 'playing';
-  }
-
-  function startMediaGuard() {
-    lockMediaSession();
-    clearInterval(_metaGuardInterval);
-    _metaGuardInterval = setInterval(lockMediaSession, 200);
-  }
-
-  function stopMediaGuard() {
-    clearInterval(_metaGuardInterval);
-    _metaGuardInterval = null;
-    try {
-      Object.defineProperty(navigator.mediaSession, 'metadata', {
-        get: () => null,
-        set: (v) => {},
-        configurable: true,
-      });
-    } catch {}
-    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
-  }
-
-  function prefetchAudio(url) {
-    dropPrefetch();
-    const entry = { url, blobUrl: null, ctrl: new AbortController(), start: null };
-    entry.start = () => {
-      entry.start = null;
-      fetch(url, { signal: entry.ctrl.signal })
-        .then(r => (r.ok ? r.blob() : Promise.reject()))
-        .then(b => { if (_nextAudio === entry) entry.blobUrl = URL.createObjectURL(b); })
-        .catch(() => {});
-    };
-    _nextAudio = entry;
-    // Pas pendant le chargement de l'extrait courant : on ne lui vole pas la bande passante
-    if (!_waitingForSync) entry.start();
-  }
-
-  function dropPrefetch() {
-    if (!_nextAudio) return;
-    _nextAudio.ctrl.abort();
-    if (_nextAudio.blobUrl) URL.revokeObjectURL(_nextAudio.blobUrl);
-    _nextAudio = null;
-  }
-
-  // URL à lire : la copie locale si le préchargement a abouti
-  function audioSource(url) {
-    if (_playingBlob) { URL.revokeObjectURL(_playingBlob); _playingBlob = null; }
-    if (_nextAudio?.url === url && _nextAudio.blobUrl) {
-      _playingBlob = _nextAudio.blobUrl;
-      _nextAudio = null;
-      return _playingBlob;
-    }
-    dropPrefetch();
-    return url;
-  }
-
-  function loadAudio(audioUrl, startSeconds, onReady) {
-    const audio = document.getElementById('previewAudio');
-    if (!audio) return;
-    if (ytPlayer?.stopVideo) ytPlayer.stopVideo();
-    audio.pause();
-    audio.onloadedmetadata = null;
-    audio.onended = null;
-    audio.oncanplaythrough = null;
-    startMediaGuard();
-    audio.src = audioSource(audioUrl);
-    audio.volume = savedVol() / 100;
-    if (onReady) {
-      let readySent = false;
-      const markReady = () => {
-        if (readySent) return;
-        readySent = true;
-        clearTimeout(readyFallback);
-        onReady();
-      };
-      const readyFallback = setTimeout(markReady, 4000);
-      audio.oncanplaythrough = markReady;
-    }
-    audio.onloadedmetadata = () => {
-      audio.currentTime = startSeconds;
-      // La lecture démarre au signal round_start_sync (tous les joueurs en même temps).
-      // Si le signal est déjà passé (reconnexion), on démarre direct au bon endroit.
-      if (_syncAnchor !== null) playSyncedAudio();
-    };
-    audio.onended = () => {
-      if (_roundActive) { audio.currentTime = 0; audio.play().catch(() => {}); }
-    };
-    audio.load();
-  }
-
-  // Position attendue dans l'extrait selon l'horloge de synchro (gère la boucle audio)
-  function syncedPos(duration = null) {
-    if (!_lastVideo) return 0;
-    const elapsed = _syncAnchor !== null ? (Date.now() - _syncAnchor) / 1000 : 0;
-    let pos = _lastVideo.startSeconds + elapsed;
-    if (duration && pos >= duration) pos = (pos - duration) % duration;
-    return pos;
-  }
-
-  function playSyncedAudio() {
-    const audio = browser ? document.getElementById('previewAudio') : null;
-    if (!audio || !_lastVideo) return;
-    if (audio.readyState >= 1) audio.currentTime = syncedPos(audio.duration || null);
-    audio.play().catch(() => {
-      const resume = () => {
-        audio.currentTime = syncedPos(audio.duration || null);
-        audio.play().catch(() => {});
-        document.removeEventListener('pointerdown', resume, true);
-        document.removeEventListener('keydown',     resume, true);
-      };
-      document.addEventListener('pointerdown', resume, true);
-      document.addEventListener('keydown',     resume, true);
-    });
-  }
-
-  // Correction de dérive : recale la lecture si elle s'écarte de plus de 2s de la référence
-  function startDriftGuard() {
-    clearInterval(_driftInterval);
-    _driftInterval = setInterval(() => {
-      if (!_roundActive || _syncAnchor === null || _syncPaused || _adminPaused || !_lastVideo) return;
-      if (_usingIframe) {
-        if (ytPlayer?.getPlayerState?.() === 1 && ytPlayer?.getCurrentTime) {
-          const expected = _lastVideo.startSeconds + (Date.now() - _syncAnchor) / 1000;
-          if (Math.abs(ytPlayer.getCurrentTime() - expected) > 2) ytPlayer.seekTo(expected, true);
-        }
-      } else {
-        const audio = document.getElementById('previewAudio');
-        if (audio && !audio.paused && audio.duration) {
-          const expected = syncedPos(audio.duration);
-          if (Math.abs(audio.currentTime - expected) > 2) audio.currentTime = expected;
-        }
-      }
-    }, 5000);
-  }
-
-  function stopVideo() {
-    if (ytReady && ytPlayer) ytPlayer.stopVideo();
-    const audio = document.getElementById('previewAudio');
-    if (audio) { audio.onended = null; audio.oncanplaythrough = null; audio.pause(); audio.src = ''; }
-  }
-
-  function showFeedback(msg, cls) {
-    clearTimeout(feedTimer);
-    feedback = { msg, cls };
-    feedTimer = setTimeout(() => { feedback = { msg: '', cls: '' }; }, 2600);
-  }
-
-  function parseFeat(artistStr) {
-    if (!artistStr) return { main: '', feat: null };
-    const m = artistStr.match(/^(.+?)(?:\s*\((?:feat\.?|ft\.?|featuring)\s+([^)]+)\)|\s+(?:feat\.?|ft\.?|featuring)\s+(.+))$/i);
-    if (m) return { main: m[1].trim(), feat: (m[2] || m[3]).trim() };
-    const ci = artistStr.indexOf(', ');
-    if (ci > 0) return { main: artistStr.slice(0, ci).trim(), feat: artistStr.slice(ci + 2).trim() };
-    const am = artistStr.match(/^(.+?)\s+&\s+(.+)$/);
-    if (am) return { main: am[1].trim(), feat: am[2].trim() };
-    return { main: artistStr, feat: null };
+    friendSending = false;
   }
 
   function requestGame() {
@@ -600,21 +182,19 @@
     iRequestedReplay = true;
     socket.emit('request_new_game');
     startDisabled = true;
-    startLabel = 'Chargement\u2026';
+    startLoading = true;
   }
 
   function stopRejoinCountdown() {
-    clearInterval(_rejoinTimer);
-    _rejoinTimer = null;
+    clearInterval(timers.rejoin);
     rejoinIn = 0;
     countdownMode = null;
   }
-
   function startRejoinCountdown(mode) {
     stopRejoinCountdown();
     countdownMode = mode;
     rejoinIn = REJOIN_DELAY;
-    _rejoinTimer = setInterval(() => {
+    timers.rejoin = setInterval(() => {
       rejoinIn -= 1;
       if (rejoinIn > 0) return;
       const m = countdownMode;
@@ -624,392 +204,251 @@
     }, 1000);
   }
 
-  // Bascule vers la partie en cours et cale la lecture l\u00e0 o\u00f9 elle en est.
+  // Bascule vers la partie en cours et cale la lecture là où elle en est
   function joinRunningGame() {
     stopRejoinCountdown();
     const d = heldRound;
     heldRound = null;
     gameoverShow = false;
     if (!d) return;
-    if (d.audioUrl) {
-      _usingIframe = false;
-      loadAudio(d.audioUrl, d.startSeconds, () => socket?.emit('player_ready'));
-      if (!_waitingForSync) playSyncedAudio();
-    } else {
-      _usingIframe = true;
-      loadVideo(d.videoId, d.startSeconds);
-    }
-  }
-
-
-  function launchConfetti() {
-    if (!browser) return;
-    const container = document.createElement('div');
-    container.className = 'confetti-container';
-    document.body.appendChild(container);
-    const colors = ['#fbbf24','#a855f7','#3b82f6','#10b981','#f43f5e','#06b6d4','#e879f9','#84cc16'];
-    for (let i = 0; i < 130; i++) {
-      const el = document.createElement('div');
-      el.className = 'confetti-piece';
-      el.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*1.8}s;animation-duration:${2.5+Math.random()*2.5}s;width:${5+Math.random()*7}px;height:${6+Math.random()*9}px;transform:rotate(${Math.random()*360}deg);border-radius:${Math.random()>0.5?'50%':'2px'};`;
-      container.appendChild(el);
-    }
-    setTimeout(() => { if (container.parentNode) container.remove(); }, 7000);
+    player.playRound(d);
+    if (d.audioUrl && !player.waitingForSync) player.playSynced();
   }
 
   function startCountdownUI(seconds) {
-    clearInterval(countdownInterval);
+    clearInterval(timers.countdown);
     countdownVal = seconds;
     showCountdown = true;
-    countdownInterval = setInterval(() => {
-      countdownVal--;
-      if (countdownVal <= 0) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-        showCountdown = false;
-      }
+    timers.countdown = setInterval(() => {
+      if (--countdownVal <= 0) stopCountdownUI();
     }, 1000);
   }
-
   function stopCountdownUI() {
-    clearInterval(countdownInterval);
-    countdownInterval = null;
+    clearInterval(timers.countdown);
     showCountdown = false;
     countdownVal = 0;
   }
 
-  function submitGuess() {
-    const val = guessVal.trim();
-    if (val && !guessDisabled && socket) {
-      socket.emit('submit_guess', val);
-      guessVal = '';
-      tick().then(() => document.getElementById('guessInput')?.focus());
-    }
+  function submitGuess(val) {
+    if (!socket) return;
+    socket.emit('submit_guess', val);
+    tick().then(() => document.getElementById('guessInput')?.focus());
   }
-
   function submitChoice(index) {
-    if (qcmChosen !== null || guessDisabled || !socket) return;
-    qcmChosen = index;
+    if (qcm.chosen !== null || guessDisabled || !socket) return;
+    qcm.chosen = index;
     socket.emit('submit_choice', { choiceIndex: index });
-  }
-
-  function chatHue(name) {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-    return h;
-  }
-  function chatTime(ts) {
-    const d = new Date(ts);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  }
-
-  function sendChat() {
-    const text = chatInput.trim();
-    if (!text || !socket) return;
-    socket.emit('send_chat', text);
-    chatInput = '';
   }
 
   function toggleChat() {
     chatOpen = !chatOpen;
-    if (chatOpen) {
-      chatUnread = 0;
-      tick().then(() => { if (chatEl) chatEl.scrollTop = chatEl.scrollHeight; });
-    }
+    if (chatOpen) chatUnread = 0;
   }
 
-  onMount(() => {
-    initChatPrefs();
-    const onResize = () => { isMobileView = window.innerWidth <= 640; if (chatPos) chatPos = clampChatPos(chatPos); };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  });
-
-  onMount(async () => {
-    lockMediaSession();
-    const P  = new URLSearchParams(location.search);
-    ROOM_ID  = P.get('roomId')   || 'pop';
-    USERNAME = P.get('username') || sessionStorage.getItem('zik_uname') || 'Joueur';
-    USER_ID  = P.get('userId')   || sessionStorage.getItem('zik_uid')   || null;
-    IS_GUEST = P.get('isGuest') === '1' || !USER_ID;
-    gameMode = P.get('gameMode') || 'classic';
-    canInviteFriends = !IS_GUEST && !!USER_ID && !!sb;
-
-    volValue = savedVol();
-    setTimeout(() => document.getElementById('volSlider')?.style.setProperty('--vol', volValue + '%'), 50);
-    startDriftGuard();
-
-    // Load socket.io dynamically
-    const { io } = await import('socket.io-client');
-    socket = io({ transports: ['websocket', 'polling'], reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000, timeout: 10000 });
-
-    socket.on('connect', () => {
-      showDcBanner = false;
-      if (_hasJoined) joinPayload().then((p) => socket.emit('join_room', p));
-    });
-    socket.on('disconnect', () => {
+  // Réactions aux événements de la partie, branchées par joinRoom()
+  const handlers = {
+    connected() { showDcBanner = false; },
+    disconnected() {
       if (!takenOver) showDcBanner = true;
-      if (_roundActive) stopVideo();
-    });
-
-    socket.on('room_joined', ({ roomConfig }) => {
-      if (roomConfig) {
-        const trackInfo = roomConfig.trackCount ? ` \u2014 ${roomConfig.trackCount} titres` : '';
-        roomLabel = `${roomConfig.emoji || ''} ${roomConfig.name || ''}${trackInfo}`.trim();
-        autoStart   = roomConfig.autoStart    || false;
-        isAdmin     = roomConfig.isAdmin      || false;
-        hasOwner    = roomConfig.hasOwner     || false;
-        adminLocked = roomConfig.adminBlocked || false;
-        if (adminLocked) startDisabled = true;
-        if (roomConfig.gameMode) gameMode = roomConfig.gameMode;
-        // Proposée en « Reprendre » sur l'accueil
-        try {
-          localStorage.setItem('zik_last_room', JSON.stringify({
-            id: ROOM_ID, name: roomConfig.name || ROOM_ID, emoji: roomConfig.emoji || '', gameMode,
-          }));
-        } catch { /* stockage indisponible */ }
-      }
-    });
-    socket.on('game_countdown', ({ seconds }) => { startCountdownUI(seconds); });
-    socket.on('game_countdown_cancelled', () => { stopCountdownUI(); });
-    socket.on('track_count_update', count => {
-      roomLabel = roomLabel.replace(/ \u2014 \d+ titres$/, '') + ` \u2014 ${count} titres`;
-    });
-    socket.on('update_players', ps => {
-      const sorted = [...ps].sort((a, b) => b.score - a.score);
-      players = sorted.map((p, i) => {
-        const medals = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
-        const scored = _prevScores[p.name] !== undefined && p.score > _prevScores[p.name];
-        const rank   = medals[i] || `#${i+1}`;
-        return { ...p, rank, scored };
-      });
-      ps.forEach(p => { _prevScores[p.name] = p.score; });
-    });
-    socket.on('init_history', h => { history = Array.isArray(h) ? [...h].reverse() : []; });
-    socket.on('game_starting', () => { gameoverShow = false; showStart = false; stopCountdownUI(); revealStep = 0; _revealTimers.forEach(clearTimeout); _revealTimers = []; clearTimeout(_roundLoadingTimer); roundLoading = false; shareResultId = null; shareCopied = false; cardsInPlay = []; cardsResult = null; roundsSeen = 0; roundCard = null; });
-    socket.on('cards_in_play', (list) => { cardsInPlay = list; });
-    socket.on('cards_granted', (result) => { cardsResult = result; });
-    socket.on('round_loading', () => {
-      clearTimeout(_roundLoadingTimer);
-      _roundLoadingTimer = setTimeout(() => { roundLoading = true; }, 1500);
-    });
-    socket.on('start_round', data => {
-      clearTimeout(_roundLoadingTimer);
+      if (player.roundActive) player.stop();
+    },
+    roomJoined(roomConfig) {
+      const trackInfo = roomConfig.trackCount ? ` — ${roomConfig.trackCount} titres` : '';
+      roomLabel = `${roomConfig.emoji || ''} ${roomConfig.name || ''}${trackInfo}`.trim();
+      autoStart = roomConfig.autoStart || false;
+      isAdmin = roomConfig.isAdmin || false;
+      hasOwner = roomConfig.hasOwner || false;
+      adminLocked = roomConfig.adminBlocked || false;
+      if (adminLocked) startDisabled = true;
+      if (roomConfig.gameMode) gameMode = roomConfig.gameMode;
+      // Proposée en « Reprendre » sur l'accueil
+      try {
+        localStorage.setItem('zik_last_room', JSON.stringify({ id: ROOM_ID, name: roomConfig.name || ROOM_ID, emoji: roomConfig.emoji || '', gameMode }));
+      } catch { /* stockage indisponible */ }
+    },
+    countdown: startCountdownUI,
+    countdownCancelled: stopCountdownUI,
+    trackCount(count) {
+      roomLabel = roomLabel.replace(/ — \d+ titres$/, '') + ` — ${count} titres`;
+    },
+    players(ps) {
+      const medals = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+      players = [...ps].sort((a, b) => b.score - a.score).map((p, i) => ({
+        ...p,
+        rank: medals[i] || `#${i + 1}`,
+        scored: prevScores[p.name] !== undefined && p.score > prevScores[p.name],
+      }));
+      ps.forEach(p => { prevScores[p.name] = p.score; });
+    },
+    history(h) { history = Array.isArray(h) ? [...h].reverse() : []; },
+    gameStarting() {
+      gameoverShow = false; showStart = false; stopCountdownUI();
+      clearTimeout(timers.loading); roundLoading = false;
+      shareResultId = null; cardsInPlay = []; cardsResult = null; roundsSeen = 0; roundCard = null;
+    },
+    cardsInPlay(list) { cardsInPlay = list; },
+    cardsGranted(result) { cardsResult = result; },
+    roundLoading() { later('loading', 1500, () => { roundLoading = true; }); },
+    startRound(d) {
+      clearTimeout(timers.loading);
       roundLoading = false;
-      roundInfo = `Manche ${data.round} / ${data.total}`;
-      roundTotal = data.total;
-      cardsOff = data.cardsOff ?? null;
+      roundInfo = `Manche ${d.round} / ${d.total}`;
+      roundTotal = d.total;
+      cardsOff = d.cardsOff ?? null;
       roundCard = null;
-      currentRoundInfo = { round: data.round, trackId: data.trackId ?? null, videoId: data.videoId ?? null };
+      currentRoundInfo = { round: d.round, trackId: d.trackId ?? null, videoId: d.videoId ?? null };
       coverSrc = ''; showCover = false;
-      // Une partie relancée par quelqu'un d'autre ne doit pas nous arracher aux
-      // scores : on retient la manche et on laisse le joueur décider.
+      // Une partie relancée par quelqu'un d'autre ne doit pas nous arracher aux scores
       const holdOnResults = gameoverShow && !iRequestedReplay;
       iRequestedReplay = false;
       summaryShow = false; feedback = { msg: '', cls: '' };
       if (!holdOnResults) gameoverShow = false;
-      const featCount = data.featCount || 0;
-      featSlots  = Array.from({ length: featCount }, () => ({ val: '???', state: null }));
-      extraSlots = (data.extraLabels || []).map(label => ({ val: '???', state: null, label }));
-      slotArtist = { val: '???', state: null };
-      slotTitle  = { val: '???', state: null };
+      slots = {
+        ...emptySlots(),
+        feats: Array.from({ length: d.featCount || 0 }, () => ({ val: '???', state: null })),
+        extras: (d.extraLabels || []).map(label => ({ val: '???', state: null, label })),
+      };
       timerPct = 100; timerSecs = null; deckSpin = true;
       guessDisabled = true; guessVal = '';
-      qcmChoices = data.choices || [];
-      qcmChosen = null;
-      qcmReveal = null;
-      qcmChoiceResult = null;
-      qcmAnsweredCount = 0;
-      qcmTotalPlayers = 0;
-      showStart = false; startDisabled = false; startLabel = '\u{1F3AE} Lancer la partie';
-      _roundActive = true;
-      _waitingForSync = true;
-      syncWaiting = true;
-      syncReady = 0; syncTotal = 0;
-      _syncAnchor = null;
-      _lastVideo = { videoId: data.videoId, startSeconds: data.startSeconds, startedAt: Date.now() };
+      qcm = { ...emptyQcm(), choices: d.choices || [] };
+      showStart = false; startDisabled = false; startLoading = false;
+      player.roundActive = true;
+      player.waitingForSync = true;
+      player.syncAnchor = null;
+      player.lastVideo = { videoId: d.videoId, startSeconds: d.startSeconds, startedAt: Date.now() };
+      syncWaiting = true; syncReady = 0; syncTotal = 0;
       if (holdOnResults) {
-        // Aucun chargement audio : on n'entend pas une partie qu'on ne regarde pas.
-        heldRound = data;
+        // Aucun chargement audio : on n'entend pas une partie qu'on ne regarde pas
+        heldRound = d;
         startRejoinCountdown('rejoin');
         return;
       }
-      if (data.audioUrl) {
-        _usingIframe = false;
-        loadAudio(data.audioUrl, data.startSeconds, () => socket?.emit('player_ready'));
-      } else {
-        _usingIframe = true;
-        loadVideo(data.videoId, data.startSeconds);
-      }
-    });
-    socket.on('next_audio', ({ audioUrl }) => prefetchAudio(audioUrl));
-    socket.on('round_start_sync', (data) => {
-      const elapsed = data?.elapsed || 0;
-      _syncAnchor = Date.now() - elapsed * 1000;
-      _waitingForSync = false;
+      player.playRound(d);
+    },
+    nextAudio(url) { player.prefetch(url); },
+    roundStartSync(elapsed) {
       syncWaiting = false;
       guessDisabled = false;
-      _syncPaused = false;
-      _nextAudio?.start?.();
-      // Toujours poser l'ancre, pour caler la lecture si le joueur rejoint plus
-      // tard — mais ne rien jouer tant qu'il regarde les scores.
-      if (heldRound) return;
-      if (_usingIframe) {
-        if (ytPlayer?.seekTo && _lastVideo) ytPlayer.seekTo(_lastVideo.startSeconds + elapsed, true);
-        if (ytPlayer?.unMute) ytPlayer.unMute();
-        if (ytPlayer?.setVolume) ytPlayer.setVolume(savedVol());
-        if (ytPlayer?.playVideo) ytPlayer.playVideo();
-      } else {
-        playSyncedAudio();
-      }
-      tick().then(() => document.getElementById('guessInput')?.focus());
-    });
-    socket.on('ready_update', ({ ready, total }) => {
-      syncReady = ready;
-      syncTotal = total;
-    });
-    socket.on('chat_history', msgs => { chatMessages = msgs; });
-    socket.on('chat_message', msg => {
+      // L'ancre est toujours posée, pour caler la lecture si le joueur rejoint
+      // plus tard, mais rien ne joue tant qu'il regarde les scores
+      player.startSynced(elapsed, { play: !heldRound });
+      if (!heldRound) tick().then(() => document.getElementById('guessInput')?.focus());
+    },
+    readyUpdate(ready, total) { syncReady = ready; syncTotal = total; },
+    chatHistory(msgs) { chatMessages = msgs; },
+    chatMessage(msg) {
       chatMessages = [...chatMessages, msg];
       if (!chatOpen) chatUnread++;
-      tick().then(() => { if (chatEl) chatEl.scrollTop = chatEl.scrollHeight; });
-    });
-    socket.on('timer_update', ({ current, max }) => {
+    },
+    timer(current, max) {
       timerPct = (current / max) * 100;
       timerSecs = Math.max(0, current);
-    });
-    socket.on('feedback', data => {
-      if (data.type === 'success_artist') slotArtist = { val: data.val, state: 'found' };
-      if (data.type === 'success_feat') { const fi = data.featIndex ?? 0; featSlots = featSlots.map((s, i) => i === fi ? { val: data.val, state: 'found' } : s); }
-      if (data.type === 'success_title') slotTitle = { val: data.val, state: 'found' };
-      if (data.type === 'success_extra') { const ei = data.extraIndex ?? 0; extraSlots = extraSlots.map((s, i) => i === ei ? { ...s, val: data.val, state: 'found' } : s); }
-      const cls = data.type === 'miss' ? 'cold' : data.type === 'close' ? 'hot' : 'good';
-      showFeedback(data.msg, cls);
-    });
-    socket.on('reveal_cover', ({ cover }) => { if (cover) { coverSrc = cover; showCover = true; } });
-    socket.on('choice_result', (result) => {
-      qcmChoiceResult = result;
-    });
-    socket.on('qcm_answered_update', ({ answered, total }) => {
-      qcmAnsweredCount = answered;
-      qcmTotalPlayers = total;
-    });
-
-    socket.on('round_end', data => {
+    },
+    feedback(d) {
+      if (d.type === 'success_artist') slots.artist = { val: d.val, state: 'found' };
+      if (d.type === 'success_title') slots.title = { val: d.val, state: 'found' };
+      if (d.type === 'success_feat') slots.feats[d.featIndex ?? 0] = { val: d.val, state: 'found' };
+      if (d.type === 'success_extra') slots.extras[d.extraIndex ?? 0] = { ...slots.extras[d.extraIndex ?? 0], val: d.val, state: 'found' };
+      showFeedback(d.msg, d.type === 'miss' ? 'cold' : d.type === 'close' ? 'hot' : 'good');
+    },
+    revealCover(cover) { if (cover) { coverSrc = cover; showCover = true; } },
+    choiceResult(result) { qcm.result = result; },
+    qcmAnswered(answered, total) { qcm.answered = answered; qcm.total = total; },
+    roundEnd(d) {
       roundsSeen += 1;
-      roundCard = data.card ?? null;
-      if (data.card?.mode === 'won') cardsInPlay = [...cardsInPlay, { card: data.card.card, round: data.round }];
-      if (gameMode === 'qcm' && data.correctChoiceIndex !== undefined) {
-        qcmReveal = data.correctChoiceIndex;
-      }
-      const dashIdx    = data.answer.indexOf(' - ');
-      const fullArtist = dashIdx > -1 ? data.answer.slice(0, dashIdx) : data.answer;
-      const title      = dashIdx > -1 ? data.answer.slice(dashIdx + 3) : '\u2014';
-      const feats      = data.featArtists || [];
-      const mainArtist = feats.length ? parseFeat(fullArtist).main : fullArtist;
-      slotArtist = { val: mainArtist, state: data.foundArtist ? 'found' : 'missed' };
-      featSlots  = feats.map((fa, i) => ({ val: fa, state: (data.foundFeats || [])[i] ? 'found' : 'missed' }));
-      slotTitle  = { val: title || '\u2014', state: data.foundTitle ? 'found' : 'missed' };
-      extraSlots = (data.extraAnswers || []).map((e, i) => ({ label: e.label, val: e.value, state: (data.foundExtras || [])[i] ? 'found' : 'missed' }));
-      if (data.cover) { coverSrc = data.cover; showCover = true; }
+      roundCard = d.card ?? null;
+      if (d.card?.mode === 'won') cardsInPlay = [...cardsInPlay, { card: d.card.card, round: d.round }];
+      if (gameMode === 'qcm' && d.correctChoiceIndex !== undefined) qcm.reveal = d.correctChoiceIndex;
+      slots = answerSlots(d);
+      if (d.cover) { coverSrc = d.cover; showCover = true; }
       summaryShow = true;
-      summaryReason = data.reason;
-      summaryFinder = data.totalFound > 0 ? `\u{1F3C6} 1er : ${data.firstFinder} \u2014 ${data.totalFound} joueur(s) ont tout trouv\u00e9` : '\u274C Personne n\u2019a trouv\u00e9';
-      _roundActive = false; _waitingForSync = false; syncWaiting = false; _syncAnchor = null; guessDisabled = true; stopVideo(); timerPct = 0; deckSpin = false;
-      stopMediaGuard();
-      history = [data, ...history];
+      summaryReason = d.reason;
+      summaryFinder = d.totalFound > 0 ? `\u{1F3C6} 1er : ${d.firstFinder} — ${d.totalFound} joueur(s) ont tout trouvé` : '❌ Personne n’a trouvé';
+      syncWaiting = false; guessDisabled = true; timerPct = 0; deckSpin = false;
+      player.endRound();
+      history = [d, ...history];
       currentRoundInfo = null;
-    });
-    socket.on('game_over', scores => {
-      _roundActive = false; _syncAnchor = null; stopVideo();
-      stopMediaGuard();
+    },
+    gameOver(scores) {
+      player.endRound();
       guessDisabled = true; timerPct = 0; deckSpin = false; summaryShow = false;
       gameoverScores = scores;
-      gameoverShow   = true;
+      gameoverShow = true;
       heldRound = null;
       iRequestedReplay = false;
       stopRejoinCountdown();
-      // Relance automatique, sauf pour ceux qui ne peuvent pas lancer la partie.
-      if (!hasOwner || autoStart || isAdmin) startRejoinCountdown('replay');
-      revealStep = 0;
-      _revealTimers.forEach(clearTimeout);
-      _revealTimers = [];
-      _revealTimers.push(setTimeout(() => { revealStep = 1; }, 600));
-      _revealTimers.push(setTimeout(() => { revealStep = 2; }, 2100));
-      _revealTimers.push(setTimeout(() => { revealStep = 3; launchConfetti(); }, 3900));
-    });
-    socket.on('achievements_unlocked', list => {
-      if (Array.isArray(list)) achToasts = [...achToasts, ...list];
-    });
-    socket.on('game_result_id', id => { shareResultId = id; });
-    socket.on('server_error', msg => {
+      // Relance automatique, sauf pour ceux qui ne peuvent pas lancer la partie
+      if (canReplay) startRejoinCountdown('replay');
+    },
+    achievements(list) { if (Array.isArray(list)) achToasts = [...achToasts, ...list]; },
+    resultId(id) { shareResultId = id; },
+    serverError(msg) {
       errorMsg = msg;
-      setTimeout(() => { errorMsg = ''; }, 4000);
-      startDisabled = false; startLabel = '\u{1F3AE} Lancer la partie';
-    });
-
-    socket.on('join_refused', info => {
-      joinConflict = info;
-    });
-
+      later('error', 4000, () => { errorMsg = ''; });
+      startDisabled = false; startLoading = false;
+    },
+    joinRefused(info) { joinConflict = info; },
     // Un autre onglet a pris la main : ne pas se remettre dans la partie
-    socket.on('session_taken_over', () => {
-      takenOver = true;
-      _hasJoined = false;
-    });
-
-    socket.on('admin_kicked', () => {
-      socket.disconnect();
-      goto('/rooms');
-    });
-
-    socket.on('admin_pause', () => {
-      _adminPaused = true;
-      try { ytPlayer?.pauseVideo(); } catch { /* ignore */ }
-      const _a = document.getElementById('previewAudio');
-      if (_a) _a.pause();
-    });
-
-    socket.on('admin_resume', () => {
-      _adminPaused = false;
-      try { ytPlayer?.playVideo(); } catch { /* ignore */ }
-      const _a = document.getElementById('previewAudio');
-      if (_a) _a.play().catch(() => {});
-    });
-
-    socket.on('admin_announce', ({ message }) => {
-      clearTimeout(_announceTimer);
+    takenOver() { takenOver = true; },
+    kicked() { goto('/rooms'); },
+    adminPause() { player.pause(); },
+    adminResume() { player.resume(); },
+    announce(message) {
       adminAnnounceMsg = message;
-      _announceTimer = setTimeout(() => { adminAnnounceMsg = ''; }, 8000);
-    });
+      later('announce', 8000, () => { adminAnnounceMsg = ''; });
+    },
+    blocked(locked) { adminLocked = locked; startDisabled = locked; },
+  };
 
-    socket.on('admin_blocked', () => {
-      adminLocked = true;
-      startDisabled = true;
-    });
+  // Réponse complète de fin de manche, découpée en cases
+  function answerSlots(d) {
+    const dash = d.answer.indexOf(' - ');
+    const fullArtist = dash > -1 ? d.answer.slice(0, dash) : d.answer;
+    const title = dash > -1 ? d.answer.slice(dash + 3) : '—';
+    const feats = d.featArtists || [];
+    return {
+      artist: { val: feats.length ? mainArtist(fullArtist) : fullArtist, state: d.foundArtist ? 'found' : 'missed' },
+      title: { val: title || '—', state: d.foundTitle ? 'found' : 'missed' },
+      feats: feats.map((fa, i) => ({ val: fa, state: (d.foundFeats || [])[i] ? 'found' : 'missed' })),
+      extras: (d.extraAnswers || []).map((e, i) => ({ label: e.label, val: e.value, state: (d.foundExtras || [])[i] ? 'found' : 'missed' })),
+    };
+  }
 
-    socket.on('admin_unblocked', () => {
-      adminLocked = false;
-      startDisabled = false;
-    });
+  function mainArtist(artist) {
+    const m = artist.match(/^(.+?)(?:\s*\((?:feat\.?|ft\.?|featuring)\s+[^)]+\)|\s+(?:feat\.?|ft\.?|featuring)\s+.+)$/i);
+    if (m) return m[1].trim();
+    const ci = artist.indexOf(', ');
+    if (ci > 0) return artist.slice(0, ci).trim();
+    const am = artist.match(/^(.+?)\s+&\s+.+$/);
+    return am ? am[1].trim() : artist;
+  }
 
-    // Join
-    _hasJoined = true;
-    _joinSocket = socket;
-    joinPayload().then((p) => socket.emit('join_room', p));
+  onMount(async () => {
+    const P = new URLSearchParams(location.search);
+    ROOM_ID = P.get('roomId') || 'pop';
+    USERNAME = P.get('username') || sessionStorage.getItem('zik_uname') || 'Joueur';
+    USER_ID = P.get('userId') || sessionStorage.getItem('zik_uid') || null;
+    IS_GUEST = P.get('isGuest') === '1' || !USER_ID;
+    gameMode = P.get('gameMode') || 'classic';
+    canInviteFriends = !IS_GUEST && !!USER_ID && !!sb;
 
+    player = new GameAudio({ onPlayerReady: () => socket?.emit('player_ready') });
+    volume = savedVolume();
+    player.startDriftGuard();
+
+    // Le jeton de session prouve au serveur que userId est bien le nôtre :
+    // sans lui, pas de carte
+    socket = await joinRoom(handlers, async (extra = {}) => ({
+      roomId: ROOM_ID, username: USERNAME, userId: USER_ID, isGuest: IS_GUEST,
+      token: IS_GUEST ? null : await getToken(),
+      ...extra,
+    }));
   });
 
   onDestroy(() => {
-    if (socket) socket.disconnect();
-    dropPrefetch();
-    if (_playingBlob) URL.revokeObjectURL(_playingBlob);
-    stopMediaGuard();
-    clearTimeout(feedTimer);
-    clearTimeout(_roundLoadingTimer);
-    clearInterval(countdownInterval);
-    clearInterval(_driftInterval);
-    _revealTimers.forEach(clearTimeout);
+    socket?.disconnect();
+    player?.destroy();
+    Object.values(timers).forEach((t) => { clearTimeout(t); clearInterval(t); });
   });
 </script>
 
@@ -1017,7 +456,7 @@
   <title>ZIK - En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.16.0">
+  <link rel="stylesheet" href="/css/game.css?v=3.17.1">
   <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
 
@@ -1034,7 +473,7 @@
         <strong>{joinConflict.playerName}</strong>. Un même compte ne peut pas jouer
         depuis deux onglets à la fois.
       </p>
-      <button class="g-session-btn" onclick={takeOverSession}>Continuer ici</button>
+      <button class="g-session-btn" onclick={() => { joinConflict = null; socket?.takeOver(); }}>Continuer ici</button>
       <a class="g-session-link" href="/rooms">Retour aux rooms</a>
       <p class="g-session-note">L'autre onglet sera déconnecté.</p>
     </div>
@@ -1061,565 +500,74 @@
 {/if}
 
 <div class="g-app">
+  <GameHeader
+    {roomLabel} {roundInfo} {cardsInPlay} {roundsSeen} {roundTotal}
+    {chatOpen} {chatUnread} canInvite={canInviteFriends} {volume}
+    {onBack} onToggleChat={toggleChat} onInvite={() => (inviteOpen = true)}
+    onBugReport={openBugReport} onVolume={setVolume}
+  />
 
-  <!-- Header -->
-  <header class="g-header">
-    <a href="/" class="g-back" onclick={onBack}>&#x2190; Rooms</a>
-    <div class="g-header-room">
-      <span class="g-live"></span>
-      <span class="g-room-name">{roomLabel}</span>
-    </div>
-    <div class="g-round-info">{roundInfo}</div>
-    {#if cardsInPlay.length}
-      <div class="g-cards-pill">
-        <CardTray entries={cardsInPlay} round={roundsSeen} maxRounds={roundTotal} variant="pill" />
-      </div>
-    {/if}
-    <div class="g-header-spacer"></div>
-    <div class="g-header-right">
-      <button class="g-chat-toggle" onclick={toggleChat} title="Chat" aria-label="Ouvrir le chat" class:g-chat-active={chatOpen}>
-        &#x1F4AC;
-        {#if chatUnread > 0}<span class="g-chat-badge">{chatUnread > 9 ? '9+' : chatUnread}</span>{/if}
-      </button>
-      {#if canInviteFriends}
-        <button class="g-bug-btn" onclick={openInviteFriends} title="Inviter des amis dans cette room" aria-label="Inviter des amis dans cette room">👋</button>
-      {/if}
-      <button class="g-bug-btn" onclick={openBugReport} title="Signaler un bug" aria-label="Signaler un bug">🐛</button>
-      <div class="g-vol">
-        <span class="g-vol-label">VOL</span>
-        <input type="range" id="volSlider" min="0" max="100" value={volValue} oninput={e => setVol(parseInt(e.target.value))} aria-label="Volume">
-        <span class="g-vol-pct">{volValue}</span>
-      </div>
-    </div>
-  </header>
-
-  <!-- Corps principal -->
   <div class="g-body">
+    <PlayerList
+      {players} username={USERNAME} isGuest={IS_GUEST} canAddFriends={!IS_GUEST && !!USER_ID}
+      {cardsInPlay} {roundsSeen} {roundTotal} {cardsOff}
+      onAddFriend={addFriend} onReport={openUserReport}
+    />
 
-    <!-- Sidebar gauche : classement -->
-    <aside class="g-sidebar g-sidebar-scores">
-      <div class="g-sidebar-title">Classement <span class="n">{players.length} joueur{players.length > 1 ? 's' : ''}</span></div>
-      <div class="g-player-list" id="player-list">
-        {#each players as p, i (p.name)}
-          <div class="g-strip rank-{i+1}" class:me={p.name === USERNAME}>
-            <div class="g-strip-top">
-              <span class="g-strip-rank">{String(i + 1).padStart(2, '0')}</span>
-              <span class="g-strip-name">
-                <a href="/user/{p.name}" class="g-player-link" onclick={e => e.stopPropagation()}>{p.name}</a>
-                <span class="g-badges">
-                  <span class="g-badge {p.foundArtist ? 'found' : ''}" title={p.foundArtist ? 'Artiste trouvé' : 'Artiste pas encore trouvé'}>A</span>
-                  <span class="g-badge {p.foundTitle ? 'found' : ''}" title={p.foundTitle ? 'Titre trouvé' : 'Titre pas encore trouvé'}>T</span>
-                  {#if p.foundFeats?.some(Boolean)}<span class="g-badge found">F</span>{/if}
-                </span>
-              </span>
-              <span class="g-strip-score {p.scored ? 'flash' : ''}">{p.score}<small>pt</small></span>
-              {#if p.name !== USERNAME}
-                <div class="g-player-menu">
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
-                  <span class="g-menu-dot" role="button" tabindex="0" onclick={e => { e.stopPropagation(); openMenuFor = openMenuFor === p.name ? null : p.name; }}>⋯</span>
-                  {#if openMenuFor === p.name}
-                    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                    <div class="g-dropdown" role="menu" tabindex="-1" onclick={e => e.stopPropagation()}>
-                      {#if !IS_GUEST && USER_ID && p.userId && !p.isGuest}
-                        <button class="g-dd-item" onclick={() => addFriend(p)}>👋 Ajouter en ami</button>
-                      {/if}
-                      <button class="g-dd-item" onclick={() => openUserReport(p)}>🚨 Signaler ce joueur</button>
-                    </div>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-            <div class="g-strip-vu"><div class="g-strip-vu-fill" style="width:{(p.score / maxScore) * 100}%"></div></div>
-          </div>
-        {/each}
-      </div>
-      {#if !IS_GUEST}
-        <div class="g-cards-tray">
-          <CardTray entries={cardsInPlay} round={roundsSeen} maxRounds={roundTotal} off={cardsOff} />
-        </div>
-      {/if}
-    </aside>
-
-    <!-- Colonne centrale -->
     <div class="g-col-center">
       <main class="g-center">
+        <Deck spinning={deckSpin} {timerPct} {timerSecs} cover={showCover ? coverSrc : ''} />
+        <AnswerSlots {slots} {gameMode} />
 
-        <!-- Disque-chrono -->
-        <div class="g-deck" class:spinning={deckSpin} style="--t:{timerPct / 100}">
-          <div class="g-deck-ring" class:warn={timerSecs !== null && timerPct < 30}></div>
-          <div class="g-vinyl"></div>
-          <div class="g-tonearm">
-            <div class="g-tonearm-arm"><div class="g-tonearm-head"></div></div>
-            <div class="g-tonearm-pivot"></div>
-          </div>
-          <div class="g-deck-label">
-            {#if showCover && coverSrc}
-              <img class="g-deck-cover" src={coverSrc} alt="Pochette">
-            {:else if timerSecs !== null}
-              <div class="g-deck-clock">
-                <div class="t" class:warn={timerPct < 30}>{clockStr}</div>
-                <div class="l">Restant</div>
-              </div>
-            {:else}
-              <div class="g-deck-idle">ZIK<span>.</span></div>
-            {/if}
-          </div>
-        </div>
-
-        <!-- Slots artiste / titre -->
-        <div class="g-slots">
-          <div class="g-slot {slotArtist.state || ''}">
-            <span class="g-slot-label">Artiste</span>
-            <div class="g-slot-val">{slotArtist.val}</div>
-          </div>
-          {#if gameMode !== 'qcm'}
-            {#each featSlots as fs, i}
-              <div class="g-slot g-slot-feat {fs.state || ''}">
-                <span class="g-slot-label">{featSlots.length > 1 ? `Feat. ${i+1}` : 'Feat.'}</span>
-                <div class="g-slot-val">{fs.val}</div>
-              </div>
-            {/each}
-            {#each extraSlots as es}
-              <div class="g-slot {es.state || ''}">
-                <span class="g-slot-label">{es.label}</span>
-                <div class="g-slot-val">{es.val}</div>
-              </div>
-            {/each}
-          {/if}
-          <div class="g-slot {slotTitle.state || ''}">
-            <span class="g-slot-label">Titre</span>
-            <div class="g-slot-val">{slotTitle.val}</div>
-          </div>
-        </div>
-
-        <!-- Feedback toast -->
         <div class="g-feedback {feedback.msg ? 'show ' + feedback.cls : ''}">{feedback.msg}</div>
 
         <!-- Chargement imprévu (yt-dlp lent, prefetch KO) -->
         {#if roundLoading}
           <div class="g-waiting">&#x23F3; Chargement de la prochaine manche&hellip;</div>
         {/if}
-
-        <!-- Erreur -->
         {#if errorMsg}
           <div class="g-error">{errorMsg}</div>
         {/if}
 
-        <!-- Start / countdown / attente -->
-        {#if adminLocked}
-          <div class="g-admin-lock">
-            🔒 Cette room est verrouillée par un administrateur.<br>
-            <small>Le lancement de partie est temporairement désactivé.</small>
-          </div>
-        {/if}
-        {#if showStart && !adminLocked}
-          {#if showCountdown}
-            <div class="g-countdown">
-              <div class="g-countdown-circle">{countdownVal}</div>
-              <p class="g-countdown-label">La partie d&eacute;marre&hellip;</p>
-            </div>
-          {:else if hasOwner && autoStart && !isAdmin}
-            <div class="g-waiting">&#x23F3; La partie va d&eacute;marrer automatiquement&hellip;</div>
-          {:else if hasOwner && !autoStart && !isAdmin}
-            <div class="g-waiting">
-              &#x23F3; En attente de l&apos;administrateur&hellip;<br>
-              <small>Seul le cr&eacute;ateur peut lancer la partie.</small>
-            </div>
-          {:else}
-            <button class="g-start-btn" onclick={requestGame} disabled={startDisabled}>
-              {#if startLabel === 'Chargement\u2026'}Chargement&hellip;{:else}&#x1F3AE; Lancer la partie{/if}
-            </button>
-            {#if hasOwner && !autoStart}
-              <p class="g-admin-hint">Tu es l&apos;admin &mdash; toi seul peux lancer.</p>
-            {/if}
-          {/if}
-          {#if !showCountdown && players.length <= 1}
-            <!-- Seul dans la room : le jeu est pensé pour plusieurs, on donne les moyens d'en ramener -->
-            <div class="g-alone">
-              <p>Tu es seul pour l&apos;instant. Le blind test, c&apos;est mieux à plusieurs&nbsp;!</p>
-              <div class="g-alone-actions">
-                <button class="g-alone-btn" onclick={copyRoomLink}>{roomLinkCopied ? 'Lien copié' : 'Copier le lien de la room'}</button>
-                <a class="g-alone-btn" href="/salon">Soirée entre amis : Mode Salon</a>
-              </div>
-            </div>
-          {/if}
-        {/if}
-
-
+        <StartPanel
+          roomId={ROOM_ID} {adminLocked} {showStart} {showCountdown} {countdownVal}
+          {hasOwner} {autoStart} {isAdmin} disabled={startDisabled} loading={startLoading}
+          alone={players.length <= 1} onStart={requestGame}
+        />
       </main>
 
-      <!-- Input bar (dans la colonne centrale) -->
-
-      <div class="g-input-bar" class:g-input-bar-qcm={gameMode === 'qcm' && qcmChoices.length > 0}>
-        {#if syncWaiting}
-          <div class="g-sync-waiting">
-            &#x23F3; Chargement de la musique&hellip;
-            {#if syncTotal > 1}<span class="g-sync-count">{syncReady}/{syncTotal}</span>{/if}
-          </div>
-        {/if}
-        {#if gameMode === 'qcm' && qcmChoices.length > 0}
-          <div class="g-qcm-grid">
-            {#each qcmChoices as choice, i}
-              {@const isChosen = qcmChosen === i}
-              {@const isRevealing = qcmReveal !== null}
-              {@const isCorrect = isRevealing && i === qcmReveal}
-              {@const isWrong = isRevealing && isChosen && !isCorrect}
-              {@const isNeutral = isRevealing && !isChosen && !isCorrect}
-              <button
-                class="g-qcm-btn g-qcm-{i}"
-                class:g-qcm-selected={isChosen && !isRevealing}
-                class:g-qcm-correct={isCorrect}
-                class:g-qcm-wrong={isWrong}
-                class:g-qcm-neutral={isNeutral}
-                onclick={() => submitChoice(i)}
-                disabled={guessDisabled || qcmChosen !== null}
-              >
-                <span class="g-qcm-shape"></span>
-                <span class="g-qcm-text">{choice}</span>
-              </button>
-            {/each}
-          </div>
-          <div class="g-qcm-status-bar">
-            {#if qcmChosen !== null && qcmChoiceResult !== null}
-              {#if qcmChoiceResult.correct}
-                <span class="g-qcm-pts-correct">+{qcmChoiceResult.pts} pts ✓</span>
-              {:else}
-                <span class="g-qcm-pts-wrong">+0 pt ✗</span>
-              {/if}
-            {:else if qcmChosen !== null}
-              <span class="g-qcm-locked">Réponse verrouillée…</span>
-            {:else if qcmReveal === null}
-              <span class="g-qcm-hint">Choisis ta réponse !</span>
-            {/if}
-            {#if qcmReveal === null && qcmTotalPlayers > 1}
-              <span class="g-qcm-count">{qcmAnsweredCount}/{qcmTotalPlayers} répondu{qcmAnsweredCount > 1 ? 's' : ''}</span>
-            {/if}
-          </div>
-        {:else if gameMode !== 'qcm'}
-          <div class="g-input-wrap">
-            <span class="g-input-prompt">&gt;</span>
-            <input
-              type="text"
-              id="guessInput"
-              class="g-input"
-              placeholder="Artiste ou titre&hellip; tape ta r&eacute;ponse"
-              disabled={guessDisabled}
-              bind:value={guessVal}
-              autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" maxlength="100"
-              onkeydown={e => { if (e.key === 'Enter') submitGuess(); }}
-            >
-            <button class="g-submit-btn" disabled={guessDisabled} onclick={submitGuess}>Deviner</button>
-          </div>
-        {/if}
-      </div>
+      <AnswerBar
+        {gameMode} disabled={guessDisabled} {syncWaiting} {syncReady} {syncTotal}
+        {qcm} bind:guessVal onGuess={submitGuess} onChoice={submitChoice}
+      />
     </div>
 
-    <!-- Sidebar droite : derniers titres -->
-    <aside class="g-sidebar g-sidebar-history">
-      <div class="g-sidebar-title">Derniers titres <span class="n">{history.length}</span></div>
-      <div class="g-history-list" id="history-list">
-        {#each history as item, hi (item.answer + item.round)}
-          {@const _di = item.answer.indexOf(' - ')}
-          {@const _ha = _di > -1 ? item.answer.slice(0, _di) : item.answer}
-          {@const _ht = _di > -1 ? item.answer.slice(_di + 3) : '—'}
-          {#if hi === 0}
-            <div class="g-feat" style={item.cover ? `background-image:url(${item.cover})` : ''}>
-              {#if !item.cover}<div class="g-feat-note">&#x266A;</div>{/if}
-              <div class="g-feat-grad"></div>
-              <div class="g-feat-info">
-                <div class="g-feat-num">Manche {item.round} — dernier titre</div>
-                <div class="g-feat-art">{_ha}</div>
-                {#if item.featArtists?.length}
-                  {#each item.featArtists as fa, fi}
-                    <div class="g-feat-feat" class:found={item.foundFeats?.[fi]}>feat. {fa}</div>
-                  {/each}
-                {/if}
-                <div class="g-feat-tit">{_ht}</div>
-                <div class="g-feat-badges">
-                  <span class="g-rb" class:on={item.foundArtist}>ARTISTE {item.foundArtist ? '✓' : '✕'}</span>
-                  <span class="g-rb" class:on={item.foundTitle}>TITRE {item.foundTitle ? '✓' : '✕'}</span>
-                </div>
-              </div>
-            </div>
-          {:else}
-            <div class="g-hitem">
-              {#if item.cover}
-                <img src={item.cover} alt="" class="g-hitem-img" loading="lazy" decoding="async">
-              {:else}
-                <div class="g-hitem-img g-hitem-noimg">&#x266A;</div>
-              {/if}
-              <div class="g-hitem-info">
-                <div class="g-hitem-artist" class:found={item.foundArtist}>{_ha}</div>
-                {#if item.featArtists?.length}
-                  {#each item.featArtists as fa, fi}
-                    <div class="g-hitem-feat" class:found={item.foundFeats?.[fi]}>feat. {fa}</div>
-                  {/each}
-                {/if}
-                <div class="g-hitem-title" class:found={item.foundTitle}>{_ht}</div>
-              </div>
-            </div>
-          {/if}
-        {/each}
-      </div>
-    </aside>
-
+    <HistoryList {history} />
   </div>
-
 </div>
 
-<!-- Splash reveal plein écran (fin de manche) -->
 {#if summaryShow && !gameoverShow}
-  <div class="g-reveal">
-    <div class="g-rv-bg" style={coverSrc ? `background-image:url(${coverSrc})` : ''}></div>
-    <div class="g-rv-inner">
-      {#if roundCard?.mode === 'won'}
-        <div class="g-rv-card">
-          <Card card={roundCard.card} size="lg" reveal inspectable list={[roundCard.card]} />
-        </div>
-      {:else}
-        <div class="g-rv-sleeve">
-          <div class="g-rv-vinyl"></div>
-          {#if coverSrc}
-            <img class="g-rv-cover" src={coverSrc} alt="Pochette">
-          {:else}
-            <div class="g-rv-cover-fb">&#x266A;</div>
-          {/if}
-        </div>
-      {/if}
-      <div class="g-rv-info">
-        <div class="g-rv-eyebrow">{roundInfo} — Réponse</div>
-        <h1 class="g-rv-artist" class:missed={slotArtist.state === 'missed'}>{slotArtist.val}</h1>
-        {#each featSlots as fs}
-          <div class="g-rv-feat">feat. {fs.val}</div>
-        {/each}
-        <div class="g-rv-title" class:missed={slotTitle.state === 'missed'}>{slotTitle.val}</div>
-        {#each extraSlots as es}
-          <div class="g-rv-extra">{es.label} : {es.val}</div>
-        {/each}
-        <div class="g-rv-chips">
-          <span class="g-rv-chip" class:none={!summaryFinder.includes('1er')}>{summaryFinder}</span>
-        </div>
-        {#if roundCard}
-          <div class="g-rv-drop">
-            <CardDrop
-              card={roundCard.card}
-              mode={roundCard.mode}
-              delayed={roundCard.delayed}
-              winner={roundCard.winner}
-              round={roundCard.roundsPresent ?? roundsSeen}
-              maxRounds={roundTotal}
-              conditions={roundCard.conditions ?? []}
-              onsignup={() => goto('/?auth=register&ref=cards')}
-            />
-          </div>
-        {/if}
-        <div class="g-rv-next">{summaryReason}</div>
-      </div>
-    </div>
-  </div>
+  <RoundReveal
+    {coverSrc} {roundCard} {roundInfo} {slots} finder={summaryFinder}
+    reason={summaryReason} {roundsSeen} {roundTotal}
+  />
 {/if}
 
-<!-- Game Over -->
 {#if gameoverShow}
-  <div class="g-gameover">
-    <div class="g-go-inner">
-
-      <!-- Le trophée : disque d'or -->
-      <div class="g-go-award" class:won={revealStep >= 3}>
-        <div class="g-go-frame">
-          <div class="g-go-disc-wrap">
-            <div class="g-go-disc"></div>
-            <div class="g-go-disc-label">
-              {#if revealStep >= 3 && gameoverScores[0]}
-                <span class="g-go-disc-name">{gameoverScores[0].name}</span>
-                <span class="g-go-disc-pts">{gameoverScores[0].score} pts</span>
-              {:else}
-                <span class="g-go-disc-q">?</span>
-              {/if}
-            </div>
-          </div>
-          <div class="g-go-plaque">
-            <div class="g-go-plaque-title">Disque d'or</div>
-            <div class="g-go-plaque-sub">décerné à</div>
-            <div class="g-go-plaque-name">{revealStep >= 3 ? (gameoverScores[0]?.name ?? '—') : '· · ·'}</div>
-            <div class="g-go-plaque-room">{roomLabel}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Les crédits de fin -->
-      <div class="g-go-credits">
-        <div class="g-go-eyebrow">Partie terminée</div>
-        <div class="g-go-credits-title">Crédits de fin</div>
-        <div class="g-go-tracklist">
-          {#each gameoverScores as p, i (p.name)}
-            <div
-              class="g-go-track t{Math.min(i + 1, 4)}"
-              class:me={p.name === USERNAME}
-              class:revealed={i === 0 ? revealStep >= 3 : i === 1 ? revealStep >= 2 : revealStep >= 1}
-            >
-              <span class="g-go-tnum">{String(i + 1).padStart(2, '0')}</span>
-              <span class="g-go-tname">
-                {#if p.isGuest}{p.name} <span class="g-go-guest">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="g-go-link">{p.name}</a>{/if}
-                {#if p.name === USERNAME}<span class="g-go-tyou">TOI</span>{/if}
-              </span>
-              <span class="g-go-tfill"></span>
-              <span class="g-go-tpts">{p.score} pts</span>
-            </div>
-          {/each}
-        </div>
-
-        {#if IS_GUEST}
-          {@const myScore = gameoverScores.find(p => p.name === USERNAME)?.score ?? 0}
-          <p class="g-go-guest-note">
-            Tu joues en invité : {myScore > 0 ? `tes ${myScore} pts ne seront pas gardés` : 'ton score n’est pas gardé'}.
-            Un compte gratuit les enregistre et te fait entrer au classement.
-          </p>
-        {/if}
-
-        {#if cardsInPlay.length}
-          <section class="g-go-cards" aria-label="Tes cartes de la partie">
-            <p class="g-go-cards-title">
-              {cardsInPlay.length} nouvelle{cardsInPlay.length > 1 ? 's' : ''} carte{cardsInPlay.length > 1 ? 's' : ''} pour ta collection
-            </p>
-            <div class="g-go-cards-list">
-              {#each cardsInPlay as entry (entry.card.id)}
-                <Card card={entry.card} size="sm" motion="hover" inspectable list={cardsInPlay.map((e) => e.card)} />
-              {/each}
-            </div>
-            {#each cardsResult?.sets ?? [] as set (set.id)}
-              <p class="g-go-cards-set">
-                {set.kind === 'album' ? 'Album complété' : 'Artiste complété'} : <strong>{set.name}</strong>
-              </p>
-            {/each}
-            <a href="/collection" class="g-go-share">Voir ma collection</a>
-          </section>
-        {/if}
-
-        <div class="g-go-actions">
-        <div class="g-go-lead">
-          {#if rejoinIn > 0}
-            <span class="g-rejoin-note">
-              {countdownMode === 'replay' ? 'Nouvelle partie' : 'La partie a démarré'} dans {rejoinIn} s
-            </span>
-          {/if}
-          {#if heldRound}
-            <button class="g-start-btn" onclick={joinRunningGame}>Rejoindre la partie</button>
-          {:else if !hasOwner || autoStart || isAdmin}
-            <button class="g-start-btn" onclick={requestGame}>Rejouer</button>
-          {:else}
-            <span class="g-rejoin-note">En attente de l&apos;admin pour rejouer</span>
-          {/if}
-        </div>
-
-        <div class="g-go-more">
-        {#if shareResultId}
-          <button class="g-go-share" onclick={shareResult}>
-            {shareCopied ? 'Lien copié' : 'Partager mon score'}
-          </button>
-        {/if}
-        {#if IS_GUEST}
-          <a href="/?auth=register&ref=room-guest" class="g-go-share">Créer un compte gratuit</a>
-        {/if}
-        <a href="/rooms" class="g-go-back">Changer de room</a>
-        <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="g-go-discord">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path fill-rule="evenodd" clip-rule="evenodd" fill="white" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942.0209-.0406.0098-.0895-.0321-.1112a13.201 13.201 0 0 1-1.8735-.8914.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
-          </svg>
-          Discord
-        </a>
-        </div>
-        </div>
-
-        <div class="g-go-support-box">
-          <span class="g-go-support-text">ZIK est gratuit et tourne sur un serveur payé de ma poche.</span>
-          <a href="/soutenir" class="g-go-support-btn">Soutenir ZIK</a>
-        </div>
-
-      </div>
-
-    </div>
-  </div>
+  {#key gameoverScores}
+    <GameOver
+      scores={gameoverScores} username={USERNAME} isGuest={IS_GUEST} {roomLabel}
+      {cardsInPlay} {cardsResult} resultId={shareResultId}
+      {rejoinIn} {countdownMode} {heldRound} {canReplay}
+      onJoin={joinRunningGame} onReplay={requestGame}
+    />
+  {/key}
 {/if}
 
-<!-- Chat -->
 {#if chatOpen}
-  <div class="g-chat-panel" style={chatStyle}>
-    {#if !isMobileView}
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div
-        class="g-chat-resize"
-        title="Redimensionner"
-        onpointerdown={chatResizeStart}
-        onpointermove={chatResizeMove}
-        onpointerup={chatResizeEnd}
-        onpointercancel={chatResizeEnd}
-      ></div>
-    {/if}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-      class="g-chat-head"
-      class:g-chat-head--draggable={!isMobileView}
-      onpointerdown={chatDragStart}
-      onpointermove={chatDragMove}
-      onpointerup={chatDragEnd}
-      onpointercancel={chatDragEnd}
-    >
-      <span class="g-chat-head-title"><span class="g-chat-live"></span>Chat</span>
-      <button class="g-chat-close" onclick={toggleChat} aria-label="Fermer le chat">&#x2715;</button>
-    </div>
-    <div class="g-chat-msgs" bind:this={chatEl}>
-      {#if chatMessages.length === 0}
-        <div class="g-chat-empty">
-          <span class="g-chat-empty-ico">&#x1F4AC;</span>
-          <span>Aucun message pour l&apos;instant</span>
-          <small>Lance la conversation !</small>
-        </div>
-      {/if}
-      {#each chatMessages as m, i (m.ts + m.name)}
-        {@const mine = !m.system && m.name === USERNAME}
-        {@const admin = m.name.endsWith(' - admin')}
-        {@const system = !!m.system}
-        {@const grouped = i > 0 && chatMessages[i - 1].name === m.name}
-        <div
-          class="g-chat-msg"
-          class:g-chat-mine={mine}
-          class:g-chat-admin={admin || system}
-          class:g-chat-grouped={grouped}
-          style="--h:{chatHue(m.name)}"
-        >
-          {#if !mine}
-            <span class="g-chat-avatar">{system ? '🃏' : admin ? '★' : m.name[0].toUpperCase()}</span>
-          {/if}
-          <div class="g-chat-body">
-            {#if !grouped && !mine}
-              <span class="g-chat-author">{m.name}<span class="g-chat-time">{chatTime(m.ts)}</span></span>
-            {/if}
-            <span class="g-chat-text" title={chatTime(m.ts)}>{m.text}</span>
-          </div>
-        </div>
-      {/each}
-    </div>
-    <div class="g-chat-input-row">
-      <input
-        class="g-chat-input"
-        type="text"
-        placeholder="Message&hellip;"
-        maxlength="120"
-        bind:value={chatInput}
-        autocomplete="off" autocorrect="off" spellcheck="false"
-        onkeydown={e => { if (e.key === 'Enter') sendChat(); }}
-      >
-      <button class="g-chat-send" onclick={sendChat} aria-label="Envoyer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>
-        </svg>
-      </button>
-    </div>
-  </div>
+  <GameChat messages={chatMessages} username={USERNAME} onSend={(text) => socket?.emit('send_chat', text)} onClose={toggleChat} />
 {/if}
 
-<!-- Signalement joueur / bug -->
 <ReportModal
   bind:open={reportOpen}
   type={reportType}
@@ -1639,266 +587,28 @@
     guest: IS_GUEST,
     connected: socket?.connected ?? false,
     screen: gameoverShow ? 'scores de fin' : summaryShow ? 'résumé de manche' : 'manche',
-    answer: { artist: slotArtist.state, title: slotTitle.state },
+    answer: { artist: slots.artist.state, title: slots.title.state },
   })}
 />
 
-<!-- Inviter des amis dans la room courante -->
 <CardViewer />
 
 <svelte:window onbeforeunload={onBeforeUnload} />
 
-<Modal open={quitAsked} onClose={() => (quitAsked = false)} maxWidth="440px">
-  {@const qc = quitCase()}
-  {@const n = cardsInPlay.length}
-  {@const secureRound = Math.ceil(roundTotal / 2)}
-  <h3 class="gi-title">Quitter la partie ?</h3>
-  <p class="gi-sub">
-    {#if qc === 'lose'}
-      {n > 1 ? `Tu as ${n} cartes en jeu` : 'Tu as 1 carte en jeu'}, sécurisée{n > 1 ? 's' : ''} seulement à la manche {secureRound}.
-      <strong>En partant maintenant, tu {n > 1 ? 'les' : 'la'} perds.</strong>
-    {:else if qc === 'keep'}
-      {n > 1 ? `Tes ${n} cartes sont sécurisées` : 'Ta carte est sécurisée'} : <strong>tu {n > 1 ? 'les' : 'la'} gardes</strong>, même en partant maintenant.
-    {:else}
-      Tu n'as pas encore gagné de carte dans cette partie. En restant, chaque titre trouvé en premier peut t'en rapporter une.
-    {/if}
-  </p>
-  {#if n}
-    <div class="g-quit-cards" class:is-lost={qc === 'lose'}>
-      {#each cardsInPlay as entry (entry.card.id)}
-        <Card card={entry.card} size="mini" motion="none" />
-      {/each}
-    </div>
-  {/if}
-  <div class="g-quit-actions">
-    <button class="g-start-btn" onclick={() => (quitAsked = false)}>Rester</button>
-    <button class="g-go-back" onclick={() => { quitAsked = false; goto('/'); }}>{quitCase() === 'lose' ? 'Quitter quand même' : 'Quitter'}</button>
-  </div>
-</Modal>
+<QuitModal
+  open={quitAsked} quitCase={quitCase()} {cardsInPlay} {roundTotal}
+  onStay={() => (quitAsked = false)}
+  onQuit={() => { quitAsked = false; goto('/'); }}
+/>
 
-<Modal open={inviteOpen} onClose={() => inviteOpen = false} maxWidth="440px">
-  <h3 class="gi-title">Inviter des amis</h3>
-  <p class="gi-sub">Ils recevront une invitation pour <b>{roomLabel || ROOM_ID}</b>.</p>
-
-  {#if friendsLoading}
-    <p class="gi-dim">Chargement de tes amis…</p>
-  {:else if friendsList.length === 0}
-    <p class="gi-dim">Tu n'as pas encore d'amis sur ZIK. Ajoute des joueurs depuis leur profil ou le menu ⋯ du classement.</p>
-  {:else}
-    <div class="gi-list">
-      {#each friendsList as f (f.id)}
-        <div class="gi-row">
-          <img class="gi-av" src={f.avatar_url || dicebear(f.username)} alt="" width="34" height="34" loading="lazy" />
-          <div class="gi-info">
-            <span class="gi-name">{f.username}</span>
-            <span class="gi-elo">{f.elo} ELO</span>
-          </div>
-          {#if invitedIds.includes(f.id)}
-            <span class="gi-sent">✓ Envoyée</span>
-          {:else}
-            <button class="gi-btn" onclick={() => inviteFriend(f)} disabled={invitingId !== null}>
-              {invitingId === f.id ? '…' : 'Inviter'}
-            </button>
-          {/if}
-        </div>
-      {/each}
-    </div>
-  {/if}
-</Modal>
-
-<!-- Fermeture dropdown au clic extérieur -->
-{#if openMenuFor}
-  <div aria-hidden="true" style="position:fixed;inset:0;z-index:98" onclick={() => { openMenuFor = null; }}></div>
+{#if canInviteFriends}
+  <InviteFriendsModal
+    bind:open={inviteOpen} {getToken} userId={USER_ID} roomId={ROOM_ID} {roomLabel}
+    onError={(msg) => showFeedback(msg, 'cold')}
+  />
 {/if}
 
-<!-- Toast succès débloqués -->
 <AchievementToast items={achToasts} onConsume={() => { achToasts = achToasts.slice(1); }} />
 
-<!-- Hidden YouTube player -->
+<!-- Lecteur YouTube caché (secours si le fichier audio manque) -->
 <div id="yt-player" style="position:fixed;bottom:-1px;left:-1px;width:1px;height:1px;overflow:hidden;pointer-events:none"></div>
-
-<style>
-.gi-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900;
-  font-size: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 4px;
-}
-.gi-sub {
-  font-size: 0.8rem;
-  color: var(--mid);
-  margin-bottom: 16px;
-}
-.gi-sub b { color: var(--accent); }
-.gi-dim { color: var(--dim); font-size: 0.82rem; padding: 6px 0; }
-.gi-list {
-  max-height: min(50vh, 380px);
-  overflow-y: auto;
-  padding-right: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(var(--c-glass) / 0.18) transparent;
-}
-.gi-list::-webkit-scrollbar { width: 5px; }
-.gi-list::-webkit-scrollbar-track { background: transparent; }
-.gi-list::-webkit-scrollbar-thumb {
-  background: rgb(var(--c-glass) / 0.18);
-  border-radius: 99px;
-}
-.gi-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 2px;
-  border-bottom: 1px solid var(--border);
-}
-.gi-row:last-child { border-bottom: none; }
-.gi-av {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: rgb(var(--c-glass) / 0.06);
-  flex-shrink: 0;
-}
-.gi-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
-}
-.gi-name {
-  font-size: 0.86rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.gi-elo {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
-.gi-btn {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 0.64rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 6px 16px;
-  border-radius: 99px;
-  cursor: pointer;
-  flex-shrink: 0;
-  border: 1.5px solid rgb(var(--accent-rgb) / 0.5);
-  background: rgb(var(--accent-rgb) / 0.08);
-  color: var(--accent);
-  transition: background 0.15s, border-color 0.15s;
-}
-.gi-btn:hover { border-color: var(--accent); background: rgb(var(--accent-rgb) / 0.15); }
-.gi-btn:disabled { opacity: 0.55; cursor: default; }
-.gi-sent {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--success);
-  flex-shrink: 0;
-}
-
-.g-go-share {
-  background: none;
-  border: 1px solid rgb(var(--accent-rgb) / 0.45);
-  color: var(--accent);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 10px 22px;
-  cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-.g-go-share:hover {
-  background: rgb(var(--accent-rgb) / 0.1);
-  box-shadow: 0 0 18px rgb(var(--accent-rgb) / 0.2);
-}
-.g-go-discord {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  background: #5865f2;
-  color: #fff;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
-}
-.g-go-discord:hover {
-  background: #4752c4;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(88, 101, 242, 0.5);
-}
-
-.g-chat-resize {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 9px;
-  cursor: ew-resize;
-  touch-action: none;
-  z-index: 1;
-}
-
-.g-chat-head--draggable {
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
-.g-chat-head--draggable:active { cursor: grabbing; }
-.g-alone {
-  margin-top: 18px;
-  padding: 14px 16px;
-  border: 1px dashed var(--border2);
-  border-radius: 12px;
-  text-align: center;
-  max-width: 420px;
-}
-.g-alone p {
-  font-size: 0.85rem;
-  color: var(--mid);
-  margin: 0 0 10px;
-}
-.g-alone-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.g-alone-btn {
-  background: none;
-  border: 1px solid rgb(var(--accent-rgb) / 0.45);
-  color: var(--accent);
-  font-family: "Barlow Condensed", sans-serif;
-  font-weight: 700;
-  font-size: 0.8rem;
-  padding: 7px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  text-decoration: none;
-}
-.g-alone-btn:hover {
-  background: rgb(var(--accent-rgb) / 0.1);
-}
-</style>

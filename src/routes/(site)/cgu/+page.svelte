@@ -1,3 +1,7 @@
+<script>
+  import LegalPage from '$lib/components/legal/LegalPage.svelte';
+</script>
+
 <svelte:head>
   <title>ZIK - Conditions Générales d'Utilisation</title>
   <meta name="description" content="Conditions Générales d'Utilisation de ZIK, le blind test musical multijoueur en ligne. Accès, droits, comportement attendu et responsabilités.">
@@ -5,11 +9,7 @@
   <link rel="canonical" href="https://www.zik-music.fr/cgu">
 </svelte:head>
 
-<main class="legal-page">
-  <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
-  <h1>Conditions G&eacute;n&eacute;rales d&apos;Utilisation</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: juillet 2026</p>
-
+<LegalPage title="Conditions Générales d'Utilisation" updated="juillet 2026">
   <section>
     <h2>1. Pr&eacute;sentation du service</h2>
     <p>ZIK est une application web de blind test musical multijoueur, accessible gratuitement &agrave; l&rsquo;adresse <strong>www.zik-music.fr</strong>. Le service permet aux utilisateurs de participer &agrave; des parties de blind test en temps r&eacute;el, de cr&eacute;er des playlists personnalis&eacute;es, d&rsquo;organiser des sessions en Mode Salon (Kahoot-like) et de se mesurer &agrave; d&rsquo;autres joueurs via un classement ELO.</p>
@@ -79,39 +79,4 @@
     <h2>8. Contact</h2>
     <p>Pour toute question relative aux pr&eacute;sentes CGU, consultez la <a href="/docs#faq">FAQ</a> ou ouvrez une <a href="https://github.com/Tfoucher5/ZIK/issues" target="_blank" rel="noopener noreferrer">issue GitHub</a>.</p>
   </section>
-</main>
-
-<style>
-.legal-page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: calc(var(--nav-h) + 32px) 24px 80px;
-}
-.legal-page h1 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
-}
-.legal-date { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
-.legal-page section { margin-bottom: 32px; }
-.legal-page h2 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: var(--text);
-}
-.legal-page p, .legal-page li { font-size: 0.9rem; color: var(--mid); line-height: 1.7; }
-.legal-page ul { padding-left: 20px; margin: 8px 0; }
-.legal-page li { margin-bottom: 4px; }
-.legal-page a { color: var(--accent); }
-.legal-page code {
-  font-size: 0.82rem;
-  background: rgb(var(--c-glass) / 0.05);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
-}
-</style>
+</LegalPage>

@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { getCardByNumber } from "$lib/server/services/cardPage.js";
+import { getCardByNumber } from "$lib/server/services/cards/page.js";
 
 export async function load({ params, setHeaders }) {
   const result = await getCardByNumber(params.number);

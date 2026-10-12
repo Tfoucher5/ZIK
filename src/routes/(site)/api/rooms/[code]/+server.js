@@ -38,7 +38,7 @@ export async function GET({ params }) {
 }
 
 export async function PATCH({ params, request }) {
-  const { user, token } = await requireAuth(request);
+  const { token } = await requireAuth(request);
   const body = await request.json();
   const allowed = [
     "name",
@@ -75,13 +75,14 @@ export async function PATCH({ params, request }) {
 
   // Mettre à jour room_playlists si playlist_ids fourni
   if (playlist_ids !== undefined) {
-    await supabase.from("room_playlists").delete().eq("room_id", params.code);
+    const db = userClient(token);
+    await db.from("room_playlists").delete().eq("room_id", params.code);
     const links = playlist_ids.map((pid, i) => ({
       room_id: params.code,
       playlist_id: pid,
       position: i,
     }));
-    await supabase.from("room_playlists").insert(links);
+    await db.from("room_playlists").insert(links);
   }
 
   // Invalider le cache mémoire (config + playlist)

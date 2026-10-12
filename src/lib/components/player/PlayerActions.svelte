@@ -5,7 +5,7 @@
    * échapper aux conteneurs qui coupent les débordements (content-visibility).
    */
   import { getContext, tick } from 'svelte';
-  import ReportModal from '$lib/components/ReportModal.svelte';
+  import ReportModal from '$lib/components/report/ReportModal.svelte';
   import { fetchPlayerId, fetchSocial, sendFollow, sendFriend } from './social.js';
   import { toast } from '$lib/toast.svelte.js';
 

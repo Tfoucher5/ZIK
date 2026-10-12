@@ -1,73 +1,32 @@
 import { json } from "@sveltejs/kit";
-import { supabase, getAdminClient } from "$lib/server/config.js";
-import { roomGames, playlistCache } from "$lib/server/state.js";
+import { getAdminClient } from "$lib/server/config.js";
+import { playlistCache } from "$lib/server/state.js";
 import { MIN_ROUNDS, MIN_TRACKS } from "$lib/server/socket/game/cards.js";
 import {
   requireAuth,
   userClient,
   checkRateLimit,
 } from "$lib/server/middleware/auth.js";
-import { seededShuffle } from "$lib/utils.js";
+import {
+  ROOM_PLAYLISTS_SELECT,
+  roomPlaylists,
+  onlineCount,
+  withCovers,
+} from "$lib/server/services/roomList.js";
 
-export async function GET({ request }) {
-  const query = getAdminClient()
+export async function GET() {
+  const { data, error } = await getAdminClient()
     .from("rooms")
     .select(
-      "id, code, name, emoji, description, is_public, is_official, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, owner_id, playlist_id, profiles!owner_id(username, avatar_url), custom_playlists!playlist_id(id, name, track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))",
+      `id, code, name, emoji, description, is_public, is_official, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, owner_id, profiles!owner_id(username, avatar_url), ${ROOM_PLAYLISTS_SELECT}`,
     )
     .eq("is_public", true)
     .order("last_active_at", { ascending: false })
     .limit(200);
-
-  const { data, error } = await query;
   if (error) return json({ error: error.message }, { status: 400 });
 
   const result = (data || []).map((r) => {
-    // Nombre de joueurs en live
-    const online = Object.values(roomGames)
-      .filter((g) => g.roomId === r.code)
-      .reduce(
-        (acc, g) =>
-          acc + Object.values(g.players).filter((p) => !p._dcTimer).length,
-        0,
-      );
-
-    // Joueurs connectés à un compte : ceux qui comptent pour les cartes
-    const connected = Object.values(roomGames)
-      .filter((g) => g.roomId === r.code)
-      .reduce(
-        (acc, g) =>
-          acc +
-          Object.values(g.players).filter((p) => !p._dcTimer && p.verified)
-            .length,
-        0,
-      );
-
-    // Playlists liées (new system) ou fallback sur playlist_id
-    const playlists =
-      r.room_playlists?.length > 0
-        ? r.room_playlists
-            .sort((a, b) => a.position - b.position)
-            .map((rp) => rp.custom_playlists)
-            .filter(Boolean)
-        : r.custom_playlists
-          ? [r.custom_playlists]
-          : [];
-
-    const track_count = playlists.reduce(
-      (sum, pl) => sum + (pl?.track_count || 0),
-      0,
-    );
-
-    const playlist_ids =
-      r.room_playlists?.length > 0
-        ? r.room_playlists
-            .sort((a, b) => a.position - b.position)
-            .map((rp) => rp.playlist_id)
-        : r.playlist_id
-          ? [r.playlist_id]
-          : [];
-
+    const { playlists, playlist_ids, track_count } = roomPlaylists(r);
     return {
       id: r.id,
       code: r.code,
@@ -87,8 +46,9 @@ export async function GET({ request }) {
       playlists,
       playlist_ids,
       track_count,
-      online,
-      connected,
+      online: onlineCount(r.code),
+      // Joueurs connectés à un compte : ceux qui comptent pour les cartes
+      connected: onlineCount(r.code, { verifiedOnly: true }),
       // Titres dédoublonnés quand la playlist est en cache, comme en partie
       cards:
         (playlistCache[r.code]?.length ?? track_count) >= MIN_TRACKS &&
@@ -96,34 +56,10 @@ export async function GET({ request }) {
     };
   });
 
-  const allPids = [...new Set(result.flatMap((r) => r.playlist_ids))];
-  let coverMap = {};
-  if (allPids.length > 0) {
-    const { data: tc } = await getAdminClient().rpc("get_covers_by_playlists", {
-      pids: allPids,
-      max_per_playlist: 27,
-    });
-    for (const [pid, covers] of Object.entries(tc || {})) {
-      coverMap[pid] = new Set(covers);
-    }
-  }
-
   // Rooms avec des joueurs connectés en tête : on y gagne des cartes à plusieurs
   result.sort((a, b) => (b.connected > 0) - (a.connected > 0));
 
-  return json(
-    result.map((r) => ({
-      ...r,
-      covers: seededShuffle(
-        [
-          ...new Set(
-            r.playlist_ids.flatMap((pid) => [...(coverMap[pid] || [])]),
-          ),
-        ],
-        r.id,
-      ).slice(0, 9),
-    })),
-  );
+  return json(await withCovers(result, 9));
 }
 
 export async function POST({ request }) {
@@ -177,7 +113,7 @@ export async function POST({ request }) {
     playlist_id: pid,
     position: i,
   }));
-  await supabase.from("room_playlists").insert(links);
+  await userClient(token).from("room_playlists").insert(links);
 
   return json(data);
 }

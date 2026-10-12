@@ -14,7 +14,7 @@ export async function load({ params }) {
   const { data: song, error: songErr } = await sb
     .from("daily_songs")
     .select(
-      "track_id, tracks(preview_url, preview_expires_at, external_id, artist, title)",
+      "track_id, tracks(id, preview_url, preview_expires_at, external_id, artist, title)",
     )
     .eq("date", params.date)
     .single();

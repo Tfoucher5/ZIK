@@ -54,7 +54,9 @@ export async function backfillCovers(playlistIds) {
             if (cover) updates.push({ id: t.id, cover_url: cover });
           });
         }
-      } catch {}
+      } catch {
+        /* Spotify indisponible : on passe à Deezer */
+      }
     }
 
     // Deezer : parallèle par paquets de 10

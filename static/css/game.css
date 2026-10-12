@@ -2725,3 +2725,21 @@ html.no-animations *::after {
     display: none;
   }
 }
+
+/* Titres des fenêtres de la page de jeu (inviter, quitter) */
+.gi-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+.gi-sub {
+  font-size: 0.8rem;
+  color: var(--mid);
+  margin-bottom: 16px;
+}
+.gi-sub b {
+  color: var(--accent);
+}

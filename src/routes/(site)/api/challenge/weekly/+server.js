@@ -1,17 +1,17 @@
 import { json } from "@sveltejs/kit";
 import { getWeeklyChallengeState } from "$lib/server/services/weeklyChallenge.js";
+import { makeCache } from "$lib/server/cache.js";
 
-let _cache = null;
-let _cacheExp = 0;
+const cache = makeCache(60_000);
 
 export async function GET() {
-  if (_cache && _cacheExp > Date.now()) return json(_cache);
+  const cached = cache.get();
+  if (cached) return json(cached);
 
   const state = await getWeeklyChallengeState();
   const payload = state ? { active: true, ...state } : { active: false };
 
-  _cache = payload;
-  _cacheExp = Date.now() + 60_000;
+  cache.set(payload);
   return json(payload, {
     headers: {
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",

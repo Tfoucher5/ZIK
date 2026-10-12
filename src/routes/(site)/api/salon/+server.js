@@ -2,7 +2,7 @@ import { json } from "@sveltejs/kit";
 import {
   createSalonRoom,
   changeSalonPlaylists,
-} from "$lib/server/socket/salon.js";
+} from "$lib/server/socket/salon/index.js";
 import { salonRooms } from "$lib/server/state.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 

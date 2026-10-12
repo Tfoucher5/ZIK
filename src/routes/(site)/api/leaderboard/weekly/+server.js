@@ -1,19 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
+import { makeCache } from "$lib/server/cache.js";
 
-function makeCache(ttlMs) {
-  let _data = null,
-    _exp = 0;
-  return {
-    get() {
-      return _exp > Date.now() ? _data : null;
-    },
-    set(v) {
-      _data = v;
-      _exp = Date.now() + ttlMs;
-    },
-  };
-}
 const _cache = makeCache(60_000);
 
 export async function GET() {

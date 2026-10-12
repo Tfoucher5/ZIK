@@ -10,8 +10,8 @@ import {
   supportKick,
   supportGiftPro,
   supportSettings,
-} from "$lib/server/socket/salonAdmin.js";
-import { closeSupport } from "$lib/server/socket/salonSupport.js";
+} from "$lib/server/socket/salon/admin.js";
+import { closeSupport } from "$lib/server/socket/salon/support.js";
 
 const DAY = 24 * 3600_000;
 
