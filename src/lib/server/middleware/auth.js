@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { error } from "@sveltejs/kit";
 import { supabase, getAdminClient } from "../config.js";
+import { isUuid } from "../../utils.js";
 
 // ─── JWT token cache (avoids a Supabase round-trip per request) ──────────────
 const _tokenCache = new Map(); // token -> { user, exp }
@@ -87,11 +88,19 @@ export async function logAdminAction(
   targetType,
   payload = {},
 ) {
-  await getAdminClient().from("admin_audit_log").insert({
-    admin_id: adminId,
-    action,
-    target_id: targetId,
-    target_type: targetType,
-    payload,
-  });
+  // target_id est un uuid : un code de salon ou une date va dans le payload
+  const uuidTarget = isUuid(targetId);
+  const { error: err } = await getAdminClient()
+    .from("admin_audit_log")
+    .insert({
+      admin_id: adminId,
+      action,
+      target_id: uuidTarget ? targetId : null,
+      target_type: targetType,
+      payload:
+        uuidTarget || targetId == null
+          ? payload
+          : { ...payload, target: targetId },
+    });
+  if (err) console.error("[admin_audit_log]", err.message);
 }

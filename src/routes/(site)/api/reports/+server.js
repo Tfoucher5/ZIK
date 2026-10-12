@@ -8,7 +8,7 @@ import {
 } from "$lib/reports/bug-report.js";
 import { reportTrackIssue } from "$lib/server/services/trackIssues.js";
 import { roomGames } from "$lib/server/state.js";
-import { salonLiveState } from "$lib/server/socket/salonAdmin.js";
+import { salonLiveState } from "$lib/server/socket/salon/admin.js";
 import { NEWS } from "$lib/news.js";
 import { alertAdminsSafe } from "$lib/server/services/adminAlerts.js";
 

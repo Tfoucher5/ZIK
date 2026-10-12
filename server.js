@@ -11,9 +11,9 @@ import { writeFileSync as _writeFileSync } from "fs";
 const { handler } = await import("./build/handler.js");
 
 import { register } from "./src/lib/server/socket/game/index.js";
-import { registerSalon } from "./src/lib/server/socket/salon.js";
+import { registerSalon } from "./src/lib/server/socket/salon/index.js";
 import { registerPresence } from "./src/lib/server/socket/presence.js";
-import { dailyCardsMaintenance } from "./src/lib/server/services/cards.js";
+import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenance.js";
 import { startPushSchedule } from "./src/lib/server/services/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
 import { announceLatestNews } from "./src/lib/server/services/notifications.js";
@@ -90,7 +90,6 @@ const io = new Server(server, {
   httpCompression: { threshold: 1024 },
 });
 
-globalThis.__zik_io = io;
 register(io);
 registerSalon(io);
 registerPresence(io);

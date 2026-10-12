@@ -103,10 +103,13 @@ export async function pushToAll(category, payload, { skip = new Set() } = {}) {
 
 /** Vrai la première fois qu'une clé est vue : un envoi ne part qu'une fois. */
 export async function firstTime(key) {
-  const { error } = await getAdminClient()
+  // ON CONFLICT DO NOTHING : une clé déjà vue ne renvoie aucune ligne, sans
+  // remplir les logs Postgres d'erreurs de doublon
+  const { data, error } = await getAdminClient()
     .from("notification_once")
-    .insert({ key });
-  return !error;
+    .upsert({ key }, { onConflict: "key", ignoreDuplicates: true })
+    .select("key");
+  return !error && data.length > 0;
 }
 
 export async function saveSubscription(userId, sub, userAgent) {

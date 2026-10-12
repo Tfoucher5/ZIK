@@ -2,9 +2,7 @@ import { error } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { buildResultCardSvg } from "$lib/server/og/resultCard.js";
 import { svgToPng } from "$lib/server/og/render.js";
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { isUuid } from "$lib/utils.js";
 
 // Un résultat est figé une fois la partie terminée : l'image ne changera
 // jamais, on peut donc la garder indéfiniment.
@@ -13,7 +11,7 @@ const MEMO_LIMIT = 200;
 const memo = new Map();
 
 export async function GET({ params, setHeaders }) {
-  if (!UUID_RE.test(params.id)) throw error(404, "Résultat introuvable");
+  if (!isUuid(params.id)) throw error(404, "Résultat introuvable");
 
   setHeaders({ "Content-Type": "image/png", "Cache-Control": CACHE_HEADER });
 

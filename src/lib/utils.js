@@ -8,6 +8,13 @@ export function esc(s) {
     .replace(/"/g, "&quot;");
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(value) {
+  return typeof value === "string" && UUID_RE.test(value);
+}
+
 export function dicebear(name) {
   return `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=0c1018&textColor=3ecfff`;
 }

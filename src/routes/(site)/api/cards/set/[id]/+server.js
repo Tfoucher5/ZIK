@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
-import { getSetCards } from "$lib/server/services/collection.js";
+import { getSetCards } from "$lib/server/services/cards/collection.js";
 
 // GET /api/cards/set/:id?user=pseudo — cartes d'un set, vues depuis la
 // collection de « pseudo » : les cartes qu'il n'a pas restent des silhouettes.

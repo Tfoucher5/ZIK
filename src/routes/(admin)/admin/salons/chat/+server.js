@@ -5,7 +5,7 @@ import {
   supportView,
   markAdminJoined,
   sendSupportMessage,
-} from "$lib/server/socket/salonSupport.js";
+} from "$lib/server/socket/salon/support.js";
 
 // Chat de support de la fiche salon. Le hook réserve /admin au cookie admin.
 

@@ -1,10 +1,15 @@
 import { verifyToken } from "../middleware/auth.js";
-import { presence, roomGames, customRooms, dbRooms } from "../state.js";
+import {
+  presence,
+  roomGames,
+  customRooms,
+  dbRooms,
+  setIO,
+  getIO,
+} from "../state.js";
 
-// io ancré sur globalThis : en dev, le plugin Vite et les routes SSR chargent
-// deux instances distinctes de ce module.
 export function registerPresence(io) {
-  globalThis.__zik_io = io;
+  setIO(io);
 
   io.on("connection", (socket) => {
     socket.on("presence:hello", async (token) => {
@@ -54,7 +59,7 @@ export function currentRoomOf(userId) {
 
 // Pousse une notification en temps réel à tous les onglets d'un utilisateur.
 export function pushNotify(userId, notification) {
-  const io = globalThis.__zik_io;
+  const io = getIO();
   const sockets = presence.get(userId);
   if (!io || !sockets) return;
   for (const sid of sockets) io.to(sid).emit("notify", notification);
@@ -62,7 +67,7 @@ export function pushNotify(userId, notification) {
 
 // Demande à tous les joueurs connectés de recharger leurs notifications.
 export function refreshAllNotifications() {
-  const io = globalThis.__zik_io;
+  const io = getIO();
   if (!io) return;
   for (const sockets of presence.values())
     for (const sid of sockets) io.to(sid).emit("notify:refresh");

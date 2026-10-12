@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { getCardByNumber } from "$lib/server/services/cardPage.js";
+import { getCardByNumber } from "$lib/server/services/cards/page.js";
 import { buildMusicCardSvg } from "$lib/server/og/musicCard.js";
 import { svgToPng } from "$lib/server/og/render.js";
 

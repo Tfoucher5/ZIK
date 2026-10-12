@@ -1,10 +1,9 @@
 import { error } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
+import { isUuid } from "$lib/utils.js";
 
 export async function load({ params }) {
-  const uuidRe =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRe.test(params.id)) throw error(404, "Résultat introuvable");
+  if (!isUuid(params.id)) throw error(404, "Résultat introuvable");
 
   const { data: result } = await supabase
     .from("game_results")

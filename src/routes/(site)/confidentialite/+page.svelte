@@ -1,3 +1,7 @@
+<script>
+  import LegalPage from '$lib/components/legal/LegalPage.svelte';
+</script>
+
 <svelte:head>
   <title>ZIK - Politique de Confidentialité</title>
   <meta name="description" content="Politique de confidentialité de ZIK, le blind test musical multijoueur en ligne. Données collectées, hébergement RGPD, droits des utilisateurs.">
@@ -5,11 +9,7 @@
   <link rel="canonical" href="https://www.zik-music.fr/confidentialite">
 </svelte:head>
 
-<main class="legal-page">
-  <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
-  <h1>Politique de confidentialit&eacute;</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: septembre 2026</p>
-
+<LegalPage title="Politique de confidentialité" updated="septembre 2026">
   <section>
     <h2>1. Responsable du traitement</h2>
     <p>Le responsable du traitement des donn&eacute;es personnelles collect&eacute;es sur <strong>www.zik-music.fr</strong> est Th&eacute;o Foucher.</p>
@@ -114,39 +114,4 @@
     <h2>9. Contact</h2>
     <p>Pour toute question relative &agrave; vos donn&eacute;es ou &agrave; la pr&eacute;sente politique&nbsp;: <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a> ou via <a href="https://github.com/Tfoucher5/ZIK/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>.</p>
   </section>
-</main>
-
-<style>
-.legal-page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: calc(var(--nav-h) + 32px) 24px 80px;
-}
-.legal-page h1 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
-}
-.legal-date { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
-.legal-page section { margin-bottom: 32px; }
-.legal-page h2 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: var(--text);
-}
-.legal-page p, .legal-page li { font-size: 0.9rem; color: var(--mid); line-height: 1.7; }
-.legal-page ul { padding-left: 20px; margin: 8px 0; }
-.legal-page li { margin-bottom: 4px; }
-.legal-page a { color: var(--accent); }
-.legal-page code {
-  font-size: 0.82rem;
-  background: rgb(var(--c-glass) / 0.05);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
-}
-</style>
+</LegalPage>

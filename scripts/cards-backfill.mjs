@@ -2,7 +2,7 @@
 // Usage : node scripts/cards-backfill.mjs [--retry-missing]
 // --retry-missing : retraite aussi les titres déjà vérifiés restés sans carte.
 // Reprend là où il s'est arrêté : un titre traité n'est plus resélectionné.
-import { enrichPending } from "../src/lib/server/services/cards.js";
+import { enrichPending } from "../src/lib/server/services/cards/enrich.js";
 
 const startedAt = Date.now();
 let last = 0;

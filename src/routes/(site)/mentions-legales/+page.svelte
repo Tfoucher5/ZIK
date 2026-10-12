@@ -1,3 +1,7 @@
+<script>
+  import LegalPage from '$lib/components/legal/LegalPage.svelte';
+</script>
+
 <svelte:head>
   <title>ZIK - Mentions Légales</title>
   <meta name="description" content="Mentions légales de ZIK, le blind test musical multijoueur en ligne. Éditeur, hébergeur et informations légales.">
@@ -5,11 +9,7 @@
   <link rel="canonical" href="https://www.zik-music.fr/mentions-legales">
 </svelte:head>
 
-<main class="legal-page">
-  <button onclick={() => history.back()} class="settings-back" style="background:none;border:none;cursor:pointer;padding:0;display:inline-block;margin-bottom:24px;font-size:.82rem;color:var(--mid);font-weight:500;transition:color .15s">&larr; Retour</button>
-  <h1>Mentions L&eacute;gales</h1>
-  <p class="legal-date">Derni&egrave;re mise &agrave; jour&nbsp;: octobre 2026</p>
-
+<LegalPage title="Mentions Légales" updated="octobre 2026">
   <section>
     <h2>1. &Eacute;diteur du site</h2>
     <p>Le site <strong>www.zik-music.fr</strong> est &eacute;dit&eacute; par&nbsp;:</p>
@@ -73,39 +73,4 @@
     <h2>8. Contact</h2>
     <p>Pour toute question relative aux pr&eacute;sentes mentions l&eacute;gales&nbsp;: <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a> ou via <a href="https://github.com/Tfoucher5/ZIK/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>.</p>
   </section>
-</main>
-
-<style>
-.legal-page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: calc(var(--nav-h) + 32px) 24px 80px;
-}
-.legal-page h1 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
-}
-.legal-date { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
-.legal-page section { margin-bottom: 32px; }
-.legal-page h2 {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: var(--text);
-}
-.legal-page p, .legal-page li { font-size: 0.9rem; color: var(--mid); line-height: 1.7; }
-.legal-page ul { padding-left: 20px; margin: 8px 0; }
-.legal-page li { margin-bottom: 4px; }
-.legal-page a { color: var(--accent); }
-.legal-page code {
-  font-size: 0.82rem;
-  background: rgb(var(--c-glass) / 0.05);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
-}
-</style>
+</LegalPage>

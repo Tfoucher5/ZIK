@@ -1,11 +1,12 @@
 import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
+import { makeCache } from "$lib/server/cache.js";
 
-let _cache = null;
-let _cacheExp = 0;
+const cache = makeCache(60_000);
 
 export async function GET() {
-  if (_cache && _cacheExp > Date.now()) return json(_cache);
+  const cached = cache.get();
+  if (cached) return json(cached);
 
   try {
     const since30d = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
@@ -30,14 +31,14 @@ export async function GET() {
         .gte("started_at", since30d),
     ]);
 
-    _cache = {
+    const stats = {
       users: users ?? 0,
       publicRooms: publicRooms ?? 0,
       publicPlaylists: publicPlaylists ?? 0,
       gamesMonth: gamesMonth ?? 0,
     };
-    _cacheExp = Date.now() + 60_000;
-    return json(_cache, {
+    cache.set(stats);
+    return json(stats, {
       headers: {
         "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
       },

@@ -46,7 +46,7 @@ export async function GET({ request, url }) {
   // remaster, feat.) fusionnent en une suggestion, sous leur libellé le plus court.
   // Slice à 20 (pas 8) : un artiste avec beaucoup de titres exacts (ex. Tiakola
   // en solo) dépasse déjà les 8 sans compter les feats — la liste de suggestions
-  // scrolle (cf. ZikleGame.svelte), pas besoin de couper aussi court.
+  // scrolle (cf. components/zikle/ZikleSearch.svelte), pas besoin de couper aussi court.
   const merged = dedupByTrack([
     ...(byArtist.data || []),
     ...(byTitle.data || []),

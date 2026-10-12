@@ -1,8 +1,5 @@
 import { json } from "@sveltejs/kit";
-import {
-  getSpotifyToken,
-  normalizeSpotifyItem,
-} from "$lib/server/services/spotify.js";
+import { getSpotifyToken } from "$lib/server/services/spotify.js";
 import { getFetch } from "$lib/server/services/fetch.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
 

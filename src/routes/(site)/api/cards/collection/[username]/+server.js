@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
-import { getCollection } from "$lib/server/services/collection.js";
+import { getCollection } from "$lib/server/services/cards/collection.js";
 
 // GET /api/cards/collection/:username — cartes et sets d'un joueur.
 // Connexion requise, comme pour les profils. Profil privé : propriétaire seul.

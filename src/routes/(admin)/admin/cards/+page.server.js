@@ -6,7 +6,7 @@ import {
   deleteCards,
   revokeGrants,
   suspiciousPairs,
-} from "$lib/server/services/cardsAdmin.js";
+} from "$lib/server/services/cards/admin.js";
 import { RARITY_ORDER } from "$lib/components/card/rarity.js";
 import { GRANT_STATUSES, parseCardSearch } from "$lib/admin/cartes.js";
 

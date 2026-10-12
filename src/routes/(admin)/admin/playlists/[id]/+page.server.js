@@ -37,15 +37,10 @@ export async function load({ params }) {
   const playlist = playlistRes.data;
   const rows = tracksRes.data ?? [];
 
-  const trackIds = rows.map((r) => r.tracks?.id).filter(Boolean);
+  // Peu de signalements ouverts : un .in() sur des centaines d'ids dépasse
+  // la taille d'URL acceptée par l'API
   const [issuesRes, playsRes] = await Promise.all([
-    trackIds.length
-      ? sb
-          .from("track_issues")
-          .select("track_id")
-          .eq("status", "open")
-          .in("track_id", trackIds)
-      : Promise.resolve({ data: [] }),
+    sb.from("track_issues").select("track_id").eq("status", "open"),
     playlist.linked_room_id
       ? sb
           .from("games")

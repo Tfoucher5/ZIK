@@ -2,7 +2,7 @@
   import { onMount, setContext } from 'svelte';
   import { page } from '$app/state';
   import Nav from '$lib/components/Nav.svelte';
-  import AuthModal from '$lib/components/AuthModal.svelte';
+  import AuthModal from '$lib/components/auth/AuthModal.svelte';
   import ContactModal from '$lib/components/ContactModal.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import Onboarding from '$lib/components/onboarding/Onboarding.svelte';
@@ -262,7 +262,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.17.0</span>
+    <span class="footer-version-tag">v3.17.1</span>
   </div>
 </footer>
 {/if}
