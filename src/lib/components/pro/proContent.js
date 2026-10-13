@@ -103,8 +103,7 @@ export const PAGE_JSON_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "WebPage",
   name: "Organiser un blind test - ZIK pour les bars, associations et entreprises",
-  description:
-    `Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro pour les bars et événements.`,
+  description: `Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro pour les bars et événements.`,
   url: "https://www.zik-music.fr/pro",
   inLanguage: "fr-FR",
   isPartOf: {
