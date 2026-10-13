@@ -1,7 +1,10 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
+  import { page } from '$app/state';
   import ProfileView from '$lib/components/ProfileView.svelte';
+  import OrganizerDashboard from '$lib/components/organizer/OrganizerDashboard.svelte';
+  import ProSpaceTabs from '$lib/components/organizer/ProSpaceTabs.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import { toast } from '$lib/toast.svelte.js';
 
@@ -10,6 +13,7 @@
   const openAuthModal = _ctx.openAuthModal;
   const user      = $derived(_ctx.user);
   const authReady = $derived(_ctx.authReady);
+  const organizer = $derived(!!user?.pro && page.url.searchParams.get('vue') !== 'joueur');
 
   let profile = $state(null);
   let stats   = $state(null);
@@ -129,7 +133,10 @@
       <button class="btn-accent" onclick={() => openAuthModal('login')} style="margin-top:16px">Se connecter</button>
     </div>
   </div>
+{:else if organizer}
+  <OrganizerDashboard />
 {:else if profile}
+  {#if user.pro}<div class="profile-pro-tabs"><ProSpaceTabs active="player" /></div>{/if}
   <ProfileView {profile} {stats} {sb} userId={user.id} viewerId={user.id} editable onEdit={openEdit} />
 {/if}
 </div>
@@ -196,6 +203,20 @@
 #profile-page {
   padding-top: var(--nav-h);
   flex: 1;
+}
+.profile-pro-tabs {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+}
+.profile-pro-tabs :global(.pt) {
+  margin-bottom: 0;
+}
+@media (max-width: 600px) {
+  .profile-pro-tabs { padding: 16px 16px 0; }
+}
+#profile-page :global(.vn-page) {
+  padding-top: 28px;
 }
 
 /* -- Modal edition -- */

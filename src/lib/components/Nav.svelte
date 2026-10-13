@@ -12,6 +12,7 @@
 
   const name   = $derived(user?.profile?.username || user?.email?.split('@')[0] || 'Joueur');
   const avatar = $derived(user?.profile?.avatar_url || dicebear(name));
+  const pro    = $derived(!!user?.pro);
 
   const activeSection = $derived.by(() => {
     const path = page.url.pathname;
@@ -23,6 +24,7 @@
     if (path.startsWith('/zikle')) return 'zikle';
     if (path.startsWith('/salon')) return 'salon';
     if (path.startsWith('/docs')) return 'docs';
+    if (path.startsWith('/pro/lieu') || (path === '/profile' && pro && page.url.searchParams.get('vue') !== 'joueur')) return 'pro';
     if (path.startsWith('/profile') || path.startsWith('/user')) return 'profile';
     return '';
   });
@@ -63,10 +65,14 @@
   </div>
 
   <div class="nav-right">
-    <a href="/salon" class="nav-salon-btn" class:active={activeSection === 'salon'}>
-      <span class="nav-salon-dot"></span>
-      Mode Salon
-    </a>
+    {#if pro}
+      <a href="/profile" class="nav-salon-btn nav-pro-btn" class:active={activeSection === 'pro'}>Espace Pro</a>
+    {:else}
+      <a href="/salon" class="nav-salon-btn" class:active={activeSection === 'salon'}>
+        <span class="nav-salon-dot"></span>
+        Mode Salon
+      </a>
+    {/if}
 
     <ThemeMenu open={themeOpen} onToggle={toggleTheme} />
 
@@ -83,14 +89,22 @@
             <img src={avatar} alt="" width="34" height="34" class="nav-dd-head-av" loading="lazy" decoding="async">
             <span class="nav-dd-head-info">
               <span class="nav-dd-head-name">{name}</span>
-              {#if user?.profile?.elo != null}
+              {#if pro}
+                <span class="nav-dd-head-elo">ZIK Pro</span>
+              {:else if user?.profile?.elo != null}
                 <span class="nav-dd-head-elo">{user.profile.elo} ELO</span>
               {/if}
             </span>
           </div>
 
+          {#if pro}
+            <span class="nav-dd-group">Organisateur</span>
+            <a href="/profile"  class="nav-dd-item">Tableau de bord</a>
+            <a href="/pro/lieu" class="nav-dd-item">Mon lieu et la TV</a>
+            <a href="/salon"    class="nav-dd-item">Lancer une soir&eacute;e</a>
+          {/if}
           <span class="nav-dd-group">Mon compte</span>
-          <a href="/profile"  class="nav-dd-item">Mon profil</a>
+          <a href={pro ? '/profile?vue=joueur' : '/profile'} class="nav-dd-item">{pro ? 'Profil joueur' : 'Mon profil'}</a>
           <a href="/collection" class="nav-dd-item">Ma collection</a>
           <a href="/settings" class="nav-dd-item">Param&egrave;tres</a>
 

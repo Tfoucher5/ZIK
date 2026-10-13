@@ -1,3 +1,9 @@
+<script>
+  import { getContext } from 'svelte';
+
+  const zik = getContext('zik');
+</script>
+
 <!-- Le Mode Salon, cœur de ZIK : visible dès l'arrivée, sur tous les écrans -->
 <aside class="hero-salon" aria-labelledby="hero-salon-title">
   <div class="hs-screen" aria-hidden="true">
@@ -13,7 +19,11 @@
     <li>Pour une soirée entre amis, un bar, un camping ou un team building</li>
   </ul>
   <a class="hs-link" href="/salon/play">Rejoindre une soirée avec un code →</a>
-  <a class="hs-pro" href="/pro">Bar, camping, entreprise ? Découvrir ZIK Pro</a>
+  {#if zik?.user?.pro}
+    <a class="hs-pro" href="/profile">Mon espace organisateur ZIK Pro →</a>
+  {:else}
+    <a class="hs-pro" href="/pro">Bar, camping, entreprise ? Découvrir ZIK Pro</a>
+  {/if}
 </aside>
 
 <style>

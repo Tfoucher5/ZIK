@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { error } from "@sveltejs/kit";
 import { supabase, getAdminClient } from "../config.js";
 import { isUuid } from "../../utils.js";
+import { isPro } from "../services/pro.js";
+import { venueOfOwner } from "../services/venues.js";
 
 // ─── JWT token cache (avoids a Supabase round-trip per request) ──────────────
 const _tokenCache = new Map(); // token -> { user, exp }
@@ -103,4 +105,13 @@ export async function logAdminAction(
           : { ...payload, target: targetId },
     });
   if (err) console.error("[admin_audit_log]", err.message);
+}
+
+// Compte ZIK Pro et son lieu, pour les routes de l'espace organisateur
+export async function requireOwnVenue(request) {
+  const { user } = await requireAuth(request);
+  if (!(await isPro(user.id))) throw error(403, "Réservé aux comptes ZIK Pro.");
+  const venue = await venueOfOwner(user.id);
+  if (!venue) throw error(404, "Créez d'abord votre lieu.");
+  return venue;
 }

@@ -1,21 +1,25 @@
 <script>
   import { PRO_PERKS, PRO_COMING } from '$lib/proPlans.js';
   import { TRUST } from './proContent.js';
+
+  let { member = false } = $props();
 </script>
 
 <div class="pro-included">
-  <h3>Inclus dans toutes les formules</h3>
+  <h3>{member ? 'Inclus dans votre accès' : 'Inclus dans toutes les formules'}</h3>
   <ul>{#each PRO_PERKS as c (c)}<li>{c}</li>{/each}</ul>
 </div>
 
-<ul class="pro-trust">
-  {#each TRUST as [titre, texte] (titre)}<li><b>{titre}</b> {texte}</li>{/each}
-</ul>
-<p class="pro-legal-note">
-  Prix en euros, TVA non applicable. En payant, vous acceptez les
-  <a href="/cgv">conditions générales de vente</a>. Un compte ZIK gratuit
-  est nécessaire pour rattacher ZIK Pro à vos salons.
-</p>
+{#if !member}
+  <ul class="pro-trust">
+    {#each TRUST as [titre, texte] (titre)}<li><b>{titre}</b> {texte}</li>{/each}
+  </ul>
+  <p class="pro-legal-note">
+    Prix en euros, TVA non applicable. En payant, vous acceptez les
+    <a href="/cgv">conditions générales de vente</a>. Un compte ZIK gratuit
+    est nécessaire pour rattacher ZIK Pro à vos salons.
+  </p>
+{/if}
 
 <div class="pro-coming">
   <h3>Bientôt dans ZIK Pro</h3>

@@ -27,6 +27,11 @@ export const NOTIF_CATEGORIES = [
     label: "Nouveautés de ZIK",
     desc: "À chaque nouvelle version du site, pas pour les petits correctifs.",
   },
+  {
+    id: "venues",
+    label: "Lieux suivis",
+    desc: "Quand un bar ou un lieu que tu suis annonce une soirée blind test.",
+  },
 ];
 
 export function tokenGetter(sb) {

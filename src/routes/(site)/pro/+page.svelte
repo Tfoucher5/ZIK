@@ -8,6 +8,7 @@
   import ProPricing from '$lib/components/pro/ProPricing.svelte';
   import ProFaq from '$lib/components/pro/ProFaq.svelte';
   import ProCta from '$lib/components/pro/ProCta.svelte';
+  import ProMember from '$lib/components/pro/ProMember.svelte';
   import { ProCheckout } from '$lib/components/pro/proCheckout.svelte.js';
   import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
   import { PAGE_JSON_LD, FAQ_JSON_LD } from '$lib/components/pro/proContent.js';
@@ -45,13 +46,21 @@
   <div class="pro-back"><a href="/">← Retour à ZIK</a></div>
 
   <article class="pro-article">
-    <ProHeader {checkout} />
-    <ProSteps />
-    <ProUsages />
-    <ProSetup />
-    <ProPricing {checkout} />
-    <ProFaq />
-    <ProCta />
+    {#if checkout.activePro}
+      <ProMember {checkout} />
+      <ProSteps />
+      <ProSetup />
+      <ProFaq />
+      <ProPricing {checkout} />
+    {:else}
+      <ProHeader {checkout} />
+      <ProSteps />
+      <ProUsages />
+      <ProSetup />
+      <ProPricing {checkout} />
+      <ProFaq />
+      <ProCta />
+    {/if}
   </article>
 </main>
 

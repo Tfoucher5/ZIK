@@ -1,4 +1,5 @@
 import { RARITIES } from "../../components/card/rarity.js";
+import { venueEventText } from "../../venues.js";
 
 // Texte et lien de la notification d'appareil pour chaque type de la cloche.
 
@@ -9,6 +10,7 @@ export const CATEGORY_OF_TYPE = {
   card_up: "cards",
   card_mythic: "cards",
   card_set_near: "cards",
+  venue_event: "venues",
 };
 
 const SET_LABEL = { album: "l'album", artist: "l'artiste" };
@@ -64,6 +66,13 @@ export function pushMessageFor(n) {
         title: "Plus qu'une carte !",
         body: `Il te manque une carte pour finir ${SET_LABEL[p.kind] ?? "le set"} ${p.setName}${p.roomName ? `. Elle passe dans la room ${p.roomName}` : ""}`,
         url: p.roomCode ? `/room/${p.roomCode}` : "/collection",
+      };
+    case "venue_event":
+      return {
+        ...base,
+        title: "Soirée blind test annoncée",
+        body: venueEventText(p),
+        url: `/lieu/${p.slug}`,
       };
     default:
       return null;

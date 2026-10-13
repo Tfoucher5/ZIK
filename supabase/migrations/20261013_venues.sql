@@ -60,3 +60,35 @@ as $$
 $$;
 
 revoke execute on function public.venue_league(uuid, timestamptz) from public, anon, authenticated;
+
+-- Joueurs inscrits qui suivent un lieu : prévenus quand il annonce une soirée.
+create table if not exists public.venue_follows (
+  venue_id uuid not null references public.venues(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (venue_id, user_id)
+);
+
+create index if not exists venue_follows_user_idx on public.venue_follows (user_id);
+
+alter table public.venue_follows enable row level security;
+
+-- Une soirée n'est annoncée qu'une fois à ceux qui suivent le lieu
+alter table public.venue_events add column if not exists notified_at timestamptz;
+
+alter table public.notifications drop constraint if exists notifications_type_check;
+alter table public.notifications add constraint notifications_type_check
+  check (type in (
+    'friend_request', 'friend_accept', 'room_invite',
+    'card_up', 'card_mythic', 'card_set_near',
+    'announcement', 'news', 'venue_event'
+  ));
+
+-- Catégorie « venues » des notifications sur l'appareil, activée par défaut
+alter table public.profiles
+  alter column notif_prefs
+  set default '{"social": true, "cards": true, "challenge": true, "zikle": false, "updates": true, "venues": true}'::jsonb;
+
+update public.profiles
+  set notif_prefs = notif_prefs || '{"venues": true}'::jsonb
+  where not (notif_prefs ? 'venues');

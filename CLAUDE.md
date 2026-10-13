@@ -38,6 +38,7 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 - **Vérifier avant de livrer** : `npx eslint .`, `npx vitest run`, `npx svelte-check`, et pour toute modif d'interface un contrôle visuel en desktop et en mobile (390 px)
 - **Tests locaux** : le serveur de dev tape sur la BDD de prod. Ne pas créer de données de test (une room `auto_start` lance une partie dès qu'on la rejoint) ; si ça arrive, les supprimer
 - Fais des fichiers réduits en taille, pas de gros fichiers. Privilégie les composants et modules réutilisables.
+- Utilises le plugin ponytail et Graphify pour travailler plus vite et mieux. (si pas installé, intaller toi même)
 
 ## Avant de coder
 

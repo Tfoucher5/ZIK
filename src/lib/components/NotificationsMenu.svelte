@@ -2,6 +2,7 @@
   import { getContext } from 'svelte';
   import { dicebear } from '$lib/utils.js';
   import { RARITIES } from '$lib/components/card/rarity.js';
+  import { venueEventText } from '$lib/venues.js';
   import { notifState, markAllRead, dismissNotif } from '$lib/notifications.svelte.js';
   import { push, enablePush } from '$lib/push.svelte.js';
   import { toast } from '$lib/toast.svelte.js';
@@ -91,8 +92,8 @@
             {#if fromZik}
               <span class="notif-av notif-zik" aria-hidden="true">Z</span>
             {:else}
-              <a class="notif-av" href={n.actor ? `/user/${uname}` : '/collection'}>
-                <img src={n.payload?.cover || n.actor?.avatar_url || dicebear(uname)} alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <a class="notif-av" href={n.type === 'venue_event' ? `/lieu/${n.payload?.slug}` : n.actor ? `/user/${uname}` : '/collection'}>
+                <img src={n.payload?.cover || n.actor?.avatar_url || dicebear(n.payload?.name || uname)} alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="no-referrer">
               </a>
             {/if}
             <div class="notif-body">
@@ -125,6 +126,11 @@
                 <p><a href="/user/{uname}"><b>{uname}</b></a> a décroché la carte Mythique <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> 🌟</p>
               {:else if n.type === 'card_up'}
                 <p>Ta carte <a href="/carte/{n.payload?.number}"><b>{n.payload?.title}</b></a> est passée <b>{RARITIES[n.payload?.rarity]?.label ?? ''}</b></p>
+              {:else if n.type === 'venue_event'}
+                <p>{venueEventText(n.payload ?? {})}</p>
+                <div class="notif-actions">
+                  <a class="notif-btn accept" href="/lieu/{n.payload?.slug}">Voir le lieu</a>
+                </div>
               {:else if n.type === 'card_set_near'}
                 <p>
                   Plus qu'une carte pour finir {n.payload?.kind === 'artist' ? "l'artiste" : "l'album"} <b>{n.payload?.setName}</b>

@@ -183,7 +183,7 @@ export const STEPS = [
     kicker: "Reste au courant",
     title: "Ne rate rien",
     text: "Un ami t'invite, un nouveau défi tombe, ZIK sort une nouvelle version : avec un compte, active les notifications et tu es prévenu même quand ZIK est fermé. Tu choisis lesquelles dans les Paramètres.",
-    notify: ["social", "cards", "challenge", "updates"],
+    notify: ["social", "cards", "challenge", "updates", "venues"],
   },
   {
     final: true,

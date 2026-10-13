@@ -13,6 +13,7 @@
   import { notifPrefs } from '$lib/components/notify/notifPrefs.svelte.js';
   import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
   import { watchClientErrors } from '$lib/reports/context.js';
+  import { fetchPro, proActive } from '$lib/salonClient.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -61,7 +62,8 @@
         profile = d;
         if (profile) setCachedProfile(user.id, profile);
       }
-      currentUser = { ...user, profile };
+      const proRow = await fetchPro(sb, user.id).catch(() => null);
+      currentUser = { ...user, profile, pro: proActive(proRow) ? proRow : null };
       sessionStorage.setItem('zik_uid',   user.id);
       sessionStorage.setItem('zik_uname', profile?.username || user.email?.split('@')[0] || 'Joueur');
     } catch {
@@ -143,7 +145,7 @@
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
-  <link rel="stylesheet" href="/css/base.css?v=3.15.0">
+  <link rel="stylesheet" href="/css/base.css?v=3.18.0">
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
   <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>

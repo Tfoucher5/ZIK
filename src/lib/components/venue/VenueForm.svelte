@@ -1,62 +1,87 @@
 <script>
+  import VenueBranding from './VenueBranding.svelte';
   import { VENUE_FIELDS } from '$lib/venues.js';
 
   let { admin } = $props();
-  const LONG = new Set(['description']);
+
+  const HINTS = {
+    website: { placeholder: 'www.lecomptoir.fr' },
+    schedule: { placeholder: 'Tous les mardis à 21 h', hint: 'Votre rendez-vous régulier, en tête de page et sur l\'affiche.' },
+    description: { placeholder: 'Ambiance, lots à gagner, réservation conseillée…' },
+  };
 </script>
 
-<form class="vf" onsubmit={(e) => { e.preventDefault(); admin.save(); }}>
-  {#each Object.entries(VENUE_FIELDS) as [key, f] (key)}
-    <label>
-      <span>{f.label}{f.required ? ' *' : ''}</span>
-      {#if LONG.has(key)}
-        <textarea bind:value={admin.form[key]} maxlength={f.max} rows="4"></textarea>
-      {:else}
-        <input bind:value={admin.form[key]} maxlength={f.max} required={f.required}
-          placeholder={key === 'schedule' ? 'Tous les mardis à 21 h' : key === 'welcome' ? 'Bienvenue au Comptoir !' : ''} />
-      {/if}
-    </label>
-  {/each}
-
-  <div class="vf-row">
-    <label class="vf-logo">
-      <span>Logo</span>
-      <input type="file" accept="image/png,image/jpeg,image/webp"
-        onchange={(e) => e.target.files[0] && admin.setLogo(e.target.files[0])} />
-    </label>
-    {#if admin.form.logo}
-      <img src={admin.form.logo} alt="Aperçu du logo" />
-      <button type="button" class="vf-link" onclick={() => (admin.form.logo = null)}>Retirer</button>
+{#snippet field(key)}
+  {@const f = VENUE_FIELDS[key]}
+  <label class="vn-field">
+    <span>{f.label}{f.required ? ' *' : ''}</span>
+    {#if key === 'description'}
+      <textarea class="vn-input" bind:value={admin.form[key]} maxlength={f.max} rows="4" placeholder={HINTS[key].placeholder}></textarea>
+    {:else}
+      <input class="vn-input" bind:value={admin.form[key]} maxlength={f.max} required={f.required} placeholder={HINTS[key]?.placeholder ?? ''} />
     {/if}
-  </div>
+    {#if HINTS[key]?.hint}<small>{HINTS[key].hint}</small>{/if}
+  </label>
+{/snippet}
 
-  <div class="vf-row">
-    <label class="vf-color">
-      <span>Couleur sur la TV</span>
-      <input type="color" bind:value={admin.form.color} />
-    </label>
-    {#if admin.form.color}<button type="button" class="vf-link" onclick={() => (admin.form.color = null)}>Couleur ZIK</button>{/if}
-  </div>
+<form class="vf" onsubmit={(e) => { e.preventDefault(); admin.save(); }}>
+  <section class="vn-card">
+    <div class="vn-card-head">
+      <h2>Le lieu</h2>
+      <span class="vn-card-sub">Affiché sur votre page et dans « Où jouer », classé par ville</span>
+    </div>
+    <div class="vf-grid">
+      {@render field('name')}
+      {@render field('city')}
+      {@render field('address')}
+      {@render field('website')}
+    </div>
+  </section>
 
-  <button class="vf-save" disabled={admin.busy}>{admin.venue ? 'Enregistrer' : 'Créer mon lieu'}</button>
+  <section class="vn-card">
+    <div class="vn-card-head">
+      <h2>Sur la TV</h2>
+      <span class="vn-card-sub">Dans chaque salon lancé avec ce compte</span>
+    </div>
+    <VenueBranding {admin} />
+  </section>
+
+  <section class="vn-card">
+    <div class="vn-card-head">
+      <h2>Page publique</h2>
+      <span class="vn-card-sub">Ce que lisent vos clients avant de venir</span>
+    </div>
+    <div class="vf-stack">
+      {@render field('schedule')}
+      {@render field('description')}
+    </div>
+  </section>
+
+  <div class="vf-bar" class:dirty={admin.dirty}>
+    <span>{admin.dirty ? 'Modifications non enregistrées' : 'Tout est enregistré'}</span>
+    <button class="vn-btn" disabled={admin.busy || !admin.dirty}>{admin.venue ? 'Enregistrer' : 'Créer ma page'}</button>
+  </div>
 </form>
 
 <style>
-  .vf { display: flex; flex-direction: column; gap: 14px; }
-  label { display: flex; flex-direction: column; gap: 6px; }
-  label span { font-size: 0.8rem; font-weight: 700; color: var(--mid); }
-  input:not([type="file"]):not([type="color"]), textarea {
-    padding: 11px 13px;
+  .vf { display: flex; flex-direction: column; gap: 20px; }
+  .vf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .vf-stack { display: flex; flex-direction: column; gap: 16px; }
+  .vf-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 12px 12px 20px;
     border: 1px solid var(--border);
-    border-radius: 3px;
-    background: rgb(var(--c-glass) / 0.04);
-    color: var(--text);
-    font: inherit;
+    border-radius: 14px;
+    background: var(--nav-bg);
+    backdrop-filter: blur(10px);
+    font-size: 0.85rem;
+    color: var(--dim);
   }
-  .vf-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .vf-row img { height: 56px; max-width: 140px; object-fit: contain; }
-  .vf-color input { width: 64px; height: 40px; padding: 0; border: 0; background: none; }
-  .vf-link { background: none; border: 0; color: var(--mid); text-decoration: underline; cursor: pointer; font: inherit; font-size: 0.85rem; }
-  .vf-save { align-self: flex-start; padding: 12px 22px; border: 0; border-radius: 3px; background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 800; cursor: pointer; }
-  .vf-save:disabled { opacity: 0.5; }
+  .vf-bar.dirty { position: sticky; bottom: 16px; z-index: 2; border-color: rgb(var(--accent-rgb) / 0.5); color: var(--text); font-weight: 700; }
+  @media (max-width: 600px) {
+    .vf-grid { grid-template-columns: 1fr; }
+  }
 </style>

@@ -9,7 +9,7 @@
   import { createSupabaseClient } from '$lib/supabase.js';
   import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
   import { takeSalonKeyFromUrl, patchSalonPlaylists } from '$lib/salonClient.js';
-  import { onColor } from '$lib/venues.js';
+  import { venueTheme } from '$lib/venues.js';
 
   let { data } = $props();
   const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
@@ -261,7 +261,7 @@
     <a class="sx-btn sx-btn-primary" href="/salon/play?code={code}">Rejoindre comme joueur</a>
   </main>
 {:else}
-<div class="sh" style={venue?.color ? `--accent:${venue.color};--on-accent:${onColor(venue.color)}` : ''}>
+<div class="sh" style={venueTheme(venue?.color)}>
   <header class="sh-top">
     {#if venue}
       <span class="sh-brand sh-venue">

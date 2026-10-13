@@ -1169,3 +1169,13 @@ button {
   color: var(--mid);
   margin-top: 10px;
 }
+.nav-pro-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.nav-pro-btn:hover,
+.nav-pro-btn.active {
+  background: var(--accent);
+  opacity: 0.88;
+}

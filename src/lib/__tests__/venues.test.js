@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cleanVenue, seasonStart, onColor } from "../venues.js";
+import { cleanVenue, seasonStart, onColor, venueEventText } from "../venues.js";
 import { slugify } from "../slug.js";
 
 describe("cleanVenue", () => {
@@ -48,5 +48,25 @@ describe("slugify", () => {
   it("fait une adresse propre", () => {
     expect(slugify("Le Bar à Thym Nantes")).toBe("le-bar-a-thym-nantes");
     expect(slugify("Bigflo & Oli")).toBe("bigflo-et-oli");
+  });
+});
+
+describe("venueEventText", () => {
+  it("annonce le lieu, le thème et la date en heure de Paris", () => {
+    expect(
+      venueEventText({
+        name: "Le Comptoir",
+        startsAt: "2026-10-20T19:00:00Z",
+        theme: "Années 80",
+      }),
+    ).toBe(
+      "Le Comptoir organise un blind test « Années 80 » le mardi 20 octobre à 21:00.",
+    );
+  });
+
+  it("se passe du thème", () => {
+    expect(
+      venueEventText({ name: "Chez Jo", startsAt: "2026-12-05T20:30:00Z" }),
+    ).toBe("Chez Jo organise un blind test le samedi 5 décembre à 21:30.");
   });
 });

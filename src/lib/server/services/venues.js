@@ -22,12 +22,19 @@ async function proOwners(ownerIds) {
 export async function listVenues() {
   const { data } = await db()
     .from("venues")
-    .select("slug, name, city, owner_id")
+    .select("slug, name, city, schedule, color, logo, owner_id")
     .order("city");
   const active = await proOwners((data ?? []).map((v) => v.owner_id));
   return (data ?? [])
     .filter((v) => active.has(v.owner_id))
-    .map(({ slug, name, city }) => ({ slug, name, city }));
+    .map(({ slug, name, city, schedule, color, logo }) => ({
+      slug,
+      name,
+      city,
+      schedule,
+      color,
+      logo,
+    }));
 }
 
 export async function venueBySlug(slug) {
@@ -86,7 +93,7 @@ export async function saveVenue(userId, fields) {
 export async function upcomingEvents(venueId) {
   const { data } = await db()
     .from("venue_events")
-    .select("id, starts_at, theme")
+    .select("id, starts_at, theme, notified_at")
     .eq("venue_id", venueId)
     .gte("starts_at", new Date(Date.now() - 6 * 3600_000).toISOString())
     .order("starts_at")
@@ -130,3 +137,18 @@ export const salonVenue = (v) =>
     color: v.color,
     welcome: v.welcome,
   };
+
+// Chiffres du mois pour l'espace organisateur
+export async function monthStats(venueId) {
+  const { data } = await db()
+    .from("games")
+    .select("started_at")
+    .eq("venue_id", venueId)
+    .gte("started_at", seasonStart().toISOString());
+  const day = (d) =>
+    new Date(d).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+  return {
+    games: data?.length ?? 0,
+    nights: new Set((data ?? []).map((g) => day(g.started_at))).size,
+  };
+}

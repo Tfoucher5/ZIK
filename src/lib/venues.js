@@ -50,9 +50,41 @@ export function seasonLabel(now = new Date()) {
   });
 }
 
+const rgb = (hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return [n >> 16, (n >> 8) & 255, n & 255];
+};
+
 // Texte lisible sur la couleur du lieu
 export function onColor(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const lum = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
-  return lum > 150 ? "#000000" : "#ffffff";
+  const [r, g, b] = rgb(hex);
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#000000" : "#ffffff";
+}
+
+// Variables CSS qui passent une page ou la TV aux couleurs du lieu
+export function venueTheme(color) {
+  if (!color) return "";
+  return `--accent:${color};--accent-rgb:${rgb(color).join(" ")};--on-accent:${onColor(color)}`;
+}
+
+// « mardi 14 octobre à 21:00 », heure de Paris
+export function eventWhen(iso) {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/Paris",
+  });
+  const time = d.toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Paris",
+  });
+  return `${day} à ${time}`;
+}
+
+// Texte de la notification envoyée à ceux qui suivent le lieu
+export function venueEventText({ name, startsAt, theme }) {
+  return `${name} organise un blind test ${theme ? `« ${theme} » ` : ""}le ${eventWhen(startsAt)}.`;
 }

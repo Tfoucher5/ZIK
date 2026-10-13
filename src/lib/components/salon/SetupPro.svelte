@@ -15,6 +15,7 @@
 {#if pro}
   <p class="st-pro-actif">
     <b>ZIK Pro actif</b> : joueurs illimités, jusqu'à 8 équipes, régie complète.
+    Votre logo et votre couleur s'affichent sur la TV : <a class="st-pro-link" href="/pro/lieu">Mon lieu et la TV</a>.
     {#if proRow.stripe_customer_id}
       <button type="button" class="st-pro-manage" disabled={portalBusy} onclick={onPortal}>
         {portalBusy ? 'Ouverture…' : proRow.plan === 'night' ? 'Mes factures' : 'Gérer mon abonnement'}
@@ -37,6 +38,7 @@
 {/if}
 
 <style>
+  .st-pro-link { color: var(--accent); font-weight: 700; }
   /* L'avertissement « cet onglet devient l'écran TV » est ce que les gens
      ratent le plus : il quitte le corps de texte gris pour un encadré. */
   .st-tv {

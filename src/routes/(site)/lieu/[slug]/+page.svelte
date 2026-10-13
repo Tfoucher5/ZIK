@@ -1,11 +1,14 @@
 <script>
+  import { getContext } from 'svelte';
   import JsonLd from '$lib/components/JsonLd.svelte';
   import VenueLeague from '$lib/components/venue/VenueLeague.svelte';
   import VenueEvents from '$lib/components/venue/VenueEvents.svelte';
+  import VenueHero from '$lib/components/venue/VenueHero.svelte';
   import { breadcrumb } from '$lib/seo.js';
-  import { seasonLabel } from '$lib/venues.js';
+  import { seasonLabel, venueTheme } from '$lib/venues.js';
 
   let { data } = $props();
+  const zik = getContext('zik');
 
   const SITE = 'https://www.zik-music.fr';
   const season = seasonLabel();
@@ -52,61 +55,99 @@
   <meta property="og:type" content="website" />
   <JsonLd json={jsonLd} />
   <JsonLd json={breadcrumbJsonLd} />
-  <link rel="stylesheet" href="/css/blind-test.css?v=3.18.0" />
+  <link rel="stylesheet" href="/css/venue.css?v=3.18.0" />
 </svelte:head>
 
-<main class="bt-page">
-  <nav class="bt-crumbs" aria-label="Fil d'Ariane">
+<main class="vn-page" style={venueTheme(v.color)}>
+  <nav class="vn-crumbs" aria-label="Fil d'Ariane">
     <a href="/">Accueil</a> › <a href="/lieux">Où jouer</a> › <span>{v.name}</span>
   </nav>
 
-  <header class="bt-header venue-head">
-    {#if v.logo}<img class="venue-logo" src={v.logo} alt="Logo {v.name}" />{/if}
-    <h1><span class="bt-kicker">Blind test à {v.city}</span>{v.name}</h1>
-    {#if v.address}<p class="bt-intro">{v.address}</p>{/if}
-    <div class="bt-ctas">
-      <a class="bt-cta bt-cta-main" href="/salon/play">
-        <b>Je suis sur place</b>
-        <span>Entrer le code affiché sur la TV</span>
-      </a>
-      {#if v.website}
-        <a class="bt-cta" href={v.website} rel="noopener" target="_blank">
-          <b>Le lieu</b>
-          <span>Site, réservations, infos pratiques</span>
-        </a>
-      {/if}
-    </div>
-  </header>
+  <VenueHero venue={v} followers={data.followers} />
+
+  <div class="vp-grid">
+    <section class="vn-card">
+      <div class="vn-card-head"><h2>Prochaines soirées</h2></div>
+      <VenueEvents events={data.events} empty={v.schedule ? `Rendez-vous ${v.schedule.toLowerCase()}.` : "Pas de date annoncée pour l'instant."} />
+    </section>
+
+    <section class="vn-card">
+      <div class="vn-card-head">
+        <h2>Classement de {season}</h2>
+        <span class="vn-card-sub">{data.ranking.length} joueur{data.ranking.length > 1 ? 's' : ''}</span>
+      </div>
+      <VenueLeague ranking={data.ranking} {season} />
+      <p class="vp-note">
+        Les points de chaque soirée s'additionnent jusqu'à la fin du mois. Jouez connecté à votre compte
+        ZIK pour qu'ils vous suivent, même si vous changez de pseudo.
+      </p>
+    </section>
+  </div>
 
   {#if v.description}
-    <section class="bt-section"><p class="bt-intro">{v.description}</p></section>
+    <section class="vn-card vp-about">
+      <h2>Le lieu</h2>
+      <p>{v.description}</p>
+    </section>
   {/if}
 
-  <section class="bt-section">
-    <h2>Prochaines soirées</h2>
-    <VenueEvents events={data.events} schedule={v.schedule} />
+  <section class="vp-how" aria-label="Comment jouer">
+    {#each [
+      ['Scannez ou tapez le code', 'Le code de la partie est affiché sur l\'écran du lieu. Pas d\'application à installer.'],
+      ['Répondez sur votre téléphone', 'Titre, artiste : plus vous êtes rapide, plus vous marquez de points.'],
+      ['Grimpez au classement', 'Chaque soirée compte pour le classement du mois, affiché sur cette page.'],
+    ] as [t, d], i (t)}
+      <div><b>{i + 1}</b><h3>{t}</h3><p>{d}</p></div>
+    {/each}
   </section>
 
-  <section class="bt-section">
-    <h2>Classement de {season}</h2>
-    <VenueLeague ranking={data.ranking} {season} />
-    <p class="bt-pro">
-      Les points de chaque soirée s'additionnent jusqu'à la fin du mois. Jouez connecté à votre
-      compte ZIK pour que vos points vous suivent, même si vous changez de pseudo.
-    </p>
-  </section>
-
-  <section class="bt-section">
-    <h2>Vous aussi ?</h2>
-    <p>
-      Bar, association, camping : <a href="/pro">organisez vos soirées blind test avec ZIK Pro</a>,
-      ou <a href="/lieux">trouvez un autre lieu près de chez vous</a>.
-    </p>
-  </section>
+  <aside class="vp-pro">
+    {#if zik.user?.pro}
+      <p><b>Votre espace ZIK Pro</b> : modifiez votre lieu, programmez vos soirées et prévenez ceux qui vous suivent.</p>
+      <a class="vn-btn vn-btn-ghost" href="/profile">Mon espace organisateur</a>
+    {:else}
+      <p><b>Vous gérez un bar, une association ou un camping ?</b> Votre page, votre logo sur la TV et le classement de vos habitués.</p>
+      <a class="vn-btn vn-btn-ghost" href="/pro">Découvrir ZIK Pro</a>
+    {/if}
+  </aside>
 </main>
 
 <style>
-  .venue-head { display: flex; flex-direction: column; }
-  .venue-logo { width: 96px; height: 96px; object-fit: contain; margin-bottom: 8px; }
-  .bt-page p a { color: var(--text); text-underline-offset: 3px; }
+  .vp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .vp-note { margin-top: 16px; font-size: 0.8rem; line-height: 1.6; color: var(--dim); }
+  .vp-about { margin-top: 20px; }
+  .vp-about h2 { margin-bottom: 10px; }
+  .vp-about p { font-size: 0.95rem; line-height: 1.75; color: var(--mid); white-space: pre-line; }
+  .vp-how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 44px 0; }
+  .vp-how b {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: rgb(var(--accent-rgb) / 0.12);
+    color: var(--accent);
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+  }
+  .vp-how h3 { font-size: 0.98rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .vp-how p { font-size: 0.86rem; line-height: 1.6; color: var(--mid); }
+  .vp-pro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 24px;
+    border: 1px dashed var(--border2);
+    border-radius: 16px;
+  }
+  .vp-pro p { font-size: 0.9rem; line-height: 1.6; color: var(--mid); }
+  .vp-pro p b { color: var(--text); }
+  .vp-pro .vn-btn { flex: none; }
+  @media (max-width: 820px) {
+    .vp-grid, .vp-how { grid-template-columns: 1fr; }
+    .vp-pro { flex-direction: column; align-items: flex-start; }
+  }
 </style>

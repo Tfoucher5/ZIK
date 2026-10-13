@@ -10,6 +10,7 @@ export const PUSH_CATEGORIES = [
   "challenge",
   "zikle",
   "updates",
+  "venues",
 ];
 
 const CHUNK = 20;

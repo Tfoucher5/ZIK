@@ -14,7 +14,7 @@
       {:else if pro.plan === 'manual'}Accès offert jusqu'au {checkout.endLabel}.
       {:else}Formule {pro.plan === 'yearly' ? 'Annuel' : 'Mensuel'}, prochaine échéance le {checkout.endLabel}.{/if}
     </span>
-    <a href="/pro/lieu">Mon lieu : page publique, logo sur la TV, classement du mois →</a>
+    <a href="/profile">Mon espace organisateur : lieu, TV, classement du mois →</a>
   </div>
   {#if pro.stripe_customer_id}
     <button class="pro-status-btn" onclick={checkout.openPortal} disabled={checkout.busy === 'portal'}>

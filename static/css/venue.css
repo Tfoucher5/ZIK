@@ -1,0 +1,162 @@
+/* Lieux ZIK Pro : /lieux, /lieu/<lieu>, /pro/lieu */
+.vn-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: calc(var(--nav-h) + 28px) 24px 96px;
+}
+.vn-crumbs {
+  font-size: 0.8rem;
+  color: var(--dim);
+  margin-bottom: 28px;
+}
+.vn-crumbs a {
+  color: var(--mid);
+  text-decoration: none;
+}
+.vn-crumbs a:hover {
+  color: var(--accent);
+}
+
+.vn-tag {
+  display: inline-block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: rgb(var(--accent-rgb) / 0.12);
+  border: 1px solid rgb(var(--accent-rgb) / 0.35);
+  border-radius: 999px;
+  padding: 5px 14px;
+}
+.vn-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.02;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.vn-lead {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--mid);
+  max-width: 640px;
+}
+
+.vn-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+.vn-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.vn-card h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.vn-card-sub {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--mid);
+}
+.vn-empty {
+  padding: 22px;
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--mid);
+  text-align: center;
+}
+
+.vn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.vn-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.vn-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.vn-btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border2);
+}
+.vn-btn-ghost:hover:not(:disabled) {
+  opacity: 1;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.vn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vn-field > span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.vn-field small {
+  font-size: 0.76rem;
+  color: var(--dim);
+}
+.vn-input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.vn-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.18);
+}
+textarea.vn-input {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .vn-page {
+    padding: calc(var(--nav-h) + 18px) 16px 72px;
+  }
+  .vn-card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+}

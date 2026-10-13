@@ -1,5 +1,3 @@
-import { fetchPro, proActive } from "$lib/salonClient.js";
-
 const LOGO_SIZE = 256;
 
 // Espace « Mon lieu » d'un compte ZIK Pro
@@ -9,9 +7,15 @@ export class VenueAdmin {
   venue = $state(null);
   form = $state({});
   events = $state([]);
+  ranking = $state([]);
+  stats = $state(null);
+  followers = $state(0);
   busy = $state(false);
   message = $state("");
   error = $state("");
+  dirty = $derived(
+    JSON.stringify(this.form) !== JSON.stringify(this.venue ?? {}),
+  );
 
   constructor(zik) {
     this.zik = zik;
@@ -38,11 +42,14 @@ export class VenueAdmin {
   }
 
   async load() {
-    this.pro = proActive(await fetchPro(this.zik.sb, this.zik.user.id));
+    this.pro = !!this.zik.user.pro;
     const d = await this.call("/api/venue");
     this.venue = d.venue;
     this.form = { ...(d.venue ?? {}) };
     this.events = d.events;
+    this.ranking = d.ranking;
+    this.stats = d.stats;
+    this.followers = d.followers;
     this.ready = true;
   }
 
@@ -52,7 +59,8 @@ export class VenueAdmin {
     this.message = "";
     try {
       await fn();
-      this.message = done;
+      this.message = typeof done === "function" ? done() : done;
+      setTimeout(() => (this.message = ""), 3000);
     } catch (e) {
       this.error = e.message;
     }
@@ -68,15 +76,33 @@ export class VenueAdmin {
   }
 
   addEvent(startsAt, theme) {
-    return this.run(async () => {
-      const d = await this.call("/api/venue/events", "POST", {
-        // datetime-local est en heure locale : le serveur reçoit l'instant exact
-        // eslint-disable-next-line svelte/prefer-svelte-reactivity
-        startsAt: new Date(startsAt).toISOString(),
-        theme,
-      });
-      this.events = d.events;
-    }, "Soirée ajoutée.");
+    return this.run(
+      async () => {
+        const d = await this.call("/api/venue/events", "POST", {
+          // datetime-local est en heure locale : le serveur reçoit l'instant exact
+          // eslint-disable-next-line svelte/prefer-svelte-reactivity
+          startsAt: new Date(startsAt).toISOString(),
+          theme,
+        });
+        this.events = d.events;
+      },
+      () =>
+        this.followers
+          ? "Soirée ajoutée. Vous pouvez maintenant prévenir ceux qui vous suivent."
+          : "Soirée ajoutée.",
+    );
+  }
+
+  notifyEvent(id) {
+    let sent = 0;
+    return this.run(
+      async () => {
+        const d = await this.call("/api/venue/events/notify", "POST", { id });
+        this.events = d.events;
+        sent = d.sent;
+      },
+      () => `Notification envoyée à ${sent} joueur${sent > 1 ? "s" : ""}.`,
+    );
   }
 
   removeEvent(id) {

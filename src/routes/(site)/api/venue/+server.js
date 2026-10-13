@@ -5,16 +5,24 @@ import {
   venueOfOwner,
   saveVenue,
   upcomingEvents,
+  league,
+  monthStats,
 } from "$lib/server/services/venues.js";
+import { followerCount } from "$lib/server/services/venueFollows.js";
 import { cleanVenue } from "$lib/venues.js";
 
 export async function GET({ request }) {
   const { user } = await requireAuth(request);
   const venue = await venueOfOwner(user.id);
-  return json({
-    venue,
-    events: venue ? await upcomingEvents(venue.id) : [],
-  });
+  if (!venue)
+    return json({ venue, events: [], ranking: [], stats: null, followers: 0 });
+  const [events, ranking, stats, followers] = await Promise.all([
+    upcomingEvents(venue.id),
+    league(venue.id),
+    monthStats(venue.id),
+    followerCount(venue.id),
+  ]);
+  return json({ venue, events, ranking, stats, followers });
 }
 
 export async function PUT({ request }) {
