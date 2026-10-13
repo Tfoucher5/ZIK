@@ -47,6 +47,7 @@
   <meta property="og:type" content="website" />
   <JsonLd json={jsonLd} />
   <JsonLd json={faqJsonLd} />
+  <link rel="stylesheet" href="/css/blind-test.css?v=3.18.0" />
 </svelte:head>
 
 <main class="bt-page">
@@ -88,8 +89,8 @@
         <h2>Au programme</h2>
         <p>Parmi les artistes les plus présents dans la playlist :</p>
         <ul class="bt-artists">
-          {#each data.artists as artist (artist)}
-            <li>{artist}</li>
+          {#each data.artists as artist (artist.name)}
+            <li>{#if artist.slug}<a href="/blind-test/artiste/{artist.slug}">{artist.name}</a>{:else}{artist.name}{/if}</li>
           {/each}
         </ul>
       </section>
@@ -136,107 +137,3 @@
     </section>
   </article>
 </main>
-
-<style>
-  .bt-page {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: calc(var(--nav-h) + 32px) 24px 96px;
-  }
-  .bt-crumbs { font-size: 0.8rem; color: var(--dim); margin-bottom: 40px; }
-  .bt-crumbs a { color: var(--mid); text-underline-offset: 3px; }
-  .bt-header { padding-bottom: 40px; margin-bottom: 40px; border-bottom: 2px solid var(--text); }
-  .bt-kicker {
-    display: block;
-    margin-bottom: 14px;
-    line-height: 1;
-    font-weight: 400;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  h1 {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: clamp(3rem, 10vw, 6.4rem);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    line-height: 0.86;
-    text-transform: uppercase;
-    margin: 12px 0 32px;
-  }
-  .bt-intro { font-size: 1rem; color: var(--mid); line-height: 1.7; margin-bottom: 14px; }
-
-  .bt-ctas { display: flex; flex-wrap: wrap; gap: 16px; }
-  .bt-cta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 240px;
-    padding: 16px 20px;
-    border: 2px solid var(--text);
-    border-radius: 3px;
-    text-decoration: none;
-    color: var(--text);
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
-  .bt-cta:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--text); }
-  .bt-cta b { font-family: "Barlow Condensed", sans-serif; font-size: 1.35rem; font-weight: 900; text-transform: uppercase; }
-  .bt-cta span { font-size: 0.82rem; color: var(--mid); }
-  .bt-cta-main { background: var(--accent); color: var(--on-accent); box-shadow: 4px 4px 0 var(--text); }
-  .bt-cta-main:hover { box-shadow: 6px 6px 0 var(--text); }
-  .bt-cta-main span { color: rgb(0 0 0 / 0.7); }
-
-  .bt-section { margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--border); }
-  .bt-section:last-of-type { border-bottom: none; }
-  .bt-section h2 {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--mid);
-    margin-bottom: 16px;
-  }
-  .bt-section p, .bt-section li, .bt-faq dd { font-size: 0.95rem; color: var(--mid); line-height: 1.7; }
-
-  .bt-artists { display: flex; flex-wrap: wrap; gap: 4px 18px; list-style: none; padding: 0; margin-top: 12px; }
-  .bt-section .bt-artists li {
-    font-family: "Barlow Condensed", sans-serif;
-    font-weight: 800;
-    font-size: 1.5rem;
-    line-height: 1.2;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-  .bt-steps { list-style: none; padding: 0; counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
-  .bt-steps li { counter-increment: step; position: relative; padding-left: 40px; }
-  .bt-steps li::before {
-    content: counter(step, decimal-leading-zero);
-    position: absolute;
-    left: 0;
-    top: 3px;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.8rem;
-    color: var(--accent);
-  }
-  .bt-steps b { color: var(--text); }
-  .bt-tips { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .bt-tips li { padding-left: 22px; position: relative; }
-  .bt-tips li::before { content: "→"; position: absolute; left: 0; color: var(--text); }
-  .bt-faq dt { font-weight: 700; color: var(--text); margin-top: 18px; font-size: 1rem; }
-  .bt-faq dt:first-child { margin-top: 0; }
-  .bt-faq dd { margin: 4px 0 0; }
-  .bt-others { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 24px; }
-  .bt-section .bt-others li { border-bottom: 1px solid var(--border); }
-  .bt-others a { display: block; padding: 9px 0; color: var(--text); text-decoration: none; }
-  .bt-others a:hover { color: var(--accent); }
-  .bt-pro a { color: var(--text); text-underline-offset: 3px; }
-  .bt-pro { margin-top: 20px; }
-
-  @media (max-width: 600px) {
-    .bt-page { padding: calc(var(--nav-h) + 20px) 16px 72px; }
-    .bt-cta { min-width: 0; width: 100%; }
-  }
-</style>

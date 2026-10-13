@@ -237,6 +237,8 @@
         <a href="/blind-test/disney">Disney</a>
         <a href="/blind-test/anniversaire">Anniversaire</a>
         <a href="/blind-test">Tous les thèmes</a>
+        <a href="/blind-test/artistes">Par artiste</a>
+        <a href="/lieux">Où jouer près de chez vous</a>
       </div>
     </div>
 
@@ -262,7 +264,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.17.1</span>
+    <span class="footer-version-tag">v3.18.0</span>
   </div>
 </footer>
 {/if}

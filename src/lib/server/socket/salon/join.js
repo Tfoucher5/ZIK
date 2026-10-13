@@ -43,6 +43,7 @@ export function registerJoin(socket, io) {
 
     socket.emit("salon_host_joined", {
       pro: salon.pro,
+      venue: salon.venue,
       settings: salon.settings,
       players: getPlayerList(salon),
       teams: standings(salon),
@@ -79,6 +80,7 @@ export function registerJoin(socket, io) {
     const game = salon.game;
     socket.emit("salon_control_joined", {
       pro: salon.pro,
+      venue: salon.venue,
       settings: salon.settings,
       players: getPlayerList(salon),
       teams: standings(salon),
@@ -178,6 +180,7 @@ export function registerJoin(socket, io) {
         username,
         token: existing.token,
         reconnecting: true,
+        venue: salon.venue,
         settings: {
           answerMode: salon.settings.answerMode,
           maxRounds: salon.settings.maxRounds,
@@ -234,6 +237,7 @@ export function registerJoin(socket, io) {
       team: player.team,
       teams: standings(salon),
       players: getPlayerList(salon),
+      venue: salon.venue,
     });
     broadcastRoster(code, io);
     scheduleCleanup(code);

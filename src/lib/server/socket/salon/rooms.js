@@ -3,6 +3,7 @@ import { supabase } from "../../config.js";
 import { userClient } from "../../middleware/auth.js";
 import { salonRooms, getIO } from "../../state.js";
 import { isPro } from "../../services/pro.js";
+import { venueOfOwner, salonVenue } from "../../services/venues.js";
 import { FREE_MAX_TEAMS } from "../../../proPlans.js";
 import { makeTeams } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
@@ -40,6 +41,7 @@ export async function createSalonRoom({
 
   const code = generateCode();
   const pro = await isPro(hostUserId);
+  const venue = pro ? salonVenue(await venueOfOwner(hostUserId)) : null;
   const s = {
     maxRounds: Math.min(Math.max(settings.maxRounds || 10, 5), 20),
     roundDuration: Math.min(Math.max(settings.roundDuration || 30, 15), 60),
@@ -60,6 +62,7 @@ export async function createSalonRoom({
     code,
     adminKey,
     pro,
+    venue,
     hostUserId,
     origin,
     _hostDcTimer: null,

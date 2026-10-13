@@ -8,7 +8,7 @@
     roundEnd = null, gameOver = null,
     round = 0, total = 10,
     choices = null, answerMode = 'free',
-    paused = false, pro = false, settings = {},
+    paused = false, pro = false, venue = null, settings = {},
     onSetting,
     onRestart, onNewSalon, onMusicReady, onChangePlaylists = null,
   } = $props();
@@ -220,6 +220,7 @@
     <div class="sh-lobby">
       <div>
         <p class="sx-kicker"><b>●</b> {players.length} joueur{players.length !== 1 ? 's' : ''} connecté{players.length !== 1 ? 's' : ''}</p>
+        {#if venue?.welcome}<p class="sh-welcome">{venue.welcome}</p>{/if}
         <h1>Sortez vos<br><em>téléphones.</em></h1>
         <div class="sh-code" aria-label="Code {code}">
           {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
@@ -312,6 +313,10 @@
           {/each}
         </div>
       </div>
+    {/if}
+
+    {#if venue}
+      <p class="sh-league" class:on={revealStep >= 4}>Classement du mois chez {venue.name} : <b>zik-music.fr/lieu/{venue.slug}</b></p>
     {/if}
 
     {#if gameOver?.history?.length}

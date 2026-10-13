@@ -12,6 +12,9 @@ export const PRO_PERKS = [
   "Révéler, terminer, corriger les points à tout moment",
   "Volume de la TV réglé depuis la régie",
   "Réglages modifiables en pleine partie",
+  "La page de votre lieu, avec vos dates et le classement du mois de vos habitués",
+  "Votre logo, votre couleur et votre message sur la TV",
+  "Une affiche à imprimer avec QR code",
 ];
 
 export const PLANS = [
@@ -58,7 +61,6 @@ export const PLANS = [
 
 // Fonctions Pro annoncées, pas encore construites
 export const PRO_COMING = [
-  "L'écran TV aux couleurs du lieu : logo, couleurs, message d'accueil",
   "Manches spéciales : points doubles, intros de 3 secondes, « qui chante ? »",
   "Export des scores et historique de vos soirées",
   "Soirées programmées et inscription des équipes à l'avance",

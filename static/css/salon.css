@@ -279,6 +279,16 @@ button.sx-choice:active:not(:disabled) {
 .sh-brand span {
   color: var(--accent);
 }
+.sh-venue {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sh-venue img {
+  height: 44px;
+  max-width: 120px;
+  object-fit: contain;
+}
 .sh-join {
   display: flex;
   align-items: center;
@@ -426,6 +436,12 @@ button.sx-choice:active:not(:disabled) {
   font-size: clamp(2.6rem, 5.4vw, 5.6rem);
   line-height: 0.9;
   text-transform: uppercase;
+}
+.sh-welcome {
+  margin-top: 14px;
+  font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+  font-weight: 700;
+  color: var(--accent);
 }
 .sh-lobby h1 em {
   font-style: normal;
@@ -774,6 +790,19 @@ button.sx-choice:active:not(:disabled) {
 }
 .sh-po.p3 .sh-po-block {
   height: clamp(56px, 10vh, 110px);
+}
+.sh-league {
+  margin-top: 18px;
+  font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+  color: var(--mid);
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.sh-league.on {
+  opacity: 1;
+}
+.sh-league b {
+  color: var(--accent);
 }
 .sh-tracks {
   opacity: 0;

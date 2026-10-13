@@ -55,6 +55,7 @@
   let teams  = $state(null);
   let myTeam = $state(null);
   let paused = $state(false);
+  let venue  = $state(null);
 
   let socket;
 
@@ -131,6 +132,7 @@
       roster = data.players || [];
       teams  = data.teams;
       myTeam = data.team;
+      venue  = data.venue ?? null;
 
       if (data.reconnecting) {
         // Restore server-side state after a disconnection
@@ -396,7 +398,7 @@
       {:else if phase === 'summary' || phase === 'gameover'}
         <SummaryView
           {phase} {roundEnd} {finalScores} {scores} {username} {teams} {myTeam}
-          {round} {total}
+          {round} {total} {venue}
           onLeave={() => { joined = false; codeInput = ''; }}
         />
       {/if}

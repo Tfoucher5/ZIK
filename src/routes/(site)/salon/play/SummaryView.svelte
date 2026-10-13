@@ -12,6 +12,7 @@
     myTeam = null,
     round = 0,
     total = 10,
+    venue = null,
     onLeave,
   } = $props();
 
@@ -87,6 +88,12 @@
 </ol>
 
 {#if phase === 'gameover'}
+  {#if venue}
+    <a class="salon-venue-cta" href="/lieu/{venue.slug}">
+      <span>Tes points comptent pour le classement du mois chez <b>{venue.name}</b>.</span>
+      <b>Voir le classement →</b>
+    </a>
+  {/if}
   <div class="salon-host-cta">
     <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>
     <a href="/?auth=register&ref=salon-invite" class="sx-btn sx-btn-primary">Créer mon compte</a>
@@ -125,6 +132,18 @@
   }
   .salon-host-cta b {
     color: var(--text);
+  }
+  .salon-venue-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    border-radius: 3px;
+    background: var(--accent);
+    color: var(--on-accent);
+    text-decoration: none;
+    font-size: 0.92rem;
+    line-height: 1.4;
   }
   .salon-host-cta .salon-join-link {
     text-align: center;

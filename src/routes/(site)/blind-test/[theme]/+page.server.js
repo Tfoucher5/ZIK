@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { findTheme, BLIND_TEST_THEMES } from "$lib/blindTestThemes.js";
+import { listArtists } from "$lib/server/services/artistPages.js";
 
 const ARTIST_SAMPLE = 12;
 
@@ -17,10 +18,11 @@ async function topArtists(playlistId) {
     const artist = row.tracks?.artist?.trim();
     if (artist) counts.set(artist, (counts.get(artist) ?? 0) + 1);
   }
+  const pages = new Map((await listArtists()).map((a) => [a.name, a.slug]));
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, ARTIST_SAMPLE)
-    .map(([artist]) => artist);
+    .map(([name]) => ({ name, slug: pages.get(name) ?? null }));
 }
 
 export async function load({ params, setHeaders }) {

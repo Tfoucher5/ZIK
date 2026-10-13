@@ -9,6 +9,7 @@
   import { createSupabaseClient } from '$lib/supabase.js';
   import { loadSalonPlaylists } from '$lib/salonPlaylists.js';
   import { takeSalonKeyFromUrl, patchSalonPlaylists } from '$lib/salonClient.js';
+  import { onColor } from '$lib/venues.js';
 
   let { data } = $props();
   const sb = createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey);
@@ -18,6 +19,7 @@
   // L'écran TV n'existe qu'avec la clé du salon : personne d'autre ne l'ouvre
   let joined = $state(false);
   let pro = $state(false);
+  let venue = $state(null);
   let socket;
 
   // Changement de playlist en cours de salon
@@ -112,6 +114,7 @@
     socket.on('salon_host_joined', (data) => {
       joined   = true;
       pro      = data.pro;
+      venue    = data.venue ?? null;
       settings = data.settings || {};
       players  = data.players || [];
       teams    = data.teams;
@@ -258,9 +261,16 @@
     <a class="sx-btn sx-btn-primary" href="/salon/play?code={code}">Rejoindre comme joueur</a>
   </main>
 {:else}
-<div class="sh">
+<div class="sh" style={venue?.color ? `--accent:${venue.color};--on-accent:${onColor(venue.color)}` : ''}>
   <header class="sh-top">
-    <a class="sh-brand" href="/" title="Retour au site">ZIK <span>Salon</span></a>
+    {#if venue}
+      <span class="sh-brand sh-venue">
+        {#if venue.logo}<img src={venue.logo} alt="">{/if}
+        {venue.name}
+      </span>
+    {:else}
+      <a class="sh-brand" href="/" title="Retour au site">ZIK <span>Salon</span></a>
+    {/if}
     <div class="sh-join">
       <img src={qrUrl(100)} alt="" width="44" height="44">
       <div>
@@ -307,7 +317,7 @@
       bind:this={hostCenter}
       {phase} {code} {timerVal} {timerMax} {timerStarted}
       {players} {teams} {roundEnd} {gameOver}
-      {paused} {pro}
+      {paused} {pro} {venue}
       {round} {total}
       {choices}
       answerMode={settings.answerMode || 'free'}

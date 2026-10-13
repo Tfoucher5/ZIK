@@ -1,7 +1,7 @@
 const KEY = "zik_onboarding_done";
 
 // Pages où on arrive pour une action précise (lien d'invitation, mot de passe) : pas d'interruption.
-const SKIP_PATHS = ["/room/", "/reset-password"];
+const SKIP_PATHS = ["/room/", "/blind-test/artiste/", "/reset-password"];
 
 let _open = $state(false);
 

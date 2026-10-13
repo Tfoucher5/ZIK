@@ -16,6 +16,7 @@ export async function recordSalonGameStart(salon) {
         source: "salon",
         origin: salon.origin,
         host_id: salon.hostUserId,
+        venue_id: salon.venue?.id ?? null,
       })
       .select("id")
       .single();

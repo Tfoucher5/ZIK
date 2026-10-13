@@ -1,5 +1,7 @@
 import { supabase } from "$lib/server/config.js";
 import { BLIND_TEST_THEMES } from "$lib/blindTestThemes.js";
+import { listArtists } from "$lib/server/services/artistPages.js";
+import { listVenues } from "$lib/server/services/venues.js";
 
 const SITE = "https://www.zik-music.fr";
 
@@ -112,7 +114,35 @@ export async function GET() {
       priority: "0.8",
       lastmod: "2026-09-30",
     })),
+    {
+      loc: "/blind-test/artistes",
+      changefreq: "weekly",
+      priority: "0.8",
+      lastmod: "2026-10-13",
+    },
   ];
+
+  urls.push({ loc: "/lieux", changefreq: "weekly", priority: "0.7" });
+  const venues = await listVenues().catch((e) => {
+    console.error("[sitemap] lieux:", e.message);
+    return [];
+  });
+  for (const v of venues) {
+    urls.push({ loc: `/lieu/${v.slug}`, changefreq: "daily", priority: "0.6" });
+  }
+
+  const artists = await listArtists().catch((e) => {
+    console.error("[sitemap] artistes:", e.message);
+    return [];
+  });
+  for (const a of artists) {
+    urls.push({
+      loc: `/blind-test/artiste/${a.slug}`,
+      changefreq: "weekly",
+      priority: "0.7",
+      lastmod: "2026-10-13",
+    });
+  }
 
   // `rooms` n'a pas de colonne updated_at : le lastmod vient de last_active_at.
   const { data: rooms, error: roomsError } = await supabase

@@ -4,6 +4,22 @@
 
 export const NEWS = [
   {
+    date: "2026-10-13",
+    version: "3.18.0",
+    tag: "Nouveauté",
+    title: "Le classement de votre bar et un blind test par artiste",
+    summary:
+      "Les bars ont leur page et le classement du mois de leurs habitués, et 165 artistes ont leur propre blind test.",
+    items: [
+      "Les lieux qui organisent leurs soirées avec ZIK ont leur page : prochaines dates et classement du mois. Vos points de chaque soirée s'additionnent, jouez connecté pour qu'ils vous suivent.",
+      "En fin de partie dans un bar, le téléphone vous montre où voir le classement. Tous les lieux sont dans « Où jouer ».",
+      "ZIK Pro : logo, couleur et message d'accueil du lieu sur la TV, et une affiche avec QR code à imprimer.",
+      "165 artistes ont leur propre blind test : chaque partie tire 10 de leurs titres au hasard. Un pseudo suffit pour jouer.",
+      "Chaque page montre les titres en jeu et propose des artistes proches pour enchaîner.",
+      "Retrouvez-les tous dans Blind test › Par artiste, et depuis les pages thème.",
+    ],
+  },
+  {
     date: "2026-10-11",
     version: "3.17.0",
     tag: "Nouveauté",
