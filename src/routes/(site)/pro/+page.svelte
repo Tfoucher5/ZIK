@@ -9,6 +9,7 @@
   import ProFaq from '$lib/components/pro/ProFaq.svelte';
   import ProCta from '$lib/components/pro/ProCta.svelte';
   import { ProCheckout } from '$lib/components/pro/proCheckout.svelte.js';
+  import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
   import { PAGE_JSON_LD, FAQ_JSON_LD } from '$lib/components/pro/proContent.js';
 
   const checkout = new ProCheckout(getContext('zik'));
@@ -21,7 +22,7 @@
   <title>Animation blind test pour bar, camping et entreprise - ZIK Pro</title>
   <meta
     name="description"
-    content="Animez une soirée blind test sans animateur. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit jusqu'à 8 joueurs, ZIK Pro pour les bars, campings et événements."
+    content="Animez une soirée blind test sans animateur. L'écran affiche la partie, vos invités jouent sur leur téléphone. Gratuit jusqu'à {FREE_MAX_PLAYERS} joueurs, ZIK Pro pour les bars, campings et événements."
   />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/pro" />

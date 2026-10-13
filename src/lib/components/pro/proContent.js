@@ -104,7 +104,7 @@ export const PAGE_JSON_LD = JSON.stringify({
   "@type": "WebPage",
   name: "Organiser un blind test - ZIK pour les bars, associations et entreprises",
   description:
-    "Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à 8 joueurs, ZIK Pro pour les bars et événements.",
+    `Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro pour les bars et événements.`,
   url: "https://www.zik-music.fr/pro",
   inLanguage: "fr-FR",
   isPartOf: {
@@ -143,7 +143,7 @@ export const FAQ_JSON_LD = JSON.stringify({
   mainEntity: [
     question(
       "Combien de personnes peuvent jouer en même temps ?",
-      "Jusqu'à 8 joueurs en version gratuite, sans limite avec ZIK Pro. Chacun joue sur son propre téléphone, il n'y a rien à installer.",
+      `Jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, sans limite avec ZIK Pro. Chacun joue sur son propre téléphone, il n'y a rien à installer.`,
     ),
     question(
       "Faut-il créer un compte pour organiser une soirée ?",
@@ -151,7 +151,7 @@ export const FAQ_JSON_LD = JSON.stringify({
     ),
     question(
       "Est-ce que c'est payant ?",
-      "Le Mode Salon est gratuit jusqu'à 8 joueurs et 2 équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € la soirée.",
+      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € la soirée.`,
     ),
     question(
       "Quel matériel faut-il prévoir ?",

@@ -15,7 +15,7 @@
   import SetupBar from '$lib/components/salon/SetupBar.svelte';
   import SalonSeo from '$lib/components/salon/SalonSeo.svelte';
   import { salonJsonLd } from '$lib/components/salon/salonSetupSeo.js';
-  import { FREE_MAX_TEAMS } from '$lib/proPlans.js';
+  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/proPlans.js';
 
   let { data } = $props();
 
@@ -127,19 +127,19 @@
 
 <svelte:head>
   <title>Blind test en soirée sur la TV, les téléphones en buzzers - gratuit | ZIK</title>
-  <meta name="description" content="Organisez un blind test en soirée en 2 minutes : la TV diffuse la musique et le classement, chacun répond sur son téléphone, en solo ou en équipes. Sans appli, gratuit jusqu'à 8 joueurs." />
+  <meta name="description" content="Organisez un blind test en soirée en 2 minutes : la TV diffuse la musique et le classement, chacun répond sur son téléphone, en solo ou en équipes. Sans appli, gratuit jusqu'à {FREE_MAX_PLAYERS} joueurs." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/salon" />
 
   <meta property="og:title" content="Blind test en soirée sur la TV | ZIK" />
-  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Deezer. Sans appli, gratuit jusqu'à 8 joueurs." />
+  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium. Vos playlists Deezer. Sans appli, gratuit jusqu'à {FREE_MAX_PLAYERS} joueurs." />
   <meta property="og:url" content="https://www.zik-music.fr/salon" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Blind test en soirée sur la TV | ZIK" />
-  <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Sans appli, gratuit jusqu'à 8 joueurs." />
+  <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Sans appli, gratuit jusqu'à {FREE_MAX_PLAYERS} joueurs." />
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0" />
 
   <JsonLd json={salonJsonLd} />
