@@ -75,7 +75,14 @@ async function autoUpdateYtDlp() {
   }
 }
 
-const compress = compression({ threshold: 1024 });
+// Le gzip garde les événements SSE en tampon : le flux admin en direct n'arrivait jamais
+const compress = compression({
+  threshold: 1024,
+  filter: (req, res) =>
+    !String(res.getHeader("Content-Type") ?? "").startsWith(
+      "text/event-stream",
+    ) && compression.filter(req, res),
+});
 const IMMUTABLE_RE = /^\/(css|fonts|favicon)\//;
 const server = createServer((req, res) => {
   if (IMMUTABLE_RE.test(req.url)) {
