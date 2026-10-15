@@ -1,5 +1,6 @@
 <script>
   import SleeveArt from './SleeveArt.svelte';
+  import { fuzzyFilter } from '$lib/fuzzy.js';
 
   let { playlists = [], selectedIds = $bindable([]), onLogin = null } = $props();
 
@@ -9,12 +10,11 @@
   let searchQuery    = $state('');
   let showCommunity  = $state(false);
 
-  let q = $derived(searchQuery.trim().toLowerCase());
-  let match = (p) => !q || p.name.toLowerCase().includes(q);
-
-  let official  = $derived(playlists.filter(p => p.group === 'official' && match(p)));
-  let mine      = $derived(playlists.filter(p => p.group === 'mine' && match(p)));
-  let community = $derived(playlists.filter(p => p.group === 'public' && match(p)));
+  let q         = $derived(searchQuery.trim());
+  let found     = $derived(fuzzyFilter(playlists, q, ['name']));
+  let official  = $derived(found.filter(p => p.group === 'official'));
+  let mine      = $derived(found.filter(p => p.group === 'mine'));
+  let community = $derived(found.filter(p => p.group === 'public'));
 
   function toggle(pl) {
     selectedIds = selectedIds.includes(pl.id)

@@ -4,6 +4,20 @@
 
 export const NEWS = [
   {
+    date: "2026-10-15",
+    version: "3.18.0",
+    tag: "Amélioration",
+    title: "Des réponses mieux reconnues",
+    summary:
+      "Titre et artiste en une seule réponse, plus de fautes de frappe pardonnées, et des recherches qui vous comprennent.",
+    items: [
+      "Donnez tout d'un coup : « bohemian rhapsody queen » valide le titre et l'artiste en une seule réponse, featurings compris.",
+      "Les fautes de frappe passent beaucoup mieux : lettres inversées, oubliées ou en trop, mots collés ou dans le désordre.",
+      "Les nombres s'écrivent comme vous voulez : « two become one » vaut « 2 Become 1 ».",
+      "Les barres de recherche (playlists, rooms, collection de cartes, invitations) trouvent ce que vous cherchez même avec une faute ou sans accents.",
+    ],
+  },
+  {
     date: "2026-10-11",
     version: "3.17.0",
     tag: "Nouveauté",

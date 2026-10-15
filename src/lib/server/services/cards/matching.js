@@ -1,8 +1,5 @@
-import { createRequire } from "node:module";
 import { cleanString, parseFeaturing } from "../playlist.js";
-
-const require = createRequire(import.meta.url);
-const stringSimilarity = require("string-similarity");
+import { similarity } from "../../../fuzzy.js";
 
 // « Titre - Remastered 2011 », « Titre - Live », « Titre - Radio Edit » → « Titre »
 export function stripVersion(title) {
@@ -71,7 +68,7 @@ export function sameArtist(a, b) {
   if (x === y) return true;
   if (x.length > 2 && y.length > 2 && (x.includes(y) || y.includes(x)))
     return true;
-  if (stringSimilarity.compareTwoStrings(x, y) >= 0.75) return true;
+  if (similarity(x, y) >= 80) return true;
   const lastX = x.split(" ").pop();
   return lastX.length >= 4 && lastX === y.split(" ").pop();
 }
@@ -97,7 +94,7 @@ export function looseTitle(a, b) {
     long.includes(short)
   )
     return true;
-  return stringSimilarity.compareTwoStrings(x, y) >= 0.75;
+  return similarity(x, y) >= 80;
 }
 export const titleOf = (v) => v.title_short || v.title;
 export const fullTitleMatch = (v, title) =>

@@ -1,8 +1,5 @@
-import { createRequire } from "module";
 import { displayString } from "../services/playlist.js";
-
-const require = createRequire(import.meta.url);
-const stringSimilarity = require("string-similarity");
+import { findParts, partialSimilarity, similarity } from "../../fuzzy.js";
 
 // Ressemblance globale, sans découper en mots : un seul mot juste ne suffit
 // pas à valider une réponse
@@ -15,26 +12,74 @@ export function checkMatch(input, target) {
   if (len >= 3 && target.includes(input) && len / tLen >= 0.4) return true;
   // Cible contenue dans la réponse (mots en trop autour)
   if (tLen >= 3 && input.includes(target) && tLen / len >= 0.6) return true;
-  const sim = stringSimilarity.compareTwoStrings(input, target);
-  if (len <= 2) return sim >= 0.95;
-  if (sim >= 0.72) return true;
-  // Réponses longues : un peu plus tolérant aux fautes de frappe
-  if (len >= 6 && sim >= 0.65) return true;
-  return false;
+  const sim = similarity(input, target);
+  return len <= 2 ? sim === 100 : sim >= 80;
 }
 
 export function checkClose(input, target) {
   if (!input || !target || input.length < 2) return false;
-  const sim = stringSimilarity.compareTwoStrings(input, target);
-  if (sim >= 0.42) return true;
-  if (input.length >= 3 && target.length >= 3) {
-    for (let i = 0; i <= target.length - input.length + 1; i++) {
-      const chunk = target.slice(i, i + input.length);
-      if (stringSimilarity.compareTwoStrings(input, chunk) >= 0.8) return true;
-    }
-  }
-  return false;
+  if (similarity(input, target) >= 60) return true;
+  return input.length >= 3 && partialSimilarity(input, target) >= 80;
 }
+
+const words = (s) => (s ? s.split(" ").filter(Boolean).length : 0);
+
+// Parties encore à trouver, dans l'ordre où on les teste
+function openParts(track, found) {
+  return [
+    !found.foundArtist && { kind: "artist", target: track.cleanArtist },
+    ...track.cleanFeatArtists.map(
+      (target, index) =>
+        !found.foundFeats[index] && { kind: "feat", index, target },
+    ),
+    !found.foundTitle && { kind: "title", target: track.cleanTitle },
+    ...(track.extraAnswers || []).map(
+      (e, index) =>
+        !found.foundExtras[index] && { kind: "extra", index, target: e.clean },
+    ),
+  ].filter((p) => p && p.target);
+}
+
+// Tout peut se donner d'un coup (« bohemian rhapsody queen ») : une partie est
+// trouvée si elle ressemble à toute la réponse ou à un passage. Une réponse
+// bien plus longue que le morceau ne ratisse rien.
+export function gradeGuess(input, track, found) {
+  const parts = openParts(track, found);
+  const trackWords = [
+    track.cleanArtist,
+    ...track.cleanFeatArtists,
+    track.cleanTitle,
+    ...(track.extraAnswers || []).map((e) => e.clean),
+  ].reduce((n, s) => n + words(s), 0);
+  const inGuess =
+    words(input) <= trackWords + 2
+      ? findParts(
+          input,
+          parts.map((p) => p.target),
+        )
+      : [];
+  const hits = parts.filter(
+    (p, i) => inGuess.includes(i) || checkMatch(input, p.target),
+  );
+  const close = hits.length
+    ? null
+    : (parts.find((p) => checkClose(input, p.target)) ?? null);
+  return { hits, close };
+}
+
+export function markFound(player, part) {
+  if (part.kind === "artist") player.foundArtist = true;
+  if (part.kind === "title") player.foundTitle = true;
+  if (part.kind === "feat") player.foundFeats[part.index] = true;
+  if (part.kind === "extra") player.foundExtras[part.index] = true;
+}
+
+const NAMES = { artist: "Artiste", feat: "Feat", title: "Titre" };
+const CLOSE = { artist: "l'artiste", feat: "le feat", title: "le titre" };
+export const partName = (part, track) =>
+  NAMES[part.kind] ?? track.extraAnswers[part.index].label;
+export const closeMsg = (part, track) =>
+  `Tu chauffes sur ${CLOSE[part.kind] ?? track.extraAnswers[part.index].label} !`;
 
 const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 

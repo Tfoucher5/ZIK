@@ -1,16 +1,13 @@
 <script>
   import PlaylistTrackRow from './PlaylistTrackRow.svelte';
+  import { fuzzyFilter } from '$lib/fuzzy.js';
 
   let { store, onEditAnswers } = $props();
 
   let filter = $state('');
   let openId = $state(null);
 
-  const shown = $derived.by(() => {
-    const q = filter.trim().toLowerCase();
-    if (!q) return store.tracks;
-    return store.tracks.filter((t) => `${t.artist} ${t.title}`.toLowerCase().includes(q));
-  });
+  const shown = $derived(fuzzyFilter(store.tracks, filter, ['artist', 'title']));
 
   let shownPl = null;
   $effect(() => {
