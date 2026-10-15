@@ -4,9 +4,24 @@ import {
   displayString,
 } from "../../services/playlist.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
-import { calcQcmPoints, checkClose, checkMatch } from "../scoring.js";
+import {
+  calcQcmPoints,
+  closeMsg,
+  gradeGuess,
+  markFound,
+  partName,
+} from "../scoring.js";
 import { emitPlayers, getOrCreateRoom } from "./rooms.js";
 import { checkEveryoneFound } from "./rounds.js";
+
+const foundValue = (part, track) =>
+  part.kind === "artist"
+    ? displayString(track.mainArtist || track.artist)
+    : part.kind === "title"
+      ? displayString(track.title)
+      : part.kind === "feat"
+        ? displayString(track.featArtists[part.index])
+        : track.extraAnswers[part.index].value;
 
 // Réponses des joueurs : texte libre ou QCM
 export function registerAnswers(socket, io) {
@@ -36,100 +51,23 @@ export function registerAnswers(socket, io) {
     const track = room.game.currentTrack;
     const cover = track.cover || "";
 
-    let hit = false;
-
-    if (!user.foundArtist) {
-      if (checkMatch(input, track.cleanArtist)) {
-        user.foundArtist = true;
-        user.score += 1 + speedBonus;
-        socket.emit("feedback", {
-          type: "success_artist",
-          msg: `Artiste ! (+${1 + speedBonus} pts)`,
-          val: displayString(track.mainArtist || track.artist),
-          cover,
-        });
-        hit = true;
-      } else if (!hit && checkClose(input, track.cleanArtist)) {
-        socket.emit("feedback", {
-          type: "close",
-          msg: "Tu chauffes sur l'artiste !",
-        });
-        hit = true;
-      }
+    const { hits, close } = gradeGuess(input, track, user);
+    for (const part of hits) {
+      markFound(user, part);
+      user.score += 1 + speedBonus;
+      socket.emit("feedback", {
+        type: `success_${part.kind}`,
+        featIndex: part.kind === "feat" ? part.index : undefined,
+        extraIndex: part.kind === "extra" ? part.index : undefined,
+        msg: `${partName(part, track)} ! (+${1 + speedBonus} pts)`,
+        val: foundValue(part, track),
+        cover,
+      });
     }
-
-    for (let fi = 0; fi < track.cleanFeatArtists.length; fi++) {
-      if (user.foundFeats[fi]) continue;
-      const cleanFeat = track.cleanFeatArtists[fi];
-      if (checkMatch(input, cleanFeat)) {
-        user.foundFeats[fi] = true;
-        user.score += 1 + speedBonus;
-        socket.emit("feedback", {
-          type: "success_feat",
-          featIndex: fi,
-          msg: `Feat ! (+${1 + speedBonus} pts)`,
-          val: displayString(track.featArtists[fi]),
-          cover,
-        });
-        hit = true;
-        break;
-      } else if (!hit && checkClose(input, cleanFeat)) {
-        socket.emit("feedback", {
-          type: "close",
-          msg: "Tu chauffes sur le feat !",
-        });
-        hit = true;
-      }
-    }
-
-    if (!user.foundTitle) {
-      if (checkMatch(input, track.cleanTitle)) {
-        user.foundTitle = true;
-        user.score += 1 + speedBonus;
-        socket.emit("feedback", {
-          type: "success_title",
-          msg: `Titre ! (+${1 + speedBonus} pts)`,
-          val: displayString(track.title),
-          cover,
-        });
-        hit = true;
-      } else if (!hit && checkClose(input, track.cleanTitle)) {
-        socket.emit("feedback", {
-          type: "close",
-          msg: "Tu chauffes sur le titre !",
-        });
-        hit = true;
-      }
-    }
-
-    if (!hit) {
-      for (let ei = 0; ei < (track.extraAnswers || []).length; ei++) {
-        if (user.foundExtras[ei]) continue;
-        const extra = track.extraAnswers[ei];
-        if (checkMatch(input, extra.clean)) {
-          user.foundExtras[ei] = true;
-          user.score += 1 + speedBonus;
-          socket.emit("feedback", {
-            type: "success_extra",
-            extraIndex: ei,
-            msg: `${extra.label} ! (+${1 + speedBonus} pts)`,
-            val: extra.value,
-            cover,
-          });
-          hit = true;
-          break;
-        } else if (checkClose(input, extra.clean)) {
-          socket.emit("feedback", {
-            type: "close",
-            msg: `Tu chauffes sur ${extra.label} !`,
-          });
-          hit = true;
-          break;
-        }
-      }
-    }
-
-    if (!hit) socket.emit("feedback", { type: "miss", msg: "Pas du tout..." });
+    if (close)
+      socket.emit("feedback", { type: "close", msg: closeMsg(close, track) });
+    if (!hits.length && !close)
+      socket.emit("feedback", { type: "miss", msg: "Pas du tout..." });
 
     emitPlayers(room, io);
 

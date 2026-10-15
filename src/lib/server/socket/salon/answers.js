@@ -1,6 +1,6 @@
 import { calcSpeedBonus, cleanString } from "../../services/playlist.js";
 import { salonRooms } from "../../state.js";
-import { checkClose, checkMatch } from "../scoring.js";
+import { closeMsg, gradeGuess, markFound, partName } from "../scoring.js";
 import {
   broadcastRoster,
   playerFullyFound,
@@ -46,118 +46,26 @@ export function registerAnswers(socket, io) {
 
     const timeTaken = (Date.now() - salon.game.startTime) / 1000;
     const bonus = calcSpeedBonus(timeTaken);
-    let hit = false;
-
-    if (!player.foundArtist) {
-      if (checkMatch(input, track.cleanArtist)) {
-        player.foundArtist = true;
-        player.score += 1 + bonus;
-        socket.emit("salon_feedback", {
-          type: "success_artist",
-          correct: true,
-          points: 1 + bonus,
-          msg: `Artiste ! (+${1 + bonus} pts)`,
-        });
-        hit = true;
-      } else if (checkClose(input, track.cleanArtist)) {
-        socket.emit("salon_feedback", {
-          type: "close",
-          correct: false,
-          points: 0,
-          msg: "Tu chauffes sur l'artiste !",
-        });
-        hit = true;
-      }
-    }
-
-    if (!hit) {
-      for (let fi = 0; fi < track.cleanFeatArtists.length; fi++) {
-        if (player.foundFeats[fi]) continue;
-        if (checkMatch(input, track.cleanFeatArtists[fi])) {
-          player.foundFeats[fi] = true;
-          player.score += 1 + bonus;
-          socket.emit("salon_feedback", {
-            type: "success_feat",
-            correct: true,
-            points: 1 + bonus,
-            msg: `Feat ! (+${1 + bonus} pts)`,
-          });
-          hit = true;
-          break;
-        } else if (checkClose(input, track.cleanFeatArtists[fi])) {
-          socket.emit("salon_feedback", {
-            type: "close",
-            correct: false,
-            points: 0,
-            msg: "Tu chauffes sur le feat !",
-          });
-          hit = true;
-          break;
-        }
-      }
-    }
-
-    if (!hit) {
-      if (!player.foundTitle) {
-        if (checkMatch(input, track.cleanTitle)) {
-          player.foundTitle = true;
-          player.score += 1 + bonus;
-          socket.emit("salon_feedback", {
-            type: "success_title",
-            correct: true,
-            points: 1 + bonus,
-            msg: `Titre ! (+${1 + bonus} pts)`,
-          });
-          hit = true;
-        } else if (checkClose(input, track.cleanTitle)) {
-          socket.emit("salon_feedback", {
-            type: "close",
-            correct: false,
-            points: 0,
-            msg: "Tu chauffes sur le titre !",
-          });
-          hit = true;
-        }
-      }
-    }
-
-    if (!hit) {
-      for (let ei = 0; ei < (track.extraAnswers || []).length; ei++) {
-        if (player.foundExtras[ei]) continue;
-        const extra = track.extraAnswers[ei];
-        if (checkMatch(input, extra.clean)) {
-          player.foundExtras[ei] = true;
-          player.score += 1 + bonus;
-          socket.emit("salon_feedback", {
-            type: "success_extra",
-            extraIndex: ei,
-            correct: true,
-            points: 1 + bonus,
-            msg: `${extra.label} ! (+${1 + bonus} pts)`,
-          });
-          hit = true;
-          break;
-        } else if (checkClose(input, extra.clean)) {
-          socket.emit("salon_feedback", {
-            type: "close",
-            correct: false,
-            points: 0,
-            msg: `Tu chauffes sur ${extra.label} !`,
-          });
-          hit = true;
-          break;
-        }
-      }
-    }
-
-    if (!hit) {
+    const { hits, close } = gradeGuess(input, track, player);
+    for (const part of hits) {
+      markFound(player, part);
+      player.score += 1 + bonus;
       socket.emit("salon_feedback", {
-        type: "miss",
-        correct: false,
-        points: 0,
-        msg: "Pas du tout…",
+        type: `success_${part.kind}`,
+        extraIndex: part.kind === "extra" ? part.index : undefined,
+        correct: true,
+        points: 1 + bonus,
+        msg: `${partName(part, track)} ! (+${1 + bonus} pts)`,
       });
     }
+    if (!hits.length)
+      socket.emit("salon_feedback", {
+        type: close ? "close" : "miss",
+        correct: false,
+        points: 0,
+        msg: close ? closeMsg(close, track) : "Pas du tout…",
+      });
+    const hit = hits.length > 0 || !!close;
 
     // Check if fully found now
     if (playerFullyFound(player, track) && !player._fullFoundCounted) {

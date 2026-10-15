@@ -456,7 +456,7 @@
   <title>ZIK - En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/game.css?v=3.17.1">
+  <link rel="stylesheet" href="/css/game.css?v=3.18.0">
   <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
 

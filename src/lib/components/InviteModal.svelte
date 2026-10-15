@@ -1,6 +1,7 @@
 <script>
   import Modal from '$lib/components/Modal.svelte';
   import { toast } from '$lib/toast.svelte.js';
+  import { fuzzyFilter } from '$lib/fuzzy.js';
 
   let { open = false, onClose = () => {}, sb, viewerId = null, targetId, targetName = '' } = $props();
 
@@ -13,12 +14,8 @@
 
   const filteredPublic = $derived.by(() => {
     const mine = new Set(myRooms.map((r) => r.code));
-    let list = publicRooms.filter((r) => !mine.has(r.code) && r.code !== myRoom?.roomId);
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((r) => r.name?.toLowerCase().includes(q));
-    }
-    return list.slice(0, 16);
+    const list = publicRooms.filter((r) => !mine.has(r.code) && r.code !== myRoom?.roomId);
+    return fuzzyFilter(list, search, ['name']).slice(0, 16);
   });
 
   async function getToken() {
