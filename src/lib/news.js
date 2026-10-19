@@ -9,8 +9,9 @@ export const NEWS = [
     tag: "Amélioration",
     title: "Des réponses mieux reconnues",
     summary:
-      "Titre et artiste en une seule réponse, plus de fautes de frappe pardonnées, et des recherches qui vous comprennent.",
+      "Nouveau moteur de reconnaissance des réponses : titre et artiste en une seule réponse, plus de fautes de frappe pardonnées, et des recherches qui vous comprennent.",
     items: [
+      "ZIK change de moteur pour reconnaître vos réponses : plus rapide et plus précis, il comprend mieux ce que vous tapez, sans accepter les mauvaises réponses.",
       "Donnez tout d'un coup : « bohemian rhapsody queen » valide le titre et l'artiste en une seule réponse, featurings compris.",
       "Les fautes de frappe passent beaucoup mieux : lettres inversées, oubliées ou en trop, mots collés ou dans le désordre.",
       "Les nombres s'écrivent comme vous voulez : « two become one » vaut « 2 Become 1 ».",
