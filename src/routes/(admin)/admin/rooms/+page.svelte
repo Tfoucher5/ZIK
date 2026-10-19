@@ -4,6 +4,7 @@
   import Sheet from '$lib/admin/Sheet.svelte';
   import BarChart from '$lib/admin/BarChart.svelte';
   import { ago } from '$lib/admin/stats-utils.js';
+  import { fuzzyFilter } from '$lib/fuzzy.js';
 
   let { data } = $props();
 
@@ -39,9 +40,8 @@
   const counts = $derived(Object.fromEntries(FILTERS.map((f) => [f.key, data.rooms.filter(f.test).length])));
   const list = $derived.by(() => {
     const test = FILTERS.find((f) => f.key === filter).test;
-    const needle = q.trim().toLowerCase();
-    return data.rooms
-      .filter((r) => test(r) && (!needle || `${r.name} ${r.code} ${r.owner ?? ''}`.toLowerCase().includes(needle)))
+    return fuzzyFilter(data.rooms, q, ['name', 'code', 'owner'])
+      .filter(test)
       .sort(SORTS[sort].fn);
   });
   const top = $derived([...data.rooms].filter((r) => r.plays7).sort((a, b) => b.plays7 - a.plays7).slice(0, 6));

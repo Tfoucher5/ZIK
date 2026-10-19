@@ -7,6 +7,7 @@
   import { invalidateAll } from '$app/navigation';
   import { getContext } from 'svelte';
   import { ago } from '$lib/admin/stats-utils.js';
+  import { fuzzyFilter } from '$lib/fuzzy.js';
 
   let { data, form } = $props();
   const adminCtx = getContext('adminToken');
@@ -51,17 +52,13 @@
     answers: tracks.filter((t) => t.answers.length).length,
   });
   const shown = $derived.by(() => {
-    const q = query.trim().toLowerCase();
-    return tracks.filter((t) => {
+    const list = tracks.filter((t) => {
       if (view === 'nopreview' && t.track?.preview_url) return false;
       if (view === 'reported' && !t.reported) return false;
       if (view === 'answers' && !t.answers.length) return false;
-      if (!q) return true;
-      return [artistOf(t), titleOf(t), ...(t.custom_feats ?? []), ...t.answers.map((a) => a.value)]
-        .join(' ')
-        .toLowerCase()
-        .includes(q);
+      return true;
     });
+    return fuzzyFilter(list, query, [artistOf, titleOf, (t) => (t.custom_feats ?? []).join(' '), (t) => t.answers.map((a) => a.value).join(' ')]);
   });
   const canReorder = $derived(view === 'all' && !query.trim());
   const typeName = $derived(Object.fromEntries(data.types.map((t) => [t.id, t.name])));

@@ -65,7 +65,7 @@
         type="text"
         id="guessInput"
         class="g-input"
-        placeholder="Artiste ou titre&hellip; tape ta r&eacute;ponse"
+        placeholder="Artiste, titre ou les deux&hellip;"
         disabled={disabled}
         bind:value={guessVal}
         autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" maxlength="100"

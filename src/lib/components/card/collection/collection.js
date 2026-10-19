@@ -1,4 +1,5 @@
 import { RARITY_ORDER } from "../rarity.js";
+import { fuzzyFilter } from "../../../fuzzy.js";
 
 export const STEP = 60;
 export const VIEWS = [
@@ -28,12 +29,6 @@ export const SORTS = [
 export const decadeOf = (year) => (year ? `${Math.floor(year / 10) * 10}` : "");
 export const decadeLabel = (d) =>
   Number(d) >= 2000 ? `Années ${d}` : `Années ${String(d).slice(2)}`;
-const norm = (s) =>
-  String(s || "")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
-
 export const fmt = (n) => n.toLocaleString("fr-FR");
 // Au moins un trait visible dès la première carte
 export const pct = (n, total) =>
@@ -75,13 +70,11 @@ export function autoMore(node) {
 }
 
 export function filterCards(cards, { q, rarity, genre, decade, sort }) {
-  const needle = norm(q);
-  const list = cards.filter(
+  const list = fuzzyFilter(cards, q, ["title", "artist", "album"]).filter(
     (c) =>
       (!rarity || c.rarity === rarity) &&
       (!genre || c.genre === genre) &&
-      (!decade || decadeOf(c.year) === decade) &&
-      (!needle || norm(`${c.title} ${c.artist} ${c.album}`).includes(needle)),
+      (!decade || decadeOf(c.year) === decade),
   );
   const rank = (c) => RARITY_ORDER.indexOf(c.rarity);
   const by = {

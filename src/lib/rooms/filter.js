@@ -1,3 +1,5 @@
+import { fuzzyFilter } from "../fuzzy.js";
+
 const HOUR = 3_600_000;
 
 // Filtres de la page Rooms : clé → test sur une room.
@@ -27,22 +29,15 @@ export function toggleFilter(active, key) {
   return [...next];
 }
 
-function matchesQuery(r, q) {
-  if (!q) return true;
-  return [
-    r.name,
-    r.profiles?.username,
-    ...(r.playlists || []).map((p) => p?.name),
-  ]
-    .filter(Boolean)
-    .some((s) => s.toLowerCase().includes(q));
-}
+const ROOM_SEARCH_KEYS = [
+  "name",
+  (r) => r.profiles?.username,
+  (r) => (r.playlists || []).map((p) => p?.name).join(" "),
+];
 
 export function filterRooms(rooms, { q = "", active = [] }, now = Date.now()) {
-  const query = q.trim().toLowerCase();
-  return rooms.filter(
-    (r) =>
-      matchesQuery(r, query) && active.every((k) => FILTERS[k].test(r, now)),
+  return fuzzyFilter(rooms, q, ROOM_SEARCH_KEYS).filter((r) =>
+    active.every((k) => FILTERS[k].test(r, now)),
   );
 }
 

@@ -1,4 +1,6 @@
 <script>
+  import { fuzzyFilter } from '$lib/fuzzy.js';
+
   let { playlists, selected = $bindable() } = $props();
 
   let q = $state('');
@@ -7,8 +9,7 @@
   const total = $derived(chosen.reduce((n, p) => n + (p.track_count || 0), 0));
   const GROUPS = ['Mes playlists', 'Officielles', 'Publiques'];
   const groups = $derived.by(() => {
-    const s = q.trim().toLowerCase();
-    const list = s ? playlists.filter((p) => p.name.toLowerCase().includes(s)) : playlists;
+    const list = fuzzyFilter(playlists, q, ['name']);
     return GROUPS.map((g) => ({ name: g, items: list.filter((p) => p.group === g) })).filter((g) => g.items.length);
   });
 
