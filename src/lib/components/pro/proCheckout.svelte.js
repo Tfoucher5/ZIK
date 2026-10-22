@@ -1,5 +1,5 @@
-import { fetchPro, proActive, goToStripe } from "$lib/salonClient.js";
-import { PLANS } from "$lib/proPlans.js";
+import { fetchPro, proActive, goToStripe } from "$lib/client/salonClient.js";
+import { PLANS } from "$lib/data/proPlans.js";
 
 const INTENT_KEY = "zik_pro_intent";
 

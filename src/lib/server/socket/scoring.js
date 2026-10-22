@@ -1,5 +1,9 @@
-import { displayString } from "../services/playlist.js";
-import { findParts, partialSimilarity, similarity } from "../../fuzzy.js";
+import { displayString } from "../services/music/trackText.js";
+import {
+  findParts,
+  partialSimilarity,
+  similarity,
+} from "../../shared/fuzzy.js";
 
 // Ressemblance globale, sans découper en mots : un seul mot juste ne suffit
 // pas à valider une réponse

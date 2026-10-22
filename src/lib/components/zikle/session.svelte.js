@@ -4,7 +4,7 @@ import {
   durationForAttempt,
   computeStreak,
   buildShareGrid,
-} from "$lib/zikle/shared.js";
+} from "$lib/shared/zikle/shared.js";
 import { loadGuestHistory, saveGuestResult } from "./history.js";
 import { SnippetPlayer } from "./player.svelte.js";
 

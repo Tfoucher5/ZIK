@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
-import { albumPage } from "$lib/server/services/deezerCatalog.js";
+import { albumPage } from "$lib/server/services/music/deezerCatalog.js";
 
 export async function GET({ request, params }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";

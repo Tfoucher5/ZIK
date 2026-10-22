@@ -1,5 +1,5 @@
 import { getAdminClient } from "$lib/server/config.js";
-import { refreshExpiredPreviews } from "$lib/server/services/playlist.js";
+import { refreshExpiredPreviews } from "$lib/server/services/music/playlist.js";
 import {
   refreshZiklePool,
   getOrCreateDailySong,

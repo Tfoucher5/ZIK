@@ -1,19 +1,8 @@
 // Lecture de l'extrait d'une manche : fichier audio (cas normal) ou lecteur
 // YouTube caché en secours. Tous les joueurs démarrent ensemble au signal
 // round_start_sync, puis un garde-fou recale la lecture si elle dérive.
-
-const FAKE_META = {
-  title: "♪ ♪ ♪",
-  artist: "???",
-  album: "ZIK — Blind Test",
-  artwork: [
-    {
-      src: "/favicon/web-app-manifest-192x192.png",
-      sizes: "192x192",
-      type: "image/png",
-    },
-  ],
-};
+import { GameYoutube } from "./gameYoutube.js";
+import { lockMediaSession, unlockMediaSession } from "./mediaSession.js";
 
 const audioEl = () => document.getElementById("previewAudio");
 
@@ -21,26 +10,7 @@ export function savedVolume() {
   return parseInt(localStorage.getItem("zik_vol") ?? "50");
 }
 
-// Le titre ne doit jamais apparaître dans les contrôles système du téléphone
-function lockMediaSession() {
-  if (!("mediaSession" in navigator)) return;
-  try {
-    const fake = new MediaMetadata(FAKE_META);
-    Object.defineProperty(navigator.mediaSession, "metadata", {
-      get: () => fake,
-      set: () => {},
-      configurable: true,
-    });
-  } catch {
-    /* navigateur sans MediaMetadata */
-  }
-  navigator.mediaSession.playbackState = "playing";
-}
-
 export class GameAudio {
-  ytPlayer = null;
-  ytReady = false;
-  pendingLoad = null;
   roundActive = false;
   waitingForSync = false;
   syncPaused = false;
@@ -54,14 +24,19 @@ export class GameAudio {
   playingBlob = null;
   metaGuard = null;
   driftInterval = null;
+  yt = new GameYoutube(this);
 
   constructor({ onPlayerReady }) {
     this.onPlayerReady = onPlayerReady;
     lockMediaSession();
   }
 
+  get volume() {
+    return savedVolume();
+  }
+
   setVolume(v) {
-    this.ytPlayer?.setVolume?.(v);
+    this.yt.player?.setVolume?.(v);
     const audio = audioEl();
     if (audio) audio.volume = v / 100;
     localStorage.setItem("zik_vol", v);
@@ -76,119 +51,7 @@ export class GameAudio {
   stopMediaGuard() {
     clearInterval(this.metaGuard);
     this.metaGuard = null;
-    try {
-      Object.defineProperty(navigator.mediaSession, "metadata", {
-        get: () => null,
-        set: () => {},
-        configurable: true,
-      });
-    } catch {
-      /* navigateur sans mediaSession */
-    }
-    if ("mediaSession" in navigator)
-      navigator.mediaSession.playbackState = "none";
-  }
-
-  #createYTPlayer() {
-    window.onYouTubeIframeAPIReady = () => {
-      this.ytPlayer = new window.YT.Player("yt-player", {
-        height: "1",
-        width: "1",
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          enablejsapi: 1,
-          playsinline: 1,
-        },
-        events: {
-          onReady: (e) => this.#onYTReady(e),
-          onStateChange: (e) => this.#onYTState(e),
-        },
-      });
-    };
-    if (!document.getElementById("yt-api-script")) {
-      const s = document.createElement("script");
-      s.id = "yt-api-script";
-      s.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(s);
-    } else if (window.YT?.Player) {
-      window.onYouTubeIframeAPIReady();
-    }
-  }
-
-  #onYTReady(e) {
-    this.ytReady = true;
-    e.target.setVolume(savedVolume());
-    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      document.addEventListener(
-        "touchstart",
-        () => {
-          this.ytPlayer.mute();
-          this.ytPlayer.playVideo();
-          setTimeout(() => {
-            if (!this.roundActive) this.ytPlayer.pauseVideo();
-          }, 200);
-        },
-        { capture: true, once: true },
-      );
-    }
-    if (this.pendingLoad) {
-      this.loadVideo(this.pendingLoad.id, this.pendingLoad.start);
-      this.pendingLoad = null;
-    }
-  }
-
-  #onYTState(e) {
-    const { PlayerState } = window.YT;
-    const yt = this.ytPlayer;
-    if (e.data === PlayerState.PLAYING) {
-      yt.setVolume(savedVolume());
-      yt.unMute();
-      this.startMediaGuard();
-      if (this.waitingForSync) {
-        this.onPlayerReady();
-        this.syncPaused = true;
-        yt.pauseVideo();
-      } else if (
-        this.syncAnchor !== null &&
-        this.lastVideo &&
-        yt?.getCurrentTime
-      ) {
-        // Arrivée en cours de manche : on recale direct sur la référence
-        const expected =
-          this.lastVideo.startSeconds + (Date.now() - this.syncAnchor) / 1000;
-        if (Math.abs(yt.getCurrentTime() - expected) > 2)
-          yt.seekTo(expected, true);
-      }
-    }
-    const stopped =
-      e.data === PlayerState.ENDED || e.data === PlayerState.PAUSED;
-    if (
-      !this.syncPaused &&
-      !this.adminPaused &&
-      this.roundActive &&
-      this.lastVideo &&
-      stopped
-    ) {
-      const elapsed =
-        this.syncAnchor !== null
-          ? (Date.now() - this.syncAnchor) / 1000
-          : (Date.now() - this.lastVideo.startedAt) / 1000;
-      this.loadVideo(
-        this.lastVideo.videoId,
-        this.lastVideo.startSeconds + elapsed,
-      );
-    }
-  }
-
-  loadVideo(videoId, startSeconds) {
-    if (!this.ytReady || !this.ytPlayer) {
-      this.pendingLoad = { id: videoId, start: startSeconds };
-      this.#createYTPlayer();
-      return;
-    }
-    this.ytPlayer.mute();
-    this.ytPlayer.loadVideoById({ videoId, startSeconds });
+    unlockMediaSession();
   }
 
   prefetch(url) {
@@ -238,7 +101,7 @@ export class GameAudio {
   loadAudio(audioUrl, startSeconds, onReady) {
     const audio = audioEl();
     if (!audio) return;
-    this.ytPlayer?.stopVideo?.();
+    this.yt.player?.stopVideo?.();
     audio.pause();
     audio.onloadedmetadata = null;
     audio.onended = null;
@@ -281,7 +144,7 @@ export class GameAudio {
       );
     } else {
       this.usingIframe = true;
-      this.loadVideo(data.videoId, data.startSeconds);
+      this.yt.load(data.videoId, data.startSeconds);
     }
   }
 
@@ -321,7 +184,7 @@ export class GameAudio {
     this.nextAudio?.start?.();
     if (!play) return;
     if (this.usingIframe) {
-      const yt = this.ytPlayer;
+      const yt = this.yt.player;
       if (yt?.seekTo && this.lastVideo)
         yt.seekTo(this.lastVideo.startSeconds + elapsed, true);
       yt?.unMute?.();
@@ -345,7 +208,7 @@ export class GameAudio {
       )
         return;
       if (this.usingIframe) {
-        const yt = this.ytPlayer;
+        const yt = this.yt.player;
         if (yt?.getPlayerState?.() === 1 && yt?.getCurrentTime) {
           const expected =
             this.lastVideo.startSeconds + (Date.now() - this.syncAnchor) / 1000;
@@ -364,7 +227,7 @@ export class GameAudio {
   }
 
   stop() {
-    if (this.ytReady && this.ytPlayer) this.ytPlayer.stopVideo();
+    if (this.yt.ready && this.yt.player) this.yt.player.stopVideo();
     const audio = audioEl();
     if (audio) {
       audio.onended = null;
@@ -386,7 +249,7 @@ export class GameAudio {
   pause() {
     this.adminPaused = true;
     try {
-      this.ytPlayer?.pauseVideo();
+      this.yt.player?.pauseVideo();
     } catch {
       /* lecteur pas prêt */
     }
@@ -396,7 +259,7 @@ export class GameAudio {
   resume() {
     this.adminPaused = false;
     try {
-      this.ytPlayer?.playVideo();
+      this.yt.player?.playVideo();
     } catch {
       /* lecteur pas prêt */
     }

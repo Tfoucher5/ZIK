@@ -1,6 +1,6 @@
 {
   "name": "zik-music.fr",
-  "version": "3.19.0",
+  "version": "3.19.1",
   "description": "Blind Test Multijoueur",
   "type": "module",
   "scripts": {
@@ -21,9 +21,7 @@
     "guess-rater": "^2.0.0",
     "imapflow": "^2.1.2",
     "mailparser": "^3.9.32",
-    "node-fetch": "^3.3.2",
     "nodemailer": "^10.0.16",
-    "resend": "^6.32.1",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.8.3",
     "stripe": "^22.6.2",

@@ -1,6 +1,6 @@
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { escapeIlike } from "$lib/zikle/shared.js";
+import { escapeIlike } from "$lib/shared/zikle/shared.js";
 
 const PAGE_SIZE = 50;
 const SORTS = {

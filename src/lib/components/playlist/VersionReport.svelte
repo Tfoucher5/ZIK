@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte';
-  import { toast } from '$lib/toast.svelte.js';
-  import { MIN_REPORT_MESSAGE } from '$lib/reports/bug-report.js';
+  import { toast } from '$lib/client/toast.svelte.js';
+  import { MIN_REPORT_MESSAGE } from '$lib/shared/reports/bug-report.js';
 
   let { track, trackId, videoId, onDone } = $props();
 

@@ -1,5 +1,5 @@
 import { RARITY_ORDER } from "../rarity.js";
-import { fuzzyFilter } from "../../../fuzzy.js";
+import { fuzzyFilter } from "../../../shared/fuzzy.js";
 
 export const STEP = 60;
 export const VIEWS = [

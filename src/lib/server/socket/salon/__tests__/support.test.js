@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 const alertAdminsSafe = vi.fn();
-vi.mock("../../../services/adminAlerts.js", () => ({ alertAdminsSafe }));
+vi.mock("../../../services/admin/alerts.js", () => ({ alertAdminsSafe }));
 
 const { salonRooms, setIO } = await import("../../../state.js");
 const {

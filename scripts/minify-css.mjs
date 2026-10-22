@@ -1,4 +1,4 @@
-// Minifie les CSS copiés depuis static/css vers build/client/css après le build,
+// Minifie les CSS copiés depuis static/css (et ses sous-dossiers) vers build/client/css après le build,
 // et régénère leurs .br/.gz (la précompression adapter a tourné avant, sur les non-minifiés).
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
@@ -11,7 +11,9 @@ if (!existsSync(dir)) {
   process.exit(1);
 }
 
-for (const f of readdirSync(dir).filter((n) => n.endsWith(".css"))) {
+for (const f of readdirSync(dir, { recursive: true }).filter((n) =>
+  n.endsWith(".css"),
+)) {
   const p = join(dir, f);
   const src = readFileSync(p, "utf8");
   const { code } = await transform(src, { loader: "css", minify: true });

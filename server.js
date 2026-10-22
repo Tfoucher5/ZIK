@@ -14,10 +14,10 @@ import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon/index.js";
 import { registerPresence } from "./src/lib/server/socket/presence.js";
 import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenance.js";
-import { startPushSchedule } from "./src/lib/server/services/pushSchedule.js";
+import { startPushSchedule } from "./src/lib/server/services/notify/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
-import { announceLatestNews } from "./src/lib/server/services/notifications.js";
-import { startErrorWatch } from "./src/lib/server/services/adminAlerts.js";
+import { announceLatestNews } from "./src/lib/server/services/notify/notifications.js";
+import { startErrorWatch } from "./src/lib/server/services/admin/alerts.js";
 
 const _origError = console.error.bind(console);
 const _origWarn = console.warn.bind(console);

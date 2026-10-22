@@ -1,7 +1,6 @@
-export { todayParis } from "../../zikle/shared.js";
+export { todayParis } from "../../shared/zikle/shared.js";
 
-import { getFetch } from "./fetch.js";
-import { parseExpFromUrl } from "./deezer.js";
+import { parseExpFromUrl } from "./music/deezer.js";
 import { enqueueCardEnrichment } from "./cards/maintenance.js";
 
 const REFRESH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -45,8 +44,7 @@ export async function refreshZiklePool(sb, force = false) {
     }
   }
 
-  const fetchFn = await getFetch();
-  const res = await fetchFn(DEEZER_CHART_URL, {
+  const res = await fetch(DEEZER_CHART_URL, {
     headers: { "User-Agent": "ZIK-BlindTest/1.0" },
     signal: AbortSignal.timeout(8000),
   });

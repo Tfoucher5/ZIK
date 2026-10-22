@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
-import { matchLines } from "$lib/server/services/deezerCatalog.js";
+import { matchLines } from "$lib/server/services/music/deezerCatalog.js";
 
 // POST /api/deezer/match { lines: ["Daft Punk - One More Time", ...] }
 export async function POST({ request }) {

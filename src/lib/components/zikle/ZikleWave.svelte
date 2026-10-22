@@ -1,5 +1,5 @@
 <script>
-  import { waveformForDate } from "$lib/zikle/shared.js";
+  import { waveformForDate } from "$lib/shared/zikle/shared.js";
   import { TOTAL } from "./session.svelte.js";
 
   let { date, unlocked, playing, progress, justUnlocked } = $props();

@@ -1,5 +1,5 @@
 import { salonRooms, getIO } from "../../state.js";
-import { alertAdminsSafe } from "../../services/adminAlerts.js";
+import { alertAdminsSafe } from "../../services/admin/alerts.js";
 
 // Chat en direct entre l'organisateur d'un salon (régie ou écran TV) et
 // l'admin. Tout reste en mémoire sur le salon : rien n'est gardé après la

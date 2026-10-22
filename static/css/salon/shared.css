@@ -1,0 +1,253 @@
+/* ── ZIK — Mode Salon ─────────────────────────────────────────────────────
+   DA du site (noir, magenta, Barlow Condensed, JetBrains Mono) en version
+   « régie » : une seule information forte à l'écran à la fois, lisible depuis
+   le canapé, aucun décor qui ne serve à rien.
+   Préfixes : sx- partagé, sh- écran hôte, sp- téléphone joueur.
+──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --s-cond: "Barlow Condensed", sans-serif;
+  --s-mono: "JetBrains Mono", ui-monospace, monospace;
+  --q0: #ff4f9a;
+  --q1: #5bc0eb;
+  --q2: #f4e04d;
+  --q3: #3ddc84;
+  /* Équipes 5 à 8 (ZIK Pro) */
+  --q4: #8c7bff;
+  --q5: #ff8c42;
+  --q6: #2ec4b6;
+  --q7: #f2ede3;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Barlow", sans-serif;
+}
+a {
+  color: inherit;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Partagé ───────────────────────────────────────────────────────────── */
+.sx-kicker {
+  font-family: var(--s-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+.sx-kicker b {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.sx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border: 2px solid var(--text);
+  border-radius: 3px;
+  background: none;
+  color: var(--text);
+  font-family: var(--s-cond);
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s,
+    background 0.15s;
+}
+.sx-btn:hover:not(:disabled) {
+  background: var(--surface2);
+}
+.sx-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 4px 4px 0 var(--text);
+}
+.sx-btn-primary:hover:not(:disabled) {
+  background: var(--accent);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--text);
+}
+.sx-btn-primary:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--text);
+}
+.sx-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.sx-btn-lg {
+  padding: 16px 36px;
+  font-size: 1.25rem;
+}
+
+.sx-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.sx-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: sx-dot 1.2s ease-in-out infinite;
+}
+.sx-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.sx-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes sx-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.salon-back {
+  font-size: 0.85rem;
+  color: var(--mid);
+  text-decoration: none;
+}
+.salon-back:hover {
+  color: var(--text);
+}
+.salon-play-backlink {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top));
+  left: 16px;
+  z-index: 20;
+}
+.salon-join-link {
+  background: none;
+  border: 0;
+  color: var(--mid);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.salon-join-link:hover {
+  color: var(--text);
+}
+
+/* QCM : quatre couleurs franches, une forme par case (lisible en daltonien) */
+.sx-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.sx-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--c);
+  color: #111;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  text-align: left;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
+}
+button.sx-choice {
+  cursor: pointer;
+}
+button.sx-choice:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.sx-choice.c0 {
+  --c: var(--q0);
+}
+.sx-choice.c1 {
+  --c: var(--q1);
+}
+.sx-choice.c2 {
+  --c: var(--q2);
+}
+.sx-choice.c3 {
+  --c: var(--q3);
+}
+.sx-shape {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background: #111;
+}
+.c0 .sx-shape {
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.c1 .sx-shape {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.c2 .sx-shape {
+  border-radius: 50%;
+}
+.sx-choice.reveal-neutral {
+  opacity: 0.3;
+}
+.sx-choice.reveal-wrong {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.sx-choice.reveal-correct {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+  animation: sx-pop 0.4s ease;
+}
+@keyframes sx-pop {
+  50% {
+    transform: scale(1.04);
+  }
+}

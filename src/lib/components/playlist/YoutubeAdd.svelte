@@ -1,8 +1,8 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { guessFromVideo } from '$lib/playlist/input.js';
+  import { guessFromVideo } from '$lib/shared/playlist/input.js';
   import { player } from './previewPlayer.svelte.js';
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { id, store, onDone } = $props();
 

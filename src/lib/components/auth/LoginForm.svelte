@@ -1,5 +1,5 @@
 <script>
-  import Captcha from '$lib/components/Captcha.svelte';
+  import Captcha from '$lib/components/auth/Captcha.svelte';
   import AuthPanel from './AuthPanel.svelte';
   import YouLine from './YouLine.svelte';
   import OAuthButtons from './OAuthButtons.svelte';

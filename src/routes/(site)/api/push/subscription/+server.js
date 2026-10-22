@@ -3,7 +3,7 @@ import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
 import {
   saveSubscription,
   deleteSubscription,
-} from "$lib/server/services/push.js";
+} from "$lib/server/services/notify/push.js";
 
 const validSub = (s) =>
   typeof s?.endpoint === "string" &&

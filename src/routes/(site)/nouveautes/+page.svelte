@@ -1,8 +1,8 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
-  import { NEWS } from '$lib/news.js';
-  import { breadcrumb } from '$lib/seo.js';
+  import { NEWS } from '$lib/data/news.js';
+  import { breadcrumb } from '$lib/shared/seo.js';
   const breadcrumbJsonLd = breadcrumb([{ name: 'Nouveautés', path: '/nouveautes' }]);
 
 

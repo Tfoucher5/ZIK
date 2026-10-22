@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { requireAuth } from "$lib/server/middleware/auth.js";
-import { PUSH_CATEGORIES } from "$lib/server/services/push.js";
+import { PUSH_CATEGORIES } from "$lib/server/services/notify/push.js";
 
 // GET : catégories de notifications activées. PUT : en change une partie.
 export async function GET({ request }) {

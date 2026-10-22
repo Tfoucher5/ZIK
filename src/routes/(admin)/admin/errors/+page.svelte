@@ -1,8 +1,8 @@
 <script>
   import { getContext } from 'svelte';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import Sheet from '$lib/admin/Sheet.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');

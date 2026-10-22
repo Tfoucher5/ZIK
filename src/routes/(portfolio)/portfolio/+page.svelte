@@ -1,15 +1,15 @@
 <script>
     import { onMount } from 'svelte';
 
-    import PortfolioNav from './components/PortfolioNav.svelte';
-    import Hero from './components/Hero.svelte';
-    import TechMarquee from './components/TechMarquee.svelte';
-    import Experience from './components/Experience.svelte';
-    import Education from './components/Education.svelte';
-    import Skills from './components/Skills.svelte';
-    import Projects from './components/Projects.svelte';
-    import Passions from './components/Passions.svelte';
-    import Contact from './components/Contact.svelte';
+    import PortfolioNav from '$lib/components/portfolio/PortfolioNav.svelte';
+    import Hero from '$lib/components/portfolio/Hero.svelte';
+    import TechMarquee from '$lib/components/portfolio/TechMarquee.svelte';
+    import Experience from '$lib/components/portfolio/Experience.svelte';
+    import Education from '$lib/components/portfolio/Education.svelte';
+    import Skills from '$lib/components/portfolio/Skills.svelte';
+    import Projects from '$lib/components/portfolio/Projects.svelte';
+    import Passions from '$lib/components/portfolio/Passions.svelte';
+    import Contact from '$lib/components/portfolio/Contact.svelte';
 
     export let form;
 

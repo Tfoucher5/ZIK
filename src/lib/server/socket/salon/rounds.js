@@ -1,6 +1,6 @@
 import { salonRooms } from "../../state.js";
-import { displayString } from "../../services/playlist.js";
-import { reportTrackIssue } from "../../services/trackIssues.js";
+import { displayString } from "../../services/music/trackText.js";
+import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { makeChoices, calcQcmPoints } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
 import { searchTrackVideo } from "./tracks.js";

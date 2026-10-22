@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { requireAdminToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { sumWindow, computeDelta, pct } from "$lib/admin/stats-utils.js";
+import { sumWindow, computeDelta, pct } from "$lib/shared/admin/stats-utils.js";
 
 const CACHE_TTL = 5 * 60_000;
 const _cache = new Map(); // days -> { data, exp }

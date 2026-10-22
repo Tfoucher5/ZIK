@@ -1,0 +1,304 @@
+/* les crédits de fin (tracklist) */
+.g-go-credits {
+  flex: 1;
+  min-width: 0;
+  max-width: 430px;
+}
+.g-go-eyebrow {
+  font-family: var(--g-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.g-go-credits-title {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 3.6vw, 2.5rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+.g-go-tracklist {
+  margin-top: 18px;
+  max-height: 44vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.g-go-track {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transform: translateX(16px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.g-go-track.revealed {
+  opacity: 1;
+  transform: none;
+}
+.g-go-track.me {
+  box-shadow: inset 2px 0 0 var(--accent);
+  padding-left: 10px;
+}
+.g-go-track.me .g-go-tname,
+.g-go-track.me .g-go-tname .g-go-link {
+  color: var(--accent);
+}
+.g-go-tnum {
+  font-family: var(--g-mono);
+  font-size: 0.66rem;
+  color: var(--dim);
+  width: 24px;
+  flex-shrink: 0;
+}
+.g-go-track.t1 .g-go-tnum {
+  color: var(--gold);
+}
+.g-go-track.t2 .g-go-tnum {
+  color: var(--silver);
+}
+.g-go-track.t3 .g-go-tnum {
+  color: #b0764a;
+}
+.g-go-tname {
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 62%;
+  flex-shrink: 0;
+}
+.g-go-tyou {
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  border: 1px solid rgb(var(--accent-rgb) / 0.4);
+  padding: 1px 5px;
+  margin-left: 7px;
+  vertical-align: 2px;
+}
+.g-go-guest {
+  font-family: var(--g-mono);
+  font-size: 0.55rem;
+  color: var(--dim);
+  letter-spacing: 0;
+}
+.g-go-tfill {
+  flex: 1;
+  min-width: 20px;
+  border-bottom: 1px dotted var(--border2);
+  transform: translateY(-4px);
+}
+.g-go-tpts {
+  font-family: var(--g-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.g-go-track.t1 .g-go-tpts {
+  color: var(--gold);
+}
+.g-go-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.g-go-guest-note {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent);
+  background: rgb(var(--accent-rgb) / 0.08);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.g-go-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  margin-top: 26px;
+}
+/* Fin de partie : l'action du moment d'abord, le reste en dessous. Les
+   boutons secondaires partagent une seule métrique ; la bordure transparente
+   aligne leurs hauteurs, qu'ils soient pleins ou contournés. */
+.g-go-lead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.g-go-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.g-go-actions .g-start-btn {
+  height: 46px;
+  padding: 0 38px;
+  font-size: 0.9rem;
+  letter-spacing: 0.2em;
+}
+
+.g-go-more .g-go-share,
+.g-go-more .g-go-back,
+.g-go-more .g-go-discord {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 18px;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: none;
+}
+.g-go-more .g-go-back {
+  border-color: var(--border2);
+}
+.g-go-more .g-go-share {
+  border-color: rgb(var(--accent-rgb) / 0.45);
+}
+.g-go-support-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  width: 100%;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border2);
+}
+.g-go-support-text {
+  color: var(--mid);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.g-go-support-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 18px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.g-go-support-btn:hover {
+  background: var(--accent);
+  color: #0b0b12;
+}
+
+.g-rejoin-note {
+  color: var(--mid);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.g-go-back {
+  color: var(--mid);
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border: 1px solid var(--border2);
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.g-go-back:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* game over responsive */
+@media (max-width: 860px) {
+  .g-gameover {
+    padding: 16px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+  .g-go-inner {
+    flex-direction: column;
+    gap: 24px;
+    max-height: none;
+    padding: 8px 0 24px;
+  }
+  .g-go-frame {
+    width: min(58vw, 250px);
+  }
+  .g-go-credits {
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+  }
+  .g-go-tracklist {
+    max-height: none;
+    text-align: left;
+  }
+  .g-go-actions {
+    justify-content: center;
+  }
+}
+@media (max-width: 480px) {
+  /* Le bouton principal prend la largeur, les secondaires se partagent la ligne
+     sans jamais déborder. */
+  .g-go-actions .g-start-btn {
+    width: 100%;
+    padding: 0 20px;
+  }
+  .g-go-more .g-go-share,
+  .g-go-more .g-go-back,
+  .g-go-more .g-go-discord {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 12px;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+  }
+}

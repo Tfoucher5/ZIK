@@ -1,8 +1,8 @@
 import { error } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { escapeIlike } from "$lib/zikle/shared.js";
-import { forgetPlaylists } from "$lib/admin/contenu.server.js";
+import { escapeIlike } from "$lib/shared/zikle/shared.js";
+import { forgetPlaylists } from "$lib/server/services/admin/contenu.js";
 
 const SORTS = {
   tracks: ["track_count", false],

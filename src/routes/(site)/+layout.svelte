@@ -1,18 +1,18 @@
 <script>
   import { onMount, setContext } from 'svelte';
   import { page } from '$app/state';
-  import Nav from '$lib/components/Nav.svelte';
+  import Nav from '$lib/components/layout/Nav.svelte';
   import AuthModal from '$lib/components/auth/AuthModal.svelte';
-  import ContactModal from '$lib/components/ContactModal.svelte';
-  import Toast from '$lib/components/Toast.svelte';
+  import ContactModal from '$lib/components/layout/ContactModal.svelte';
+  import Toast from '$lib/components/ui/Toast.svelte';
   import Onboarding from '$lib/components/onboarding/Onboarding.svelte';
   import { onboarding, shouldAutoStart } from '$lib/components/onboarding/onboarding.svelte.js';
-  import { createSupabaseClient } from '$lib/supabase.js';
-  import { initNotifications, teardownNotifications } from '$lib/notifications.svelte.js';
-  import { initPush, forgetPushOwner } from '$lib/push.svelte.js';
+  import { createSupabaseClient } from '$lib/client/supabase.js';
+  import { initNotifications, teardownNotifications } from '$lib/client/notifications.svelte.js';
+  import { initPush, forgetPushOwner } from '$lib/client/push.svelte.js';
   import { notifPrefs } from '$lib/components/notify/notifPrefs.svelte.js';
-  import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
-  import { watchClientErrors } from '$lib/reports/context.js';
+  import { rememberSignupRef, tagNewUser } from '$lib/client/signupRef.js';
+  import { watchClientErrors } from '$lib/shared/reports/context.js';
 
   const isGame = $derived(page.url.pathname.startsWith('/game'));
 
@@ -143,7 +143,7 @@
   <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
-  <link rel="stylesheet" href="/css/base.css?v=3.15.0">
+  {#each ["nav", "nav-menus", "bottom-nav", "controls", "footer", "auth-modal"] as f (f)}<link rel="stylesheet" href="/css/base/{f}.css?v=3.19.0">{/each}
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
   <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
@@ -262,7 +262,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.19.0</span>
+    <span class="footer-version-tag">v3.19.1</span>
   </div>
 </footer>
 {/if}

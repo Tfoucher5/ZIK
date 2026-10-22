@@ -1,5 +1,5 @@
 <script>
-  import { dicebear } from '$lib/utils.js';
+  import { dicebear } from '$lib/shared/utils.js';
   import { reveal } from './reveal.js';
 
   let { players = [] } = $props();

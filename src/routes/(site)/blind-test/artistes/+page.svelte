@@ -1,6 +1,6 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
-  import { breadcrumb } from '$lib/seo.js';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
+  import { breadcrumb } from '$lib/shared/seo.js';
 
   let { data } = $props();
 

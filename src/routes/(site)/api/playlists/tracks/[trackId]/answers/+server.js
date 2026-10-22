@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { parseFeaturing } from "$lib/server/services/playlist.js";
+import { parseFeaturing } from "$lib/server/services/music/trackText.js";
 import { playlistCache, dbRooms } from "$lib/server/state.js";
 
 async function getOwnedTrack(uSupa, trackId, userId) {

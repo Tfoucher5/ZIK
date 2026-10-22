@@ -3,7 +3,10 @@ import {
   requireAdminToken,
   logAdminAction,
 } from "$lib/server/middleware/auth.js";
-import { addAnswers, removeAnswers } from "$lib/admin/contenu.server.js";
+import {
+  addAnswers,
+  removeAnswers,
+} from "$lib/server/services/admin/contenu.js";
 
 export async function POST({ url, request }) {
   const admin = await requireAdminToken(url.searchParams.get("token"));

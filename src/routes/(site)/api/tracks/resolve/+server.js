@@ -1,12 +1,12 @@
 import { json } from "@sveltejs/kit";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { parseExpFromUrl } from "$lib/server/services/deezer.js";
+import { parseExpFromUrl } from "$lib/server/services/music/deezer.js";
 import { enqueueCardEnrichment } from "$lib/server/services/cards/maintenance.js";
 import {
   checkVideo,
   pinVideoIfEmpty,
-} from "$lib/server/services/trackVideo.js";
+} from "$lib/server/services/music/trackVideo.js";
 
 const PERMANENT_EXPIRY = "2099-01-01T00:00:00.000Z";
 

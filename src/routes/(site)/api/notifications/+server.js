@@ -3,7 +3,7 @@ import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
 import {
   NOTIF_SELECT,
   purgeCutoff,
-} from "$lib/server/services/notifications.js";
+} from "$lib/server/services/notify/notifications.js";
 
 export async function GET({ request }) {
   const { user, token } = await requireAuth(request);

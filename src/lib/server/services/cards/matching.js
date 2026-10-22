@@ -1,5 +1,5 @@
-import { cleanString, parseFeaturing } from "../playlist.js";
-import { similarity } from "../../../fuzzy.js";
+import { cleanString, parseFeaturing } from "../music/trackText.js";
+import { similarity } from "../../../shared/fuzzy.js";
 
 // « Titre - Remastered 2011 », « Titre - Live », « Titre - Radio Edit » → « Titre »
 export function stripVersion(title) {

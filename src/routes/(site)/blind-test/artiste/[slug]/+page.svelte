@@ -1,7 +1,7 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import RoomJoinCard from '$lib/components/rooms/RoomJoinCard.svelte';
-  import { breadcrumb } from '$lib/seo.js';
+  import { breadcrumb } from '$lib/shared/seo.js';
 
   let { data } = $props();
 

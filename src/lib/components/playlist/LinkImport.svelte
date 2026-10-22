@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
   import { getSpotifyToken, clearSpotifyToken, connectSpotify } from './spotify.js';
 
   let { source, id, store, onDone } = $props();

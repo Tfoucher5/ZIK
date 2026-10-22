@@ -1,0 +1,174 @@
+/* ── Derniers titres (droite) ────────────────────────────────────────────── */
+.g-history-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.g-history-list::-webkit-scrollbar {
+  width: 4px;
+}
+.g-history-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+/* dernière manche = grande pochette */
+.g-feat {
+  position: relative;
+  margin: 0 18px 16px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: rgb(var(--c-glass) / 0.04);
+  border: 1px solid var(--border2);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  animation: hitemIn 0.3s ease;
+}
+.g-feat-note {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--dim);
+}
+.g-feat-grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(5, 5, 5, 0.92) 0%,
+    rgba(5, 5, 5, 0.35) 42%,
+    transparent 65%
+  );
+}
+.g-feat-info {
+  position: relative;
+  padding: 14px;
+  width: 100%;
+}
+.g-feat-num {
+  font-family: var(--g-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.g-feat-art {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: 1.45rem;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: #fff;
+}
+.g-feat-tit {
+  font-family: var(--g-mono);
+  font-size: 0.66rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 4px;
+}
+.g-feat-feat {
+  font-family: var(--g-mono);
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+.g-feat-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+.g-rb {
+  font-family: var(--g-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+  background: rgba(5, 5, 5, 0.5);
+}
+.g-rb.on {
+  border-color: rgb(74 222 128 / 0.55);
+  color: var(--success);
+}
+
+/* manches précédentes = lignes */
+.g-hitem {
+  display: flex;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  align-items: center;
+  animation: hitemIn 0.25s ease;
+  flex-shrink: 0;
+}
+@keyframes hitemIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.g-hitem-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.g-hitem-noimg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--c-glass) / 0.04);
+  font-size: 1rem;
+  color: var(--dim);
+}
+.g-hitem-info {
+  flex: 1;
+  min-width: 0;
+}
+.g-hitem-artist {
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-hitem-title {
+  font-family: var(--g-mono);
+  font-size: 0.64rem;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.g-hitem-feat {
+  font-family: var(--g-mono);
+  font-size: 0.58rem;
+  color: var(--dim);
+  opacity: 0.7;
+}
+.g-hitem-artist.found,
+.g-hitem-title.found,
+.g-hitem-feat.found {
+  color: var(--success);
+  opacity: 1;
+}

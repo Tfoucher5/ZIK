@@ -1,10 +1,10 @@
 <script>
   import { getContext } from "svelte";
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import ArchivesHeader from "$lib/components/zikle/ArchivesHeader.svelte";
   import ArchiveDay from "$lib/components/zikle/ArchiveDay.svelte";
   import { loadGuestHistory } from "$lib/components/zikle/history.js";
-  import { breadcrumb } from '$lib/seo.js';
+  import { breadcrumb } from '$lib/shared/seo.js';
   const breadcrumbJsonLd = breadcrumb([{ name: 'Zikle', path: '/zikle' }, { name: 'Archives', path: '/zikle/archives' }]);
 
 

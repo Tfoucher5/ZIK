@@ -1,5 +1,5 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import DocSidebar from '$lib/components/docs/DocSidebar.svelte';
   import DocHeader from '$lib/components/docs/DocHeader.svelte';
   import DecouverteSection from '$lib/components/docs/DecouverteSection.svelte';

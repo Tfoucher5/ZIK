@@ -1,6 +1,6 @@
 import { error, fail, redirect } from "@sveltejs/kit";
-import { isUuid } from "$lib/utils.js";
-import { getAdminUserDetail } from "$lib/server/services/adminUserDetail.js";
+import { isUuid } from "$lib/shared/utils.js";
+import { getAdminUserDetail } from "$lib/server/services/admin/userDetail.js";
 import {
   BAN_DURATIONS,
   banUser,
@@ -13,7 +13,7 @@ import {
   deleteUserAccount,
   deleteFollow,
   deleteFriendship,
-} from "$lib/server/services/adminUserActions.js";
+} from "$lib/server/services/admin/userActions.js";
 
 function assertUuid(id) {
   if (!isUuid(id)) throw error(400, "ID invalide");

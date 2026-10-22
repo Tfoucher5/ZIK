@@ -1,0 +1,247 @@
+/* Réponse et classement */
+.sp-answer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--text);
+}
+.sp-answer img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.sp-answer-txt {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+.sp-answer-sub {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--mid);
+}
+.sp-list {
+  list-style: none;
+}
+.sp-list li {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sp-list li.me {
+  background: rgb(var(--accent-rgb) / 0.1);
+  margin: 0 -8px;
+  padding: 10px 8px;
+}
+.sp-list .r {
+  font-family: var(--s-mono);
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+.sp-list .n {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sp-list .p {
+  font-family: var(--s-mono);
+  font-weight: 600;
+}
+.sp-list .p small {
+  margin-left: 6px;
+  color: var(--success);
+}
+
+/* Lobby joueur : équipe et présents */
+.sp-hint {
+  margin-top: 10px;
+  color: var(--mid);
+  line-height: 1.5;
+}
+.sp-team-tag {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: var(--tc);
+  color: #111;
+  font-weight: 700;
+}
+.sp-teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.sp-team {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px;
+  border: 2px solid var(--border2);
+  border-top: 5px solid var(--tc);
+  border-radius: 3px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sp-team b {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+}
+.sp-team small {
+  color: var(--mid);
+}
+.sp-team.on {
+  border-color: var(--tc);
+  background: var(--surface2);
+}
+.sp-roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  list-style: none;
+}
+.sp-roster li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 2px;
+  font-size: 0.9rem;
+}
+.sp-roster li.me {
+  border-color: var(--text);
+  font-weight: 700;
+}
+.sp-roster i,
+.sp-team-list i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tc);
+}
+.sp-team-list .n {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+}
+.sp-team-list {
+  margin-bottom: 8px;
+}
+
+/* Classement en attendant la réponse */
+.sp-board .sp-list {
+  margin-top: 6px;
+}
+
+/* Choix multiples : les quatre réponses prennent tout l'écran restant */
+.sp-drawer {
+  flex: 1;
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+  gap: 8px;
+}
+.sp .sx-choice {
+  min-height: 64px;
+  font-size: 1.1rem;
+}
+.sp-chosen {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sp-chosen .sx-choice {
+  min-height: 0;
+  font-size: 0.95rem;
+}
+
+.sp-pause {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgb(var(--bg-rgb) / 0.94);
+}
+.sp-pause span {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 4.5rem;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sp-pause small {
+  color: var(--mid);
+}
+
+/* Retour après une réponse */
+.sp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 30;
+  width: min(440px, calc(100% - 32px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 3px;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+  animation: sp-toast 0.25s ease;
+}
+.sp-toast.ok {
+  background: var(--success);
+  color: #000;
+}
+.sp-toast.close {
+  background: var(--warn);
+  color: #000;
+}
+.sp-toast.ko {
+  background: var(--danger);
+  color: #000;
+}
+.sp-toast b {
+  margin-left: auto;
+  font-family: var(--s-mono);
+}
+@keyframes sp-toast {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

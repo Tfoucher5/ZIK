@@ -1,5 +1,5 @@
 <script>
-  import { PRESETS, presetOf, maxRounds, estimateMinutes, cardsCheck, ROUNDS_MIN } from '$lib/rooms/settings.js';
+  import { PRESETS, presetOf, maxRounds, estimateMinutes, cardsCheck, ROUNDS_MIN } from '$lib/shared/rooms/settings.js';
 
   let { value = $bindable(), trackCount, hasPlaylists } = $props();
 

@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
-import { isUuid } from "$lib/utils.js";
+import { isUuid } from "$lib/shared/utils.js";
 
 export async function load({ params }) {
   if (!isUuid(params.id)) throw error(404, "Résultat introuvable");

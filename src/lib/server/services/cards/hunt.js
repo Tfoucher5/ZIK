@@ -1,6 +1,6 @@
 import { getAdminClient } from "../../config.js";
-import { createNotification } from "../notifications.js";
-import { firstTime } from "../push.js";
+import { createNotification } from "../notify/notifications.js";
+import { firstTime } from "../notify/push.js";
 
 const MIN_SET_SIZE = 3;
 

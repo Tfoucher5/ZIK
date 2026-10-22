@@ -1,5 +1,5 @@
 import { getAdminClient } from "$lib/server/config.js";
-import { todayParis } from "$lib/zikle/shared.js";
+import { todayParis } from "$lib/shared/zikle/shared.js";
 
 export async function load() {
   const sb = getAdminClient();

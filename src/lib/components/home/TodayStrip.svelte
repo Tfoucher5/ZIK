@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte';
-  import ChallengeIcon from '$lib/components/ChallengeIcon.svelte';
-  import { todayParis, computeStreak } from '$lib/zikle/shared.js';
+  import ChallengeIcon from '$lib/components/ui/ChallengeIcon.svelte';
+  import { todayParis, computeStreak } from '$lib/shared/zikle/shared.js';
 
   /** @type {{ challenge: any, onResume: (room: any) => void }} */
   let { challenge = null, onResume } = $props();

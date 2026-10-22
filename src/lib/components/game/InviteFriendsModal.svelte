@@ -1,6 +1,6 @@
 <script>
-  import Modal from '$lib/components/Modal.svelte';
-  import { dicebear } from '$lib/utils.js';
+  import Modal from '$lib/components/ui/Modal.svelte';
+  import { dicebear } from '$lib/shared/utils.js';
 
   // Invite ses amis dans la room en cours
   let { open = $bindable(false), getToken, userId, roomId, roomLabel, onError } = $props();

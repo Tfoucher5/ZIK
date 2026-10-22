@@ -1,5 +1,5 @@
 <script>
-  import { fmtScore } from '$lib/profile/stats.js';
+  import { fmtScore } from '$lib/shared/profile/stats.js';
 
   /**
    * Meilleurs scores par room officielle, et répartition des parties par type

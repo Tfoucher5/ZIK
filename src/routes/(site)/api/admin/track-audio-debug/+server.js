@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { YTDLP_BIN, getYtAudioUrl } from "$lib/server/ytdlAudio.js";
+import { YTDLP_BIN, getYtAudioUrl } from "$lib/server/audio/ytdlAudio.js";
 import {
   validPreviewUrl,
   getDeezerPreview,

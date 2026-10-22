@@ -1,21 +1,21 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import { onMount } from 'svelte';
-  import { createSupabaseClient } from '$lib/supabase.js';
+  import { createSupabaseClient } from '$lib/client/supabase.js';
   import AuthModal from '$lib/components/auth/AuthModal.svelte';
-  import PlaylistPicker from '$lib/components/salon/PlaylistPicker.svelte';
-  import { loadSalonPlaylists, DEFAULT_SALON_PLAYLIST } from '$lib/salonPlaylists.js';
-  import { rememberSignupRef, tagNewUser } from '$lib/signupRef.js';
-  import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/salonClient.js';
-  import ProUpsell from '$lib/components/salon/ProUpsell.svelte';
-  import SetupHero from '$lib/components/salon/SetupHero.svelte';
-  import SetupBlock from '$lib/components/salon/SetupBlock.svelte';
-  import SetupSheet from '$lib/components/salon/SetupSheet.svelte';
-  import SetupPro from '$lib/components/salon/SetupPro.svelte';
-  import SetupBar from '$lib/components/salon/SetupBar.svelte';
-  import SalonSeo from '$lib/components/salon/SalonSeo.svelte';
-  import { salonJsonLd } from '$lib/components/salon/salonSetupSeo.js';
-  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/proPlans.js';
+  import PlaylistPicker from '$lib/components/salon/playlists/PlaylistPicker.svelte';
+  import { loadSalonPlaylists, DEFAULT_SALON_PLAYLIST } from '$lib/data/salonPlaylists.js';
+  import { rememberSignupRef, tagNewUser } from '$lib/client/signupRef.js';
+  import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/client/salonClient.js';
+  import ProUpsell from '$lib/components/salon/setup/ProUpsell.svelte';
+  import SetupHero from '$lib/components/salon/setup/SetupHero.svelte';
+  import SetupBlock from '$lib/components/salon/setup/SetupBlock.svelte';
+  import SetupSheet from '$lib/components/salon/setup/SetupSheet.svelte';
+  import SetupPro from '$lib/components/salon/setup/SetupPro.svelte';
+  import SetupBar from '$lib/components/salon/setup/SetupBar.svelte';
+  import SalonSeo from '$lib/components/salon/setup/SalonSeo.svelte';
+  import { salonJsonLd } from '$lib/components/salon/setup/salonSetupSeo.js';
+  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
 
   let { data } = $props();
 

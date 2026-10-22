@@ -1,8 +1,8 @@
-import { displayString } from "../../services/playlist.js";
-import { reportTrackIssue } from "../../services/trackIssues.js";
+import { displayString } from "../../services/music/trackText.js";
+import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { roomGames } from "../../state.js";
-import { getYtAudioUrl } from "../../ytdlAudio.js";
-import { audioUrlFor, ytdlAudioCache } from "../../ytdlCache.js";
+import { getYtAudioUrl } from "../../audio/ytdlAudio.js";
+import { audioUrlFor, ytdlAudioCache } from "../../audio/ytdlCache.js";
 import { makeChoices } from "../scoring.js";
 import {
   getPreview,

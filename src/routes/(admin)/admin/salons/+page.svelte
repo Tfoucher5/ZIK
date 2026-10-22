@@ -2,12 +2,12 @@
   import { getContext, untrack } from 'svelte';
   import { invalidateAll, replaceState } from '$app/navigation';
   import { page } from '$app/state';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import Sheet from '$lib/admin/Sheet.svelte';
-  import SalonLiveCard from '$lib/admin/salons/SalonLiveCard.svelte';
-  import SalonFiche from '$lib/admin/salons/SalonFiche.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
-  import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import SalonLiveCard from '$lib/components/admin/salons/SalonLiveCard.svelte';
+  import SalonFiche from '$lib/components/admin/salons/SalonFiche.svelte';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
 
   let { data, form } = $props();
 

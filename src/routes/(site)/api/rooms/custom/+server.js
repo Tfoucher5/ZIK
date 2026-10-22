@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { buildTrack } from "$lib/server/services/playlist.js";
-import { createCustomRoom } from "$lib/server/services/customRoom.js";
+import { buildTrack } from "$lib/server/services/music/playlist.js";
+import { createCustomRoom } from "$lib/server/services/rooms/customRoom.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
 
 export async function POST({ request }) {

@@ -1,6 +1,6 @@
 <script>
   import TrackResult from './TrackResult.svelte';
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { target, store, onBack, onNavigate } = $props();
 

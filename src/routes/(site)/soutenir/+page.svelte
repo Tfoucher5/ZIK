@@ -1,7 +1,7 @@
 <script>
-  import { KOFI_URL } from '$lib/support.js';
-  import JsonLd from '$lib/components/JsonLd.svelte';
-  import { breadcrumb } from '$lib/seo.js';
+  import { KOFI_URL } from '$lib/data/support.js';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
+  import { breadcrumb } from '$lib/shared/seo.js';
   const breadcrumbJsonLd = breadcrumb([{ name: 'Soutenir ZIK', path: '/soutenir' }]);
 
 

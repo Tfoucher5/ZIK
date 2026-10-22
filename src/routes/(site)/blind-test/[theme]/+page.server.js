@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
-import { findTheme, BLIND_TEST_THEMES } from "$lib/blindTestThemes.js";
-import { listArtists } from "$lib/server/services/artistPages.js";
+import { findTheme, BLIND_TEST_THEMES } from "$lib/data/blindTestThemes.js";
+import { listArtists } from "$lib/server/services/music/artistPages.js";
 
 const ARTIST_SAMPLE = 12;
 

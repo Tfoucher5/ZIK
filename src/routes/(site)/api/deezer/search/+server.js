@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
-import { searchTracks } from "$lib/server/services/deezerCatalog.js";
+import { searchTracks } from "$lib/server/services/music/deezerCatalog.js";
 
 // Appelée pendant la frappe (anti-rebond côté client), d'où la limite large.
 export async function GET({ request, url }) {

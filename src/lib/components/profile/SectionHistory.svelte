@@ -1,5 +1,5 @@
 <script>
-  import { fmtDate } from '$lib/profile/stats.js';
+  import { fmtDate } from '$lib/shared/profile/stats.js';
 
   /** @type {{ parties: Array<{score: number, rank: number|null, endedAt: string, roomName: string, roomEmoji: string, gmode: 'cl'|'qcm'}> }} */
   let { parties } = $props();

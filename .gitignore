@@ -32,3 +32,6 @@ vite.config.js.timestamp-*
 # Visual companion brainstorming
 .superpowers/
 /bin/
+
+# Graphe du code (graphify)
+graphify-out/

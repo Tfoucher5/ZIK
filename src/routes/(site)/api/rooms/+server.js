@@ -12,7 +12,7 @@ import {
   roomPlaylists,
   onlineCount,
   withCovers,
-} from "$lib/server/services/roomList.js";
+} from "$lib/server/services/rooms/roomList.js";
 
 export async function GET() {
   const { data, error } = await getAdminClient()

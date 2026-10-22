@@ -1,5 +1,5 @@
 <script>
-  import { durationForAttempt, buildShareSquares } from "$lib/zikle/shared.js";
+  import { durationForAttempt, buildShareSquares } from "$lib/shared/zikle/shared.js";
   import { scoreLabel } from "./history.js";
   import { TOTAL } from "./session.svelte.js";
 

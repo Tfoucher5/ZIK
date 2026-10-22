@@ -1,6 +1,6 @@
 import { getAdminClient } from "$lib/server/config.js";
 import { error } from "@sveltejs/kit";
-import { topArtists, artistFromRow } from "$lib/rooms/room-content.js";
+import { topArtists, artistFromRow } from "$lib/shared/rooms/room-content.js";
 
 // Client service : le lien d'invitation doit aussi ouvrir les rooms privées
 const supabase = getAdminClient();

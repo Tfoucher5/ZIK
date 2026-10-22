@@ -20,7 +20,9 @@ vi.mock("../../../config.js", () => ({
     from: () => ({ insert: () => ({ then: (r) => r({ error: null }) }) }),
   }),
 }));
-vi.mock("../../../youtube.js", () => ({ YouTube: { search: async () => [] } }));
+vi.mock("../../../audio/youtube.js", () => ({
+  YouTube: { search: async () => [] },
+}));
 
 const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");

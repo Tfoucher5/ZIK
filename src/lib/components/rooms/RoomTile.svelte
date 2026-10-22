@@ -1,7 +1,7 @@
 <script>
   import RoomCovers from './RoomCovers.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
-  import { toast } from '$lib/toast.svelte.js';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { room: r, covers, seed = 0, owner = false, onJoin, onEdit = null, onDelete = null } = $props();
 

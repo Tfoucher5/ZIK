@@ -1,4 +1,4 @@
-import { reportTrackIssue } from "../../services/trackIssues.js";
+import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { salonRooms } from "../../state.js";
 import { recordSalonGameStart } from "./persist.js";
 import {

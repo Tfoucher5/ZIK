@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { requireAdminToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { loadAnswerTypes } from "$lib/admin/contenu.server.js";
+import { loadAnswerTypes } from "$lib/server/services/admin/contenu.js";
 
 export async function GET({ url }) {
   await requireAdminToken(url.searchParams.get("token"));

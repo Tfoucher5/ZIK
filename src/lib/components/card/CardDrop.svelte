@@ -1,5 +1,7 @@
 <script>
   import { RARITIES } from './rarity.js';
+  import CardDropConditions from './CardDropConditions.svelte';
+  import CardDropSecure from './CardDropSecure.svelte';
 
   /**
    * Panneau « carte de la manche » de l'écran de fin de manche.
@@ -19,8 +21,6 @@
   } = $props();
 
   const label = $derived(RARITIES[card.rarity].label);
-  const secureAt = $derived(Math.ceil(maxRounds / 2));
-  const secured = $derived(round >= secureAt);
   const seconds = (ms) => `${(ms / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} s`;
 </script>
 
@@ -43,23 +43,7 @@
       </div>
     {/if}
 
-    <div class="cd-secure" class:is-secured={secured}>
-      <div class="cd-track" role="img" aria-label={`Manche ${round} sur ${maxRounds}`}>
-        {#each Array.from({ length: maxRounds }, (_, i) => i + 1) as n (n)}
-          <span class="cd-seg" class:done={n <= round} class:goal={n === secureAt}></span>
-        {/each}
-      </div>
-      <p class="cd-secure-text">
-        {#if secured}
-          <svg viewBox="0 0 16 16" aria-hidden="true"
-            ><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg
-          >
-          Carte sécurisée{delayed ? ", disponible dans ta collection sous 24 h" : ""}
-        {:else}
-          Sécurisée à la manche {secureAt}, reste jusque-là pour la garder
-        {/if}
-      </p>
-    </div>
+    <CardDropSecure {round} {maxRounds} {delayed} />
   {:else if mode === 'taken'}
     <div class="cd-taken">
       <span class="cd-avatar" aria-hidden="true">{winner?.name?.[0]?.toUpperCase()}</span>
@@ -75,17 +59,7 @@
       <span class="cd-rarity-name">{label}</span>
       <span class="cd-status">Pas cette fois</span>
     </p>
-    <ul class="cd-conditions">
-      {#each conditions as c (c.label)}
-        <li class:ok={c.ok}>
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            {#if c.ok}<path d="M3.5 8.5l3 3 6-7" />{:else}<path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />{/if}
-          </svg>
-          <span class="cd-cond-label">{c.label}</span>
-          <span class="cd-cond-value">{c.value}</span>
-        </li>
-      {/each}
-    </ul>
+    <CardDropConditions {conditions} />
     <p class="cd-hint">La carte reste à prendre la prochaine fois que ce titre passe.</p>
   {:else if mode === 'owned'}
     <p class="cd-rarity">
@@ -200,65 +174,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Progression vers la manche où la carte devient définitive */
-  .cd-secure {
-    display: grid;
-    gap: 8px;
-  }
-
-  .cd-track {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    gap: 4px;
-  }
-
-  .cd-seg {
-    position: relative;
-    height: 6px;
-    border-radius: 3px;
-    background: rgb(255 255 255 / 0.12);
-  }
-
-  .cd-seg.done {
-    background: var(--rc);
-  }
-
-  .cd-seg.goal::after {
-    content: '';
-    position: absolute;
-    top: -4px;
-    right: -3px;
-    width: 2px;
-    height: 14px;
-    border-radius: 1px;
-    background: #f5f3f8;
-  }
-
-  .cd-secure-text {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    font-size: 0.82rem;
-    color: rgb(255 255 255 / 0.6);
-  }
-
-  .cd-secure.is-secured .cd-secure-text {
-    color: var(--rc-light);
-    font-weight: 600;
-  }
-
-  .cd svg {
-    flex-shrink: 0;
-    width: 15px;
-    height: 15px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
 
   /* Un autre joueur a la carte */
   .cd-taken {
@@ -296,37 +211,6 @@
     color: var(--rc-light);
   }
 
-  /* Conditions d'exploit */
-  .cd-conditions {
-    display: grid;
-    gap: 8px;
-    margin: 0;
-    padding: 12px 0 0;
-    border-top: 1px solid rgb(255 255 255 / 0.1);
-    list-style: none;
-  }
-
-  .cd-conditions li {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.88rem;
-    color: #ff9b9b;
-  }
-
-  .cd-conditions li.ok {
-    color: #86efac;
-  }
-
-  .cd-cond-label {
-    color: rgb(255 255 255 / 0.8);
-  }
-
-  .cd-cond-value {
-    font: 600 1rem/1 'Barlow Condensed', sans-serif;
-    font-variant-numeric: tabular-nums;
-  }
 
   .cd-hint {
     margin: 0;

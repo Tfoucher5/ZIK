@@ -1,0 +1,216 @@
+/* ── Splash reveal plein écran ───────────────────────────────────────────── */
+.g-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050505;
+  overflow: hidden;
+  animation: rvFade 0.55s ease;
+}
+@keyframes rvFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.g-rv-bg {
+  position: absolute;
+  inset: -10%;
+  background-size: cover;
+  background-position: center;
+  background-image: linear-gradient(160deg, #20081f, #0a0a0a);
+  filter: blur(70px) brightness(0.32) saturate(1.5);
+  transform: scale(1.1);
+}
+.g-rv-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(0, 0, 0, 0.55)
+  );
+}
+.g-rv-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(30px, 6vw, 80px);
+  padding: 28px;
+  width: 100%;
+  max-width: 1100px;
+  flex-wrap: wrap;
+}
+.g-rv-sleeve {
+  position: relative;
+  width: min(44vh, 360px, 76vw);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  animation: sleeveIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes sleeveIn {
+  from {
+    transform: scale(0.35) rotate(-4deg);
+    opacity: 0;
+  }
+}
+.g-rv-vinyl {
+  position: absolute;
+  top: 3%;
+  left: 24%;
+  width: 94%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      #101010 0px,
+      #171717 1.5px,
+      #0b0b0b 3px,
+      #141414 4.5px
+    ),
+    #0d0d0d;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.09),
+    18px 0 50px rgba(0, 0, 0, 0.8);
+  animation: g-spin 7s linear infinite;
+}
+.g-rv-vinyl::after {
+  content: "";
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.85;
+}
+.g-rv-cover,
+.g-rv-cover-fb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.85);
+}
+.g-rv-cover {
+  object-fit: cover;
+}
+.g-rv-cover-fb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    160deg,
+    rgb(var(--accent-rgb) / 0.85),
+    rgba(40, 0, 60, 0.95)
+  );
+  font-size: 3.4rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+.g-rv-info {
+  max-width: 460px;
+  min-width: 280px;
+}
+.g-rv-info > * {
+  animation: rvUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.g-rv-info > *:nth-child(1) {
+  animation-delay: 0.25s;
+}
+.g-rv-info > *:nth-child(2) {
+  animation-delay: 0.35s;
+}
+.g-rv-info > *:nth-child(3) {
+  animation-delay: 0.45s;
+}
+.g-rv-info > *:nth-child(4) {
+  animation-delay: 0.55s;
+}
+.g-rv-info > *:nth-child(5) {
+  animation-delay: 0.65s;
+}
+.g-rv-info > *:nth-child(6) {
+  animation-delay: 0.75s;
+}
+@keyframes rvUp {
+  from {
+    transform: translateY(22px);
+    opacity: 0;
+  }
+}
+.g-rv-eyebrow {
+  font-family: var(--g-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.g-rv-artist {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(2.4rem, 6.4vw, 4.4rem);
+  line-height: 0.88;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.g-rv-artist.missed,
+.g-rv-title.missed {
+  color: rgba(255, 255, 255, 0.55);
+}
+.g-rv-feat {
+  font-family: var(--g-mono);
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8px;
+  letter-spacing: 0.06em;
+}
+.g-rv-title {
+  font-family: var(--g-mono);
+  font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 12px;
+  letter-spacing: 0.06em;
+}
+.g-rv-extra {
+  font-family: var(--g-mono);
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 6px;
+}
+.g-rv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.g-rv-chip {
+  font-family: var(--g-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  border: 1px solid rgb(74 222 128 / 0.45);
+  color: var(--success);
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+.g-rv-chip.none {
+  border-color: var(--border2);
+  color: rgba(255, 255, 255, 0.45);
+}
+.g-rv-next {
+  margin-top: 26px;
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}

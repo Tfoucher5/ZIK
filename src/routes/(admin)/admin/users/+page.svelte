@@ -2,8 +2,8 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import { avatarOf, lastSeen } from '$lib/admin/players.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import { avatarOf, lastSeen } from '$lib/shared/admin/players.js';
 
   let { data } = $props();
 

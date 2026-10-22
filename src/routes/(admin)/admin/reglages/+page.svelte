@@ -1,10 +1,10 @@
 <script>
   import { enhance } from '$app/forms';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
   import { getContext, onMount } from 'svelte';
-  import { push, initPush, enablePush, disablePush } from '$lib/push.svelte.js';
-  import { ago } from '$lib/admin/stats-utils.js';
-  import { describeDevice } from '$lib/admin/reports.js';
+  import { push, initPush, enablePush, disablePush } from '$lib/client/push.svelte.js';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { describeDevice } from '$lib/shared/admin/reports.js';
 
   let { data, form } = $props();
 

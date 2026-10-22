@@ -4,7 +4,7 @@
   import VersionReport from './VersionReport.svelte';
   import { VersionPickerState } from './versionPicker.svelte.js';
   import { player } from './previewPlayer.svelte.js';
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { track, store } = $props();
 

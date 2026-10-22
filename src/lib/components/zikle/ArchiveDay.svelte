@@ -8,7 +8,7 @@
 </script>
 
 <script>
-  import { waveformForDate } from "$lib/zikle/shared.js";
+  import { waveformForDate } from "$lib/shared/zikle/shared.js";
   import { scoreLabel } from "./history.js";
 
   // done : { won, attempts } quand le jour est déjà terminé

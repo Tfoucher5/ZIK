@@ -1,0 +1,115 @@
+/* Reveal : bandeau en bas de la vidéo */
+.sh-reveal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px clamp(20px, 3vw, 40px);
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  animation: sh-up 0.4s ease;
+}
+.sh-reveal img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.sh-reveal-txt {
+  flex: 1;
+  min-width: 0;
+}
+.sh-reveal-answer {
+  margin-top: 4px;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.sh-reveal-feat {
+  margin-top: 4px;
+  color: var(--mid);
+}
+.sh-reveal-first {
+  text-align: right;
+  font-size: 0.95rem;
+  color: var(--mid);
+}
+.sh-reveal-first b {
+  display: block;
+  font-family: var(--s-cond);
+  font-size: 1.6rem;
+  color: var(--text);
+}
+
+/* Écran TV ouvert sans la clé du salon */
+.sh-locked {
+  min-height: 100dvh;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+.sh-locked h1 {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: clamp(2.6rem, 8vw, 4.4rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.sh-locked p {
+  color: var(--mid);
+  line-height: 1.6;
+}
+.sh-locked b {
+  color: var(--text);
+}
+.sh-locked .sx-btn {
+  align-self: flex-start;
+}
+
+/* Lobby : équipes ou joueurs déjà là */
+.sh-teams {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-top: clamp(20px, 4vh, 40px);
+}
+.sh-team {
+  padding: 12px 14px;
+  border-top: 4px solid var(--tc);
+  background: var(--surface);
+}
+.sh-team b {
+  display: block;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  color: var(--tc);
+}
+.sh-team span {
+  font-size: 0.9rem;
+  color: var(--mid);
+}
+.sh-lobby-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: clamp(20px, 4vh, 40px);
+}
+.sh-lobby-names span {
+  padding: 6px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 2px;
+  font-weight: 600;
+  animation: sh-in 0.3s ease;
+}

@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
-import { suggestions } from "$lib/server/services/deezerCatalog.js";
+import { suggestions } from "$lib/server/services/music/deezerCatalog.js";
 
 // GET /api/deezer/suggest?ids=3135556,1109731 (titres Deezer de la playlist)
 export async function GET({ request, url }) {

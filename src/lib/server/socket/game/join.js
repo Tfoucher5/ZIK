@@ -1,5 +1,5 @@
 import { getAdminClient } from "../../config.js";
-import { loadPlaylist } from "../../services/playlist.js";
+import { loadPlaylist } from "../../services/music/playlist.js";
 import {
   chatHistories,
   customRooms,

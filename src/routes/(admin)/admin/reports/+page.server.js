@@ -2,7 +2,7 @@ import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { salonRooms } from "$lib/server/state.js";
-import { isPrioritySalon } from "$lib/admin/reports.js";
+import { isPrioritySalon } from "$lib/shared/admin/reports.js";
 
 const STATUSES = ["pending", "resolved", "dismissed"];
 

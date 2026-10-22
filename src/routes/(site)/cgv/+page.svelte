@@ -1,5 +1,5 @@
 <script>
-  import { PLANS } from '$lib/proPlans.js';
+  import { PLANS } from '$lib/data/proPlans.js';
 
   // Identité du vendeur, reprise dans les mentions légales
   const SELLER = {

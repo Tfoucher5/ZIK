@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
 import { ytVideoInfo } from "$lib/server/socket/game/audio.js";
-import { extractYoutubeId } from "$lib/youtube.js";
+import { extractYoutubeId } from "$lib/shared/youtube.js";
 
 // GET /api/tracks/youtube?id= : titre et chaîne d'une vidéo collée
 export async function GET({ request, url }) {

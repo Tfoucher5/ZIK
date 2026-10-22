@@ -1,0 +1,300 @@
+/* ── Footer — style "Journal" ── */
+.site-footer {
+  background: var(--bg);
+}
+.footer-stripe {
+  height: 4px;
+  background: var(--accent);
+}
+.footer-masthead {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px clamp(20px, 5vw, 48px) 20px;
+  border-bottom: 1px solid var(--border);
+}
+.footer-logo {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 4rem;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.footer-logo span {
+  color: var(--accent);
+}
+.footer-mast-divider {
+  width: 2px;
+  height: 48px;
+  background: rgb(var(--c-glass) / 0.12);
+  flex-shrink: 0;
+}
+.footer-mast-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.footer-mast-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.footer-mast-tagline {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgb(var(--c-glass) / 0.5);
+}
+.footer-mast-online {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.footer-online-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+  flex-shrink: 0;
+}
+
+/* Colonnes journal */
+.footer-columns {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 1100px) {
+  .footer-columns {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.footer-col {
+  padding: 22px clamp(16px, 2vw, 24px);
+  border-right: 1px solid var(--border);
+}
+.footer-col:last-child {
+  border-right: none;
+}
+.footer-col-head {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.5rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgb(var(--accent-rgb) / 0.2);
+}
+.footer-col-links {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.footer-col-links a,
+.footer-contact-btn {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mid);
+  transition: color 0.15s;
+  display: block;
+  text-align: left;
+}
+.footer-col-links a:hover,
+.footer-contact-btn:hover {
+  color: var(--text);
+}
+.footer-contact-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: "Barlow Condensed", sans-serif;
+  padding: 0;
+}
+
+/* Colonne Discord */
+.footer-discord-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 32px;
+}
+.btn-discord {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 2px;
+  background: #5865f2;
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.15s;
+}
+.btn-discord:hover {
+  background: #4752c4;
+}
+.footer-discord-text {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.btn-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 9px 16px;
+  border-radius: 2px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  width: fit-content;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.btn-support:hover {
+  background: var(--accent);
+  color: #0b0b12;
+}
+.footer-support-text {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* Bas */
+.footer-bottom {
+  padding: 13px clamp(20px, 5vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.footer-copy {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+.footer-copy a {
+  color: var(--mid);
+  transition: color 0.15s;
+}
+.footer-copy a:hover {
+  color: rgb(var(--c-glass) / 0.55);
+}
+.footer-version-tag {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+@media (max-width: 900px) {
+  .footer-columns {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .footer-discord-col {
+    grid-column: span 1;
+  }
+}
+@media (max-width: 600px) {
+  .footer-masthead {
+    gap: 16px;
+  }
+  .footer-logo {
+    font-size: 2.8rem;
+  }
+  .footer-mast-divider {
+    display: none;
+  }
+  .footer-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+  .footer-col {
+    padding: 26px 20px;
+  }
+  .footer-col-links {
+    gap: 12px;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+@media (max-width: 768px) {
+  /* Le pied de page est toujours le dernier élément du layout : dégager ici
+     suffit pour toutes les pages, y compris celles sans <main>. */
+  .site-footer {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+}
+
+/* ── Bouton retour ── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--mid);
+  padding: 0;
+  transition: color 0.15s;
+  text-decoration: none;
+}
+.btn-back:hover {
+  color: var(--text);
+}
+.btn-back::before {
+  content: "←";
+}

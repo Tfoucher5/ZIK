@@ -1,9 +1,9 @@
 <script>
   import { onMount, getContext } from 'svelte';
-  import { dicebear } from '$lib/utils.js';
-  import ProfileView from '$lib/components/ProfileView.svelte';
-  import Toast from '$lib/components/Toast.svelte';
-  import { toast } from '$lib/toast.svelte.js';
+  import { dicebear } from '$lib/shared/utils.js';
+  import ProfileView from '$lib/components/profile/ProfileView.svelte';
+  import Toast from '$lib/components/ui/Toast.svelte';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;

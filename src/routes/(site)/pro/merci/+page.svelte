@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import { fetchPro, proActive } from '$lib/salonClient.js';
+  import { fetchPro, proActive } from '$lib/client/salonClient.js';
 
   const zik = getContext('zik');
   let pro = $state(null);

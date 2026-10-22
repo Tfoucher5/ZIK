@@ -1,0 +1,246 @@
+/* ── Body (3 colonnes) ───────────────────────────────────────────────────── */
+.g-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Sidebars ────────────────────────────────────────────────────────────── */
+.g-sidebar {
+  width: var(--g-sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.g-sidebar-scores {
+  border-right: 1px solid var(--border);
+}
+.g-sidebar-history {
+  border-left: 1px solid var(--border);
+}
+.g-sidebar-title {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 16px 18px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-shrink: 0;
+}
+.g-sidebar-title .n {
+  font-family: var(--g-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0;
+}
+
+/* ── Classement : tranches de console ────────────────────────────────────── */
+.g-player-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.g-player-list::-webkit-scrollbar {
+  width: 4px;
+}
+.g-player-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+.g-strip {
+  padding: 11px 18px 13px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.g-strip.me {
+  background: rgb(var(--accent-rgb) / 0.04);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.g-strip-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.g-strip-rank {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--dim);
+  width: 26px;
+  flex-shrink: 0;
+}
+.g-strip.rank-1 .g-strip-rank {
+  color: var(--gold);
+}
+.g-strip.rank-2 .g-strip-rank {
+  color: var(--silver);
+}
+.g-strip.rank-3 .g-strip-rank {
+  color: #b0764a;
+}
+.g-strip-name {
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-strip.me .g-strip-name {
+  color: var(--accent);
+}
+.g-player-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.g-badges {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 7px;
+  vertical-align: 1px;
+}
+.g-badge {
+  font-family: var(--g-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 1px 4px;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+}
+.g-badge.found {
+  border-color: rgb(74 222 128 / 0.55);
+  color: var(--success);
+}
+.g-strip-score {
+  font-family: var(--g-mono);
+  font-weight: 700;
+  font-size: 0.92rem;
+  flex-shrink: 0;
+}
+.g-strip-score small {
+  font-size: 0.6em;
+  opacity: 0.6;
+}
+.g-strip-score.flash {
+  animation: scoreFlash 0.6s ease;
+}
+@keyframes scoreFlash {
+  0% {
+    color: var(--success);
+    transform: scale(1.25);
+  }
+  100% {
+    color: inherit;
+    transform: none;
+  }
+}
+.g-strip-vu {
+  height: 10px;
+  background: rgb(var(--c-glass) / 0.04);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.g-strip-vu-fill {
+  position: absolute;
+  inset: 0;
+  right: auto;
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent-rgb) / 0.35),
+    var(--accent)
+  );
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.g-strip.rank-1 .g-strip-vu-fill {
+  background: linear-gradient(to right, rgb(251 191 36 / 0.35), var(--gold));
+}
+.g-strip-vu::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to right,
+    transparent 0 6px,
+    var(--bg) 6px 8px
+  );
+  pointer-events: none;
+}
+
+/* ── Menu 3-points joueur ────────────────────────────────────────────────── */
+.g-player-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+.g-menu-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--dim);
+  letter-spacing: -1px;
+  transition: color 0.15s;
+  user-select: none;
+}
+.g-menu-dot:hover {
+  color: var(--text);
+}
+.g-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  padding: 4px;
+  min-width: 176px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: dropIn 0.15s ease;
+}
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.g-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.g-dd-item:hover {
+  background: rgb(var(--c-glass) / 0.07);
+}

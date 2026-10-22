@@ -2,8 +2,7 @@ import { json } from "@sveltejs/kit";
 import {
   getSpotifyToken,
   normalizeSpotifyItem,
-} from "$lib/server/services/spotify.js";
-import { getFetch } from "$lib/server/services/fetch.js";
+} from "$lib/server/services/music/spotify.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
 
 export async function GET({ params, request }) {
@@ -12,16 +11,12 @@ export async function GET({ params, request }) {
 
   try {
     const token = await getSpotifyToken();
-    const fetchFn = await getFetch();
     const plId = params.id;
 
-    const plRes = await fetchFn(
-      `https://api.spotify.com/v1/playlists/${plId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: AbortSignal.timeout(12000),
-      },
-    );
+    const plRes = await fetch(`https://api.spotify.com/v1/playlists/${plId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(12000),
+    });
     if (!plRes.ok) throw new Error("Playlist introuvable ou priv\u00e9e");
     const pl = await plRes.json();
     const total = pl.tracks?.total || 0;
@@ -32,7 +27,7 @@ export async function GET({ params, request }) {
       itemsOk = true;
 
     while (allItems.length < Math.min(loopTotal, 1000)) {
-      const tRes = await fetchFn(
+      const tRes = await fetch(
         `https://api.spotify.com/v1/playlists/${plId}/items?limit=50&offset=${offset}`,
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -1,0 +1,235 @@
+/* Classement */
+.sh-board {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg);
+}
+.sh-board-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sh-board-list {
+  list-style: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.sh-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+.sh-row.done {
+  background: rgb(74 222 128 / 0.08);
+}
+.sh-row-rank {
+  font-family: var(--s-mono);
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+.sh-row:first-child .sh-row-rank {
+  color: var(--accent);
+}
+.sh-row-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.sh-row-marks {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 8px;
+  vertical-align: 1px;
+}
+.sh-row-marks i {
+  width: 16px;
+  height: 16px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border2);
+  border-radius: 2px;
+  font-family: var(--s-mono);
+  font-size: 0.6rem;
+  font-style: normal;
+  color: var(--dim);
+}
+.sh-row-marks i.ok {
+  background: var(--success);
+  border-color: var(--success);
+  color: #000;
+}
+.sh-row-pts {
+  font-family: var(--s-mono);
+  font-weight: 600;
+  text-align: right;
+}
+.sh-row-pts small {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--success);
+}
+.sh-group {
+  border-left: 5px solid var(--tc);
+}
+.sh-group + .sh-group {
+  border-top: 2px solid var(--text);
+}
+.sh-group ol {
+  list-style: none;
+}
+.sh-group-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0 12px;
+  padding: 12px 20px 8px 15px;
+}
+.sh-group-head b {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  color: var(--tc);
+}
+.sh-group-head small {
+  grid-row: 2;
+  font-size: 0.75rem;
+  color: var(--mid);
+}
+.sh-group-head .pts {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  font-family: var(--s-mono);
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+.sh-group .sh-row {
+  padding-left: 15px;
+}
+.sh-row.offline {
+  opacity: 0.4;
+}
+.sh-board-empty {
+  padding: 24px 20px;
+  color: var(--mid);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.sh-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 76px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+}
+.sh-auto {
+  color: var(--mid);
+}
+.sh-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 70;
+  transform: translateX(-50%);
+  padding: 12px 18px;
+  border-radius: 3px;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+.sh-toast.err {
+  background: var(--danger);
+  color: #000;
+}
+
+/* Prochaine partie (fin de partie, écran piloté) */
+.sh-next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sh-next-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.sh-seg {
+  display: inline-flex;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+}
+.sh-seg button {
+  padding: 8px 12px;
+  background: none;
+  border: 0;
+  border-right: 1px solid var(--border2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.sh-seg button:last-child {
+  border-right: 0;
+}
+.sh-seg button.on {
+  background: var(--text);
+  color: var(--bg);
+}
+
+@keyframes sh-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+@keyframes sh-rise {
+  from {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes sh-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (max-width: 1000px) {
+  .sh-over-grid {
+    grid-template-columns: 1fr;
+  }
+  .sh-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+  .sh-board {
+    max-height: 30vh;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  .sh-join-url,
+  .sh-vol input {
+    display: none;
+  }
+  .sh-lobby {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .sh-lobby .sh-code {
+    justify-content: center;
+  }
+}

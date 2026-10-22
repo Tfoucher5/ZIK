@@ -5,10 +5,13 @@ import { getAdminClient } from "$lib/server/config.js";
 import {
   getVideoSettings,
   clearVideoSettingsCache,
-} from "$lib/server/services/trackIssues.js";
-import { broadcastNotification } from "$lib/server/services/notifications.js";
-import { ADMIN_ALERTS } from "$lib/server/services/adminAlerts.js";
-import { ready as pushReady, deliver } from "$lib/server/services/push.js";
+} from "$lib/server/services/music/trackIssues.js";
+import { broadcastNotification } from "$lib/server/services/notify/notifications.js";
+import { ADMIN_ALERTS } from "$lib/server/services/admin/alerts.js";
+import {
+  ready as pushReady,
+  deliver,
+} from "$lib/server/services/notify/push.js";
 
 export const actions = {
   alerts: async ({ request, locals }) => {

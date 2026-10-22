@@ -5,7 +5,7 @@
   import LinkImport from './LinkImport.svelte';
   import YoutubeAdd from './YoutubeAdd.svelte';
   import Suggestions from './Suggestions.svelte';
-  import { detectInput } from '$lib/playlist/input.js';
+  import { detectInput } from '$lib/shared/playlist/input.js';
   import { SuggestionsState } from './suggestions.svelte.js';
 
   let { store, onClose } = $props();

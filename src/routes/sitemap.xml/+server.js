@@ -1,6 +1,6 @@
 import { supabase } from "$lib/server/config.js";
-import { BLIND_TEST_THEMES } from "$lib/blindTestThemes.js";
-import { listArtists } from "$lib/server/services/artistPages.js";
+import { BLIND_TEST_THEMES } from "$lib/data/blindTestThemes.js";
+import { listArtists } from "$lib/server/services/music/artistPages.js";
 
 const SITE = "https://www.zik-music.fr";
 

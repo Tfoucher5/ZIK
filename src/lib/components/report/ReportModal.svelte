@@ -13,8 +13,8 @@
    *   currentRound    — { round, trackId, videoId } de la manche active, ou null
    *   getGameContext  — renvoie l'état de la partie au moment du signalement
    */
-  import { BUG_MOTIFS, buildTrackChoices, motifCibleUnTitre, MIN_REPORT_MESSAGE } from '$lib/reports/bug-report.js';
-  import { collectReportContext } from '$lib/reports/context.js';
+  import { BUG_MOTIFS, buildTrackChoices, motifCibleUnTitre, MIN_REPORT_MESSAGE } from '$lib/shared/reports/bug-report.js';
+  import { collectReportContext } from '$lib/shared/reports/context.js';
   import { buildReportBody } from './reportBody.js';
   import ReportButton from './ReportButton.svelte';
   import ReportField from './ReportField.svelte';

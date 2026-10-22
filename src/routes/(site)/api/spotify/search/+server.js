@@ -1,6 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { getSpotifyToken } from "$lib/server/services/spotify.js";
-import { getFetch } from "$lib/server/services/fetch.js";
+import { getSpotifyToken } from "$lib/server/services/music/spotify.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
 
 export async function GET({ request, url }) {
@@ -12,14 +11,13 @@ export async function GET({ request, url }) {
 
   try {
     const token = await getSpotifyToken();
-    const fetchFn = await getFetch();
     const params = new URLSearchParams({
       q,
       type: "track",
       limit: "10",
       market: "FR",
     });
-    const r = await fetchFn(`https://api.spotify.com/v1/search?${params}`, {
+    const r = await fetch(`https://api.spotify.com/v1/search?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await r.json();

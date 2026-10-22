@@ -5,7 +5,7 @@ import {
   coversByPlaylist,
   onlineCount,
   totalOnline,
-} from "$lib/server/services/roomList.js";
+} from "$lib/server/services/rooms/roomList.js";
 
 const cache = makeCache(30_000);
 

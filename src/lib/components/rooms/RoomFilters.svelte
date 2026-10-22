@@ -1,5 +1,5 @@
 <script>
-  import { FILTERS, SORTS, toggleFilter } from '$lib/rooms/filter.js';
+  import { FILTERS, SORTS, toggleFilter } from '$lib/shared/rooms/filter.js';
 
   let { q = $bindable(), active = $bindable(), sort = $bindable(), counts } = $props();
 </script>

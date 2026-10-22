@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { error } from "@sveltejs/kit";
 import { supabase, getAdminClient } from "../config.js";
-import { isUuid } from "../../utils.js";
+import { isUuid } from "../../shared/utils.js";
 
 // ─── JWT token cache (avoids a Supabase round-trip per request) ──────────────
 const _tokenCache = new Map(); // token -> { user, exp }

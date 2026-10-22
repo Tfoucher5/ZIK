@@ -1,5 +1,5 @@
 <script>
-  import { NEWS } from '$lib/news.js';
+  import { NEWS } from '$lib/data/news.js';
   import { reveal } from './reveal.js';
 
   const latestNews = NEWS[0];

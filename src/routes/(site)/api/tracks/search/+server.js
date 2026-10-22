@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
-import { escapeIlike, dedupByTrack } from "$lib/zikle/shared.js";
+import { escapeIlike, dedupByTrack } from "$lib/shared/zikle/shared.js";
 
 export async function GET({ request, url }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";

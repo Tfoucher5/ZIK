@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte';
   import TrackResult from './TrackResult.svelte';
-  import { coverThumb } from '$lib/playlist/input.js';
+  import { coverThumb } from '$lib/shared/playlist/input.js';
 
   let { q, store, onArtist, onAlbum } = $props();
 

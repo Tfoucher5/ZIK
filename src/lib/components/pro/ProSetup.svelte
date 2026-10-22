@@ -1,7 +1,7 @@
 <script>
   import ProSection from './ProSection.svelte';
   import { BESOINS } from './proContent.js';
-  import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
 </script>
 
 <ProSection title="Ce qu'il vous faut">

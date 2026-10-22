@@ -1,0 +1,265 @@
+/* ── Auth Modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 40px 38px;
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+  animation: popIn 0.2s ease;
+}
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--mid);
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+.close-btn:hover {
+  color: var(--text);
+}
+.modal-logo {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.modal-logo span {
+  color: var(--accent);
+}
+.modal h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.mdesc {
+  font-size: 0.84rem;
+  color: var(--mid);
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+.mdesc a {
+  color: var(--accent);
+  font-weight: 500;
+}
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  background: #fff;
+  color: #222;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.btn-google:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+.btn-google svg {
+  flex-shrink: 0;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: var(--dim);
+  font-size: 0.78rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dim);
+  margin-bottom: 7px;
+}
+.field input {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgb(var(--c-glass) / 0.04);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.field input:focus {
+  border-color: var(--accent);
+  background: rgb(var(--accent-rgb) / 0.04);
+}
+.field input::placeholder {
+  color: var(--dim);
+}
+.pwd-wrap {
+  position: relative;
+}
+.pwd-wrap input {
+  padding-right: 42px;
+}
+.pwd-eye {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.pwd-eye:hover {
+  opacity: 1;
+}
+
+.alert-err {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+  padding: 9px 13px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}
+.mswitch {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--mid);
+  margin-top: 14px;
+}
+.mswitch a {
+  color: var(--accent);
+  font-weight: 500;
+}
+.mswitch a:hover {
+  text-decoration: underline;
+}
+.confirm-view {
+  text-align: center;
+  padding: 10px 0;
+}
+.confirm-emoji {
+  font-size: 2.8rem;
+  margin-bottom: 14px;
+}
+
+/* ── Utilitaires ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.page-pad {
+  padding-top: calc(var(--nav-h) + 24px);
+}
+
+/* ── Page header (remplacement HeroSection sur pages secondaires) ── */
+.page-head {
+  padding: calc(var(--nav-h) + 40px) clamp(20px, 5vw, 72px) 40px;
+  background: var(--bg);
+  border-bottom: 1px solid rgb(var(--c-glass) / 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.page-head::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    108deg,
+    rgb(var(--accent-rgb) / 0.04) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+.page-head-inner {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.page-head-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: clamp(3rem, 8vw, 6rem);
+  text-transform: uppercase;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--text);
+}
+.page-head-sub {
+  font-size: 1rem;
+  color: var(--mid);
+  margin-top: 10px;
+}

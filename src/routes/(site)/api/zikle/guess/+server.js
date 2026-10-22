@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
-import { todayParis, canonicalTrackKey } from "$lib/zikle/shared.js";
+import { todayParis, canonicalTrackKey } from "$lib/shared/zikle/shared.js";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

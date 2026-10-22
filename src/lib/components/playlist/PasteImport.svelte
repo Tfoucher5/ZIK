@@ -1,8 +1,8 @@
 <script>
   import { onMount } from 'svelte';
-  import { parseList } from '$lib/playlist/input.js';
+  import { parseList } from '$lib/shared/playlist/input.js';
   import { player } from './previewPlayer.svelte.js';
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { initialText = '', store, onClose } = $props();
 

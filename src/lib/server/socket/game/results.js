@@ -5,7 +5,7 @@ import {
 } from "../../services/achievements.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
 import { customRooms, dbRooms } from "../../state.js";
-import { settleCards } from "./cardFlow.js";
+import { settleCards } from "./cardSettle.js";
 import { getOrCreateRoom } from "./rooms.js";
 
 // Elo à la manière des échecs, chaque paire de joueurs comptant comme un

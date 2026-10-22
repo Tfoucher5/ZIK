@@ -2,8 +2,8 @@ import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { refreshZiklePool, todayParis } from "$lib/server/services/zikle.js";
-import { escapeIlike } from "$lib/zikle/shared.js";
-import { fetchAllRows } from "$lib/admin/paginate.server.js";
+import { escapeIlike } from "$lib/shared/zikle/shared.js";
+import { fetchAllRows } from "$lib/server/services/admin/paginate.js";
 
 const PAGE_SIZE = 50;
 

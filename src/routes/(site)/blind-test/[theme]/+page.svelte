@@ -1,5 +1,5 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   let { data } = $props();
 
   const SITE = 'https://www.zik-music.fr';

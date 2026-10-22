@@ -1,5 +1,5 @@
 import { fail } from "@sveltejs/kit";
-import { getSupabaseServerClient } from "$lib/supabaseServer";
+import { supabase } from "$lib/server/config.js";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -64,19 +64,14 @@ export const actions = {
     }
 
     try {
-      const supabase = getSupabaseServerClient();
-
-      const { data: fnData, error } = await supabase.functions.invoke(
-        "send-contact",
-        {
-          body: {
-            nom,
-            email,
-            message,
-            source: "Portfolio",
-          },
+      const { error } = await supabase.functions.invoke("send-contact", {
+        body: {
+          nom,
+          email,
+          message,
+          source: "Portfolio",
         },
-      );
+      });
 
       if (error) {
         console.error(error);

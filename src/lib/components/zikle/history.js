@@ -1,4 +1,4 @@
-import { MAX_ATTEMPTS } from "$lib/zikle/shared.js";
+import { MAX_ATTEMPTS } from "$lib/shared/zikle/shared.js";
 
 const STORAGE_KEY = "zikle_history"; // { [date]: { attempts: string[], won: boolean, labels: string[] } }
 

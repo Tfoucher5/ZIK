@@ -1,5 +1,5 @@
 <script>
-  import { eloRatio } from '$lib/profile/stats.js';
+  import { eloRatio } from '$lib/shared/profile/stats.js';
 
   /**
    * Chiffres du mode sélectionné : cadran ELO, tableau de valeurs, progression

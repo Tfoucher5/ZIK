@@ -1,5 +1,5 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import { jsonLd, faqJsonLd } from './seo.js';
 </script>
 

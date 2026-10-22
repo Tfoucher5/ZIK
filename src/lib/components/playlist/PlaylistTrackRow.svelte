@@ -1,6 +1,6 @@
 <script>
   import VersionPanel from './VersionPanel.svelte';
-  import { coverThumb } from '$lib/playlist/input.js';
+  import { coverThumb } from '$lib/shared/playlist/input.js';
 
   let { track, index, store, open, onToggle, onEditAnswers } = $props();
 </script>

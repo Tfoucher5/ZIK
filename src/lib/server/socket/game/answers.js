@@ -1,8 +1,5 @@
-import {
-  calcSpeedBonus,
-  cleanString,
-  displayString,
-} from "../../services/playlist.js";
+import { calcSpeedBonus } from "../../services/music/playlist.js";
+import { cleanString, displayString } from "../../services/music/trackText.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
 import {
   calcQcmPoints,

@@ -1,6 +1,6 @@
 <script>
-  import { collectReportContext } from '$lib/reports/context.js';
-  import { MIN_REPORT_MESSAGE } from '$lib/reports/bug-report.js';
+  import { collectReportContext } from '$lib/shared/reports/context.js';
+  import { MIN_REPORT_MESSAGE } from '$lib/shared/reports/bug-report.js';
   import Card from '$lib/components/card/Card.svelte';
   import CardViewer from '$lib/components/card/CardViewer.svelte';
   import { shareCard, shareMessage } from '$lib/components/card/shareCard.js';

@@ -2,8 +2,8 @@
   import RoomPlaylistPicker from './RoomPlaylistPicker.svelte';
   import RoomSettings from './RoomSettings.svelte';
   import RoomCreated from './RoomCreated.svelte';
-  import { maxRounds } from '$lib/rooms/settings.js';
-  import { toast } from '$lib/toast.svelte.js';
+  import { maxRounds } from '$lib/shared/rooms/settings.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { open, editing = null, store, onClose, onJoin } = $props();
 

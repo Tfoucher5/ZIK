@@ -21,18 +21,22 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 
 - **Svelte 5 runes** : utiliser `$state`, `$derived`, `$effect`, `$props` — pas les anciens stores Svelte 4
 - **SvelteKit** : load functions côté serveur dans `+page.server.js`, client dans `+page.js`
-- **Socket.io** : la logique serveur est dans `src/lib/server/socket/`
-- **Supabase** : client browser dans `src/lib/supabase.js`, serveur dans `src/lib/supabaseServer.js`
-- **CSS** : pas de framework CSS, styles dans `static/css/` ou `<style>` scoped dans les composants
+- **Socket.io** : la logique serveur est dans `src/lib/server/socket/` (`game/`, `salon/`)
+- **Supabase** : client navigateur dans `src/lib/client/supabase.js`, serveur dans `src/lib/server/config.js` (`supabase` anonyme, `getAdminClient()`)
+- **CSS** : pas de framework CSS. Feuilles globales dans `static/css/`, découpées par sous-dossier (`game/`, `salon/`, `base/`, `admin/`) et chargées dans l'ordre par un `{#each}` de `<link>` (pas d'import Vite : le CSS doit disparaître quand on quitte la page). Sinon `<style>` scoped dans les composants
 
 ## Bonnes pratiques de développement
 
-- **Taille des fichiers** : viser moins de 300 lignes par fichier. Au-delà, découper avant d'ajouter du code
-- **Où ranger quoi** :
-  - `+page.svelte` assemble des composants, sans grosse logique ni gros bloc de styles
-  - Composants d'un domaine dans `src/lib/components/<domaine>/` (ex : `card/`, `leaderboard/`), un composant = une responsabilité, avec ses styles scoped
-  - État et chargement de données partagés par plusieurs composants : module `.svelte.js` (classe avec runes) à côté des composants
-  - Accès BDD et logique métier serveur dans `src/lib/server/services/`, les `+server.js` restent fins (lecture des paramètres, appel du service, réponse)
+- **Taille des fichiers** : moins de 300 lignes par fichier (hors données statiques de `src/lib/data/`). Au-delà, découper avant d'ajouter du code
+- **Où ranger quoi** (aucun fichier en vrac à la racine de `src/lib` ni de `src/lib/components`) :
+  - `+page.svelte` assemble des composants, sans grosse logique ni gros bloc de styles. Pas de composant dans les dossiers de routes
+  - `src/lib/components/<domaine>/` : composants d'un domaine (`card/`, `game/`, `salon/host/`, `admin/cards/`…), un composant = une responsabilité, avec ses styles scoped. Composants génériques dans `ui/`, coque du site (nav, menus) dans `layout/`
+  - État d'une page riche (socket, nombreux `$state`) : classe dans un `.svelte.js` à côté des composants (ex : `game/gameSession.svelte.js`), les réactions socket dans un module séparé (`gameHandlers.js`, `salon/play/playerEvents.js`)
+  - `src/lib/client/` : singletons navigateur (supabase, toast, notifications, push, thème)
+  - `src/lib/shared/` : logique pure utilisée côté client et serveur, par domaine
+  - `src/lib/data/` : contenus statiques (nouveautés, thèmes, offres Pro…)
+  - `src/lib/server/services/<domaine>/` (`admin/`, `music/`, `notify/`, `rooms/`, `cards/`) : accès BDD et logique métier. Les `+server.js` et `+page.server.js` restent fins (lecture des paramètres, appel du service, réponse)
+- **Imports** : `$lib/…` dans les `.svelte` et les routes. Les `.js` de `src/lib` importent en relatif : `server.js` charge le code serveur avec Node pur, et vitest ne connaît pas l'alias `$lib`
 - **Pas de duplication** : chercher un composant, un utilitaire ou une variable CSS existants avant d'en créer (ex : couleurs de rareté `--rc` dans `static/css/cards.css`)
 - **Supabase côté serveur** : `supabase` utilise la clé anonyme et subit les RLS (rooms et playlists privées invisibles). Lire avec `getAdminClient()` quand le serveur doit tout voir
 - **Vérifier avant de livrer** : `npx eslint .`, `npx vitest run`, `npx svelte-check`, et pour toute modif d'interface un contrôle visuel en desktop et en mobile (390 px)
@@ -51,7 +55,7 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 ## Avant de coder
 
 - Toujours lire le fichier avant de le modifier
-- Pour les bugs Socket.io, vérifier `src/lib/server/socket/game.js` et `salon.js`
+- Pour les bugs Socket.io, vérifier `src/lib/server/socket/game/` et `salon/` (point d'entrée `index.js` de chacun)
 - Le state des salons est sur `globalThis.__zik_salonRooms` (survie hot-reload)
 
 ## Git

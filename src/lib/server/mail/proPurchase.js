@@ -1,4 +1,4 @@
-import { PLANS, PRO_PERKS } from "../../proPlans.js";
+import { PLANS, PRO_PERKS } from "../../data/proPlans.js";
 import {
   layout,
   kicker,

@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
   import SettingsSection from './SettingsSection.svelte';
 
   const _ctx = getContext('zik');

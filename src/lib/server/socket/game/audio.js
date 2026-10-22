@@ -1,11 +1,11 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { ytdlAudioCache, audioUrlFor } from "../../ytdlCache.js";
-import { YTDLP_BIN, getYtAudioUrl } from "../../ytdlAudio.js";
+import { ytdlAudioCache, audioUrlFor } from "../../audio/ytdlCache.js";
+import { YTDLP_BIN, getYtAudioUrl } from "../../audio/ytdlAudio.js";
 import { roomGames } from "../../state.js";
-import { fetchDeezerTrackPreview } from "../../services/deezer.js";
-import { pickStart } from "../../services/trackIssues.js";
-import { pickAutoIndex } from "../../../youtube.js";
+import { fetchDeezerTrackPreview } from "../../services/music/deezer.js";
+import { pickStart } from "../../services/music/trackIssues.js";
+import { pickAutoIndex } from "../../../shared/youtube.js";
 
 const execFileAsync = promisify(execFile);
 

@@ -1,6 +1,6 @@
 <script>
   import { goto } from '$app/navigation';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
 
   let q = $state('');
 

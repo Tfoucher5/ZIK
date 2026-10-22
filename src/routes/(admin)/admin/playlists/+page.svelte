@@ -3,9 +3,13 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import Sheet from '$lib/admin/Sheet.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import PlaylistTile from '$lib/components/admin/playlist/PlaylistTile.svelte';
+  import PlaylistFlags from '$lib/components/admin/playlist/PlaylistFlags.svelte';
+  import PlaylistEditForm from '$lib/components/admin/playlist/PlaylistEditForm.svelte';
+  import TopPlaylists from '$lib/components/admin/playlist/TopPlaylists.svelte';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
 
   let { data, form } = $props();
 
@@ -30,7 +34,6 @@
   let searchTimer;
 
   const totalPages = $derived(Math.max(1, Math.ceil(data.count / data.pageSize)));
-  const maxPlays = $derived(Math.max(1, ...data.top.map((p) => p.plays)));
   const fmt = (n) => n.toLocaleString('fr-FR');
 
   function setParam(key, value) {
@@ -69,25 +72,6 @@
     };
   };
 </script>
-
-{#snippet flags(pl)}
-  <form method="POST" action="?/toggleFlag" use:enhance={keep}>
-    <input type="hidden" name="id" value={pl.id} />
-    <input type="hidden" name="field" value="is_official" />
-    <input type="hidden" name="value" value={String(!pl.is_official)} />
-    <button class="flag" class:on-star={pl.is_official} title={pl.is_official ? 'Retirer des officielles' : 'Rendre officielle'}>
-      ★ <span>{pl.is_official ? 'Officielle' : 'Non officielle'}</span>
-    </button>
-  </form>
-  <form method="POST" action="?/toggleFlag" use:enhance={keep}>
-    <input type="hidden" name="id" value={pl.id} />
-    <input type="hidden" name="field" value="is_public" />
-    <input type="hidden" name="value" value={String(!pl.is_public)} />
-    <button class="flag" class:on={pl.is_public} title={pl.is_public ? 'Rendre privée' : 'Rendre publique'}>
-      {pl.is_public ? '●' : '○'} <span>{pl.is_public ? 'Publique' : 'Privée'}</span>
-    </button>
-  </form>
-{/snippet}
 
 {#snippet actions(pl)}
   <a class="a-btn small" href="/admin/playlists/{pl.id}">Ouvrir</a>
@@ -151,7 +135,7 @@
             {#each data.playlists as pl (pl.id)}
               <li class="m-item">
                 <a class="a-row" href="/admin/playlists/{pl.id}">
-                  <span class="tile" class:official={pl.is_official}>{pl.emoji}</span>
+                  <PlaylistTile emoji={pl.emoji} official={pl.is_official} />
                   <span class="a-row-main">
                     <span class="a-row-title">{pl.name}</span>
                     <span class="a-row-sub">{pl.track_count} titres · {pl.profiles?.username ?? 'sans auteur'}{pl.plays !== null ? ` · ${fmt(pl.plays)} parties` : ''}</span>
@@ -160,7 +144,7 @@
                   {#if !pl.is_public}<em class="a-tag">privée</em>{/if}
                 </a>
                 <div class="m-actions">
-                  {@render flags(pl)}
+                  <PlaylistFlags {pl} {keep} />
                   <span class="sp"></span>
                   <button class="a-btn small" type="button" onclick={() => edit(pl)}>Modifier</button>
                   <button class="a-btn small danger" type="button" aria-label="Supprimer" onclick={() => askDelete(pl)}>✕</button>
@@ -187,7 +171,7 @@
                   <tr>
                     <td>
                       <a class="name" href="/admin/playlists/{pl.id}">
-                        <span class="tile small" class:official={pl.is_official}>{pl.emoji}</span>
+                        <PlaylistTile emoji={pl.emoji} official={pl.is_official} small />
                         <b>{pl.name}</b>
                       </a>
                     </td>
@@ -196,7 +180,7 @@
                     </td>
                     <td class="num">{fmt(pl.track_count)}</td>
                     <td class="num">{pl.plays !== null ? fmt(pl.plays) : '—'}</td>
-                    <td><div class="flags">{@render flags(pl)}</div></td>
+                    <td><div class="flags"><PlaylistFlags {pl} {keep} /></div></td>
                     <td class="a-muted nowrap">{ago(pl.updated_at)}</td>
                     <td><div class="row-actions">{@render actions(pl)}</div></td>
                   </tr>
@@ -216,29 +200,7 @@
       </div>
 
       <aside>
-        <section class="a-section">
-          <div class="a-section-head"><h2>Les plus jouées</h2></div>
-          {#if data.top.length}
-            <ol class="top">
-              {#each data.top as p, i (p.id)}
-                <li>
-                  <a href="/admin/playlists/{p.id}">
-                    <span class="rank">{i + 1}</span>
-                    <span class="tile small">{p.emoji}</span>
-                    <span class="top-main">
-                      <span class="top-name">{p.name}</span>
-                      <span class="a-meter"><i style="width:{(p.plays / maxPlays) * 100}%"></i></span>
-                    </span>
-                    <span class="top-n"><b>{fmt(p.plays)}</b><small>{p.month} ce mois</small></span>
-                  </a>
-                </li>
-              {/each}
-            </ol>
-            <p class="a-muted foot">Parties lancées dans la room liée à chaque playlist.</p>
-          {:else}
-            <p class="a-muted">Aucune playlist n'est liée à une room pour l'instant.</p>
-          {/if}
-        </section>
+        <TopPlaylists top={data.top} />
       </aside>
     </div>
   </div>
@@ -246,20 +208,7 @@
 
 <Sheet bind:open={editOpen} title="Modifier la playlist">
   {#if editing}
-    <form class="a-form" method="POST" action="?/editPlaylist" use:enhance={closing(() => (editOpen = false))}>
-      <input type="hidden" name="id" value={editing.id} />
-      <div class="edit-name">
-        <label class="a-label emoji">Emoji<input class="a-input" name="emoji" value={editing.emoji} maxlength="4" /></label>
-        <label class="a-label">Nom<input class="a-input" name="name" value={editing.name} required /></label>
-      </div>
-      <label class="a-label">
-        Room liée (code)
-        <input class="a-input" name="linked_room_id" value={editing.linked_room_id ?? ''} placeholder="ex : KDP2G9" maxlength="12" />
-        <span class="a-muted small">La room du site qui joue cette playlist. Sert aussi à compter ses parties.</span>
-      </label>
-      {#if form?.error}<p class="a-err">{form.error}</p>{/if}
-      <button class="a-btn primary" type="submit" disabled={busy}>Enregistrer</button>
-    </form>
+    <PlaylistEditForm pl={editing} action="?/editPlaylist" submit={closing(() => (editOpen = false))} {busy} error={form?.error} />
   {/if}
 </Sheet>
 
@@ -281,18 +230,6 @@
   .sort { flex: 0 0 auto; width: auto; }
   .a-cols > div { align-content: start; }
 
-  .tile {
-    flex: 0 0 44px;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--a-surface2), var(--a-accent-soft));
-    font-size: 1.4rem;
-  }
-  .tile.official { box-shadow: inset 0 0 0 2px var(--a-warn); }
-  .tile.small { flex-basis: 34px; width: 34px; height: 34px; font-size: 1.1rem; border-radius: 8px; }
 
   .m-item { display: grid; gap: 0; }
   .m-item .a-row { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
@@ -308,26 +245,8 @@
   }
   .sp { flex: 1; }
 
-  .flag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 32px;
-    padding: 4px 8px;
-    border: 1px solid var(--a-line);
-    border-radius: 99px;
-    background: none;
-    color: var(--a-dim);
-    font: inherit;
-    font-size: 0.75rem;
-    font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-  .flag.on { border-color: var(--a-good); color: var(--a-good); }
-  .flag.on-star { border-color: var(--a-warn); color: var(--a-warn); }
-  .m-actions .flag span { display: none; }
-  @media (min-width: 400px) { .m-actions .flag span { display: inline; } }
+  .m-actions :global(.flag span) { display: none; }
+  @media (min-width: 400px) { .m-actions :global(.flag span) { display: inline; } }
 
   .desktop { display: none; }
   @media (min-width: 900px) {
@@ -338,18 +257,4 @@
   .flags, .row-actions { display: flex; gap: 6px; }
   .row-actions { justify-content: flex-end; }
   .nowrap { white-space: nowrap; }
-
-  .top { display: grid; gap: 4px; list-style: none; }
-  .top a { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-radius: 10px; color: var(--a-fg); }
-  .top a:hover { background: var(--a-surface2); }
-  .rank { width: 16px; font-family: var(--a-display); font-weight: 800; color: var(--a-dim); }
-  .top-main { flex: 1; display: grid; gap: 5px; min-width: 0; }
-  .top-name { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  .top-n { display: grid; text-align: right; font-variant-numeric: tabular-nums; }
-  .top-n small { font-size: 0.7rem; color: var(--a-dim); }
-  .foot { font-size: 0.78rem; }
-
-  .edit-name { display: grid; grid-template-columns: 84px 1fr; gap: 10px; }
-  .emoji input { text-align: center; font-size: 1.2rem; }
-  .small { font-size: 0.75rem; font-weight: 400; }
 </style>

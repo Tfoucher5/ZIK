@@ -1,6 +1,6 @@
 import { error, redirect } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
-import { refreshExpiredPreviews } from "$lib/server/services/playlist.js";
+import { refreshExpiredPreviews } from "$lib/server/services/music/playlist.js";
 import { getDayNumber, todayParis } from "$lib/server/services/zikle.js";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

@@ -1,5 +1,5 @@
 <script>
-  import { PRO_PERKS, PRO_COMING } from '$lib/proPlans.js';
+  import { PRO_PERKS, PRO_COMING } from '$lib/data/proPlans.js';
   import { TRUST } from './proContent.js';
 </script>
 

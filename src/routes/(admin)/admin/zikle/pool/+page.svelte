@@ -3,10 +3,10 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import Sheet from '$lib/admin/Sheet.svelte';
-  import ZikleTrackSearch from '$lib/admin/ZikleTrackSearch.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import ZikleTrackSearch from '$lib/components/admin/ZikleTrackSearch.svelte';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
 
   let { data, form } = $props();
 

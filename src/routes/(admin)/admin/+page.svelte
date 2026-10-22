@@ -1,7 +1,7 @@
 <script>
   import { getContext, onMount } from 'svelte';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
 
   let { data } = $props();
 

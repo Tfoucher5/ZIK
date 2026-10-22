@@ -1,5 +1,5 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import ZikleGame from "$lib/components/zikle/ZikleGame.svelte";
   import ZikleStage from "$lib/components/zikle/ZikleStage.svelte";
 

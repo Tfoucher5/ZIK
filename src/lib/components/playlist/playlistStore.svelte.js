@@ -1,4 +1,4 @@
-import { toast } from "$lib/toast.svelte.js";
+import { toast } from "$lib/client/toast.svelte.js";
 
 const LAST_KEY = "zik_pl_last";
 

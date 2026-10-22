@@ -1,6 +1,6 @@
 <script>
   import PlaylistTrackRow from './PlaylistTrackRow.svelte';
-  import { fuzzyFilter } from '$lib/fuzzy.js';
+  import { fuzzyFilter } from '$lib/shared/fuzzy.js';
 
   let { store, onEditAnswers } = $props();
 

@@ -1,7 +1,6 @@
 import { Resvg } from "@resvg/resvg-js";
 import { getAdminClient } from "../../config.js";
-import { getFetch } from "../fetch.js";
-import { cleanString } from "../playlist.js";
+import { cleanString } from "../music/trackText.js";
 import { rarityFromRank } from "../../../components/card/rarity.js";
 import {
   albumCache,
@@ -22,8 +21,7 @@ const RECHECK_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 /** Teinte moyenne d'une pochette, sans dépendance : resvg la réduit à 1 pixel. */
 async function dominantColor(url) {
   try {
-    const fetchFn = await getFetch();
-    const res = await fetchFn(url, { signal: AbortSignal.timeout(8_000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
     if (!res.ok) return null;
     const b64 = Buffer.from(await res.arrayBuffer()).toString("base64");
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><image href="data:image/jpeg;base64,${b64}" width="1" height="1" preserveAspectRatio="none"/></svg>`;

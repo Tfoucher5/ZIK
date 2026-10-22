@@ -1,5 +1,5 @@
 <script>
-  import { toast } from '$lib/toast.svelte.js';
+  import { toast } from '$lib/client/toast.svelte.js';
 
   let { open, playlist = null, store, onClose } = $props();
 

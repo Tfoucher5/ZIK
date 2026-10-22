@@ -3,7 +3,7 @@ import { supabase } from "../../config.js";
 import { userClient } from "../../middleware/auth.js";
 import { salonRooms, getIO } from "../../state.js";
 import { isPro } from "../../services/pro.js";
-import { FREE_MAX_TEAMS } from "../../../proPlans.js";
+import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { makeTeams } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";

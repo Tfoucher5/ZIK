@@ -1,0 +1,181 @@
+/* ── Game Over : disque d'or + crédits de fin ────────────────────────────── */
+.g-gameover {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background:
+    radial-gradient(
+      ellipse 55% 60% at 32% 42%,
+      rgba(251, 191, 36, 0.09),
+      transparent 65%
+    ),
+    rgba(5, 5, 5, 0.97);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: safe center;
+  justify-content: center;
+  padding: 24px;
+  animation: rvFade 0.4s ease;
+  overflow-y: auto;
+}
+.g-go-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(30px, 6vw, 80px);
+  width: 100%;
+  min-width: 0;
+  max-width: 1000px;
+  max-height: 100%;
+  animation: goCardIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes goCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* le trophée : vinyle d'or encadré */
+.g-go-award {
+  flex-shrink: 0;
+}
+.g-go-frame {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  outline: 1px solid rgba(251, 191, 36, 0.12);
+  outline-offset: 7px;
+  background:
+    linear-gradient(160deg, rgba(251, 191, 36, 0.06), transparent 60%),
+    rgba(10, 10, 10, 0.7);
+  padding: clamp(18px, 3vh, 28px);
+  width: min(40vh, 330px, 74vw);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+}
+.g-go-disc-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.g-go-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from 30deg,
+      transparent 0deg,
+      rgba(255, 226, 130, 0.18) 40deg,
+      transparent 85deg,
+      transparent 180deg,
+      rgba(255, 226, 130, 0.12) 220deg,
+      transparent 265deg
+    ),
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      #2c2005 0px,
+      #4a3609 1.5px,
+      #241a04 3px,
+      #3d2d08 4.5px
+    ),
+    #2c2005;
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 191, 36, 0.3),
+    inset 0 0 50px rgba(0, 0, 0, 0.65),
+    0 10px 40px rgba(0, 0, 0, 0.6);
+  animation: g-spin 9s linear infinite;
+  transition: filter 0.9s ease;
+}
+.g-go-disc-label {
+  position: absolute;
+  inset: 31%;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  padding: 8px;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, #f8e3a1, #d4af37 55%, #9a7418);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #241903;
+  transition: filter 0.9s ease;
+}
+.g-go-award:not(.won) .g-go-disc,
+.g-go-award:not(.won) .g-go-disc-label,
+.g-go-award:not(.won) .g-go-plaque {
+  filter: grayscale(1) brightness(0.55);
+}
+.g-go-disc-q {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: 2.2rem;
+  opacity: 0.55;
+}
+.g-go-disc-name {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(0.95rem, 2.4vh, 1.3rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-go-disc-pts {
+  font-family: var(--g-mono);
+  font-weight: 700;
+  font-size: 0.62rem;
+}
+.g-go-plaque {
+  margin-top: clamp(14px, 2.4vh, 22px);
+  background: linear-gradient(165deg, #e8c96a, #8a6a1c 55%, #c19a2e);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.35);
+  color: #241903;
+  text-align: center;
+  padding: 12px 14px 14px;
+  transition: filter 0.9s ease;
+}
+.g-go-plaque-title {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.g-go-plaque-sub {
+  font-family: var(--g-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-top: 4px;
+}
+.g-go-plaque-name {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(1.3rem, 3vh, 1.7rem);
+  text-transform: uppercase;
+  line-height: 1;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-go-plaque-room {
+  font-family: var(--g-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-top: 5px;
+}

@@ -1,5 +1,4 @@
 import { json } from "@sveltejs/kit";
-import { getFetch } from "$lib/server/services/fetch.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
 
 export async function GET({ params, request }) {
@@ -7,11 +6,10 @@ export async function GET({ params, request }) {
   checkRateLimit(ip, 10, 60_000);
 
   try {
-    const fetchFn = await getFetch();
     const headers = { "User-Agent": "ZIK-BlindTest/1.0" };
     const plId = params.id;
 
-    const r = await fetchFn(`https://api.deezer.com/playlist/${plId}`, {
+    const r = await fetch(`https://api.deezer.com/playlist/${plId}`, {
       headers,
       signal: AbortSignal.timeout(10000),
     });
@@ -26,7 +24,7 @@ export async function GET({ params, request }) {
     let allTracks = [];
     while (allTracks.length < Math.min(total, 1000)) {
       const index = allTracks.length;
-      const nextR = await fetchFn(
+      const nextR = await fetch(
         `https://api.deezer.com/playlist/${plId}/tracks?index=${index}&limit=100`,
         { headers, signal: AbortSignal.timeout(10000) },
       );

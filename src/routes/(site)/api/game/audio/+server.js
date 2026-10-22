@@ -1,5 +1,5 @@
-import { ytdlAudioCache, audioKeyFor } from "$lib/server/ytdlCache.js";
-import { getYtAudioUrl } from "$lib/server/ytdlAudio.js";
+import { ytdlAudioCache, audioKeyFor } from "$lib/server/audio/ytdlCache.js";
+import { getYtAudioUrl } from "$lib/server/audio/ytdlAudio.js";
 import { refreshPreview } from "$lib/server/socket/game/audio.js";
 
 const TTL = 2 * 60 * 60 * 1000;

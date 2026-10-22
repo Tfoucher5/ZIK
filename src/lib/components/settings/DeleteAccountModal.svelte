@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import Modal from '$lib/components/Modal.svelte';
+  import Modal from '$lib/components/ui/Modal.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;

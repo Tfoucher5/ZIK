@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/theme.js';
+  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/client/theme.js';
 
   let animOn      = $state(true);
   let activeTheme = $state(DEFAULT_THEME);

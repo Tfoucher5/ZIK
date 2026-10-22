@@ -3,7 +3,7 @@ import { checkRateLimit } from "$lib/server/middleware/auth.js";
 import {
   findArtist,
   startArtistRoom,
-} from "$lib/server/services/artistPages.js";
+} from "$lib/server/services/music/artistPages.js";
 
 export async function POST({ params, request }) {
   checkRateLimit(

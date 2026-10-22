@@ -1,4 +1,4 @@
-import { displayString, parseFeaturing } from "../playlist.js";
+import { displayString, parseFeaturing } from "../music/trackText.js";
 import { deezer, spotifyIsrc, youtubeTitle } from "./deezerApi.js";
 import {
   stripVersion,

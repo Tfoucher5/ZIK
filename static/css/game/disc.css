@@ -1,0 +1,284 @@
+/* ── Colonne centrale ────────────────────────────────────────────────────── */
+.g-col-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.g-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.6vh, 24px);
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px;
+  background: radial-gradient(
+    ellipse 55% 50% at 50% 42%,
+    rgb(var(--accent-rgb) / 0.055),
+    transparent 70%
+  );
+}
+
+/* ── Disque-chrono ───────────────────────────────────────────────────────── */
+.g-deck {
+  position: relative;
+  width: min(44vh, 360px, 74vw);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+.g-deck-ring {
+  position: absolute;
+  inset: -13px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -90deg,
+    var(--accent) calc(var(--t) * 1turn),
+    rgba(255, 255, 255, 0.06) 0
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 5px),
+    #000 calc(100% - 4px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 5px),
+    #000 calc(100% - 4px)
+  );
+  filter: drop-shadow(0 0 12px rgb(var(--accent-rgb) / 0.5));
+  transition: background 0.3s;
+}
+.g-deck-ring.warn {
+  background: conic-gradient(
+    from -90deg,
+    var(--danger) calc(var(--t) * 1turn),
+    rgba(255, 255, 255, 0.06) 0
+  );
+  filter: drop-shadow(0 0 12px rgba(248, 113, 113, 0.55));
+}
+.g-vinyl {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      #101010 0px,
+      #161616 1.5px,
+      #0b0b0b 3px,
+      #131313 4.5px
+    ),
+    #0d0d0d;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+    inset 0 0 60px rgba(0, 0, 0, 0.9),
+    0 12px 50px rgba(0, 0, 0, 0.7);
+  animation: g-spin 3.6s linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
+}
+.g-deck.spinning .g-vinyl {
+  animation-play-state: running;
+}
+.g-vinyl::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 20deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.05) 30deg,
+    transparent 70deg,
+    transparent 180deg,
+    rgba(255, 255, 255, 0.04) 215deg,
+    transparent 250deg
+  );
+}
+.g-deck-label {
+  position: absolute;
+  inset: 28%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141414;
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  z-index: 2;
+}
+.g-deck-clock {
+  text-align: center;
+}
+.g-deck-clock .t {
+  font-family: var(--g-mono);
+  font-weight: 700;
+  color: #fff;
+  font-size: clamp(1.3rem, 4.6vh, 2rem);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.g-deck-clock .t.warn {
+  color: var(--danger);
+  animation: g-pulse 0.8s ease-in-out infinite;
+}
+.g-deck-clock .l {
+  font-family: var(--g-cond);
+  font-weight: 700;
+  font-size: 0.56rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.6);
+  margin-top: 2px;
+}
+.g-deck-idle {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(1.2rem, 3.4vh, 1.7rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+}
+.g-deck-idle span {
+  color: var(--accent);
+}
+.g-deck-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: coverIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes coverIn {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* bras de lecture */
+.g-tonearm {
+  position: absolute;
+  top: -8%;
+  right: -7%;
+  width: 46%;
+  height: 60%;
+  z-index: 3;
+  pointer-events: none;
+  transform-origin: 78% 12%;
+  transform: rotate(calc((1 - var(--t)) * 26deg - 4deg));
+  transition: transform 1s linear;
+}
+.g-tonearm-pivot {
+  position: absolute;
+  top: 6%;
+  right: 14%;
+  width: 17%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1c1c1c;
+  border: 1px solid var(--border2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+.g-tonearm-arm {
+  position: absolute;
+  top: 12%;
+  right: 20%;
+  width: 3.5%;
+  height: 74%;
+  background: linear-gradient(#2c2c2c, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transform-origin: top center;
+  transform: rotate(24deg);
+}
+.g-tonearm-head {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 340%;
+  height: 16px;
+  background: #242424;
+  border: 1px solid var(--border2);
+  border-radius: 1px;
+}
+.g-tonearm-head::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 3px;
+  height: 5px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* ── Slots ───────────────────────────────────────────────────────────────── */
+.g-slots {
+  display: flex;
+  gap: 10px 26px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.g-slot {
+  text-align: center;
+  min-width: 140px;
+}
+.g-slot-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: 0.6rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+.g-slot-val {
+  font-family: var(--g-cond);
+  font-weight: 900;
+  font-size: clamp(1.1rem, 3vh, 1.5rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  word-break: break-word;
+  color: var(--dim);
+  border-bottom: 2px solid var(--border2);
+  padding: 2px 14px 6px;
+  transition:
+    color 0.25s,
+    border-color 0.25s;
+}
+.g-slot.found .g-slot-val {
+  color: var(--success);
+  border-bottom-color: var(--success);
+  text-shadow: 0 0 18px rgb(74 222 128 / 0.35);
+  animation: slotFound 0.5s ease;
+}
+.g-slot.missed .g-slot-val {
+  color: var(--danger);
+  border-bottom-color: var(--danger);
+}
+@keyframes slotFound {
+  from {
+    transform: rotateX(80deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

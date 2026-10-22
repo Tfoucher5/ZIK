@@ -1,8 +1,8 @@
 <script>
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import BarChart from '$lib/admin/BarChart.svelte';
-  import ProMailing from '$lib/admin/ProMailing.svelte';
-  import { ago, euros } from '$lib/admin/stats-utils.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import BarChart from '$lib/components/admin/BarChart.svelte';
+  import ProMailing from '$lib/components/admin/ProMailing.svelte';
+  import { ago, euros } from '$lib/shared/admin/stats-utils.js';
 
   let { data, form } = $props();
 

@@ -1,14 +1,14 @@
 import { supabase } from "../../config.js";
-import { YouTube } from "../../youtube.js";
+import { YouTube } from "../../audio/youtube.js";
 import {
   buildTrackFromRow,
   TRACK_ROW_SELECT,
-} from "../../services/playlist.js";
+} from "../../services/music/playlist.js";
 import {
   getVideoSettings,
   filterVideos,
   pickStart,
-} from "../../services/trackIssues.js";
+} from "../../services/music/trackIssues.js";
 
 async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {

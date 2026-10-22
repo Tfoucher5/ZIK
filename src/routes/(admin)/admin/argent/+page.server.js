@@ -6,7 +6,7 @@ import {
   proMailingStatus,
   sendProMailing,
   sendProMailingTest,
-} from "$lib/server/services/proMailing.js";
+} from "$lib/server/services/admin/proMailing.js";
 
 const TTL = 5 * 60_000;
 let cache = null;

@@ -35,7 +35,7 @@ export async function refreshProvisional(now = new Date()) {
   }
   const holidays =
     isFestive(now) || (now.getMonth() === 0 && now.getDate() < 15);
-  const { createNotification } = await import("../notifications.js");
+  const { createNotification } = await import("../notify/notifications.js");
   let raised = 0;
 
   for (const card of cards) {

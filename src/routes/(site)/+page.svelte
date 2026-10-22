@@ -1,6 +1,6 @@
 <script>
   import { onMount, untrack } from 'svelte';
-  import GuestModal from '$lib/components/GuestModal.svelte';
+  import GuestModal from '$lib/components/auth/GuestModal.svelte';
   import HomeSeo from '$lib/components/home/HomeSeo.svelte';
   import HeroSection from '$lib/components/home/HeroSection.svelte';
   import TodayStrip from '$lib/components/home/TodayStrip.svelte';

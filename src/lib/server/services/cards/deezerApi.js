@@ -1,5 +1,4 @@
-import { getFetch } from "../fetch.js";
-import { getSpotifyToken } from "../spotify.js";
+import { getSpotifyToken } from "../music/spotify.js";
 
 const DEEZER = "https://api.deezer.com";
 const HEADERS = { "User-Agent": "ZIK-BlindTest/1.0" };
@@ -15,9 +14,8 @@ export async function deezer(path) {
   nextSlot = Math.max(nextSlot, Date.now()) + MIN_GAP_MS;
   if (wait) await new Promise((r) => setTimeout(r, wait));
 
-  const fetchFn = await getFetch();
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetchFn(`${DEEZER}${path}`, {
+    const res = await fetch(`${DEEZER}${path}`, {
       headers: HEADERS,
       signal: AbortSignal.timeout(10_000),
     }).catch(() => null);
@@ -43,8 +41,7 @@ export async function firstReleaseFromIsrc(isrc) {
   mbNextSlot = Math.max(mbNextSlot, Date.now()) + MB_GAP_MS;
   if (wait) await new Promise((r) => setTimeout(r, wait));
   try {
-    const fetchFn = await getFetch();
-    const res = await fetchFn(
+    const res = await fetch(
       `https://musicbrainz.org/ws/2/isrc/${encodeURIComponent(isrc)}?fmt=json`,
       { headers: MB_HEADERS, signal: AbortSignal.timeout(10_000) },
     );
@@ -70,8 +67,7 @@ export async function cached(cache, id, path) {
 export async function spotifyIsrc(id) {
   try {
     const token = await getSpotifyToken();
-    const fetchFn = await getFetch();
-    const res = await fetchFn(`https://api.spotify.com/v1/tracks/${id}`, {
+    const res = await fetch(`https://api.spotify.com/v1/tracks/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(8_000),
     });
@@ -86,8 +82,7 @@ export async function spotifyIsrc(id) {
 // de la vidéo
 export async function youtubeTitle(id) {
   try {
-    const fetchFn = await getFetch();
-    const res = await fetchFn(
+    const res = await fetch(
       `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`,
       { signal: AbortSignal.timeout(8_000) },
     );

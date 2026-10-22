@@ -2,7 +2,7 @@
   import { onMount, getContext } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import ProfileView from '$lib/components/ProfileView.svelte';
+  import ProfileView from '$lib/components/profile/ProfileView.svelte';
   import ReportModal from '$lib/components/report/ReportModal.svelte';
 
   const _ctx = getContext('zik');

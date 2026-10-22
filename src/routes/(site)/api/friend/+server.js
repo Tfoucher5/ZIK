@@ -4,7 +4,7 @@ import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
 import {
   createNotification,
   deleteNotifications,
-} from "$lib/server/services/notifications.js";
+} from "$lib/server/services/notify/notifications.js";
 
 const ACTIONS = new Set(["request", "accept", "remove"]);
 

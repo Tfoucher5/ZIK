@@ -27,7 +27,7 @@ vi.mock("../../../services/weeklyChallenge.js", () => ({
   bumpWeeklyChallenge: () => {},
 }));
 const loadPlaylist = vi.fn(async () => []);
-vi.mock("../../../services/playlist.js", async (importOriginal) => ({
+vi.mock("../../../services/music/playlist.js", async (importOriginal) => ({
   ...(await importOriginal()),
   loadPlaylist: (...args) => loadPlaylist(...args),
 }));

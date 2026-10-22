@@ -1,5 +1,5 @@
 <script>
-  import { fuzzyFilter } from '$lib/fuzzy.js';
+  import { fuzzyFilter } from '$lib/shared/fuzzy.js';
 
   let { playlists, selected = $bindable() } = $props();
 

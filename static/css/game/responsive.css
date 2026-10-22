@@ -1,0 +1,173 @@
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+  :root {
+    --g-sidebar-w: 245px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .g-sidebar-history {
+    display: none;
+  }
+}
+
+/* Mobile — layout colonne scrollable */
+@media (max-width: 800px) {
+  :root {
+    --g-header-h: 46px;
+    --g-input-h: 56px;
+  }
+
+  .g-app {
+    height: 100dvh;
+  }
+  .g-body {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .g-header-room,
+  .g-back,
+  .g-round-info {
+    padding: 0 10px;
+  }
+  .g-room-name {
+    font-size: 0.88rem;
+    letter-spacing: 0.08em;
+  }
+  .g-round-info {
+    font-size: 0.62rem;
+  }
+  .g-vol {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .g-vol-label,
+  .g-vol-pct {
+    display: none;
+  }
+  .g-vol input[type="range"] {
+    width: 64px;
+  }
+  .g-chat-toggle,
+  .g-bug-btn {
+    padding: 0 10px;
+  }
+
+  .g-sidebar {
+    width: 100%;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+  .g-sidebar-scores {
+    order: 10;
+    border-right: none;
+    border-top: 1px solid var(--border);
+  }
+  .g-sidebar-history {
+    display: flex;
+    order: 11;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+  .g-player-list,
+  .g-history-list {
+    overflow-y: visible;
+    flex: none;
+  }
+
+  .g-col-center {
+    order: 0;
+    flex: 0 0 auto;
+    min-height: calc(100dvh - var(--g-header-h));
+  }
+  .g-center {
+    gap: 12px;
+    padding: 12px;
+  }
+  .g-deck {
+    width: min(30vh, 240px, 64vw);
+  }
+  .g-slot {
+    min-width: 110px;
+  }
+  .g-slot-val {
+    font-size: 1.05rem;
+  }
+  .g-feat {
+    margin: 0 14px 14px;
+  }
+
+  .g-input {
+    font-size: 16px;
+    padding: 14px 12px;
+  }
+  .g-submit-btn {
+    padding: 0 20px;
+    font-size: 0.75rem;
+  }
+
+  .g-rv-inner {
+    flex-direction: column;
+    gap: 26px;
+    text-align: center;
+  }
+  .g-rv-sleeve {
+    width: min(34vh, 250px, 70vw);
+  }
+  .g-rv-info {
+    min-width: 0;
+  }
+  .g-rv-chips {
+    justify-content: center;
+  }
+
+  /* QCM : deux colonnes laissaient ~100px de large au texte, donc un
+     « Artiste — Titre » sur 5 lignes serrées. Une seule colonne pleine largeur
+     le rend lisible d'un coup d'œil, et la hauteur suit le contenu. */
+  .g-qcm-grid {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .g-qcm-btn {
+    min-height: 52px;
+    padding: 11px 13px;
+    font-size: 0.92rem;
+  }
+
+  /* L'historique occupe toute la largeur sur mobile : l'ellipse de la sidebar
+     n'a plus lieu d'être, on affiche artiste et titre en entier. */
+  .g-hitem-artist,
+  .g-hitem-title {
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .g-vinyl,
+  .g-rv-vinyl,
+  .g-live,
+  .g-deck-clock .t.warn,
+  .g-strip-score.flash,
+  .g-slot.found .g-slot-val,
+  .g-hitem,
+  .g-feat,
+  .g-go-inner,
+  .g-gameover,
+  .g-go-disc,
+  .g-deck-cover,
+  .g-reveal,
+  .g-rv-sleeve,
+  .g-rv-info > *,
+  .confetti-piece {
+    animation: none !important;
+  }
+  .g-go-track {
+    transition: none;
+  }
+}

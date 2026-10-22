@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { salonRooms } from "../../state.js";
-import { FREE_MAX_TEAMS } from "../../../proPlans.js";
+import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { teamStandings } from "./teams.js";
 import { checkEveryoneDone } from "./rounds.js";
 

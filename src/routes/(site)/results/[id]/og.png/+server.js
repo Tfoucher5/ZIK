@@ -2,7 +2,7 @@ import { error } from "@sveltejs/kit";
 import { supabase } from "$lib/server/config.js";
 import { buildResultCardSvg } from "$lib/server/og/resultCard.js";
 import { svgToPng } from "$lib/server/og/render.js";
-import { isUuid } from "$lib/utils.js";
+import { isUuid } from "$lib/shared/utils.js";
 
 // Un résultat est figé une fois la partie terminée : l'image ne changera
 // jamais, on peut donc la garder indéfiniment.

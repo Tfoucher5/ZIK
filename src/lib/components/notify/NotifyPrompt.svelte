@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from 'svelte';
-  import { push, enablePush } from '$lib/push.svelte.js';
+  import { push, enablePush } from '$lib/client/push.svelte.js';
   import { notifPrefs, tokenGetter } from './notifPrefs.svelte.js';
 
   /**

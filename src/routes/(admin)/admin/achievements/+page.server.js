@@ -1,7 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { fetchAllRows } from "$lib/admin/paginate.server.js";
+import { fetchAllRows } from "$lib/server/services/admin/paginate.js";
 
 const TYPES = ["one_time", "tiered"];
 const RARITIES = ["common", "rare", "epic", "legendary"];

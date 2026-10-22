@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import ProHeader from '$lib/components/pro/ProHeader.svelte';
   import ProSteps from '$lib/components/pro/ProSteps.svelte';
   import ProUsages from '$lib/components/pro/ProUsages.svelte';
@@ -9,7 +9,7 @@
   import ProFaq from '$lib/components/pro/ProFaq.svelte';
   import ProCta from '$lib/components/pro/ProCta.svelte';
   import { ProCheckout } from '$lib/components/pro/proCheckout.svelte.js';
-  import { FREE_MAX_PLAYERS } from '$lib/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
   import { PAGE_JSON_LD, FAQ_JSON_LD } from '$lib/components/pro/proContent.js';
 
   const checkout = new ProCheckout(getContext('zik'));

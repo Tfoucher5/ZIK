@@ -1,7 +1,7 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
-  import { BLIND_TEST_THEMES } from '$lib/blindTestThemes.js';
-  import { breadcrumb } from '$lib/seo.js';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
+  import { BLIND_TEST_THEMES } from '$lib/data/blindTestThemes.js';
+  import { breadcrumb } from '$lib/shared/seo.js';
   const breadcrumbJsonLd = breadcrumb([{ name: 'Blind test par thème', path: '/blind-test' }]);
 
 

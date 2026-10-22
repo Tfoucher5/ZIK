@@ -1,6 +1,6 @@
 <script>
   import { player } from './previewPlayer.svelte.js';
-  import { coverThumb } from '$lib/playlist/input.js';
+  import { coverThumb } from '$lib/shared/playlist/input.js';
 
   let { track, store, active = false, onArtist = null, onAlbum = null, onhover = null } = $props();
 

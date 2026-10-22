@@ -2,8 +2,7 @@ import { json } from "@sveltejs/kit";
 import {
   getSpotifyToken,
   normalizeSpotifyItem,
-} from "$lib/server/services/spotify.js";
-import { getFetch } from "$lib/server/services/fetch.js";
+} from "$lib/server/services/music/spotify.js";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
 
 export async function GET({ params, request }) {
@@ -15,10 +14,8 @@ export async function GET({ params, request }) {
   if (!userToken)
     return json({ error: "X-Spotify-Token manquant" }, { status: 400 });
 
-  const fetchFn = await getFetch();
-
   try {
-    let plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}`, {
+    let plRes = await fetch(`https://api.spotify.com/v1/playlists/${plId}`, {
       headers: { Authorization: `Bearer ${userToken}` },
       signal: AbortSignal.timeout(12000),
     });
@@ -34,7 +31,7 @@ export async function GET({ params, request }) {
       if (plRes.status === 404)
         return json({ error: "Playlist introuvable." }, { status: 404 });
       currentToken = await getSpotifyToken();
-      plRes = await fetchFn(`https://api.spotify.com/v1/playlists/${plId}`, {
+      plRes = await fetch(`https://api.spotify.com/v1/playlists/${plId}`, {
         headers: { Authorization: `Bearer ${currentToken}` },
         signal: AbortSignal.timeout(12000),
       });
@@ -54,7 +51,7 @@ export async function GET({ params, request }) {
       itemsOk = true;
 
     while (allItems.length < Math.min(loopTotal, 1000)) {
-      const tRes = await fetchFn(
+      const tRes = await fetch(
         `https://api.spotify.com/v1/playlists/${plId}/items?limit=50&offset=${offset}`,
         {
           headers: { Authorization: `Bearer ${currentToken}` },

@@ -2,7 +2,7 @@ import { error, fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { getDayNumber } from "$lib/server/services/zikle.js";
-import { fetchAllRows } from "$lib/admin/paginate.server.js";
+import { fetchAllRows } from "$lib/server/services/admin/paginate.js";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

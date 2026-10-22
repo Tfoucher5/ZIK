@@ -1,5 +1,5 @@
 <script>
-  import { MAX_ATTEMPTS } from "$lib/zikle/shared.js";
+  import { MAX_ATTEMPTS } from "$lib/shared/zikle/shared.js";
   import { SKIP } from "./session.svelte.js";
 
   let { attempts, labels, finished, won, shakeRow } = $props();

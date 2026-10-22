@@ -1,4 +1,4 @@
-import { extractYoutubeId } from "$lib/youtube.js";
+import { extractYoutubeId } from "$lib/shared/youtube.js";
 import { player } from "./previewPlayer.svelte.js";
 
 // Version YouTube jouée en partie pour un titre de la playlist : écoute,

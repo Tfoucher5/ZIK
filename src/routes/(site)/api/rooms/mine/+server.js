@@ -1,12 +1,12 @@
 import { json } from "@sveltejs/kit";
 import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
-import { backfillCovers } from "$lib/server/services/coverBackfill.js";
+import { backfillCovers } from "$lib/server/services/music/coverBackfill.js";
 import {
   ROOM_PLAYLISTS_SELECT,
   roomPlaylists,
   onlineCount,
   withCovers,
-} from "$lib/server/services/roomList.js";
+} from "$lib/server/services/rooms/roomList.js";
 
 export async function GET({ request }) {
   const { user, token } = await requireAuth(request);

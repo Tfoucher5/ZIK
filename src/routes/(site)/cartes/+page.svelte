@@ -1,22 +1,12 @@
 <script>
-  import Card from '$lib/components/card/Card.svelte';
   import CardViewer from '$lib/components/card/CardViewer.svelte';
-  import JsonLd from '$lib/components/JsonLd.svelte';
-  import { RARITIES } from '$lib/components/card/rarity.js';
+  import RarityShowcase from '$lib/components/card/RarityShowcase.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
 
   let { data } = $props();
 
   const fmt = (n) => (n ?? 0).toLocaleString('fr-FR');
   const total = $derived(fmt(data.totals.total));
-  const pct = (r) => Math.max(1, Math.round(((data.totals.byRarity[r] ?? 0) / (data.totals.total || 1)) * 100));
-
-  function condition(r) {
-    const e = RARITIES[r].exploit;
-    const parts = [`${e.players} joueurs connectés`];
-    if (e.classic) parts.push(`trouvée en moins de ${e.classic / 1000} s (${e.qcm / 1000} s en QCM)`);
-    if (e.notOwnPlaylist) parts.push('jamais sur sa propre playlist');
-    return parts.join(', ');
-  }
 
   const FAQ = [
     {
@@ -110,18 +100,7 @@
   <section class="ct-section" aria-labelledby="ct-rar">
     <h2 id="ct-rar">Six raretés, des plus courantes aux plus grands tubes</h2>
     <p class="ct-text">Plus un titre est écouté, plus sa carte est rare. Les plus rares demandent en plus de trouver vite.</p>
-    <ul class="ct-rarities">
-      {#each data.samples as card (card.id)}
-        <li class="ct-rarity" data-rarity={card.rarity}>
-          <Card {card} size="sm" inspectable list={data.samples} />
-          <div>
-            <h3>{RARITIES[card.rarity].label}</h3>
-            <p class="ct-share">{fmt(data.totals.byRarity[card.rarity])} cartes, environ {pct(card.rarity)}&nbsp;%</p>
-            <p class="ct-cond">{condition(card.rarity)}</p>
-          </div>
-        </li>
-      {/each}
-    </ul>
+    <RarityShowcase samples={data.samples} totals={data.totals} />
   </section>
 
   <section class="ct-section" aria-labelledby="ct-sets">
@@ -258,43 +237,6 @@
     line-height: 1.5;
   }
 
-  .ct-rarities {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .ct-rarity {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 16px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: var(--surface);
-  }
-
-  .ct-rarity h3 {
-    margin: 0 0 6px;
-    color: var(--rc, var(--text));
-    font: 700 1.5rem/1 'Barlow Condensed', sans-serif;
-  }
-
-  .ct-share {
-    margin: 0 0 8px;
-    font-weight: 600;
-  }
-
-  .ct-cond {
-    margin: 0;
-    color: var(--mid);
-    font-size: 0.9rem;
-    line-height: 1.45;
-  }
-
   .ct-faq {
     max-width: 760px;
     padding: 16px 0;
@@ -319,17 +261,6 @@
   .ct-link {
     color: var(--accent);
     font-weight: 600;
-  }
-
-  @media (max-width: 480px) {
-    .ct-rarities {
-      grid-template-columns: 1fr;
-    }
-
-    .ct-rarity {
-      gap: 14px;
-      padding: 12px;
-    }
   }
 
   .ct-btn:focus-visible,

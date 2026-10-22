@@ -1,6 +1,6 @@
-import { FREE_MAX_PLAYERS } from "../../../proPlans.js";
+import { FREE_MAX_PLAYERS } from "../../../data/proPlans.js";
 import { verifyToken } from "../../middleware/auth.js";
-import { alertAdminsSafe } from "../../services/adminAlerts.js";
+import { alertAdminsSafe } from "../../services/admin/alerts.js";
 import { salonRooms } from "../../state.js";
 import {
   addPlayer,

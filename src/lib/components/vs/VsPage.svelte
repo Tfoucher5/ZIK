@@ -1,5 +1,5 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
 
   /**
    * Bloc : { p } ou { ul } (élément de liste : texte, ou [gras, suite]).

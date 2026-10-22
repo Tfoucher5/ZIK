@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
-import { listVersions } from "$lib/server/services/trackVideo.js";
+import { listVersions } from "$lib/server/services/music/trackVideo.js";
 
 // GET /api/tracks/versions?artist=&title=
 export async function GET({ request, url }) {

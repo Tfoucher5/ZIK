@@ -1,8 +1,8 @@
 <script>
   import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
   import { getContext } from 'svelte';
-  import { dicebear } from '$lib/utils.js';
-  import ChallengeIcon from '$lib/components/ChallengeIcon.svelte';
+  import { dicebear } from '$lib/shared/utils.js';
+  import ChallengeIcon from '$lib/components/ui/ChallengeIcon.svelte';
 
   let { data } = $props();
   const challenge = data.challenge;

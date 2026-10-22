@@ -3,7 +3,7 @@ import {
   getTodo,
   getJournal,
   liveCounts,
-} from "$lib/server/services/adminBoard.js";
+} from "$lib/server/services/admin/board.js";
 
 export async function load() {
   const [{ items }, journal, pro] = await Promise.all([

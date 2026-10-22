@@ -1,18 +1,18 @@
 <script>
-  import JsonLd from '$lib/components/JsonLd.svelte';
+  import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import { onMount, getContext } from 'svelte';
   import { page } from '$app/state';
-  import Toast from '$lib/components/Toast.svelte';
-  import LoadMore from '$lib/components/LoadMore.svelte';
-  import GuestModal from '$lib/components/GuestModal.svelte';
+  import Toast from '$lib/components/ui/Toast.svelte';
+  import LoadMore from '$lib/components/ui/LoadMore.svelte';
+  import GuestModal from '$lib/components/auth/GuestModal.svelte';
   import RoomTile from '$lib/components/rooms/RoomTile.svelte';
   import RoomFilters from '$lib/components/rooms/RoomFilters.svelte';
   import LiveStrip from '$lib/components/rooms/LiveStrip.svelte';
   import RoomFormModal from '$lib/components/rooms/RoomFormModal.svelte';
   import { RoomsStore } from '$lib/components/rooms/roomsStore.svelte.js';
-  import { filterRooms, countByFilter, sortRooms } from '$lib/rooms/filter.js';
-  import { toast } from '$lib/toast.svelte.js';
-  import { breadcrumb } from '$lib/seo.js';
+  import { filterRooms, countByFilter, sortRooms } from '$lib/shared/rooms/filter.js';
+  import { toast } from '$lib/client/toast.svelte.js';
+  import { breadcrumb } from '$lib/shared/seo.js';
 
   const breadcrumbJsonLd = breadcrumb([{ name: 'Rooms', path: '/rooms' }]);
   const roomsJsonLd = JSON.stringify({

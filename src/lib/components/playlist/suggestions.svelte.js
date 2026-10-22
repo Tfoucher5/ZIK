@@ -1,4 +1,4 @@
-import { pickSeeds } from "$lib/playlist/suggest.js";
+import { pickSeeds } from "$lib/shared/playlist/suggest.js";
 
 const PAGE = 8;
 

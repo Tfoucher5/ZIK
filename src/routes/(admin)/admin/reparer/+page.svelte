@@ -1,10 +1,10 @@
 <script>
   import { getContext } from 'svelte';
-  import PageHeader from '$lib/admin/PageHeader.svelte';
-  import Sheet from '$lib/admin/Sheet.svelte';
-  import VideoFixer from '$lib/admin/VideoFixer.svelte';
-  import TrackAudioDebugger from '$lib/components/admin/TrackAudioDebugger.svelte';
-  import { ago } from '$lib/admin/stats-utils.js';
+  import PageHeader from '$lib/components/admin/PageHeader.svelte';
+  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import VideoFixer from '$lib/components/admin/VideoFixer.svelte';
+  import TrackAudioDebugger from '$lib/components/admin/audio/TrackAudioDebugger.svelte';
+  import { ago } from '$lib/shared/admin/stats-utils.js';
 
   const adminCtx = getContext('adminToken');
   const alertsCtx = getContext('adminAlerts');

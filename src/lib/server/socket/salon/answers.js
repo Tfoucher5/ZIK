@@ -1,4 +1,5 @@
-import { calcSpeedBonus, cleanString } from "../../services/playlist.js";
+import { calcSpeedBonus } from "../../services/music/playlist.js";
+import { cleanString } from "../../services/music/trackText.js";
 import { salonRooms } from "../../state.js";
 import { closeMsg, gradeGuess, markFound, partName } from "../scoring.js";
 import {

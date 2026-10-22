@@ -7,8 +7,8 @@ import {
 } from "$lib/server/services/pro.js";
 import { sendMail, ADMIN_EMAIL } from "$lib/server/mail/send.js";
 import { proWelcome, proSaleAlert } from "$lib/server/mail/proPurchase.js";
-import { alertAdminsSafe } from "$lib/server/services/adminAlerts.js";
-import { PLAN_LABELS } from "$lib/admin/players.js";
+import { alertAdminsSafe } from "$lib/server/services/admin/alerts.js";
+import { PLAN_LABELS } from "$lib/shared/admin/players.js";
 
 async function onCheckoutCompleted(session) {
   const userId = session.client_reference_id;
