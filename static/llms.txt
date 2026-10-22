@@ -20,6 +20,7 @@ ZIK propose plusieurs façons de jouer :
 - [Mode Salon](https://www.zik-music.fr/salon) : lancer un blind test de soirée sur la TV.
 - [ZIK Pro](https://www.zik-music.fr/pro) : l'offre pour les bars, campings, associations et entreprises, avec les tarifs.
 - [Blind test par thème et par occasion](https://www.zik-music.fr/blind-test) : années 80, rap français, Disney, soirée entre amis, bar, camping, team building, anniversaire, mariage.
+- [Blind test par artiste](https://www.zik-music.fr/blind-test/artistes) : un blind test par artiste (Ninho, Jul, GIMS, Aya Nakamura…), 10 titres tirés au hasard par partie, jouable sans compte.
 - [Documentation](https://www.zik-music.fr/docs) : règles complètes, système de points, FAQ.
 - [Nouveautés](https://www.zik-music.fr/nouveautes) : journal des mises à jour.
 

@@ -4,6 +4,19 @@
 
 export const NEWS = [
   {
+    date: "2026-10-22",
+    version: "3.19.0",
+    tag: "Nouveauté",
+    title: "Un blind test par artiste",
+    summary:
+      "165 artistes ont leur propre blind test : 10 de leurs titres tirés au hasard à chaque partie.",
+    items: [
+      "165 artistes ont leur propre blind test : chaque partie tire 10 de leurs titres au hasard. Un pseudo suffit pour jouer.",
+      "Chaque page montre les titres en jeu et propose des artistes proches pour enchaîner.",
+      "Retrouvez-les tous dans Blind test › Par artiste, et depuis les pages thème.",
+    ],
+  },
+  {
     date: "2026-10-15",
     version: "3.18.0",
     tag: "Amélioration",

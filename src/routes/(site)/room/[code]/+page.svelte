@@ -1,16 +1,11 @@
 <script>
   import JsonLd from '$lib/components/JsonLd.svelte';
-  import { onMount } from 'svelte';
+  import RoomJoinCard from '$lib/components/rooms/RoomJoinCard.svelte';
   import { modeRules } from '$lib/rooms/room-content.js';
 
   let { data } = $props();
   const { room, trackCount, artists, leaderboard } = data;
   const mode = modeRules(room.game_mode);
-
-  let loggedUser   = $state(null);
-  let guestName    = $state('');
-  let guestError   = $state('');
-  let joining      = $state(false);
 
   const modeLabel = room.game_mode === 'qcm' ? 'Mode QCM (choix multiple)' : 'Mode Classique (saisie libre, classement ELO)';
   const officialLabel = room.is_official ? ' Room officielle.' : '';
@@ -40,32 +35,6 @@
     }
   });
 
-  onMount(() => {
-    const uid   = sessionStorage.getItem('zik_uid');
-    const uname = sessionStorage.getItem('zik_uname');
-    if (uid && uname) loggedUser = { uid, uname };
-  });
-
-  function joinAsLogged() {
-    if (!loggedUser) return;
-    joining = true;
-    const p = new URLSearchParams({ roomId: room.code, username: loggedUser.uname, userId: loggedUser.uid, isGuest: '0', gameMode: room.game_mode || 'classic' });
-    window.location.href = `/game?${p}`;
-  }
-
-  function joinAsGuest() {
-    const name = guestName.trim();
-    if (!name) { guestError = 'Entre un pseudo pour jouer.'; return; }
-    if (name.length < 2 || name.length > 20) { guestError = 'Le pseudo doit faire entre 2 et 20 caractères.'; return; }
-    guestError = '';
-    joining = true;
-    localStorage.setItem('zik_guest', name);
-    const uid = 'guest_' + Date.now();
-    sessionStorage.setItem('zik_uid', uid);
-    sessionStorage.setItem('zik_uname', name);
-    const p = new URLSearchParams({ roomId: room.code, username: name, userId: uid, isGuest: '1', gameMode: room.game_mode || 'classic' });
-    window.location.href = `/game?${p}`;
-  }
 </script>
 
 <svelte:head>
@@ -125,42 +94,11 @@
 
   <!-- Join card -->
   <div class="room-join-wrap">
-    <div class="room-join-card">
-      <h2 class="room-join-title">Rejoindre la room</h2>
-
-      {#if loggedUser}
-        <p class="room-join-sub">Connecté en tant que <strong>{loggedUser.uname}</strong></p>
-        <button class="btn-room-join" onclick={joinAsLogged} disabled={joining}>
-          {joining ? 'Connexion…' : '▶ Jouer maintenant'}
-        </button>
-        <p class="room-join-or">ou jouer en tant qu'invité ↓</p>
-      {/if}
-
-      <div class="room-guest-form">
-        {#if !loggedUser}
-          <p class="room-join-sub">Aucune inscription requise — entre juste un pseudo !</p>
-        {/if}
-        <input
-          type="text"
-          class="room-guest-input"
-          bind:value={guestName}
-          placeholder="Ton pseudo…"
-          maxlength="20"
-          disabled={joining}
-          onkeydown={e => { if (e.key === 'Enter') joinAsGuest(); }}
-        >
-        {#if guestError}
-          <p class="room-guest-error">{guestError}</p>
-        {/if}
-        <button class="btn-room-guest" onclick={joinAsGuest} disabled={joining || !guestName.trim()}>
-          {joining ? 'Connexion…' : '→ Jouer en invité'}
-        </button>
-      </div>
-
+    <RoomJoinCard gameMode={room.game_mode || 'classic'} getCode={async () => room.code}>
       <p class="room-back-link">
         <a href="/rooms">← Voir toutes les rooms</a>
       </p>
-    </div>
+    </RoomJoinCard>
   </div>
 
   <section class="room-info">
@@ -312,91 +250,6 @@
     justify-content: center;
     padding: 0 clamp(16px, 5vw, 80px) 48px;
   }
-  .room-join-card {
-    background: var(--surface, rgb(var(--c-glass) / 0.04));
-    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
-    border-radius: 20px;
-    padding: 32px;
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-  }
-  .room-join-title {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-  }
-  .room-join-sub {
-    font-size: 0.85rem;
-    color: var(--mid, #94a3b8);
-    margin-bottom: 14px;
-  }
-  .room-join-or {
-    font-size: 0.78rem;
-    color: var(--dim, #64748b);
-    margin: 12px 0 16px;
-  }
-  .btn-room-join {
-    width: 100%;
-    background: var(--accent);
-    border: none;
-    color: var(--on-accent);
-    font-size: 1rem;
-    font-weight: 700;
-    padding: 13px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: opacity 0.15s, filter 0.15s;
-    margin-bottom: 4px;
-  }
-  .btn-room-join:hover:not(:disabled) { filter: brightness(1.08); }
-  .btn-room-join:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .room-guest-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .room-guest-input {
-    width: 100%;
-    background: rgb(var(--c-glass) / 0.05);
-    border: 1px solid var(--border, rgb(var(--c-glass) / 0.08));
-    border-radius: 10px;
-    color: var(--text, #f1f5f9);
-    font-size: 0.95rem;
-    font-family: inherit;
-    padding: 11px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-  }
-  .room-guest-input:focus {
-    border-color: rgb(var(--accent-rgb) / 0.45);
-    box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.1);
-  }
-  .room-guest-error {
-    font-size: 0.78rem;
-    color: var(--danger);
-    margin: 0;
-  }
-  .btn-room-guest {
-    width: 100%;
-    background: rgb(var(--c-glass) / 0.06);
-    border: 1px solid rgb(var(--c-glass) / 0.12);
-    color: var(--text, #f1f5f9);
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 11px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s;
-  }
-  .btn-room-guest:hover:not(:disabled) { background: rgb(var(--c-glass) / 0.1); }
-  .btn-room-guest:disabled { opacity: 0.4; cursor: not-allowed; }
-
   .room-back-link {
     margin-top: 18px;
     font-size: 0.8rem;
