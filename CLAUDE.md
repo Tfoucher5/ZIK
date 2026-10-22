@@ -39,6 +39,15 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 - **Tests locaux** : le serveur de dev tape sur la BDD de prod. Ne pas créer de données de test (une room `auto_start` lance une partie dès qu'on la rejoint) ; si ça arrive, les supprimer
 - Fais des fichiers réduits en taille, pas de gros fichiers. Privilégie les composants et modules réutilisables.
 
+## Économiser des tokens : Graphify + Ponytail
+
+- **Graphify** (graphe du code dans `graphify-out/`, ignoré par git) :
+  - Pour comprendre une archi, trouver qui appelle quoi ou tracer un flux : `graphify query "<question>"` (ou `path "A" "B"`, `explain "X"`) **avant** de lire des fichiers ou lancer un agent Explore
+  - Lire `graphify-out/GRAPH_REPORT.md` (god nodes, communautés) plutôt que parcourir le repo
+  - Après de gros changements : `/graphify . --update` (code seul = AST, gratuit). Ne pas relancer l'extraction des docs/images sans demande (coûte des sous-agents)
+  - Si absent : `uv tool install graphifyy` puis `/graphify .` en mode code seul
+- **Ponytail** (actif par défaut, niveau `full`) : plus petit diff complet, réutiliser l'existant, pas de code « pour plus tard ». `/ponytail-review` avant une PR, `/ponytail-audit` pour chercher le code mort, `/ponytail-debt` pour lister les `shortcut:`
+
 ## Avant de coder
 
 - Toujours lire le fichier avant de le modifier
