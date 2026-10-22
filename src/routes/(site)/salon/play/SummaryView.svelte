@@ -13,6 +13,7 @@
     round = 0,
     total = 10,
     venue = null,
+    account = false,
     onLeave,
   } = $props();
 
@@ -89,10 +90,17 @@
 
 {#if phase === 'gameover'}
   {#if venue}
-    <a class="salon-venue-cta" href="/lieu/{venue.slug}">
-      <span>Tes points comptent pour le classement du mois chez <b>{venue.name}</b>.</span>
-      <b>Voir le classement →</b>
-    </a>
+    {#if account}
+      <a class="salon-venue-cta" href="/lieu/{venue.slug}">
+        <span>Tes points comptent pour le classement du mois chez <b>{venue.name}</b>.</span>
+        <b>Voir le classement →</b>
+      </a>
+    {:else}
+      <a class="salon-venue-cta" href="/?auth=register&ref=salon-lieu">
+        <span>En invité, tes points ne comptent pas pour le classement du mois chez <b>{venue.name}</b>. Avec un compte gratuit, ils s'additionnent soirée après soirée.</span>
+        <b>Créer mon compte →</b>
+      </a>
+    {/if}
   {/if}
   <div class="salon-host-cta">
     <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>

@@ -4,7 +4,7 @@
   let steps = $derived([
     { done: !!admin.venue, label: 'Créer la page de votre lieu', hint: 'Nom, ville, rendez-vous : deux minutes.', href: '/pro/lieu' },
     { done: !!(admin.venue?.logo || admin.venue?.color), label: 'Ajouter votre logo et votre couleur', hint: 'Ils remplacent ceux de ZIK sur la TV.', href: '/pro/lieu' },
-    { done: admin.events.length > 0, label: 'Programmer votre prochaine soirée', hint: 'Elle apparaît sur votre page et dans Google.', href: '/pro/lieu#soirees' },
+    { done: admin.events.length > 0, label: 'Programmer votre prochaine soirée', hint: 'Elle apparaît sur votre page et dans Google.', href: '/pro/soirees' },
     { done: admin.followers > 0, label: 'Faire suivre votre lieu', hint: "Imprimez l'affiche : vos clients scannent le QR code et s'abonnent.", href: admin.venue ? `/lieu/${admin.venue.slug}/affiche` : '/pro/lieu' },
     { done: (admin.stats?.games ?? 0) > 0, label: 'Lancer une soirée', hint: 'Connecté avec ce compte, votre logo s\'affiche tout seul.', href: '/salon' },
   ]);

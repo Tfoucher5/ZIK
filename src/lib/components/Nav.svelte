@@ -24,7 +24,7 @@
     if (path.startsWith('/zikle')) return 'zikle';
     if (path.startsWith('/salon')) return 'salon';
     if (path.startsWith('/docs')) return 'docs';
-    if (path.startsWith('/pro/lieu') || (path === '/profile' && pro && page.url.searchParams.get('vue') !== 'joueur')) return 'pro';
+    if (path.startsWith('/pro/lieu') || path.startsWith('/pro/soirees') || (path === '/profile' && pro && page.url.searchParams.get('vue') !== 'joueur')) return 'pro';
     if (path.startsWith('/profile') || path.startsWith('/user')) return 'profile';
     return '';
   });
@@ -101,6 +101,7 @@
             <span class="nav-dd-group">Organisateur</span>
             <a href="/profile"  class="nav-dd-item">Tableau de bord</a>
             <a href="/pro/lieu" class="nav-dd-item">Mon lieu et la TV</a>
+            <a href="/pro/soirees" class="nav-dd-item">Mes soirées</a>
             <a href="/salon"    class="nav-dd-item">Lancer une soir&eacute;e</a>
           {/if}
           <span class="nav-dd-group">Mon compte</span>

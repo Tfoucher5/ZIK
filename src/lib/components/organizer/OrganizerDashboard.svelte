@@ -4,6 +4,7 @@
   import OrganizerTools from './OrganizerTools.svelte';
   import OrganizerChecklist from './OrganizerChecklist.svelte';
   import OrganizerHelp from './OrganizerHelp.svelte';
+  import OrganizerRecap from './OrganizerRecap.svelte';
   import VenueEvents from '$lib/components/venue/VenueEvents.svelte';
   import VenueLeague from '$lib/components/venue/VenueLeague.svelte';
   import { VenueAdmin } from '$lib/components/venue/venueAdmin.svelte.js';
@@ -52,6 +53,8 @@
   {/if}
 
   {#if admin.ready && v}
+    {#if admin.recap}<OrganizerRecap recap={admin.recap} />{/if}
+
     <div class="od-stats">
       <div class="vn-card"><b>{admin.stats?.nights ?? 0}</b><span>soirée{admin.stats?.nights > 1 ? 's' : ''} en {season}</span></div>
       <div class="vn-card"><b>{admin.stats?.games ?? 0}</b><span>partie{admin.stats?.games > 1 ? 's' : ''} jouée{admin.stats?.games > 1 ? 's' : ''}</span></div>
@@ -63,7 +66,7 @@
       <section class="vn-card">
         <div class="vn-card-head">
           <h2>Prochaines soirées</h2>
-          <a class="od-more" href="/pro/lieu#soirees">Gérer</a>
+          <a class="od-more" href="/pro/soirees">Gérer</a>
         </div>
         <VenueEvents events={admin.events.slice(0, 3)} empty="Aucune date annoncée. Ajoutez vos prochaines soirées pour qu'elles apparaissent sur votre page." />
       </section>

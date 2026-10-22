@@ -11,10 +11,11 @@ export const NEWS = [
     summary:
       "Les bars ont leur page et le classement du mois de leurs habitués, et 165 artistes ont leur propre blind test.",
     items: [
-      "Les lieux qui organisent leurs soirées avec ZIK ont leur page : prochaines dates et classement du mois. Vos points de chaque soirée s'additionnent, jouez connecté pour qu'ils vous suivent.",
+      "Les lieux qui organisent leurs soirées avec ZIK ont leur page : prochaines dates et classement du mois. Jouez connecté à votre compte pour y entrer : les invités n'y figurent pas, personne ne peut donc reprendre votre pseudo pour jouer à votre place.",
       "En fin de partie dans un bar, le téléphone vous montre où voir le classement. Tous les lieux sont dans « Où jouer ».",
       "Suivez vos lieux préférés : vous êtes prévenu dès qu'ils annoncent une soirée. Réglable dans Paramètres › Notifications.",
-      "ZIK Pro : un espace organisateur avec tableau de bord, chiffres du mois, prochaines soirées et guide de démarrage.",
+      "Vos lieux suivis et leur prochaine soirée sont dans votre profil, avec un rappel le jour J. Chaque date s'ajoute à votre agenda en un clic.",
+      "ZIK Pro : un espace organisateur avec tableau de bord, récap de la dernière soirée, chiffres du mois et guide de démarrage.",
       "ZIK Pro : logo, couleur et message d'accueil du lieu sur la TV, une affiche avec QR code à imprimer, et une notification à ceux qui suivent le lieu pour chaque soirée.",
       "165 artistes ont leur propre blind test : chaque partie tire 10 de leurs titres au hasard. Un pseudo suffit pour jouer.",
       "Chaque page montre les titres en jeu et propose des artistes proches pour enchaîner.",

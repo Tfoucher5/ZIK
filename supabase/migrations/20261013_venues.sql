@@ -92,3 +92,7 @@ alter table public.profiles
 update public.profiles
   set notif_prefs = notif_prefs || '{"venues": true}'::jsonb
   where not (notif_prefs ? 'venues');
+
+-- Rappel le jour J à ceux qui suivent le lieu (le lieu peut le couper)
+alter table public.venues add column if not exists reminders boolean not null default true;
+alter table public.venue_events add column if not exists reminded_at timestamptz;

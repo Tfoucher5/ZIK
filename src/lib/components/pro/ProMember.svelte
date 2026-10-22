@@ -12,7 +12,8 @@
 
   const LINKS = [
     { href: '/profile', title: 'Tableau de bord', text: 'Vos soirées, votre classement du mois, vos chiffres' },
-    { href: '/pro/lieu', title: 'Mon lieu et la TV', text: 'Logo, couleur, message d\'accueil, dates, affiche' },
+    { href: '/pro/lieu', title: 'Mon lieu et la TV', text: 'Logo, couleur, message d\'accueil, affiche' },
+    { href: '/pro/soirees', title: 'Mes soirées', text: 'Vos dates, et prévenir ceux qui suivent votre lieu' },
     { href: '/salon', title: 'Lancer une soirée', text: 'Ouvrez l\'écran TV, pilotez depuis la régie' },
   ];
 </script>

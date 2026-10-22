@@ -5,7 +5,11 @@
 <div class="ot">
   <a class="vn-card ot-item" href="/pro/lieu">
     <b>Mon lieu et la TV</b>
-    <span>Infos, logo, couleur, message d'accueil, dates</span>
+    <span>Infos, logo, couleur, message d'accueil</span>
+  </a>
+  <a class="vn-card ot-item" href="/pro/soirees">
+    <b>Mes soirées</b>
+    <span>Dates, notifications et rappel du jour J</span>
   </a>
   {#if venue}
     <a class="vn-card ot-item" href="/lieu/{venue.slug}" target="_blank">
@@ -32,7 +36,7 @@
 {#if checkout.payError}<p class="ot-err">{checkout.payError}</p>{/if}
 
 <style>
-  .ot { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .ot { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
   .ot-item {
     display: flex;
     flex-direction: column;

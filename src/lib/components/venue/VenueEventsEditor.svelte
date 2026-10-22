@@ -47,6 +47,15 @@
   {/if}
 </p>
 
+<label class="vee-toggle">
+  <input type="checkbox" checked={admin.venue.reminders !== false} disabled={admin.busy}
+    onchange={(e) => admin.setReminders(e.currentTarget.checked)} />
+  <span>
+    <b>Rappel automatique le jour J</b>
+    <small>Le jour J vers 11 h, ceux qui suivent votre lieu reçoivent « Ce soir à 21:00 : blind test chez {admin.venue.name} ». Seulement pour les soirées que vous avez annoncées avec « Prévenir ».</small>
+  </span>
+</label>
+
 <VenueEvents
   events={admin.events}
   empty="Aucune soirée programmée. Ajoutez vos prochaines dates : elles apparaissent sur votre page et dans Google."
@@ -69,6 +78,7 @@
   {#if ask?.kind === 'notify'}
     <p>Tous ceux qui suivent <b>{admin.venue.name}</b> recevront ce message dans ZIK et sur leur téléphone :</p>
     <blockquote>{venueEventText({ name: admin.venue.name, startsAt: ask.ev.starts_at, theme: ask.ev.theme })}</blockquote>
+    {#if admin.venue.reminders !== false}<p>Ils recevront aussi un rappel le jour J, vers 11 h.</p>{/if}
     <p class="vee-warn">Une notification envoyée ne peut pas être annulée. Vérifiez bien la date.</p>
   {:else if ask?.kind === 'remove'}
     <p>La soirée du <b>{eventWhen(ask.ev.starts_at)}</b> disparaîtra de votre page publique.</p>
@@ -79,6 +89,11 @@
 <style>
   .vee-help { margin-bottom: 14px; font-size: 0.85rem; line-height: 1.6; color: var(--mid); }
   .vee-help b { color: var(--text); }
+  .vee-toggle { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+  .vee-toggle input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+  .vee-toggle span { display: flex; flex-direction: column; gap: 2px; }
+  .vee-toggle b { font-size: 0.88rem; color: var(--text); }
+  .vee-toggle small { font-size: 0.78rem; line-height: 1.45; color: var(--mid); }
   .vee-actions { display: flex; align-items: center; gap: 8px; flex: none; }
   .vee-notify {
     padding: 7px 12px;

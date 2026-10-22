@@ -18,6 +18,7 @@
 
   // Game state
   let joined       = $state(false);
+  let account      = $state(false);
   let username     = $state('');
   let code         = $state('');
   let answerMode   = $state('free');
@@ -115,6 +116,7 @@
       let token = null;
       try { token = localStorage.getItem('zik_salon_player_' + c); } catch { /* stockage indisponible */ }
       const auth = sb ? (await sb.auth.getSession().catch(() => null))?.data.session?.access_token : null;
+      account = !!auth;
       socket.emit('salon_join_player', { code: c, username: u, token, auth });
     });
 
@@ -398,7 +400,7 @@
       {:else if phase === 'summary' || phase === 'gameover'}
         <SummaryView
           {phase} {roundEnd} {finalScores} {scores} {username} {teams} {myTeam}
-          {round} {total} {venue}
+          {round} {total} {venue} {account}
           onLeave={() => { joined = false; codeInput = ''; }}
         />
       {/if}

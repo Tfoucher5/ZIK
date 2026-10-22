@@ -4,6 +4,7 @@
   const TABS = [
     { id: 'dashboard', label: 'Tableau de bord', href: '/profile' },
     { id: 'venue', label: 'Mon lieu et la TV', href: '/pro/lieu' },
+    { id: 'events', label: 'Soirées', href: '/pro/soirees' },
     { id: 'player', label: 'Profil joueur', href: '/profile?vue=joueur' },
   ];
 </script>

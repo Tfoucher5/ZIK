@@ -70,7 +70,9 @@ export function pushMessageFor(n) {
     case "venue_event":
       return {
         ...base,
-        title: "Soirée blind test annoncée",
+        title: p.reminder
+          ? "C'est aujourd'hui !"
+          : "Soirée blind test annoncée",
         body: venueEventText(p),
         url: `/lieu/${p.slug}`,
       };

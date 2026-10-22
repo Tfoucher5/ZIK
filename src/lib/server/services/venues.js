@@ -1,10 +1,10 @@
 import { getAdminClient } from "../config.js";
 import { isProActive } from "./pro.js";
 import { slugify } from "../../slug.js";
-import { seasonStart } from "../../venues.js";
+import { seasonStart, parisDay } from "../../venues.js";
 
 const PUBLIC_COLS =
-  "id, owner_id, slug, name, city, address, website, description, schedule, welcome, color, logo";
+  "id, owner_id, slug, name, city, address, website, description, schedule, welcome, color, logo, reminders";
 const MAX_EVENTS = 12;
 
 const db = () => getAdminClient();
@@ -38,11 +38,12 @@ export async function listVenues() {
 }
 
 export async function venueBySlug(slug) {
-  const { data } = await db()
+  const { data, error } = await db()
     .from("venues")
     .select(PUBLIC_COLS)
     .eq("slug", slug)
     .maybeSingle();
+  if (error) console.error("[lieu] lecture:", error.message);
   if (!data) return null;
   const active = await proOwners([data.owner_id]);
   return { ...data, active: active.has(data.owner_id) };
@@ -50,11 +51,12 @@ export async function venueBySlug(slug) {
 
 export async function venueOfOwner(userId) {
   if (!userId) return null;
-  const { data } = await db()
+  const { data, error } = await db()
     .from("venues")
     .select(PUBLIC_COLS)
     .eq("owner_id", userId)
     .maybeSingle();
+  if (error) console.error("[lieu] lecture:", error.message);
   return data;
 }
 
@@ -145,10 +147,79 @@ export async function monthStats(venueId) {
     .select("started_at")
     .eq("venue_id", venueId)
     .gte("started_at", seasonStart().toISOString());
-  const day = (d) =>
-    new Date(d).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
   return {
     games: data?.length ?? 0,
-    nights: new Set((data ?? []).map((g) => day(g.started_at))).size,
+    nights: new Set((data ?? []).map((g) => parisDay(g.started_at))).size,
   };
+}
+
+export async function setReminders(venueId, on) {
+  const { error } = await db()
+    .from("venues")
+    .update({ reminders: !!on })
+    .eq("id", venueId);
+  if (error) throw new Error(error.message);
+}
+
+// Récap de la dernière soirée : parties du même jour (heure de Paris),
+// joueurs, podium cumulé et abonnés gagnés depuis le début de la soirée.
+export async function lastNightRecap(venueId) {
+  const { data: last } = await db()
+    .from("games")
+    .select("started_at")
+    .eq("venue_id", venueId)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!last) return null;
+  const day = parisDay(last.started_at);
+  const since = new Date(Date.parse(last.started_at) - 24 * 3600_000);
+  const { data: games } = await db()
+    .from("games")
+    .select("id, started_at")
+    .eq("venue_id", venueId)
+    .gte("started_at", since.toISOString());
+  const night = (games ?? []).filter((g) => parisDay(g.started_at) === day);
+  const first = night.map((g) => g.started_at).sort()[0];
+
+  const [{ data: rows }, { count: newFollowers }] = await Promise.all([
+    db()
+      .from("salon_players")
+      .select("user_id, username, score")
+      .in(
+        "game_id",
+        night.map((g) => g.id),
+      ),
+    db()
+      .from("venue_follows")
+      .select("user_id", { count: "exact", head: true })
+      .eq("venue_id", venueId)
+      .gte("created_at", first),
+  ]);
+  const players = new Map();
+  for (const r of rows ?? []) {
+    const key = r.user_id ?? r.username.trim().toLowerCase();
+    const p = players.get(key) ?? { name: r.username, points: 0 };
+    p.points += r.score;
+    players.set(key, p);
+  }
+  return {
+    date: first,
+    games: night.length,
+    players: players.size,
+    podium: [...players.values()]
+      .sort((a, b) => b.points - a.points)
+      .slice(0, 3),
+    newFollowers: newFollowers ?? 0,
+  };
+}
+
+export async function eventOf(venueId, eventId) {
+  const { data } = await db()
+    .from("venue_events")
+    .select("id, starts_at, theme")
+    .eq("venue_id", venueId)
+    .eq("id", eventId)
+    .maybeSingle();
+  return data;
 }

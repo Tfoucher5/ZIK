@@ -3,7 +3,7 @@
     ['Ouvrez le salon sur l\'écran', 'Sur l\'ordinateur branché à la TV, ouvrez « Lancer une soirée » en étant connecté avec ce compte : votre logo et votre couleur s\'appliquent.'],
     ['Pilotez depuis la régie', 'Le lien de la régie s\'ouvre sur votre téléphone : vous lancez, révélez, corrigez les points et réglez le son sans toucher l\'ordinateur.'],
     ['Vos clients jouent', 'Ils scannent le QR code affiché à l\'écran, choisissent un pseudo et répondent sur leur téléphone. Aucune appli.'],
-    ['Le classement se remplit', 'Les points de chaque soirée s\'additionnent dans le classement du mois de votre lieu. Il repart à zéro le 1er.'],
+    ['Le classement se remplit', 'Les points des joueurs connectés à un compte ZIK s\'additionnent dans le classement du mois de votre lieu. Un invité n\'y entre pas : son pseudo pourrait être repris. Il repart à zéro le 1er.'],
   ];
 </script>
 

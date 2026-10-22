@@ -10,6 +10,7 @@ export class VenueAdmin {
   ranking = $state([]);
   stats = $state(null);
   followers = $state(0);
+  recap = $state(null);
   busy = $state(false);
   message = $state("");
   error = $state("");
@@ -50,6 +51,7 @@ export class VenueAdmin {
     this.ranking = d.ranking;
     this.stats = d.stats;
     this.followers = d.followers;
+    this.recap = d.recap;
     this.ready = true;
   }
 
@@ -102,6 +104,17 @@ export class VenueAdmin {
         sent = d.sent;
       },
       () => `Notification envoyée à ${sent} joueur${sent > 1 ? "s" : ""}.`,
+    );
+  }
+
+  setReminders(on) {
+    return this.run(
+      async () => {
+        await this.call("/api/venue", "PATCH", { reminders: on });
+        this.venue.reminders = on;
+        this.form.reminders = on;
+      },
+      on ? "Rappel du jour J activé." : "Rappel du jour J coupé.",
     );
   }
 

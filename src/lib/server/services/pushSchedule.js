@@ -6,6 +6,7 @@ import {
 } from "./weeklyChallenge.js";
 import { releaseMessage } from "./pushMessages.js";
 import { NEWS } from "../../news.js";
+import { remindToday } from "./venueFollows.js";
 
 // Notifications d'appareil planifiées (heure de Paris). Lancé par server.js
 // seulement : en dev, la base est celle de la prod et ces envois partiraient
@@ -110,6 +111,11 @@ async function releaseNews() {
   console.log(`[push] version ${latest.version} annoncée sur ${n} appareils`);
 }
 
+async function venueReminders(now) {
+  const n = await remindToday(now.date);
+  if (n) console.log(`[push] rappel des soirées du jour envoyé à ${n} joueurs`);
+}
+
 async function tick() {
   const now = parisNow();
   const jobs = [];
@@ -119,6 +125,8 @@ async function tick() {
     jobs.push(challengeLastDay());
   if (inWindow(now.hour, 18)) jobs.push(zikleReminder(now));
   if (inReleaseWindow(now.hour)) jobs.push(releaseNews());
+  // Dès 11 h ; une soirée ajoutée dans la journée a encore son rappel
+  if (now.hour >= 11 && now.hour < 21) jobs.push(venueReminders(now));
   const results = await Promise.allSettled(jobs);
   for (const r of results)
     if (r.status === "rejected")

@@ -14,6 +14,7 @@
   import SectionFriends from '$lib/components/profile/SectionFriends.svelte';
   import SectionBestScores from '$lib/components/profile/SectionBestScores.svelte';
   import SectionCards from '$lib/components/profile/SectionCards.svelte';
+  import SectionVenues from '$lib/components/profile/SectionVenues.svelte';
   import CardViewer from '$lib/components/card/CardViewer.svelte';
   import SectionPerformances from '$lib/components/profile/SectionPerformances.svelte';
   import ProfileHeader from '$lib/components/profile/ProfileHeader.svelte';
@@ -166,6 +167,7 @@
     { id: 'case',  t: 'Badges', quand: () => true },
     { id: 'cards', t: 'Cartes', quand: () => !!profile?.username },
     { id: 'guests', t: 'Amis', quand: () => true },
+    { id: 'venues', t: 'Mes lieux', quand: () => isOwn },
   ];
   const sections = $derived(
     sectionDefs.filter(s => s.quand()).map((s, i) => ({
@@ -265,6 +267,11 @@
           onJoinRoom={joinFriendRoom}
           onInvite={openInvite}
         />
+      </ProfileSection>
+    {/if}
+    {#if visible.has('venues')}
+      <ProfileSection id="venues" num={numDe('venues')} titre="Mes lieux" sub="Bars et lieux suivis">
+        <SectionVenues {sb} />
       </ProfileSection>
     {/if}
 

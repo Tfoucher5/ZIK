@@ -5,6 +5,7 @@ import {
   followerCount,
   isFollowing,
   setFollow,
+  followedVenues,
 } from "$lib/server/services/venueFollows.js";
 
 async function venueOf(slug) {
@@ -15,7 +16,10 @@ async function venueOf(slug) {
 
 export async function GET({ request, url }) {
   const { user } = await requireAuth(request);
-  const venue = await venueOf(url.searchParams.get("slug"));
+  const slug = url.searchParams.get("slug");
+  // Sans lieu précisé : les lieux que le joueur suit
+  if (!slug) return json({ venues: await followedVenues(user.id) });
+  const venue = await venueOf(slug);
   return json({ following: await isFollowing(venue.id, user.id) });
 }
 

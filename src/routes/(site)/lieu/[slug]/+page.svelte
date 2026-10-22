@@ -58,6 +58,10 @@
   <link rel="stylesheet" href="/css/venue.css?v=3.18.0" />
 </svelte:head>
 
+{#snippet actions(e)}
+  <a class="vp-ics" href="/lieu/{v.slug}/agenda/{e.id}" download title="Ajouter à mon agenda">📅 Agenda</a>
+{/snippet}
+
 <main class="vn-page" style={venueTheme(v.color)}>
   <nav class="vn-crumbs" aria-label="Fil d'Ariane">
     <a href="/">Accueil</a> › <a href="/lieux">Où jouer</a> › <span>{v.name}</span>
@@ -68,7 +72,7 @@
   <div class="vp-grid">
     <section class="vn-card">
       <div class="vn-card-head"><h2>Prochaines soirées</h2></div>
-      <VenueEvents events={data.events} empty={v.schedule ? `Rendez-vous ${v.schedule.toLowerCase()}.` : "Pas de date annoncée pour l'instant."} />
+      <VenueEvents events={data.events} empty={v.schedule ? `Rendez-vous ${v.schedule.toLowerCase()}.` : "Pas de date annoncée pour l'instant."} {actions} />
     </section>
 
     <section class="vn-card">
@@ -78,8 +82,9 @@
       </div>
       <VenueLeague ranking={data.ranking} {season} />
       <p class="vp-note">
-        Les points de chaque soirée s'additionnent jusqu'à la fin du mois. Jouez connecté à votre compte
-        ZIK pour qu'ils vous suivent, même si vous changez de pseudo.
+        Les points de chaque soirée s'additionnent jusqu'à la fin du mois. Seuls les joueurs connectés
+        à leur compte ZIK y entrent : un pseudo d'invité ne compte pas, personne ne peut donc jouer à
+        votre place. <a href="/?auth=register&ref=lieu">Créer un compte gratuit</a>.
       </p>
     </section>
   </div>
@@ -113,6 +118,18 @@
 </main>
 
 <style>
+  .vp-ics {
+    flex: none;
+    padding: 7px 12px;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .vp-ics:hover { border-color: var(--accent); color: var(--accent); }
   .vp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
   .vp-note { margin-top: 16px; font-size: 0.8rem; line-height: 1.6; color: var(--dim); }
   .vp-about { margin-top: 20px; }

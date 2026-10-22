@@ -85,6 +85,19 @@ export function eventWhen(iso) {
 }
 
 // Texte de la notification envoyée à ceux qui suivent le lieu
-export function venueEventText({ name, startsAt, theme }) {
-  return `${name} organise un blind test ${theme ? `« ${theme} » ` : ""}le ${eventWhen(startsAt)}.`;
+// reminder : rappel du jour J (« Ce soir à 21:00 … »)
+export function venueEventText({ name, startsAt, theme, reminder = false }) {
+  const what = `blind test ${theme ? `« ${theme} » ` : ""}`;
+  if (!reminder) return `${name} organise un ${what}le ${eventWhen(startsAt)}.`;
+  const time = new Date(startsAt).toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Paris",
+  });
+  const when = Number(time.slice(0, 2)) >= 17 ? "Ce soir" : "Aujourd'hui";
+  return `${when} à ${time} : ${what}chez ${name}.`;
 }
+
+// « 2026-10-14 » : le jour d'une date, heure de Paris
+export const parisDay = (d) =>
+  new Date(d).toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
