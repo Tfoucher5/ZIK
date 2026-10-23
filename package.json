@@ -1,6 +1,6 @@
 {
   "name": "zik-music.fr",
-  "version": "3.20.1",
+  "version": "3.20.2",
   "description": "Blind Test Multijoueur",
   "type": "module",
   "scripts": {
@@ -40,5 +40,10 @@
     "prettier": "^3.8.1",
     "vite": "^8.2.4",
     "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "@sveltejs/kit": {
+      "cookie": "^0.7.2"
+    }
   }
 }
