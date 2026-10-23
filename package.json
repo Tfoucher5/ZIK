@@ -1,6 +1,6 @@
 {
   "name": "zik-music.fr",
-  "version": "3.20.0",
+  "version": "3.20.1",
   "description": "Blind Test Multijoueur",
   "type": "module",
   "scripts": {
@@ -38,7 +38,7 @@
     "eslint-plugin-svelte": "^3.23.0",
     "globals": "^17.13.0",
     "prettier": "^3.8.1",
-    "vite": "^8.1.5",
+    "vite": "^8.2.4",
     "vitest": "^5.0.5"
   }
 }
