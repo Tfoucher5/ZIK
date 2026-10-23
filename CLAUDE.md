@@ -15,6 +15,7 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 - Toujours tester lint avant de push et de faire une Pull Request (PR)
 - Parles comme un homme de cromagnon pour dépenser moins de tokens
 - Toujours incrémenter le numéro de version convenablement à chaque merge (dans toutes les pages concernées et dans les commits)
+- `/nouveautes` (`src/lib/data/news.js`) : seulement ce qui change l'expérience des joueurs. Pas d'entrée pour un changement purement technique (dépendances, nettoyage, refactoring)
 - Toujours supprimer les morceaux de code inutiles ou inutilisés.
 
 ## Stack & conventions

@@ -125,23 +125,26 @@
   <meta name="theme-color" content="#7c3aed">
   <meta name="format-detection" content="telephone=no">
 
-  <!-- Open Graph -->
-  <meta property="og:site_name" content="ZIK">
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="fr_FR">
-  <meta property="og:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
-  <meta property="og:description" content="Blind test multijoueur gratuit en ligne. Import Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
-  <meta property="og:url" content="https://www.zik-music.fr/">
-  <meta property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="ZIK — Blind Test Multijoueur">
+  <!-- Open Graph. data-default : retirée côté serveur si la page définit la même
+       balise (dropOverriddenMeta dans hooks.server.js), sinon les aperçus de
+       liens prennent la première, la générique. -->
+
+  <meta data-default property="og:site_name" content="ZIK">
+  <meta data-default property="og:type" content="website">
+  <meta data-default property="og:locale" content="fr_FR">
+  <meta data-default property="og:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
+  <meta data-default property="og:description" content="Blind test multijoueur gratuit en ligne. Import Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
+  <meta data-default property="og:url" content="https://www.zik-music.fr/">
+  <meta data-default property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
+  <meta data-default property="og:image:width" content="1200">
+  <meta data-default property="og:image:height" content="630">
+  <meta data-default property="og:image:alt" content="ZIK — Blind Test Multijoueur">
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
-  <meta name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
-  <meta name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
+  <meta data-default name="twitter:card" content="summary_large_image">
+  <meta data-default name="twitter:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
+  <meta data-default name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
+  <meta data-default name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
   {#each ["nav", "nav-menus", "bottom-nav", "controls", "footer", "auth-modal"] as f (f)}<link rel="stylesheet" href="/css/base/{f}.css?v=3.19.0">{/each}
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
@@ -262,7 +265,7 @@
 
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.20.2</span>
+    <span class="footer-version-tag">v3.20.3</span>
   </div>
 </footer>
 {/if}

@@ -6,6 +6,7 @@ import {
 } from "$lib/server/maintenance.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { isTrackableVisit, buildVisitRow } from "$lib/server/visitSource.js";
+import { dropOverriddenMeta } from "$lib/server/defaultMeta.js";
 
 const ADMIN_LOGIN = "/admin/connexion";
 const MAINTENANCE_EXEMPT = ["/admin", "/api/admin", "/api/stripe"];
@@ -97,7 +98,9 @@ export async function handle({ event, resolve }) {
 
   recordVisitSource(event);
 
-  const response = await resolve(event);
+  const response = await resolve(event, {
+    transformPageChunk: ({ html }) => dropOverriddenMeta(html),
+  });
   // Empêche les iframes (YouTube) d'accéder à l'API Media Session
   // → le titre de la chanson ne peut plus apparaître dans les contrôles système iOS/Android
   response.headers.set("Permissions-Policy", "mediasession=(self)");

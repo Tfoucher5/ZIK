@@ -5,6 +5,17 @@
 export const NEWS = [
   {
     date: "2026-10-23",
+    version: "3.20.3",
+    tag: "Correctif",
+    title: "Des aperçus de liens enfin fidèles",
+    summary:
+      "Un lien ZIK partagé sur WhatsApp, Discord ou les réseaux affiche maintenant le titre et l'image de la page partagée.",
+    items: [
+      "Un lien vers une room, un thème, un artiste ou le Zikle partagé sur WhatsApp, Discord ou les réseaux affiche maintenant son propre titre, sa description et son image, au lieu de l'aperçu générique de ZIK.",
+    ],
+  },
+  {
+    date: "2026-10-23",
     version: "3.20.0",
     tag: "Amélioration",
     title: "Musiques de films : trouvez le film, c'est gagné",
