@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@supabase/supabase-js": "^2.108.1",
+    "@supabase/supabase-js": "^2.118.0",
     "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.70.1",
     "compression": "^1.8.1",
