@@ -9,6 +9,9 @@
   <p>
     À chaque manche, un extrait musical est diffusé. Votre objectif est de trouver <strong>l'artiste principal</strong> et le <strong>titre de la chanson</strong> le plus vite possible. Si la chanson comporte des artistes en featuring, chaque feat trouvé rapporte un point supplémentaire.
   </p>
+  <p>
+    Sur une musique de <strong>film, de série, d'animé ou de jeu vidéo</strong>, le nom de l'œuvre suffit : le trouver valide toute la manche, même sans connaître le titre ni l'interprète. En QCM, ces musiques proposent directement des noms d'œuvres.
+  </p>
 
   <h3>La saisie libre</h3>
   <p>

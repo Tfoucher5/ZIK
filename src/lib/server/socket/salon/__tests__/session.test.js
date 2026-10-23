@@ -30,6 +30,35 @@ describe("buildSessionPlaylist", () => {
     expect(full).toEqual(copy);
   });
 
+  it("répartit les manches entre les playlists, même très inégales", () => {
+    const full = [
+      ...pool(300).map((t) => ({ ...t, playlistId: "big" })),
+      ...pool(12).map((t) => ({
+        ...t,
+        title: `S${t.title}`,
+        playlistId: "small",
+      })),
+    ];
+    const session = buildSessionPlaylist(full, 20);
+    const small = session.filter((t) => t.playlistId === "small").length;
+    expect(session).toHaveLength(20);
+    expect(small).toBe(10);
+  });
+
+  it("complète avec les autres playlists quand une est épuisée", () => {
+    const full = [
+      ...pool(30).map((t) => ({ ...t, playlistId: "big" })),
+      ...pool(3).map((t) => ({
+        ...t,
+        title: `S${t.title}`,
+        playlistId: "small",
+      })),
+    ];
+    const session = buildSessionPlaylist(full, 20);
+    expect(session).toHaveLength(20);
+    expect(session.filter((t) => t.playlistId === "small")).toHaveLength(3);
+  });
+
   it("ne rend pas toujours le même tirage", () => {
     const full = pool(40);
     const runs = new Set(

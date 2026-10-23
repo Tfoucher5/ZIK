@@ -62,9 +62,12 @@ export function gradeGuess(input, track, found) {
           parts.map((p) => p.target),
         )
       : [];
-  const hits = parts.filter(
+  let hits = parts.filter(
     (p, i) => inGuess.includes(i) || checkMatch(input, p.target),
   );
+  // Trouver le film ou la série vaut toute la manche
+  if (hits.some((p) => p.kind === "extra" && track.extraAnswers[p.index].work))
+    hits = parts;
   const close = hits.length
     ? null
     : (parts.find((p) => checkClose(input, p.target)) ?? null);
@@ -90,6 +93,32 @@ const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 // 4 propositions dont la bonne. 40 % du temps, un autre titre du même artiste
 // sert de leurre : il faut reconnaître le titre, pas seulement l'artiste.
 export function makeChoices(correct, allTracks, sep = " — ") {
+  return (
+    workChoices(correct, allTracks) ?? songChoices(correct, allTracks, sep)
+  );
+}
+
+// Musique de film, série… : on propose des œuvres du même type plutôt que des
+// chansons, sinon il faudrait connaître le titre exact
+function workChoices(correct, allTracks) {
+  const work = correct.extraAnswers?.find((e) => e.work);
+  if (!work) return null;
+  const others = new Map();
+  for (const t of allTracks) {
+    for (const e of t.extraAnswers || []) {
+      if (e.label === work.label && e.clean !== work.clean)
+        others.set(e.clean, e.value);
+    }
+  }
+  if (others.size < 3) return null;
+  const choices = shuffle([
+    work.value,
+    ...shuffle([...others.values()]).slice(0, 3),
+  ]);
+  return { choices, correctChoiceIndex: choices.indexOf(work.value) };
+}
+
+function songChoices(correct, allTracks, sep) {
   const label = (t) =>
     `${displayString(t.mainArtist || t.artist)}${sep}${displayString(t.title)}`;
   const artistKey = (t) =>

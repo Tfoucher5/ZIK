@@ -56,7 +56,7 @@
   <title>ZIK - En jeu</title>
   <meta name="robots" content="noindex, nofollow">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  {#each ["shell", "sidebars", "history", "disc", "states", "splash", "gameover", "credits", "chat", "qcm", "responsive", "extras"] as f (f)}<link rel="stylesheet" href="/css/game/{f}.css?v=3.19.0">{/each}
+  {#each ["shell", "sidebars", "history", "disc", "states", "splash", "gameover", "credits", "chat", "qcm", "responsive", "extras"] as f (f)}<link rel="stylesheet" href="/css/game/{f}.css?v=3.20.0">{/each}
   <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
 

@@ -4,7 +4,12 @@
 
   let { home } = $props();
 
-  let roomsTab = $state('classic');
+  const MODES = [
+    { id: 'qcm', label: 'QCM', tag: 'Facile', desc: 'Choisis parmi 4 réponses' },
+    { id: 'classic', label: 'Classique', tag: 'Expert', desc: 'Tape le titre ou l’artiste, classement ELO' },
+  ];
+
+  let roomsTab = $state('qcm');
   let tabRooms = $derived(home.rooms.filter(r => roomsTab === 'qcm' ? r.game_mode === 'qcm' : r.game_mode !== 'qcm'));
 </script>
 
@@ -19,15 +24,15 @@
       {/if}
       <p class="pw-sub">Choisis une room par thème et joue contre les autres joueurs, sans inscription.</p>
     </div>
-    <div class="pw-mode">
-      <div class="pw-tabs" role="tablist" aria-label="Mode de jeu">
-        <button role="tab" aria-selected={roomsTab === 'classic'} class:active={roomsTab === 'classic'} onclick={() => roomsTab = 'classic'}>Classique</button>
-        <button role="tab" aria-selected={roomsTab === 'qcm'} class:active={roomsTab === 'qcm'} onclick={() => roomsTab = 'qcm'}>QCM</button>
-      </div>
-      <p class="pw-mode-help">
-        {roomsTab === 'qcm' ? 'QCM : choisis parmi 4 réponses.' : 'Classique : tape le titre ou l’artiste.'}
-      </p>
-    </div>
+  </div>
+
+  <div class="pw-modes" role="radiogroup" aria-label="Mode de jeu">
+    {#each MODES as m (m.id)}
+      <button role="radio" aria-checked={roomsTab === m.id} class:active={roomsTab === m.id} onclick={() => roomsTab = m.id}>
+        <span class="pw-mode-label">{m.label} <span class="pw-mode-tag">{m.tag}</span></span>
+        <span class="pw-mode-desc">{m.desc}</span>
+      </button>
+    {/each}
   </div>
 
   <RoomCollage {home} rooms={tabRooms} />
@@ -44,42 +49,61 @@
     position: relative;
   }
 
-  /* ── Onglets Classique / QCM ── */
-  .pw-tabs {
-    display: inline-flex;
-    border: 1px solid rgb(var(--c-glass) / 0.18);
+  /* ── Choix du mode QCM / Classique ── */
+  .pw-modes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 320px));
+    gap: 12px;
+    padding: 0 48px;
+    margin-bottom: 40px;
   }
-  .pw-tabs button {
+  .pw-modes button {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    padding: 16px 20px;
+    background: rgb(var(--c-glass) / 0.04);
+    border: 2px solid rgb(var(--c-glass) / 0.18);
+    color: var(--mid);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+  }
+  .pw-modes button:hover { border-color: rgb(var(--c-glass) / 0.4); color: var(--text); }
+  .pw-modes button.active {
+    border-color: var(--accent);
+    background: rgb(var(--c-glass) / 0.08);
+    color: var(--text);
+  }
+  .pw-mode-label {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
-    font-size: 0.78rem;
+    font-size: 1.4rem;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pw-mode-tag {
+    font-size: 0.68rem;
     letter-spacing: 0.14em;
-    padding: 10px 26px;
-    background: none;
-    border: none;
-    color: var(--dim);
-    cursor: pointer;
-    transition: color 0.15s, background 0.15s;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
   }
-  .pw-tabs button.active {
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-  .pw-tabs button:not(.active):hover { color: var(--text); }
+  .active .pw-mode-tag { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .pw-mode-desc { font-size: 0.9rem; }
   .pw-head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     padding: 0 48px;
-    margin-bottom: 48px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 12px;
   }
   .pw-head-left { display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; }
   .pw-sub { flex-basis: 100%; font-size: 1rem; color: var(--mid); }
-  .pw-mode { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  .pw-mode-help { font-size: 0.9rem; color: var(--mid); }
   .pw-title {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
@@ -124,15 +148,16 @@
   .pw-cta:hover { background: transparent; color: var(--accent); }
 
   @media (max-width: 900px) {
-    .pw-head { padding: 0 24px; }
+    .pw-head, .pw-modes { padding: 0 24px; }
     .pw-cta-wrap { padding: 28px 24px 0; }
   }
 
   @media (max-width: 600px) {
-    .pw-head { padding: 0 16px; }
-    .pw-mode { width: 100%; align-items: stretch; }
-    .pw-tabs { width: 100%; }
-    .pw-tabs button { flex: 1; padding: 12px 0; }
+    .pw-head, .pw-modes { padding: 0 16px; }
+    .pw-modes { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pw-modes button { padding: 12px 14px; }
+    .pw-mode-label { font-size: 1.15rem; flex-wrap: wrap; gap: 6px; }
+    .pw-mode-desc { font-size: 0.8rem; }
     .pw-cta-wrap { padding: 32px 16px 0; }
     .pw-cta { width: 100%; text-align: center; }
   }

@@ -6,7 +6,10 @@ import { lockMediaSession, unlockMediaSession } from "./mediaSession.js";
 
 const audioEl = () => document.getElementById("previewAudio");
 
+// Sur mobile, pas de curseur (même seuil que responsive.css) : les boutons
+// du téléphone règlent le son
 export function savedVolume() {
+  if (matchMedia("(max-width: 800px)").matches) return 100;
   return parseInt(localStorage.getItem("zik_vol") ?? "50");
 }
 

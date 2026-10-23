@@ -88,7 +88,27 @@ async function artistTracks(name) {
     .not("preview_url", "is", null)
     .order("title");
   if (error) throw new Error(error.message);
-  return data;
+  const edits = await officialEdits(data.map((t) => t.id));
+  return data.map((t) => ({ ...t, edit: edits.get(t.id) ?? {} }));
+}
+
+// Titre, artiste, feats et œuvre corrigés dans une playlist officielle
+async function officialEdits(trackIds) {
+  const { data } = await supabase
+    .from("custom_playlist_tracks")
+    .select(
+      "track_id, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name)), custom_playlists!inner(is_official)",
+    )
+    .in("track_id", trackIds.slice(0, 300))
+    .eq("custom_playlists.is_official", true);
+  const edits = new Map();
+  for (const row of data ?? []) {
+    const score =
+      !!row.custom_title + !!row.custom_artist + row.track_answers.length;
+    if (score > (edits.get(row.track_id)?.score ?? 0))
+      edits.set(row.track_id, { ...row, score });
+  }
+  return edits;
 }
 
 // Artistes qui reviennent le plus dans les mêmes playlists publiques.
@@ -123,7 +143,7 @@ async function relatedArtists(artist, trackIds) {
 export async function artistPage(artist) {
   const tracks = await artistTracks(artist.name);
   return {
-    titles: tracks.map((t) => t.title),
+    titles: tracks.map((t) => t.edit.custom_title || t.title),
     cover: tracks.find((t) => t.cover_url)?.cover_url ?? null,
     related: await relatedArtists(
       artist,
@@ -151,6 +171,13 @@ export async function startArtistRoom(artist) {
         cover: t.cover_url,
         preview_url: t.preview_url,
         external_id: t.external_id,
+        custom_artist: t.edit.custom_artist,
+        custom_title: t.edit.custom_title,
+        custom_feats: t.edit.custom_feats,
+        extraAnswers: (t.edit.track_answers ?? []).map((a) => ({
+          label: a.answer_types?.name || "",
+          value: a.value,
+        })),
       }),
     ),
     maxRounds: ROUNDS,

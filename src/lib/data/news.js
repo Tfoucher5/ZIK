@@ -4,6 +4,22 @@
 
 export const NEWS = [
   {
+    date: "2026-10-23",
+    version: "3.20.0",
+    tag: "Amélioration",
+    title: "Musiques de films : trouvez le film, c'est gagné",
+    summary:
+      "Sur une musique de film, de série, d'animé ou de jeu vidéo, trouver l'œuvre suffit à remporter la manche.",
+    items: [
+      "Sur une musique de film, de série, d'animé ou de jeu vidéo, donner le nom de l'œuvre valide toute la manche, même sans connaître le titre ni l'interprète.",
+      "En QCM, ces musiques proposent des noms d'œuvres plutôt que des titres de chansons.",
+      "Les blind tests par artiste reprennent les titres corrigés et les œuvres de nos playlists.",
+      "L'accueil affiche d'abord les rooms QCM, et le choix entre QCM (facile) et Classique (expert) est plus visible.",
+      "Mode salon : avec plusieurs playlists, chacune fournit sa part de titres, même si l'une est bien plus grosse que les autres.",
+      "Sur mobile, le son de la partie se règle avec les boutons du téléphone, et la fenêtre pour quitter une partie est plus claire.",
+    ],
+  },
+  {
     date: "2026-10-22",
     version: "3.19.0",
     tag: "Nouveauté",

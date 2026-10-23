@@ -37,30 +37,42 @@ export async function loadSalonTracks(playlistIds, client = supabase) {
       const key = `${t.artist}|${t.title}`;
       if (!seen.has(key)) {
         seen.add(key);
-        all.push(t);
+        all.push({ ...t, playlistId: id });
       }
     }
   }
-  // Fisher-Yates shuffle
-  for (let i = all.length - 1; i > 0; i--) {
+  return shuffle(all);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [all[i], all[j]] = [all[j], all[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return all;
+  return arr;
 }
 
 /**
  * Tire au hasard les titres d'une session dans le pool complet.
- * Les manches consomment le tableau par la fin (pop), l'ordre est donc deja
- * celui du jeu.
+ * Les playlists fournissent leurs titres tour à tour, pour qu'une énorme
+ * playlist n'écrase pas les petites. Les manches consomment le tableau par la
+ * fin (pop), l'ordre est donc deja celui du jeu.
  */
 export function buildSessionPlaylist(fullPlaylist, count) {
-  const pool = [...fullPlaylist];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
+  const groups = new Map();
+  for (const t of fullPlaylist) {
+    if (!groups.has(t.playlistId)) groups.set(t.playlistId, []);
+    groups.get(t.playlistId).push(t);
   }
-  return pool.slice(0, Math.max(0, count));
+  const queues = shuffle([...groups.values()].map((g) => shuffle([...g])));
+  const picked = [];
+  while (picked.length < count && queues.length) {
+    for (let i = 0; i < queues.length && picked.length < count; i++) {
+      picked.push(queues[i].pop());
+      if (!queues[i].length) queues.splice(i--, 1);
+    }
+  }
+  return shuffle(picked);
 }
 
 export async function searchTrackVideo(track, roundDuration) {

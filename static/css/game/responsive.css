@@ -41,15 +41,7 @@
     font-size: 0.62rem;
   }
   .g-vol {
-    padding: 0 10px;
-    gap: 6px;
-  }
-  .g-vol-label,
-  .g-vol-pct {
     display: none;
-  }
-  .g-vol input[type="range"] {
-    width: 64px;
   }
   .g-chat-toggle,
   .g-bug-btn {

@@ -8,6 +8,9 @@ import {
 } from "./deezer.js";
 import { cleanString, parseFeaturing } from "./trackText.js";
 
+// Œuvre d'où vient la musique : on la reconnaît souvent mieux que le titre
+const WORK_TYPES = new Set(["Film", "Série", "Jeu vidéo", "Animé"]);
+
 export function buildTrack({
   artist,
   title,
@@ -34,6 +37,7 @@ export function buildTrack({
     label: e.label,
     value: e.value,
     clean: cleanString(e.value),
+    work: WORK_TYPES.has(e.label),
   }));
   return {
     artist: effectiveArtist,

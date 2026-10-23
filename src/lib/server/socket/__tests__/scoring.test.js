@@ -4,6 +4,7 @@ import {
   checkClose,
   checkMatch,
   gradeGuess,
+  makeChoices,
 } from "../scoring.js";
 
 describe("calcQcmPoints", () => {
@@ -90,5 +91,67 @@ describe("gradeGuess", () => {
     const r = gradeGuess("under", track, fresh());
     expect(r.hits).toEqual([]);
     expect(r.close?.kind).toBe("title");
+  });
+});
+
+describe("œuvre (film, série…)", () => {
+  const extra = (label, value) => ({
+    label,
+    value,
+    clean: value.toLowerCase(),
+    work: label === "Film",
+  });
+  const song = (artist, title, extras = []) => ({
+    artist,
+    mainArtist: artist,
+    title,
+    cleanArtist: artist.toLowerCase(),
+    cleanFeatArtists: [],
+    cleanTitle: title.toLowerCase(),
+    extraAnswers: extras,
+  });
+  const tarzan = song("Phil Collins", "Jungle Jazz", [extra("Film", "Tarzan")]);
+  const fresh = () => ({
+    foundArtist: false,
+    foundTitle: false,
+    foundFeats: [],
+    foundExtras: [false],
+  });
+
+  it("trouver le film valide toute la manche", () => {
+    const kinds = gradeGuess("tarzan", tarzan, fresh()).hits.map((p) => p.kind);
+    expect(kinds).toEqual(["artist", "title", "extra"]);
+  });
+
+  it("un personnage reste un bonus", () => {
+    const t = song("Phil Collins", "Jungle Jazz", [
+      extra("Personnage", "Tarzan"),
+    ]);
+    expect(gradeGuess("tarzan", t, fresh()).hits.map((p) => p.kind)).toEqual([
+      "extra",
+    ]);
+  });
+
+  it("le QCM propose des films quand la playlist en a assez", () => {
+    const pool = ["Coco", "Vaiana", "Mulan", "Coco"].map((f) =>
+      song("X", f, [extra("Film", f)]),
+    );
+    const { choices, correctChoiceIndex } = makeChoices(tarzan, [
+      tarzan,
+      ...pool,
+    ]);
+    expect(choices[correctChoiceIndex]).toBe("Tarzan");
+    expect(new Set(choices)).toEqual(
+      new Set(["Tarzan", "Coco", "Vaiana", "Mulan"]),
+    );
+  });
+
+  it("le QCM garde artiste — titre s'il manque des films", () => {
+    const pool = [song("A", "a"), song("B", "b"), song("C", "c")];
+    const { choices, correctChoiceIndex } = makeChoices(tarzan, [
+      tarzan,
+      ...pool,
+    ]);
+    expect(choices[correctChoiceIndex]).toBe("Phil Collins — Jungle Jazz");
   });
 });

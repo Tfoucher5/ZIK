@@ -31,8 +31,53 @@
       {/each}
     </div>
   {/if}
-  <div class="g-quit-actions">
-    <button class="g-start-btn" onclick={onStay}>Rester</button>
-    <button class="g-go-back" onclick={onQuit}>{quitCase === 'lose' ? 'Quitter quand même' : 'Quitter'}</button>
+  <div class="quit-actions">
+    <button class="quit-btn quit-leave" class:is-lose={quitCase === 'lose'} onclick={onQuit}>
+      {quitCase === 'lose' ? 'Quitter quand même' : 'Quitter'}
+    </button>
+    <button class="quit-btn quit-stay" onclick={onStay}>Rester</button>
   </div>
 </Modal>
+
+<style>
+  .quit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .quit-btn {
+    font-family: var(--g-cond);
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .quit-stay {
+    background: var(--accent);
+    color: var(--on-accent);
+    border: 1px solid var(--accent);
+  }
+  .quit-stay:hover { filter: brightness(1.12); }
+  .quit-leave {
+    background: transparent;
+    color: var(--mid);
+    border: 1px solid rgb(var(--c-glass) / 0.2);
+  }
+  .quit-leave:hover {
+    color: var(--text);
+    border-color: rgb(var(--c-glass) / 0.45);
+    background: rgb(var(--c-glass) / 0.06);
+  }
+  .quit-leave.is-lose:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+  @media (max-width: 480px) {
+    .quit-actions { flex-direction: column-reverse; }
+  }
+</style>
