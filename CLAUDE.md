@@ -59,6 +59,13 @@ Stack: **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js
 - Pour les bugs Socket.io, vérifier `src/lib/server/socket/game/` et `salon/` (point d'entrée `index.js` de chacun)
 - Le state des salons est sur `globalThis.__zik_salonRooms` (survie hot-reload)
 
+## Vidéos promo (TikTok, Reels, Shorts)
+
+- Tout se passe sur la branche **`promo/memes`**, dans le worktree `C:\Users\Teamr\Documents\GitHub\ZIK-memes`, dossier `promo/montage/` (Remotion). Jamais de code promo sur `master`
+- Suivre le skill Claude **`zik-montage`** : direction artistique, musiques validées, catalogue des formats déjà faits, méthode de rendu
+- Une musique différente par vidéo (sons FR viraux ou connus), validée par l'utilisateur, ajoutée dans TikTok et jamais incrustée dans la vidéo à poster
+- Prises de vue : pages publiques en lecture seule sur la prod, parties uniquement en local derrière la passerelle en lecture seule (`scripts/gateway.mjs`). Toute modif temporaire du worktree `master` pour filmer est annulée ensuite
+
 ## Git
 
 - Toujours demander confirmation avant `git push` ou `git commit`
