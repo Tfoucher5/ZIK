@@ -39,6 +39,7 @@
 
   let allPlaylists = $state([]);
   let selectedIds  = $state([]);
+  let autoPicked   = $state(false);
   let creating     = $state(false);
   let error        = $state('');
 
@@ -77,6 +78,7 @@
       if (wanted.length) selectedIds = wanted;
       else if (selectedIds.length === 0 && flat.length > 0) {
         selectedIds = [flat.find(p => p.id === DEFAULT_SALON_PLAYLIST)?.id ?? flat[0].id];
+        autoPicked = true;
       }
     } catch {
       error = 'Impossible de charger les playlists.';
@@ -152,7 +154,7 @@
     <p class="st-loading">Chargement…</p>
   {:else}
     <SetupBlock letter="A" title="La musique">
-      <div><PlaylistPicker playlists={allPlaylists} bind:selectedIds onLogin={user ? null : () => openAuth('register')} /></div>
+      <div><PlaylistPicker playlists={allPlaylists} bind:selectedIds bind:autoPicked onLogin={user ? null : () => openAuth('register')} /></div>
     </SetupBlock>
 
     <SetupBlock letter="B" title="Le déroulé">

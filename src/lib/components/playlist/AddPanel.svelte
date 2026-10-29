@@ -27,6 +27,21 @@
   const target = $derived(explore ?? linkTarget);
   const view = $derived(target ? 'explore' : pasteText !== null ? 'paste' : input.kind);
 
+  let shortError = $state('');
+  $effect(() => {
+    if (input.kind !== 'deezer-short') return;
+    shortError = '';
+    const ctrl = new AbortController();
+    fetch(`/api/deezer/link/${input.id}`, { signal: ctrl.signal })
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+        text = data.url;
+      })
+      .catch((e) => { if (e.name !== 'AbortError') shortError = e.message; });
+    return () => ctrl.abort();
+  });
+
   function reset() {
     text = '';
     explore = null;
@@ -80,6 +95,8 @@
       <LinkImport source={view.split('-')[0]} id={input.id} {store} onDone={reset} />
     {:else if view === 'youtube'}
       <YoutubeAdd id={input.id} {store} onDone={reset} />
+    {:else if view === 'deezer-short'}
+      <p class="add-msg">{shortError || 'Lecture du lien Deezer...'}</p>
     {:else if view === 'unknown-link'}
       <p class="add-msg">Lien non reconnu. Colle un lien Deezer (playlist, album, artiste), YouTube ou Spotify.</p>
     {:else}

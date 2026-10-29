@@ -17,6 +17,10 @@ describe("detectInput", () => {
       "https://www.deezer.com/fr/playlist/908622995",
       { kind: "deezer-playlist", id: "908622995" },
     ],
+    [
+      "Écoute ma playlist sur Deezer https://link.deezer.com/s/31VxXnMeXGYxGFUXblR1A",
+      { kind: "deezer-short", id: "31VxXnMeXGYxGFUXblR1A" },
+    ],
     ["https://deezer.com/album/302127", { kind: "deezer-album", id: "302127" }],
     [
       "https://www.deezer.com/en/artist/27",

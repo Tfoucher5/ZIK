@@ -2,7 +2,7 @@
   import SleeveArt from './SleeveArt.svelte';
   import { fuzzyFilter } from '$lib/shared/fuzzy.js';
 
-  let { playlists = [], selectedIds = $bindable([]), onLogin = null } = $props();
+  let { playlists = [], selectedIds = $bindable([]), autoPicked = $bindable(false), onLogin = null } = $props();
 
   // Pochettes à aplat : une couleur par disque, jamais de dégradé
   const SLEEVES = ['#f4e04d', '#ff6b35', '#2ec4b6', '#ff4f9a', '#8c7bff', '#f2ede3', '#3ddc84', '#ffb627', '#5bc0eb', '#e94f37'];
@@ -17,6 +17,12 @@
   let community = $derived(found.filter(p => p.group === 'public'));
 
   function toggle(pl) {
+    // Premier choix : il remplace la playlist cochée d'office au lieu de s'y ajouter
+    if (autoPicked) {
+      autoPicked = false;
+      selectedIds = selectedIds.includes(pl.id) ? [] : [pl.id];
+      return;
+    }
     selectedIds = selectedIds.includes(pl.id)
       ? selectedIds.filter(id => id !== pl.id)
       : [...selectedIds, pl.id];

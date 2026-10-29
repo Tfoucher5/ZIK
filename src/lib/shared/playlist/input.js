@@ -1,6 +1,8 @@
 import { extractYoutubeId } from "../youtube.js";
 
 const DEEZER_RE = /deezer\.com\/(?:[a-z]{2}\/)?(playlist|album|artist)\/(\d+)/i;
+// Lien de partage de l'appli Deezer, redirige vers deezer.com
+const DEEZER_SHORT_RE = /link\.deezer\.com\/s\/(\w+)/i;
 const SPOTIFY_RE = /open\.spotify\.com\/(?:intl-[a-z]+\/)?playlist\/(\w+)/i;
 
 // Ce que l'utilisateur a tapé ou collé dans la barre d'ajout.
@@ -10,6 +12,8 @@ export function detectInput(text) {
   if (lines(raw).length >= 2) return { kind: "list" };
   const dz = raw.match(DEEZER_RE);
   if (dz) return { kind: `deezer-${dz[1].toLowerCase()}`, id: dz[2] };
+  const dzShort = raw.match(DEEZER_SHORT_RE);
+  if (dzShort) return { kind: "deezer-short", id: dzShort[1] };
   const sp = raw.match(SPOTIFY_RE);
   if (sp) return { kind: "spotify-playlist", id: sp[1] };
   if (/^https?:\/\//i.test(raw)) {

@@ -4,6 +4,18 @@
 
 export const NEWS = [
   {
+    date: "2026-10-29",
+    version: "3.20.4",
+    tag: "Correctif",
+    title: "Mode salon : fini les titres que tu n'as pas choisis",
+    summary:
+      "En mode salon, ta playlist n'est plus mélangée avec la playlist proposée par défaut.",
+    items: [
+      "Mode salon : la playlist « Chanson Française » restait cochée d'office quand tu choisissais la tienne, et ses titres se mélangeaient aux tiens. Résultat : des chansons d'une autre époque ou d'un autre thème passaient. Désormais, la première playlist que tu choisis remplace celle par défaut. Pour en jouer plusieurs, il suffit de les cocher ensuite.",
+      "Les liens de partage de l'appli Deezer (link.deezer.com) sont maintenant reconnus quand tu ajoutes des titres à une playlist.",
+    ],
+  },
+  {
     date: "2026-10-23",
     version: "3.20.3",
     tag: "Correctif",
