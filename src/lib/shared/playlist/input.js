@@ -1,6 +1,7 @@
 import { extractYoutubeId } from "../youtube.js";
 
-const DEEZER_RE = /deezer\.com\/(?:[a-z]{2}\/)?(playlist|album|artist|track)\/(\d+)/i;
+const DEEZER_RE =
+  /deezer\.com\/(?:[a-z]{2}\/)?(playlist|album|artist|track)\/(\d+)/i;
 // Lien de partage de l'appli Deezer, redirige vers deezer.com
 const DEEZER_SHORT_RE = /link\.deezer\.com\/s\/(\w+)/i;
 const SPOTIFY_RE = /open\.spotify\.com\/(?:intl-[a-z]+\/)?playlist\/(\w+)/i;
