@@ -5,6 +5,19 @@
 export const NEWS = [
   {
     date: "2026-10-29",
+    version: "3.20.5",
+    tag: "Amélioration",
+    title: "Mode salon : prêt pour les grandes soirées",
+    summary:
+      "Les salons avec beaucoup de joueurs restent fluides sur les téléphones, et ton score affiché est enfin le bon.",
+    items: [
+      "Mode salon : avec des centaines de joueurs, les téléphones recevaient le classement complet à chaque réponse tapée par n'importe qui. Le classement est maintenant envoyé au plus une fois par seconde : les réponses sont validées instantanément, même à 200 joueurs.",
+      "Sur ton téléphone, le score en haut de l'écran pouvait afficher celui du premier du classement au lieu du tien. C'est corrigé.",
+      "Un lien Deezer vers un titre (deezer.com/track/…) est maintenant reconnu quand tu ajoutes des titres à une playlist.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     version: "3.20.4",
     tag: "Correctif",
     title: "Mode salon : fini les titres que tu n'as pas choisis",

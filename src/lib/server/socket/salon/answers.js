@@ -4,10 +4,9 @@ import { salonRooms } from "../../state.js";
 import { closeMsg, gradeGuess, markFound, partName } from "../scoring.js";
 import {
   broadcastRoster,
+  broadcastScores,
   playerFullyFound,
-  sortedScores,
   staff,
-  standings,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
 // Téléphones des joueurs : équipe et réponses
@@ -86,11 +85,7 @@ export function registerAnswers(socket, io) {
       });
     }
 
-    // Broadcast updated scores
-    io.to(`salon:${code}`).emit("salon_scores_update", {
-      scores: sortedScores(salon),
-      teams: standings(salon),
-    });
+    if (hits.length) broadcastScores(code, io);
 
     checkEveryoneDone(code, io);
   });

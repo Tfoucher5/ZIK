@@ -27,18 +27,20 @@
   const target = $derived(explore ?? linkTarget);
   const view = $derived(target ? 'explore' : pasteText !== null ? 'paste' : input.kind);
 
-  let shortError = $state('');
+  // Lien court ou lien d'un titre : remplacé par ce qu'il désigne
+  let linkError = $state('');
   $effect(() => {
-    if (input.kind !== 'deezer-short') return;
-    shortError = '';
+    const route = { 'deezer-short': 'link', 'deezer-track': 'track' }[input.kind];
+    if (!route) return;
+    linkError = '';
     const ctrl = new AbortController();
-    fetch(`/api/deezer/link/${input.id}`, { signal: ctrl.signal })
+    fetch(`/api/deezer/${route}/${input.id}`, { signal: ctrl.signal })
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
-        text = data.url;
+        text = data.url ?? data.q;
       })
-      .catch((e) => { if (e.name !== 'AbortError') shortError = e.message; });
+      .catch((e) => { if (e.name !== 'AbortError') linkError = e.message; });
     return () => ctrl.abort();
   });
 
@@ -95,10 +97,10 @@
       <LinkImport source={view.split('-')[0]} id={input.id} {store} onDone={reset} />
     {:else if view === 'youtube'}
       <YoutubeAdd id={input.id} {store} onDone={reset} />
-    {:else if view === 'deezer-short'}
-      <p class="add-msg">{shortError || 'Lecture du lien Deezer...'}</p>
+    {:else if view === 'deezer-short' || view === 'deezer-track'}
+      <p class="add-msg">{linkError || 'Lecture du lien Deezer...'}</p>
     {:else if view === 'unknown-link'}
-      <p class="add-msg">Lien non reconnu. Colle un lien Deezer (playlist, album, artiste), YouTube ou Spotify.</p>
+      <p class="add-msg">Lien non reconnu. Colle un lien Deezer (playlist, album, artiste, titre), YouTube ou Spotify.</p>
     {:else}
       <Suggestions {sugg} {store} onArtist={(id) => explore = { type: 'artist', id }} onAlbum={(id) => explore = { type: 'album', id }} />
     {/if}

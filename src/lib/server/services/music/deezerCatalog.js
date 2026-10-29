@@ -48,6 +48,12 @@ export async function searchTracks(q, limit = 20) {
   return (data.data || []).filter(playable).map((t) => toTrack(t));
 }
 
+// Lien d'un titre : la recherche « artiste titre » le propose en premier
+export async function trackQuery(id) {
+  const t = await dz(`/track/${id}`);
+  return `${t.artist.name} ${t.title}`;
+}
+
 export function artistPage(id) {
   return cached(`artist:${id}`, HOUR, async () => {
     const [artist, top, albums] = await Promise.all([

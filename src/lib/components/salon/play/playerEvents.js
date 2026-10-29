@@ -16,7 +16,8 @@ export function listenPlayer(p, socket, c, u) {
   socket.on("salon_roster", ({ players, teams }) => {
     p.roster = players;
     p.teams = teams;
-    p.myTeam = players.find((p) => p.username === p.username)?.team ?? p.myTeam;
+    p.myTeam =
+      players.find((pl) => pl.username === p.username)?.team ?? p.myTeam;
   });
   socket.on("salon_paused", ({ paused }) => {
     p.paused = paused;
@@ -73,7 +74,7 @@ export function listenPlayer(p, socket, c, u) {
   socket.on("salon_scores_update", ({ scores, teams }) => {
     p.scores = scores;
     if (teams) p.teams = teams;
-    const me = scores.find((p) => p.username === p.username);
+    const me = scores.find((s) => s.username === p.username);
     if (me) p.myScore = me.score;
   });
 

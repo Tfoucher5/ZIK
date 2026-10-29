@@ -4,12 +4,11 @@ import { recordSalonGameStart } from "./persist.js";
 import {
   adminSalon,
   broadcastRoster,
+  broadcastScores,
   getPlayerList,
   kickPlayer,
   requirePro,
   resetStats,
-  sortedScores,
-  standings,
 } from "./players.js";
 import { applySettings } from "./rooms.js";
 import {
@@ -76,10 +75,7 @@ export function registerControl(socket, io) {
 
     if (!requirePro(socket, salon, "score")) return;
     player.score = absolu ? v : Math.max(0, player.score + v);
-    io.to(`salon:${salon.code}`).emit("salon_scores_update", {
-      scores: sortedScores(salon),
-      teams: standings(salon),
-    });
+    broadcastScores(salon.code, io);
     broadcastRoster(salon.code, io);
   });
 

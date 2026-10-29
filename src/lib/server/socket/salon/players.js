@@ -73,13 +73,42 @@ export function broadcastScreens(code, io) {
   io.to(`salon:ctrl:${code}`).emit("salon_screens", { count });
 }
 
-export function broadcastRoster(code, io) {
+// À 200 joueurs, chaque envoi de liste part vers 200 téléphones : au plus un
+// envoi par seconde, le dernier état part à la fin de la fenêtre
+const COALESCE_MS = 1000;
+function coalesce(code, key, send) {
   const salon = salonRooms[code];
   if (!salon) return;
-  io.to(`salon:${code}`).emit("salon_roster", {
-    players: getPlayerList(salon),
-    teams: standings(salon),
-  });
+  const waits = (salon._coalesce ??= {});
+  if (waits[key]) {
+    waits[key].pending = true;
+    return;
+  }
+  send(salon);
+  waits[key] = { pending: false };
+  setTimeout(() => {
+    const again = waits[key].pending;
+    delete waits[key];
+    if (again && salonRooms[code] === salon) coalesce(code, key, send);
+  }, COALESCE_MS);
+}
+
+export function broadcastRoster(code, io) {
+  coalesce(code, "roster", (salon) =>
+    io.to(`salon:${code}`).emit("salon_roster", {
+      players: getPlayerList(salon),
+      teams: standings(salon),
+    }),
+  );
+}
+
+export function broadcastScores(code, io) {
+  coalesce(code, "scores", (salon) =>
+    io.to(`salon:${code}`).emit("salon_scores_update", {
+      scores: sortedScores(salon),
+      teams: standings(salon),
+    }),
+  );
 }
 
 // Fonction ZIK Pro : refusée aux salons gratuits, l'hôte voit l'offre
