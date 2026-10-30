@@ -1,5 +1,5 @@
 import { supabase } from "../../config.js";
-import { YouTube } from "../../audio/youtube.js";
+import { ytsQuery, ytVideoInfo } from "../game/audio.js";
 import { displayString } from "../../services/music/trackText.js";
 import {
   buildTrackFromRow,
@@ -80,9 +80,7 @@ export async function searchTrackVideo(track, roundDuration) {
   const { exclude, minStart } = await getVideoSettings();
   // Vidéo choisie dans l'admin : elle prime sur la recherche
   if (track.youtube_id) {
-    const pinned = await YouTube.getVideo(
-      `https://www.youtube.com/watch?v=${track.youtube_id}`,
-    ).catch(() => null);
+    const pinned = await ytVideoInfo(track.youtube_id).catch(() => null);
     return {
       video: { id: track.youtube_id },
       safeStart: pickStart({
@@ -94,13 +92,8 @@ export async function searchTrackVideo(track, roundDuration) {
     };
   }
   const artist = track.mainArtist || track.artist;
-  const results = filterVideos(
-    await YouTube.search(`${artist} - ${track.title}`, {
-      type: "video",
-      limit: 5,
-    }),
-    exclude,
-  );
+  const { results: found } = await ytsQuery(`${artist} - ${track.title}`);
+  const results = filterVideos(found, exclude);
   if (!results.length) throw new Error("No video");
   const video =
     results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];

@@ -9,13 +9,13 @@ import { pickAutoIndex } from "../../../shared/youtube.js";
 
 const execFileAsync = promisify(execFile);
 
-// Les 5 premiers résultats YouTube et l'index que le jeu choisirait.
-export async function ytsCandidates(artist, title) {
+// Les premiers résultats YouTube et l'index que le jeu choisirait.
+export async function ytsQuery(query, count = 5) {
   try {
     const { stdout } = await execFileAsync(
       YTDLP_BIN,
       [
-        `ytsearch5:${artist} - ${title}`,
+        `ytsearch${count}:${query}`,
         "--flat-playlist",
         "-j",
         "--no-warnings",
@@ -47,6 +47,10 @@ export async function ytsCandidates(artist, title) {
   } catch {
     return { results: [], autoIndex: -1 };
   }
+}
+
+export function ytsCandidates(artist, title) {
+  return ytsQuery(`${artist} - ${title}`);
 }
 
 export async function ytsSearch(artist, title) {

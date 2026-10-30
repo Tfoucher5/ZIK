@@ -11,14 +11,16 @@ const SELECT =
 export async function GET({ url }) {
   await requireAdminToken(url.searchParams.get("token"));
   const open = url.searchParams.get("status") !== "done";
+  const kind = url.searchParams.get("kind");
 
   let q = getAdminClient().from("track_issues").select(SELECT);
+  if (kind) q = q.eq("kind", kind);
   q = open
     ? q.eq("status", "open").order("count", { ascending: false })
     : q.neq("status", "open").order("resolved_at", { ascending: false });
   const { data, error } = await q
     .order("updated_at", { ascending: false })
-    .limit(open ? 200 : 40);
+    .limit(kind ? 1000 : open ? 200 : 40);
 
   if (error) {
     return json(
