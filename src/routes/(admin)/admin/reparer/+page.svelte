@@ -107,6 +107,10 @@
       {/each}
     </div>
 
+    {#if view === 'open' && counts.video}
+      <a class="a-btn primary" href="/admin/reparer/videos">Réparer les vidéos à la chaîne</a>
+    {/if}
+
     {#if err}
       <p class="a-card bad">{err}</p>
     {:else if !issues}

@@ -22,8 +22,9 @@ vi.mock("../../../config.js", () => ({
     from: () => ({ insert: () => ({ then: (r) => r({ error: null }) }) }),
   }),
 }));
-vi.mock("../../../audio/youtube.js", () => ({
-  YouTube: { search: async () => [] },
+vi.mock("../../game/audio.js", () => ({
+  ytsQuery: async () => ({ results: [], autoIndex: -1 }),
+  ytVideoInfo: async () => null,
 }));
 
 const { salonRooms } = await import("../../../state.js");
