@@ -2,8 +2,8 @@ const AHEAD = 3;
 
 async function post(path, token, body) {
   const r = await fetch(`${path}?token=${encodeURIComponent(token)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const d = await r.json().catch(() => ({}));
@@ -20,7 +20,7 @@ export class VideoQueue {
   results = $state({});
   done = $state(0);
   failures = $state([]);
-  loadErr = $state('');
+  loadErr = $state("");
 
   constructor(token) {
     this.token = token;
@@ -30,18 +30,28 @@ export class VideoQueue {
   candidates = $derived(this.current ? this.results[this.current.id] : null);
 
   async load() {
-    const r = await fetch(`/api/admin/issues?status=open&kind=video&token=${encodeURIComponent(this.token)}`);
+    const r = await fetch(
+      `/api/admin/issues?status=open&kind=video&token=${encodeURIComponent(this.token)}`,
+    );
     const d = await r.json();
-    if (!r.ok) { this.loadErr = d.error || 'Chargement impossible.'; this.items = []; return; }
+    if (!r.ok) {
+      this.loadErr = d.error || "Chargement impossible.";
+      this.items = [];
+      return;
+    }
     this.items = d.issues;
     this.prefetch();
   }
 
   search(issue, query = `${issue.track.artist} - ${issue.track.title}`) {
-    this.results[issue.id] = { query, videos: null, err: '' };
-    return post('/api/admin/track-video-search', this.token, { query })
-      .then((d) => (this.results[issue.id] = { query, videos: d.videos, err: '' }))
-      .catch((e) => (this.results[issue.id] = { query, videos: [], err: e.message }));
+    this.results[issue.id] = { query, videos: null, err: "" };
+    return post("/api/admin/track-video-search", this.token, { query })
+      .then(
+        (d) => (this.results[issue.id] = { query, videos: d.videos, err: "" }),
+      )
+      .catch(
+        (e) => (this.results[issue.id] = { query, videos: [], err: e.message }),
+      );
   }
 
   prefetch() {
@@ -59,8 +69,14 @@ export class VideoQueue {
   pick(video) {
     const issue = this.current;
     this.next();
-    post('/api/admin/track-audio-fix', this.token, { trackId: issue.track.id, youtubeId: video.id, youtubeStart: null })
-      .then(() => post('/api/admin/issues', this.token, { id: issue.id, action: 'fix' }))
+    post("/api/admin/track-audio-fix", this.token, {
+      trackId: issue.track.id,
+      youtubeId: video.id,
+      youtubeStart: null,
+    })
+      .then(() =>
+        post("/api/admin/issues", this.token, { id: issue.id, action: "fix" }),
+      )
       .then(() => this.done++)
       .catch((e) => this.failures.push({ issue, error: e.message }));
   }
@@ -68,8 +84,10 @@ export class VideoQueue {
   ignore() {
     const issue = this.current;
     this.next();
-    post('/api/admin/issues', this.token, { id: issue.id, action: 'ignore' })
-      .catch((e) => this.failures.push({ issue, error: e.message }));
+    post("/api/admin/issues", this.token, {
+      id: issue.id,
+      action: "ignore",
+    }).catch((e) => this.failures.push({ issue, error: e.message }));
   }
 
   // Remis en fin de file, le signalement reste ouvert
