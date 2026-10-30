@@ -43,5 +43,17 @@ export function prepareSession(code, io) {
   );
   salon.game.prefetchedRound = null;
   salon.game.played = [];
+  salon.game.skipStreak = 0;
   prefetchNextVideo(code, io);
+}
+
+// Remplaçant d'un titre injouable, de préférence de la même playlist. Glissé
+// sous la pile : le titre suivant, déjà préchargé, reste le prochain.
+export function drawSpareTrack(game, failed) {
+  const used = new Set([...game.played, ...game.sessionPlaylist]);
+  const spares = game.fullPlaylist.filter((t) => !used.has(t));
+  const same = spares.filter((t) => t.playlistId === failed.playlistId);
+  const pool = same.length ? same : spares;
+  if (pool.length)
+    game.sessionPlaylist.unshift(pool[Math.floor(Math.random() * pool.length)]);
 }

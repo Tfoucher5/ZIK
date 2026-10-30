@@ -50,6 +50,7 @@
       onChangePlaylists={h.canChangePlaylists ? h.openPicker : null}
       onNewSalon={() => window.location.href = '/salon'}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
+      onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
     />
     <PlayerSidebar players={h.players} teams={h.teams} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
   </div>

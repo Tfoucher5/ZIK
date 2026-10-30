@@ -50,6 +50,7 @@ export function startTimer(code, io) {
   const duration = salon.settings.roundDuration;
 
   clearTimeout(game.musicReadyTimer);
+  game.skipStreak = 0;
   game.musicReadyTimer = null;
   game.startTime = Date.now();
   game.timerValue = duration;

@@ -10,7 +10,8 @@ import {
   getPlayerList,
   standings,
 } from "./players.js";
-import { checkEveryoneDone, currentTrackInfo } from "./rounds.js";
+import { checkEveryoneDone } from "./rounds.js";
+import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { cleanupNow, scheduleCleanup } from "./timers.js";

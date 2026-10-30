@@ -4,6 +4,17 @@
 
 export const NEWS = [
   {
+    date: "2026-10-30",
+    version: "3.20.6",
+    tag: "Correctif",
+    title: "Mode salon : le bon nombre de manches",
+    summary:
+      "En mode salon, une partie de 10 manches joue maintenant vraiment 10 chansons.",
+    items: [
+      "Mode salon : quand aucune vidéo n'était trouvée pour un titre, ou que YouTube refusait de la lire, la chanson était sautée et la partie finissait avec moins de manches que prévu. Désormais, un autre titre de ta playlist prend sa place : une manche = une chanson réellement jouée.",
+    ],
+  },
+  {
     date: "2026-10-29",
     version: "3.20.5",
     tag: "Amélioration",

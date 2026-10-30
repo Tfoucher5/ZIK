@@ -15,6 +15,7 @@ import {
   finishGame,
   nextRound,
   revealRound,
+  skipTrack,
   startNextRound,
 } from "./rounds.js";
 import { prepareSession } from "./session.js";
@@ -133,6 +134,28 @@ export function registerControl(socket, io) {
     )
       return;
     startTimer(code, io);
+  });
+
+  // L'écran ne peut pas lire la vidéo (supprimée, intégration bloquée) :
+  // tant que la musique n'a pas démarré, un autre titre prend la place
+  socket.on("salon_video_failed", ({ videoId } = {}) => {
+    if (socket.salonRole !== "screen") return;
+    const salon = salonRooms[socket.salonCode];
+    const game = salon?.game;
+    if (
+      game?.phase !== "round" ||
+      game.timerActive ||
+      game.currentVideo?.id !== videoId
+    )
+      return;
+    reportTrackIssue(
+      game.currentTrack.id,
+      "video",
+      "auto",
+      "Vidéo illisible en salon",
+      { salon: salon.code, videoId },
+    );
+    skipTrack(salon.code, io);
   });
 
   // ── Host triggers next round (manual mode) ────────────────────────────────

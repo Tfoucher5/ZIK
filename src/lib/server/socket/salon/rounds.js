@@ -3,8 +3,12 @@ import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { makeChoices, calcQcmPoints } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
-import { searchTrackVideo } from "./tracks.js";
-import { prefetchNextVideo, prepareSession } from "./session.js";
+import { currentTrackInfo, searchTrackVideo } from "./tracks.js";
+import {
+  drawSpareTrack,
+  prefetchNextVideo,
+  prepareSession,
+} from "./session.js";
 import { playerFullyFound, resetRoundFlags, standings } from "./players.js";
 import { scheduleCleanup, startTimer, clearPause } from "./timers.js";
 
@@ -281,19 +285,16 @@ export async function startNextRound(code, io) {
         salon: code,
       },
     );
-    // Titre sans source : on ne consomme pas la manche, on passe au titre suivant
-    game.currentRound--;
-    startNextRound(code, io);
+    skipTrack(code, io);
   }
 }
 
-export function currentTrackInfo(salon) {
-  const track = salon.game.currentTrack;
-  if (!track) return null;
-  return {
-    artist: displayString(track.mainArtist || track.artist),
-    title: displayString(track.title),
-    cover: track.cover,
-    correctChoiceIndex: salon.game.correctChoiceIndex,
-  };
+// Titre injouable : manche non consommée, un titre de réserve le remplace
+export function skipTrack(code, io) {
+  const game = salonRooms[code].game;
+  clearTimeout(game.musicReadyTimer);
+  game.currentRound--;
+  game.skipStreak = (game.skipStreak ?? 0) + 1;
+  if (game.skipStreak <= 10) drawSpareTrack(game, game.currentTrack);
+  startNextRound(code, io);
 }

@@ -12,7 +12,7 @@
     choices = null, answerMode = 'free',
     paused = false, pro = false, settings = {},
     onSetting,
-    onRestart, onNewSalon, onMusicReady, onChangePlaylists = null,
+    onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
   } = $props();
 
   let membersOf = (id) => players.filter(p => p.team === id);
@@ -20,7 +20,7 @@
   let finders = $derived(players.filter(p => p.foundThisRound));
   let timerLevel = $derived(!timerMax || timerVal / timerMax >= 0.4 ? '' : timerVal / timerMax >= 0.2 ? 'warn' : 'danger');
 
-  const yt = new HostYoutube(() => onMusicReady?.());
+  const yt = new HostYoutube(() => onMusicReady?.(), (videoId) => onVideoError?.(videoId));
 
   // Pilotées par la page (bind:this) au fil des événements du serveur
   export const setVolume = (v) => yt.setVolume(v);

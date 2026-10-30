@@ -25,10 +25,13 @@ export class HostYoutube {
   #currentStartSecs = 0;
   #metaGuard = null;
   #volume = 100;
+  #videoId = null;
   #onMusicReady;
+  #onVideoError;
 
-  constructor(onMusicReady) {
+  constructor(onMusicReady, onVideoError) {
     this.#onMusicReady = onMusicReady;
+    this.#onVideoError = onVideoError;
   }
 
   init() {
@@ -92,6 +95,7 @@ export class HostYoutube {
           e.target.playVideo();
         },
         onStateChange: (e) => this.#onState(slot, e.data),
+        onError: () => this.#onError(slot),
       },
     });
   }
@@ -122,6 +126,12 @@ export class HostYoutube {
     }
     if (state === 0 /* ENDED */ || state === 2 /* PAUSED */)
       this.#stopMediaGuard();
+  }
+
+  // Vidéo supprimée ou intégration refusée par YouTube
+  #onError(slot) {
+    if (slot === this.active) return this.#onVideoError?.(this.#videoId);
+    if (this.#preload?.slot === slot) this.#preload.failed = true;
   }
 
   #startPreload() {
@@ -166,11 +176,17 @@ export class HostYoutube {
   }
 
   loadVideo(videoId, startSeconds) {
+    this.#videoId = videoId;
     this.#currentStartSecs = startSeconds;
     this.#activePlaying = false;
     clearTimeout(this.#preloadTimer);
     const pre = this.#preload;
-    if (pre?.go && pre.videoId === videoId && this.#yt[pre.slot]) {
+    if (
+      pre?.go &&
+      !pre.failed &&
+      pre.videoId === videoId &&
+      this.#yt[pre.slot]
+    ) {
       const old = this.active;
       this.active = pre.slot;
       this.#preload = null;

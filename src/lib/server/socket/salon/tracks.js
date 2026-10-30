@@ -1,5 +1,6 @@
 import { supabase } from "../../config.js";
 import { YouTube } from "../../audio/youtube.js";
+import { displayString } from "../../services/music/trackText.js";
 import {
   buildTrackFromRow,
   TRACK_ROW_SELECT,
@@ -111,5 +112,16 @@ export async function searchTrackVideo(track, roundDuration) {
       roundDuration,
       minStart,
     }),
+  };
+}
+
+export function currentTrackInfo(salon) {
+  const track = salon.game.currentTrack;
+  if (!track) return null;
+  return {
+    artist: displayString(track.mainArtist || track.artist),
+    title: displayString(track.title),
+    cover: track.cover,
+    correctChoiceIndex: salon.game.correctChoiceIndex,
   };
 }
