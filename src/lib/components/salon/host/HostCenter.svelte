@@ -79,7 +79,7 @@
       <div class="sh-qr"><img src={salonQrUrl(code, 320)} alt="QR code pour rejoindre" width="320" height="320"></div>
     </div>
     {#if teams}
-      <div class="sh-teams">
+      <div class="sh-teams" class:serre={teams.length > 8}>
         {#each teams as t (t.id)}
           <div class="sh-team" style="--tc:{teamColor(t.id)}">
             <b>{t.name}</b>
