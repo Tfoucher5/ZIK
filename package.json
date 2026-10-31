@@ -21,7 +21,7 @@
     "guess-rater": "^2.0.0",
     "imapflow": "^2.1.2",
     "mailparser": "^3.9.32",
-    "nodemailer": "^10.0.16",
+    "nodemailer": "^10.2.1",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.8.3",
     "stripe": "^22.6.2",
