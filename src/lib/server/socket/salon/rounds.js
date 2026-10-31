@@ -230,6 +230,8 @@ export async function startNextRound(code, io) {
         salon.settings.roundDuration,
       ));
     }
+    // Relance ou fermeture du salon pendant la recherche : manche périmée
+    if (salonRooms[code] !== salon || game.currentTrack !== track) return;
 
     game.currentVideo = { id: video.id, start: safeStart };
     game.phase = "round";
@@ -275,6 +277,7 @@ export async function startNextRound(code, io) {
 
     prefetchNextVideo(code, io);
   } catch (err) {
+    if (salonRooms[code] !== salon || game.currentTrack !== track) return;
     console.error(`Salon skip "${track.title}":`, err.message);
     reportTrackIssue(
       track.id,
