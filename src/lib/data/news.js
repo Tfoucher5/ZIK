@@ -1,13 +1,15 @@
 // Mur d'actualité — entrées affichées sur /nouveautes (la plus récente en premier).
 // tag : 'Nouveauté' | 'Amélioration' | 'Correctif'
 // summary (facultatif) : texte de la notification envoyée aux appareils, sinon le premier point.
+// proItems (facultatif) : points réservés à ZIK Pro, affichés à part sous les autres.
 
 export const NEWS = [
   {
     date: "2026-10-31",
     version: "3.21.0",
     tag: "Nouveauté",
-    title: "Mode salon : une soirée entière, plus fiable et plus simple",
+    title:
+      "Mode salon : une soirée entière, plus fiable, et du nouveau pour ZIK Pro",
     summary:
       "Mode salon : on enchaîne les parties dans le même salon, la musique ne lâche plus, et ZIK Pro gagne le buzzer et le podium final.",
     items: [
@@ -25,13 +27,7 @@ export const NEWS = [
       "Avec beaucoup d'équipes, la liste de l'écran d'accueil de la TV devient compacte et défile.",
       "Correctif : terminer une partie depuis la régie pendant le chargement d'une chanson pouvait relancer une manche fantôme.",
     ],
-  },
-  {
-    date: "2026-10-31",
-    version: "3.21.0",
-    tag: "Nouveauté",
-    title: "ZIK Pro : buzzer, podium final et classement de la soirée",
-    items: [
+    proItems: [
       "Classement de la soirée : les points de chaque partie s'additionnent. Entre deux parties, la TV affiche le podium de la partie et, à côté, le classement de toute la soirée. Chaque téléphone indique sa place, et l'animateur peut le remettre à zéro depuis la régie.",
       "Un joueur dont le téléphone s'est mis en veille retrouve ses points de la soirée en revenant.",
       "Mode buzzer : le premier qui buzze coupe la musique et répond à voix haute, l'animateur valide depuis la régie.",
