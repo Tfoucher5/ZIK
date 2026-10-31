@@ -30,6 +30,12 @@ console.warn = (...args) => {
   pushError("warn", ...args);
 };
 
+// Un bug dans une manche ne doit pas redémarrer le serveur : les salons et
+// parties en cours vivent en mémoire et seraient tous perdus
+process.on("unhandledRejection", (err) => {
+  console.error("[unhandledRejection]", err?.stack ?? err);
+});
+
 const _execAsync = _promisify(_execFile);
 const _YTDLP_BIN =
   process.env.YOUTUBE_DL_PATH ||

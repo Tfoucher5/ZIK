@@ -52,7 +52,7 @@ export function prepareSession(code, io) {
 export function drawSpareTrack(game, failed) {
   const used = new Set([...game.played, ...game.sessionPlaylist]);
   const spares = game.fullPlaylist.filter((t) => !used.has(t));
-  const same = spares.filter((t) => t.playlistId === failed.playlistId);
+  const same = spares.filter((t) => t.playlistId === failed?.playlistId);
   const pool = same.length ? same : spares;
   if (pool.length)
     game.sessionPlaylist.unshift(pool[Math.floor(Math.random() * pool.length)]);
