@@ -421,7 +421,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien coûte une soirée blind test avec ZIK ?",
-        a: `La version gratuite accueille ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes, idéale pour tester. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète : 7,90 € la soirée, 19 € par mois ou 190 € par an.`,
+        a: `La version gratuite accueille ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes, idéale pour tester. ZIK Pro débloque les joueurs et équipes illimités et la régie complète : 7,90 € la soirée, 19 € par mois ou 190 € par an.`,
       },
       {
         q: "De quel matériel a-t-on besoin ?",
@@ -449,7 +449,7 @@ export const BLIND_TEST_THEMES = [
       "L'animateur garde la main depuis la régie : pause pour annoncer les résultats, passage d'un titre, points corrigés quand un enfant répond à voix haute. Le mode 4 choix permet aux plus jeunes de jouer sans taper au clavier.",
     ],
     tips: [
-      "Formez des équipes par famille ou par allée : jusqu'à 8 équipes avec ZIK Pro, chacune avec son nom.",
+      "Formez des équipes par famille ou par allée : autant d'équipes que vous voulez avec ZIK Pro, chacune avec son nom.",
       "Pour un public familial, mélangez Disney, années 80 et années 2000 : chaque génération a ses manches.",
       "Programmez le blind test le même soir chaque semaine : les vacanciers s'en parlent d'une semaine sur l'autre.",
     ],
@@ -460,7 +460,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Combien de participants au maximum ?",
-        a: `${FREE_MAX_PLAYERS} joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.`,
+        a: `${FREE_MAX_PLAYERS} joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et d'équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.`,
       },
     ],
     playlists: [PL.disney, PL.annees8090, PL.annees2000],

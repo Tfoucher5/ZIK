@@ -36,6 +36,16 @@ export class SalonHost {
   roundEnd = $state(null);
   gameOver = $state(null);
   teams = $state(null);
+  night = $state(null);
+  buzzer = $state(null);
+  videoOutage = $state(null);
+  mediaCheck = $state(null);
+  specialIntro = $state(false);
+  special = $state(null);
+  intermission = $state(null);
+  finale = $state(null);
+  // Intro éclair : la musique est coupée, une reprise après un buzz raté ne la relance pas
+  flashCut = false;
   paused = $state(false);
   settings = $state({});
   choices = $state(null);

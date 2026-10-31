@@ -3,6 +3,8 @@ import { registerSupport } from "./support.js";
 import { registerJoin } from "./join.js";
 import { registerControl } from "./control.js";
 import { registerAnswers } from "./answers.js";
+import { registerBuzzer } from "./buzzer.js";
+import { registerEvening } from "./evening.js";
 
 export { createSalonRoom, changeSalonPlaylists } from "./rooms.js";
 
@@ -13,5 +15,7 @@ export function registerSalon(io) {
     registerJoin(socket, io);
     registerControl(socket, io);
     registerAnswers(socket, io);
+    registerBuzzer(socket, io);
+    registerEvening(socket, io);
   });
 }

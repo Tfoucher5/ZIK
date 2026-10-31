@@ -20,6 +20,10 @@ import {
 } from "./rounds.js";
 import { prepareSession } from "./session.js";
 import { cleanTeamName } from "./teams.js";
+import { previewUrl } from "./media.js";
+import { forgetVideo } from "./tracks.js";
+import { closeEvening } from "./evening.js";
+import { clearOutage } from "./outage.js";
 import { clearPause, pauseGame, resumeGame, startTimer } from "./timers.js";
 // Régie (et écran ouvert avec la clé) : pilotage de la partie
 export function registerControl(socket, io) {
@@ -116,6 +120,8 @@ export function registerControl(socket, io) {
     resetStats(salon);
     broadcastRoster(code, io);
 
+    closeEvening(salon, io);
+    clearOutage(salon, io);
     io.to(`salon:${code}`).emit("salon_game_starting");
     recordSalonGameStart(salon);
     startNextRound(code, io);
@@ -138,7 +144,7 @@ export function registerControl(socket, io) {
 
   // L'écran ne peut pas lire la vidéo (supprimée, intégration bloquée) :
   // tant que la musique n'a pas démarré, un autre titre prend la place
-  socket.on("salon_video_failed", ({ videoId } = {}) => {
+  socket.on("salon_video_failed", async ({ videoId } = {}) => {
     if (socket.salonRole !== "screen") return;
     const salon = salonRooms[socket.salonCode];
     const game = salon?.game;
@@ -148,14 +154,27 @@ export function registerControl(socket, io) {
       game.currentVideo?.id !== videoId
     )
       return;
-    reportTrackIssue(
-      game.currentTrack.id,
-      "video",
-      "auto",
-      "Vidéo illisible en salon",
-      { salon: salon.code, videoId },
-    );
-    skipTrack(salon.code, io);
+    const track = game.currentTrack;
+    if (game.currentVideo.audio) return skipTrack(salon.code, io);
+    reportTrackIssue(track.id, "video", "auto", "Vidéo illisible en salon", {
+      salon: salon.code,
+      videoId,
+    });
+    // Vidéo bloquée par YouTube : l'extrait audio prend le relais
+    game.videos?.delete(track);
+    forgetVideo(track);
+    const audio = await previewUrl(track);
+    if (
+      !audio ||
+      game.currentTrack !== track ||
+      game.phase !== "round" ||
+      game.timerActive
+    )
+      return skipTrack(salon.code, io);
+    game.currentVideo = { id: audio, start: 0, audio: true };
+    io.to(`salon:screens:${salon.code}`).emit("salon_use_audio", {
+      audioUrl: audio,
+    });
   });
 
   // ── Host triggers next round (manual mode) ────────────────────────────────
@@ -216,6 +235,9 @@ export function registerControl(socket, io) {
     salon.game.firstFinder = null;
     salon.game.currentTrack = null;
 
+    closeEvening(salon, io);
+    clearOutage(salon, io);
+    salon.game.skipStreak = 0;
     io.to(`salon:${code}`).emit("salon_restarted", {
       players: getPlayerList(salon),
     });

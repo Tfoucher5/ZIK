@@ -2,7 +2,8 @@
 // une équipe de six ne bat pas une équipe de deux juste parce qu'elle est plus
 // nombreuse (soirées de camping, bars : les tables n'ont jamais la même taille).
 
-export const MAX_TEAMS = 8;
+// Garde-fou contre une valeur absurde envoyée à la main, pas une limite produit
+export const MAX_TEAMS = 100;
 const DEFAULT_NAMES = [
   "Rouge",
   "Bleue",
@@ -12,6 +13,14 @@ const DEFAULT_NAMES = [
   "Orange",
   "Turquoise",
   "Blanche",
+  "Lime",
+  "Marine",
+  "Corail",
+  "Lilas",
+  "Or",
+  "Menthe",
+  "Rose",
+  "Grise",
 ];
 
 /**
@@ -27,7 +36,7 @@ export function makeTeams(count, existantes = null) {
   const connues = new Map((existantes ?? []).map((t) => [t.id, t.name]));
   return Array.from({ length: n }, (_, id) => ({
     id,
-    name: connues.get(id) ?? DEFAULT_NAMES[id],
+    name: connues.get(id) ?? DEFAULT_NAMES[id] ?? `Équipe ${id + 1}`,
   }));
 }
 

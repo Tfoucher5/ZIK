@@ -171,7 +171,60 @@
 .sh-over-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
+}
+.sh-new-link {
+  margin-left: auto;
+  padding: 8px 4px;
+  background: none;
+  border: 0;
+  color: var(--mid);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+.sh-new-confirm {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: clamp(24px, 6vw, 96px);
+  background: rgb(var(--bg-rgb) / 0.97);
+}
+.sh-new-confirm .sx-kicker {
+  color: var(--danger);
+}
+.sh-new-confirm h2 {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: clamp(2.6rem, 6vw, 6rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.sh-new-confirm ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 1.2em;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+}
+.sh-new-confirm b {
+  color: var(--danger);
+}
+.sh-new-confirm > p:not(.sx-kicker) {
+  max-width: 60ch;
+  color: var(--mid);
+  font-size: 1rem;
+}
+.sh-new-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
 }
 
 /* Pause */

@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
 import { SupportChat } from "../support/supportChat.svelte.js";
 import { loadSalonPlaylists } from "../../../data/salonPlaylists.js";
+import { listenRegie } from "./regieEvents.js";
 import {
   takeSalonKeyFromUrl,
   patchSalonPlaylists,
@@ -28,6 +29,12 @@ export class SalonRegie {
   settings = $state({});
   players = $state([]);
   teams = $state(null);
+  night = $state(null);
+  buzzer = $state(null);
+  videoOutage = $state(null);
+  mediaCheck = $state(null);
+  intermission = $state(null);
+  finale = $state(null);
   timerVal = $state(0);
   timerMax = $state(30);
   timerOn = $state(false);
@@ -103,7 +110,7 @@ export class SalonRegie {
       .sort((a, b) => b.score - a.score);
   }
 
-  #applyScores(scores) {
+  applyScores(scores) {
     const m = Object.fromEntries(scores.map((s) => [s.username, s.score]));
     this.players = this.players
       .map((p) => ({ ...p, score: m[p.username] ?? p.score }))
@@ -184,111 +191,7 @@ export class SalonRegie {
     );
     this.chat.attach(socket);
 
-    socket.on("salon_control_joined", (d) => {
-      this.ready = true;
-      this.pro = d.pro;
-      this.error = "";
-      this.settings = d.settings;
-      this.mergeRoster(d.players);
-      this.teams = d.teams;
-      this.phase = d.phase;
-      this.paused = d.paused;
-      this.round = d.currentRound;
-      this.timerVal = d.timerVal;
-      this.timerMax = d.timerMax;
-      this.timerOn = d.timerActive;
-      this.track = d.track;
-      this.history = d.history;
-      this.pickerIds = [...(d.settings.playlistIds || [])];
-      this.chat.update(d.support);
-    });
-
-    socket.on("salon_roster", ({ players, teams }) => {
-      this.mergeRoster(players);
-      this.teams = teams;
-    });
-    socket.on("salon_settings", ({ settings }) => {
-      this.settings = settings;
-    });
-    socket.on("salon_paused", ({ paused }) => {
-      this.paused = paused;
-    });
-    socket.on("salon_game_starting", () => {
-      this.phase = "starting";
-      this.history = [];
-    });
-    socket.on("salon_round_start", (d) => {
-      this.phase = "round";
-      this.round = d.round;
-      this.track = d.hostInfo;
-      this.timerOn = false;
-      this.timerVal = 0;
-      this.players = this.players.map((p) => ({
-        ...p,
-        foundThisRound: false,
-        answeredThisRound: false,
-      }));
-    });
-    socket.on("salon_timer_started", ({ max }) => {
-      this.timerVal = max;
-      this.timerMax = max;
-      this.timerOn = true;
-    });
-    socket.on("salon_timer_update", ({ current, max }) => {
-      this.timerVal = current;
-      this.timerMax = max;
-      this.timerOn = true;
-    });
-    socket.on("salon_player_answered", ({ username, correct, answered }) => {
-      this.players = this.players.map((p) =>
-        p.username === username
-          ? {
-              ...p,
-              answeredThisRound: answered === true || p.answeredThisRound,
-              foundThisRound: correct ?? p.foundThisRound,
-            }
-          : p,
-      );
-    });
-    socket.on("salon_scores_update", ({ scores, teams }) => {
-      this.#applyScores(scores);
-      if (teams) this.teams = teams;
-    });
-    socket.on("salon_round_end", (d) => {
-      this.phase = "summary";
-      this.timerOn = false;
-      this.teams = d.teams;
-      this.history = [...this.history, { answer: d.answer, cover: d.cover }];
-      this.#applyScores(d.scores);
-    });
-    socket.on("salon_game_over", (d) => {
-      this.phase = "gameover";
-      this.teams = d.teams;
-      this.track = null;
-    });
-    socket.on("salon_restarted", ({ players }) => {
-      this.mergeRoster(players);
-      this.history = [];
-    });
-    socket.on("salon_playlists_changed", ({ trackCount, appliedNow }) =>
-      this.flash(
-        `Playlist changée (${trackCount} titres), ${appliedNow ? "dès la manche suivante" : "pour la prochaine partie"}.`,
-      ),
-    );
-    socket.on("salon_screens", ({ count }) => {
-      this.screens = count;
-    });
-    socket.on("salon_pro_required", ({ feature }) => {
-      this.upsell = feature;
-    });
-    socket.on("salon_pro", ({ pro }) => {
-      this.pro = pro;
-      this.upsell = null;
-      this.flash("ZIK Pro activé pour ce salon.");
-    });
-    socket.on("salon_error", ({ message }) => {
-      this.error = message;
-    });
+    listenRegie(this, socket);
   }
 
   destroy() {

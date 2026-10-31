@@ -1,5 +1,6 @@
 import { salonRooms } from "../../state.js";
-import { buildSessionPlaylist, searchTrackVideo } from "./tracks.js";
+import { buildSessionPlaylist } from "./tracks.js";
+import { checkSession, findVideo } from "./media.js";
 
 // Cherche la vidéo du prochain titre et l'annonce à l'hôte, qui la met en
 // mémoire tampon pendant la manche en cours : sur une connexion lente, la
@@ -9,13 +10,8 @@ export function prefetchNextVideo(code, io) {
   const game = salon.game;
   const nextTrack = game.sessionPlaylist[game.sessionPlaylist.length - 1];
   if (!nextTrack) return;
-  const gen = (game._prefetchGen = (game._prefetchGen ?? 0) + 1);
-  game._prefetchPromise = searchTrackVideo(
-    nextTrack,
-    salon.settings.roundDuration,
-  )
+  findVideo(salon, nextTrack)
     .then((r) => {
-      if (game._prefetchGen !== gen) return;
       game.prefetchedRound = { track: nextTrack, ...r };
       // Déjà sorti de la pile : la manche démarre avec, rien à précharger
       if (game.sessionPlaylist.at(-1) === nextTrack)
@@ -45,6 +41,7 @@ export function prepareSession(code, io) {
   salon.game.played = [];
   salon.game.skipStreak = 0;
   prefetchNextVideo(code, io);
+  checkSession(salon, io).catch(() => {});
 }
 
 // Remplaçant d'un titre injouable, de préférence de la même playlist. Glissé

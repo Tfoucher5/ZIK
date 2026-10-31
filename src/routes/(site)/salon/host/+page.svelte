@@ -3,6 +3,7 @@
   import HostCenter from '$lib/components/salon/host/HostCenter.svelte';
   import HostTopBar from '$lib/components/salon/host/HostTopBar.svelte';
   import PlayerSidebar from '$lib/components/salon/host/PlayerSidebar.svelte';
+  import HostFinale from '$lib/components/salon/host/HostFinale.svelte';
   import PlaylistModal from '$lib/components/salon/playlists/PlaylistModal.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
@@ -51,8 +52,10 @@
       onNewSalon={() => window.location.href = '/salon'}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
+      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} mediaCheck={h.mediaCheck}
+      onJudge={(correct) => h.socket?.emit('salon_buzz_judge', { correct })}
     />
-    <PlayerSidebar players={h.players} teams={h.teams} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
+    <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
   </div>
 
   {#if h.phase === 'lobby'}
@@ -65,6 +68,8 @@
 </div>
 
 {/if}
+
+{#if h.finale}<HostFinale finale={h.finale} volume={h.volume} sound={h.settings.finaleSound !== false} />{/if}
 
 {#if h.joined && (h.playlistNotice || h.error)}
   <p class="sh-toast" class:err={!!h.error} role="status">{h.error || h.playlistNotice}</p>

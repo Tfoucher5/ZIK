@@ -1,4 +1,4 @@
-import { supabase } from "../../config.js";
+import { supabase, getAdminClient } from "../../config.js";
 import { ytsQuery, ytVideoInfo } from "../game/audio.js";
 import { displayString } from "../../services/music/trackText.js";
 import {
@@ -42,7 +42,53 @@ export async function loadSalonTracks(playlistIds, client = supabase) {
       }
     }
   }
+  await loadVideoCache(all);
   return shuffle(all);
+}
+
+// Vidéos mémorisées (colonnes video_cache_*) : une vidéo trouvée une fois ne
+// dépend plus de la recherche YouTube. Lues et écrites à part : si la colonne
+// manque, le salon marche comme avant.
+async function loadVideoCache(tracks) {
+  const ids = [...new Set(tracks.map((t) => t.id).filter(Boolean))];
+  const cache = new Map();
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data } = await getAdminClient()
+      .from("tracks")
+      .select("id, video_cache_id, video_cache_duration")
+      .in("id", ids.slice(i, i + 300))
+      .not("video_cache_id", "is", null);
+    for (const r of data ?? []) cache.set(r.id, r);
+  }
+  for (const t of tracks) {
+    const c = cache.get(t.id);
+    if (c)
+      t.cachedVideo = {
+        id: c.video_cache_id,
+        duration: c.video_cache_duration ?? 0,
+      };
+  }
+}
+
+function saveVideoCache(track, cached) {
+  track.cachedVideo = cached;
+  getAdminClient()
+    .from("tracks")
+    .update({
+      video_cache_id: cached?.id ?? null,
+      video_cache_duration: cached?.duration ?? null,
+      video_cache_at: cached ? new Date().toISOString() : null,
+    })
+    .eq("id", track.id)
+    .then(
+      () => {},
+      () => {},
+    );
+}
+
+// Vidéo refusée par la TV : on ne la propose plus
+export function forgetVideo(track) {
+  if (track.cachedVideo) saveVideoCache(track, null);
 }
 
 function shuffle(arr) {
@@ -91,12 +137,28 @@ export async function searchTrackVideo(track, roundDuration) {
       }),
     };
   }
+  if (track.cachedVideo) {
+    return {
+      video: { id: track.cachedVideo.id },
+      safeStart: pickStart({
+        pinned: null,
+        durationSec: track.cachedVideo.duration,
+        roundDuration,
+        minStart,
+      }),
+    };
+  }
   const artist = track.mainArtist || track.artist;
   const { results: found } = await ytsQuery(`${artist} - ${track.title}`);
   const results = filterVideos(found, exclude);
   if (!results.length) throw new Error("No video");
   const video =
     results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
+  if (track.id)
+    saveVideoCache(track, {
+      id: video.id,
+      duration: Math.round((video.duration || 0) / 1000),
+    });
   return {
     video,
     safeStart: pickStart({

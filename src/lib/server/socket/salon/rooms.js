@@ -44,7 +44,15 @@ export async function createSalonRoom({
     maxRounds: Math.min(Math.max(settings.maxRounds || 10, 5), 20),
     roundDuration: Math.min(Math.max(settings.roundDuration || 30, 15), 60),
     manualNext: settings.manualNext === true,
-    answerMode: settings.answerMode === "multiple" ? "multiple" : "free",
+    answerMode:
+      settings.answerMode === "buzzer" && pro
+        ? "buzzer"
+        : settings.answerMode === "free"
+          ? "free"
+          : "multiple",
+    specials: pro && settings.specials === true,
+    buzzSound: true,
+    finaleSound: true,
     showAnswerDuration: Math.min(
       Math.max(settings.showAnswerDuration || 7, 3),
       15,
@@ -168,6 +176,11 @@ export function applySettings(code, patch, io, allow) {
   const s = salon.settings;
   const game = salon.game;
   const idle = game.phase === "lobby" || game.phase === "gameover";
+  // Sons de la TV : pour tous, à tout moment, sans passer par l'offre Pro
+  const sons = ["buzzSound", "finaleSound"].filter((k) => k in patch);
+  for (const k of sons) s[k] = patch[k] !== false;
+  if (sons.length && sons.length === Object.keys(patch).length)
+    return io.to(`salon:${code}`).emit("salon_settings", { settings: s });
   if (!idle && !allow("liveSettings")) return;
   const clamp = (v, lo, hi, d) =>
     Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
@@ -182,8 +195,16 @@ export function applySettings(code, patch, io, allow) {
       s.showAnswerDuration,
     );
   if ("manualNext" in patch) s.manualNext = patch.manualNext === true;
-  if (idle && "answerMode" in patch)
-    s.answerMode = patch.answerMode === "multiple" ? "multiple" : "free";
+  if (idle && "answerMode" in patch) {
+    if (patch.answerMode === "buzzer" && !allow("buzzer")) return;
+    s.answerMode = ["multiple", "buzzer"].includes(patch.answerMode)
+      ? patch.answerMode
+      : "free";
+  }
+  if ("specials" in patch) {
+    if (patch.specials && !allow("specials")) return;
+    s.specials = patch.specials === true;
+  }
   if ("maxRounds" in patch) {
     const n = clamp(
       patch.maxRounds,

@@ -1,6 +1,7 @@
 <script>
+  import SpecialsInfo from './SpecialsInfo.svelte';
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
-  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS } from '$lib/data/salonOptions.js';
+  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '$lib/data/salonOptions.js';
 
   let {
     maxRounds = $bindable(),
@@ -8,10 +9,14 @@
     answerMode = $bindable(),
     manualNext = $bindable(),
     showAnswerDuration = $bindable(),
+    specials = $bindable(),
     teamCount,
     pro,
     onPickTeams,
+    onUpsell,
   } = $props();
+
+  const proOnly = (feature, fn) => (pro ? fn() : onUpsell(feature));
 </script>
 
 {#snippet segmented(options, value, set, unit = '')}
@@ -41,6 +46,20 @@
         <button type="button" role="radio" aria-checked={answerMode === 'multiple'} class:on={answerMode === 'multiple'} onclick={() => (answerMode = 'multiple')}>
           4 choix<small>Tout le monde joue</small>
         </button>
+        <button type="button" role="radio" aria-checked={answerMode === 'buzzer'} class:on={answerMode === 'buzzer'} class:st-pro={!pro} onclick={() => proOnly('buzzer', () => (answerMode = 'buzzer'))}>
+          Buzzer<small>L'animateur valide à voix haute</small>
+        </button>
+      </div>
+    </dd>
+  </div>
+  <div>
+    <dt>Manches spéciales<SpecialsInfo /></dt>
+    <dd>
+      <div class="st-seg st-seg-wide" role="radiogroup">
+        <button type="button" role="radio" aria-checked={!specials} class:on={!specials} onclick={() => (specials = false)}>Non</button>
+        <button type="button" role="radio" aria-checked={specials} class:on={specials} class:st-pro={!pro} onclick={() => proOnly('specials', () => (specials = true))}>
+          Au hasard<small>Points doubles, intro éclair, sprint</small>
+        </button>
       </div>
     </dd>
   </div>
@@ -57,10 +76,16 @@
     <dt>Équipes</dt>
     <dd>
       <div class="st-seg st-seg-wide" role="radiogroup">
-        {#each [[0, 'Chacun pour soi'], [2, '2 équipes'], [3, '3'], [4, '4'], [6, '6'], [8, '8']] as [n, label] (n)}
-          <button type="button" role="radio" aria-checked={teamCount === n} class:on={teamCount === n} class:st-pro={!pro && n > FREE_MAX_TEAMS} onclick={() => onPickTeams(n)}>{label}</button>
+        {#each SALON_TEAMS as n (n)}
+          <button type="button" role="radio" aria-checked={teamCount === n} class:on={teamCount === n} class:st-pro={!pro && n > FREE_MAX_TEAMS} onclick={() => onPickTeams(n)}>{n === 0 ? 'Chacun pour soi' : n === 2 ? '2 équipes' : n}</button>
         {/each}
       </div>
+      {#if pro}
+        <label class="st-autre">Autre nombre
+          <input type="number" min="2" max="100" value={SALON_TEAMS.includes(teamCount) ? '' : teamCount}
+            onchange={(e) => onPickTeams(Math.round(+e.currentTarget.value) || 0)}>
+        </label>
+      {/if}
     </dd>
   </div>
   {#if !manualNext}
@@ -131,6 +156,12 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+  }
+
+  .st-autre { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.82rem; color: var(--mid); }
+  .st-autre input {
+    width: 72px; padding: 8px; border: 1px solid var(--border2); border-radius: 2px;
+    background: var(--bg2); color: var(--text); font: inherit;
   }
 
   @media (max-width: 760px) {

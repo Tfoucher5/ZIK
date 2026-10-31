@@ -7,7 +7,10 @@ export const FREE_MAX_TEAMS = 2;
 // Ce que débloque n'importe quelle formule Pro
 export const PRO_PERKS = [
   "Joueurs illimités dans le salon",
-  "Jusqu'à 8 équipes, renommables",
+  "Équipes illimitées, renommables",
+  "Classement de la soirée et podium final",
+  "Mode buzzer : l'animateur valide les réponses à voix haute",
+  "Manches spéciales au hasard : points doubles, intro éclair, sprint",
   "Régie complète sur un second écran",
   "Révéler, terminer, corriger les points à tout moment",
   "Volume de la TV réglé depuis la régie",
@@ -59,7 +62,6 @@ export const PLANS = [
 // Fonctions Pro annoncées, pas encore construites
 export const PRO_COMING = [
   "L'écran TV aux couleurs du lieu : logo, couleurs, message d'accueil",
-  "Manches spéciales : points doubles, intros de 3 secondes, « qui chante ? »",
   "Export des scores et historique de vos soirées",
   "Soirées programmées et inscription des équipes à l'avance",
 ];
@@ -74,4 +76,7 @@ export const PRO_FEATURES = {
   volume: "Régler le son de la TV depuis la régie",
   liveSettings: "Changer les réglages en pleine partie",
   teamEdit: "Renommer les équipes et déplacer les joueurs",
+  night: "Le classement de toute la soirée, partie après partie",
+  buzzer: "Le mode buzzer, avec l'animateur qui valide les réponses",
+  specials: "Les manches spéciales tirées au hasard",
 };

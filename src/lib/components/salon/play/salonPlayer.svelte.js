@@ -43,6 +43,14 @@ export class SalonPlayer {
 
   roster = $state([]);
   teams = $state(null);
+  night = $state(null);
+  buzzer = $state(null);
+  videoOutage = $state(null);
+  specialIntro = $state(false);
+  buzzLocked = $state(false);
+  special = $state(null);
+  intermission = $state(null);
+  finale = $state(null);
   myTeam = $state(null);
   paused = $state(false);
 
@@ -97,6 +105,12 @@ export class SalonPlayer {
     this.chosenIndex = index;
     this.allFound = true;
     this.socket.emit("salon_submit_choice", { choiceIndex: index });
+  };
+
+  buzz = () => {
+    if (this.buzzer || this.buzzLocked || this.allFound) return;
+    navigator.vibrate?.(60);
+    this.socket.emit("salon_buzz");
   };
 
   leave = () => {

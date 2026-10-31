@@ -76,12 +76,34 @@
   align-self: flex-start;
 }
 
-/* Lobby : équipes ou joueurs déjà là */
+/* Lobby : équipes ou joueurs déjà là. Beaucoup d'équipes ou de joueurs : la
+   liste prend la place restante et défile, le QR code reste entier */
+.sh-lobby {
+  flex-shrink: 0;
+}
+.sh-teams,
+.sh-lobby-names {
+  min-height: 0;
+  overflow-y: auto;
+}
 .sh-teams {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px;
   margin-top: clamp(20px, 4vh, 40px);
+}
+.sh-teams.serre {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+.sh-teams.serre .sh-team {
+  padding: 8px 10px;
+}
+.sh-teams.serre .sh-team b {
+  font-size: 1.05rem;
+}
+.sh-teams.serre .sh-team span {
+  font-size: 0.78rem;
 }
 .sh-team {
   padding: 12px 14px;

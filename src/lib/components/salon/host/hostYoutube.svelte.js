@@ -24,6 +24,8 @@ export class HostYoutube {
   #preloadTimer = null;
   #currentStartSecs = 0;
   #metaGuard = null;
+  #fadeTimer = null;
+  #fading = false;
   #volume = 100;
   #videoId = null;
   #onMusicReady;
@@ -48,6 +50,8 @@ export class HostYoutube {
   }
 
   #applyVolume(p) {
+    // Le lecteur repasse en lecture pendant le fondu : il ne doit pas remonter le son
+    if (this.#fading) return;
     try {
       if (this.#volume === 0) p?.mute?.();
       else {
@@ -179,6 +183,8 @@ export class HostYoutube {
     this.#videoId = videoId;
     this.#currentStartSecs = startSeconds;
     this.#activePlaying = false;
+    clearInterval(this.#fadeTimer);
+    this.#fading = false;
     clearTimeout(this.#preloadTimer);
     const pre = this.#preload;
     if (
@@ -220,6 +226,31 @@ export class HostYoutube {
     });
   }
 
+  // Fin de partie : le son baisse doucement puis la vidéo s'arrête
+  fadeOut(ms = 6000) {
+    const p = this.#yt[this.active];
+    if (!p) return;
+    clearInterval(this.#fadeTimer);
+    this.#fading = true;
+    const steps = 60;
+    let step = 0;
+    this.#fadeTimer = setInterval(() => {
+      step++;
+      // Courbe au carré : la baisse s'entend régulière jusqu'au bout
+      const left = (1 - step / steps) ** 2;
+      try {
+        if (step < steps) p.setVolume(Math.round(this.#volume * left));
+        else {
+          p.mute();
+          p.stopVideo();
+        }
+      } catch {
+        /* YT pas prêt */
+      }
+      if (step >= steps) clearInterval(this.#fadeTimer);
+    }, ms / steps);
+  }
+
   pauseVideo() {
     try {
       this.#yt[this.active]?.pauseVideo();
@@ -248,6 +279,7 @@ export class HostYoutube {
   }
 
   destroy() {
+    clearInterval(this.#fadeTimer);
     this.#yt.forEach((p) => p?.destroy?.());
     clearTimeout(this.#preloadTimer);
     this.#stopMediaGuard();

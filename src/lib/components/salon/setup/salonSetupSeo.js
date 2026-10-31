@@ -43,7 +43,7 @@ export const FAQ_GROUPS = [
     items: [
       {
         q: "Combien de joueurs peuvent participer ?",
-        a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et jusqu'à 8 équipes.`,
+        a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et d'équipes.`,
       },
       {
         q: "Combien ça coûte ?",

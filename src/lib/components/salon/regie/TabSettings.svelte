@@ -1,6 +1,7 @@
 <script>
+  import SpecialsInfo from '$lib/components/salon/setup/SpecialsInfo.svelte';
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
-  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '$lib/data/salonOptions.js';
+  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
 
   /**
    * Onglet « Réglages ». Secondaire : la configuration se fait en amont sur
@@ -12,19 +13,28 @@
    *   onSet: (patch: any) => void,
    *   onRenameTeam: (team: number, name: string) => void,
    *   onUpsell: (f: string) => void,
-   *   onOpenPlaylists: () => void,
+   *   onOpenPlaylists: () => void, playlistNames: string[],
    * }}
    */
-  let { settings, phase, round, pro, onSet, onRenameTeam, onUpsell, onOpenPlaylists } = $props();
+  let { settings, phase, round, pro, onSet, onRenameTeam, onUpsell, onOpenPlaylists, onSound, playlistNames = [] } = $props();
 
   const idle = $derived(phase === 'lobby' || phase === 'gameover');
 </script>
 
+{#if phase === 'gameover'}<h2 class="ts-titre">Partie suivante</h2>{/if}
 <p class="ts-note">
   {idle
-    ? 'Les changements prennent effet à la prochaine partie.'
+    ? 'Les changements prennent effet à la prochaine partie. Pas besoin de nouveau salon : les joueurs restent.'
     : 'Les changements prennent effet dès la manche suivante.'}
 </p>
+
+<div class="ts-field">
+  <span>Playlist</span>
+  <div class="ts-playlist">
+    <p>{playlistNames.join(', ') || 'Sélection en cours'}</p>
+    <button class="sx-btn" onclick={onOpenPlaylists}>Changer de playlist</button>
+  </div>
+</div>
 
 <div class="ts-field">
   <span>Manches</span>
@@ -68,6 +78,26 @@
   <div class="ts-seg">
     <button class:on={settings.answerMode === 'free'} disabled={!idle} onclick={() => onSet({ answerMode: 'free' })}>Texte libre</button>
     <button class:on={settings.answerMode === 'multiple'} disabled={!idle} onclick={() => onSet({ answerMode: 'multiple' })}>4 choix</button>
+    <button class:on={settings.answerMode === 'buzzer'} class:ts-locked={!pro} disabled={!idle}
+      onclick={() => (pro ? onSet({ answerMode: 'buzzer' }) : onUpsell('buzzer'))}>Buzzer{#if !pro}<i>Pro</i>{/if}</button>
+  </div>
+  {#if settings.answerMode === 'buzzer'}
+    <div class="ts-son">
+      <b>Son du buzz sur la TV</b>
+      <div class="ts-seg">
+        <button class:on={settings.buzzSound !== false} onclick={() => onSound({ buzzSound: true })}>Oui</button>
+        <button class:on={settings.buzzSound === false} onclick={() => onSound({ buzzSound: false })}>Coupé</button>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<div class="ts-field">
+  <span>Manches spéciales <small>au hasard</small><SpecialsInfo /></span>
+  <div class="ts-seg">
+    <button class:on={!settings.specials} onclick={() => onSet({ specials: false })}>Non</button>
+    <button class:on={settings.specials} class:ts-locked={!pro}
+      onclick={() => (pro ? onSet({ specials: true }) : onUpsell('specials'))}>Oui{#if !pro}<i>Pro</i>{/if}</button>
   </div>
 </div>
 
@@ -83,6 +113,11 @@
         onclick={() => (locked ? onUpsell('teams') : onSet({ teamCount: n }))}
       >{n || 'Aucune'}{#if locked}<i>Pro</i>{/if}</button>
     {/each}
+    {#if pro}
+      <input class="ts-input ts-nombre" type="number" min="2" max="100" placeholder="Autre" disabled={!idle} aria-label="Autre nombre d'équipes"
+        value={SALON_TEAMS.includes(settings.teams?.length ?? 0) ? '' : settings.teams.length}
+        onchange={(e) => onSet({ teamCount: Math.round(+e.currentTarget.value) || 0 })}>
+    {/if}
   </div>
 </div>
 
@@ -91,7 +126,7 @@
     <span>Noms des équipes</span>
     <div class="ts-teamnames">
       {#each settings.teams as t (t.id)}
-        <input class="ts-input" style="--tc:var(--q{t.id})" value={t.name} maxlength="24" readonly={!pro}
+        <input class="ts-input" style="--tc:{teamColor(t.id)}" value={t.name} maxlength="24" readonly={!pro}
           onclick={() => { if (!pro) onUpsell('teamEdit'); }}
           onchange={(e) => onRenameTeam(t.id, e.target.value)}>
       {/each}
@@ -99,13 +134,11 @@
   </div>
 {/if}
 
-<div class="ts-field">
-  <span>Playlists</span>
-  <button class="sx-btn" onclick={onOpenPlaylists}>Changer de playlist</button>
-</div>
-
 <style>
+  .ts-titre { margin: 0 0 6px; font-size: 1.2rem; }
   .ts-note { font-size: 0.82rem; color: var(--dim); margin: 0 0 20px; }
+  .ts-playlist { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ts-playlist p { flex: 1; min-width: 160px; margin: 0; font-weight: 600; }
 
   .ts-field { margin-bottom: 20px; }
   .ts-field > span {
@@ -139,6 +172,9 @@
     background: rgb(var(--accent-rgb) / 0.16); color: var(--accent);
   }
 
+  .ts-son { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .ts-son b { font-size: 0.9rem; font-weight: 600; }
+  .ts-nombre { width: 90px; border-left-width: 1px; }
   .ts-teamnames { display: flex; flex-wrap: wrap; gap: 8px; }
   .ts-input {
     padding: 10px 12px; min-height: 44px; border-radius: 2px;

@@ -1,6 +1,7 @@
 <script>
   /** Barre du haut de l'écran TV : QR code pour rejoindre, manche, pause, volume, régie. */
   import { salonQrUrl } from '$lib/client/salonClient.js';
+  import HostSounds from './HostSounds.svelte';
 
   let { h } = $props();
 </script>
@@ -36,6 +37,7 @@
         oninput={(e) => h.applyVolume(parseInt(e.target.value))}
       />
     </div>
+    <HostSounds settings={h.settings} onSet={(patch) => h.socket?.emit('salon_update_settings', patch)} />
     {#if h.canChangePlaylists && h.phase !== 'starting'}
       <button class="sh-icon-btn" title="Changer de playlist" aria-label="Changer de playlist" onclick={h.openPicker}>♫</button>
     {/if}

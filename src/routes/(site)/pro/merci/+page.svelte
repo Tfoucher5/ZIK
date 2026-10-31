@@ -48,7 +48,7 @@
         <div><dt>{pro.plan === 'night' ? 'Actif jusqu’au' : 'Prochaine échéance'}</dt><dd>{endLabel}</dd></div>
         <div><dt>Compte</dt><dd>{zik.user?.email}</dd></div>
       </dl>
-      <p>ZIK Pro est actif. Ouvrez un salon en restant connecté avec ce compte : joueurs illimités, 8 équipes et la régie complète sont débloqués.</p>
+      <p>ZIK Pro est actif. Ouvrez un salon en restant connecté avec ce compte : joueurs et équipes illimités, le classement de la soirée et la régie complète sont débloqués.</p>
       <p class="merci-note">Votre paiement est bien enregistré : inutile de payer à nouveau.</p>
     {:else if waitedTooLong}
       <p>Le paiement est bien passé, l'activation prend un peu plus de temps que prévu. Rechargez la page dans une minute. Si rien ne bouge, écrivez à <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a> : c'est réglé dans la journée.</p>

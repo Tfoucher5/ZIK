@@ -80,6 +80,14 @@
               <li>{item}</li>
             {/each}
           </ul>
+          {#if entry.proItems?.length}
+            <h3 class="news-pro"><a href="/pro">Avec ZIK Pro</a></h3>
+            <ul class="news-items">
+              {#each entry.proItems as item (item)}
+                <li>{item}</li>
+              {/each}
+            </ul>
+          {/if}
         </div>
       </article>
     {/each}
@@ -209,6 +217,21 @@
   color: var(--mid);
   line-height: 1.55;
   font-size: 0.95rem;
+}
+
+.news-pro {
+  margin: 18px 0 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.news-pro a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.news-pro a:hover {
+  text-decoration: underline;
 }
 
 .news-footer-cta {

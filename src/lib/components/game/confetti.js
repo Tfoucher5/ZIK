@@ -9,16 +9,27 @@ const COLORS = [
   "#84cc16",
 ];
 
-// Pluie de confettis plein écran (styles .confetti-* dans game.css)
-export function launchConfetti() {
+const FALL = [
+  { transform: "translateY(0) rotate(0deg)", opacity: 1 },
+  { opacity: 1, offset: 0.75 },
+  { transform: "translateY(110vh) rotate(720deg)", opacity: 0 },
+];
+
+// Pluie de confettis plein écran, sans feuille de style : utilisable partout
+export function launchConfetti(count = 130) {
   const container = document.createElement("div");
-  container.className = "confetti-container";
+  container.style.cssText =
+    "position:fixed;inset:0;pointer-events:none;z-index:400;overflow:hidden;";
   document.body.appendChild(container);
-  for (let i = 0; i < 130; i++) {
+  for (let i = 0; i < count; i++) {
     const el = document.createElement("div");
-    el.className = "confetti-piece";
-    el.style.cssText = `left:${Math.random() * 100}%;background:${COLORS[Math.floor(Math.random() * COLORS.length)]};animation-delay:${Math.random() * 1.8}s;animation-duration:${2.5 + Math.random() * 2.5}s;width:${5 + Math.random() * 7}px;height:${6 + Math.random() * 9}px;transform:rotate(${Math.random() * 360}deg);border-radius:${Math.random() > 0.5 ? "50%" : "2px"};`;
+    el.style.cssText = `position:absolute;top:-12px;left:${Math.random() * 100}%;background:${COLORS[Math.floor(Math.random() * COLORS.length)]};width:${5 + Math.random() * 7}px;height:${6 + Math.random() * 9}px;border-radius:${Math.random() > 0.5 ? "50%" : "2px"};`;
     container.appendChild(el);
+    el.animate(FALL, {
+      duration: 2500 + Math.random() * 2500,
+      delay: Math.random() * 1800,
+      fill: "both",
+    });
   }
   setTimeout(() => container.remove(), 7000);
 }

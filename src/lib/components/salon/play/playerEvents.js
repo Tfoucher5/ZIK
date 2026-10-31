@@ -1,3 +1,5 @@
+import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
+
 // Réactions du téléphone joueur aux événements du salon (état p : SalonPlayer).
 export function listenPlayer(p, socket, c, u) {
   socket.on("salon_joined", (data) => onJoined(p, data, c, u));
@@ -19,6 +21,20 @@ export function listenPlayer(p, socket, c, u) {
     p.myTeam =
       players.find((pl) => pl.username === p.username)?.team ?? p.myTeam;
   });
+  socket.on("salon_video_outage", ({ retryIn }) => {
+    p.videoOutage = retryIn;
+  });
+  socket.on("salon_buzzed", ({ username }) => {
+    p.buzzer = username;
+  });
+  socket.on("salon_buzz_result", ({ username, correct }) => {
+    p.buzzer = null;
+    if (username === p.username && !correct) p.buzzLocked = true;
+  });
+  socket.on("salon_evening", ({ intermission, finale }) => {
+    p.intermission = intermission;
+    p.finale = finale;
+  });
   socket.on("salon_paused", ({ paused }) => {
     p.paused = paused;
   });
@@ -34,6 +50,13 @@ export function listenPlayer(p, socket, c, u) {
 
   socket.on("salon_round_start", (data) => {
     p.phase = "round";
+    p.special = data.special ?? null;
+    p.specialIntro = !!data.special;
+    if (data.special)
+      setTimeout(() => (p.specialIntro = false), SPECIAL_INTRO_MS);
+    p.videoOutage = null;
+    p.buzzer = null;
+    p.buzzLocked = false;
     p.round = data.round;
     p.total = data.total;
     p.choices = data.choices || null;
@@ -98,10 +121,14 @@ export function listenPlayer(p, socket, c, u) {
     }
   });
 
-  socket.on("salon_game_over", ({ scores, teams }) => {
+  socket.on("salon_game_over", ({ scores, teams, night }) => {
     p.phase = "gameover";
     p.finalScores = scores;
     p.teams = teams;
+    p.night = night;
+  });
+  socket.on("salon_night", ({ night }) => {
+    p.night = night;
   });
 
   socket.on("salon_error", ({ message }) => {
@@ -133,6 +160,9 @@ function onJoined(p, data, c, u) {
   localStorage.setItem("zik_salon_player_" + c, data.token);
   p.roster = data.players || [];
   p.teams = data.teams;
+  p.night = data.night ?? null;
+  p.intermission = data.evening?.intermission ?? null;
+  p.finale = data.evening?.finale ?? null;
   p.myTeam = data.team;
 
   if (data.reconnecting) {

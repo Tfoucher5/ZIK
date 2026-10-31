@@ -1,7 +1,13 @@
 import { calcSpeedBonus } from "../../services/music/playlist.js";
 import { cleanString } from "../../services/music/trackText.js";
 import { salonRooms } from "../../state.js";
-import { closeMsg, gradeGuess, markFound, partName } from "../scoring.js";
+import {
+  calcQcmPoints,
+  closeMsg,
+  gradeGuess,
+  markFound,
+  partName,
+} from "../scoring.js";
 import {
   broadcastRoster,
   broadcastScores,
@@ -9,6 +15,7 @@ import {
   staff,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
+import { roundMult } from "./specials.js";
 // Téléphones des joueurs : équipe et réponses
 export function registerAnswers(socket, io) {
   // Le joueur choisit son équipe avant la partie, pas en cours de route
@@ -46,16 +53,17 @@ export function registerAnswers(socket, io) {
 
     const timeTaken = (Date.now() - salon.game.startTime) / 1000;
     const bonus = calcSpeedBonus(timeTaken);
+    const pts = (1 + bonus) * roundMult(salon.game);
     const { hits, close } = gradeGuess(input, track, player);
     for (const part of hits) {
       markFound(player, part);
-      player.score += 1 + bonus;
+      player.score += pts;
       socket.emit("salon_feedback", {
         type: `success_${part.kind}`,
         extraIndex: part.kind === "extra" ? part.index : undefined,
         correct: true,
-        points: 1 + bonus,
-        msg: `${partName(part, track)} ! (+${1 + bonus} pts)`,
+        points: pts,
+        msg: `${partName(part, track)} ! (+${pts} pts)`,
       });
     }
     if (!hits.length)
@@ -126,4 +134,61 @@ export function registerAnswers(socket, io) {
     // Scores are NOT updated here — deferred to endRound
     checkEveryoneDone(code, io);
   });
+}
+
+// QCM : les points ne tombent qu'à la fin de la manche, avec le retour de chacun
+export function scoreQcmRound(salon, io) {
+  const game = salon.game;
+  // Determine firstFinder: the correct player with the lowest timeTaken
+  if (!game.firstFinder) {
+    const firstCorrect = Object.values(salon.players)
+      .filter(
+        (p) =>
+          p._fullFoundCounted &&
+          p._choiceIndex === game.correctChoiceIndex &&
+          !p._disconnected,
+      )
+      .sort(
+        (a, b) =>
+          (a._choiceTimeTaken ?? Infinity) - (b._choiceTimeTaken ?? Infinity),
+      )[0];
+    if (firstCorrect) game.firstFinder = firstCorrect.username;
+  }
+
+  for (const p of Object.values(salon.players)) {
+    if (!p.socketId || p._disconnected) continue;
+    if (p._fullFoundCounted) {
+      // They answered — evaluate
+      const correct = p._choiceIndex === game.correctChoiceIndex;
+      if (correct) {
+        const max = game.timerMax ?? salon.settings.roundDuration;
+        const points =
+          calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
+        p.score += points;
+        p.foundArtist = true;
+        p.foundTitle = true;
+        io.to(p.socketId).emit("salon_feedback", {
+          type: "success_title",
+          correct: true,
+          points,
+          msg: `Bonne réponse ! (+${points} pts)`,
+        });
+      } else {
+        io.to(p.socketId).emit("salon_feedback", {
+          type: "miss",
+          correct: false,
+          points: 0,
+          msg: "Raté !",
+        });
+      }
+    } else {
+      // Didn't answer in time
+      io.to(p.socketId).emit("salon_feedback", {
+        type: "miss",
+        correct: false,
+        points: 0,
+        msg: "Temps écoulé…",
+      });
+    }
+  }
 }

@@ -15,7 +15,7 @@
     <h2 id="pu-title">{PRO_FEATURES[feature] ?? 'Toute la régie, sans limite'}</h2>
     <p class="pu-lead">
       Cette fonction fait partie de ZIK Pro, pensé pour les bars, campings et événements :
-      joueurs illimités, jusqu'à 8 équipes et la régie complète.
+      joueurs et équipes illimités, le classement de la soirée et la régie complète.
     </p>
     <ul class="pu-plans">
       {#each PLANS as p (p.id)}

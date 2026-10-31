@@ -1,11 +1,28 @@
 import { getAdminClient } from "../../config.js";
 import { sendMail, ADMIN_EMAIL } from "../../mail/send.js";
 import { proSupportLaunch } from "../../mail/proSupport.js";
+import { proSoireeLaunch } from "../../mail/proSoiree.js";
 import { firstTime } from "../notify/push.js";
 
-const KEY = "mail:pro-support";
+// Mails aux clients Pro, du plus récent au plus ancien. La clé garde la trace
+// des envois : chaque client ne reçoit un mail donné qu'une fois.
+export const CAMPAIGNS = [
+  {
+    id: "pro-soiree",
+    label: "v3.21 · Soirée, buzzer, podium final",
+    build: proSoireeLaunch,
+  },
+  {
+    id: "pro-support",
+    label: "v3.15 · Support en direct",
+    build: proSupportLaunch,
+  },
+];
 
-async function recipients(scope) {
+export const campaign = (id) => CAMPAIGNS.find((c) => c.id === id) ?? null;
+const key = (c, userId) => `mail:${c.id}:${userId}`;
+
+async function recipients(c, scope) {
   const sb = getAdminClient();
   let q = sb.from("pro_subscriptions").select("user_id, current_period_end");
   if (scope === "active")
@@ -20,7 +37,7 @@ async function recipients(scope) {
         .select("key")
         .in(
           "key",
-          ids.map((id) => `${KEY}:${id}`),
+          ids.map((id) => key(c, id)),
         )
     : { data: [] };
   const done = new Set((sent ?? []).map((r) => r.key));
@@ -29,34 +46,40 @@ async function recipients(scope) {
   );
   return users
     .filter((u) => u?.email)
-    .map((u) => ({
-      id: u.id,
-      email: u.email,
-      sent: done.has(`${KEY}:${u.id}`),
-    }));
+    .map((u) => ({ id: u.id, email: u.email, sent: done.has(key(c, u.id)) }));
 }
 
 export async function proMailingStatus() {
-  const [active, all] = await Promise.all([
-    recipients("active"),
-    recipients("all"),
-  ]);
   const count = (list) => ({
     total: list.length,
     pending: list.filter((r) => !r.sent).length,
   });
-  return { active: count(active), all: count(all) };
+  return Promise.all(
+    CAMPAIGNS.map(async (c) => {
+      const [active, all] = await Promise.all([
+        recipients(c, "active"),
+        recipients(c, "all"),
+      ]);
+      return {
+        id: c.id,
+        label: c.label,
+        subject: c.build().subject,
+        active: count(active),
+        all: count(all),
+      };
+    }),
+  );
 }
 
-export const sendProMailingTest = () =>
-  sendMail({ to: ADMIN_EMAIL, ...proSupportLaunch() });
+export const sendProMailingTest = (c) =>
+  sendMail({ to: ADMIN_EMAIL, ...c.build() });
 
-// Chaque client ne reçoit le mail qu'une fois, même si on relance l'envoi
-export async function sendProMailing(scope) {
-  const mail = proSupportLaunch();
+// Relancer l'envoi ne renvoie rien à ceux qui l'ont déjà reçu
+export async function sendProMailing(c, scope) {
+  const mail = c.build();
   let sent = 0;
-  for (const r of await recipients(scope)) {
-    if (r.sent || !(await firstTime(`${KEY}:${r.id}`))) continue;
+  for (const r of await recipients(c, scope)) {
+    if (r.sent || !(await firstTime(key(c, r.id)))) continue;
     if (await sendMail({ to: r.email, ...mail })) sent++;
   }
   return sent;

@@ -1,3 +1,6 @@
+import { playSound, SOUNDS } from "./sounds.js";
+import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
+
 // Réactions de l'écran TV aux événements du salon (état h : SalonHost).
 export function listenHost(h, socket) {
   socket.on("salon_host_joined", (data) => {
@@ -6,11 +9,41 @@ export function listenHost(h, socket) {
     h.settings = data.settings || {};
     h.players = data.players || [];
     h.teams = data.teams;
+    h.night = data.night;
+    h.intermission = data.evening?.intermission ?? null;
+    h.finale = data.evening?.finale ?? null;
+    h.buzzer = data.buzzer;
+    h.mediaCheck = data.mediaCheck;
     h.paused = data.paused;
     h.phase = data.phase || "lobby";
     h.round = data.currentRound || 0;
     h.total = h.settings.maxRounds || 10;
     h.chat.update(data.support);
+  });
+
+  socket.on("salon_night", ({ night }) => {
+    h.night = night;
+  });
+  socket.on("salon_evening", ({ intermission, finale }) => {
+    h.intermission = intermission;
+    h.finale = finale;
+  });
+  socket.on("salon_buzzed", (buzzer) => {
+    h.buzzer = buzzer;
+    if (h.settings.buzzSound !== false) playSound(SOUNDS.buzz, h.volume / 100);
+  });
+  // Vidéo bloquée par YouTube pendant la manche : l'extrait audio prend le relais
+  socket.on("salon_use_audio", ({ audioUrl }) => {
+    h.hostCenter?.useAudio(audioUrl);
+  });
+  socket.on("salon_media_check", (check) => {
+    h.mediaCheck = check;
+  });
+  socket.on("salon_video_outage", ({ retryIn }) => {
+    h.videoOutage = retryIn;
+  });
+  socket.on("salon_buzz_result", () => {
+    h.buzzer = null;
   });
 
   socket.on("salon_pro", ({ pro }) => {
@@ -29,7 +62,7 @@ export function listenHost(h, socket) {
   socket.on("salon_paused", ({ paused }) => {
     h.paused = paused;
     if (paused) h.hostCenter?.pauseVideo();
-    else h.hostCenter?.resumeVideo();
+    else if (!h.flashCut) h.hostCenter?.resumeVideo();
     if (paused) h.clearAutoNext();
   });
 
@@ -53,6 +86,10 @@ export function listenHost(h, socket) {
 
   socket.on("salon_round_start", (data) => {
     h.phase = "round";
+    h.special = data.special ?? null;
+    h.videoOutage = null;
+    h.buzzer = null;
+    h.flashCut = false;
     h.round = data.round;
     h.total = data.total;
     h.roundEnd = null;
@@ -69,13 +106,28 @@ export function listenHost(h, socket) {
       foundFeatCount: 0,
       totalFeatCount: data.featCount || 0,
     }));
-    h.hostCenter?.loadVideo(data.videoId, data.startSeconds);
+    if (!data.special) return h.hostCenter?.loadMedia(data);
+    // Manche spéciale : on prévient tout le monde avant la musique
+    h.specialIntro = true;
+    const round = data.round;
+    setTimeout(() => {
+      h.specialIntro = false;
+      if (h.phase === "round" && h.round === round)
+        h.hostCenter?.loadMedia(data);
+    }, SPECIAL_INTRO_MS);
   });
 
   socket.on("salon_timer_started", ({ max }) => {
     h.timerVal = max;
     h.timerMax = max;
     h.timerStarted = true;
+    if (h.special !== "flash") return;
+    const round = h.round;
+    setTimeout(() => {
+      if (h.phase !== "round" || h.round !== round) return;
+      h.flashCut = true;
+      h.hostCenter?.pauseVideo();
+    }, 5000);
   });
   socket.on("salon_timer_update", ({ current, max }) => {
     h.timerVal = current;
@@ -107,6 +159,7 @@ export function listenHost(h, socket) {
 
   socket.on("salon_round_end", (data) => {
     h.phase = "summary";
+    h.buzzer = null;
     h.choices = null;
     h.roundEnd = data;
     h.teams = data.teams;
@@ -127,7 +180,9 @@ export function listenHost(h, socket) {
     h.phase = "gameover";
     h.gameOver = data;
     h.teams = data.teams;
+    h.night = data.night;
     h.clearAutoNext();
+    h.hostCenter?.fadeOut();
   });
 
   socket.on("salon_restarted", ({ players }) => {

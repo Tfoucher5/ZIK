@@ -1,4 +1,5 @@
 <script>
+  import { teamColor } from '$lib/data/salonOptions.js';
   import { onMount, onDestroy } from 'svelte';
   import JoinForm from '$lib/components/salon/play/JoinForm.svelte';
   import RoundPlay from '$lib/components/salon/play/RoundPlay.svelte';
@@ -6,6 +7,7 @@
   import FeedbackOverlay from '$lib/components/salon/play/FeedbackOverlay.svelte';
   import PlayLobby from '$lib/components/salon/play/PlayLobby.svelte';
   import PlayBoard from '$lib/components/salon/play/PlayBoard.svelte';
+  import PlayEvening from '$lib/components/salon/play/PlayEvening.svelte';
   import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -53,7 +55,7 @@
         <div class="sp-name">{p.username}</div>
         <div class="sp-salon">
           Salon {p.code}
-          {#if p.teamName}<span class="sp-team-tag" style="--tc:var(--q{p.myTeam})">{p.teamName}</span>{/if}
+          {#if p.teamName}<span class="sp-team-tag" style="--tc:{teamColor(p.myTeam)}">{p.teamName}</span>{/if}
         </div>
       </div>
       <div class="sp-score">{p.myScore}<small>points</small></div>
@@ -75,6 +77,8 @@
           bind:guess={p.guess}
           onSubmitGuess={p.submitGuess}
           onSubmitChoice={p.submitChoice}
+          special={p.special} specialIntro={p.specialIntro} buzzer={p.buzzer} buzzLocked={p.buzzLocked} username={p.username}
+          onBuzz={p.buzz}
         />
 
         {#if p.board.length > 1 && (p.answerMode === 'multiple' ? p.chosenIndex !== null && p.revealCorrectIndex === null : p.allFound)}
@@ -83,17 +87,22 @@
       {:else if p.phase === 'summary' || p.phase === 'gameover'}
         <SummaryView
           phase={p.phase} roundEnd={p.roundEnd} finalScores={p.finalScores} scores={p.scores}
-          username={p.username} teams={p.teams} myTeam={p.myTeam}
+          username={p.username} teams={p.teams} night={p.night} myTeam={p.myTeam}
           round={p.round} total={p.total}
           onLeave={p.leave}
         />
       {/if}
 
+      {#if p.videoOutage}<p class="sp-error">Petite pause technique : les vidéos ne répondent pas, la partie reprend toute seule.</p>{/if}
       {#if p.error}<p class="sp-error">{p.error}</p>{/if}
     </div>
   </main>
 
-  {#if p.paused}
+  {#if p.intermission || p.finale}
+    <PlayEvening intermission={p.intermission} finale={p.finale} username={p.username} myTeam={p.myTeam} />
+  {/if}
+
+  {#if p.paused && !p.buzzer}
     <div class="sp-pause"><span>Pause</span><small>L'hôte a mis la partie en pause</small></div>
   {/if}
 

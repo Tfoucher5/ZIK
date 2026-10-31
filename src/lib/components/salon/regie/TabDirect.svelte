@@ -1,4 +1,5 @@
 <script>
+  import RegieAnswer from './RegieAnswer.svelte';
   /**
    * Onglet « Direct » : ce qui se passe maintenant.
    *
@@ -43,16 +44,7 @@
 {#if track}
   <section class="td-bloc">
     <h3 class="sx-kicker">{phase === 'round' ? 'Titre en cours' : 'Dernier titre'}</h3>
-    <div class="td-track">
-      {#if track.cover}<img src={track.cover} alt="" width="72" height="72" loading="lazy" decoding="async">{/if}
-      <div class="td-track-id">
-        <b>{track.artist} - {track.title}</b>
-        {#if answerMode === 'multiple' && track.correctChoiceIndex != null}
-          <small>Bonne réponse : choix {track.correctChoiceIndex + 1}</small>
-        {/if}
-        {#if phase === 'round'}<small class="td-secret">Visible sur cet écran uniquement</small>{/if}
-      </div>
-    </div>
+    <RegieAnswer {track} {phase} {answerMode} />
     {#if phase === 'round' || phase === 'summary'}
       <div class="td-report">
         {#if signale}
@@ -96,12 +88,6 @@
   .td-help li { font-size: 0.9rem; line-height: 1.5; color: var(--mid); }
   .td-help b { color: var(--text); }
 
-  .td-track { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
-  .td-track img { width: 72px; height: 72px; border-radius: 3px; object-fit: cover; flex-shrink: 0; background: var(--surface); }
-  .td-track-id { min-width: 0; }
-  .td-track-id b { display: block; font-size: 1.05rem; line-height: 1.3; }
-  .td-track-id small { display: block; font-size: 0.76rem; color: var(--dim); margin-top: 4px; }
-  .td-secret { font-style: italic; }
 
   .td-report { margin-top: 14px; font-size: 0.82rem; color: var(--dim); }
   .td-report p { color: var(--mid); }

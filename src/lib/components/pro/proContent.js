@@ -2,7 +2,10 @@ import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/data/proPlans.js";
 
 export const COMPARE = [
   ["Joueurs par salon", `jusqu'à ${FREE_MAX_PLAYERS}`, "illimité"],
-  ["Équipes", `jusqu'à ${FREE_MAX_TEAMS}`, "jusqu'à 8, renommables"],
+  ["Équipes", `jusqu'à ${FREE_MAX_TEAMS}`, "illimitées, renommables"],
+  ["Classement", "partie par partie", "cumulé sur la soirée, podium final"],
+  ["Modes de réponse", "texte libre, 4 choix", "+ buzzer avec l'animateur"],
+  ["Manches spéciales", "non", "points doubles, intro éclair, sprint"],
   [
     "Régie sur un second écran",
     "lancer, pause, manche suivante, exclure un joueur",
@@ -150,7 +153,7 @@ export const FAQ_JSON_LD = JSON.stringify({
     ),
     question(
       "Est-ce que c'est payant ?",
-      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque les joueurs illimités, 8 équipes et la régie complète, dès 7,90 € la soirée.`,
+      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque les joueurs et équipes illimités, le classement de la soirée et la régie complète, dès 7,90 € la soirée.`,
     ),
     question(
       "Quel matériel faut-il prévoir ?",

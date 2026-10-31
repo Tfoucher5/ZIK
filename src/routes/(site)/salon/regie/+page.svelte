@@ -7,6 +7,9 @@
   import RegieActions from '$lib/components/salon/regie/RegieActions.svelte';
   import TabDirect from '$lib/components/salon/regie/TabDirect.svelte';
   import TabPlayers from '$lib/components/salon/regie/TabPlayers.svelte';
+  import NightBoard from '$lib/components/salon/regie/NightBoard.svelte';
+  import RegieEvening from '$lib/components/salon/regie/RegieEvening.svelte';
+  import MediaCheck from '$lib/components/salon/regie/MediaCheck.svelte';
   import TabSettings from '$lib/components/salon/regie/TabSettings.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import { SalonRegie, PHASES } from '$lib/components/salon/regie/salonRegie.svelte.js';
@@ -36,6 +39,12 @@
     onHelp={() => (r.helpOpen = true)}
   />
 
+  {#if r.videoOutage}
+    <p class="rg-outage" role="status">
+      <b>Les vidéos YouTube ne répondent pas.</b> La partie attend et réessaie toute seule (prochain essai dans {r.videoOutage} s). Personne ne perd ses points. Si ça dure, appelle un admin.
+    </p>
+  {/if}
+
   {#if r.error}
     <div class="rg-vide">
       <p class="rg-error">{r.error}</p>
@@ -48,6 +57,7 @@
 
     <div class="rg-corps">
       <div class="rg-zone">
+        {#if r.idle && r.mediaCheck}<div class="rg-media"><MediaCheck check={r.mediaCheck} /></div>{/if}
         {#if r.onglet === 'direct'}
           <TabDirect
             phase={r.phase} code={r.code} track={r.track} answerMode={r.settings.answerMode}
@@ -56,6 +66,7 @@
             onReport={(reason) => r.send('salon_report_video', { reason })}
           />
         {:else if r.onglet === 'joueurs'}
+          <NightBoard night={r.night} pro={r.pro} onReset={() => r.send('salon_reset_night')} onUpsell={() => (r.upsell = 'night')} />
           <TabPlayers
             players={r.players} teams={r.teams} phase={r.phase} code={r.code} pro={r.pro} step={r.step} confirmKick={r.confirmKick}
             onScore={(username, delta) => r.gate('score', () => r.send('salon_adjust_score', { username, delta }))}
@@ -64,20 +75,27 @@
             onTeam={(username, team) => r.send('salon_set_player_team', { username, team })}
           />
         {:else}
+          {#if r.idle}
+            <RegieEvening pro={r.pro} night={r.night} intermission={r.intermission} finale={r.finale} finaleSound={r.settings.finaleSound !== false}
+              onSend={r.send} onUpsell={(f) => (r.upsell = f)} />
+          {/if}
           <TabSettings
             settings={r.settings} phase={r.phase} round={r.round} pro={r.pro}
+            playlistNames={r.allPlaylists.filter((pl) => r.settings.playlistIds?.includes(pl.id)).map((pl) => pl.name)}
             onSet={r.setSetting}
             onRenameTeam={(team, name) => r.send('salon_rename_team', { team, name })}
             onUpsell={(f) => (r.upsell = f)}
             onOpenPlaylists={r.openPlaylists}
+            onSound={(patch) => r.send('salon_update_settings', patch)}
           />
         {/if}
       </div>
     </div>
 
     <RegieActions
-      phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length}
+      phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} buzzer={r.buzzer}
       onAction={(ev) => r.send(ev)}
+      onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
       onGate={r.gate}
     />
   {/if}
@@ -149,6 +167,18 @@
   }
   .rg-muted { color: var(--mid); font-size: 0.88rem; line-height: 1.5; }
   .rg-error { max-width: 460px; color: var(--danger); font-size: 0.95rem; line-height: 1.6; margin: 0; }
+
+  .rg-media { margin-bottom: 18px; }
+  .rg-outage {
+    margin: 0;
+    padding: 12px 18px;
+    background: rgb(248 113 113 / 0.14);
+    border-bottom: 1px solid var(--danger);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .rg-outage b { color: var(--danger); }
 
   .rg-notice {
     position: fixed;

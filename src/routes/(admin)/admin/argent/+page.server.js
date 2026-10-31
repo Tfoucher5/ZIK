@@ -3,6 +3,7 @@ import { getStripe } from "$lib/server/stripe.js";
 import { fail } from "@sveltejs/kit";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import {
+  campaign,
   proMailingStatus,
   sendProMailing,
   sendProMailingTest,
@@ -71,18 +72,23 @@ export async function load({ url }) {
 }
 
 export const actions = {
-  mailTest: async () => {
-    if (!(await sendProMailingTest()))
+  mailTest: async ({ request }) => {
+    const c = campaign((await request.formData()).get("campaign"));
+    if (!c) return fail(400, { mailError: "Mail inconnu." });
+    if (!(await sendProMailingTest(c)))
       return fail(500, {
         mailError: "Envoi impossible (clé Resend absente ?).",
       });
     return { mailTestSent: true };
   },
   mailSend: async ({ request, locals }) => {
-    const scope =
-      (await request.formData()).get("scope") === "all" ? "all" : "active";
-    const sent = await sendProMailing(scope);
+    const form = await request.formData();
+    const c = campaign(form.get("campaign"));
+    if (!c) return fail(400, { mailError: "Mail inconnu." });
+    const scope = form.get("scope") === "all" ? "all" : "active";
+    const sent = await sendProMailing(c, scope);
     await logAdminAction(locals.adminId, "pro_mailing", null, "site", {
+      campaign: c.id,
       scope,
       sent,
     });

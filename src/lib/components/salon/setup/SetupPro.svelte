@@ -14,7 +14,7 @@
 
 {#if pro}
   <p class="st-pro-actif">
-    <b>ZIK Pro actif</b> : joueurs illimités, jusqu'à 8 équipes, régie complète.
+    <b>ZIK Pro actif</b> : joueurs et équipes illimités, classement de la soirée, régie complète.
     {#if proRow.stripe_customer_id}
       <button type="button" class="st-pro-manage" disabled={portalBusy} onclick={onPortal}>
         {portalBusy ? 'Ouverture…' : proRow.plan === 'night' ? 'Mes factures' : 'Gérer mon abonnement'}
@@ -28,7 +28,8 @@
       <h3>Pour les bars, les campings et les événements</h3>
       <ul>
         <li>Joueurs illimités, au lieu de {FREE_MAX_PLAYERS}</li>
-        <li>Jusqu'à 8 équipes, au lieu de {FREE_MAX_TEAMS}</li>
+        <li>Autant d'équipes que voulu, au lieu de {FREE_MAX_TEAMS}</li>
+        <li>Le classement de la soirée, cumulé partie après partie</li>
         <li>Régie complète : révéler, couper, ajuster les scores</li>
       </ul>
     </div>

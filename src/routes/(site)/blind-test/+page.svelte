@@ -82,7 +82,7 @@
     Fan d'un artiste en particulier ? <a href="/blind-test/artistes">Blind test par artiste</a> : Ninho, Jul, GIMS, Aya Nakamura…
   </p>
   <p class="bt-own">
-    Vous animez un lieu ou un événement ? <a href="/pro">ZIK Pro</a> : joueurs illimités, jusqu'à 8 équipes et une régie complète.
+    Vous animez un lieu ou un événement ? <a href="/pro">ZIK Pro</a> : joueurs et équipes illimités, et une régie complète.
   </p>
   <p class="bt-own">
     Votre thème n'est pas là ? <a href="/salon">Ouvrez un salon</a> avec vos propres playlists Deezer.
