@@ -66,7 +66,10 @@ export async function syncSubscription(sub, sessionId) {
     user_id: userId,
     plan,
     status,
-    current_period_end: new Date(item.current_period_end * 1000).toISOString(),
+    // Fin programmée (résiliation à date) : on affiche la vraie date de fin
+    current_period_end: new Date(
+      (sub.cancel_at ?? item.current_period_end) * 1000,
+    ).toISOString(),
     stripe_customer_id: sub.customer,
     stripe_subscription_id: sub.id,
     updated_at: new Date().toISOString(),
