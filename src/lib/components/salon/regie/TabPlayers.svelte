@@ -1,4 +1,5 @@
 <script>
+  import { teamColor } from '$lib/data/salonOptions.js';
   /**
    * Onglet « Joueurs » : qui est là, qui a répondu, ajustement des scores.
    *
@@ -41,7 +42,7 @@
 {#if teams}
   <ol class="tp-teams">
     {#each teams as t (t.id)}
-      <li style="--tc:var(--q{t.id})"><b>{t.name}</b><span>{t.members.length} j.</span><span class="pts">{t.score}</span></li>
+      <li style="--tc:{teamColor(t.id)}"><b>{t.name}</b><span>{t.members.length} j.</span><span class="pts">{t.score}</span></li>
     {/each}
   </ol>
 {/if}
@@ -56,7 +57,7 @@
     {#each players as p (p.username)}
       <li class:off={p.offline}>
         <span class="tp-nom">
-          {#if teams && p.team != null}<i class="tp-pastille" style="--tc:var(--q{p.team})"></i>{/if}{p.username}
+          {#if teams && p.team != null}<i class="tp-pastille" style="--tc:{teamColor(p.team)}"></i>{/if}{p.username}
           {#if p.offline}<small>déconnecté</small>{/if}
         </span>
 

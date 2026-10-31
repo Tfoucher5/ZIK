@@ -51,13 +51,41 @@
   <p>En mode QCM, les 4 options proposées incluent toujours la bonne réponse (artiste + titre) et 3 leurres générés automatiquement depuis d'autres titres de la playlist. <strong>Attention :</strong> parfois, plusieurs titres du même artiste peuvent apparaître dans les choix — il faut donc vraiment reconnaître la chanson et pas seulement l'artiste ! Les formes et couleurs sont fixes :</p>
   <DocTable {...qcmShapes} />
 
+  <h3>Mode buzzer (ZIK Pro)</h3>
+  <p>
+    Chaque téléphone affiche un gros bouton <strong>Buzz</strong>. Le premier qui appuie coupe la musique, son nom s'affiche en grand sur la TV et il répond <strong>à voix haute</strong>. L'animateur valide depuis la régie (ou l'écran TV) : bonne réponse, le joueur marque des points selon sa rapidité et la manche se termine ; raté, la musique repart et ce joueur ne peut plus buzzer jusqu'à la manche suivante.
+  </p>
+
+  <h3>Manches spéciales (ZIK Pro)</h3>
+  <p>Une fois activées, environ une manche sur quatre devient spéciale, au hasard (jamais la première, jamais deux de suite). La TV et les téléphones l'annoncent :</p>
+  <ul class="doc-list">
+    <li><strong>Points doubles :</strong> chaque bonne réponse rapporte deux fois plus</li>
+    <li><strong>Intro éclair :</strong> la musique s'arrête au bout de 5 secondes</li>
+    <li><strong>Sprint :</strong> deux fois moins de temps pour répondre</li>
+  </ul>
+
+  <h3>Toute la soirée dans le même salon</h3>
+  <ul class="doc-list">
+    <li><strong>Partie suivante :</strong> à la fin d'une partie, la régie ouvre directement les réglages de la suivante (playlist, manches, mode). Les joueurs restent connectés, sans ressaisir de code.</li>
+    <li><strong>Classement de la soirée (ZIK Pro) :</strong> les points de chaque partie s'additionnent. La TV l'affiche entre deux parties, chaque téléphone indique sa place.</li>
+    <li><strong>Entracte :</strong> depuis la régie, la TV affiche une pause, avec une heure de reprise si vous en choisissez une. Rien ne redémarre tout seul.</li>
+    <li><strong>Podium final (ZIK Pro) :</strong> « Terminer la soirée » révèle sur la TV le 3e, le 2e, puis le vainqueur après un roulement de tambour, sous les confettis.</li>
+  </ul>
+
+  <h3>Une musique fiable</h3>
+  <ul class="doc-list">
+    <li><strong>Vérification dès le lobby :</strong> toute la musique de la partie est vérifiée avant le lancement, la TV et la régie affichent ce qui est prêt.</li>
+    <li><strong>Extrait audio en secours :</strong> si la vidéo YouTube d'un titre manque, la manche se joue avec son extrait audio de 30 secondes.</li>
+    <li><strong>Pause automatique en cas de panne :</strong> si les vidéos ne répondent plus du tout, la partie attend et réessaie toute seule, sans rien perdre.</li>
+  </ul>
+
   <h3>Reconnexion automatique</h3>
   <p>
     Si un joueur perd sa connexion réseau (tunnel, coupure Wi-Fi…), le système lui accorde une <strong>fenêtre de grâce de 90 secondes</strong>. Son score est conservé et il reprend la partie dès qu'il se reconnecte, sans avoir à ressaisir son nom ni rejoindre à nouveau.
   </p>
 
   <DocTip warn label="Important :">
-    Le salon est <strong>éphémère</strong> — il disparaît dès que l'hôte ferme l'onglet ou se déconnecte. Les scores ne sont pas sauvegardés en base de données. Pensez à noter les résultats finaux si vous souhaitez les conserver.
+    Le salon est <strong>éphémère</strong> : il se ferme si plus aucun écran TV ni régie n'est ouvert pendant 10 minutes en pleine partie, ou 2 heures entre deux parties et pendant une pause. Pensez à noter les résultats finaux si vous souhaitez les conserver.
   </DocTip>
 
   <DocTip label="Astuce soirée :">

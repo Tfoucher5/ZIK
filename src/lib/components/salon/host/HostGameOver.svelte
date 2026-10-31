@@ -1,5 +1,6 @@
 <script>
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
+  import { SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
 
   /** Fin de partie sur la TV : vainqueur, podium révélé pas à pas, playlist et réglages de la suivante. */
   let {
@@ -26,6 +27,7 @@
   let steadiest = $derived([...finalScores].sort((a, b) => b.found - a.found)[0]);
 
   let revealStep = $state(0);
+  let confirmNew = $state(false);
 
   $effect(() => {
     revealStep = 0;
@@ -38,7 +40,7 @@
 <section class="sh-layer sh-over" class:on={phase === 'gameover'}>
   {#if winner}
     <div class="sh-over-grid">
-      <div class="sh-winner" class:on={revealStep >= 3} style="--tc:{winner.team != null ? `var(--q${winner.team})` : 'var(--accent)'}">
+      <div class="sh-winner" class:on={revealStep >= 3} style="--tc:{winner.team != null ? teamColor(winner.team) : 'var(--accent)'}">
         <p class="sx-kicker">{finalTeams ? 'Équipe gagnante' : 'Vainqueur'} · {gameOver?.rounds ?? total} manches</p>
         <div class="sh-winner-name">{winner.name}</div>
         <div class="sh-winner-pts">{winner.score}<small>{finalTeams ? 'pts de moyenne' : 'pts'}</small></div>
@@ -47,7 +49,7 @@
             <div><dt>Meilleur joueur</dt><dd>{bestPlayer.username} <small>{bestPlayer.score} pts</small></dd></div>
           {/if}
           {#if fastest?.first > 0}
-            <div><dt>Le plus rapide</dt><dd>{fastest.username} <small>{fastest.first} fois premier</small></dd></div>
+            <div><dt>Le plus rapide</dt><dd>{fastest.username} <small>{fastest.first} fois 1re réponse</small></dd></div>
           {/if}
           {#if steadiest?.found > 0}
             <div><dt>Le plus régulier</dt><dd>{steadiest.username} <small>{steadiest.found} titre{steadiest.found > 1 ? 's' : ''} trouvé{steadiest.found > 1 ? 's' : ''}</small></dd></div>
@@ -57,7 +59,7 @@
 
       <div class="sh-podium">
         {#each podiumSlots as slot (slot.pos)}
-          <div class="sh-po p{slot.pos}" class:on={slot.e && revealStep >= slot.step} style="--tc:{slot.e?.team != null ? `var(--q${slot.e.team})` : 'var(--text)'}">
+          <div class="sh-po p{slot.pos}" class:on={slot.e && revealStep >= slot.step} style="--tc:{slot.e?.team != null ? teamColor(slot.e.team) : 'var(--text)'}">
             {#if slot.e}
               <span class="sh-po-name">{slot.e.name}</span>
               <span class="sh-po-pts">{slot.e.score} pts · {slot.e.sub}</span>
@@ -89,11 +91,12 @@
       <div class="sh-seg" role="radiogroup" aria-label="Réponses">
         <button class:on={settings.answerMode === 'free'} onclick={() => onSetting({ answerMode: 'free' })}>Texte libre</button>
         <button class:on={settings.answerMode === 'multiple'} onclick={() => onSetting({ answerMode: 'multiple' })}>4 choix</button>
+        {#if pro}<button class:on={settings.answerMode === 'buzzer'} onclick={() => onSetting({ answerMode: 'buzzer' })}>Buzzer</button>{/if}
       </div>
       <div class="sh-seg" role="radiogroup" aria-label="Équipes">
         <!-- Écran public : on ne montre que ce que le salon peut faire -->
-        {#each [[0, 'Solo'], [2, '2 équipes'], [3, '3'], [4, '4'], [6, '6'], [8, '8']].filter(([n]) => pro || n <= FREE_MAX_TEAMS) as [n, label] (n)}
-          <button class:on={(settings.teams?.length ?? 0) === n} onclick={() => onSetting({ teamCount: n })}>{label}</button>
+        {#each SALON_TEAMS.filter(n => pro || n <= FREE_MAX_TEAMS) as n (n)}
+          <button class:on={(settings.teams?.length ?? 0) === n} onclick={() => onSetting({ teamCount: n })}>{n === 0 ? 'Solo' : n === 2 ? '2 équipes' : n}</button>
         {/each}
       </div>
       <div class="sh-seg" role="radiogroup" aria-label="Manches">
@@ -104,10 +107,27 @@
     </div>
   </div>
   <div class="sh-over-actions">
-    <button class="sx-btn sx-btn-primary" onclick={onRestart}>Rejouer</button>
+    <button class="sx-btn sx-btn-primary" onclick={onRestart}>Lancer la partie suivante</button>
     {#if onChangePlaylists}
       <button class="sx-btn" onclick={onChangePlaylists}>Changer de playlist</button>
     {/if}
-    <button class="sx-btn" onclick={onNewSalon}>Nouveau salon</button>
+    <!-- Un nouveau salon fait ressaisir le code à tout le monde : on perd des joueurs -->
+    <button class="sh-new-link" onclick={() => (confirmNew = true)}>Nouveau salon…</button>
   </div>
+
+  {#if confirmNew}
+    <div class="sh-new-confirm" role="alertdialog" aria-labelledby="sh-new-title">
+      <p class="sx-kicker">Attention</p>
+      <h2 id="sh-new-title">Fermer ce salon ?</h2>
+      <ul>
+        <li>Tous les joueurs devront <b>ressaisir un nouveau code</b>.</li>
+        {#if gameOver?.night}<li>Le <b>classement de la soirée</b> repartira de zéro.</li>{/if}
+      </ul>
+      <p>Pour changer de playlist ou de réglages, inutile : « Lancer la partie suivante » garde tout le monde.</p>
+      <div class="sh-new-actions">
+        <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={() => (confirmNew = false)}>Rester dans ce salon</button>
+        <button class="sx-btn sx-btn-lg" onclick={onNewSalon}>Fermer et créer un nouveau salon</button>
+      </div>
+    </div>
+  {/if}
 </section>

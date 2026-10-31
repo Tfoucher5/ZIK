@@ -242,3 +242,33 @@ describe("ajustement du score d'un joueur", () => {
     expect(score()).toBe(120);
   });
 });
+
+describe("sons de la TV", () => {
+  let regie, upsell;
+
+  beforeEach(() => {
+    for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+    salonDeTest();
+    const h = makeIo();
+    registerSalon(h.io);
+    regie = makeSocket("regie", h.rooms);
+    upsell = 0;
+    regie.emit = (ev) => {
+      if (ev === "salon_pro_required") upsell++;
+    };
+    h.connecte(regie);
+    regie.handlers.salon_join_control({ code: CODE, key: CLE });
+  });
+
+  it("se coupent séparément, en pleine partie, même sans ZIK Pro", () => {
+    const salon = salonRooms[CODE];
+    salon.pro = false;
+    salon.game.phase = "round";
+    regie.handlers.salon_update_settings({ buzzSound: false });
+    expect(salon.settings.buzzSound).toBe(false);
+    expect(salon.settings.finaleSound).not.toBe(false);
+    regie.handlers.salon_update_settings({ finaleSound: false });
+    expect(salon.settings.finaleSound).toBe(false);
+    expect(upsell).toBe(0);
+  });
+});

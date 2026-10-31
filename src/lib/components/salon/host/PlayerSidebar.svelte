@@ -1,20 +1,29 @@
 <script>
+  import { teamColor } from '$lib/data/salonOptions.js';
   import { flip } from 'svelte/animate';
 
-  let { players = [], teams = null, phase = 'lobby', answerMode = 'free', deltas = {} } = $props();
+  let { players = [], teams = null, night = null, phase = 'lobby', answerMode = 'free', deltas = {} } = $props();
 
   let inGame = $derived(phase === 'round' || phase === 'summary');
+  // Fin de partie : le podium montre la partie, la colonne montre la soirée
+  let soiree = $derived(phase === 'gameover' && night?.games > 1 ? night : null);
+  let list = $derived(
+    soiree
+      ? soiree.players.map(n => ({ ...players.find(p => p.username === n.username), ...n }))
+      : players
+  );
+  let ranked = $derived(soiree ? soiree.teams : teams);
   // En équipes : chaque équipe suivie de ses joueurs, dans l'ordre du classement
   let groups = $derived(
-    teams
-      ? teams.map(t => ({ team: t, members: players.filter(p => p.team === t.id) }))
-      : [{ team: null, members: players }]
+    ranked
+      ? ranked.map(t => ({ team: t, members: list.filter(p => p.team === t.id) }))
+      : [{ team: null, members: list }]
   );
 </script>
 
 <aside class="sh-board">
   <div class="sh-board-head">
-    <span class="sx-kicker">{inGame || phase === 'gameover' ? 'Classement' : 'Joueurs'}</span>
+    <span class="sx-kicker">{soiree ? `Soirée · ${soiree.games} parties` : inGame || phase === 'gameover' ? 'Classement' : 'Joueurs'}</span>
     <span class="sx-kicker">{players.length}</span>
   </div>
   {#if players.length === 0}
@@ -22,7 +31,7 @@
   {:else}
     <div class="sh-board-list">
       {#each groups as g (g.team?.id ?? 'solo')}
-        <section class="sh-group" animate:flip={{ duration: 500 }} style="--tc:{g.team ? `var(--q${g.team.id})` : 'transparent'}">
+        <section class="sh-group" animate:flip={{ duration: 500 }} style="--tc:{g.team ? teamColor(g.team.id) : 'transparent'}">
           {#if g.team}
             <header class="sh-group-head">
               <b>{g.team.name}</b>

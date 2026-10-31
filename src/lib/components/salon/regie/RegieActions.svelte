@@ -16,7 +16,7 @@
    *   onGate: (feature: string, fn: () => void) => void,
    * }}
    */
-  let { phase, paused, pro, joueurs, onAction, onGate } = $props();
+  let { phase, paused, pro, joueurs, buzzer = null, onAction, onGate, onJudge } = $props();
 
   let menuOuvert = $state(false);
   let confirmeFin = $state(false);
@@ -36,12 +36,15 @@
 <div class="ra">
   <div class="ra-interieur">
   <div class="ra-principal">
-    {#if phase === 'lobby'}
+    {#if buzzer && phase === 'round'}
+      <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onJudge(true)}>Bonne réponse · {buzzer.username}</button>
+      <button class="sx-btn sx-btn-lg ra-large" onclick={() => onJudge(false)}>Raté</button>
+    {:else if phase === 'lobby'}
       <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onAction('salon_start')} disabled={!joueurs}>
         {joueurs ? 'Lancer la partie' : 'En attente de joueurs'}
       </button>
     {:else if phase === 'gameover'}
-      <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onAction('salon_restart')}>Rejouer</button>
+      <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onAction('salon_restart')}>Lancer la partie suivante</button>
     {:else if live}
       <button class="sx-btn sx-btn-primary ra-large" onclick={() => onAction(paused ? 'salon_resume' : 'salon_pause')}>
         {paused ? 'Reprendre' : 'Pause'}

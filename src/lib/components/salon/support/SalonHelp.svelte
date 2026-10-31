@@ -31,6 +31,8 @@
 
   let message = $state('');
   let email = $state('');
+  // Un invité n'a pas de compte : sans e-mail, impossible de lui répondre plus tard
+  let emailRequis = $derived(!reporterId);
   let loading = $state(false);
   let sent = $state(false);
   let error = $state('');
@@ -45,7 +47,7 @@
 
   function report(text) {
     const where = role === 'regie' ? 'la régie' : "l'écran TV";
-    const body = text.length >= MIN_REPORT_MESSAGE ? text : `Appel d'un admin depuis ${where}. ${text}`.trim();
+    const body = `Appel d'un admin depuis ${where}. ${text}`;
     return fetch('/api/reports', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,8 +66,12 @@
   async function submit(e) {
     e.preventDefault();
     error = '';
-    loading = true;
     const text = message.trim();
+    if (text.length < MIN_REPORT_MESSAGE)
+      return (error = `Explique en quelques mots ce qui se passe (${MIN_REPORT_MESSAGE} caractères minimum).`);
+    if (emailRequis && !email.trim())
+      return (error = 'Laisse ton e-mail : sans compte, c’est le seul moyen de te répondre.');
+    loading = true;
     const call = await chat.call(text);
     try {
       const res = await report(text);
@@ -103,7 +109,7 @@
         <h2 id="hp-title">On s'en occupe.</h2>
         <p class="hp-lead">
           Le direct avec le salon est coupé, ta demande est partie par message.
-          Le support ZIK te répond dès que la connexion revient, ou par email.
+          Le support ZIK te répond dès que possible, par e-mail si besoin.
         </p>
         <button class="sx-btn sx-btn-primary" onclick={close}>Fermer</button>
       {:else}
@@ -113,8 +119,13 @@
           <p class="hp-pro">ZIK Pro : ta demande passe en priorité.</p>
         {/if}
         <p class="hp-lead">
-          Un admin ZIK est prévenu tout de suite et te répond ici, dans un chat, sans couper la partie.
-          L'état du salon lui est transmis.
+          Le support ZIK est prévenu tout de suite et répond ici, dans un chat, sans couper la partie.
+          L'état du salon est transmis automatiquement.
+        </p>
+        <p class="hp-note">
+          ZIK est développé et géré par une seule personne, qui n'est pas devant son écran à toute heure.
+          Si personne ne répond dans le chat, pas d'inquiétude : ta demande est bien enregistrée
+          et tu recevras une réponse par e-mail dès que possible.
         </p>
 
         <form class="hp-form" onsubmit={submit}>
@@ -124,12 +135,12 @@
             {/each}
           </div>
           <label>
-            <span>Ce qui se passe (conseillé)</span>
-            <textarea bind:value={message} rows="3" maxlength="500" placeholder="Ex. : la vidéo reste noire depuis la manche 3"></textarea>
+            <span>Ce qui se passe (obligatoire)</span>
+            <textarea bind:value={message} rows="3" maxlength="500" required minlength={MIN_REPORT_MESSAGE} placeholder="Ex. : la vidéo reste noire depuis la manche 3"></textarea>
           </label>
           <label>
-            <span>Ton email (si on doit te répondre plus tard, facultatif)</span>
-            <input type="email" bind:value={email} autocomplete="email" placeholder="toi@exemple.fr" />
+            <span>Ton e-mail {emailRequis ? '(obligatoire sans compte)' : '(facultatif : ton compte suffit pour te répondre)'}</span>
+            <input type="email" bind:value={email} autocomplete="email" required={emailRequis} placeholder="toi@exemple.fr" />
           </label>
           {#if error}<p class="hp-err" role="alert">{error}</p>{/if}
           <button class="sx-btn sx-btn-primary" type="submit" disabled={loading}>
@@ -178,6 +189,14 @@
     color: var(--mid);
     line-height: 1.5;
     font-size: 0.95rem;
+  }
+  .hp-note {
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    color: var(--mid);
+    font-size: 0.86rem;
+    line-height: 1.5;
   }
   .hp-pro {
     align-self: flex-start;

@@ -1,4 +1,5 @@
 <script>
+  import { teamColor } from '$lib/data/salonOptions.js';
   /** Avant la partie : confirmation, choix d'équipe et joueurs présents. */
   let { p } = $props();
 </script>
@@ -14,7 +15,7 @@
     <p class="sx-kicker">Choisis ton équipe</p>
     <div class="sp-teams">
       {#each p.teams as t (t.id)}
-        <button class="sp-team" class:on={p.myTeam === t.id} style="--tc:var(--q{t.id})" onclick={() => p.pickTeam(t.id)}>
+        <button class="sp-team" class:on={p.myTeam === t.id} style="--tc:{teamColor(t.id)}" onclick={() => p.pickTeam(t.id)}>
           <b>{t.name}</b>
           <small>{t.members.length} joueur{t.members.length > 1 ? 's' : ''}</small>
         </button>
@@ -28,7 +29,7 @@
   <ul class="sp-roster">
     {#each p.roster as pl (pl.username)}
       <li class:me={pl.username === p.username}>
-        {#if p.teams && pl.team != null}<i style="--tc:var(--q{pl.team})"></i>{/if}{pl.username}
+        {#if p.teams && pl.team != null}<i style="--tc:{teamColor(pl.team)}"></i>{/if}{pl.username}
       </li>
     {/each}
   </ul>

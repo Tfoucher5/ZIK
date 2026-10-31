@@ -1,15 +1,25 @@
 import { salonRooms } from "../../state.js";
 import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
-import { makeChoices, calcQcmPoints } from "../scoring.js";
+import { makeChoices } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
-import { currentTrackInfo, searchTrackVideo } from "./tracks.js";
+import { scoreQcmRound } from "./answers.js";
+import { drawSpecial } from "./specials.js";
+import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
+import { OUTAGE_AFTER, holdForVideos, clearOutage } from "./outage.js";
+import { currentTrackInfo } from "./tracks.js";
+import { resolveMedia } from "./media.js";
 import {
   drawSpareTrack,
   prefetchNextVideo,
   prepareSession,
 } from "./session.js";
-import { playerFullyFound, resetRoundFlags, standings } from "./players.js";
+import {
+  nightView,
+  playerFullyFound,
+  resetRoundFlags,
+  standings,
+} from "./players.js";
 import { scheduleCleanup, startTimer, clearPause } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
@@ -20,10 +30,13 @@ export function checkEveryoneDone(code, io) {
   if (players.length === 0) return;
   // In QCM mode: done when everyone has answered (right or wrong)
   // In free mode: done when everyone has found all elements
+  const mode = salon.settings.answerMode;
   const allDone =
-    salon.settings.answerMode === "multiple"
-      ? players.every((p) => p._fullFoundCounted)
-      : players.every((p) => playerFullyFound(p, salon.game.currentTrack));
+    mode === "buzzer"
+      ? players.every((p) => p._buzzLocked)
+      : mode === "multiple"
+        ? players.every((p) => p._fullFoundCounted)
+        : players.every((p) => playerFullyFound(p, salon.game.currentTrack));
   if (allDone) endRound(code, "Tout le monde a répondu !", io);
 }
 
@@ -38,7 +51,11 @@ export function finishGame(code, io) {
   game.musicReadyTimer = null;
   if (game.paused) clearPause(code, io);
   game.phase = "gameover";
+  game.gen = (game.gen ?? 0) + 1;
+  clearOutage(salon, io);
   recordSalonGameEnd(salon);
+  for (const p of Object.values(salon.players)) p.night += p.score;
+  salon.nightGames = (salon.nightGames ?? 0) + 1;
   const scores = Object.values(salon.players)
     .map((p) => ({
       username: p.username,
@@ -53,6 +70,7 @@ export function finishGame(code, io) {
     teams: standings(salon),
     history: game.history,
     rounds: game.history.length,
+    night: nightView(salon),
   });
   prepareSession(code, io);
   scheduleCleanup(code);
@@ -80,67 +98,13 @@ export function endRound(code, reason, io) {
   clearInterval(game.interval);
   game.interval = null;
   game.paused = false;
+  game.buzzer = null;
   game.phase = "summary";
 
   const track = game.currentTrack;
   const answer = `${displayString(track.mainArtist || track.artist)} - ${displayString(track.title)}`;
 
-  // ── QCM deferred scoring: compute points and send individual feedback now ──
-  if (salon.settings.answerMode === "multiple") {
-    // Determine firstFinder: the correct player with the lowest timeTaken
-    if (!game.firstFinder) {
-      const firstCorrect = Object.values(salon.players)
-        .filter(
-          (p) =>
-            p._fullFoundCounted &&
-            p._choiceIndex === game.correctChoiceIndex &&
-            !p._disconnected,
-        )
-        .sort(
-          (a, b) =>
-            (a._choiceTimeTaken ?? Infinity) - (b._choiceTimeTaken ?? Infinity),
-        )[0];
-      if (firstCorrect) game.firstFinder = firstCorrect.username;
-    }
-
-    for (const p of Object.values(salon.players)) {
-      if (!p.socketId || p._disconnected) continue;
-      if (p._fullFoundCounted) {
-        // They answered — evaluate
-        const correct = p._choiceIndex === game.correctChoiceIndex;
-        if (correct) {
-          const points = calcQcmPoints(
-            p._choiceTimeTaken ?? salon.settings.roundDuration,
-            salon.settings.roundDuration,
-          );
-          p.score += points;
-          p.foundArtist = true;
-          p.foundTitle = true;
-          io.to(p.socketId).emit("salon_feedback", {
-            type: "success_title",
-            correct: true,
-            points,
-            msg: `Bonne réponse ! (+${points} pts)`,
-          });
-        } else {
-          io.to(p.socketId).emit("salon_feedback", {
-            type: "miss",
-            correct: false,
-            points: 0,
-            msg: "Raté !",
-          });
-        }
-      } else {
-        // Didn't answer in time
-        io.to(p.socketId).emit("salon_feedback", {
-          type: "miss",
-          correct: false,
-          points: 0,
-          msg: "Temps écoulé…",
-        });
-      }
-    }
-  }
+  if (salon.settings.answerMode === "multiple") scoreQcmRound(salon, io);
 
   for (const p of Object.values(salon.players)) {
     const ok =
@@ -202,6 +166,8 @@ export async function startNextRound(code, io) {
 
   game.currentRound++;
   game.firstFinder = null;
+  game.buzzer = null;
+  game.special = drawSpecial(salon);
   resetRoundFlags(salon);
   game.currentTrack = game.sessionPlaylist.pop();
   game.played.push(game.currentTrack);
@@ -209,31 +175,23 @@ export async function startNextRound(code, io) {
   game.correctChoiceIndex = null;
 
   const track = game.currentTrack;
+  const gen = game.gen;
 
   try {
-    let video, safeStart;
-    if (game.prefetchedRound?.track === track) {
-      ({ video, safeStart } = game.prefetchedRound);
-      game.prefetchedRound = null;
-    }
-    if (!video && game._prefetchPromise) {
-      await game._prefetchPromise.catch(() => {});
-      game._prefetchPromise = null;
-      if (game.prefetchedRound?.track === track) {
-        ({ video, safeStart } = game.prefetchedRound);
-        game.prefetchedRound = null;
-      }
-    }
-    if (!video) {
-      ({ video, safeStart } = await searchTrackVideo(
-        track,
-        salon.settings.roundDuration,
-      ));
-    }
-    // Relance ou fermeture du salon pendant la recherche : manche périmée
-    if (salonRooms[code] !== salon || game.currentTrack !== track) return;
-
-    game.currentVideo = { id: video.id, start: safeStart };
+    const { video, audio, safeStart } = await resolveMedia(salon, track);
+    // Relance, partie terminée ou salon fermé pendant la recherche : manche périmée
+    if (
+      salonRooms[code] !== salon ||
+      game.currentTrack !== track ||
+      game.gen !== gen
+    )
+      return;
+    // Sans vidéo, la TV joue l'extrait audio : la manche a lieu quand même
+    game.currentVideo = {
+      id: video?.id ?? audio,
+      start: safeStart,
+      audio: !!audio,
+    };
     game.phase = "round";
     game.timerActive = false;
     game.timerValue = 0;
@@ -252,11 +210,13 @@ export async function startNextRound(code, io) {
     }
 
     const roundData = {
-      videoId: video.id,
+      videoId: video?.id,
+      audioUrl: audio,
       startSeconds: safeStart,
       round: game.currentRound,
       total: salon.settings.maxRounds,
       choices,
+      special: game.special,
       featCount: track.featArtists?.length || 0,
       extras: (track.extraAnswers || []).map((e) => ({ label: e.label })),
     };
@@ -273,31 +233,39 @@ export async function startNextRound(code, io) {
 
     // L'hôte signale le début de la musique ; filet si son lecteur ne répond
     // pas. Large : sur une connexion lente, la vidéo met du temps à démarrer.
-    game.musicReadyTimer = setTimeout(() => startTimer(code, io), 12000);
+    game.musicReadyTimer = setTimeout(
+      () => startTimer(code, io),
+      game.special ? SPECIAL_INTRO_MS + 12000 : 12000,
+    );
 
     prefetchNextVideo(code, io);
   } catch (err) {
     if (salonRooms[code] !== salon || game.currentTrack !== track) return;
     console.error(`Salon skip "${track.title}":`, err.message);
-    reportTrackIssue(
-      track.id,
-      "video",
-      "auto",
-      "Aucune vidéo trouvée en salon",
-      {
-        salon: code,
-      },
-    );
+    // En panne, les titres ne sont pas en cause : pas de faux signalements
+    if (!game.videoOutage)
+      reportTrackIssue(
+        track.id,
+        "video",
+        "auto",
+        "Aucune vidéo trouvée en salon",
+        {
+          salon: code,
+        },
+      );
     skipTrack(code, io);
   }
 }
 
 // Titre injouable : manche non consommée, un titre de réserve le remplace
 export function skipTrack(code, io) {
-  const game = salonRooms[code].game;
+  const salon = salonRooms[code];
+  const game = salon.game;
   clearTimeout(game.musicReadyTimer);
   game.currentRound--;
   game.skipStreak = (game.skipStreak ?? 0) + 1;
-  if (game.skipStreak <= 10) drawSpareTrack(game, game.currentTrack);
+  if (game.skipStreak >= OUTAGE_AFTER)
+    return holdForVideos(salon, io, () => startNextRound(code, io));
+  drawSpareTrack(game, game.currentTrack);
   startNextRound(code, io);
 }

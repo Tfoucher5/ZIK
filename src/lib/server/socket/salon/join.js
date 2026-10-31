@@ -4,20 +4,27 @@ import { alertAdminsSafe } from "../../services/admin/alerts.js";
 import { salonRooms } from "../../state.js";
 import {
   addPlayer,
+  bankNight,
   broadcastRoster,
   broadcastScreens,
   cleanUsername,
   getPlayerList,
+  nightView,
+  reconnectView,
   standings,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
 import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
+import { eveningView } from "./evening.js";
 import { cleanupNow, scheduleCleanup } from "./timers.js";
 // Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
 // fermer la soirée
 const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
+// Entre deux parties ou en pause : l'ordi de la TV peut se mettre en veille
+// pendant l'entracte sans que la soirée soit perdue
+const HOST_IDLE_GRACE = 2 * 60 * 60 * 1000; // 2 h
 const PLAYER_RECONNECT_GRACE = 90 * 1000; // 90 s
 
 // Arrivées et départs : écran TV, régie, joueurs
@@ -47,6 +54,10 @@ export function registerJoin(socket, io) {
       settings: salon.settings,
       players: getPlayerList(salon),
       teams: standings(salon),
+      night: nightView(salon),
+      evening: eveningView(salon),
+      mediaCheck: salon.game.mediaCheck ?? null,
+      buzzer: salon.game.buzzer ?? null,
       phase: salon.game.phase,
       paused: salon.game.paused,
       currentRound: salon.game.currentRound,
@@ -83,6 +94,10 @@ export function registerJoin(socket, io) {
       settings: salon.settings,
       players: getPlayerList(salon),
       teams: standings(salon),
+      night: nightView(salon),
+      evening: eveningView(salon),
+      mediaCheck: game.mediaCheck ?? null,
+      buzzer: game.buzzer ?? null,
       phase: game.phase,
       paused: game.paused,
       currentRound: game.currentRound,
@@ -158,7 +173,7 @@ export function registerJoin(socket, io) {
       !salon.players[username] &&
       salon.game.phase !== "lobby" &&
       salon.game.phase !== "gameover";
-    if (late) addPlayer(salon, username, socket.id).scoreBeforeRound = 0;
+    if (late) addPlayer(salon, username, socket.id, token).scoreBeforeRound = 0;
     if (salon.players[username]) {
       const existing = salon.players[username];
       // Cancel pending removal timer
@@ -174,49 +189,13 @@ export function registerJoin(socket, io) {
       socket.salonRole = "player";
       socket.salonUsername = username;
 
-      // Build reconnect payload so client can restore its UI
-      const reconnectData = {
-        username,
-        token: existing.token,
-        reconnecting: true,
-        settings: {
-          answerMode: salon.settings.answerMode,
-          maxRounds: salon.settings.maxRounds,
-        },
-        phase: salon.game.phase,
-        paused: salon.game.paused,
-        round: salon.game.currentRound,
-        team: existing.team,
-        teams: standings(salon),
-        players: getPlayerList(salon),
-        score: existing.score,
-        foundArtist: existing.foundArtist,
-        foundTitle: existing.foundTitle,
-        foundFeatCount: existing.foundFeats.filter(Boolean).length,
-        foundExtrasCount: existing.foundExtras.filter(Boolean).length,
-        allFound: existing._fullFoundCounted,
-        timerVal: salon.game.timerValue,
-        timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
-        timerActive: salon.game.timerActive,
-      };
-      if (salon.game.phase === "round") {
-        reconnectData.extras = (
-          salon.game.currentTrack?.extraAnswers || []
-        ).map((e) => ({ label: e.label }));
-        if (salon.settings.answerMode === "multiple") {
-          reconnectData.choices = salon.game.choices;
-          reconnectData.featCount =
-            salon.game.currentTrack?.featArtists?.length || 0;
-        }
-      }
-
-      socket.emit("salon_joined", reconnectData);
+      socket.emit("salon_joined", reconnectView(salon, existing));
       broadcastRoster(code, io);
       scheduleCleanup(code);
       return;
     }
 
-    const player = addPlayer(salon, username, socket.id);
+    const player = addPlayer(salon, username, socket.id, token);
     if (account) player.userId = account.id;
 
     socket.join(`salon:${code}`);
@@ -235,6 +214,7 @@ export function registerJoin(socket, io) {
       team: player.team,
       teams: standings(salon),
       players: getPlayerList(salon),
+      evening: eveningView(salon),
     });
     broadcastRoster(code, io);
     scheduleCleanup(code);
@@ -257,9 +237,14 @@ export function registerJoin(socket, io) {
         (rooms.get(`salon:ctrl:${code}`)?.size ?? 0);
       if (left > 0) return;
       clearTimeout(salon._hostDcTimer);
-      salon._hostDcTimer = setTimeout(() => {
-        cleanupNow(code, io);
-      }, HOST_RECONNECT_GRACE);
+      const idle =
+        salon.game.paused ||
+        salon.game.phase === "lobby" ||
+        salon.game.phase === "gameover";
+      salon._hostDcTimer = setTimeout(
+        () => cleanupNow(code, io),
+        idle ? HOST_IDLE_GRACE : HOST_RECONNECT_GRACE,
+      );
     } else if (socket.salonRole === "player") {
       const username = socket.salonUsername;
       if (!username || !salon.players[username]) return;
@@ -270,6 +255,7 @@ export function registerJoin(socket, io) {
 
       // During lobby: remove immediately (they can re-enter with same name)
       if (salon.game.phase === "lobby") {
+        bankNight(salon, player);
         delete salon.players[username];
         broadcastRoster(code, io);
         return;
@@ -287,6 +273,7 @@ export function registerJoin(socket, io) {
       player._dcTimer = setTimeout(() => {
         const s = salonRooms[code];
         if (!s?.players[username]) return;
+        bankNight(s, s.players[username]);
         delete s.players[username];
         broadcastRoster(code, io);
       }, PLAYER_RECONNECT_GRACE);

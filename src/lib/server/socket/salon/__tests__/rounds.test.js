@@ -14,7 +14,7 @@ vi.mock("../tracks.js", () => ({
 }));
 
 const { salonRooms } = await import("../../../state.js");
-const { startNextRound, skipTrack } = await import("../rounds.js");
+const { startNextRound, skipTrack, finishGame } = await import("../rounds.js");
 const { drawSpareTrack } = await import("../session.js");
 
 const CODE = "ROUND1";
@@ -42,6 +42,29 @@ function salonDeTest(full, session, maxRounds) {
   };
   return salonRooms[CODE].game;
 }
+
+describe("fin de partie pendant la recherche d'une vidéo", () => {
+  beforeEach(() => {
+    for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+  });
+
+  it("ne relance pas de manche après la fin", async () => {
+    const ok1 = t("ok1");
+    const game = salonDeTest([ok1], [ok1], 5);
+    const pending = startNextRound(CODE, io);
+    finishGame(CODE, io);
+    await pending;
+    expect(game.phase).toBe("gameover");
+  });
+
+  it("la partie suivante démarre depuis le podium", async () => {
+    const ok1 = t("ok1");
+    const game = salonDeTest([ok1], [ok1], 5);
+    game.phase = "gameover";
+    await startNextRound(CODE, io);
+    expect(game.phase).toBe("round");
+  });
+});
 
 describe("titre sans vidéo en salon", () => {
   beforeEach(() => {

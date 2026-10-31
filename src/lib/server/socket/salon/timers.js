@@ -1,5 +1,6 @@
-import { salonRooms } from "../../state.js";
+import { salonRooms, getIO } from "../../state.js";
 import { endRound, startNextRound } from "./rounds.js";
+import { clearOutage } from "./outage.js";
 
 const SALON_CLEANUP_DELAY = 30 * 60 * 1000; // 30 min
 
@@ -8,6 +9,13 @@ export function scheduleCleanup(code) {
   if (!salon) return;
   clearTimeout(salon._cleanupTimer);
   salon._cleanupTimer = setTimeout(() => {
+    // Entracte : rien ne bouge, mais la TV ou la régie est encore là
+    const rooms = getIO()?.sockets.adapter.rooms;
+    if (
+      rooms?.get(`salon:screens:${code}`)?.size ||
+      rooms?.get(`salon:ctrl:${code}`)?.size
+    )
+      return scheduleCleanup(code);
     const s = salonRooms[code];
     if (s) {
       clearInterval(s.game.interval);
@@ -47,10 +55,14 @@ export function startTimer(code, io) {
   )
     return;
   const game = salon.game;
-  const duration = salon.settings.roundDuration;
+  const duration =
+    game.special === "sprint"
+      ? Math.max(10, Math.round(salon.settings.roundDuration / 2))
+      : salon.settings.roundDuration;
 
   clearTimeout(game.musicReadyTimer);
   game.skipStreak = 0;
+  clearOutage(salon, io);
   game.musicReadyTimer = null;
   game.startTime = Date.now();
   game.timerValue = duration;

@@ -28,10 +28,11 @@
 
   let maxRounds          = $state(10);
   let roundDuration      = $state(30);
-  let answerMode         = $state('free');
+  let answerMode         = $state('multiple');
   let manualNext         = $state(false);
   let showAnswerDuration = $state(7);
   let teamCount          = $state(0);
+  let specials           = $state(false);
   let proRow             = $state(null);
   const pro              = $derived(proActive(proRow));
   let portalBusy         = $state(false);
@@ -99,7 +100,7 @@
         body: JSON.stringify({
           origin: new URLSearchParams(window.location.search).get('ref'),
           playlistIds: selectedIds,
-          settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount },
+          settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials },
         }),
       });
       const d = await res.json();
@@ -159,8 +160,8 @@
 
     <SetupBlock letter="B" title="Le déroulé">
       <SetupSheet
-        bind:maxRounds bind:roundDuration bind:answerMode bind:manualNext bind:showAnswerDuration
-        {teamCount} {pro} onPickTeams={pickTeams}
+        bind:maxRounds bind:roundDuration bind:answerMode bind:manualNext bind:showAnswerDuration bind:specials
+        {teamCount} {pro} onPickTeams={pickTeams} onUpsell={(f) => (upsell = f)}
       />
     </SetupBlock>
 

@@ -9,8 +9,11 @@ describe("makeTeams", () => {
     expect(makeTeams(1)).toBeNull();
   });
 
-  it("plafonne à huit équipes", () => {
-    expect(makeTeams(12)).toHaveLength(8);
+  it("autant d'équipes que voulu, nommées au-delà des couleurs", () => {
+    const teams = makeTeams(20);
+    expect(teams).toHaveLength(20);
+    expect(teams[19].name).toBe("Équipe 20");
+    expect(makeTeams(5000)).toHaveLength(100);
   });
 
   it("garde les noms déjà personnalisés quand le nombre change", () => {

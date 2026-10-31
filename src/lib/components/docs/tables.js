@@ -57,7 +57,13 @@ export const salonSettings = {
   rows: [
     ["Durée d'une manche", "15 à 60 secondes", "30s"],
     ["Nombre de manches", "5 à 20", "10"],
-    ["Mode de réponse", "Texte libre ou QCM 4 choix", "Texte libre"],
+    [
+      "Mode de réponse",
+      "Texte libre, QCM 4 choix ou buzzer (ZIK Pro)",
+      "QCM 4 choix",
+    ],
+    ["Équipes", "Aucune, 2 (gratuit) ou autant que voulu (ZIK Pro)", "Aucune"],
+    ["Manches spéciales", "Non / au hasard (ZIK Pro)", "Non"],
     ["Avance automatique", "Oui / Non (hôte clique manuellement)", "Oui"],
     ["Durée de révélation", "3 à 15 secondes", "7s"],
   ],

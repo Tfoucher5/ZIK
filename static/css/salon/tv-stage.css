@@ -126,6 +126,20 @@
   position: absolute;
   inset: 0;
 }
+/* Cache opaque posé d'un coup sur la vidéo, retiré seulement à la réponse :
+   les calques arrivent en fondu et laissaient voir la manche suivante. Le
+   lecteur lui-même reste visible, YouTube refuse de lire un lecteur à opacité 0 */
+.sh-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--bg);
+  pointer-events: none;
+}
+.sh-cover.off {
+  opacity: 0;
+  transition: opacity 0.35s;
+}
 #salon-yt-player iframe {
   width: 100%;
   height: 100%;

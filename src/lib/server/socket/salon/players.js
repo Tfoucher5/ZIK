@@ -3,12 +3,14 @@ import { salonRooms } from "../../state.js";
 import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { teamStandings } from "./teams.js";
 import { checkEveryoneDone } from "./rounds.js";
+import { eveningView } from "./evening.js";
 
 function makePlayer(username, socketId) {
   return {
     username,
     socketId,
     score: 0,
+    night: 0,
     foundArtist: false,
     foundTitle: false,
     foundFeats: [],
@@ -23,11 +25,16 @@ function makePlayer(username, socketId) {
   };
 }
 
-export function addPlayer(salon, username, socketId) {
+export function addPlayer(salon, username, socketId, token = null) {
   // Pas d'équipe d'office : le joueur la choisit sur son téléphone, ou l'hôte
   // la lui donne depuis la régie. Coller un arrivant dans l'équipe la moins
   // remplie cassait les tables déjà constituées.
   const player = makePlayer(username, socketId);
+  // Téléphone resté en veille trop longtemps : il retrouve ses points de soirée
+  if (token && salon.nightBank?.[token]) {
+    player.night = salon.nightBank[token];
+    delete salon.nightBank[token];
+  }
   salon.players[username] = player;
   return player;
 }
@@ -42,6 +49,64 @@ export function getPlayerList(salon) {
     answeredThisRound:
       p.foundArtist || p.foundTitle || p.foundFeats.some(Boolean),
   }));
+}
+
+// Joueur retiré faute de reconnexion : ses points de soirée l'attendent
+export function bankNight(salon, player) {
+  if (player.night) (salon.nightBank ??= {})[player.token] = player.night;
+}
+
+// Classement de la soirée (ZIK Pro) : cumul des parties terminées du salon
+export function nightView(salon) {
+  if (!salon.pro || !salon.nightGames) return null;
+  const players = Object.values(salon.players)
+    .map((p) => ({ username: p.username, score: p.night, team: p.team }))
+    .sort((a, b) => b.score - a.score);
+  return {
+    games: salon.nightGames,
+    players,
+    teams: teamStandings(salon.settings.teams, players),
+  };
+}
+
+// Reprise après une coupure : de quoi rétablir l'écran du téléphone
+export function reconnectView(salon, player) {
+  const data = {
+    username: player.username,
+    token: player.token,
+    reconnecting: true,
+    settings: {
+      answerMode: salon.settings.answerMode,
+      maxRounds: salon.settings.maxRounds,
+    },
+    phase: salon.game.phase,
+    paused: salon.game.paused,
+    round: salon.game.currentRound,
+    team: player.team,
+    teams: standings(salon),
+    night: nightView(salon),
+    evening: eveningView(salon),
+    players: getPlayerList(salon),
+    score: player.score,
+    foundArtist: player.foundArtist,
+    foundTitle: player.foundTitle,
+    foundFeatCount: player.foundFeats.filter(Boolean).length,
+    foundExtrasCount: player.foundExtras.filter(Boolean).length,
+    allFound: player._fullFoundCounted,
+    timerVal: salon.game.timerValue,
+    timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
+    timerActive: salon.game.timerActive,
+  };
+  if (salon.game.phase === "round") {
+    data.extras = (salon.game.currentTrack?.extraAnswers || []).map((e) => ({
+      label: e.label,
+    }));
+    if (salon.settings.answerMode === "multiple") {
+      data.choices = salon.game.choices;
+      data.featCount = salon.game.currentTrack?.featArtists?.length || 0;
+    }
+  }
+  return data;
 }
 
 export function standings(salon) {
@@ -145,6 +210,7 @@ export function resetRoundFlags(salon) {
     p._fullFoundCounted = false;
     p._choiceIndex = null;
     p._choiceTimeTaken = null;
+    p._buzzLocked = false;
   }
 }
 

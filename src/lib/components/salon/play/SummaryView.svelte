@@ -1,4 +1,5 @@
 <script>
+  import { teamColor } from '$lib/data/salonOptions.js';
   import { onMount } from 'svelte';
   import { flip } from 'svelte/animate';
 
@@ -9,6 +10,7 @@
     scores = [],
     username = '',
     teams = null,
+    night = null,
     myTeam = null,
     round = 0,
     total = 10,
@@ -30,6 +32,12 @@
   });
   let myPos = $derived(finalScores.findIndex(p => p.username === username) + 1);
   let teamPos = $derived((teams?.findIndex(t => t.id === myTeam) ?? -1) + 1);
+  let soiree = $derived(night?.games > 1 ? night : null);
+  let nightPos = $derived(
+    soiree?.teams
+      ? soiree.teams.findIndex(t => t.id === myTeam) + 1
+      : (soiree?.players.findIndex(n => n.username === username) ?? -1) + 1
+  );
 </script>
 
 {#if phase === 'summary' && roundEnd}
@@ -54,13 +62,19 @@
     {:else}
       <div class="sp-big">{myPos === 1 ? 'Tu gagnes !' : myPos > 0 ? `${myPos}e sur ${finalScores.length}` : 'Fin de partie'}</div>
     {/if}
+    {#if nightPos > 0}
+      <p class="sp-night">
+        Soirée ({soiree.games} parties) : {soiree.teams ? 'ton équipe est' : 'tu es'}
+        à la <b>{nightPos === 1 ? '1re' : `${nightPos}e`} place</b>{#if !soiree.teams}&nbsp;sur {soiree.players.length}{/if}
+      </p>
+    {/if}
   </div>
 {/if}
 
 {#if teams}
   <ol class="sp-list sp-team-list">
     {#each teams as t, i (t.id)}
-      <li class:me={t.id === myTeam} style="--tc:var(--q{t.id})">
+      <li class:me={t.id === myTeam} style="--tc:{teamColor(t.id)}">
         <span class="r">{String(i + 1).padStart(2, '0')}</span>
         <span class="n"><i></i>{t.name}</span>
         <span class="p">{t.score}</span>
@@ -109,6 +123,14 @@
   .sp-list small { animation: sum-in 0.4s ease; }
   @keyframes sum-in {
     from { opacity: 0; transform: translateY(4px); }
+  }
+  .sp-night {
+    margin-top: 8px;
+    font-size: 0.92rem;
+    color: var(--mid);
+  }
+  .sp-night b {
+    color: var(--accent);
   }
   .salon-host-cta {
     display: flex;

@@ -40,7 +40,7 @@
 
   <section>
     <h2>3. Le service ZIK Pro</h2>
-    <p>ZIK Pro débloque, pour le compte ZIK qui l'achète, des fonctions supplémentaires du Mode Salon : joueurs illimités, jusqu'à 8 équipes, régie complète sur un second écran (révéler la réponse, terminer une partie, corriger les points, régler le volume de la TV, modifier les réglages en pleine partie). La liste à jour figure sur la page <a href="/pro">ZIK Pro</a>.</p>
+    <p>ZIK Pro débloque, pour le compte ZIK qui l'achète, des fonctions supplémentaires du Mode Salon : joueurs et équipes illimités, classement de la soirée sur plusieurs parties, régie complète sur un second écran (révéler la réponse, terminer une partie, corriger les points, régler le volume de la TV, modifier les réglages en pleine partie). La liste à jour figure sur la page <a href="/pro">ZIK Pro</a>.</p>
     <p>Le service est fourni en ligne, depuis un navigateur. Il ne comprend ni matériel, ni installation, ni animation sur place.</p>
     <p>ZIK peut faire évoluer le service, notamment en ajoutant des fonctions. Les fonctions annoncées comme « bientôt » ne font pas partie de ce qui est vendu tant qu'elles ne sont pas disponibles.</p>
   </section>
