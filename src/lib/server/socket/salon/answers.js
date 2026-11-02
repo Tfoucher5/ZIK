@@ -16,10 +16,11 @@ import {
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
 import { roundMult } from "./specials.js";
+import { int, safe, str } from "../safe.js";
 // Téléphones des joueurs : équipe et réponses
 export function registerAnswers(socket, io) {
   // Le joueur choisit son équipe avant la partie, pas en cours de route
-  socket.on("salon_pick_team", ({ team } = {}) => {
+  safe(socket, "salon_pick_team", { team: int(0, 99) }, ({ team }) => {
     const salon = salonRooms[socket.salonCode];
     const player = salon?.players[socket.salonUsername];
     if (!player || !salon.settings.teams?.some((t) => t.id === team)) return;
@@ -29,7 +30,7 @@ export function registerAnswers(socket, io) {
   });
 
   // ── Player submits free text answer ──────────────────────────────────────
-  socket.on("salon_submit_guess", ({ guess }) => {
+  safe(socket, "salon_submit_guess", { guess: str(200) }, ({ guess }) => {
     const code = socket.salonCode;
     const username = socket.salonUsername;
     const salon = salonRooms[code];
@@ -99,41 +100,46 @@ export function registerAnswers(socket, io) {
   });
 
   // ── Player submits multiple choice ────────────────────────────────────────
-  socket.on("salon_submit_choice", ({ choiceIndex }) => {
-    const code = socket.salonCode;
-    const username = socket.salonUsername;
-    const salon = salonRooms[code];
-    // Pas de réponse avant que la musique joue (chrono lancé)
-    if (
-      !salon ||
-      salon.game.phase !== "round" ||
-      salon.game.paused ||
-      !salon.game.timerActive
-    )
-      return;
+  safe(
+    socket,
+    "salon_submit_choice",
+    { choiceIndex: int(0, 9) },
+    ({ choiceIndex }) => {
+      const code = socket.salonCode;
+      const username = socket.salonUsername;
+      const salon = salonRooms[code];
+      // Pas de réponse avant que la musique joue (chrono lancé)
+      if (
+        !salon ||
+        salon.game.phase !== "round" ||
+        salon.game.paused ||
+        !salon.game.timerActive
+      )
+        return;
 
-    const player = salon.players[username];
-    if (!player || player._fullFoundCounted) return;
+      const player = salon.players[username];
+      if (!player || player._fullFoundCounted) return;
 
-    const game = salon.game;
-    const timeTaken = (Date.now() - game.startTime) / 1000;
+      const game = salon.game;
+      const timeTaken = (Date.now() - game.startTime) / 1000;
 
-    // Store choice for deferred scoring at round end (Kahoot-style suspense)
-    player._choiceIndex = choiceIndex;
-    player._choiceTimeTaken = timeTaken;
-    player._fullFoundCounted = true; // block re-submission
+      // Store choice for deferred scoring at round end (Kahoot-style suspense)
+      player._choiceIndex = choiceIndex;
+      player._choiceTimeTaken = timeTaken;
+      player._fullFoundCounted = true; // block re-submission
 
-    // Notify host that player has answered — but NOT whether it's correct
-    staff(code, io).emit("salon_player_answered", {
-      username,
-      answered: true,
-      // foundArtist/foundTitle intentionally omitted — reveal at round end
-      totalFeatCount: game.currentTrack?.cleanFeatArtists?.length || 0,
-    });
+      // Notify host that player has answered — but NOT whether it's correct
+      staff(code, io).emit("salon_player_answered", {
+        username,
+        answered: true,
+        // foundArtist/foundTitle intentionally omitted — reveal at round end
+        totalFeatCount: game.currentTrack?.cleanFeatArtists?.length || 0,
+      });
 
-    // Scores are NOT updated here — deferred to endRound
-    checkEveryoneDone(code, io);
-  });
+      // Scores are NOT updated here — deferred to endRound
+      checkEveryoneDone(code, io);
+    },
+  );
 }
 
 // QCM : les points ne tombent qu'à la fin de la manche, avec le retour de chacun

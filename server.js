@@ -35,6 +35,9 @@ console.warn = (...args) => {
 process.on("unhandledRejection", (err) => {
   console.error("[unhandledRejection]", err?.stack ?? err);
 });
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err?.stack ?? err);
+});
 
 const _execAsync = _promisify(_execFile);
 const _YTDLP_BIN =
@@ -114,6 +117,11 @@ startPushSchedule();
 startErrorWatch();
 
 const PORT = process.env.PORT || 3000;
+// Sans ça, uncaughtException garderait un process qui n'écoute pas
+server.on("error", (err) => {
+  console.error("[listen]", err?.stack ?? err);
+  process.exit(1);
+});
 server.listen(PORT, () => {
   console.log(`ZIK en ligne -> http://localhost:${PORT}`);
   announceLatestNews().catch((e) => console.error("[news]", e.message));

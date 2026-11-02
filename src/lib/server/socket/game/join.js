@@ -18,10 +18,20 @@ import {
   startAutoCountdown,
 } from "./lobby.js";
 import { emitPlayers, getOrCreateRoom } from "./rooms.js";
+import { bool, key, optional, safe, str } from "../safe.js";
+
+const JOIN_ROOM = {
+  roomId: key(64),
+  username: str(100),
+  userId: optional(str(64)),
+  isGuest: optional(bool()),
+  takeover: optional(bool()),
+  token: optional(str(8192)),
+};
 
 // Arrivée dans une room, lancement d'une partie, départ
 export function registerJoin(socket, io) {
-  socket.on("join_room", async (payload) => {
+  safe(socket, "join_room", JOIN_ROOM, async (payload) => {
     const {
       roomId,
       username: rawName,
@@ -31,7 +41,9 @@ export function registerJoin(socket, io) {
       token,
     } = payload;
     let username = rawName;
-    if (!username?.trim()) return socket.emit("error", "Pseudo requis");
+    // Le pseudo sert de clé de room.players : « __proto__ » viserait Object.prototype
+    if (!username.trim() || username.trim() in Object.prototype)
+      return socket.emit("error", "Pseudo requis");
 
     // Client service : une room privée est invisible pour la clé anonyme
     if (!customRooms[roomId] && !dbRooms[roomId]) {
@@ -183,7 +195,7 @@ export function registerJoin(socket, io) {
     console.log(`${username} -> room "${roomId}"`);
   });
 
-  socket.on("request_new_game", async () => {
+  safe(socket, "request_new_game", {}, async () => {
     const roomId = socket.currentRoom;
     if (!roomId) return;
     const room = getOrCreateRoom(roomId);
@@ -216,7 +228,7 @@ export function registerJoin(socket, io) {
     await beginGame(room, io);
   });
 
-  socket.on("disconnect", () => {
+  safe(socket, "disconnect", {}, () => {
     if (socket.currentRoom) leaveRoom(socket, socket.currentRoom, io);
   });
 }
