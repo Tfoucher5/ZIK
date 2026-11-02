@@ -44,7 +44,7 @@ export async function checkAchievements(userId, gameData) {
   try {
     const won = gameData.rank === 1 && gameData.totalPlayers >= 2;
 
-    const { data: streakRows } = await supabase.rpc("update_player_streaks", {
+    const { data: streakRows } = await db().rpc("update_player_streaks", {
       p_user_id: userId,
       p_won: won,
     });
