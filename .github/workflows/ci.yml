@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop, master]
+
+# Railway attend ce workflow avant de déployer : les migrations passent avant le code
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx eslint .
+      - run: npx prettier --check .
+      - run: npx svelte-check --threshold error
+      - run: npx vitest run
+      # config.js crée le client Supabase au chargement : valeurs factices, jamais appelées
+      - run: npm run build
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_ANON_KEY: ci
+          SUPABASE_SERVICE_KEY: ci
+
+  migrations:
+    needs: check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Une seule migration à la fois par base
+    concurrency: migrations-${{ github.ref_name }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      # develop → staging ZIK-DEV, master → prod
+      PROJECT_REF: ${{ github.ref_name == 'master' && 'fbeubmwhxytniohodlgr' || 'ieuknbblonybkiqknonn' }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx -y supabase@3.0.0 link --project-ref "$PROJECT_REF"
+      - run: npx -y supabase@3.0.0 db push --remote --dry-run
+      - run: npx -y supabase@3.0.0 db push --remote --yes
