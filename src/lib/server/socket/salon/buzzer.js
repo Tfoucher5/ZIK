@@ -4,11 +4,12 @@ import { adminSalon, broadcastScores } from "./players.js";
 import { endRound } from "./rounds.js";
 import { roundMult } from "./specials.js";
 import { clearPause, pauseGame, resumeGame } from "./timers.js";
+import { bool, safe } from "../safe.js";
 
 // Mode buzzer (ZIK Pro) : le premier qui buzze coupe la musique, répond à
 // voix haute, et l'animateur valide ou non depuis la régie
 export function registerBuzzer(socket, io) {
-  socket.on("salon_buzz", () => {
+  safe(socket, "salon_buzz", {}, () => {
     const salon = salonRooms[socket.salonCode];
     const game = salon?.game;
     const player = salon?.players[socket.salonUsername];
@@ -27,7 +28,7 @@ export function registerBuzzer(socket, io) {
     pauseGame(salon.code, io);
   });
 
-  socket.on("salon_buzz_judge", ({ correct } = {}) => {
+  safe(socket, "salon_buzz_judge", { correct: bool() }, ({ correct }) => {
     const salon = adminSalon(socket);
     const game = salon?.game;
     if (!game?.buzzer || game.phase !== "round") return;

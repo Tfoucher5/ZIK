@@ -7,12 +7,13 @@ import {
   setIO,
   getIO,
 } from "../state.js";
+import { safe, str } from "./safe.js";
 
 export function registerPresence(io) {
   setIO(io);
 
   io.on("connection", (socket) => {
-    socket.on("presence:hello", async (token) => {
+    safe(socket, "presence:hello", str(8192), async (token) => {
       const user = await verifyToken(token);
       if (!user) return;
       socket.data.presenceUserId = user.id;
@@ -24,7 +25,7 @@ export function registerPresence(io) {
       sockets.add(socket.id);
     });
 
-    socket.on("disconnect", () => {
+    safe(socket, "disconnect", {}, () => {
       const uid = socket.data.presenceUserId;
       if (!uid) return;
       const sockets = presence.get(uid);

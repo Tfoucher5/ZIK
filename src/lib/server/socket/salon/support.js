@@ -1,5 +1,6 @@
 import { salonRooms, getIO } from "../../state.js";
 import { alertAdminsSafe } from "../../services/admin/alerts.js";
+import { optional, safe, str } from "../safe.js";
 
 // Chat en direct entre l'organisateur d'un salon (régie ou écran TV) et
 // l'admin. Tout reste en mémoire sur le salon : rien n'est gardé après la
@@ -137,10 +138,13 @@ export function registerSupport(socket) {
     if (typeof ack === "function") ack(res);
   };
 
-  socket.on("salon_support_call", ({ message } = {}, ack) =>
-    reply(ack, () => callSupport(salonCode(), message)),
+  safe(
+    socket,
+    "salon_support_call",
+    { message: optional(str(2000)) },
+    ({ message }, ack) => reply(ack, () => callSupport(salonCode(), message)),
   );
-  socket.on("salon_support_send", ({ text } = {}, ack) =>
+  safe(socket, "salon_support_send", { text: str(2000) }, ({ text }, ack) =>
     reply(ack, () => sendSupportMessage(salonCode(), "host", text)),
   );
 }

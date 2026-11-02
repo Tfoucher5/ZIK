@@ -25,41 +25,49 @@ import { forgetVideo } from "./tracks.js";
 import { closeEvening } from "./evening.js";
 import { clearOutage } from "./outage.js";
 import { clearPause, pauseGame, resumeGame, startTimer } from "./timers.js";
+import { int, key, num, object, optional, safe, str } from "../safe.js";
+
+const ADJUST_SCORE = {
+  username: key(20),
+  delta: optional(num(-1000, 1000)),
+  score: optional(num(0, 100000)),
+};
+
 // Régie (et écran ouvert avec la clé) : pilotage de la partie
 export function registerControl(socket, io) {
-  socket.on("salon_pause", () => {
+  safe(socket, "salon_pause", {}, () => {
     const salon = adminSalon(socket);
     if (salon) pauseGame(salon.code, io);
   });
 
-  socket.on("salon_resume", () => {
+  safe(socket, "salon_resume", {}, () => {
     const salon = adminSalon(socket);
     if (salon) resumeGame(salon.code, io);
   });
 
   // Révéler tout de suite, sans attendre la fin du chrono
-  socket.on("salon_reveal", () => {
+  safe(socket, "salon_reveal", {}, () => {
     const salon = adminSalon(socket);
     if (!salon || salon.game.phase !== "round") return;
     if (!requirePro(socket, salon, "reveal")) return;
     revealRound(salon.code, "Réponse révélée", io);
   });
 
-  socket.on("salon_end_game", () => {
+  safe(socket, "salon_end_game", {}, () => {
     const salon = adminSalon(socket);
     if (!salon || !["round", "summary"].includes(salon.game.phase)) return;
     if (!requirePro(socket, salon, "endGame")) return;
     finishGame(salon.code, io);
   });
 
-  socket.on("salon_volume", ({ volume } = {}) => {
+  safe(socket, "salon_volume", { volume: num(0, 100) }, ({ volume }) => {
     const salon = adminSalon(socket);
     if (!salon || !requirePro(socket, salon, "volume")) return;
     const v = Math.min(Math.max(Math.round(Number(volume) || 0), 0), 100);
     io.to(`salon:screens:${salon.code}`).emit("salon_volume", { volume: v });
   });
 
-  socket.on("salon_kick", ({ username } = {}) => {
+  safe(socket, "salon_kick", { username: key(20) }, ({ username }) => {
     const salon = adminSalon(socket);
     if (salon) kickPlayer(salon, username, io);
   });
@@ -67,49 +75,64 @@ export function registerControl(socket, io) {
   // Correction à la main par l'animateur (réponse orale acceptée, triche…)
   // `delta` ajuste au pas (boutons + et −) ; `score` fixe une valeur saisie
   // directement, hors de portée d'un delta plafonné à 1000.
-  socket.on("salon_adjust_score", ({ username, delta, score } = {}) => {
-    const salon = adminSalon(socket);
-    const player = salon?.players[username];
-    if (!player) return;
+  safe(
+    socket,
+    "salon_adjust_score",
+    ADJUST_SCORE,
+    ({ username, delta, score }) => {
+      const salon = adminSalon(socket);
+      const player = salon?.players[username];
+      if (!player) return;
 
-    const absolu = score != null;
-    const v = Math.round(Number(absolu ? score : delta) || 0);
-    if (absolu) {
-      if (!Number.isFinite(v) || v < 0 || v > 100000) return;
-    } else if (!v || Math.abs(v) > 1000) return;
+      const absolu = score != null;
+      const v = Math.round(Number(absolu ? score : delta) || 0);
+      if (absolu) {
+        if (!Number.isFinite(v) || v < 0 || v > 100000) return;
+      } else if (!v || Math.abs(v) > 1000) return;
 
-    if (!requirePro(socket, salon, "score")) return;
-    player.score = absolu ? v : Math.max(0, player.score + v);
-    broadcastScores(salon.code, io);
-    broadcastRoster(salon.code, io);
-  });
+      if (!requirePro(socket, salon, "score")) return;
+      player.score = absolu ? v : Math.max(0, player.score + v);
+      broadcastScores(salon.code, io);
+      broadcastRoster(salon.code, io);
+    },
+  );
 
-  socket.on("salon_update_settings", (patch = {}) => {
+  safe(socket, "salon_update_settings", object(), (patch) => {
     const salon = adminSalon(socket);
     if (salon)
       applySettings(salon.code, patch, io, (f) => requirePro(socket, salon, f));
   });
 
-  socket.on("salon_rename_team", ({ team, name } = {}) => {
-    const salon = adminSalon(socket);
-    const t = salon?.settings.teams?.find((x) => x.id === team);
-    const n = cleanTeamName(name);
-    if (!t || !n || !requirePro(socket, salon, "teamEdit")) return;
-    t.name = n;
-    broadcastRoster(salon.code, io);
-  });
+  safe(
+    socket,
+    "salon_rename_team",
+    { team: int(0, 99), name: str(100) },
+    ({ team, name }) => {
+      const salon = adminSalon(socket);
+      const t = salon?.settings.teams?.find((x) => x.id === team);
+      const n = cleanTeamName(name);
+      if (!t || !n || !requirePro(socket, salon, "teamEdit")) return;
+      t.name = n;
+      broadcastRoster(salon.code, io);
+    },
+  );
 
-  socket.on("salon_set_player_team", ({ username, team } = {}) => {
-    const salon = adminSalon(socket);
-    const player = salon?.players[username];
-    if (!player || !salon.settings.teams?.some((t) => t.id === team)) return;
-    if (!requirePro(socket, salon, "teamEdit")) return;
-    player.team = team;
-    broadcastRoster(salon.code, io);
-  });
+  safe(
+    socket,
+    "salon_set_player_team",
+    { username: key(20), team: int(0, 99) },
+    ({ username, team }) => {
+      const salon = adminSalon(socket);
+      const player = salon?.players[username];
+      if (!player || !salon.settings.teams?.some((t) => t.id === team)) return;
+      if (!requirePro(socket, salon, "teamEdit")) return;
+      player.team = team;
+      broadcastRoster(salon.code, io);
+    },
+  );
 
   // ── Host starts the game ──────────────────────────────────────────────────
-  socket.on("salon_start", () => {
+  safe(socket, "salon_start", {}, () => {
     const salon = adminSalon(socket);
     if (!salon || salon.game.phase !== "lobby") return;
     const code = salon.code;
@@ -128,7 +151,7 @@ export function registerControl(socket, io) {
   });
 
   // ── Host signals music has started playing ────────────────────────────────
-  socket.on("salon_music_ready", () => {
+  safe(socket, "salon_music_ready", {}, () => {
     if (socket.salonRole !== "screen") return;
     const code = socket.salonCode;
     const salon = salonRooms[code];
@@ -144,41 +167,46 @@ export function registerControl(socket, io) {
 
   // L'écran ne peut pas lire la vidéo (supprimée, intégration bloquée) :
   // tant que la musique n'a pas démarré, un autre titre prend la place
-  socket.on("salon_video_failed", async ({ videoId } = {}) => {
-    if (socket.salonRole !== "screen") return;
-    const salon = salonRooms[socket.salonCode];
-    const game = salon?.game;
-    if (
-      game?.phase !== "round" ||
-      game.timerActive ||
-      game.currentVideo?.id !== videoId
-    )
-      return;
-    const track = game.currentTrack;
-    if (game.currentVideo.audio) return skipTrack(salon.code, io);
-    reportTrackIssue(track.id, "video", "auto", "Vidéo illisible en salon", {
-      salon: salon.code,
-      videoId,
-    });
-    // Vidéo bloquée par YouTube : l'extrait audio prend le relais
-    game.videos?.delete(track);
-    forgetVideo(track);
-    const audio = await previewUrl(track);
-    if (
-      !audio ||
-      game.currentTrack !== track ||
-      game.phase !== "round" ||
-      game.timerActive
-    )
-      return skipTrack(salon.code, io);
-    game.currentVideo = { id: audio, start: 0, audio: true };
-    io.to(`salon:screens:${salon.code}`).emit("salon_use_audio", {
-      audioUrl: audio,
-    });
-  });
+  safe(
+    socket,
+    "salon_video_failed",
+    { videoId: str(2000) },
+    async ({ videoId }) => {
+      if (socket.salonRole !== "screen") return;
+      const salon = salonRooms[socket.salonCode];
+      const game = salon?.game;
+      if (
+        game?.phase !== "round" ||
+        game.timerActive ||
+        game.currentVideo?.id !== videoId
+      )
+        return;
+      const track = game.currentTrack;
+      if (game.currentVideo.audio) return skipTrack(salon.code, io);
+      reportTrackIssue(track.id, "video", "auto", "Vidéo illisible en salon", {
+        salon: salon.code,
+        videoId,
+      });
+      // Vidéo bloquée par YouTube : l'extrait audio prend le relais
+      game.videos?.delete(track);
+      forgetVideo(track);
+      const audio = await previewUrl(track);
+      if (
+        !audio ||
+        game.currentTrack !== track ||
+        game.phase !== "round" ||
+        game.timerActive
+      )
+        return skipTrack(salon.code, io);
+      game.currentVideo = { id: audio, start: 0, audio: true };
+      io.to(`salon:screens:${salon.code}`).emit("salon_use_audio", {
+        audioUrl: audio,
+      });
+    },
+  );
 
   // ── Host triggers next round (manual mode) ────────────────────────────────
-  socket.on("salon_next_round", () => {
+  safe(socket, "salon_next_round", {}, () => {
     const salon = adminSalon(socket);
     if (!salon || salon.game.phase !== "summary") return;
     nextRound(salon.code, io);
@@ -186,25 +214,30 @@ export function registerControl(socket, io) {
 
   // La régie signale une vidéo fausse ou mal calée : elle part dans la file
   // « Réparer » de l'admin avec la vidéo exacte qui passait.
-  socket.on("salon_report_video", ({ reason } = {}) => {
-    const salon = adminSalon(socket);
-    const track = salon?.game.currentTrack;
-    if (!track || !["round", "summary"].includes(salon.game.phase)) return;
-    reportTrackIssue(
-      track.id,
-      "video",
-      "host",
-      String(reason ?? "").slice(0, 200) || null,
-      {
-        salon: salon.code,
-        videoId: salon.game.currentVideo?.id ?? null,
-        start: salon.game.currentVideo?.start ?? null,
-      },
-    );
-  });
+  safe(
+    socket,
+    "salon_report_video",
+    { reason: optional(str()) },
+    ({ reason }) => {
+      const salon = adminSalon(socket);
+      const track = salon?.game.currentTrack;
+      if (!track || !["round", "summary"].includes(salon.game.phase)) return;
+      reportTrackIssue(
+        track.id,
+        "video",
+        "host",
+        String(reason ?? "").slice(0, 200) || null,
+        {
+          salon: salon.code,
+          videoId: salon.game.currentVideo?.id ?? null,
+          start: salon.game.currentVideo?.start ?? null,
+        },
+      );
+    },
+  );
 
   // ── Host restarts the game with same players ──────────────────────────────
-  socket.on("salon_restart", () => {
+  safe(socket, "salon_restart", {}, () => {
     const salon = adminSalon(socket);
     if (!salon) return;
     const code = salon.code;
