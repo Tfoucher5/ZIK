@@ -207,6 +207,7 @@ export async function startNextRound(roomId, io) {
     }
 
     if (!ytAudio) throw new Error("No audio source");
+    game.skipStreak = 0;
 
     let choices = undefined;
     if (room.game_mode === "qcm" && game.fullPlaylist.length >= 2) {
@@ -271,8 +272,13 @@ export async function startNextRound(roomId, io) {
         room: roomId,
       },
     );
-    // Titre sans source audio : on ne consomme pas la manche, on passe au titre suivant
+    // Titre sans source audio : on ne consomme pas la manche, un titre de
+    // réserve prend sa place. Après 3 échecs d'affilée (panne YouTube et
+    // Deezer), plus de réserve : la partie raccourcit au lieu de chercher.
     game.currentRound--;
+    game.skipStreak = (game.skipStreak ?? 0) + 1;
+    const spare = game.skipStreak <= 3 && game.spareTracks?.pop();
+    if (spare) game.sessionPlaylist.unshift(spare);
     startNextRound(roomId, io);
   }
 }
