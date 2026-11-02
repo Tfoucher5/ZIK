@@ -1,7 +1,6 @@
 ---
 name: terminer
 description: Termine une tâche ZIK et ouvre la PR vers develop — passe tous les contrôles de la Définition de terminé, lance la relecture, rédige la PR, coche le plan. Utilise ce skill quand Théo dit que c'est fini, qu'on peut ouvrir la PR, pousser ou fusionner une branche de travail (« c'est bon on push », « ouvre la PR », « on termine »).
-disable-model-invocation: true
 argument-hint: "[notes pour la PR]"
 allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(git rev-parse *) Bash(git merge-base *)
 ---
@@ -27,7 +26,7 @@ Arrête-toi au premier point rouge, corrige ou demande, puis reprends. Une PR n'
    - `npx vitest run` (et `--coverage` si le seuil est configuré)
    - `npm run build`
 3. **Tests manquants.** Si du code nouveau ou corrigé n'a pas de test, lance l'agent `test-writer` (ou `/tests`), puis relance `npx vitest run`.
-4. **Relecture.** Lance `/review`. Tout point « Bloquant » ou « À corriger avant fusion » est traité avant d'aller plus loin.
+4. **Relecture.** Lance `/relire`. Tout point « Bloquant » ou « À corriger avant fusion » est traité avant d'aller plus loin.
 5. **Interface.** Si des `.svelte` ou du CSS ont changé, rappelle à Théo le contrôle visuel desktop 1440 px et mobile 390 px sur la preview de la PR, et TV 1920×1080 ou régie 1024 px si concernés.
 6. **Plan.** Coche l'item dans `docs/audit/2026-11-02-a-valider.md` (et ajoute une ligne si on a fait plus que prévu), dans un commit `docs(plan): …`.
 7. **Commit et push**, après confirmation de Théo :
@@ -45,7 +44,7 @@ Item du plan : « … » (phase N)
 ## Vérifications
 - [x] eslint · prettier · svelte-check · build
 - [x] vitest : X/Y
-- [x] /review : fusionnable
+- [x] /relire : fusionnable
 - [ ] Contrôle visuel sur la preview (si interface)
 
 ## Risques et points d'attention

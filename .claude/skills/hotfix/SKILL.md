@@ -23,7 +23,7 @@ Un hotfix est le plus petit changement qui supprime le problème, rien de plus. 
 3. `git fetch origin` puis `git switch -c hotfix/<sujet> origin/master`.
 4. **Écris d'abord le test qui reproduit le bug** et vérifie qu'il échoue.
 5. Corrige avec le diff minimal. Le test passe, la suite complète aussi (`npx vitest run`), ainsi que `npx eslint .` et `npm run build`.
-6. `/review` avec `origin/master` comme base.
+6. `/relire` avec `origin/master` comme base.
 7. Version : incrément de correctif (`X.Y.Z+1`) dans `package.json` et partout où elle est affichée.
 8. Après confirmation de Théo : push, `gh pr create --base master --title "fix(<zone>): … (vX.Y.Z)"`.
 9. **Pendant le gel** (jeudi 18 h → dimanche 2 h) : rappelle d'annoncer la maintenance aux salons ouverts depuis l'admin avant de fusionner, et de fusionner entre deux parties si possible.

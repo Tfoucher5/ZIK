@@ -52,7 +52,7 @@ Une PR n'est prête que si tout est vrai :
 4. Tout handler Socket.io nouveau ou modifié passe par `safe()` avec un schéma de validation, et a son test d'entrées hostiles
 5. Toute migration a ses politiques RLS et ses droits explicites, et les conseillers Supabase du staging ne remontent rien de nouveau
 6. Interface modifiée : contrôle visuel sur la preview en desktop et en mobile (390 px)
-7. `/review` (agent `reviewer`) sans point bloquant
+7. `/relire` (agent `reviewer`) sans point bloquant
 8. Release : scénario Playwright du salon vert sur le staging, sondes de `/admin/statut` au vert
 
 Si un point ne peut pas être tenu, le dire dans la PR et demander, ne pas fusionner.
@@ -65,9 +65,9 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 | -------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | `/demarrer <item du plan>` | état git propre, item trouvé dans le plan, branche depuis `develop`, plan annoncé         | Théo ou Claude au début d'une tâche                  |
 | `/tests`                   | agent `test-writer` : tests manquants du diff                                             | Claude après le code, ou Théo                        |
-| `/review`                  | agent `reviewer` : relit le diff contre ce fichier, verdict fusionnable / bloqué          | Claude avant toute PR, ou Théo                       |
+| `/relire`                  | agent `reviewer` : relit le diff contre ce fichier, verdict fusionnable / bloqué          | Claude avant toute PR, ou Théo                       |
 | `/migration <changement>`  | migration Supabase selon les règles, testée sur le staging                                | Claude dès qu'un changement de schéma est nécessaire |
-| `/terminer`                | Définition de terminé vérifiée, plan coché, commit + PR vers `develop` après confirmation | Théo seulement                                       |
+| `/terminer`                | Définition de terminé vérifiée, plan coché, commit + PR vers `develop` après confirmation | Claude quand la tâche est finie, ou Théo             |
 | `/release`                 | gel, staging, version, notes, PR `develop` → `master`                                     | Théo seulement                                       |
 | `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Théo seulement                                       |
 | `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |

@@ -1,5 +1,5 @@
 ---
-name: review
+name: relire
 description: Relecture indépendante de la branche en cours par l'agent reviewer, contre le CLAUDE.md, avec verdict fusionnable ou bloqué. Utilise ce skill avant toute PR, tout merge ou toute release, quand Théo demande une relecture ou « est-ce que c'est bon », et à la fin de chaque tâche.
 argument-hint: "[branche de base, develop par défaut]"
 context: fork
