@@ -1,4 +1,4 @@
-import { supabase } from "../../config.js";
+import { supabase, getAdminClient } from "../../config.js";
 import {
   checkAchievements,
   saveGameResult,
@@ -96,10 +96,11 @@ export async function saveGameResults(roomId, finalScores, io) {
       : {};
 
     if (room.game_mode !== "qcm") {
+      const admin = getAdminClient();
       for (let i = 0; i < finalScores.length; i++) {
         const p = finalScores[i];
         if (p.userId && !p.isGuest) {
-          await supabase.rpc("update_player_stats", {
+          await admin.rpc("update_player_stats", {
             p_user_id: p.userId,
             p_score: p.score,
             p_rank: i + 1,
@@ -164,7 +165,7 @@ export async function saveMidGamePlayer(
       is_guest: player.isGuest || !player.userId,
     });
     if (player.userId && !player.isGuest && gameMode !== "qcm") {
-      await supabase.rpc("update_player_stats", {
+      await getAdminClient().rpc("update_player_stats", {
         p_user_id: player.userId,
         p_score: player.score,
         p_rank: null,
