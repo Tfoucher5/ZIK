@@ -52,20 +52,29 @@ Une PR n'est prête que si tout est vrai :
 4. Tout handler Socket.io nouveau ou modifié passe par `safe()` avec un schéma de validation, et a son test d'entrées hostiles
 5. Toute migration a ses politiques RLS et ses droits explicites, et les conseillers Supabase du staging ne remontent rien de nouveau
 6. Interface modifiée : contrôle visuel sur la preview en desktop et en mobile (390 px)
-7. Revue par l'agent `reviewer` sans point bloquant
+7. `/review` (agent `reviewer`) sans point bloquant
 8. Release : scénario Playwright du salon vert sur le staging, sondes de `/admin/statut` au vert
 
 Si un point ne peut pas être tenu, le dire dans la PR et demander, ne pas fusionner.
 
-## Agents
+## Skills et agents
 
-Dans `.claude/agents/`. Les utiliser au lieu de tout faire dans la conversation principale :
+Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 
-- `reviewer` : avant toute fusion, relit le diff contre ce fichier
-- `test-writer` : écrit les tests manquants d'une PR
-- `db-migrations` : tout changement de base (migration, RLS, droits, conseillers)
-- `release-manager` : prépare une release `develop` → `master`
-- `incident` : alerte, suspicion ou bug signalé en prod
+| Commande                   | Rôle                                                                                      | Déclenchement                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `/demarrer <item du plan>` | état git propre, item trouvé dans le plan, branche depuis `develop`, plan annoncé         | Théo ou Claude au début d'une tâche                  |
+| `/tests`                   | agent `test-writer` : tests manquants du diff                                             | Claude après le code, ou Théo                        |
+| `/review`                  | agent `reviewer` : relit le diff contre ce fichier, verdict fusionnable / bloqué          | Claude avant toute PR, ou Théo                       |
+| `/migration <changement>`  | migration Supabase selon les règles, testée sur le staging                                | Claude dès qu'un changement de schéma est nécessaire |
+| `/terminer`                | Définition de terminé vérifiée, plan coché, commit + PR vers `develop` après confirmation | Théo seulement                                       |
+| `/release`                 | gel, staging, version, notes, PR `develop` → `master`                                     | Théo seulement                                       |
+| `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Théo seulement                                       |
+| `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |
+
+Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (temps réel, salon, partie), `zik-supabase` (base, migrations, services), `zik-ui` (`.svelte`, CSS).
+
+Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod).
 
 ## Base de données (Supabase)
 
@@ -80,7 +89,7 @@ Dans `.claude/agents/`. Les utiliser au lieu de tout faire dans la conversation 
 ## Temps réel (Socket.io) et ZIK Soirée
 
 - Logique serveur dans `src/lib/server/socket/` (`game/`, `salon/`), point d'entrée `index.js` de chacun
-- Chaque handler est enregistré via `safe(nom, fn)` : payload validé par un schéma, exception attrapée et journalisée. Un message mal formé ne doit jamais faire tomber le process
+- Chaque handler est enregistré via `safe(socket, nom, schema, fn)` : payload validé par un schéma, exception attrapée et journalisée. Un message mal formé ne doit jamais faire tomber le process
 - Le serveur est la seule source de vérité : chrono (heure de fin), scores, phase
 - Les téléphones des joueurs ne reçoivent jamais la réponse ni le média (`videoId`, `audioUrl`) ; le média ne part qu'aux écrans authentifiés par la clé de régie
 - Un joueur parti en cours de partie reste compté : son score figure dans le résultat final, le classement de soirée et son profil
@@ -143,7 +152,7 @@ Dans `.claude/agents/`. Les utiliser au lieu de tout faire dans la conversation 
 
 ## MCPs disponibles
 
-- **Supabase** : inspecter la base. Écritures et migrations uniquement sur le staging, via l'agent `db-migrations`
+- **Supabase** : inspecter la base. Écritures et migrations uniquement sur le staging, via `/migration`
 - **Railway** : lire logs, métriques, déploiements. Aucune modification de `[PROD]` sans demande explicite
 - **Stripe** : système de paiement (abonnements, factures), mode test hors prod
 - **Notion** : tâches et doc projet
