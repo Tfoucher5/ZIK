@@ -1,13 +1,20 @@
 // Texte des titres et artistes : forme comparable (réponses), forme affichée,
 // et découpage des featurings.
 
+// Retire \u00ab (Remix) \u00bb, \u00ab [Live] \u00bb\u2026 sauf si le titre n'est que \u00e7a : \u00ab [666] \u00bb
+function withoutBrackets(str, sep) {
+  const noParen = str.replace(/ *\([^)]*\) */g, sep);
+  const out = noParen.replace(/ *\[[^\]]*\] */g, sep);
+  if (out.trim()) return out;
+  return (noParen.trim() ? noParen : str).replace(/[()[\]]/g, "");
+}
+
 export function cleanString(str) {
   if (!str) return "";
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ *\([^)]*\) */g, "")
-    .replace(/ *\[[^\]]*\] */g, "")
+  return withoutBrackets(
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+    "",
+  )
     .replace(/[''`]/g, "'")
     .replace(/[-\u2013\u2014]/g, " ")
     .trim()
@@ -16,11 +23,7 @@ export function cleanString(str) {
 
 export function displayString(str) {
   if (!str) return "";
-  return str
-    .replace(/ *\([^)]*\) */g, " ")
-    .replace(/ *\[[^\]]*\] */g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return withoutBrackets(str, " ").replace(/\s+/g, " ").trim();
 }
 
 export function parseFeaturing(artistStr) {
