@@ -25,7 +25,7 @@ ZIK est un blind test musical : on entend un extrait, on trouve le titre et l'ar
 - **Accueil = choix de direction.** Deux portes de taille égale : « Jouer en ligne » et « Animer une soirée ». Un champ « J'ai un code » pour rejoindre directement une soirée ou une partie privée.
 - **Deux navigations distinctes.** Dans Jouer en ligne : Rooms, Zikle, Défi, Playlists, Cartes, Classements, plus le compte. Dans ZIK Soirée : Découvrir, Tarifs, Créer une soirée, Mon espace, Aide. On passe d'un univers à l'autre par un lien discret et permanent, et par le logo qui ramène à l'accueil.
 - **Écrans de jeu en soirée (TV, régie, téléphone) : aucune navigation du site.** Ils sont en plein écran et ne montrent que ce qui sert à la soirée.
-- **Compte** : un seul compte pour les deux univers. Le menu compte donne accès au profil, à la collection, aux paramètres et, pour un organisateur, à son espace.
+- **Compte** : un seul compte pour les deux univers, mais deux profils distincts avec des options différentes : le profil joueur dans Jouer en ligne, l'espace organisateur (« mon lieu ») dans ZIK Soirée. Le menu compte donne accès aux deux, à la collection et aux paramètres.
 - **Pied de page** : statut des services, nouveautés, aide, mentions légales, CGU, CGV, confidentialité, soutenir ZIK.
 
 ## 4. Arborescence cible
@@ -77,7 +77,7 @@ Les anciennes adresses (`/salon`, `/salon/host`, `/salon/regie`, `/salon/play`, 
 ### Accueil `/` — Modifiée
 
 - **But** : envoyer chaque visiteur dans le bon univers en un clic.
-- **Contenu** : accroche courte ; deux grandes portes « Jouer en ligne » (rooms en direct, Zikle du jour) et « Animer une soirée » (TV + téléphones, pour bars, campings, entreprises, soirées privées) ; champ « J'ai un code » ; soirées et rooms en direct maintenant (nombre de joueurs) ; aperçu des nouveautés ; preuve de confiance pour les organisateurs (nombre de soirées jouées, avis de clients Pro quand il y en aura).
+- **Contenu** : un aiguillage, rien d'autre. Accroche courte ; deux grandes portes « Jouer en ligne » et « Animer une soirée » ; champ « J'ai un code ». L'onboarding actuel de l'accueil est découpé : la partie salon part sur `/soiree`, la partie jeu (rooms, Zikle, playlists, classements) sur la page d'entrée du jeu en ligne.
 - **Actions** : choisir une porte, saisir un code, se connecter.
 - **États** : visiteur, connecté, connecté organisateur Pro (accès direct à son espace).
 
@@ -127,6 +127,7 @@ Ces pages existent et fonctionnent ; la refonte porte surtout sur une navigation
 ### Présentation `/soiree` — Nouvelle
 
 - **But** : convaincre un organisateur en moins d'une minute et l'amener à créer sa première soirée.
+- **Structure** : s'inspirer de l'enchaînement des sections de la page d'accueil d'AnimTonBar (pas de son style), avec l'identité ZIK.
 - **Contenu** : promesse claire (« Le blind test de votre soirée, sur votre TV, avec les téléphones des joueurs ») ; démonstration du fonctionnement en 3 étapes (ouvrir la TV, les joueurs scannent, l'animateur pilote) avec visuels des trois écrans ; ce qui est gratuit et ce qu'apporte Pro ; usages (bar, camping, entreprise, événement privé, association) menant aux pages dédiées ; chiffres de confiance ; questions fréquentes (matériel nécessaire, droits musicaux, connexion internet, nombre de joueurs).
 - **Actions** : « Créer une soirée » (principal), « Voir les tarifs », « Rejoindre une soirée ».
 
@@ -205,17 +206,20 @@ Ces pages existent et fonctionnent ; la refonte porte surtout sur une navigation
 
 ## 9. ZIK Soirée — espace organisateur
 
-### Tableau de bord `/soiree/espace` — Nouvelle
+### Espace organisateur `/soiree/espace` — Nouvelle
 
-- **But** : le point d'entrée d'un organisateur connecté.
-- **Contenu** : bouton « Créer une soirée » ; soirée en cours si une est ouverte (reprendre la régie) ; dernières soirées ; lieux ; playlists favorites ; abonnement (formule, date de fin, gérer le paiement et les factures) ; état des services (lien vers `/statut`).
-- **États** : pas encore de soirée (premier pas guidé), gratuit, Pro actif, Pro expiré.
+- **But** : l'espace « mon lieu » de l'organisateur connecté. C'est son profil côté ZIK Soirée, distinct du profil joueur (même compte, options différentes).
+- **Règle** : un compte organisateur = un lieu inclus dans Pro ; un lieu supplémentaire est une option payante de l'abonnement. Une soirée peut aussi se jouer sans lieu (particulier, pass Soirée).
+- **Contenu** : bouton « Créer une soirée » ; soirée en cours si une est ouverte (reprendre la régie) ; fiche du lieu modifiable (nom, type, ville, logo plus tard) ; historique des soirées et des parties ; classements et habitués du lieu ; playlists et réglages par défaut des soirées ; abonnement (formule, lieux inclus et supplémentaires, date de renouvellement, gérer le paiement et les factures) ; état des services (lien vers `/statut`).
+- **Avec plusieurs lieux** : un sélecteur de lieu en haut de l'espace ; chaque lieu a sa fiche.
+- **États** : pas encore de lieu ni de soirée (premier pas guidé : créer son lieu), gratuit, Pro actif, Pro expiré.
+- **Plus tard** : inviter d'autres comptes à collaborer sur un même lieu, avec des rôles (propriétaire, animateur).
 
 ### Fiche d'un lieu `/soiree/espace/lieux/[id]` — Nouvelle
 
-- **But** : l'historique d'un lieu pour les organisateurs réguliers (entreprise, camping, association, bar). Inclus dans Pro.
-- **Contenu** : nom, type, ville ; liste des soirées jouées ici ; joueurs et équipes les plus réguliers ; classement du lieu sur une période ; playlists les plus jouées.
-- **Actions** : créer une soirée dans ce lieu, renommer, archiver.
+- **But** : l'historique et les réglages d'un lieu (entreprise, camping, association, bar). Inclus dans Pro.
+- **Contenu** : nom, type, ville ; liste des soirées jouées ici ; joueurs et équipes les plus réguliers ; classement du lieu sur une période ; playlists les plus jouées ; réglages par défaut des soirées de ce lieu.
+- **Actions** : créer une soirée dans ce lieu, modifier la fiche, archiver.
 
 ### Détail d'une soirée passée `/soiree/espace/soirees/[id]` — Nouvelle
 
@@ -227,7 +231,6 @@ Ces pages existent et fonctionnent ; la refonte porte surtout sur une navigation
 
 - Soirées programmées et inscription des équipes à l'avance.
 - Écran TV aux couleurs du lieu (logo, couleurs, message d'accueil).
-- Offre pour animateurs qui tournent dans plusieurs lieux.
 
 ## 10. États à prévoir partout
 
