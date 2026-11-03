@@ -24,6 +24,16 @@ export function lastSalon(now = Date.now()) {
   }
 }
 
+// Dernière soirée, seulement si le serveur la dit encore ouverte ; fermée,
+// elle est oubliée. Réseau en panne : rien n'est affiché, rien n'est oublié.
+export async function openLastSalon(fetchFn = fetch) {
+  const code = lastSalon();
+  if (!code) return null;
+  const res = await fetchFn(`/api/salon?code=${code}`).catch(() => null);
+  if (res?.status === 404) forgetSalon(code);
+  return res?.ok ? code : null;
+}
+
 export function forgetSalon(code) {
   try {
     if (lastSalon() === code) localStorage.removeItem(LAST);

@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { saveSalonKey, lastSalon, forgetSalon } from "../salonClient.js";
+import {
+  saveSalonKey,
+  lastSalon,
+  forgetSalon,
+  openLastSalon,
+} from "../salonClient.js";
 import { listenHost } from "../../components/salon/host/hostEvents.js";
 
 let store;
@@ -43,5 +48,29 @@ describe("hôte qui revient dans sa soirée", () => {
     listenHost(h, { on: (ev, fn) => (ecoute[ev] = fn) });
     ecoute.salon_error({ message: "Salon introuvable." });
     expect(lastSalon()).toBeNull();
+  });
+});
+
+describe("carte « votre soirée est encore ouverte »", () => {
+  const repond = (status) => async () => ({ ok: status === 200, status });
+
+  it("s'affiche seulement si le serveur dit la soirée ouverte", async () => {
+    saveSalonKey("ABC123", "cle");
+    expect(await openLastSalon(repond(200))).toBe("ABC123");
+  });
+
+  it("soirée fermée : rien ne s'affiche et elle est oubliée", async () => {
+    saveSalonKey("ABC123", "cle");
+    expect(await openLastSalon(repond(404))).toBeNull();
+    expect(lastSalon()).toBeNull();
+  });
+
+  it("réseau en panne : rien ne s'affiche, mais rien n'est oublié", async () => {
+    saveSalonKey("ABC123", "cle");
+    const panne = async () => {
+      throw new Error("offline");
+    };
+    expect(await openLastSalon(panne)).toBeNull();
+    expect(lastSalon()).toBe("ABC123");
   });
 });

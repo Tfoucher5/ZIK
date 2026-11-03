@@ -3,7 +3,8 @@ import {
   createSalonRoom,
   changeSalonPlaylists,
 } from "$lib/server/socket/salon/index.js";
-import { salonRooms } from "$lib/server/state.js";
+import { salonRooms, getIO } from "$lib/server/state.js";
+import { restoreSalon } from "$lib/server/socket/salon/snapshot.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 
 // Un salon sans compte ne lit que les playlists publiques (client anonyme,
@@ -53,9 +54,20 @@ export async function POST({ request }) {
   }
 }
 
+// Recherches ratées par HTTP, toutes requêtes confondues (même plafond que par
+// socket) : des codes au hasard ne martèlent pas la base
+const httpLookups = {};
+
 export async function GET({ url }) {
   const code = url.searchParams.get("code")?.toUpperCase();
-  if (!code) return json({ error: "Code requis" }, { status: 400 });
+  if (!/^[A-Z0-9]{4,12}$/.test(code ?? ""))
+    return json({ error: "Code requis" }, { status: 400 });
+  // Juste après un redémarrage, le salon n'est encore que dans son instantané
+  if (
+    !salonRooms[code] &&
+    (await restoreSalon(code, getIO(), httpLookups)) === "throttled"
+  )
+    return json({ error: "Réessayez dans un instant" }, { status: 503 });
   const salon = salonRooms[code];
   if (!salon) return json({ error: "Salon introuvable" }, { status: 404 });
   return json({

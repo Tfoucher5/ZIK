@@ -183,7 +183,8 @@ export async function restoreSalon(code, io, socket) {
   const misses = (socket._restoreMisses ??= []);
   const now = Date.now();
   while (misses.length && now - misses[0] > MISS_WINDOW_MS) misses.shift();
-  if (misses.length >= MAX_MISSES) return;
+  // « throttled » : on n'a pas regardé, ce n'est pas un salon fermé
+  if (misses.length >= MAX_MISSES) return "throttled";
   await (pending[code] ??= load(code, io).finally(() => delete pending[code]));
   if (!salonRooms[code]) misses.push(now);
 }
