@@ -1,6 +1,7 @@
 import { playSound, SOUNDS } from "./sounds.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
 import { countdown } from "../countdown.js";
+import { forgetSalon } from "../../../client/salonClient.js";
 
 // Réactions de l'écran TV aux événements du salon (état h : SalonHost).
 export function listenHost(h, socket) {
@@ -230,6 +231,7 @@ export function listenHost(h, socket) {
   );
 
   socket.on("salon_error", ({ message }) => {
+    if (!h.joined) forgetSalon(h.code);
     h.restarting = false;
     h.error = message;
   });

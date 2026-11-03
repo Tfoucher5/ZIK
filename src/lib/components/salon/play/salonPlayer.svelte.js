@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 import { listenPlayer } from "./playerEvents.js";
-import { forgetResume, readResume } from "./resume.js";
+import { forgetResume, leaveResume, readResume } from "./resume.js";
 
 // État du téléphone d'un joueur du mode Salon et connexion à la partie.
 export class SalonPlayer {
@@ -147,6 +147,11 @@ export class SalonPlayer {
     this.socket?.disconnect();
     this.socket = null;
     this.resume = null;
+    try {
+      leaveResume(localStorage);
+    } catch {
+      /* stockage indisponible */
+    }
     this.joined = false;
     this.codeInput = "";
   };
