@@ -4,6 +4,7 @@ import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { makeChoices } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
 import { gamePlayers } from "./departed.js";
+import { saveSnapshot } from "./snapshot.js";
 import { scoreQcmRound } from "./answers.js";
 import { drawSpecial } from "./specials.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
@@ -75,6 +76,7 @@ export function finishGame(code, io) {
     rounds: game.history.length,
     night: nightView(salon),
   });
+  saveSnapshot(salon);
   prepareSession(code, io);
   scheduleCleanup(code);
 }
@@ -146,6 +148,7 @@ export function endRound(code, reason, io) {
   game.history.push({ answer, cover: track.cover });
   io.to(`salon:${code}`).emit("salon_round_end", roundSummary);
   scheduleCleanup(code);
+  saveSnapshot(salon);
 
   if (!salon.settings.manualNext) {
     game.breakTimer = setTimeout(() => {
@@ -197,6 +200,7 @@ export async function startNextRound(code, io) {
       audio: !!audio,
     };
     game.phase = "round";
+    saveSnapshot(salon);
     game.timerActive = false;
     game.timerValue = 0;
     game.startTime = 0;

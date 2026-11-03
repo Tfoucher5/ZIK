@@ -12,13 +12,13 @@ import {
   reconnectView,
   standings,
 } from "./players.js";
-import { checkEveryoneDone } from "./rounds.js";
-import { departPlayer, nameTaken } from "./departed.js";
+import { nameTaken } from "./departed.js";
+import { restoreSalon } from "./snapshot.js";
 import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
-import { cleanupNow, scheduleCleanup } from "./timers.js";
+import { scheduleCleanup } from "./timers.js";
 import { key, optional, safe, str } from "../safe.js";
 
 // key absente (TV ouverte avec le seul code) : le handler répond « réservé à l'hôte »
@@ -30,20 +30,12 @@ const PLAYER_JOIN = {
   auth: optional(str(8192)),
 };
 
-// Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
-// fermer la soirée
-const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
-// Entre deux parties ou en pause : l'ordi de la TV peut se mettre en veille
-// pendant l'entracte sans que la soirée soit perdue
-const HOST_IDLE_GRACE = 2 * 60 * 60 * 1000; // 2 h
-// Un téléphone verrouillé le temps d'un passage au comptoir garde sa place
-const PLAYER_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
-
-// Arrivées et départs : écran TV, régie, joueurs
+// Arrivées : écran TV, régie, joueurs (départs dans leave.js)
 export function registerJoin(socket, io) {
   // ── Host connects to their salon ──────────────────────────────────────────
   // ── Écran TV : public avec le code, pilotable seulement avec la clé ──────
-  safe(socket, "salon_join_host", SCREEN_JOIN, ({ code, key }) => {
+  safe(socket, "salon_join_host", SCREEN_JOIN, async ({ code, key }) => {
+    if (!salonRooms[code]) await restoreSalon(code, io, socket);
     const salon = salonRooms[code];
     if (!salon)
       return socket.emit("salon_error", { message: "Salon introuvable." });
@@ -83,7 +75,8 @@ export function registerJoin(socket, io) {
   });
 
   // ── Régie : l'écran de pilotage, à côté de la TV ─────────────────────────
-  safe(socket, "salon_join_control", SCREEN_JOIN, ({ code, key }) => {
+  safe(socket, "salon_join_control", SCREEN_JOIN, async ({ code, key }) => {
+    if (!salonRooms[code]) await restoreSalon(code, io, socket);
     const salon = salonRooms[code];
     if (!salon)
       return socket.emit("salon_error", { message: "Salon introuvable." });
@@ -140,6 +133,7 @@ export function registerJoin(socket, io) {
       if (!username || username in Object.prototype)
         return socket.emit("salon_error", { message: "Pseudo requis." });
 
+      if (!salonRooms[code]) await restoreSalon(code, io, socket);
       const salon = salonRooms[code];
       if (!salon)
         return socket.emit("salon_error", {
@@ -237,62 +231,4 @@ export function registerJoin(socket, io) {
       scheduleCleanup(code);
     },
   );
-
-  // ── Disconnect ────────────────────────────────────────────────────────────
-  safe(socket, "disconnect", {}, () => {
-    const code = socket.salonCode;
-    if (!code) return;
-    const salon = salonRooms[code];
-    if (!salon) return;
-
-    if (socket.salonRole === "screen" || socket.salonRole === "control") {
-      // Un écran de moins : la régie doit le voir tout de suite.
-      if (socket.salonRole === "screen") broadcastScreens(code, io);
-      // Le salon ferme quand plus aucun écran ni régie n'est connecté
-      const rooms = io.sockets.adapter.rooms;
-      const left =
-        (rooms.get(`salon:screens:${code}`)?.size ?? 0) +
-        (rooms.get(`salon:ctrl:${code}`)?.size ?? 0);
-      if (left > 0) return;
-      clearTimeout(salon._hostDcTimer);
-      const idle =
-        salon.game.paused ||
-        salon.game.phase === "lobby" ||
-        salon.game.phase === "gameover";
-      salon._hostDcTimer = setTimeout(
-        () => cleanupNow(code, io),
-        idle ? HOST_IDLE_GRACE : HOST_RECONNECT_GRACE,
-      );
-    } else if (socket.salonRole === "player") {
-      const username = socket.salonUsername;
-      if (!username || !salon.players[username]) return;
-
-      const player = salon.players[username];
-      // Ce téléphone a déjà été remplacé par une reconnexion
-      if (player.socketId !== socket.id) return;
-
-      // During lobby: remove immediately (they can re-enter with same name)
-      if (salon.game.phase === "lobby") {
-        departPlayer(salon, username);
-        broadcastRoster(code, io);
-        return;
-      }
-
-      // En partie : score et état gardés le temps du délai de grâce
-      player._disconnected = true;
-      player.socketId = null;
-
-      broadcastRoster(code, io);
-
-      // Check if their absence unblocks round end
-      checkEveryoneDone(code, io);
-
-      player._dcTimer = setTimeout(() => {
-        const s = salonRooms[code];
-        if (!s?.players[username]) return;
-        departPlayer(s, username);
-        broadcastRoster(code, io);
-      }, PLAYER_RECONNECT_GRACE);
-    }
-  });
 }

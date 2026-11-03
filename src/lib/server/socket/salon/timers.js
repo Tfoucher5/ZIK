@@ -1,6 +1,7 @@
 import { salonRooms, getIO } from "../../state.js";
 import { endRound, startNextRound } from "./rounds.js";
 import { clearOutage } from "./outage.js";
+import { dropSnapshot } from "./snapshot.js";
 
 const SALON_CLEANUP_DELAY = 30 * 60 * 1000; // 30 min
 
@@ -23,6 +24,7 @@ export function scheduleCleanup(code) {
       clearTimeout(s.game.musicReadyTimer);
     }
     delete salonRooms[code];
+    dropSnapshot(code);
     console.log(`Salon "${code}" libere de la memoire`);
   }, SALON_CLEANUP_DELAY);
 }
@@ -40,6 +42,7 @@ export function cleanupNow(code, io) {
     });
   }
   delete salonRooms[code];
+  dropSnapshot(code);
   console.log(`Salon "${code}" ferme (hote deconnecte)`);
 }
 

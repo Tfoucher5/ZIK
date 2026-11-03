@@ -3,7 +3,9 @@ import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
 
 // Réactions de l'écran TV aux événements du salon (état h : SalonHost).
 export function listenHost(h, socket) {
+  socket.on("salon_server_restart", () => (h.restarting = true));
   socket.on("salon_host_joined", (data) => {
+    h.restarting = false;
     h.joined = true;
     h.pro = data.pro;
     h.settings = data.settings || {};
@@ -206,6 +208,7 @@ export function listenHost(h, socket) {
   );
 
   socket.on("salon_error", ({ message }) => {
+    h.restarting = false;
     h.error = message;
   });
 }

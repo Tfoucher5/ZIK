@@ -1,5 +1,14 @@
 import { describe, it, expect, vi, afterAll } from "vitest";
 
+// Pas de base en test : les instantanés sont couverts par snapshot.test.js
+vi.mock("../salon/snapshot.js", () => ({
+  saveSnapshot: async () => {},
+  freezeAndSaveAll: async () => {},
+  purgeSnapshots: async () => {},
+  dropSnapshot: async () => {},
+  restoreSalon: async () => {},
+}));
+
 // Client Supabase factice : toute chaîne d'appels finit en { data: null }
 vi.mock("../../config.js", () => {
   const db = new Proxy(function () {}, {

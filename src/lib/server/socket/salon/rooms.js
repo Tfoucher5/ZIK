@@ -8,6 +8,7 @@ import { makeTeams } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";
 import { broadcastRoster, teamLimit } from "./players.js";
+import { saveSnapshot } from "./snapshot.js";
 import { scheduleCleanup } from "./timers.js";
 import { startNextRound } from "./rounds.js";
 
@@ -97,6 +98,7 @@ export async function createSalonRoom({
   };
 
   scheduleCleanup(code);
+  saveSnapshot(salonRooms[code]);
   console.log(`Salon "${code}" cree`);
   return { code, key: adminKey };
 }
@@ -157,6 +159,7 @@ export async function changeSalonPlaylists({
     prepareSession(code, getIO());
   }
 
+  saveSnapshot(salon);
   getIO()
     ?.to(`salon:${code}`)
     .emit("salon_playlists_changed", {
@@ -250,5 +253,6 @@ export function applySettings(code, patch, io, allow) {
       startNextRound(code, io);
     }, s.showAnswerDuration * 1000);
   }
+  saveSnapshot(salon);
   io.to(`salon:${code}`).emit("salon_settings", { settings: s });
 }

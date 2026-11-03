@@ -12,6 +12,11 @@ const { handler } = await import("./build/handler.js");
 
 import { register } from "./src/lib/server/socket/game/index.js";
 import { registerSalon } from "./src/lib/server/socket/salon/index.js";
+import {
+  freezeAndSaveAll,
+  purgeSnapshots,
+} from "./src/lib/server/socket/salon/snapshot.js";
+import { salonRooms } from "./src/lib/server/state.js";
 import { registerPresence } from "./src/lib/server/socket/presence.js";
 import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenance.js";
 import { startPushSchedule } from "./src/lib/server/services/notify/pushSchedule.js";
@@ -116,6 +121,17 @@ setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
 startPushSchedule();
 startErrorWatch();
 
+// Déploiement : Railway envoie SIGTERM à l'ancien conteneur une fois le nouveau
+// prêt. Les salons sont prévenus et sauvegardés ; leurs écrans et téléphones se
+// reconnectent seuls au nouveau, qui les reprend depuis l'instantané. Pas de
+// io.close() : un client déconnecté par le serveur ne se reconnecte pas.
+process.once("SIGTERM", async () => {
+  for (const code of Object.keys(salonRooms))
+    io.to(`salon:${code}`).emit("salon_server_restart");
+  await freezeAndSaveAll();
+  process.exit(0);
+});
+
 const PORT = process.env.PORT || 3000;
 // Sans ça, uncaughtException garderait un process qui n'écoute pas
 server.on("error", (err) => {
@@ -125,4 +141,5 @@ server.on("error", (err) => {
 server.listen(PORT, () => {
   console.log(`ZIK en ligne -> http://localhost:${PORT}`);
   announceLatestNews().catch((e) => console.error("[news]", e.message));
+  purgeSnapshots();
 });

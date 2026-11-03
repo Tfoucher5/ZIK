@@ -49,6 +49,8 @@ export class SalonPlayer {
   night = $state(null);
   buzzer = $state(null);
   videoOutage = $state(null);
+  // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
+  restarting = $state(false);
   specialIntro = $state(false);
   buzzLocked = $state(false);
   special = $state(null);
