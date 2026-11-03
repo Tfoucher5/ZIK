@@ -12,6 +12,7 @@
 --   drop function public.record_health(jsonb);
 --   drop function public.record_errors(jsonb);
 --   drop function public.purge_ops();
+--   drop function public.health_history(integer);
 --   drop schema ops cascade;
 
 create schema if not exists ops;
@@ -88,9 +89,31 @@ as $$
   delete from ops.errors where last_seen < now() - interval '30 days';
 $$;
 
+-- Pages /statut et /admin/statut : pire niveau de chaque sonde par jour
+-- (heure de Paris) sur les p_days derniers jours
+create or replace function public.health_history(p_days integer)
+returns table (day date, probe text, level text)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select (h.checked_at at time zone 'Europe/Paris')::date as day,
+         h.probe,
+         (array['ok', 'suspect', 'incident'])[
+           max(array_position(array['ok', 'suspect', 'incident'], h.level))
+         ] as level
+  from ops.health_checks h
+  where h.checked_at > now() - make_interval(days => least(greatest(p_days, 1), 90))
+  group by 1, 2
+  order by 1, 2;
+$$;
+
 revoke execute on function public.record_health(jsonb) from public, anon, authenticated;
 revoke execute on function public.record_errors(jsonb) from public, anon, authenticated;
 revoke execute on function public.purge_ops() from public, anon, authenticated;
+revoke execute on function public.health_history(integer) from public, anon, authenticated;
 grant execute on function public.record_health(jsonb) to service_role;
 grant execute on function public.record_errors(jsonb) to service_role;
 grant execute on function public.purge_ops() to service_role;
+grant execute on function public.health_history(integer) to service_role;

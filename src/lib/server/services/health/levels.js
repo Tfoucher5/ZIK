@@ -3,7 +3,9 @@
 // - incident : trois échecs de suite.
 // Une mesure saine remet tout à zéro.
 
-export const LEVELS = ["ok", "suspect", "incident"];
+import { LEVELS, worst } from "../../../shared/health/levels.js";
+
+export { LEVELS, worst };
 
 /**
  * @param {{ warns: number, fails: number }} streak séries en cours
@@ -19,14 +21,6 @@ export function levelOf(streak) {
   if (streak.fails >= 3) return "incident";
   if (streak.fails >= 1 || streak.warns >= 2) return "suspect";
   return "ok";
-}
-
-// Niveau global : le pire des sondes
-export function worst(levels) {
-  return levels.reduce(
-    (a, b) => (LEVELS.indexOf(b) > LEVELS.indexOf(a) ? b : a),
-    "ok",
-  );
 }
 
 /** Seuils « plus c'est grand, pire c'est » : ok, warn (approché) ou fail. */
