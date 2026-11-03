@@ -26,10 +26,14 @@ export const GROUPS = [
 ];
 
 /** Jours (AAAA-MM-JJ, heure de Paris) du plus ancien au plus récent. */
+// On recule par jours de calendrier, pas par pas de 24 h : au changement
+// d'heure, un jour fait 23 ou 25 h et la frise sauterait ou doublerait un jour
 export function lastDays(n, now = Date.now()) {
-  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" });
+  const paris = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" });
+  const [y, m, d] = paris.format(new Date(now)).split("-").map(Number);
+  const utc = new Intl.DateTimeFormat("en-CA", { timeZone: "UTC" });
   return Array.from({ length: n }, (_, i) =>
-    fmt.format(new Date(now - (n - 1 - i) * 86_400_000)),
+    utc.format(new Date(Date.UTC(y, m - 1, d - (n - 1 - i)))),
   );
 }
 
@@ -98,6 +102,7 @@ export async function adminStatus(now = Date.now()) {
   return {
     level: state.level,
     days,
+    historyAvailable: rows !== null,
     probes: Object.keys(LABELS).map((id) => ({
       id,
       label: LABELS[id],

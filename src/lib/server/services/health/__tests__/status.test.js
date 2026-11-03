@@ -47,6 +47,22 @@ describe("pages de statut", () => {
     expect(days[0]).toBe("2026-10-06");
   });
 
+  it("changement d'heure : 30 jours distincts et consécutifs, même vers minuit", () => {
+    // 23 h 30 à Paris, 10 jours après le passage à l'heure d'hiver
+    for (const now of [
+      Date.parse("2026-11-04T22:30:00Z"),
+      Date.parse("2026-04-05T21:45:00Z"),
+    ]) {
+      const days = lastDays(30, now);
+      expect(new Set(days).size).toBe(30);
+      for (let i = 1; i < 30; i++)
+        expect(Date.parse(days[i]) - Date.parse(days[i - 1])).toBe(86_400_000);
+    }
+    expect(lastDays(1, Date.parse("2026-11-04T22:30:00Z"))).toEqual([
+      "2026-11-04",
+    ]);
+  });
+
   it("un groupe prend le pire niveau de ses sondes chaque jour, null sans mesure", () => {
     const days = ["2026-11-02", "2026-11-03", "2026-11-04"];
     const h = historyBy(
@@ -105,5 +121,6 @@ describe("pages de statut", () => {
       value: 42,
     });
     expect(a.probes.find((p) => p.id === "deezer").level).toBeNull();
+    expect(a.historyAvailable).toBe(true);
   });
 });

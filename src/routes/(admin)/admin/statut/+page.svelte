@@ -51,6 +51,9 @@
     <p class="ast-note">Chargement…</p>
   {:else}
     <p class="ast-global {status.level}">État global : <b>{LEVEL_TEXT[status.level]}</b> · page publique <a href="/statut">/statut</a></p>
+    {#if !status.historyAvailable}
+      <p class="ast-note">Historique illisible (base injoignable, ou migration <code>ops</code> pas encore appliquée) : les frises restent grises.</p>
+    {/if}
     <ul class="ast-sondes">
       {#each status.probes as p (p.id)}
         <li>
