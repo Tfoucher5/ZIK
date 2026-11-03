@@ -32,6 +32,6 @@ Lis la fiche de l'écran concerné dans le brief avant de le toucher.
 
 ## Vérifier
 
-- Contrôle visuel en desktop (1440 px) et mobile (390 px) sur la preview ; TV en 1920×1080, régie aussi en 1024 px.
+- Contrôle visuel en desktop (1440 px) et mobile (390 px) sur le staging après fusion ; TV en 1920×1080, régie aussi en 1024 px.
 - Relis chaque texte affiché : français, sans jargon, sans donnée inventée.
 - Compte les éléments magenta à l'écran : un seul.
