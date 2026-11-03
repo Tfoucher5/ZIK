@@ -1,10 +1,16 @@
 // Chrono local calé sur l'heure de fin envoyée par le serveur : un tick perdu
 // ou une page reprise en cours de manche affichent quand même le bon temps.
-// L'écart d'horloge avec le serveur (now) est mesuré à la réception ; la
-// latence du réseau n'est pas corrigée (quelques dizaines de ms).
+//
+// Écart d'horloge avec le serveur : un message ne peut qu'arriver en retard,
+// donc chaque mesure (now du serveur − heure du téléphone) le sous-estime. On
+// garde la plus grande : celle du message le moins retardé. Au réveil d'un
+// téléphone verrouillé, les messages restés en attente arrivent d'un coup avec
+// plusieurs secondes de retard ; ils ne faussent plus l'affichage.
+// shortcut: un téléphone dont l'heure avance brusquement en cours de soirée
+// garderait l'ancien écart jusqu'au rechargement de la page.
 export function countdown(onTick, clock = () => Date.now()) {
   let timer = null;
-  let last = null;
+  let offset = -Infinity;
   const stop = () => {
     clearInterval(timer);
     timer = null;
@@ -12,12 +18,7 @@ export function countdown(onTick, clock = () => Date.now()) {
   return {
     start(endsAt, serverNow) {
       stop();
-      let offset = serverNow - clock();
-      // Même manche, latence qui varie : on garde l'écart déjà mesuré pour que
-      // l'affichage ne remonte pas d'une seconde
-      if (last?.endsAt === endsAt && Math.abs(offset - last.offset) < 1000)
-        offset = last.offset;
-      last = { endsAt, offset };
+      offset = Math.max(offset, serverNow - clock());
       const tick = () => {
         const left = Math.max(0, Math.ceil((endsAt - clock() - offset) / 1000));
         onTick(left);
