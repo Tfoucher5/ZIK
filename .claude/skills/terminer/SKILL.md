@@ -27,7 +27,7 @@ Arrête-toi au premier point rouge, corrige ou demande, puis reprends. Une PR n'
    - `npm run build`
 3. **Tests manquants.** Si du code nouveau ou corrigé n'a pas de test, lance l'agent `test-writer` (ou `/tests`), puis relance `npx vitest run`.
 4. **Relecture.** Lance `/relire`. Tout point « Bloquant » ou « À corriger avant fusion » est traité avant d'aller plus loin.
-5. **Interface.** Si des `.svelte` ou du CSS ont changé, rappelle à Théo le contrôle visuel desktop 1440 px et mobile 390 px sur la preview de la PR, et TV 1920×1080 ou régie 1024 px si concernés.
+5. **Interface.** Si des `.svelte` ou du CSS ont changé, rappelle à Théo le contrôle visuel desktop 1440 px et mobile 390 px sur le staging après fusion dans `develop`, et TV 1920×1080 ou régie 1024 px si concernés.
 6. **Plan.** Coche l'item dans `docs/audit/2026-11-02-a-valider.md` (et ajoute une ligne si on a fait plus que prévu), dans un commit `docs(plan): …`.
 7. **Commit et push**, après confirmation de Théo :
    - message au format `type(zone): description` (sans numéro de version : il est fixé à la release) ;
@@ -45,7 +45,7 @@ Item du plan : « … » (phase N)
 - [x] eslint · prettier · svelte-check · build
 - [x] vitest : X/Y
 - [x] /relire : fusionnable
-- [ ] Contrôle visuel sur la preview (si interface)
+- [ ] Contrôle visuel sur le staging après fusion (si interface)
 
 ## Risques et points d'attention
 - …

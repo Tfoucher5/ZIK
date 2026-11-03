@@ -22,16 +22,15 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 
 ## Environnements
 
-| Env     | Branche                         | Railway                                  | Supabase        | Usage                                           |
-| ------- | ------------------------------- | ---------------------------------------- | --------------- | ----------------------------------------------- |
-| Prod    | `master`                        | `[PROD] - Production` (www.zik-music.fr) | projet `ZIK`    | Joueurs et clients réels                        |
-| Staging | `develop`                       | `[DEV] - Développement`                  | base de staging | Recette d'une release complète, tests de charge |
-| Preview | `feature/*`, `fix/*`, `chore/*` | environnement de PR Railway              | base de staging | Tester une branche seule                        |
+| Env     | Branche   | Railway                                  | Supabase        | Usage                                           |
+| ------- | --------- | ---------------------------------------- | --------------- | ----------------------------------------------- |
+| Prod    | `master`  | `[PROD] - Production` (www.zik-music.fr) | projet `ZIK`    | Joueurs et clients réels                        |
+| Staging | `develop` | `[DEV] - Développement`                  | base de staging | Recette d'une release complète, tests de charge |
 
 - Le `.env` local pointe sur la **base de staging**, jamais sur la prod
 - Hors prod : clés Stripe de test, clé Resend limitée, paire VAPID dédiée, clés Turnstile de test, prospection désactivée. Un test ne doit jamais envoyer de mail, de notification ou de paiement réel
 - Données de test : seulement sur le staging, régénérables par le script de seed. Jamais de donnée de test en prod
-- Une variable ajoutée = ajoutée dans `.env.example` (avec un commentaire qui dit où l'obtenir) et dans les trois environnements Railway
+- Une variable ajoutée = ajoutée dans `.env.example` (avec un commentaire qui dit où l'obtenir) et dans les deux environnements Railway
 
 ## Branches et mises en prod
 
@@ -51,7 +50,7 @@ Une PR n'est prête que si tout est vrai :
 3. Couverture tenue sur `src/lib/server/socket/` et `src/lib/server/services/` (seuil dans `vitest.config.js`, on ne le baisse jamais)
 4. Tout handler Socket.io nouveau ou modifié passe par `safe()` avec un schéma de validation, et a son test d'entrées hostiles
 5. Toute migration a ses politiques RLS et ses droits explicites, et les conseillers Supabase du staging ne remontent rien de nouveau
-6. Interface modifiée : contrôle visuel sur la preview en desktop et en mobile (390 px)
+6. Interface modifiée : contrôle visuel sur le staging après fusion dans `develop` (pas d'environnement par PR), en desktop et en mobile (390 px)
 7. `/relire` (agent `reviewer`) sans point bloquant
 8. Release : scénario Playwright du salon vert sur le staging, sondes de `/admin/statut` au vert
 
@@ -100,7 +99,7 @@ Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule),
 ## Tests
 
 - Unitaires et intégration : Vitest. Les tests d'intégration démarrent un vrai serveur Socket.io en mémoire et des `socket.io-client`, avec YouTube, Deezer et Stripe simulés
-- Bout en bout : Playwright, un écran TV, une régie et des téléphones (contextes mobiles), sur la preview ou le staging
+- Bout en bout : Playwright, un écran TV, une régie et des téléphones (contextes mobiles), sur le staging
 - Charge : uniquement sur le staging, jamais sur la prod, source vidéo simulée
 - Un test ne dépend jamais du réseau réel ni de la base de prod
 
