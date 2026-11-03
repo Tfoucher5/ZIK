@@ -1,10 +1,10 @@
 <script>
   import { onMount } from 'svelte';
-  import { lastSalon, forgetSalon } from '$lib/client/salonClient.js';
+  import { openLastSalon, forgetSalon } from '$lib/client/salonClient.js';
 
   /** Hôte qui a fermé l'onglet de sa TV ou de sa régie : il retrouve sa soirée. */
   let code = $state(null);
-  onMount(() => (code = lastSalon()));
+  onMount(async () => (code = await openLastSalon()));
 
   function oublier() {
     forgetSalon(code);
@@ -16,7 +16,7 @@
   <section class="rs" aria-labelledby="rs-titre">
     <div>
       <p class="sx-kicker">Soirée en cours</p>
-      <h2 id="rs-titre">Votre soirée <span>{code}</span> est peut-être encore ouverte</h2>
+      <h2 id="rs-titre">Votre soirée <span>{code}</span> est encore ouverte</h2>
       <p class="rs-txt">Rouvrez l'écran TV ou la régie pour la reprendre là où elle en est. Les joueurs n'ont rien à refaire.</p>
     </div>
     <div class="rs-actions">

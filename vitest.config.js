@@ -1,9 +1,15 @@
 import { defineConfig } from "vitest/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   // Compile les runes des classes d'état (.svelte.js) pour pouvoir les tester
   plugins: [svelte()],
+  // Pour importer les routes (+server.js) dans les tests ; le code de src/lib
+  // garde ses imports relatifs (server.js le charge avec Node pur)
+  resolve: {
+    alias: { $lib: fileURLToPath(new URL("src/lib", import.meta.url)) },
+  },
   test: {
     environment: "node",
     include: ["src/**/__tests__/**/*.test.js"],
