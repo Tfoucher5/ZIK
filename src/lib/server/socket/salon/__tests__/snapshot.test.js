@@ -23,6 +23,7 @@ const {
 } = await import("../snapshot.js");
 const { addPlayer, broadcastRoster } = await import("../players.js");
 const { departPlayer } = await import("../departed.js");
+const { timerClock } = await import("../timers.js");
 
 const io = { to: () => ({ emit: () => {} }) };
 const titres = Array.from({ length: 4 }, (_, i) => ({
@@ -68,6 +69,8 @@ function salonEnManche() {
       videos: new Map([[full[1], { id: "v1" }]]),
       timerActive: true,
       timerValue: 12,
+      endsAt: 1_000_000,
+      remainingMs: 12_000,
       history: [{ answer: "A - Titre 0", cover: null }],
       paused: false,
       dbGameId: "g1",
@@ -135,6 +138,8 @@ describe("instantané d'un salon", () => {
       currentRound: 1,
     });
     expect(g.timerActive).toBe(false);
+    // Plus d'heure de fin : les écrans ne comptent pas, la reprise relance la manche
+    expect(timerClock(g).endsAt).toBeNull();
     expect(g.interval).toBeNull();
     expect(revu.banned.has("troll")).toBe(true);
     expect(revu.players.Ana).toMatchObject({ score: 300, night: 900, team: 0 });

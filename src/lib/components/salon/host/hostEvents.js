@@ -1,8 +1,10 @@
 import { playSound, SOUNDS } from "./sounds.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
+import { countdown } from "../countdown.js";
 
 // Réactions de l'écran TV aux événements du salon (état h : SalonHost).
 export function listenHost(h, socket) {
+  const chrono = countdown((v) => (h.timerVal = v));
   socket.on("salon_server_restart", () => (h.restarting = true));
   socket.on("salon_host_joined", (data) => {
     h.restarting = false;
@@ -17,6 +19,11 @@ export function listenHost(h, socket) {
     h.buzzer = data.buzzer;
     h.mediaCheck = data.mediaCheck;
     h.paused = data.paused;
+    if (data.endsAt) {
+      h.timerMax = data.timerMax;
+      h.timerStarted = true;
+      chrono.start(data.endsAt, data.now);
+    } else chrono.stop();
     h.phase = data.phase || "lobby";
     h.round = data.currentRound || 0;
     h.total = h.settings.maxRounds || 10;
@@ -63,6 +70,7 @@ export function listenHost(h, socket) {
   socket.on("salon_volume", ({ volume }) => h.applyVolume(volume));
   socket.on("salon_paused", ({ paused }) => {
     h.paused = paused;
+    if (paused) chrono.stop();
     if (paused) h.hostCenter?.pauseVideo();
     else if (!h.flashCut) h.hostCenter?.resumeVideo();
     if (paused) h.clearAutoNext();
@@ -86,6 +94,7 @@ export function listenHost(h, socket) {
     h.hostCenter?.preloadVideo(videoId, startSeconds),
   );
 
+  socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (data) => {
     h.phase = "round";
     h.special = data.special ?? null;
@@ -119,10 +128,11 @@ export function listenHost(h, socket) {
     }, SPECIAL_INTRO_MS);
   });
 
-  socket.on("salon_timer_started", ({ max }) => {
+  socket.on("salon_timer_started", ({ max, endsAt, now }) => {
     h.timerVal = max;
     h.timerMax = max;
     h.timerStarted = true;
+    if (endsAt) chrono.start(endsAt, now);
     if (h.special !== "flash") return;
     const round = h.round;
     setTimeout(() => {
@@ -131,8 +141,9 @@ export function listenHost(h, socket) {
       h.hostCenter?.pauseVideo();
     }, 5000);
   });
-  socket.on("salon_timer_update", ({ current, max }) => {
-    h.timerVal = current;
+  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
+    if (endsAt) chrono.start(endsAt, now);
+    else h.timerVal = current;
     h.timerMax = max;
     h.timerStarted = true;
   });
