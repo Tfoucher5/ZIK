@@ -18,7 +18,7 @@ import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
-import { scheduleCleanup } from "./timers.js";
+import { scheduleCleanup, timerClock } from "./timers.js";
 import { key, optional, safe, str } from "../safe.js";
 
 // key absente (TV ouverte avec le seul code) : le handler répond « réservé à l'hôte »
@@ -65,6 +65,8 @@ export function registerJoin(socket, io) {
       phase: salon.game.phase,
       paused: salon.game.paused,
       currentRound: salon.game.currentRound,
+      timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
+      ...timerClock(salon.game),
       support: supportView(salon),
     });
     if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
@@ -109,6 +111,7 @@ export function registerJoin(socket, io) {
       timerVal: game.timerValue,
       timerMax: game.timerMax ?? salon.settings.roundDuration,
       timerActive: game.timerActive,
+      ...timerClock(game),
       track:
         game.phase === "round" || game.phase === "summary"
           ? currentTrackInfo(salon)

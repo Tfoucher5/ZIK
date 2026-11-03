@@ -68,25 +68,38 @@ export function startTimer(code, io) {
   clearOutage(salon, io);
   game.musicReadyTimer = null;
   game.startTime = Date.now();
+  game.endsAt = game.startTime + duration * 1000;
   game.timerValue = duration;
   game.timerMax = duration;
   game.timerActive = true;
 
-  io.to(`salon:${code}`).emit("salon_timer_started", { max: duration });
+  io.to(`salon:${code}`).emit("salon_timer_started", {
+    max: duration,
+    ...timerClock(game),
+  });
   runTimer(code, io);
 }
 
+// Heure de fin (horloge serveur) : chaque écran compte seul et reste juste
+// même s'il rate un message
+export function timerClock(game) {
+  const running = game.timerActive && !game.paused && game.phase === "round";
+  return { endsAt: running ? game.endsAt : null, now: Date.now() };
+}
+
+// Le temps restant vient de l'heure de fin : un tick en retard ne décale rien
 function runTimer(code, io) {
   const game = salonRooms[code].game;
   game.interval = setInterval(() => {
-    game.timerValue--;
+    game.timerValue = Math.max(0, Math.ceil((game.endsAt - Date.now()) / 1000));
+    if (game.timerValue <= 0) return endRound(code, "Temps écoulé !", io);
+    // shortcut: tick par seconde gardé pour les écrans encore ouverts avec
+    // l'ancien code (ils ne lisent pas endsAt), à retirer à la release suivante
     io.to(`salon:${code}`).emit("salon_timer_update", {
       current: game.timerValue,
       max: game.timerMax,
+      ...timerClock(game),
     });
-    if (game.timerValue <= 0) {
-      endRound(code, "Temps écoulé !", io);
-    }
   }, 1000);
 }
 
@@ -96,6 +109,8 @@ export function pauseGame(code, io) {
     return;
   game.paused = true;
   game.pausedAt = Date.now();
+  if (game.timerActive)
+    game.remainingMs = Math.max(0, game.endsAt - game.pausedAt);
   clearInterval(game.interval);
   game.interval = null;
   clearTimeout(game.musicReadyTimer);
@@ -120,8 +135,15 @@ export function resumeGame(code, io) {
   if (!salon || !clearPause(code, io)) return;
   const game = salon.game;
   if (game.phase === "round") {
-    if (game.timerActive) runTimer(code, io);
-    else game.musicReadyTimer = setTimeout(() => startTimer(code, io), 12000);
+    if (game.timerActive) {
+      game.endsAt = Date.now() + (game.remainingMs ?? game.timerValue * 1000);
+      io.to(`salon:${code}`).emit("salon_timer_update", {
+        current: game.timerValue,
+        max: game.timerMax,
+        ...timerClock(game),
+      });
+      runTimer(code, io);
+    } else game.musicReadyTimer = setTimeout(() => startTimer(code, io), 12000);
   } else if (game.phase === "summary" && !salon.settings.manualNext) {
     game.breakTimer = setTimeout(() => {
       game.breakTimer = null;

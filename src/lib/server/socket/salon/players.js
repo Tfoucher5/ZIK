@@ -5,6 +5,7 @@ import { teamStandings } from "./teams.js";
 import { checkEveryoneDone } from "./rounds.js";
 import { eveningView } from "./evening.js";
 import { saveSnapshot } from "./snapshot.js";
+import { timerClock } from "./timers.js";
 import {
   closeDeparted,
   departed,
@@ -104,6 +105,7 @@ export function reconnectView(salon, player) {
     timerVal: salon.game.timerValue,
     timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
     timerActive: salon.game.timerActive,
+    ...timerClock(salon.game),
   };
   if (salon.game.phase === "round") {
     data.extras = (salon.game.currentTrack?.extraAnswers || []).map((e) => ({
