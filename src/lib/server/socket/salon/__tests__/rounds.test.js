@@ -25,6 +25,8 @@ vi.mock("../tracks.js", () => ({
 const { salonRooms } = await import("../../../state.js");
 const { startNextRound, skipTrack, finishGame } = await import("../rounds.js");
 const { drawSpareTrack } = await import("../session.js");
+const { mediaMissesSince, resetMediaMisses } =
+  await import("../../../services/health/mediaMisses.js");
 
 const CODE = "ROUND1";
 const io = { to: () => ({ emit: () => {} }) };
@@ -106,7 +108,10 @@ describe("titre sans vidéo en salon", () => {
 
     await startNextRound(CODE, io);
     expect(game.currentRound).toBe(1);
+    resetMediaMisses();
     skipTrack(CODE, io);
+    // Compté par la surveillance : c'est ce qui aurait détecté le 30/10
+    expect(mediaMissesSince(5 * 60_000)).toBe(1);
     await vi.waitFor(() => expect(game.currentTrack).toBe(b));
     expect(game.currentRound).toBe(1);
     expect(game.sessionPlaylist).toEqual([spare]);

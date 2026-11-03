@@ -196,6 +196,7 @@
         <a href="/salon">Mode Salon</a>
         <a href="/docs">Aide et règles du jeu</a>
         <a href="/nouveautes">Nouveautés</a>
+        <a href="/statut">État des services</a>
       </div>
     </div>
 
