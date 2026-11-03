@@ -36,7 +36,8 @@ const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 // Entre deux parties ou en pause : l'ordi de la TV peut se mettre en veille
 // pendant l'entracte sans que la soirée soit perdue
 const HOST_IDLE_GRACE = 2 * 60 * 60 * 1000; // 2 h
-const PLAYER_RECONNECT_GRACE = 90 * 1000; // 90 s
+// Un téléphone verrouillé le temps d'un passage au comptoir garde sa place
+const PLAYER_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 
 // Arrivées et départs : écran TV, régie, joueurs
 export function registerJoin(socket, io) {
@@ -277,7 +278,7 @@ export function registerJoin(socket, io) {
         return;
       }
 
-      // During game: keep score/state, give them 90s to reconnect
+      // En partie : score et état gardés le temps du délai de grâce
       player._disconnected = true;
       player.socketId = null;
 

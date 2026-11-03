@@ -234,8 +234,11 @@ describe("joueur parti puis revenu, par les handlers", () => {
       salonRooms[CODE].players.Ana.score = 200;
 
       ana.s.deconnecte();
-      vi.advanceTimersByTime(91_000);
       const salon = salonRooms[CODE];
+      // Téléphone verrouillé 9 min : toujours dans la partie
+      vi.advanceTimersByTime(9 * 60_000);
+      expect(salon.players.Ana._disconnected).toBe(true);
+      vi.advanceTimersByTime(61_000);
       expect(salon.players.Ana).toBeUndefined();
       expect(salon.departed[token]).toMatchObject({ score: 200, inGame: true });
 
@@ -263,7 +266,7 @@ describe("joueur parti puis revenu, par les handlers", () => {
     const salon = salonRooms[CODE];
     Object.assign(salon.players.Ana, { score: 200, night: 50 });
     ana.s.deconnecte();
-    vi.advanceTimersByTime(91_000);
+    vi.advanceTimersByTime(10 * 60_000 + 1000);
     vi.useRealTimers();
     const regie = makeSocket("regie", h.rooms);
     h.connecte(regie);

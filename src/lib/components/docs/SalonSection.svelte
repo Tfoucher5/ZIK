@@ -81,7 +81,7 @@
 
   <h3>Reconnexion automatique</h3>
   <p>
-    Si un joueur perd sa connexion réseau (tunnel, coupure Wi-Fi…), le système lui accorde une <strong>fenêtre de grâce de 90 secondes</strong>. Son score est conservé et il reprend la partie dès qu'il se reconnecte, sans avoir à ressaisir son nom ni rejoindre à nouveau.
+    Si un joueur perd sa connexion réseau (tunnel, coupure Wi-Fi…), sa place l'attend <strong>10 minutes</strong> : il reprend la partie dès qu'il se reconnecte, sans ressaisir son pseudo. Au-delà, ses points restent comptés au classement, marqués « a quitté », et il les retrouve en rouvrant la page du salon sur le même téléphone.
   </p>
 
   <DocTip warn label="Important :">
