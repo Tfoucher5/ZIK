@@ -15,7 +15,7 @@
   let ranked = $derived(
     finale.teams
       ? finale.teams.map(t => ({ key: 't' + t.id, name: t.name, score: t.score, team: t.id }))
-      : finale.players.map(p => ({ key: p.username, name: p.username, score: p.score, team: p.team }))
+      : finale.players.map(p => ({ key: p.username, name: p.left ? `${p.username} (a quitté)` : p.username, score: p.score, team: p.team }))
   );
   // Ordre d'affichage 2-1-3, ordre de révélation 3-2-1
   const PLACES = [

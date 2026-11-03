@@ -90,6 +90,7 @@
       <span class="r">{String(i + 1).padStart(2, '0')}</span>
       <span class="n">
         {p.username}
+        {#if p.left}<em>a quitté</em>{/if}
         {#if moved > 0}<em class="up">▲{moved}</em>{:else if moved < 0}<em class="down">▼{-moved}</em>{/if}
       </span>
       <span class="p">

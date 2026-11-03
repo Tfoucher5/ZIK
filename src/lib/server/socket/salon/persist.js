@@ -1,4 +1,5 @@
 import { supabase, getAdminClient } from "../../config.js";
+import { gamePlayers } from "./departed.js";
 
 // Une partie salon n'a pas de ligne game_players : les invités n'ont pas de
 // compte et le salon ne doit pas compter dans les classements. La partie, son
@@ -28,7 +29,7 @@ export async function recordSalonGameStart(salon) {
 function recordSalonPlayers(gameId, salon) {
   const teamName = (id) =>
     salon.settings.teams?.find((t) => t.id === id)?.name ?? null;
-  const rows = Object.values(salon.players)
+  const rows = gamePlayers(salon)
     .sort((a, b) => b.score - a.score)
     .map((p, i) => ({
       game_id: gameId,
@@ -58,7 +59,7 @@ export function recordSalonGameEnd(salon) {
     .from("games")
     .update({
       ended_at: new Date().toISOString(),
-      player_count: Object.keys(salon.players).length,
+      player_count: gamePlayers(salon).length,
       limit_hits: limitHits,
     })
     .eq("id", id)

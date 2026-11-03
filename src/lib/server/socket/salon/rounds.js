@@ -3,6 +3,7 @@ import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { makeChoices } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
+import { gamePlayers } from "./departed.js";
 import { scoreQcmRound } from "./answers.js";
 import { drawSpecial } from "./specials.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
@@ -54,15 +55,17 @@ export function finishGame(code, io) {
   game.gen = (game.gen ?? 0) + 1;
   clearOutage(salon, io);
   recordSalonGameEnd(salon);
-  for (const p of Object.values(salon.players)) p.night += p.score;
+  const all = gamePlayers(salon);
+  for (const p of all) p.night += p.score;
   salon.nightGames = (salon.nightGames ?? 0) + 1;
-  const scores = Object.values(salon.players)
+  const scores = all
     .map((p) => ({
       username: p.username,
       score: p.score,
       team: p.team,
       found: p.stats.found,
       first: p.stats.first,
+      ...(p.left && { left: true }),
     }))
     .sort((a, b) => b.score - a.score);
   io.to(`salon:${code}`).emit("salon_game_over", {
@@ -116,12 +119,13 @@ export function endRound(code, reason, io) {
   if (game.firstFinder && salon.players[game.firstFinder])
     salon.players[game.firstFinder].stats.first++;
 
-  const scores = Object.values(salon.players)
+  const scores = gamePlayers(salon)
     .map((p) => ({
       username: p.username,
       score: p.score,
       team: p.team,
-      delta: p.score - (p.scoreBeforeRound ?? 0),
+      delta: p.left ? 0 : p.score - (p.scoreBeforeRound ?? 0),
+      ...(p.left && { left: true }),
     }))
     .sort((a, b) => b.score - a.score);
 
