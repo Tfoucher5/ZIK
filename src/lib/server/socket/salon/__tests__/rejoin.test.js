@@ -69,7 +69,10 @@ describe("reprise d'un salon après un redémarrage, par les handlers", () => {
     delete salonRooms[CODE];
     db.reply = (fn) =>
       fn === "load_salon_snapshot"
-        ? { data: [{ code: CODE, data: instantane }], error: null }
+        ? {
+            data: [{ code: CODE, data: structuredClone(instantane) }],
+            error: null,
+          }
         : { data: null, error: null };
     h = makeIo();
     registerSalon(h.io);
@@ -83,18 +86,50 @@ describe("reprise d'un salon après un redémarrage, par les handlers", () => {
     return s;
   }
 
-  it("la TV retrouve son salon, en pause avant la manche coupée", async () => {
+  it("la TV retrouve son salon, tout le monde est prévenu, la manche coupée repart seule", async () => {
     const tv = ecouteur("tv");
     await tv.handlers.salon_join_host({ code: CODE, key: CLE });
     const joint = tv.recu.find((e) => e.event === "salon_host_joined");
     expect(joint.payload).toMatchObject({
       phase: "summary",
-      paused: true,
+      paused: false,
       currentRound: 0,
     });
-    expect(salonRooms[CODE].game.sessionPlaylist.map((t) => t.id)).toEqual([
-      "t1",
-    ]);
+    const game = salonRooms[CODE].game;
+    expect(game.sessionPlaylist.map((t) => t.id)).toEqual(["t1"]);
+    const annonce = h.emissions.find((e) => e.event === "salon_restored");
+    expect(annonce).toMatchObject({
+      cibles: [`salon:${CODE}`],
+      payload: { resumeIn: 5 },
+    });
+    expect(game.breakTimer).not.toBeNull();
+    expect(game.restored).toBeUndefined();
+    clearTimeout(game.breakTimer);
+
+    // Une TV qui se recharge ensuite ne relance rien
+    h.emissions.length = 0;
+    await ecouteur("tv2").handlers.salon_join_host({ code: CODE, key: CLE });
+    expect(h.emissions.some((e) => e.event === "salon_restored")).toBe(false);
+  });
+
+  it("la régie a déjà mis en pause ou relancé avant le retour de la TV : rien ne repart seul", async () => {
+    // Pause posée par la régie, revenue la première
+    const rg = ecouteur("rg");
+    await rg.handlers.salon_join_control({ code: CODE, key: CLE });
+    rg.handlers.salon_pause({});
+    await ecouteur("tv").handlers.salon_join_host({ code: CODE, key: CLE });
+    expect(h.emissions.some((e) => e.event === "salon_restored")).toBe(false);
+    expect(salonRooms[CODE].game).toMatchObject({ paused: true });
+    expect(salonRooms[CODE].game.breakTimer ?? null).toBeNull();
+
+    // Manche déjà relancée par la régie
+    delete salonRooms[CODE];
+    const rg2 = ecouteur("rg2");
+    await rg2.handlers.salon_join_control({ code: CODE, key: CLE });
+    salonRooms[CODE].game.phase = "round";
+    await ecouteur("tv2").handlers.salon_join_host({ code: CODE, key: CLE });
+    expect(h.emissions.some((e) => e.event === "salon_restored")).toBe(false);
+    expect(salonRooms[CODE].game.breakTimer ?? null).toBeNull();
   });
 
   it("une mauvaise clé reste refusée sur un salon repris", async () => {

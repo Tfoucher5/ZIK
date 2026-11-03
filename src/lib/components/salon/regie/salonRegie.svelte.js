@@ -34,6 +34,8 @@ export class SalonRegie {
   videoOutage = $state(null);
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
+  // Après un redémarrage : « mise à jour terminée », la manche repart seule
+  restored = $state(null);
   mediaCheck = $state(null);
   intermission = $state(null);
   finale = $state(null);

@@ -131,3 +131,38 @@ describe("TV qui se reconnecte en pleine manche", () => {
     vi.useRealTimers();
   });
 });
+
+describe("TV pendant un redémarrage du serveur", () => {
+  it("coupe la vidéo, annonce la reprise, efface l'annonce au début de la manche", () => {
+    const h = ECRANS[0].etat();
+    h.hostCenter = { pauseVideo: vi.fn(), loadMedia() {} };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    h.socket.recoit("salon_server_restart");
+    expect(h.restarting).toBe(true);
+    expect(h.hostCenter.pauseVideo).toHaveBeenCalled();
+
+    h.socket.recoit("salon_host_joined", { ...base, phase: "summary" });
+    h.socket.recoit("salon_restored", { resumeIn: 5 });
+    expect(h).toMatchObject({ restarting: false, restored: { resumeIn: 5 } });
+    h.socket.recoit("salon_round_start", { round: 1, total: 10 });
+    expect(h.restored).toBeNull();
+  });
+});
+
+describe.each(ECRANS)("annonce de reprise : $nom", ({ ecoute, etat }) => {
+  it("disparaît si l'hôte met en pause ou si la partie se termine", () => {
+    for (const fin of [
+      ["salon_paused", { paused: true }],
+      ["salon_game_over", { scores: [], teams: null, history: [] }],
+    ]) {
+      const e = etat();
+      e.socket = fauxSocket();
+      ecoute(e);
+      e.socket.recoit("salon_restored", { resumeIn: 5 });
+      expect(e.restored).toEqual({ resumeIn: 5 });
+      e.socket.recoit(...fin);
+      expect(e.restored, fin[0]).toBeNull();
+    }
+  });
+});

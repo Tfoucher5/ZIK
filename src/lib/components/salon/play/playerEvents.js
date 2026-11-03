@@ -10,6 +10,13 @@ export function listenPlayer(p, socket, c, u) {
     else chrono.stop();
   });
   socket.on("salon_server_restart", () => (p.restarting = true));
+  // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
+  socket.on("salon_paused", () => (p.restored = null));
+  socket.on("salon_game_over", () => (p.restored = null));
+  socket.on("salon_restored", ({ resumeIn }) => {
+    p.restored = { resumeIn };
+    if (resumeIn == null) setTimeout(() => (p.restored = null), 4000);
+  });
 
   const resetScores = () => {
     p.scores = [];
@@ -58,6 +65,7 @@ export function listenPlayer(p, socket, c, u) {
 
   socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (data) => {
+    p.restored = null;
     p.phase = "round";
     p.special = data.special ?? null;
     p.specialIntro = !!data.special;
