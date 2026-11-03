@@ -53,6 +53,22 @@ describe("chrono affiché sur les écrans", () => {
     c.stop();
   });
 
+  it("téléphone qui se réveille : les messages restés en attente ne faussent pas le chrono", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    let affiche;
+    const c = countdown((v) => (affiche = v));
+    c.start(30_000, 0);
+    // Verrouillé de 3 s à 15 s : au réveil, les ticks envoyés à 4, 5, 6 s
+    // arrivent d'un coup, avec 11 s de retard
+    vi.setSystemTime(15_000);
+    for (const envoye of [4000, 5000, 6000]) c.start(30_000, envoye);
+    expect(affiche).toBe(15);
+    vi.advanceTimersByTime(1000);
+    expect(affiche).toBe(14);
+    c.stop();
+  });
+
   it("stop fige l'affichage (pause)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
