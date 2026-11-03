@@ -1,10 +1,32 @@
 // Clé de régie d'un salon, gardée par le navigateur qui l'a créé : l'écran TV
 // et la régie ouverts sur ce navigateur n'ont pas besoin de la redemander.
 const k = (code) => `zik_salon_key_${code}`;
+const LAST = "zik_salon_last";
+// Une soirée dure rarement plus : au-delà, on ne propose plus d'y revenir
+const LAST_MAX_MS = 12 * 60 * 60 * 1000;
 
 export function saveSalonKey(code, key) {
   try {
     localStorage.setItem(k(code), key);
+    localStorage.setItem(LAST, JSON.stringify({ code, at: Date.now() }));
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
+// Dernière soirée créée sur ce navigateur, si l'hôte peut encore y revenir
+export function lastSalon(now = Date.now()) {
+  try {
+    const { code, at } = JSON.parse(localStorage.getItem(LAST) ?? "null") ?? {};
+    return code && now - at < LAST_MAX_MS && salonKey(code) ? code : null;
+  } catch {
+    return null;
+  }
+}
+
+export function forgetSalon(code) {
+  try {
+    if (lastSalon() === code) localStorage.removeItem(LAST);
   } catch {
     /* stockage indisponible */
   }

@@ -20,6 +20,12 @@ export function readResume(storage, urlCode, now = Date.now()) {
   };
 }
 
+// « Rejoindre une autre soirée » : plus de carte de reprise pour ce salon, le
+// pseudo reste pré-rempli
+export function leaveResume(storage) {
+  storage.removeItem("salon_at");
+}
+
 // « Ce n'est pas moi » : le téléphone oublie le joueur précédent et son jeton
 export function forgetResume(storage, code) {
   storage.removeItem("zik_salon_player_" + code);

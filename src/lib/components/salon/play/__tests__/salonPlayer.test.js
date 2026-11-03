@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 // Chaque io() rend un socket factice qu'on peut inspecter
 const sockets = [];
@@ -35,5 +35,23 @@ describe("téléphone : une seule connexion à la fois", () => {
     p.leave();
     expect(s.disconnect).toHaveBeenCalled();
     expect(p.socket).toBeNull();
+  });
+});
+
+describe("« Rejoindre une autre soirée » puis rechargement", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("ne propose plus de reprendre la place dans l'ancien salon", () => {
+    const store = { salon_at: String(Date.now()), salon_user: "Ana" };
+    vi.stubGlobal("localStorage", {
+      getItem: (k) => store[k] ?? null,
+      setItem: (k, v) => (store[k] = v),
+      removeItem: (k) => delete store[k],
+    });
+    const p = new SalonPlayer(null);
+    rejoint(p, "DDDDDD");
+    p.leave();
+    expect(store.salon_at).toBeUndefined();
+    expect(store.salon_user).toBe("Ana");
   });
 });

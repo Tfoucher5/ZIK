@@ -9,6 +9,7 @@
   import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/client/salonClient.js';
   import ProUpsell from '$lib/components/salon/setup/ProUpsell.svelte';
   import SetupHero from '$lib/components/salon/setup/SetupHero.svelte';
+  import ResumeSalon from '$lib/components/salon/setup/ResumeSalon.svelte';
   import SetupBlock from '$lib/components/salon/setup/SetupBlock.svelte';
   import SetupSheet from '$lib/components/salon/setup/SetupSheet.svelte';
   import SetupPro from '$lib/components/salon/setup/SetupPro.svelte';
@@ -150,6 +151,7 @@
 
 <div class="st">
   <SetupHero />
+  <ResumeSalon />
 
   {#if !authReady}
     <p class="st-loading">Chargement…</p>
