@@ -209,10 +209,8 @@ export async function startNextRound(code, io) {
       choices = c;
     }
 
-    const roundData = {
-      videoId: video?.id,
-      audioUrl: audio,
-      startSeconds: safeStart,
+    // Les téléphones ne reçoivent jamais le média ni la réponse
+    const publicData = {
       round: game.currentRound,
       total: salon.settings.maxRounds,
       choices,
@@ -220,16 +218,20 @@ export async function startNextRound(code, io) {
       featCount: track.featArtists?.length || 0,
       extras: (track.extraAnswers || []).map((e) => ({ label: e.label })),
     };
+    const roundData = {
+      ...publicData,
+      videoId: video?.id,
+      audioUrl: audio,
+      startSeconds: safeStart,
+    };
 
-    // La réponse ne part qu'à la régie : l'écran TV est public, n'importe
-    // qui avec le code peut l'ouvrir
+    // La réponse ne part qu'à la régie : la TV est vue par toute la salle
     io.to(`salon:screens:${code}`).emit("salon_round_start", roundData);
     io.to(`salon:ctrl:${code}`).emit("salon_round_start", {
       ...roundData,
       hostInfo: currentTrackInfo(salon),
     });
-    // Send to players (no answer info)
-    io.to(`salon:players:${code}`).emit("salon_round_start", roundData);
+    io.to(`salon:players:${code}`).emit("salon_round_start", publicData);
 
     // L'hôte signale le début de la musique ; filet si son lecteur ne répond
     // pas. Large : sur une connexion lente, la vidéo met du temps à démarrer.
