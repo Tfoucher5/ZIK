@@ -202,4 +202,14 @@ describe("diffusion du nombre d'écrans TV", () => {
     expect(salonRooms[CODE]).toBeDefined();
     expect(salonRooms[CODE]._hostDcTimer).toBeNull();
   });
+
+  it("une TV sans la bonne clé ne rejoint pas la salle du média", () => {
+    for (const key of [undefined, "mauvaise-cle"]) {
+      const s = makeSocket(`tv-${key}`, h.rooms);
+      h.connecte(s);
+      s.handlers.salon_join_host({ code: CODE, key });
+      expect(s.propres).toEqual([]);
+      expect(s.salonRole).toBeUndefined();
+    }
+  });
 });

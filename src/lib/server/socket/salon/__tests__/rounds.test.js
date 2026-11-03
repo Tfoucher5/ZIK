@@ -127,3 +127,30 @@ describe("drawSpareTrack", () => {
     expect(game.sessionPlaylist).toEqual([]);
   });
 });
+
+describe("début de manche", () => {
+  beforeEach(() => {
+    for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+  });
+
+  it("le média part à la TV et à la régie, jamais aux téléphones", async () => {
+    const ok1 = t("ok1");
+    salonDeTest([ok1], [ok1], 5);
+    const sent = {};
+    const ioCapture = {
+      to: (salle) => ({ emit: (ev, d) => (sent[`${salle}|${ev}`] = d) }),
+    };
+    await startNextRound(CODE, ioCapture);
+    const ev = "salon_round_start";
+    expect(sent[`salon:screens:${CODE}|${ev}`].videoId).toBe("v-ok1");
+    expect(sent[`salon:screens:${CODE}|${ev}`]).not.toHaveProperty("hostInfo");
+    expect(sent[`salon:ctrl:${CODE}|${ev}`]).toHaveProperty("hostInfo");
+    expect(sent[`salon:ctrl:${CODE}|${ev}`].videoId).toBe("v-ok1");
+    const phone = sent[`salon:players:${CODE}|${ev}`];
+    expect(phone.round).toBe(1);
+    expect(phone).not.toHaveProperty("videoId");
+    expect(phone).not.toHaveProperty("audioUrl");
+    expect(phone).not.toHaveProperty("startSeconds");
+    expect(phone).not.toHaveProperty("hostInfo");
+  });
+});
