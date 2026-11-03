@@ -1,0 +1,61 @@
+# Chien de garde : si le serveur tombe, il ne peut pas s'alerter lui-même.
+# Toutes les 5 min, GitHub appelle /healthz (3 essais espacés de 20 s). En
+# échec, il ouvre une issue « panne » (GitHub envoie un mail) ; quand ça
+# revient, il la ferme. Gratuit sur un dépôt public.
+# GitHub peut retarder une exécution planifiée de quelques minutes aux heures
+# chargées : la détection fine reste celle des sondes internes.
+name: Chien de garde
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: watchdog
+
+jobs:
+  healthz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Interroger /healthz
+        id: sonde
+        run: |
+          code=000
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://www.zik-music.fr/healthz || true)
+            if [ "$code" = "200" ]; then
+              echo "ok=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "ok=false" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Ouvrir ou fermer l'issue de panne
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OK: ${{ steps.sonde.outputs.ok }}
+          CODE: ${{ steps.sonde.outputs.code }}
+        run: |
+          gh label create panne --repo "$GITHUB_REPOSITORY" --color B60205 \
+            --description "Ouverte par le chien de garde" --force >/dev/null
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --label panne \
+            --state open --json number --jq '.[0].number // empty')
+          if [ "$OK" = "true" ]; then
+            if [ -n "$open" ]; then
+              gh issue close "$open" --repo "$GITHUB_REPOSITORY" \
+                --comment "Rétabli : /healthz répond 200 ($(TZ=Europe/Paris date '+%d/%m %H:%M'))."
+            fi
+          elif [ -z "$open" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --label panne \
+              --title "Panne : /healthz en échec sur www.zik-music.fr" \
+              --body "/healthz a répondu \`$CODE\` 3 fois de suite ($(TZ=Europe/Paris date '+%d/%m %H:%M'), heure de Paris).
+
+          À faire : logs Railway \`[PROD]\`, puis \`/incident\`. Cette issue se ferme seule quand le site répond."
+          fi
