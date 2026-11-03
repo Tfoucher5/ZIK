@@ -28,7 +28,7 @@ Les règles de la base sont dans le skill `zik-supabase` : charge-le si ce n'est
    - [ ] chaque clé étrangère indexée
    - [ ] migration idempotente quand c'est possible (`if not exists`)
    - [ ] aucune donnée de prod supprimée sans sauvegarde prévue
-4. **Appliquer sur le staging**, après confirmation de Théo (MCP `apply_migration` sur le projet de staging, jamais sur `ZIK` en prod). Puis relis les conseillers : tout nouvel avertissement se corrige dans la même migration.
+4. **Appliquer sur le staging**, après confirmation de Théo (MCP `apply_migration` sur le projet de staging, jamais sur `ZIK` en prod). Puis relis les conseillers : tout nouvel avertissement se corrige dans la même migration. Une fois la migration appliquée, fusionne sa PR **avant toute autre** : tant que son fichier n'est pas dans `develop`, le job `migrations` échoue sur chaque autre fusion et Railway `[DEV]` ne déploie pas.
 5. **Code qui suit.** Liste les fichiers à adapter : nom de schéma (`getAdminClient().schema("salon")`), types, requêtes. Si le code et la migration doivent partir ensemble, ils vont dans la même PR.
 6. **Tests.** Si la migration change ce que le code lit ou écrit, les tests du service concerné sont mis à jour (client Supabase simulé).
 
