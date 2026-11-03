@@ -29,6 +29,7 @@ vi.mock("../../game/audio.js", () => ({
 
 const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
+const { getPlayerList, nightView } = await import("../players.js");
 
 const CODE = "TEST01";
 const CLE = "cle-admin";
@@ -211,5 +212,115 @@ describe("diffusion du nombre d'écrans TV", () => {
       expect(s.propres).toEqual([]);
       expect(s.salonRole).toBeUndefined();
     }
+  });
+});
+
+describe("joueur parti puis revenu, par les handlers", () => {
+  let h;
+
+  beforeEach(() => {
+    for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+    salonDeTest();
+    salonRooms[CODE].game.phase = "summary";
+    h = makeIo();
+    registerSalon(h.io);
+  });
+
+  async function telephone(id, username, token) {
+    const s = makeSocket(id, h.rooms);
+    const recu = [];
+    s.emit = (event, payload) => recu.push({ event, payload });
+    h.connecte(s);
+    await s.handlers.salon_join_player({ code: CODE, username, token });
+    return { s, recu };
+  }
+
+  it("garde le score, réserve le pseudo et le rend au bon jeton", async () => {
+    vi.useFakeTimers();
+    try {
+      const ana = await telephone("t1", "Ana");
+      const token = ana.recu.find((e) => e.event === "salon_joined").payload
+        .token;
+      salonRooms[CODE].players.Ana.score = 200;
+
+      ana.s.deconnecte();
+      const salon = salonRooms[CODE];
+      // Téléphone verrouillé 9 min : toujours dans la partie
+      vi.advanceTimersByTime(9 * 60_000);
+      expect(salon.players.Ana._disconnected).toBe(true);
+      vi.advanceTimersByTime(61_000);
+      expect(salon.players.Ana).toBeUndefined();
+      expect(salon.departed[token]).toMatchObject({ score: 200, inGame: true });
+
+      const intrus = await telephone("t2", "Ana", "autre");
+      expect(intrus.recu.at(-1)).toMatchObject({
+        event: "salon_error",
+        payload: { message: "Ce pseudo est déjà pris." },
+      });
+
+      await telephone("t3", "Ana", token);
+      expect(salon.players.Ana).toMatchObject({
+        score: 200,
+        scoreBeforeRound: 200,
+      });
+      expect(salon.departed).toEqual({});
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Ana part avec 200 points de partie et 50 de soirée ; la régie est branchée
+  async function anaPartie() {
+    vi.useFakeTimers();
+    const ana = await telephone("t1", "Ana");
+    const salon = salonRooms[CODE];
+    Object.assign(salon.players.Ana, { score: 200, night: 50 });
+    ana.s.deconnecte();
+    vi.advanceTimersByTime(10 * 60_000 + 1000);
+    vi.useRealTimers();
+    const regie = makeSocket("regie", h.rooms);
+    h.connecte(regie);
+    regie.handlers.salon_join_control({ code: CODE, key: CLE });
+    return { salon, regie };
+  }
+
+  it("reste dans la liste en direct, marqué hors ligne", async () => {
+    const { salon } = await anaPartie();
+    await telephone("t2", "Bob");
+    expect(getPlayerList(salon)).toEqual([
+      expect.objectContaining({ username: "Bob", offline: false }),
+      expect.objectContaining({
+        username: "Ana",
+        score: 200,
+        offline: true,
+        left: true,
+        answeredThisRound: false,
+      }),
+    ]);
+  });
+
+  it("un jeton au nom d'une propriété d'objet est refusé", async () => {
+    const { salon } = await anaPartie();
+    for (const token of ["constructor", "__proto__", "toString"])
+      await telephone(`t-${token}`, "Zoe", token);
+    expect(salon.players.Zoe).toBeUndefined();
+    expect(Object.keys(salon.departed)).toHaveLength(1);
+  });
+
+  it("l'hôte peut retirer un joueur parti", async () => {
+    const { salon, regie } = await anaPartie();
+    regie.handlers.salon_kick({ username: "Ana" });
+    expect(salon.departed).toEqual({});
+    expect(salon.banned.has("ana")).toBe(true);
+  });
+
+  it("la remise à zéro de la soirée vide aussi les partis", async () => {
+    const { salon, regie } = await anaPartie();
+    salon.pro = true;
+    salon.nightGames = 1;
+    regie.handlers.salon_reset_night({});
+    expect(Object.values(salon.departed)[0].night).toBe(0);
+    salon.nightGames = 1;
+    expect(nightView(salon).players).toEqual([]);
   });
 });

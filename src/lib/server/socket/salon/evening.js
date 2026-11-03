@@ -26,8 +26,8 @@ export function registerEvening(socket, io) {
     const salon = adminSalon(socket);
     if (!salon || !requirePro(socket, salon, "night")) return;
     for (const p of Object.values(salon.players)) p.night = 0;
+    for (const d of Object.values(salon.departed ?? {})) d.night = 0;
     salon.nightGames = 0;
-    salon.nightBank = {};
     io.to(`salon:${salon.code}`).emit("salon_night", { night: null });
     closeEvening(salon, io);
   });

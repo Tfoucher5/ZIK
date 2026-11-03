@@ -22,10 +22,7 @@
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
-    const urlCode = params.get('code')?.toUpperCase() || '';
-    if (urlCode) p.codeInput = urlCode;
-    const savedUser = localStorage.getItem('salon_user');
-    if (savedUser && !p.usernameInput) p.usernameInput = savedUser;
+    p.checkResume(params.get('code')?.toUpperCase() || '');
   });
 
   onDestroy(() => p.destroy());
@@ -45,6 +42,8 @@
     bind:usernameInput={p.usernameInput}
     joinError={p.joinError}
     joining={p.joining}
+    resume={p.resume}
+    onForget={p.forgetResume}
     onJoin={p.connectAndJoin}
   />
 {:else}
