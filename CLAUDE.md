@@ -22,10 +22,10 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 
 ## Environnements
 
-| Env     | Branche                         | Railway                                  | Supabase        | Usage                                           |
-| ------- | ------------------------------- | ---------------------------------------- | --------------- | ----------------------------------------------- |
-| Prod    | `master`                        | `[PROD] - Production` (www.zik-music.fr) | projet `ZIK`    | Joueurs et clients réels                        |
-| Staging | `develop`                       | `[DEV] - Développement`                  | base de staging | Recette d'une release complète, tests de charge |
+| Env     | Branche   | Railway                                  | Supabase        | Usage                                           |
+| ------- | --------- | ---------------------------------------- | --------------- | ----------------------------------------------- |
+| Prod    | `master`  | `[PROD] - Production` (www.zik-music.fr) | projet `ZIK`    | Joueurs et clients réels                        |
+| Staging | `develop` | `[DEV] - Développement`                  | base de staging | Recette d'une release complète, tests de charge |
 
 - Le `.env` local pointe sur la **base de staging**, jamais sur la prod
 - Hors prod : clés Stripe de test, clé Resend limitée, paire VAPID dédiée, clés Turnstile de test, prospection désactivée. Un test ne doit jamais envoyer de mail, de notification ou de paiement réel
