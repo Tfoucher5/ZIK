@@ -41,7 +41,11 @@
 
   {#if r.restarting}
     <p class="rg-outage" role="status">
-      <b>Mise à jour de ZIK en cours.</b> La régie, la TV et les téléphones se reconnectent seuls. La manche coupée sera rejouée : la partie reprend en pause, appuie sur « Reprendre » quand la salle est prête.
+      <b>Mise à jour de ZIK en cours.</b> La régie, la TV et les téléphones se reconnectent seuls. La manche coupée sera rejouée : la partie repart toute seule dès que la TV est reconnectée.
+    </p>
+  {:else if r.restored}
+    <p class="rg-outage" role="status">
+      <b>Mise à jour terminée.</b> {r.restored.resumeIn ? `La manche coupée reprend dans ${r.restored.resumeIn} secondes.` : 'Tout le monde est reconnecté.'}
     </p>
   {:else if r.videoOutage}
     <p class="rg-outage" role="status">

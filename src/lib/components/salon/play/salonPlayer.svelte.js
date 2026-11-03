@@ -51,6 +51,8 @@ export class SalonPlayer {
   videoOutage = $state(null);
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
+  // Après un redémarrage : « mise à jour terminée », la manche repart seule
+  restored = $state(null);
   specialIntro = $state(false);
   buzzLocked = $state(false);
   special = $state(null);
@@ -140,6 +142,10 @@ export class SalonPlayer {
   };
 
   leave = () => {
+    // Sinon l'ancienne connexion se reconnecte à l'ancien salon après une
+    // coupure et y ramène le téléphone
+    this.socket?.disconnect();
+    this.socket = null;
     this.resume = null;
     this.joined = false;
     this.codeInput = "";
@@ -163,6 +169,7 @@ export class SalonPlayer {
       return;
     }
 
+    this.socket?.disconnect();
     const socket = io({
       transports: ["websocket", "polling"],
       reconnection: true,

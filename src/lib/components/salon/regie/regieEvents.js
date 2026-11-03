@@ -5,6 +5,13 @@ import { countdown } from "../countdown.js";
 export function listenRegie(r, socket) {
   const chrono = countdown((v) => (r.timerVal = v));
   socket.on("salon_server_restart", () => (r.restarting = true));
+  // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
+  socket.on("salon_paused", () => (r.restored = null));
+  socket.on("salon_game_over", () => (r.restored = null));
+  socket.on("salon_restored", ({ resumeIn }) => {
+    r.restored = { resumeIn };
+    if (resumeIn == null) setTimeout(() => (r.restored = null), 4000);
+  });
   socket.on("salon_control_joined", (d) => {
     r.restarting = false;
     r.ready = true;
@@ -66,6 +73,7 @@ export function listenRegie(r, socket) {
   });
   socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (d) => {
+    r.restored = null;
     if (d.special) r.flash(`Manche spéciale : ${SPECIALS[d.special].label}`);
     r.buzzer = null;
     r.videoOutage = null;

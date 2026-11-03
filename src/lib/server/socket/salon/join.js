@@ -13,7 +13,7 @@ import {
   standings,
 } from "./players.js";
 import { nameTaken } from "./departed.js";
-import { restoreSalon } from "./snapshot.js";
+import { restoreSalon, resumeAfterRestart } from "./snapshot.js";
 import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
@@ -74,6 +74,7 @@ export function registerJoin(socket, io) {
     else announceNextVideo(salon, io);
     scheduleCleanup(code);
     broadcastScreens(code, io);
+    if (salon.game.restored) resumeAfterRestart(salon, io);
   });
 
   // ── Régie : l'écran de pilotage, à côté de la TV ─────────────────────────

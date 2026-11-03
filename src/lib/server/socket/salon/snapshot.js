@@ -2,6 +2,7 @@ import { getAdminClient } from "../../config.js";
 import { salonRooms } from "../../state.js";
 import { scheduleDeparture } from "./leave.js";
 import { scheduleCleanup } from "./timers.js";
+import { nextRound } from "./rounds.js";
 
 // Instantané d'un salon dans Postgres (salon.snapshots) : écrit à chaque
 // changement de phase, de joueurs ou de réglages et sur SIGTERM, relu quand un
@@ -22,6 +23,8 @@ const MAX_AGE_S = 2 * 60 * 60;
 const MAX_MISSES = 5;
 const MISS_WINDOW_MS = 60 * 1000;
 const SIGTERM_BUDGET_MS = 5000;
+// Le temps de lire « mise à jour terminée » sur la TV avant que ça reparte
+const RESUME_DELAY_MS = 5000;
 
 const plain = (o) =>
   Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith("_")));
@@ -91,11 +94,33 @@ export function reviveSalon(data) {
     for (const p of [...Object.values(salon.players), ...partis])
       if (p.inGame !== false) p.score = p.scoreBeforeRound ?? p.score;
     game.phase = "summary";
+    // Repart seule au retour de la TV (resumeAfterRestart), sauf si l'hôte
+    // avait mis en pause
+    if (!game.paused) game.restored = "manche";
+  } else if (game.phase === "summary" && !game.paused) {
+    game.restored = "resume";
   }
-  // L'hôte relance quand la salle est prête
-  if (game.phase === "summary")
-    Object.assign(game, { paused: true, pausedAt: Date.now() });
   return salon;
+}
+
+// La TV est revenue après un redémarrage : tout le monde voit ce qui se passe
+// et la manche coupée repart seule
+export function resumeAfterRestart(salon, io) {
+  const { code, game } = salon;
+  const replay = game.restored === "manche" || !salon.settings.manualNext;
+  delete game.restored;
+  // La régie a déjà relancé ou mis en pause avant le retour de la TV : on
+  // ne touche à rien
+  if (game.phase !== "summary" || game.paused) return;
+  io.to(`salon:${code}`).emit("salon_restored", {
+    resumeIn: replay ? RESUME_DELAY_MS / 1000 : null,
+  });
+  if (!replay) return;
+  clearTimeout(game.breakTimer);
+  game.breakTimer = setTimeout(() => {
+    game.breakTimer = null;
+    nextRound(code, io);
+  }, RESUME_DELAY_MS);
 }
 
 // Jamais bloquant ni levant : une base injoignable ne doit pas gêner la manche

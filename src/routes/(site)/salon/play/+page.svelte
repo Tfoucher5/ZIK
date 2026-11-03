@@ -93,6 +93,7 @@
       {/if}
 
       {#if p.restarting}<p class="sp-error">Mise à jour en cours : reconnexion automatique dans quelques secondes. La manche en cours sera rejouée.</p>{/if}
+      {#if p.restored}<p class="sp-error">Mise à jour terminée{p.restored.resumeIn ? ` : la manche reprend dans ${p.restored.resumeIn} secondes` : ''}.</p>{/if}
       {#if p.videoOutage}<p class="sp-error">Petite pause technique : les vidéos ne répondent pas, la partie reprend toute seule.</p>{/if}
       {#if p.error}<p class="sp-error">{p.error}</p>{/if}
     </div>

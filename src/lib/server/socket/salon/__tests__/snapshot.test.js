@@ -127,14 +127,24 @@ describe("instantané d'un salon", () => {
     });
   });
 
-  it("une manche coupée est rejouée, salon en pause, scores d'avant la manche", () => {
+  it("si l'hôte avait mis en pause, la pause est gardée et rien ne repart seul", () => {
+    const salon = salonEnManche();
+    salon.game.paused = true;
+    const revu = reviveSalon(viaBase(salon));
+    nettoie(salon);
+    expect(revu.game).toMatchObject({ phase: "summary", paused: true });
+    expect(revu.game.restored).toBeUndefined();
+  });
+
+  it("une manche coupée est rejouée au retour de la TV, scores d'avant la manche", () => {
     const salon = salonEnManche();
     const revu = reviveSalon(viaBase(salon));
     nettoie(salon);
     const g = revu.game;
     expect(g).toMatchObject({
       phase: "summary",
-      paused: true,
+      paused: false,
+      restored: "manche",
       currentRound: 1,
     });
     expect(g.timerActive).toBe(false);

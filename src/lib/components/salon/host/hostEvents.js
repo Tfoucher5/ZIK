@@ -5,7 +5,17 @@ import { countdown } from "../countdown.js";
 // Réactions de l'écran TV aux événements du salon (état h : SalonHost).
 export function listenHost(h, socket) {
   const chrono = countdown((v) => (h.timerVal = v));
-  socket.on("salon_server_restart", () => (h.restarting = true));
+  socket.on("salon_server_restart", () => {
+    h.restarting = true;
+    h.hostCenter?.pauseVideo();
+  });
+  // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
+  socket.on("salon_paused", () => (h.restored = null));
+  socket.on("salon_game_over", () => (h.restored = null));
+  socket.on("salon_restored", ({ resumeIn }) => {
+    h.restored = { resumeIn };
+    if (resumeIn == null) setTimeout(() => (h.restored = null), 4000);
+  });
   socket.on("salon_host_joined", (data) => {
     h.restarting = false;
     h.joined = true;
@@ -96,6 +106,7 @@ export function listenHost(h, socket) {
 
   socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (data) => {
+    h.restored = null;
     h.phase = "round";
     h.special = data.special ?? null;
     h.videoOutage = null;
