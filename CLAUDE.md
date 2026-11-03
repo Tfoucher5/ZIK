@@ -36,7 +36,8 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 
 - Une tâche = une branche depuis `develop` : `feature/<sujet>`, `fix/<sujet>`, `chore/<sujet>`. Retour dans `develop` par PR
 - `master` ne reçoit que des PR `release vX.Y.Z` depuis `develop`, ou des `hotfix/<sujet>` partis de `master` (et reportés ensuite dans `develop`)
-- Pas de push direct sur `master` ni `develop`. Fusion en squash, un commit par PR
+- Pas de push direct sur `master` ni `develop`. Fusion en squash, un commit par PR, vers `develop`
+- Release `develop` → `master` et report d'un hotfix `master` → `develop` : fusion en **merge commit**, jamais en squash. Un squash coupe l'historique commun : `master` et `develop` divergent et chaque release suivante repart en conflit
 - Message de commit et titre de PR : `type(zone): description (vX.Y.Z)`, types `feat`, `fix`, `perf`, `chore`, `docs`, `test`
 - Version : toujours incrémentée dans la PR de release (dans toutes les pages concernées et dans le commit)
 - **Gel des mises en prod du jeudi 18h au dimanche 2h** (heure de Paris) : aucune release. Seul un hotfix critique passe, après annonce de maintenance aux salons depuis l'admin
