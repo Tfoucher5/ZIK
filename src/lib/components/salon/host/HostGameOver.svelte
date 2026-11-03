@@ -14,7 +14,7 @@
   let ranked = $derived(
     finalTeams
       ? finalTeams.map(t => ({ key: 't' + t.id, name: t.name, score: t.score, team: t.id, sub: `${t.members.length} joueur${t.members.length > 1 ? 's' : ''}` }))
-      : finalScores.map(p => ({ key: p.username, name: p.username, score: p.score, team: p.team, sub: `${p.found} trouvé${p.found > 1 ? 's' : ''}` }))
+      : finalScores.map(p => ({ key: p.username, name: p.username, score: p.score, team: p.team, sub: `${p.found} trouvé${p.found > 1 ? 's' : ''}${p.left ? ' · a quitté' : ''}` }))
   );
   let winner = $derived(ranked[0]);
   let podiumSlots = $derived([

@@ -10,6 +10,7 @@ import {
 } from "../scoring.js";
 import { emitPlayers, getOrCreateRoom } from "./rooms.js";
 import { checkEveryoneFound } from "./rounds.js";
+import { int, safe, str } from "../safe.js";
 
 const foundValue = (part, track) =>
   part.kind === "artist"
@@ -22,7 +23,7 @@ const foundValue = (part, track) =>
 
 // Réponses des joueurs : texte libre ou QCM
 export function registerAnswers(socket, io) {
-  socket.on("submit_guess", async (guess) => {
+  safe(socket, "submit_guess", str(200), async (guess) => {
     const roomId = socket.currentRoom;
     if (!roomId) return;
     const room = getOrCreateRoom(roomId);
@@ -87,53 +88,58 @@ export function registerAnswers(socket, io) {
     checkEveryoneFound(roomId, io);
   });
 
-  socket.on("submit_choice", ({ choiceIndex }) => {
-    const roomId = socket.currentRoom;
-    if (!roomId) return;
-    const room = getOrCreateRoom(roomId);
-    const name = room.socketToName[socket.id];
-    if (!room.game.isActive || !room.game.currentTrack || !room.players[name])
-      return;
-    if (room.game_mode !== "qcm") return;
+  safe(
+    socket,
+    "submit_choice",
+    { choiceIndex: int(0, 9) },
+    ({ choiceIndex }) => {
+      const roomId = socket.currentRoom;
+      if (!roomId) return;
+      const room = getOrCreateRoom(roomId);
+      const name = room.socketToName[socket.id];
+      if (!room.game.isActive || !room.game.currentTrack || !room.players[name])
+        return;
+      if (room.game_mode !== "qcm") return;
 
-    const user = room.players[name];
-    if (user._qcmAnswered) return;
+      const user = room.players[name];
+      if (user._qcmAnswered) return;
 
-    user._qcmAnswered = true;
-    user.lastAnswerRound = room.game.currentRound;
-    const isCorrect = choiceIndex === room.game.correctChoiceIndex;
-    const timeTaken = (Date.now() - room.game.startTime) / 1000;
-    let pts = 0;
+      user._qcmAnswered = true;
+      user.lastAnswerRound = room.game.currentRound;
+      const isCorrect = choiceIndex === room.game.correctChoiceIndex;
+      const timeTaken = (Date.now() - room.game.startTime) / 1000;
+      let pts = 0;
 
-    if (isCorrect) {
-      pts = calcQcmPoints(timeTaken, room.game.roundDuration);
-      user.score += pts;
-      user.foundArtist = true;
-      user.foundTitle = true;
-      user._fullFoundCounted = true;
-      if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
-      room.game.fullFinders.push({ name: user.name, ms: timeTaken * 1000 });
-      room.game.totalFullFound++;
-      if (user.userId && !user.isGuest)
-        bumpWeeklyChallenge("correct_answers", user.userId, 1);
-      socket.emit("feedback", {
-        type: "qcm_correct",
-        msg: `Bonne réponse ! +${pts} pts`,
+      if (isCorrect) {
+        pts = calcQcmPoints(timeTaken, room.game.roundDuration);
+        user.score += pts;
+        user.foundArtist = true;
+        user.foundTitle = true;
+        user._fullFoundCounted = true;
+        if (!room.game.firstFullFinder) room.game.firstFullFinder = user.name;
+        room.game.fullFinders.push({ name: user.name, ms: timeTaken * 1000 });
+        room.game.totalFullFound++;
+        if (user.userId && !user.isGuest)
+          bumpWeeklyChallenge("correct_answers", user.userId, 1);
+        socket.emit("feedback", {
+          type: "qcm_correct",
+          msg: `Bonne réponse ! +${pts} pts`,
+        });
+        socket.emit("reveal_cover", { cover: room.game.currentTrack.cover });
+      } else {
+        socket.emit("feedback", { type: "qcm_wrong", msg: "Raté !" });
+      }
+      socket.emit("choice_result", { correct: isCorrect, pts });
+
+      emitPlayers(room, io);
+      const activePlayers = Object.values(room.players).filter(
+        (p) => !p._disconnected,
+      );
+      io.to(`room:${roomId}`).emit("qcm_answered_update", {
+        answered: activePlayers.filter((p) => p._qcmAnswered).length,
+        total: activePlayers.length,
       });
-      socket.emit("reveal_cover", { cover: room.game.currentTrack.cover });
-    } else {
-      socket.emit("feedback", { type: "qcm_wrong", msg: "Raté !" });
-    }
-    socket.emit("choice_result", { correct: isCorrect, pts });
-
-    emitPlayers(room, io);
-    const activePlayers = Object.values(room.players).filter(
-      (p) => !p._disconnected,
-    );
-    io.to(`room:${roomId}`).emit("qcm_answered_update", {
-      answered: activePlayers.filter((p) => p._qcmAnswered).length,
-      total: activePlayers.length,
-    });
-    checkEveryoneFound(roomId, io);
-  });
+      checkEveryoneFound(roomId, io);
+    },
+  );
 }

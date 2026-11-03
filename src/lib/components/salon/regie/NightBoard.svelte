@@ -42,7 +42,7 @@
       {#each night.teams ?? night.players.slice(0, TOP) as e, i (e.id ?? e.username)}
         <li style="--tc:{e.id != null ? teamColor(e.id) : e.team != null ? teamColor(e.team) : 'var(--border2)'}">
           <span class="nb-rang">{i + 1}</span>
-          <span class="nb-nom">{e.name ?? e.username}</span>
+          <span class="nb-nom">{e.name ?? e.username}{e.left ? ' · a quitté' : ''}</span>
           <span class="nb-pts">{e.score}</span>
         </li>
       {/each}

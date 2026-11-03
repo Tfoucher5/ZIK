@@ -1,4 +1,5 @@
 import { adminSalon, nightView, requirePro } from "./players.js";
+import { num, optional, safe } from "../safe.js";
 
 // Entre deux parties : entracte (pour tous) et podium final de la soirée (Pro)
 export function eveningView(salon) {
@@ -21,29 +22,34 @@ export function closeEvening(salon, io) {
 }
 
 export function registerEvening(socket, io) {
-  socket.on("salon_reset_night", () => {
+  safe(socket, "salon_reset_night", {}, () => {
     const salon = adminSalon(socket);
     if (!salon || !requirePro(socket, salon, "night")) return;
     for (const p of Object.values(salon.players)) p.night = 0;
+    for (const d of Object.values(salon.departed ?? {})) d.night = 0;
     salon.nightGames = 0;
-    salon.nightBank = {};
     io.to(`salon:${salon.code}`).emit("salon_night", { night: null });
     closeEvening(salon, io);
   });
 
   // Durée facultative : l'heure de reprise est indicative, rien ne redémarre seul
-  socket.on("salon_intermission", ({ minutes } = {}) => {
-    const salon = adminSalon(socket);
-    if (!salon || !idle(salon)) return;
-    const m = Math.round(Number(minutes));
-    salon.intermission = {
-      until: m >= 1 && m <= 120 ? Date.now() + m * 60000 : null,
-    };
-    salon.finale = false;
-    emit(salon, io);
-  });
+  safe(
+    socket,
+    "salon_intermission",
+    { minutes: optional(num(0, 120)) },
+    ({ minutes }) => {
+      const salon = adminSalon(socket);
+      if (!salon || !idle(salon)) return;
+      const m = Math.round(Number(minutes));
+      salon.intermission = {
+        until: m >= 1 && m <= 120 ? Date.now() + m * 60000 : null,
+      };
+      salon.finale = false;
+      emit(salon, io);
+    },
+  );
 
-  socket.on("salon_finale", () => {
+  safe(socket, "salon_finale", {}, () => {
     const salon = adminSalon(socket);
     if (!salon || !idle(salon) || !requirePro(socket, salon, "night")) return;
     if (!salon.nightGames) return;
@@ -52,7 +58,7 @@ export function registerEvening(socket, io) {
     emit(salon, io);
   });
 
-  socket.on("salon_evening_close", () => {
+  safe(socket, "salon_evening_close", {}, () => {
     const salon = adminSalon(socket);
     if (salon) closeEvening(salon, io);
   });

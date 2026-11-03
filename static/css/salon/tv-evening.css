@@ -109,6 +109,9 @@
   padding: clamp(24px, 6vw, 96px);
   background: rgb(var(--bg-rgb) / 0.96);
 }
+.sh-restart {
+  background: var(--bg);
+}
 .sh-outage h2 {
   font-family: var(--s-cond);
   font-weight: 900;

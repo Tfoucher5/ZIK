@@ -1,5 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+// Pas de base en test : les instantanés sont couverts par snapshot.test.js
+vi.mock("../snapshot.js", () => ({
+  saveSnapshot: async () => {},
+  freezeAndSaveAll: async () => {},
+  purgeSnapshots: async () => {},
+  dropSnapshot: async () => {},
+  restoreSalon: async () => {},
+}));
+
 // Rejoue l'incident du 30/10 : toutes les recherches de vidéo échouent
 let panne = false;
 const alertes = [];

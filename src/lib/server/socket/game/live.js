@@ -1,10 +1,11 @@
 import { roomGames } from "../../state.js";
 import { addChatMessage } from "./chat.js";
 import { triggerRoundStart } from "./rounds.js";
+import { safe, str } from "../safe.js";
 
 // Chat et synchro du départ de manche
 export function registerLive(socket, io) {
-  socket.on("send_chat", (msg) => {
+  safe(socket, "send_chat", str(), (msg) => {
     const roomId = socket.currentRoom;
     if (!roomId) return;
     const room = roomGames[roomId];
@@ -31,7 +32,7 @@ export function registerLive(socket, io) {
     io.to(`room:${roomId}`).emit("chat_message", message);
   });
 
-  socket.on("player_ready", () => {
+  safe(socket, "player_ready", {}, () => {
     const roomId = socket.currentRoom;
     if (!roomId) return;
     const room = roomGames[roomId];

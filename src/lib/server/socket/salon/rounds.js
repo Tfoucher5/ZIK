@@ -3,6 +3,8 @@ import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { makeChoices } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
+import { gamePlayers } from "./departed.js";
+import { saveSnapshot } from "./snapshot.js";
 import { scoreQcmRound } from "./answers.js";
 import { drawSpecial } from "./specials.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
@@ -54,15 +56,17 @@ export function finishGame(code, io) {
   game.gen = (game.gen ?? 0) + 1;
   clearOutage(salon, io);
   recordSalonGameEnd(salon);
-  for (const p of Object.values(salon.players)) p.night += p.score;
+  const all = gamePlayers(salon);
+  for (const p of all) p.night += p.score;
   salon.nightGames = (salon.nightGames ?? 0) + 1;
-  const scores = Object.values(salon.players)
+  const scores = all
     .map((p) => ({
       username: p.username,
       score: p.score,
       team: p.team,
       found: p.stats.found,
       first: p.stats.first,
+      ...(p.left && { left: true }),
     }))
     .sort((a, b) => b.score - a.score);
   io.to(`salon:${code}`).emit("salon_game_over", {
@@ -72,6 +76,7 @@ export function finishGame(code, io) {
     rounds: game.history.length,
     night: nightView(salon),
   });
+  saveSnapshot(salon);
   prepareSession(code, io);
   scheduleCleanup(code);
 }
@@ -116,12 +121,13 @@ export function endRound(code, reason, io) {
   if (game.firstFinder && salon.players[game.firstFinder])
     salon.players[game.firstFinder].stats.first++;
 
-  const scores = Object.values(salon.players)
+  const scores = gamePlayers(salon)
     .map((p) => ({
       username: p.username,
       score: p.score,
       team: p.team,
-      delta: p.score - (p.scoreBeforeRound ?? 0),
+      delta: p.left ? 0 : p.score - (p.scoreBeforeRound ?? 0),
+      ...(p.left && { left: true }),
     }))
     .sort((a, b) => b.score - a.score);
 
@@ -142,6 +148,7 @@ export function endRound(code, reason, io) {
   game.history.push({ answer, cover: track.cover });
   io.to(`salon:${code}`).emit("salon_round_end", roundSummary);
   scheduleCleanup(code);
+  saveSnapshot(salon);
 
   if (!salon.settings.manualNext) {
     game.breakTimer = setTimeout(() => {
@@ -193,6 +200,7 @@ export async function startNextRound(code, io) {
       audio: !!audio,
     };
     game.phase = "round";
+    saveSnapshot(salon);
     game.timerActive = false;
     game.timerValue = 0;
     game.startTime = 0;
@@ -209,10 +217,8 @@ export async function startNextRound(code, io) {
       choices = c;
     }
 
-    const roundData = {
-      videoId: video?.id,
-      audioUrl: audio,
-      startSeconds: safeStart,
+    // Les téléphones ne reçoivent jamais le média ni la réponse
+    const publicData = {
       round: game.currentRound,
       total: salon.settings.maxRounds,
       choices,
@@ -220,16 +226,20 @@ export async function startNextRound(code, io) {
       featCount: track.featArtists?.length || 0,
       extras: (track.extraAnswers || []).map((e) => ({ label: e.label })),
     };
+    const roundData = {
+      ...publicData,
+      videoId: video?.id,
+      audioUrl: audio,
+      startSeconds: safeStart,
+    };
 
-    // La réponse ne part qu'à la régie : l'écran TV est public, n'importe
-    // qui avec le code peut l'ouvrir
+    // La réponse ne part qu'à la régie : la TV est vue par toute la salle
     io.to(`salon:screens:${code}`).emit("salon_round_start", roundData);
     io.to(`salon:ctrl:${code}`).emit("salon_round_start", {
       ...roundData,
       hostInfo: currentTrackInfo(salon),
     });
-    // Send to players (no answer info)
-    io.to(`salon:players:${code}`).emit("salon_round_start", roundData);
+    io.to(`salon:players:${code}`).emit("salon_round_start", publicData);
 
     // L'hôte signale le début de la musique ; filet si son lecteur ne répond
     // pas. Large : sur une connexion lente, la vidéo met du temps à démarrer.

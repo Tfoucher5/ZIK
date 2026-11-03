@@ -1,8 +1,22 @@
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
+import { countdown } from "../countdown.js";
 
 // Réactions du téléphone joueur aux événements du salon (état p : SalonPlayer).
 export function listenPlayer(p, socket, c, u) {
-  socket.on("salon_joined", (data) => onJoined(p, data, c, u));
+  const chrono = countdown((v) => (p.timerVal = v));
+  socket.on("salon_joined", (data) => {
+    onJoined(p, data, c, u);
+    if (data.endsAt) chrono.start(data.endsAt, data.now);
+    else chrono.stop();
+  });
+  socket.on("salon_server_restart", () => (p.restarting = true));
+  // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
+  socket.on("salon_paused", () => (p.restored = null));
+  socket.on("salon_game_over", () => (p.restored = null));
+  socket.on("salon_restored", ({ resumeIn }) => {
+    p.restored = { resumeIn };
+    if (resumeIn == null) setTimeout(() => (p.restored = null), 4000);
+  });
 
   const resetScores = () => {
     p.scores = [];
@@ -37,6 +51,7 @@ export function listenPlayer(p, socket, c, u) {
   });
   socket.on("salon_paused", ({ paused }) => {
     p.paused = paused;
+    if (paused) chrono.stop();
   });
   socket.on("salon_settings", ({ settings }) => {
     p.total = settings.maxRounds;
@@ -48,7 +63,9 @@ export function listenPlayer(p, socket, c, u) {
     p.joinError = "L'hôte t'a retiré du salon.";
   });
 
+  socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (data) => {
+    p.restored = null;
     p.phase = "round";
     p.special = data.special ?? null;
     p.specialIntro = !!data.special;
@@ -76,10 +93,11 @@ export function listenPlayer(p, socket, c, u) {
     p.foundExtras = Array(p.extras.length).fill(false);
   });
 
-  socket.on("salon_timer_started", ({ max }) => {
+  socket.on("salon_timer_started", ({ max, endsAt, now }) => {
     p.timerVal = max;
     p.timerMax = max;
     p.timerStarted = true;
+    if (endsAt) chrono.start(endsAt, now);
     if (p.answerMode === "free") {
       setTimeout(() => {
         document.getElementById("salon-guess-input")?.focus();
@@ -87,8 +105,9 @@ export function listenPlayer(p, socket, c, u) {
     }
   });
 
-  socket.on("salon_timer_update", ({ current, max }) => {
-    p.timerVal = current;
+  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
+    if (endsAt) chrono.start(endsAt, now);
+    else p.timerVal = current;
     p.timerMax = max;
   });
 
@@ -133,7 +152,10 @@ export function listenPlayer(p, socket, c, u) {
 
   socket.on("salon_error", ({ message }) => {
     p.joining = false;
+    p.restarting = false;
     if (!p.joined) {
+      // Salon fermé ou pseudo refusé : retour au formulaire, pseudo gardé
+      p.resume = null;
       p.joinError = message;
       socket.disconnect();
       return;
@@ -148,6 +170,7 @@ export function listenPlayer(p, socket, c, u) {
 }
 
 function onJoined(p, data, c, u) {
+  p.restarting = false;
   p.joined = true;
   p.username = data.username;
   p.code = c;
@@ -158,6 +181,7 @@ function onJoined(p, data, c, u) {
   localStorage.setItem("salon_code", c);
   localStorage.setItem("salon_user", u);
   localStorage.setItem("zik_salon_player_" + c, data.token);
+  localStorage.setItem("salon_at", String(Date.now()));
   p.roster = data.players || [];
   p.teams = data.teams;
   p.night = data.night ?? null;

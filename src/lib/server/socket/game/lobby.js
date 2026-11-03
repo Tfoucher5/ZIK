@@ -59,9 +59,10 @@ export async function beginGame(room, io) {
   game.history = [];
   game.currentRound = 0;
   game.fullPlaylist = [...playlist];
-  game.sessionPlaylist = [...playlist]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, game.maxRounds);
+  const shuffled = [...playlist].sort(() => Math.random() - 0.5);
+  game.sessionPlaylist = shuffled.slice(0, game.maxRounds);
+  game.spareTracks = shuffled.slice(game.maxRounds);
+  game.skipStreak = 0;
   game.plannedRounds = game.sessionPlaylist.length;
   resetScores(room, io);
   io.to(`room:${roomId}`).emit("init_history", []);

@@ -4,6 +4,15 @@ import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { teamStandings } from "./teams.js";
 import { checkEveryoneDone } from "./rounds.js";
 import { eveningView } from "./evening.js";
+import { saveSnapshot } from "./snapshot.js";
+import { timerClock } from "./timers.js";
+import {
+  closeDeparted,
+  departed,
+  gamePlayers,
+  nameTaken,
+  restoreDeparted,
+} from "./departed.js";
 
 function makePlayer(username, socketId) {
   return {
@@ -30,37 +39,37 @@ export function addPlayer(salon, username, socketId, token = null) {
   // la lui donne depuis la régie. Coller un arrivant dans l'équipe la moins
   // remplie cassait les tables déjà constituées.
   const player = makePlayer(username, socketId);
-  // Téléphone resté en veille trop longtemps : il retrouve ses points de soirée
-  if (token && salon.nightBank?.[token]) {
-    player.night = salon.nightBank[token];
-    delete salon.nightBank[token];
-  }
+  restoreDeparted(salon, player, token);
   salon.players[username] = player;
   return player;
 }
 
 export function getPlayerList(salon) {
-  return Object.values(salon.players).map((p) => ({
+  return gamePlayers(salon).map((p) => ({
     username: p.username,
     score: p.score,
     team: p.team,
-    offline: !!p._disconnected,
-    foundThisRound: p._fullFoundCounted,
+    offline: !!(p._disconnected || p.left),
+    foundThisRound: !!p._fullFoundCounted,
     answeredThisRound:
-      p.foundArtist || p.foundTitle || p.foundFeats.some(Boolean),
+      !p.left && (p.foundArtist || p.foundTitle || p.foundFeats.some(Boolean)),
+    ...(p.left && { left: true }),
   }));
-}
-
-// Joueur retiré faute de reconnexion : ses points de soirée l'attendent
-export function bankNight(salon, player) {
-  if (player.night) (salon.nightBank ??= {})[player.token] = player.night;
 }
 
 // Classement de la soirée (ZIK Pro) : cumul des parties terminées du salon
 export function nightView(salon) {
   if (!salon.pro || !salon.nightGames) return null;
-  const players = Object.values(salon.players)
-    .map((p) => ({ username: p.username, score: p.night, team: p.team }))
+  const players = [
+    ...Object.values(salon.players),
+    ...departed(salon).filter((d) => d.night),
+  ]
+    .map((p) => ({
+      username: p.username,
+      score: p.night,
+      team: p.team,
+      ...(p.left && { left: true }),
+    }))
     .sort((a, b) => b.score - a.score);
   return {
     games: salon.nightGames,
@@ -96,6 +105,7 @@ export function reconnectView(salon, player) {
     timerVal: salon.game.timerValue,
     timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
     timerActive: salon.game.timerActive,
+    ...timerClock(salon.game),
   };
   if (salon.game.phase === "round") {
     data.extras = (salon.game.currentTrack?.extraAnswers || []).map((e) => ({
@@ -110,11 +120,11 @@ export function reconnectView(salon, player) {
 }
 
 export function standings(salon) {
-  return teamStandings(salon.settings.teams, Object.values(salon.players));
+  return teamStandings(salon.settings.teams, gamePlayers(salon));
 }
 
 export function sortedScores(salon) {
-  return Object.values(salon.players)
+  return gamePlayers(salon)
     .map((p) => ({ username: p.username, score: p.score, team: p.team }))
     .sort((a, b) => b.score - a.score);
 }
@@ -165,6 +175,8 @@ export function broadcastRoster(code, io) {
       teams: standings(salon),
     }),
   );
+  // Arrivées, départs, équipes, retraits : l'instantané suit, au plus 1 par seconde
+  coalesce(code, "snapshot", saveSnapshot);
 }
 
 export function broadcastScores(code, io) {
@@ -198,6 +210,7 @@ export function resetStats(salon) {
     p.score = 0;
     p.stats = { found: 0, first: 0 };
   }
+  closeDeparted(salon);
 }
 
 export function resetRoundFlags(salon) {
@@ -233,11 +246,13 @@ export function cleanUsername(name) {
     .slice(0, 20);
 }
 
+// Retiré par l'hôte : sort aussi du résultat, contrairement à un joueur parti
 export function kickPlayer(salon, username, io) {
-  const player = salon.players[username];
+  const player = nameTaken(salon, username);
   if (!player) return false;
   clearTimeout(player._dcTimer);
   delete salon.players[username];
+  delete salon.departed?.[player.token];
   // Ni ce pseudo ni ce téléphone ne reviennent dans la soirée
   salon.banned.add(username.toLowerCase());
   salon.banned.add(player.token);

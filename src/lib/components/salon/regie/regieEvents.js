@@ -1,8 +1,19 @@
 import { SPECIALS } from "../../../data/salonOptions.js";
+import { countdown } from "../countdown.js";
 
 // Réactions de la régie aux événements du salon (état r : SalonRegie).
 export function listenRegie(r, socket) {
+  const chrono = countdown((v) => (r.timerVal = v));
+  socket.on("salon_server_restart", () => (r.restarting = true));
+  // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
+  socket.on("salon_paused", () => (r.restored = null));
+  socket.on("salon_game_over", () => (r.restored = null));
+  socket.on("salon_restored", ({ resumeIn }) => {
+    r.restored = { resumeIn };
+    if (resumeIn == null) setTimeout(() => (r.restored = null), 4000);
+  });
   socket.on("salon_control_joined", (d) => {
+    r.restarting = false;
     r.ready = true;
     r.pro = d.pro;
     r.error = "";
@@ -21,6 +32,8 @@ export function listenRegie(r, socket) {
     r.timerVal = d.timerVal;
     r.timerMax = d.timerMax;
     r.timerOn = d.timerActive;
+    if (d.endsAt) chrono.start(d.endsAt, d.now);
+    else chrono.stop();
     r.track = d.track;
     r.history = d.history;
     r.pickerIds = [...(d.settings.playlistIds || [])];
@@ -36,6 +49,7 @@ export function listenRegie(r, socket) {
   });
   socket.on("salon_paused", ({ paused }) => {
     r.paused = paused;
+    if (paused) chrono.stop();
   });
   socket.on("salon_game_starting", () => {
     r.phase = "starting";
@@ -57,7 +71,9 @@ export function listenRegie(r, socket) {
     r.intermission = intermission;
     r.finale = finale;
   });
+  socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (d) => {
+    r.restored = null;
     if (d.special) r.flash(`Manche spéciale : ${SPECIALS[d.special].label}`);
     r.buzzer = null;
     r.videoOutage = null;
@@ -72,13 +88,15 @@ export function listenRegie(r, socket) {
       answeredThisRound: false,
     }));
   });
-  socket.on("salon_timer_started", ({ max }) => {
+  socket.on("salon_timer_started", ({ max, endsAt, now }) => {
     r.timerVal = max;
     r.timerMax = max;
     r.timerOn = true;
+    if (endsAt) chrono.start(endsAt, now);
   });
-  socket.on("salon_timer_update", ({ current, max }) => {
-    r.timerVal = current;
+  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
+    if (endsAt) chrono.start(endsAt, now);
+    else r.timerVal = current;
     r.timerMax = max;
     r.timerOn = true;
   });
@@ -136,6 +154,7 @@ export function listenRegie(r, socket) {
     r.flash("ZIK Pro activé pour ce salon.");
   });
   socket.on("salon_error", ({ message }) => {
+    r.restarting = false;
     r.error = message;
   });
 }

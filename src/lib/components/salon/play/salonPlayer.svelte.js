@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { listenPlayer } from "./playerEvents.js";
+import { forgetResume, leaveResume, readResume } from "./resume.js";
 
 // État du téléphone d'un joueur du mode Salon et connexion à la partie.
 export class SalonPlayer {
@@ -8,6 +9,8 @@ export class SalonPlayer {
   usernameInput = $state("");
   joinError = $state("");
   joining = $state(false);
+  // Téléphone qui jouait récemment dans ce salon : on propose de reprendre sa place
+  resume = $state(null);
 
   // Partie
   joined = $state(false);
@@ -46,6 +49,10 @@ export class SalonPlayer {
   night = $state(null);
   buzzer = $state(null);
   videoOutage = $state(null);
+  // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
+  restarting = $state(false);
+  // Après un redémarrage : « mise à jour terminée », la manche repart seule
+  restored = $state(null);
   specialIntro = $state(false);
   buzzLocked = $state(false);
   special = $state(null);
@@ -113,7 +120,38 @@ export class SalonPlayer {
     this.socket.emit("salon_buzz");
   };
 
+  checkResume = (urlCode) => {
+    try {
+      const r = readResume(localStorage, urlCode);
+      this.codeInput = r.code;
+      this.usernameInput = r.username;
+      this.resume = r.resume;
+    } catch {
+      /* stockage indisponible : formulaire classique */
+    }
+  };
+
+  forgetResume = () => {
+    try {
+      forgetResume(localStorage, this.resume.code);
+    } catch {
+      /* stockage indisponible */
+    }
+    this.resume = null;
+    this.usernameInput = "";
+  };
+
   leave = () => {
+    // Sinon l'ancienne connexion se reconnecte à l'ancien salon après une
+    // coupure et y ramène le téléphone
+    this.socket?.disconnect();
+    this.socket = null;
+    this.resume = null;
+    try {
+      leaveResume(localStorage);
+    } catch {
+      /* stockage indisponible */
+    }
     this.joined = false;
     this.codeInput = "";
   };
@@ -136,6 +174,7 @@ export class SalonPlayer {
       return;
     }
 
+    this.socket?.disconnect();
     const socket = io({
       transports: ["websocket", "polling"],
       reconnection: true,
