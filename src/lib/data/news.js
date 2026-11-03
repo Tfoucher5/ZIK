@@ -5,6 +5,26 @@
 
 export const NEWS = [
   {
+    date: "2026-11-03",
+    version: "3.22.0",
+    tag: "Amélioration",
+    title: "ZIK Soirée : une soirée qui tient le coup",
+    summary:
+      "ZIK Soirée : la soirée survit à une coupure, les points restent si on part, et le chrono est juste sur tous les écrans.",
+    items: [
+      "Coupure ou mise à jour pendant la soirée : la TV, la régie et les téléphones se reconnectent seuls et la partie reprend en quelques secondes. La manche coupée est rejouée, les points des manches terminées sont gardés.",
+      "Un téléphone verrouillé garde sa place 10 minutes. Au-delà, ses points restent au classement, marqués « a quitté ».",
+      "En rouvrant la page du salon, un bouton « Reprendre ma place » remet le joueur dans la partie avec ses points, sans retaper le code ni le pseudo.",
+      "Le chrono est le même sur la TV, la régie et les téléphones, et reste juste avec un Wi-Fi capricieux ou un téléphone qui sort de veille.",
+      "Tu as fermé l'onglet de la TV ou de la régie ? La page de création d'un salon te propose de reprendre ta soirée encore ouverte.",
+      "Plus de triche possible : les téléphones ne reçoivent plus la vidéo de la manche.",
+      "Correctif : un joueur passé à une autre soirée pouvait être ramené sur l'ancienne après une coupure.",
+    ],
+    proItems: [
+      "Classement de la soirée : les points d'un joueur parti restent comptés, et il les retrouve s'il revient.",
+    ],
+  },
+  {
     date: "2026-10-31",
     version: "3.21.0",
     tag: "Nouveauté",
