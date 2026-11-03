@@ -4,6 +4,7 @@ import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { teamStandings } from "./teams.js";
 import { checkEveryoneDone } from "./rounds.js";
 import { eveningView } from "./evening.js";
+import { saveSnapshot } from "./snapshot.js";
 import {
   closeDeparted,
   departed,
@@ -172,6 +173,8 @@ export function broadcastRoster(code, io) {
       teams: standings(salon),
     }),
   );
+  // Arrivées, départs, équipes, retraits : l'instantané suit, au plus 1 par seconde
+  coalesce(code, "snapshot", saveSnapshot);
 }
 
 export function broadcastScores(code, io) {

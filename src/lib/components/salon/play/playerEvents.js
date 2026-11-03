@@ -3,6 +3,7 @@ import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
 // Réactions du téléphone joueur aux événements du salon (état p : SalonPlayer).
 export function listenPlayer(p, socket, c, u) {
   socket.on("salon_joined", (data) => onJoined(p, data, c, u));
+  socket.on("salon_server_restart", () => (p.restarting = true));
 
   const resetScores = () => {
     p.scores = [];
@@ -133,6 +134,7 @@ export function listenPlayer(p, socket, c, u) {
 
   socket.on("salon_error", ({ message }) => {
     p.joining = false;
+    p.restarting = false;
     if (!p.joined) {
       // Salon fermé ou pseudo refusé : retour au formulaire, pseudo gardé
       p.resume = null;
@@ -150,6 +152,7 @@ export function listenPlayer(p, socket, c, u) {
 }
 
 function onJoined(p, data, c, u) {
+  p.restarting = false;
   p.joined = true;
   p.username = data.username;
   p.code = c;

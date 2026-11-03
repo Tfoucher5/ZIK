@@ -2,7 +2,9 @@ import { SPECIALS } from "../../../data/salonOptions.js";
 
 // Réactions de la régie aux événements du salon (état r : SalonRegie).
 export function listenRegie(r, socket) {
+  socket.on("salon_server_restart", () => (r.restarting = true));
   socket.on("salon_control_joined", (d) => {
+    r.restarting = false;
     r.ready = true;
     r.pro = d.pro;
     r.error = "";
@@ -136,6 +138,7 @@ export function listenRegie(r, socket) {
     r.flash("ZIK Pro activé pour ce salon.");
   });
   socket.on("salon_error", ({ message }) => {
+    r.restarting = false;
     r.error = message;
   });
 }

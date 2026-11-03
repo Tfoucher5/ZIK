@@ -15,6 +15,8 @@ export function departPlayer(salon, username) {
     userId: p.userId ?? null,
     team: p.team,
     score: inGame ? p.score : 0,
+    // Manche coupée par un redémarrage : ses points sont annulés pour tous
+    scoreBeforeRound: inGame ? p.scoreBeforeRound : 0,
     stats: p.stats,
     night: p.night,
     inGame,

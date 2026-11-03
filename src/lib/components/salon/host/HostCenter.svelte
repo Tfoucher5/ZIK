@@ -18,7 +18,7 @@
     paused = false, pro = false, settings = {},
     onSetting,
     onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
-    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, mediaCheck = null, onJudge,
+    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, mediaCheck = null, onJudge,
   } = $props();
 
   let membersOf = (id) => players.filter(p => p.team === id);
@@ -144,7 +144,13 @@
     </div>
   {/if}
 
-  {#if videoOutage}
+  {#if restarting}
+    <div class="sh-outage" role="status">
+      <p class="sx-kicker">Mise à jour de ZIK</p>
+      <h2>Reprise dans quelques secondes</h2>
+      <p>La soirée se reconnecte toute seule. La manche en cours sera rejouée, les points des manches terminées sont gardés.</p>
+    </div>
+  {:else if videoOutage}
     <div class="sh-outage" role="status">
       <p class="sx-kicker">Petite pause technique</p>
       <h2>Les vidéos ne répondent pas</h2>

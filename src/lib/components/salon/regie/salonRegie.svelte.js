@@ -32,6 +32,8 @@ export class SalonRegie {
   night = $state(null);
   buzzer = $state(null);
   videoOutage = $state(null);
+  // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
+  restarting = $state(false);
   mediaCheck = $state(null);
   intermission = $state(null);
   finale = $state(null);

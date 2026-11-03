@@ -92,7 +92,7 @@ Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule),
 - Le serveur est la seule source de vérité : chrono (heure de fin), scores, phase
 - Les téléphones des joueurs ne reçoivent jamais la réponse ni le média (`videoId`, `audioUrl`) ; le média ne part qu'aux écrans authentifiés par la clé de régie
 - Un joueur parti en cours de partie reste compté : son score figure dans le résultat final, le classement de soirée et son profil
-- L'état des salons est en mémoire (`globalThis.__zik_salonRooms`) et sauvegardé dans Postgres à chaque changement de phase et sur `SIGTERM`, puis restauré au démarrage. Tout nouveau champ d'état doit être sérialisable et couvert par le test d'instantané
+- L'état des salons est en mémoire (`globalThis.__zik_salonRooms`) et sauvegardé dans Postgres (`salon.snapshots`) à chaque changement de phase et sur `SIGTERM`, puis restauré quand un écran ou un téléphone rejoint un code absent de la mémoire (`salon/snapshot.js`). Tout nouveau champ d'état doit être sérialisable et couvert par le test d'instantané
 - Aucun appel YouTube côté serveur pendant une partie : les vidéos sont résolues à l'import des playlists
 - Pour les bugs Socket.io, commencer par `salon/` ou `game/`, puis les logs Railway et `/admin/statut`
 
