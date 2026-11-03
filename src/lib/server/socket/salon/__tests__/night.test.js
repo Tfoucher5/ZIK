@@ -147,6 +147,15 @@ describe("classement de la soirée", () => {
     expect(addPlayer(salon, "Ana", "s3", ana.token).team).toBeNull();
   });
 
+  it("un autre pseudo avec le jeton d'un parti repart à zéro", () => {
+    const salon = salonDeTest(true);
+    const ana = addPlayer(salon, "Ana", "s1");
+    ana.score = 120;
+    departPlayer(salon, "Ana");
+    expect(addPlayer(salon, "Zoe", "s2", ana.token).score).toBe(0);
+    expect(salon.departed[ana.token]).toMatchObject({ score: 120 });
+  });
+
   it("un joueur parti du lobby sans points n'est pas gardé", () => {
     const salon = salonDeTest(true);
     salon.game.phase = "lobby";

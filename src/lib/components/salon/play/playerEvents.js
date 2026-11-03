@@ -134,6 +134,8 @@ export function listenPlayer(p, socket, c, u) {
   socket.on("salon_error", ({ message }) => {
     p.joining = false;
     if (!p.joined) {
+      // Salon fermé ou pseudo refusé : retour au formulaire, pseudo gardé
+      p.resume = null;
       p.joinError = message;
       socket.disconnect();
       return;
@@ -158,6 +160,7 @@ function onJoined(p, data, c, u) {
   localStorage.setItem("salon_code", c);
   localStorage.setItem("salon_user", u);
   localStorage.setItem("zik_salon_player_" + c, data.token);
+  localStorage.setItem("salon_at", String(Date.now()));
   p.roster = data.players || [];
   p.teams = data.teams;
   p.night = data.night ?? null;

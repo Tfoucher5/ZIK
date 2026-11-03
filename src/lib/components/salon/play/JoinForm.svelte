@@ -4,11 +4,25 @@
     usernameInput = $bindable(''),
     joinError = '',
     joining = false,
+    resume = null,
+    onForget,
     onJoin,
   } = $props();
 </script>
 
 <main class="sp sp-join">
+{#if resume}
+  <div>
+    <p class="sx-kicker"><b>●</b> ZIK Salon {resume.code}</p>
+    <h1>Re-bonjour<br><em>{resume.username}.</em></h1>
+  </div>
+  <p class="sp-resume">Reprends ta place dans la partie.</p>
+  {#if joinError}<p class="sp-error">{joinError}</p>{/if}
+  <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={onJoin} disabled={joining}>
+    {joining ? 'Connexion…' : 'Reprendre ma place'}
+  </button>
+  <button class="salon-join-link" onclick={onForget}>Ce n'est pas moi</button>
+{:else}
   <div>
     <p class="sx-kicker"><b>●</b> ZIK Salon</p>
     <h1>Entre dans<br><em>la partie.</em></h1>
@@ -46,4 +60,12 @@
   <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={onJoin} disabled={joining}>
     {joining ? 'Connexion…' : 'Rejoindre'}
   </button>
+{/if}
 </main>
+
+<style>
+  .sp-resume {
+    margin: 0;
+    color: var(--mid);
+  }
+</style>

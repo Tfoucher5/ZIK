@@ -25,7 +25,8 @@ export function departPlayer(salon, username) {
 // Téléphone resté en veille trop longtemps : il retrouve ses points
 export function restoreDeparted(salon, player, token) {
   const back = token && salon.departed?.[token];
-  if (!back) return;
+  // Téléphone prêté à un ami : le jeton seul ne suffit pas
+  if (!back || back.username !== player.username) return;
   delete salon.departed[token];
   player.night = back.night;
   if (salon.settings.teams?.some((t) => t.id === back.team))

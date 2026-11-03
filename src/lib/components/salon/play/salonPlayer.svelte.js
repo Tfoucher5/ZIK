@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { listenPlayer } from "./playerEvents.js";
+import { forgetResume, readResume } from "./resume.js";
 
 // État du téléphone d'un joueur du mode Salon et connexion à la partie.
 export class SalonPlayer {
@@ -8,6 +9,8 @@ export class SalonPlayer {
   usernameInput = $state("");
   joinError = $state("");
   joining = $state(false);
+  // Téléphone qui jouait récemment dans ce salon : on propose de reprendre sa place
+  resume = $state(null);
 
   // Partie
   joined = $state(false);
@@ -113,7 +116,29 @@ export class SalonPlayer {
     this.socket.emit("salon_buzz");
   };
 
+  checkResume = (urlCode) => {
+    try {
+      const r = readResume(localStorage, urlCode);
+      this.codeInput = r.code;
+      this.usernameInput = r.username;
+      this.resume = r.resume;
+    } catch {
+      /* stockage indisponible : formulaire classique */
+    }
+  };
+
+  forgetResume = () => {
+    try {
+      forgetResume(localStorage, this.resume.code);
+    } catch {
+      /* stockage indisponible */
+    }
+    this.resume = null;
+    this.usernameInput = "";
+  };
+
   leave = () => {
+    this.resume = null;
     this.joined = false;
     this.codeInput = "";
   };
