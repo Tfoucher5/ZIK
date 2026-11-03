@@ -5,6 +5,7 @@ import { makeChoices } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
 import { gamePlayers } from "./departed.js";
 import { saveSnapshot } from "./snapshot.js";
+import { noteMediaMiss } from "../../services/health/mediaMisses.js";
 import { scoreQcmRound } from "./answers.js";
 import { drawSpecial } from "./specials.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
@@ -272,6 +273,7 @@ export function skipTrack(code, io) {
   const salon = salonRooms[code];
   const game = salon.game;
   clearTimeout(game.musicReadyTimer);
+  noteMediaMiss();
   game.currentRound--;
   game.skipStreak = (game.skipStreak ?? 0) + 1;
   if (game.skipStreak >= OUTAGE_AFTER)
