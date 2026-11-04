@@ -5,6 +5,19 @@
 
 export const NEWS = [
   {
+    date: "2026-11-04",
+    version: "3.23.0",
+    tag: "Amélioration",
+    title: "État des services et annonces en soirée",
+    summary:
+      "Une page montre l'état de ZIK en direct, et une maintenance à venir s'annonce sur les écrans de ta soirée.",
+    items: [
+      "Nouvelle page État des services : le site, les soirées, la musique, les paiements et les mails en direct, avec la disponibilité et les incidents des 30 derniers jours.",
+      "Le bas de chaque page indique s'il y a un incident en cours, avec un lien vers le détail.",
+      "En soirée : si une maintenance approche, un message s'affiche sur la TV, la régie et les téléphones, sans couper la partie.",
+    ],
+  },
+  {
     date: "2026-11-03",
     version: "3.22.0",
     tag: "Amélioration",
