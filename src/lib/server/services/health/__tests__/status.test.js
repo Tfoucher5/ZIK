@@ -205,7 +205,13 @@ describe("pages de statut", () => {
     });
     expect(texte).not.toContain('"memory"');
     expect(texte).not.toContain("512");
-    for (const mot of ["Socket.io", "Resend", "webhook", "Stripe et"])
+    for (const mot of [
+      "Socket.io",
+      "Resend",
+      "webhook",
+      "Stripe et",
+      "Spotify",
+    ])
       expect(texte).not.toContain(mot);
   });
 

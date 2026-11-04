@@ -12,7 +12,8 @@ const MAX_INCIDENTS = 10;
 
 // Ce que voit le public : pas de jargon, un service = des sondes. Les messages
 // d'erreur, les salons ouverts et l'état interne du serveur (mémoire, réactivité,
-// capacité de la base) restent à l'admin.
+// capacité de la base) restent à l'admin, comme l'import Spotify, réservé à ZIK
+// par les restrictions de Spotify.
 export const GROUPS = [
   {
     id: "site",
@@ -27,27 +28,18 @@ export const GROUPS = [
   {
     id: "musique",
     label: "Musique",
-    probes: ["youtube", "deezer", "spotify"],
+    probes: ["youtube", "deezer"],
   },
   { id: "paiements", label: "Paiements", probes: ["stripe"] },
   { id: "mails", label: "Mails", probes: ["mail"] },
 ];
 
 // Sondes dont la valeur est un temps de réponse, seule mesure rendue publique
-const TIMED = [
-  "site",
-  "auth",
-  "realtime",
-  "youtube",
-  "deezer",
-  "spotify",
-  "mail",
-];
+const TIMED = ["site", "auth", "realtime", "youtube", "deezer", "mail"];
 
 // Noms de la page publique, sans jargon. L'admin garde les noms techniques.
 const PUBLIC_LABELS = {
   realtime: "Connexion des écrans et des téléphones",
-  spotify: "Import de playlists Spotify",
   deezer: "Extraits audio Deezer",
   stripe: "Paiements en ligne",
   mail: "Envoi des mails",
