@@ -8,6 +8,7 @@
   import PlayLobby from '$lib/components/salon/play/PlayLobby.svelte';
   import PlayBoard from '$lib/components/salon/play/PlayBoard.svelte';
   import PlayEvening from '$lib/components/salon/play/PlayEvening.svelte';
+  import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -59,6 +60,8 @@
       </div>
       <div class="sp-score">{p.myScore}<small>points</small></div>
     </header>
+
+    <NoticeBanner message={p.adminNotice} />
 
     <div class="sp-body">
       {#if p.phase === 'lobby' || p.phase === 'starting'}

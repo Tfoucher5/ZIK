@@ -39,6 +39,7 @@ export class SalonHost {
   night = $state(null);
   buzzer = $state(null);
   videoOutage = $state(null);
+  adminNotice = $state("");
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
   // Après un redémarrage : « mise à jour terminée », la manche repart seule

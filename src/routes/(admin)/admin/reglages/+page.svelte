@@ -12,6 +12,8 @@
   let maintMessage = $derived(data.maintenance?.message ?? '');
   let busy = $state('');
   let confirmSend = $state(false);
+  let confirmNotice = $state(false);
+  let noticeText = $derived(data.notice);
   let title = $state('');
   let body = $state('');
   let url = $state('');
@@ -38,8 +40,12 @@
       await update({ reset: false });
       busy = '';
       confirmSend = false;
+      confirmNotice = false;
     };
   };
+
+  // Entrée ne publie pas : le bouton par défaut du formulaire peut être « Retirer »
+  const noEnter = (e) => { if (e.key === 'Enter') e.preventDefault(); };
 </script>
 
 <div class="adm-page">
@@ -134,6 +140,21 @@
     </form>
 
     <h2 class="a-h2">Maintenance</h2>
+    <form method="POST" action="?/notice" class="a-card grid" use:enhance={submit('notice')}>
+      <p class="a-muted small">Un bandeau tout de suite sur la TV, la régie et les téléphones de tous les salons, et sur /statut. Il reste jusqu'à ce que tu le retires, même après un redémarrage. La partie continue.</p>
+      <label class="a-label">Annonce<input class="a-input" name="message" maxlength="200" bind:value={noticeText} onkeydown={noEnter} placeholder="Ex. Courte mise à jour à 23 h : la partie reprend toute seule." /></label>
+      <div class="a-btns">
+        {#if confirmNotice}
+          <button class="a-btn primary" type="submit" disabled={busy === 'notice' || !noticeText.trim()}>{busy === 'notice' ? 'Publication…' : 'Oui, publier sur tous les salons'}</button>
+          <button class="a-btn" type="button" onclick={() => (confirmNotice = false)}>Annuler</button>
+        {:else}
+          <button class="a-btn primary" type="button" disabled={!noticeText.trim()} onclick={() => (confirmNotice = true)}>Publier partout…</button>
+          {#if data.notice}<button class="a-btn" type="submit" name="clear" value="1" disabled={busy === 'notice'}>Retirer l'annonce</button>{/if}
+        {/if}
+      </div>
+      {#if form?.noticeSaved}<p class="a-ok">{data.notice ? 'Annonce en ligne.' : 'Aucune annonce en ligne.'}</p>{/if}
+      {#if form?.noticeError}<p class="a-err">{form.noticeError}</p>{/if}
+    </form>
     <form method="POST" action="?/maintenance" class="a-card grid maint" class:on={data.maintenance?.enabled} use:enhance={submit('maintenance')}>
       <div class="m-head">
         <div>

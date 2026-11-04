@@ -38,6 +38,9 @@ export function listenPlayer(p, socket, c, u) {
   socket.on("salon_video_outage", ({ retryIn }) => {
     p.videoOutage = retryIn;
   });
+  socket.on("salon_notice", ({ message }) => {
+    p.adminNotice = message;
+  });
   socket.on("salon_buzzed", ({ username }) => {
     p.buzzer = username;
   });

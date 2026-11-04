@@ -62,6 +62,9 @@ export function listenHost(h, socket) {
   socket.on("salon_video_outage", ({ retryIn }) => {
     h.videoOutage = retryIn;
   });
+  socket.on("salon_notice", ({ message }) => {
+    h.adminNotice = message;
+  });
   socket.on("salon_buzz_result", () => {
     h.buzzer = null;
   });

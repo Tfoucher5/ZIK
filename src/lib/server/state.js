@@ -27,6 +27,14 @@ export function getIO() {
   return globalThis.__zik_io ?? null;
 }
 
+// Annonce de l'admin en cours ("" = aucune), voir services/admin/salonNotice.js
+export function getSalonNotice() {
+  return globalThis.__zik_salonNotice ?? "";
+}
+export function setSalonNotice(message) {
+  globalThis.__zik_salonNotice = message;
+}
+
 const MAX_ERROR_LOG = 300;
 
 export function pushError(level, ...args) {

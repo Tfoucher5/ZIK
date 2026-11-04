@@ -1,5 +1,6 @@
 <script>
   import HistoryBar from '$lib/components/statut/HistoryBar.svelte';
+  import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import { worst, LEVEL_TEXT } from '$lib/shared/health/levels.js';
 
   let { data } = $props();
@@ -25,6 +26,8 @@
     <h1 class="stt-titre">Vérification en cours</h1>
     <p class="stt-note">Le serveur vient de redémarrer : la première vérification arrive dans moins d'une minute.</p>
   {/if}
+
+  <div class="stt-annonce"><NoticeBanner message={data.notice} /></div>
 
   <ul class="stt-groupes">
     {#each s.groups as g (g.id)}
@@ -63,6 +66,9 @@
   }
   .stt-titre.suspect { color: var(--warn); }
   .stt-titre.incident { color: var(--danger); }
+  .stt-annonce:not(:empty) {
+    margin-bottom: 32px;
+  }
   .stt-groupes {
     display: grid;
     gap: 28px;
