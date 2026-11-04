@@ -1,7 +1,7 @@
 import { FREE_MAX_PLAYERS } from "../../../data/proPlans.js";
 import { verifyToken } from "../../middleware/auth.js";
 import { alertAdminsSafe } from "../../services/admin/alerts.js";
-import { salonRooms } from "../../state.js";
+import { getSalonNotice, salonRooms } from "../../state.js";
 import {
   addPlayer,
   broadcastRoster,
@@ -29,6 +29,11 @@ const PLAYER_JOIN = {
   token: optional(key(200)),
   auth: optional(str(8192)),
 };
+
+// Toujours envoyée, même vide : l'annonce a pu être retirée pendant une coupure
+function sendNotice(socket) {
+  socket.emit("salon_notice", { message: getSalonNotice() });
+}
 
 // Arrivées : écran TV, régie, joueurs (départs dans leave.js)
 export function registerJoin(socket, io) {
@@ -69,6 +74,7 @@ export function registerJoin(socket, io) {
       ...timerClock(salon.game),
       support: supportView(salon),
     });
+    sendNotice(socket);
     if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
       prepareSession(code, io);
     else announceNextVideo(salon, io);
@@ -121,6 +127,7 @@ export function registerJoin(socket, io) {
       trackCount: game.fullPlaylist.length,
       support: supportView(salon),
     });
+    sendNotice(socket);
     scheduleCleanup(code);
     broadcastScreens(code, io);
   });
@@ -205,6 +212,7 @@ export function registerJoin(socket, io) {
         socket.salonUsername = username;
 
         socket.emit("salon_joined", reconnectView(salon, existing));
+        sendNotice(socket);
         broadcastRoster(code, io);
         scheduleCleanup(code);
         return;
@@ -231,6 +239,7 @@ export function registerJoin(socket, io) {
         players: getPlayerList(salon),
         evening: eveningView(salon),
       });
+      sendNotice(socket);
       broadcastRoster(code, io);
       scheduleCleanup(code);
     },

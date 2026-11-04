@@ -12,6 +12,7 @@
   import MediaCheck from '$lib/components/salon/regie/MediaCheck.svelte';
   import TabSettings from '$lib/components/salon/regie/TabSettings.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
+  import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import { SalonRegie, PHASES } from '$lib/components/salon/regie/salonRegie.svelte.js';
   import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
@@ -38,6 +39,8 @@
     onUpsell={(f) => (r.upsell = f)}
     onHelp={() => (r.helpOpen = true)}
   />
+
+  <NoticeBanner message={r.adminNotice} />
 
   {#if r.restarting}
     <p class="rg-outage" role="status">

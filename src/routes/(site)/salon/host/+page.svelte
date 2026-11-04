@@ -6,6 +6,7 @@
   import HostFinale from '$lib/components/salon/host/HostFinale.svelte';
   import PlaylistModal from '$lib/components/salon/playlists/PlaylistModal.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
+  import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -30,7 +31,10 @@
   </main>
 {:else}
 <div class="sh">
-  <HostTopBar {h} />
+  <div>
+    <HostTopBar {h} />
+    <NoticeBanner message={h.adminNotice} tv />
+  </div>
 
   <div class="sh-progress {h.timerLevel}">
     {#if h.phase === 'round'}<i style="width:{h.timerMax ? (h.timerVal / h.timerMax) * 100 : 0}%"></i>{/if}

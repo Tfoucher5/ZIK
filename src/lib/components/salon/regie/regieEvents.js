@@ -64,6 +64,9 @@ export function listenRegie(r, socket) {
   socket.on("salon_video_outage", ({ retryIn }) => {
     r.videoOutage = retryIn;
   });
+  socket.on("salon_notice", ({ message }) => {
+    r.adminNotice = message;
+  });
   socket.on("salon_buzz_result", () => {
     r.buzzer = null;
   });

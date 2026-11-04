@@ -22,6 +22,7 @@ import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenan
 import { startPushSchedule } from "./src/lib/server/services/notify/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
 import { announceLatestNews } from "./src/lib/server/services/notify/notifications.js";
+import { loadSalonNotice } from "./src/lib/server/services/admin/salonNotice.js";
 import {
   startHealthMonitor,
   healthz,
@@ -147,4 +148,5 @@ server.listen(PORT, () => {
   console.log(`ZIK en ligne -> http://localhost:${PORT}`);
   announceLatestNews().catch((e) => console.error("[news]", e.message));
   purgeSnapshots();
+  loadSalonNotice();
 });
