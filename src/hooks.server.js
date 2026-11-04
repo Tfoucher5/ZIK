@@ -9,6 +9,7 @@ import { isTrackableVisit, buildVisitRow } from "$lib/server/visitSource.js";
 import { dropOverriddenMeta } from "$lib/server/defaultMeta.js";
 
 const ADMIN_LOGIN = "/admin/connexion";
+const ADMIN_LOGIN_ROUTE = `/(admin)${ADMIN_LOGIN}`;
 const MAINTENANCE_EXEMPT = ["/admin", "/api/admin", "/api/stripe"];
 
 // Pages privées : jamais indexées. On le dit par en-tête plutôt que dans
@@ -65,12 +66,17 @@ export async function handle({ event, resolve }) {
 
   // Les pages admin chargent leurs données côté serveur : sans le cookie
   // admin, rien n'est rendu, on passe d'abord par la page de connexion.
+  // Sur route.id et pas sur le chemin : le routeur décode l'adresse, pas
+  // url.pathname, et /%61dmin mène aussi à l'admin.
+  const routeId = event.route.id;
   if (
     !isAdmin &&
-    (path === "/admin" || path.startsWith("/admin/")) &&
-    path.replace(/\/__data\.json$/, "") !== ADMIN_LOGIN
+    routeId?.startsWith("/(admin)/") &&
+    routeId !== ADMIN_LOGIN_ROUTE
   ) {
-    if (event.request.method !== "GET" || path.endsWith("/__data.json"))
+    // Une requête de données (__data.json) repart aussi en 303 : SvelteKit en
+    // fait une redirection sans données, le clic vers l'admin mène à la connexion
+    if (event.request.method !== "GET")
       return new Response("Accès refusé", { status: 403 });
     return Response.redirect(
       new URL(
