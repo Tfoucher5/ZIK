@@ -108,9 +108,25 @@ describe.each(ECRANS)("chrono : $nom", ({ rejoint, ecoute, etat, extra }) => {
     expect(e.timerVal).toBe(27);
   });
 
-  it("ancien serveur sans heure de fin : le tick fait foi", () => {
-    recoit("salon_timer_update", { current: 17, max: 30 });
-    expect(e.timerVal).toBe(17);
+  it("pause puis reprise : repart de la nouvelle heure de fin", () => {
+    recoit("salon_timer_started", { max: 30, endsAt: 30_000, now: 0 });
+    vi.advanceTimersByTime(10_000);
+    recoit("salon_paused", { paused: true });
+    vi.advanceTimersByTime(60_000);
+    expect(e.timerVal).toBe(20);
+
+    recoit("salon_paused", { paused: false });
+    recoit("salon_timer_update", { max: 30, endsAt: 90_000, now: 70_000 });
+    vi.advanceTimersByTime(5000);
+    expect(e.timerVal).toBe(15);
+  });
+
+  it("page rechargée pendant la pause : la reprise rétablit le chrono", () => {
+    joint({ paused: true, timerVal: 20, timerMax: 45, endsAt: null, now: 0 });
+    recoit("salon_paused", { paused: false });
+    recoit("salon_timer_update", { max: 45, endsAt: 20_000, now: 0 });
+    vi.advanceTimersByTime(1000);
+    expect(e).toMatchObject({ timerVal: 19, timerMax: 45 });
   });
 });
 

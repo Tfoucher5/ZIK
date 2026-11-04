@@ -51,10 +51,9 @@ describe("chrono par heure de fin", () => {
     });
     vi.advanceTimersByTime(29_000);
     expect(game().phase).toBe("round");
-    expect(dernier("salon_timer_update")).toMatchObject({
-      current: 1,
-      endsAt: 1_030_000,
-    });
+    expect(game().timerValue).toBe(1);
+    // Chaque écran compte seul : aucun message par seconde
+    expect(dernier("salon_timer_update")).toBeUndefined();
     vi.advanceTimersByTime(1000);
     expect(game().phase).toBe("summary");
   });
