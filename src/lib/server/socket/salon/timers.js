@@ -92,14 +92,7 @@ function runTimer(code, io) {
   const game = salonRooms[code].game;
   game.interval = setInterval(() => {
     game.timerValue = Math.max(0, Math.ceil((game.endsAt - Date.now()) / 1000));
-    if (game.timerValue <= 0) return endRound(code, "Temps écoulé !", io);
-    // shortcut: tick par seconde gardé pour les écrans encore ouverts avec
-    // l'ancien code (ils ne lisent pas endsAt), à retirer à la release suivante
-    io.to(`salon:${code}`).emit("salon_timer_update", {
-      current: game.timerValue,
-      max: game.timerMax,
-      ...timerClock(game),
-    });
+    if (game.timerValue <= 0) endRound(code, "Temps écoulé !", io);
   }, 1000);
 }
 
@@ -138,7 +131,6 @@ export function resumeGame(code, io) {
     if (game.timerActive) {
       game.endsAt = Date.now() + (game.remainingMs ?? game.timerValue * 1000);
       io.to(`salon:${code}`).emit("salon_timer_update", {
-        current: game.timerValue,
         max: game.timerMax,
         ...timerClock(game),
       });

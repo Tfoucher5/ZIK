@@ -38,6 +38,9 @@ export function listenPlayer(p, socket, c, u) {
   socket.on("salon_video_outage", ({ retryIn }) => {
     p.videoOutage = retryIn;
   });
+  socket.on("salon_notice", ({ message }) => {
+    p.adminNotice = message;
+  });
   socket.on("salon_buzzed", ({ username }) => {
     p.buzzer = username;
   });
@@ -105,9 +108,8 @@ export function listenPlayer(p, socket, c, u) {
     }
   });
 
-  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
-    if (endsAt) chrono.start(endsAt, now);
-    else p.timerVal = current;
+  socket.on("salon_timer_update", ({ max, endsAt, now }) => {
+    chrono.start(endsAt, now);
     p.timerMax = max;
   });
 

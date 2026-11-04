@@ -62,6 +62,9 @@ export function listenHost(h, socket) {
   socket.on("salon_video_outage", ({ retryIn }) => {
     h.videoOutage = retryIn;
   });
+  socket.on("salon_notice", ({ message }) => {
+    h.adminNotice = message;
+  });
   socket.on("salon_buzz_result", () => {
     h.buzzer = null;
   });
@@ -153,9 +156,8 @@ export function listenHost(h, socket) {
       h.hostCenter?.pauseVideo();
     }, 5000);
   });
-  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
-    if (endsAt) chrono.start(endsAt, now);
-    else h.timerVal = current;
+  socket.on("salon_timer_update", ({ max, endsAt, now }) => {
+    chrono.start(endsAt, now);
     h.timerMax = max;
     h.timerStarted = true;
   });

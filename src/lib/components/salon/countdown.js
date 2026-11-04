@@ -1,5 +1,5 @@
-// Chrono local calé sur l'heure de fin envoyée par le serveur : un tick perdu
-// ou une page reprise en cours de manche affichent quand même le bon temps.
+// Chrono local calé sur l'heure de fin envoyée par le serveur : chaque écran
+// compte seul, et une page reprise en cours de manche affiche le bon temps.
 //
 // Écart d'horloge avec le serveur : un message ne peut qu'arriver en retard,
 // donc chaque mesure (now du serveur − heure du téléphone) le sous-estime. On

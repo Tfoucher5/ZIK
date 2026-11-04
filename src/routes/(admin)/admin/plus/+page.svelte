@@ -11,6 +11,7 @@
         { href: '/admin/journal', name: 'Journal', desc: 'Tout ce qui se passe, au fil du temps' },
         { href: '/admin/chiffres', name: 'Chiffres', desc: 'Objectifs, semaine, Zikle du jour' },
         { href: '/admin/live', name: 'Rooms en direct', desc: 'Parties en ligne, chat, actions' },
+        { href: '/admin/statut', name: 'Statut', desc: 'Sondes du serveur et historique 30 jours' },
         { href: '/admin/errors', name: 'Erreurs serveur', desc: 'Logs des dernières 24 h' },
       ],
     },

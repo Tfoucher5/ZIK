@@ -4,6 +4,7 @@
   import Nav from '$lib/components/layout/Nav.svelte';
   import AuthModal from '$lib/components/auth/AuthModal.svelte';
   import ContactModal from '$lib/components/layout/ContactModal.svelte';
+  import StatusPill from '$lib/components/layout/StatusPill.svelte';
   import Toast from '$lib/components/ui/Toast.svelte';
   import Onboarding from '$lib/components/onboarding/Onboarding.svelte';
   import { onboarding, shouldAutoStart } from '$lib/components/onboarding/onboarding.svelte.js';
@@ -263,9 +264,11 @@
     </div>
   </div>
 
+  <StatusPill />
+
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 ZIK · par <a href="/portfolio">Theo Foucher</a></span>
-    <span class="footer-version-tag">v3.22.1</span>
+    <span class="footer-version-tag">v3.23.0</span>
   </div>
 </footer>
 {/if}

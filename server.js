@@ -22,7 +22,11 @@ import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenan
 import { startPushSchedule } from "./src/lib/server/services/notify/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
 import { announceLatestNews } from "./src/lib/server/services/notify/notifications.js";
-import { startErrorWatch } from "./src/lib/server/services/admin/alerts.js";
+import { loadSalonNotice } from "./src/lib/server/services/admin/salonNotice.js";
+import {
+  startHealthMonitor,
+  healthz,
+} from "./src/lib/server/services/health/monitor.js";
 
 const _origError = console.error.bind(console);
 const _origWarn = console.warn.bind(console);
@@ -99,6 +103,8 @@ const compress = compression({
 });
 const IMMUTABLE_RE = /^\/(css|fonts|favicon)\//;
 const server = createServer((req, res) => {
+  // Hors SvelteKit : répond même si le rendu des pages est saturé
+  if (req.url === "/healthz") return healthz(res);
   if (IMMUTABLE_RE.test(req.url)) {
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   }
@@ -119,7 +125,7 @@ setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toute
 setTimeout(dailyCardsMaintenance, 60 * 1000);
 setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
 startPushSchedule();
-startErrorWatch();
+startHealthMonitor();
 
 // Déploiement : Railway envoie SIGTERM à l'ancien conteneur une fois le nouveau
 // prêt. Les salons sont prévenus et sauvegardés ; leurs écrans et téléphones se
@@ -142,4 +148,5 @@ server.listen(PORT, () => {
   console.log(`ZIK en ligne -> http://localhost:${PORT}`);
   announceLatestNews().catch((e) => console.error("[news]", e.message));
   purgeSnapshots();
+  loadSalonNotice();
 });

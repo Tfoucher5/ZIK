@@ -64,6 +64,9 @@ export function listenRegie(r, socket) {
   socket.on("salon_video_outage", ({ retryIn }) => {
     r.videoOutage = retryIn;
   });
+  socket.on("salon_notice", ({ message }) => {
+    r.adminNotice = message;
+  });
   socket.on("salon_buzz_result", () => {
     r.buzzer = null;
   });
@@ -94,9 +97,8 @@ export function listenRegie(r, socket) {
     r.timerOn = true;
     if (endsAt) chrono.start(endsAt, now);
   });
-  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
-    if (endsAt) chrono.start(endsAt, now);
-    else r.timerVal = current;
+  socket.on("salon_timer_update", ({ max, endsAt, now }) => {
+    chrono.start(endsAt, now);
     r.timerMax = max;
     r.timerOn = true;
   });

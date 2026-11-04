@@ -1,5 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import { getMaintenance, setMaintenance } from "$lib/server/maintenance.js";
+import { publishSalonNotice } from "$lib/server/services/admin/salonNotice.js";
+import { getSalonNotice } from "$lib/server/state.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
 import {
@@ -70,6 +72,24 @@ export const actions = {
       { message },
     );
     return { maintenanceSaved: true };
+  },
+
+  notice: async ({ request, locals }) => {
+    const form = await request.formData();
+    const message = form.get("clear") ? "" : form.get("message");
+    try {
+      const published = await publishSalonNotice(message);
+      await logAdminAction(
+        locals.adminId,
+        published ? "salon_notice_on" : "salon_notice_off",
+        null,
+        "site",
+        { message: published },
+      );
+    } catch {
+      return fail(500, { noticeError: "Publication impossible." });
+    }
+    return { noticeSaved: true };
   },
 
   video: async ({ request, locals }) => {
@@ -150,6 +170,7 @@ export async function load({ locals }) {
   const prefs = profileRes.data?.notif_prefs ?? {};
   return {
     maintenance,
+    notice: getSalonNotice(),
     video,
     alerts: {
       ready: pushReady(),

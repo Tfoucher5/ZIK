@@ -20,7 +20,7 @@
   // Sur PC, la barre latérale montre directement ce que « Plus » regroupe
   const MORE = [
     { title: 'Suivre', links: [
-      ['/admin/chiffres', 'Chiffres'], ['/admin/journal', 'Journal'], ['/admin/live', 'Rooms en direct'], ['/admin/errors', 'Erreurs'],
+      ['/admin/chiffres', 'Chiffres'], ['/admin/journal', 'Journal'], ['/admin/live', 'Rooms en direct'], ['/admin/statut', 'Statut'], ['/admin/errors', 'Erreurs'],
     ] },
     { title: 'Gérer', links: [
       ['/admin/users', 'Joueurs'], ['/admin/reports', 'Messages'], ['/admin/prospection', 'Prospection'],

@@ -29,7 +29,7 @@ vi.mock("../../game/audio.js", () => ({
   ytsQuery: async () => ({ results: [], autoIndex: -1 }),
   ytVideoInfo: async () => null,
 }));
-const { salonRooms } = await import("../../../state.js");
+const { salonRooms, setSalonNotice } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
 const { serializeSalon } = await import("../snapshot.js");
 const { CODE, CLE, makeIo, makeSocket, salonDeTest } =
@@ -41,6 +41,7 @@ describe("reprise d'un salon après un redémarrage, par les handlers", () => {
 
   beforeEach(() => {
     for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+    setSalonNotice("");
     // Salon coupé en pleine manche 1, Ana à 120 points avant la manche
     salonDeTest();
     const salon = salonRooms[CODE];
@@ -85,6 +86,42 @@ describe("reprise d'un salon après un redémarrage, par les handlers", () => {
     h.connecte(s);
     return s;
   }
+
+  it("TV, régie et téléphone reçoivent l'annonce en cours en arrivant, et son retrait", async () => {
+    const annonces = (s) =>
+      s.recu.filter((e) => e.event === "salon_notice").map((e) => e.payload);
+    setSalonNotice("Mise à jour à 23 h");
+    const tv = ecouteur("tv");
+    await tv.handlers.salon_join_host({ code: CODE, key: CLE });
+    const regie = ecouteur("regie");
+    await regie.handlers.salon_join_control({ code: CODE, key: CLE });
+    const ana = ecouteur("ana");
+    await ana.handlers.salon_join_player({
+      code: CODE,
+      username: "Ana",
+      token: "jeton-ana",
+    });
+    const nouveau = ecouteur("zoe");
+    await nouveau.handlers.salon_join_player({ code: CODE, username: "Zoé" });
+    for (const s of [tv, regie, ana, nouveau])
+      expect(annonces(s)).toEqual([{ message: "Mise à jour à 23 h" }]);
+
+    setSalonNotice("");
+    const retour = ecouteur("ana2");
+    await retour.handlers.salon_join_player({
+      code: CODE,
+      username: "Ana",
+      token: "jeton-ana",
+    });
+    expect(annonces(retour)).toEqual([{ message: "" }]);
+  });
+
+  it("une TV sans la clé ne reçoit pas l'annonce", async () => {
+    setSalonNotice("Mise à jour à 23 h");
+    const tv = ecouteur("tv");
+    await tv.handlers.salon_join_host({ code: CODE });
+    expect(tv.recu.map((e) => e.event)).not.toContain("salon_notice");
+  });
 
   it("la TV retrouve son salon, tout le monde est prévenu, la manche coupée repart seule", async () => {
     const tv = ecouteur("tv");

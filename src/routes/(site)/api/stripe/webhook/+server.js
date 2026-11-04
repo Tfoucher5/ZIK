@@ -9,6 +9,7 @@ import { sendMail, ADMIN_EMAIL } from "$lib/server/mail/send.js";
 import { proWelcome, proSaleAlert } from "$lib/server/mail/proPurchase.js";
 import { alertAdminsSafe } from "$lib/server/services/admin/alerts.js";
 import { PLAN_LABELS } from "$lib/shared/admin/players.js";
+import { noteEvent } from "$lib/server/services/health/opsEvents.js";
 
 async function onCheckoutCompleted(session) {
   const userId = session.client_reference_id;
@@ -83,7 +84,8 @@ export async function POST({ request }) {
       process.env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (err) {
-    console.error("[stripe] signature refusée :", err.message);
+    console.warn("[stripe] signature refusée :", err.message);
+    noteEvent("stripe_bad_signature");
     return json({ error: "Signature invalide" }, { status: 400 });
   }
 

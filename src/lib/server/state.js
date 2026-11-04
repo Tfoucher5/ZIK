@@ -9,7 +9,13 @@ globalThis.__zik_salonRooms = globalThis.__zik_salonRooms ?? {};
 globalThis.__zik_chatHistories = globalThis.__zik_chatHistories ?? {};
 globalThis.__zik_errorLog = globalThis.__zik_errorLog ?? [];
 globalThis.__zik_presence = globalThis.__zik_presence ?? new Map();
+globalThis.__zik_healthProbes = globalThis.__zik_healthProbes ?? {};
+globalThis.__zik_opsEvents = globalThis.__zik_opsEvents ?? {};
 
+// server.js et le build SvelteKit chargent chacun leur copie des modules : tout
+// ce qui passe de l'un à l'autre (sondes, webhook, mails) doit vivre ici.
+export const healthProbes = globalThis.__zik_healthProbes; // sonde -> { streak, level, value, detail, at }
+export const opsEvents = globalThis.__zik_opsEvents; // événement -> horodatages récents
 export const playlistCache = globalThis.__zik_playlistCache; // roomId -> Track[]
 export const customRooms = globalThis.__zik_customRooms; // code   -> { id, name, emoji, tracks, ... }
 export const dbRooms = globalThis.__zik_dbRooms; // code   -> { name, emoji, max_rounds, ... }
@@ -25,6 +31,14 @@ export function setIO(io) {
 }
 export function getIO() {
   return globalThis.__zik_io ?? null;
+}
+
+// Annonce de l'admin en cours ("" = aucune), voir services/admin/salonNotice.js
+export function getSalonNotice() {
+  return globalThis.__zik_salonNotice ?? "";
+}
+export function setSalonNotice(message) {
+  globalThis.__zik_salonNotice = message;
 }
 
 const MAX_ERROR_LOG = 300;
