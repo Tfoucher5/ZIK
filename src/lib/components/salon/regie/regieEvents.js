@@ -97,9 +97,8 @@ export function listenRegie(r, socket) {
     r.timerOn = true;
     if (endsAt) chrono.start(endsAt, now);
   });
-  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
-    if (endsAt) chrono.start(endsAt, now);
-    else r.timerVal = current;
+  socket.on("salon_timer_update", ({ max, endsAt, now }) => {
+    chrono.start(endsAt, now);
     r.timerMax = max;
     r.timerOn = true;
   });

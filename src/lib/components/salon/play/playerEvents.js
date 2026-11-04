@@ -108,9 +108,8 @@ export function listenPlayer(p, socket, c, u) {
     }
   });
 
-  socket.on("salon_timer_update", ({ current, max, endsAt, now }) => {
-    if (endsAt) chrono.start(endsAt, now);
-    else p.timerVal = current;
+  socket.on("salon_timer_update", ({ max, endsAt, now }) => {
+    chrono.start(endsAt, now);
     p.timerMax = max;
   });
 
