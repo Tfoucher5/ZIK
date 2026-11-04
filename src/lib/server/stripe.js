@@ -1,5 +1,12 @@
 import Stripe from "stripe";
 
+// Événements traités par /api/stripe/webhook, surveillés par la sonde Stripe
+export const WEBHOOK_EVENTS = [
+  "checkout.session.completed",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+];
+
 let client;
 export function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY)

@@ -2,13 +2,19 @@
   import { getContext, onMount } from 'svelte';
   import PageHeader from '$lib/components/admin/PageHeader.svelte';
   import HistoryBar from '$lib/components/statut/HistoryBar.svelte';
+  import IncidentList from '$lib/components/statut/IncidentList.svelte';
   import { LEVEL_TEXT } from '$lib/shared/health/levels.js';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');
 
   // Unité de la valeur mesurée par chaque sonde
-  const UNIT = { db: 'ms', deezer: 'ms', youtube: 'ms', eventLoop: 'ms', memory: 'Mo', errors: 'en 5 min', media: 'en 5 min', load: 'salons' };
+  const UNIT = { site: 'ms', db: 'ms', database: 'Mo', auth: 'ms', realtime: 'ms', deezer: 'ms', youtube: 'ms', spotify: 'ms', stripe: 'ms', mail: 'ms', eventLoop: 'ms', memory: 'Mo', errors: 'en 5 min', media: 'en 5 min', snapshots: 'en échec en 15 min', load: 'salons' };
+
+  function depuis(s) {
+    const h = Math.floor(s / 3600);
+    return h >= 48 ? `${Math.floor(h / 24)} jours` : h ? `${h} h` : `${Math.floor(s / 60)} min`;
+  }
 
   let status = $state(null);
   let failed = $state(false);
@@ -50,7 +56,7 @@
   {:else if !status}
     <p class="ast-note">Chargement…</p>
   {:else}
-    <p class="ast-global {status.level}">État global : <b>{LEVEL_TEXT[status.level]}</b> · page publique <a href="/statut">/statut</a></p>
+    <p class="ast-global {status.level}">État global : <b>{LEVEL_TEXT[status.level]}</b> · page publique <a href="/statut">/statut</a> · serveur démarré depuis {depuis(status.uptime)}{#if status.version} · v{status.version}{/if}</p>
     {#if !status.historyAvailable}
       <p class="ast-note">Historique illisible (base injoignable, ou migration <code>ops</code> pas encore appliquée) : les frises restent grises.</p>
     {/if}
@@ -67,13 +73,14 @@
           </div>
           {#if p.level}
             <p class="ast-detail">
-              {#if p.value != null}{p.value} {UNIT[p.id] ?? ''}{/if}{#if p.detail} · {p.detail}{/if}
+              {#if p.value != null}{p.value} {UNIT[p.id] ?? ''}{/if}{#if p.detail} · {p.detail}{/if}{#if p.availability != null} · {p.availability.toLocaleString('fr-FR')} % sur 30 jours{/if}
             </p>
           {/if}
           <HistoryBar days={status.days} levels={p.history} />
         </li>
       {/each}
     </ul>
+    <IncidentList incidents={status.incidents} />
     <p class="ast-note">Sondes toutes les 60 s. Suspicion : seuil approché deux fois de suite ou premier échec. Incident : trois échecs de suite (push et mail).</p>
   {/if}
 </div>

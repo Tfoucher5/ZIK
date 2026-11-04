@@ -1,5 +1,5 @@
 import { getAdminClient } from "../../config.js";
-import { errorLog } from "../../state.js";
+import { errorLog, healthProbes } from "../../state.js";
 import { alertAdminsSafe } from "../admin/alerts.js";
 import { sendMail, ADMIN_EMAIL } from "../../mail/send.js";
 import { LEVELS, levelOf, nextStreak, worst } from "./levels.js";
@@ -14,7 +14,7 @@ const EVERY_MS = 60 * 1000;
 const SNAPSHOT_MS = 5 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const state = {}; // sonde -> { streak, level, value, detail, at }
+const state = healthProbes;
 let lastSnapshot = 0;
 let lastFlush = Date.now();
 const lastDbWarn = {};

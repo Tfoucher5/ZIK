@@ -1,5 +1,6 @@
 import { getAdminClient } from "../../config.js";
 import { salonRooms } from "../../state.js";
+import { noteEvent } from "../../services/health/opsEvents.js";
 import { scheduleDeparture } from "./leave.js";
 import { scheduleCleanup } from "./timers.js";
 import { nextRound } from "./rounds.js";
@@ -131,6 +132,7 @@ async function rpc(what, fn, args) {
     return data;
   } catch (e) {
     console.error(`[salon] ${what}:`, e?.message ?? e);
+    if (fn === "save_salon_snapshot") noteEvent("snapshot_failed");
     return null;
   }
 }
