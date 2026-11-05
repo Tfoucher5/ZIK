@@ -24,7 +24,7 @@ jobs:
       - run: npx eslint .
       - run: npx prettier --check .
       - run: npx svelte-check --threshold error
-      - run: npx vitest run
+      - run: npx vitest run --coverage
       # config.js crée le client Supabase au chargement : valeurs factices, jamais appelées
       - run: npm run build
         env:

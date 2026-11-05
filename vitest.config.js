@@ -13,6 +13,12 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/__tests__/**/*.test.js"],
+    // Seuils au niveau mesuré le 05/11 : on les monte, on ne les baisse jamais
+    coverage: {
+      include: ["src/lib/server/socket/**", "src/lib/server/services/**"],
+      reporter: ["text-summary"],
+      thresholds: { statements: 45, branches: 36, functions: 42, lines: 46 },
+    },
     // `src/lib/server/config.js` crée son client Supabase au chargement du
     // module et lève si l'URL manque. Importer n'importe quel service côté
     // serveur ferait donc échouer la suite là où il n'y a pas de .env : en CI,
