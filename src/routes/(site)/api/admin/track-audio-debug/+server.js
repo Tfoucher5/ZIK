@@ -3,13 +3,12 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
-import { YTDLP_BIN, getYtAudioUrl } from "$lib/server/audio/ytdlAudio.js";
 import {
-  validPreviewUrl,
-  getDeezerPreview,
-  getItunesPreview,
-  ytsSearch,
-} from "$lib/server/socket/game/audio.js";
+  deezerPreviewMatch,
+  iTunesPreviewMatch,
+} from "$lib/server/services/music/deezer.js";
+import { YTDLP_BIN, getYtAudioUrl } from "$lib/server/audio/ytdlAudio.js";
+import { validPreviewUrl, ytsSearch } from "$lib/server/socket/game/audio.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -113,8 +112,8 @@ export async function POST({ url, request }) {
   }
 
   // getYtAudioUrl attend un identifiant de vidéo : on passe d'abord par
-  // ytsSearch, exactement comme le fait le jeu.
-  // Une vidéo épinglée court-circuite la recherche, comme dans le jeu.
+  // ytsSearch. Le jeu ne passe plus par là : il joue les extraits ci-dessous.
+  // Une vidéo épinglée court-circuite la recherche.
   const epingle = track.youtube_id || null;
   const video = epingle
     ? { id: epingle }
@@ -160,7 +159,7 @@ export async function POST({ url, request }) {
     }
   }
 
-  const dz = await getDeezerPreview(track.artist, track.title).catch(
+  const dz = await deezerPreviewMatch(track.artist, track.title).catch(
     () => null,
   );
   steps.deezer = step(
@@ -169,7 +168,7 @@ export async function POST({ url, request }) {
     dz ? null : "Deezer ne renvoie rien",
   );
 
-  const it = await getItunesPreview(track.artist, track.title).catch(
+  const it = await iTunesPreviewMatch(track.artist, track.title).catch(
     () => null,
   );
   steps.itunes = step(

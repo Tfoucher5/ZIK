@@ -1,15 +1,9 @@
 import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { roomGames } from "../../state.js";
-import { getYtAudioUrl } from "../../audio/ytdlAudio.js";
-import { audioUrlFor, ytdlAudioCache } from "../../audio/ytdlCache.js";
+import { audioUrlFor } from "../../audio/ytdlCache.js";
 import { makeChoices } from "../scoring.js";
-import {
-  getPreview,
-  prefetchNextRound,
-  resolveVideo,
-  videoStart,
-} from "./audio.js";
+import { getPreview, prefetchNextRound } from "./audio.js";
 import { cardsOffReason, onRoundEnd } from "./cardFlow.js";
 import { saveGameResults } from "./results.js";
 import { getOrCreateRoom, resetRoundFlags, sanitizePlayer } from "./rooms.js";
@@ -57,7 +51,6 @@ export function endRound(roomId, reason, io) {
     totalFound: game.totalFullFound,
     round: game.currentRound,
     trackId: track.id ?? null,
-    videoId: game.lastVideoId ?? null,
     featArtists: (track.featArtists || []).map(displayString),
     extraAnswers: (track.extraAnswers || []).map((e) => ({
       label: e.label,
@@ -144,64 +137,33 @@ export async function startNextRound(roomId, io) {
   try {
     const track = game.currentTrack;
 
+    // Extrait Deezer ou iTunes : aucun appel YouTube pendant une partie
     let videoId = null,
-      startSeconds = 0,
       ytAudio = null;
-
-    let prefetchYtdlFailed = false;
     let prefetched = null;
 
-    if (game.prefetchedRound?.track === track) {
+    const takePrefetched = () => {
+      if (game.prefetchedRound?.track !== track) return;
       prefetched = game.prefetchedRound;
-      ({ videoId, startSeconds, ytAudio } = prefetched);
-      prefetchYtdlFailed = !!videoId && !ytAudio;
+      ({ videoId, ytAudio } = prefetched);
       game.prefetchedRound = null;
-    }
+    };
+    takePrefetched();
 
     // Prefetch en cours mais pas encore terminé → on l'attend (max 13s)
-    if (!ytAudio && !prefetchYtdlFailed && game._prefetchPromise) {
+    if (!ytAudio && game._prefetchPromise) {
       await Promise.race([
         game._prefetchPromise.catch(() => {}),
         new Promise((r) => setTimeout(r, 13000)),
       ]);
       game._prefetchPromise = null;
-      if (game.prefetchedRound?.track === track) {
-        prefetched = game.prefetchedRound;
-        ({ videoId, startSeconds, ytAudio } = prefetched);
-        prefetchYtdlFailed = !!videoId && !ytAudio;
-        game.prefetchedRound = null;
-      }
+      takePrefetched();
     }
 
-    if (!videoId) {
-      const artist = track.mainArtist || track.artist;
-      const video = await resolveVideo(artist, track);
-      if (video) {
-        videoId = video.id;
-        startSeconds = videoStart(track, video, game.roundDuration);
-      }
-    }
-
-    // Normalement le prefetch a déjà rempli ytAudio — ce bloc ne tourne
-    // que si prefetch KO ou manche 1 dont le prefetch n'a pas eu le temps.
-    // Timeout 15s : joueur est sur l'écran de chargement, pas de pression.
-    // Pas d'IFrame en fallback : videoId visible dans devtools = triche facile.
-    // prefetchYtdlFailed : yt-dlp a déjà échoué pendant le prefetch, inutile de retenter.
-    if (videoId && !ytAudio && !prefetchYtdlFailed) {
-      ytAudio = await Promise.race([
-        getYtAudioUrl(videoId).catch(() => null),
-        new Promise((resolve) => setTimeout(() => resolve(null), 15000)),
-      ]);
-      if (ytAudio) ytdlAudioCache.set(videoId, ytAudio);
-      else console.warn(`[ytdl] KO pour ${videoId} — tentative preview`);
-    }
-
-    // Fallback preview Deezer/iTunes si yt-dlp KO (30s clip, sans leak)
     if (!ytAudio) {
       const preview = await getPreview(track);
       if (preview) {
         videoId = preview.pKey;
-        startSeconds = 0;
         ytAudio = preview.entry;
       }
     }
@@ -223,15 +185,11 @@ export async function startNextRound(roomId, io) {
     // trackId sert au signalement d'un titre muet. Ne jamais ajouter ici
     // l'artiste ni le titre : lastRoundData part au client pendant la manche.
     // Même URL que celle annoncée en next_audio : le joueur l'a déjà en mémoire
-    const audioUrl =
-      prefetched?.audioUrl && prefetched.videoId === videoId
-        ? prefetched.audioUrl
-        : audioUrlFor(videoId);
-    game.lastVideoId = videoId;
+    const audioUrl = prefetched?.audioUrl ?? audioUrlFor(videoId);
     game.lastRoundData = {
       // Sans iframe, l'id ne sert à rien côté joueur et trahirait le titre
-      videoId: ytAudio ? null : videoId,
-      startSeconds,
+      videoId: null,
+      startSeconds: 0,
       trackId: track.id ?? null,
       round: game.currentRound,
       total: game.plannedRounds,
@@ -273,8 +231,8 @@ export async function startNextRound(roomId, io) {
       },
     );
     // Titre sans source audio : on ne consomme pas la manche, un titre de
-    // réserve prend sa place. Après 3 échecs d'affilée (panne YouTube et
-    // Deezer), plus de réserve : la partie raccourcit au lieu de chercher.
+    // réserve prend sa place. Après 3 échecs d'affilée (panne de Deezer et
+    // d'iTunes), plus de réserve : la partie raccourcit au lieu de chercher.
     game.currentRound--;
     game.skipStreak = (game.skipStreak ?? 0) + 1;
     const spare = game.skipStreak <= 3 && game.spareTracks?.pop();

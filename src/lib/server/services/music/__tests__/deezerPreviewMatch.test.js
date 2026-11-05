@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { deezerPreviewMatch } from "../deezer.js";
+import { deezerPreviewMatch, iTunesPreviewMatch } from "../deezer.js";
 
 const reponse = (data) =>
   vi.stubGlobal(
@@ -114,5 +114,33 @@ describe("extrait Deezer trouvé par nom", () => {
       vi.fn(async () => ({ ok: false })),
     );
     expect(await deezerPreviewMatch("S", "P")).toBeNull();
+  });
+});
+
+describe("extrait iTunes trouvé par nom", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const itunes = (results) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => ({ results }) })),
+    );
+
+  it("mêmes règles que Deezer : le bon titre, jamais une reprise", async () => {
+    itunes([
+      { artistName: "Piano Queen", trackName: "Hello", previewUrl: "faux" },
+      { artistName: "Adele", trackName: "Hello", previewUrl: "bon" },
+    ]);
+    expect(await iTunesPreviewMatch("Adele", "Hello")).toBe("bon");
+    expect(await iTunesPreviewMatch("Queen", "Hello")).toBeNull();
+  });
+
+  it("panne : null, jamais d'exception", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("réseau");
+      }),
+    );
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
   });
 });

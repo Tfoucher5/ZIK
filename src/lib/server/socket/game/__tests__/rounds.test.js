@@ -32,8 +32,6 @@ const getPreview = vi.fn(async () =>
 );
 vi.mock("../audio.js", () => ({
   prefetchNextRound: () => Promise.resolve(),
-  resolveVideo: async () => null,
-  videoStart: () => 0,
   getPreview: (...a) => getPreview(...a),
 }));
 
