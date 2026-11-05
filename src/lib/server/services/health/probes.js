@@ -105,11 +105,16 @@ export function makeProbes({
       }),
     async db() {
       const r = await timed(async () => {
-        const { error } = await db().from("profiles").select("id").limit(1);
+        const { error } = await db()
+          .from("profiles")
+          .select("id")
+          .limit(1)
+          .abortSignal(signal());
         if (error) throw new Error(error.message);
       });
       if (r.error) return { result: "fail", value: r.ms, detail: r.error };
-      return { result: grade(r.ms, 1000, 3000), value: r.ms };
+      // Lente, la base répond encore : seulement au-delà du délai des autres sondes
+      return { result: grade(r.ms, 1000, TIMEOUT_MS), value: r.ms };
     },
     // Plan Pro de Supabase : 8 Go de disque inclus
     async database() {
@@ -275,7 +280,8 @@ export function makeProbes({
     },
     async snapshots() {
       const n = countSince("snapshot_failed", QUARTER);
-      return { result: grade(n, 1, 5), value: n };
+      // Une sauvegarde ratée de temps en temps est retentée à la suivante
+      return { result: grade(n, 2, 5), value: n };
     },
     // Information seulement : jamais en alerte
     async load() {

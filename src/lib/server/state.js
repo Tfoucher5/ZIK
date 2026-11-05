@@ -14,7 +14,7 @@ globalThis.__zik_opsEvents = globalThis.__zik_opsEvents ?? {};
 
 // server.js et le build SvelteKit chargent chacun leur copie des modules : tout
 // ce qui passe de l'un à l'autre (sondes, webhook, mails) doit vivre ici.
-export const healthProbes = globalThis.__zik_healthProbes; // sonde -> { streak, level, value, detail, at }
+export const healthProbes = globalThis.__zik_healthProbes; // sonde -> { recent, level, value, detail, at }
 export const opsEvents = globalThis.__zik_opsEvents; // événement -> horodatages récents
 export const playlistCache = globalThis.__zik_playlistCache; // roomId -> Track[]
 export const customRooms = globalThis.__zik_customRooms; // code   -> { id, name, emoji, tracks, ... }
