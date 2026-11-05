@@ -116,7 +116,7 @@ export class GameAudio {
       audio.currentTime = startSeconds;
       // La lecture démarre au signal round_start_sync (tous les joueurs en même
       // temps). Signal déjà passé (reconnexion) : on démarre au bon endroit.
-      if (this.syncAnchor !== null) this.playSynced();
+      if (this.syncAnchor !== null && !this.adminPaused) this.playSynced();
     };
     audio.onended = () => {
       if (this.roundActive) {

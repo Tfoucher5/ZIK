@@ -143,6 +143,11 @@ export async function startNextRound(roomId, io) {
     return;
   }
 
+  // Partie finie, relancée ou room libérée pendant la recherche : manche périmée
+  const prep = (game._prepId = (game._prepId ?? 0) + 1);
+  const stale = () =>
+    roomGames[roomId] !== room || !game.inProgress || game._prepId !== prep;
+
   io.to(`room:${roomId}`).emit("round_loading");
 
   game.currentRound++;
@@ -216,8 +221,7 @@ export async function startNextRound(roomId, io) {
       cardsOff: cardsOffReason(game),
     };
 
-    // Partie terminée pendant la préparation : cette manche n'aura pas lieu
-    if (!game.inProgress) return;
+    if (stale()) return;
 
     // Précharger la manche suivante pendant que celle-ci tourne
     if (game.sessionPlaylist.length > 0) {
@@ -232,6 +236,7 @@ export async function startNextRound(roomId, io) {
     }
     announceRound(room, io);
   } catch (err) {
+    if (stale()) return;
     console.error(`Skip "${game.currentTrack?.title}":`, err.message);
     reportTrackIssue(
       game.currentTrack?.id,

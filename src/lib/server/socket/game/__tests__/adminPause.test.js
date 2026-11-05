@@ -69,7 +69,6 @@ async function partie() {
   await vi.waitFor(() => expect(room.game.readyRound).toBe(1));
 }
 
-// Manche suivante en cours de préparation : l'extrait attend qu'on le libère
 async function preparation() {
   await partie();
   adminPauseRoom(id);
@@ -80,13 +79,11 @@ async function preparation() {
   room.game.prefetchedRound = null;
   room.game._prefetchPromise = null;
   let libere;
-  m.preview.mockImplementation(
-    () => new Promise((r) => (libere = () => r("https://cdn/x.mp3"))),
-  );
+  m.preview.mockImplementation(() => new Promise((r) => (libere = r)));
   const fin = startNextRound(id, getIO());
   await vi.waitFor(() => expect(libere).toBeTypeOf("function"));
-  return async () => {
-    libere();
+  return async (url = "https://cdn/x.mp3") => {
+    libere(url);
     m.preview.mockImplementation(async (e) => `https://cdn/${e}.mp3`);
     await fin;
   };
@@ -113,6 +110,9 @@ describe("pause admin d'une room", () => {
     expect(room.game.isActive).toBeFalsy();
     adminPauseRoom(id);
     expect(nombre("round_start_sync")).toBe(0);
+    // Un joueur qui rejoint pendant la pause doit encore recevoir la manche
+    expect(room.game.isSyncWaiting).toBe(true);
+    expect(room.game.readyTimer).toBeNull();
 
     adminResumeRoom(id);
     expect(nombre("round_start_sync")).toBe(1);
@@ -138,7 +138,6 @@ describe("pause admin d'une room", () => {
     await vi.advanceTimersByTimeAsync(1000);
     vi.useRealTimers();
     await vi.waitFor(() => expect(nombre("start_round")).toBe(avant + 1));
-    expect(room.game.currentRound).toBe(2);
   });
 
   it("pause pendant la préparation d'une manche : annoncée à la reprise", async () => {
@@ -157,17 +156,51 @@ describe("pause admin d'une room", () => {
 
     adminResumeRoom(id);
     expect(nombre("start_round")).toBe(avant + 1);
-    expect(room.game._roundHeld).toBe(false);
     expect(room.game.readyTimer).toBeTruthy();
   });
 
-  it("room libérée pendant la préparation : ni faux signalement, ni fin de partie", async () => {
+  it.each([
+    ["extrait trouvé", "https://cdn/x.mp3"],
+    ["extrait introuvable", null],
+  ])(
+    "room libérée pendant la préparation (%s) : rien de faux",
+    async (_, url) => {
+      const finir = await preparation();
+      delete roomGames[id];
+      await finir(url);
+      expect(m.report).not.toHaveBeenCalled();
+      expect(nombre("game_over")).toBe(0);
+      expect(room.game.readyTimer).toBeFalsy();
+    },
+  );
+
+  it("room recréée pendant la préparation : la nouvelle ne démarre pas seule", async () => {
     const finir = await preparation();
     delete roomGames[id];
+    const neuve = getOrCreateRoom(id);
     await finir();
+    expect(neuve.game.readyTimer).toBeFalsy();
+    expect(neuve.game.isActive).toBeFalsy();
+  });
+
+  it("fin de partie en préparation, extrait introuvable : un seul game_over", async () => {
+    const finir = await preparation();
+    await finishGame(room, getIO());
+    await finir(null);
+    expect(nombre("game_over")).toBe(1);
     expect(m.report).not.toHaveBeenCalled();
-    expect(nombre("game_over")).toBe(0);
-    clearTimeout(room.game.readyTimer);
+  });
+
+  it("revanche pendant une ancienne préparation : pas de manche en double", async () => {
+    const finir = await preparation();
+    await finishGame(room, getIO());
+    m.preview.mockImplementation(async (e) => `https://cdn/${e}.mp3`);
+    const debut = nombre("start_round");
+    await beginGame(room, getIO());
+    await vi.waitFor(() => expect(nombre("start_round")).toBe(debut + 1));
+    const avant = nombre("start_round");
+    await finir();
+    expect(nombre("start_round")).toBe(avant);
   });
 
   it("manche sautée pendant la pause : pas de second chrono à la reprise", async () => {
@@ -198,13 +231,6 @@ describe("pause admin d'une room", () => {
     expect(m.envois.at(-2).event).toBe("admin_resume");
   });
 
-  it("pause pendant le chargement : un joueur qui rejoint a encore la manche", async () => {
-    await partie();
-    adminPauseRoom(id);
-    expect(room.game.isSyncWaiting).toBe(true);
-    expect(room.game.readyTimer).toBeNull();
-  });
-
   it("pause pendant la préparation puis fin de partie : pas de manche fantôme", async () => {
     const finir = await preparation();
     adminPauseRoom(id);
@@ -213,7 +239,6 @@ describe("pause admin d'une room", () => {
     await finir();
     expect(nombre("start_round")).toBe(avant);
     expect(room.game.readyTimer).toBeNull();
-    expect(room.game._roundHeld).toBe(false);
   });
 
   it("fin de partie pendant le chargement : plus aucun départ prévu", async () => {

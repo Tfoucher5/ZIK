@@ -82,6 +82,16 @@ describe("GameAudio", () => {
     clearInterval(a.metaGuard);
   });
 
+  it("métadonnées reçues pendant une pause admin : rien ne joue", () => {
+    const a = partie();
+    a.syncAnchor = Date.now();
+    a.adminPaused = true;
+    a.loadAudio("/api/game/audio?v=x", 0);
+    audio.onloadedmetadata();
+    expect(audio.play).not.toHaveBeenCalled();
+    clearInterval(a.metaGuard);
+  });
+
   it("pause et reprise admin : agissent sur l'audio", () => {
     const a = partie();
     a.pause();
