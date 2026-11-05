@@ -29,7 +29,7 @@ Arrête-toi au premier point rouge, corrige ou demande, puis reprends. Une PR n'
 4. **Relecture.** Lance `/relire`. Tout point « Bloquant » ou « À corriger avant fusion » est traité avant d'aller plus loin.
 5. **Interface.** Si des `.svelte` ou du CSS ont changé, rappelle à Théo le contrôle visuel desktop 1440 px et mobile 390 px sur le staging après fusion dans `develop`, et TV 1920×1080 ou régie 1024 px si concernés.
 6. **Plan.** Coche l'item dans `docs/audit/2026-11-02-a-valider.md` (et ajoute une ligne si on a fait plus que prévu), dans un commit `docs(plan): …`.
-7. **Commit et push**, après confirmation de Théo :
+7. **Commit et push** :
    - message au format `type(zone): description` (sans numéro de version : il est fixé à la release) ;
    - `git push -u origin <branche>`.
 8. **PR vers `develop`** avec `gh pr create --base develop`, titre au même format, et ce corps :
@@ -51,4 +51,5 @@ Item du plan : « … » (phase N)
 - …
 ```
 
-9. **Annonce** : lien de la PR, résultat des contrôles, ce qui reste à vérifier à la main.
+9. **Fusion.** CI verte et Définition de terminé tenue : `gh pr merge --squash --delete-branch`. Si un point ne peut pas être tenu, demande à Théo et ne fusionne pas.
+10. **Annonce** : lien de la PR, résultat des contrôles, ce que Théo doit tester à la main sur `[DEV]`.
