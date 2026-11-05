@@ -36,3 +36,6 @@ vite.config.js.timestamp-*
 
 # Graphe du code (graphify)
 graphify-out/
+
+# Rapports de couverture
+coverage/
