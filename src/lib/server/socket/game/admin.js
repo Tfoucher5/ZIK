@@ -2,7 +2,14 @@ import { chatHistories, getIO, roomGames } from "../../state.js";
 import { addChatMessage } from "./chat.js";
 import { cancelAutoCountdown } from "./lobby.js";
 import { emitPlayers } from "./rooms.js";
-import { endRound, finishGame, startNextRound, startTimer } from "./rounds.js";
+import {
+  announceRound,
+  endRound,
+  finishGame,
+  startNextRound,
+  startTimer,
+  triggerRoundStart,
+} from "./rounds.js";
 
 // Pilotage des rooms depuis l'admin
 
@@ -49,7 +56,8 @@ export function adminPauseRoom(roomId) {
     clearTimeout(room.game.breakTimer);
     room.game.breakTimer = null;
   } else {
-    room.game._pausedState = "none";
+    // Joueurs en train de charger l'extrait : la manche repartira à la reprise
+    room.game._pausedState = room.game.readyTimer ? "sync" : "none";
   }
   // Annuler readyTimer + auto-countdown
   if (room.game.readyTimer) {
@@ -79,6 +87,8 @@ export function adminResumeRoom(roomId) {
     }, 1000);
   }
   io?.to(`room:${roomId}`).emit("admin_resume");
+  if (state === "sync") triggerRoundStart(roomId, io);
+  else if (room.game._roundHeld) announceRound(roomId, io);
   return true;
 }
 

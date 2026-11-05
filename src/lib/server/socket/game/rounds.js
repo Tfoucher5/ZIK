@@ -39,6 +39,8 @@ export function endRound(roomId, reason, io) {
   const room = getOrCreateRoom(roomId);
   const game = room.game;
   clearInterval(game.interval);
+  // Une pause à l'entracte doit voir l'entracte, pas une manche en cours
+  game.interval = null;
   game.isActive = false;
 
   const track = game.currentTrack;
@@ -84,6 +86,23 @@ export function endRound(roomId, reason, io) {
     game.breakTimer = null;
     startNextRound(roomId, io);
   }, game.breakDuration * 1000);
+}
+
+export function announceRound(roomId, io) {
+  const room = roomGames[roomId];
+  const game = room.game;
+  game._roundHeld = false;
+  game.isSyncWaiting = true;
+  game.readyPlayers = new Set();
+  game.readyRound = game.currentRound;
+
+  io.to(`room:${roomId}`).emit("start_round", game.lastRoundData);
+
+  const activePlayers = Object.values(room.players).filter(
+    (p) => !p._dcTimer,
+  ).length;
+  game.readyThreshold = Math.max(1, Math.round(activePlayers * 0.75));
+  game.readyTimer = setTimeout(() => triggerRoundStart(roomId, io), 6000);
 }
 
 export function startTimer(roomId, io) {
@@ -198,19 +217,12 @@ export async function startNextRound(roomId, io) {
       cardsOff: cardsOffReason(game),
     };
 
-    if (game.isPaused) return;
-
-    game.isSyncWaiting = true;
-    game.readyPlayers = new Set();
-    game.readyRound = game.currentRound;
-
-    io.to(`room:${roomId}`).emit("start_round", game.lastRoundData);
-
-    const activePlayers = Object.values(room.players).filter(
-      (p) => !p._dcTimer,
-    ).length;
-    game.readyThreshold = Math.max(1, Math.round(activePlayers * 0.75));
-    game.readyTimer = setTimeout(() => triggerRoundStart(roomId, io), 6000);
+    // Pause pendant la préparation : la reprise annoncera cette manche
+    if (game.isPaused) {
+      game._roundHeld = true;
+      return;
+    }
+    announceRound(roomId, io);
 
     // Précharger la manche suivante pendant que celle-ci tourne
     if (game.sessionPlaylist.length > 0) {
@@ -247,6 +259,9 @@ export async function finishGame(room, io) {
   game.breakTimer = null;
   game.isActive = false;
   game.inProgress = false;
+  game.isPaused = false;
+  game._pausedState = null;
+  game._roundHeld = false;
   const finalScores = Object.values(room.players)
     .sort((a, b) => b.score - a.score)
     .map(sanitizePlayer);
