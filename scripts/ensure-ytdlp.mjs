@@ -21,21 +21,18 @@ if (existsSync(binPath)) {
   process.exit(0);
 }
 
-const assetName = getAssetName();
-console.log("[yt-dlp] fetching release info... (asset:", assetName, ")");
-const res = await fetch(
-  "https://api.github.com/repos/yt-dlp/yt-dlp/releases?per_page=1",
-);
-if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
-
-const [{ assets }] = await res.json();
-const asset = assets.find((a) => a.name === assetName);
-if (!asset) throw new Error(`No release asset for ${assetName}`);
-
-console.log("[yt-dlp] downloading", asset.browser_download_url);
-const dl = await fetch(asset.browser_download_url);
-if (!dl.ok) throw new Error(`Download failed: ${dl.status}`);
-
-mkdirSync(binDir, { recursive: true });
-writeFileSync(binPath, Buffer.from(await dl.arrayBuffer()), { mode: 0o755 });
-console.log("[yt-dlp] installed at", binPath);
+// Lien direct, sans l'API GitHub : l'API refuse (403) les appels sans jeton au
+// build. Un binaire manquant ne doit pas bloquer une mise en prod : aucune
+// partie n'en dépend, seule la recherche de vidéos en tâche de fond s'arrête.
+const url = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${getAssetName()}`;
+try {
+  console.log("[yt-dlp] downloading", url);
+  const dl = await fetch(url);
+  if (!dl.ok) throw new Error(`HTTP ${dl.status}`);
+  const binary = Buffer.from(await dl.arrayBuffer());
+  mkdirSync(binDir, { recursive: true });
+  writeFileSync(binPath, binary, { mode: 0o755 });
+  console.log("[yt-dlp] installed at", binPath);
+} catch (e) {
+  console.warn("[yt-dlp] NOT INSTALLED, video search disabled:", e.message);
+}
