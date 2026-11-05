@@ -6,10 +6,21 @@ import {
 import { salonRooms, getIO } from "$lib/server/state.js";
 import { restoreSalon } from "$lib/server/socket/salon/snapshot.js";
 import { verifyToken } from "$lib/server/middleware/auth.js";
+import { isUuid } from "$lib/shared/utils.js";
 
 // Un salon sans compte ne lit que les playlists publiques (client anonyme,
 // RLS). Plafond pour qu'un script ne remplisse pas la mémoire de salons.
 const MAX_GUEST_SALONS = 50;
+// Chaque playlist coûte une requête en base au chargement du salon
+const MAX_PLAYLISTS = 50;
+
+function playlistsError(ids) {
+  if (!Array.isArray(ids) || ids.length === 0)
+    return "Au moins une playlist requise";
+  if (ids.length > MAX_PLAYLISTS)
+    return `${MAX_PLAYLISTS} playlists maximum par soirée`;
+  return ids.every(isUuid) ? null : "Playlist invalide";
+}
 
 export async function POST({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
@@ -36,8 +47,8 @@ export async function POST({ request }) {
   }
 
   const { playlistIds, settings, origin } = body;
-  if (!Array.isArray(playlistIds) || playlistIds.length === 0)
-    return json({ error: "Au moins une playlist requise" }, { status: 400 });
+  const playlistsErr = playlistsError(playlistIds);
+  if (playlistsErr) return json({ error: playlistsErr }, { status: 400 });
 
   try {
     const { code, key } = await createSalonRoom({
@@ -94,8 +105,8 @@ export async function PATCH({ request }) {
   const { code, playlistIds, key } = body;
   if (!user && !key) return json({ error: "Non authentifié" }, { status: 401 });
   if (!code) return json({ error: "Code requis" }, { status: 400 });
-  if (!Array.isArray(playlistIds) || playlistIds.length === 0)
-    return json({ error: "Au moins une playlist requise" }, { status: 400 });
+  const playlistsErr = playlistsError(playlistIds);
+  if (playlistsErr) return json({ error: playlistsErr }, { status: 400 });
 
   try {
     const { trackCount } = await changeSalonPlaylists({
