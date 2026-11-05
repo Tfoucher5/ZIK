@@ -88,9 +88,8 @@ export function endRound(roomId, reason, io) {
   }, game.breakDuration * 1000);
 }
 
-export function announceRound(roomId, io) {
-  const room = roomGames[roomId];
-  const game = room.game;
+export function announceRound(room, io) {
+  const { game, roomId } = room;
   game._roundHeld = false;
   game.isSyncWaiting = true;
   game.readyPlayers = new Set();
@@ -217,18 +216,21 @@ export async function startNextRound(roomId, io) {
       cardsOff: cardsOffReason(game),
     };
 
-    // Pause pendant la préparation : la reprise annoncera cette manche
-    if (game.isPaused) {
-      game._roundHeld = true;
-      return;
-    }
-    announceRound(roomId, io);
+    // Partie terminée pendant la préparation : cette manche n'aura pas lieu
+    if (!game.inProgress) return;
 
     // Précharger la manche suivante pendant que celle-ci tourne
     if (game.sessionPlaylist.length > 0) {
       game._prefetchPromise = prefetchNextRound(roomId, io);
       game._prefetchPromise.catch(() => {});
     }
+
+    // Pause pendant la préparation : la reprise annoncera cette manche
+    if (game.isPaused) {
+      game._roundHeld = true;
+      return;
+    }
+    announceRound(room, io);
   } catch (err) {
     console.error(`Skip "${game.currentTrack?.title}":`, err.message);
     reportTrackIssue(
@@ -255,8 +257,11 @@ export async function finishGame(room, io) {
   const { game } = room;
   clearInterval(game.interval);
   clearTimeout(game.breakTimer);
+  clearTimeout(game.readyTimer);
   game.interval = null;
   game.breakTimer = null;
+  game.readyTimer = null;
+  game.isSyncWaiting = false;
   game.isActive = false;
   game.inProgress = false;
   game.isPaused = false;

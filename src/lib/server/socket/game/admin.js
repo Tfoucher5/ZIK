@@ -59,14 +59,13 @@ export function adminPauseRoom(roomId) {
     // Joueurs en train de charger l'extrait : la manche repartira à la reprise
     room.game._pausedState = room.game.readyTimer ? "sync" : "none";
   }
-  // Annuler readyTimer + auto-countdown
-  if (room.game.readyTimer) {
-    clearTimeout(room.game.readyTimer);
-    room.game.readyTimer = null;
-    room.game.isSyncWaiting = false;
-  }
+  // Annuler readyTimer + auto-countdown. isSyncWaiting reste : un joueur qui
+  // rejoint pendant la pause doit recevoir l'extrait de la manche
+  clearTimeout(room.game.readyTimer);
+  room.game.readyTimer = null;
   cancelAutoCountdown(roomId, io);
   room.game.isPaused = true;
+  room.game.pausedAt = Date.now();
   io?.to(`room:${roomId}`).emit("admin_pause");
   return true;
 }
@@ -79,16 +78,26 @@ export function adminResumeRoom(roomId) {
   const state = room.game._pausedState ?? "none";
   room.game._pausedState = null;
 
-  if (state === "round") startTimer(roomId, io);
-  else if (state === "break") {
+  // Manche sautée pendant la pause : plus de chrono à relancer
+  const running = state === "round" && room.game.isActive;
+  if (running) {
+    // La pause ne compte ni dans le bonus de rapidité, ni dans l'extrait
+    room.game.startTime += Date.now() - room.game.pausedAt;
+    startTimer(roomId, io);
+  } else if (state === "break") {
     room.game.breakTimer = setTimeout(() => {
       room.game.breakTimer = null;
       startNextRound(roomId, io);
     }, 1000);
   }
   io?.to(`room:${roomId}`).emit("admin_resume");
-  if (state === "sync") triggerRoundStart(roomId, io);
-  else if (room.game._roundHeld) announceRound(roomId, io);
+  // Remet tout le monde au même point, y compris qui a rejoint pendant la pause
+  if (running)
+    io?.to(`room:${roomId}`).emit("round_start_sync", {
+      elapsed: (Date.now() - room.game.startTime) / 1000,
+    });
+  else if (state === "sync") triggerRoundStart(roomId, io);
+  else if (room.game._roundHeld) announceRound(room, io);
   return true;
 }
 

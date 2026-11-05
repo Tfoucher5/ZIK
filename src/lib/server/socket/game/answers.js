@@ -31,7 +31,7 @@ export function registerAnswers(socket, io) {
 
     if (!room.game.isActive || !room.game.currentTrack || !room.players[name])
       return;
-    if (!guess?.trim()) return;
+    if (room.game.isPaused || !guess?.trim()) return;
 
     const user = room.players[name];
 
@@ -99,7 +99,7 @@ export function registerAnswers(socket, io) {
       const name = room.socketToName[socket.id];
       if (!room.game.isActive || !room.game.currentTrack || !room.players[name])
         return;
-      if (room.game_mode !== "qcm") return;
+      if (room.game_mode !== "qcm" || room.game.isPaused) return;
 
       const user = room.players[name];
       if (user._qcmAnswered) return;
