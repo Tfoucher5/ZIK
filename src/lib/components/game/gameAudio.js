@@ -29,10 +29,6 @@ export class GameAudio {
     lockMediaSession();
   }
 
-  get volume() {
-    return savedVolume();
-  }
-
   setVolume(v) {
     const audio = audioEl();
     if (audio) audio.volume = v / 100;
