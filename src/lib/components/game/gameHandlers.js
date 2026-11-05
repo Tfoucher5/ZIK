@@ -97,7 +97,6 @@ export function gameHandlers(g) {
       g.currentRoundInfo = {
         round: d.round,
         trackId: d.trackId ?? null,
-        videoId: d.videoId ?? null,
       };
       g.coverSrc = "";
       g.showCover = false;
@@ -131,11 +130,7 @@ export function gameHandlers(g) {
       g.player.roundActive = true;
       g.player.waitingForSync = true;
       g.player.syncAnchor = null;
-      g.player.lastVideo = {
-        videoId: d.videoId,
-        startSeconds: d.startSeconds,
-        startedAt: Date.now(),
-      };
+      g.player.lastVideo = { startSeconds: d.startSeconds };
       g.syncWaiting = true;
       g.syncReady = 0;
       g.syncTotal = 0;

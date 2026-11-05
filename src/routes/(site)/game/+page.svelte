@@ -174,6 +174,3 @@
 {/if}
 
 <AchievementToast items={g.achToasts} onConsume={() => { g.achToasts = g.achToasts.slice(1); }} />
-
-<!-- Lecteur YouTube caché (secours si le fichier audio manque) -->
-<div id="yt-player" style="position:fixed;bottom:-1px;left:-1px;width:1px;height:1px;overflow:hidden;pointer-events:none"></div>
