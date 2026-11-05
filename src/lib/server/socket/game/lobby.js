@@ -84,6 +84,7 @@ export async function beginGame(room, io) {
     if (data) {
       game.dbGameId = data.id;
       game.savedPlayers = new Set();
+      game._ended = false;
     }
   } catch {
     /* non bloquant */
