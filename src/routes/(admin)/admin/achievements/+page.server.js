@@ -1,3 +1,7 @@
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -26,7 +30,7 @@ function parseTiers(raw) {
   return parsed;
 }
 
-export async function load() {
+async function chargerPage() {
   const sb = getAdminClient();
 
   const [
@@ -108,7 +112,7 @@ function readDef(formData) {
   return { def };
 }
 
-export const actions = {
+export const actions = adminActions({
   createAchievement: async ({ request, locals }) => {
     const formData = await request.formData();
     const id = formData.get("id")?.trim();
@@ -232,4 +236,6 @@ export const actions = {
     );
     return { done: `Succès attribué à ${username}.` };
   },
-};
+});
+
+export const load = adminLoad(chargerPage);

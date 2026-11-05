@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Pas de base en test : les instantanés sont couverts par snapshot.test.js
+vi.mock("../../game/audio.js", () => ({
+  validPreviewUrl: (u) => u ?? null,
+}));
+vi.mock("../../../services/music/deezer.js", () => ({
+  fetchDeezerTrackPreview: async () => null,
+  deezerPreviewMatch: async () => null,
+}));
 vi.mock("../snapshot.js", () => ({
   saveSnapshot: async () => {},
   freezeAndSaveAll: async () => {},
@@ -20,14 +27,11 @@ vi.mock("../../../services/admin/alerts.js", () => ({
   alertAdminsSafe: (kind, payload) => alertes.push(payload),
 }));
 let recherches = 0;
-vi.mock("../../../services/music/deezer.js", () => ({
-  fetchDeezerTrackPreview: async () => null,
-}));
 vi.mock("../tracks.js", () => ({
   buildSessionPlaylist: () => [],
   currentTrackInfo: () => null,
   forgetVideo: () => {},
-  searchTrackVideo: async (t) => {
+  knownVideo: async (t) => {
     recherches++;
     if (panne) throw new Error("fetch failed");
     return { video: { id: `v-${t.title}` }, safeStart: 0 };

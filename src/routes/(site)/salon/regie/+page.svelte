@@ -52,7 +52,7 @@
     </p>
   {:else if r.videoOutage}
     <p class="rg-outage" role="status">
-      <b>Les vidéos YouTube ne répondent pas.</b> La partie attend et réessaie toute seule (prochain essai dans {r.videoOutage} s). Personne ne perd ses points. Si ça dure, appelle un admin.
+      <b>La musique ne répond pas.</b> La partie attend et réessaie toute seule (prochain essai dans {r.videoOutage} s). Personne ne perd ses points. Si ça dure, appelle un admin.
     </p>
   {/if}
 

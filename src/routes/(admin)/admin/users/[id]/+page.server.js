@@ -1,3 +1,7 @@
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { isUuid } from "$lib/shared/utils.js";
 import { getAdminUserDetail } from "$lib/server/services/admin/userDetail.js";
@@ -19,7 +23,7 @@ function assertUuid(id) {
   if (!isUuid(id)) throw error(400, "ID invalide");
 }
 
-export async function load({ params, locals }) {
+async function chargerPage({ params, locals }) {
   assertUuid(params.id);
   const detail = await getAdminUserDetail(params.id, locals.adminId);
   if (!detail) throw error(404, "Joueur introuvable");
@@ -41,7 +45,7 @@ const reply = (res, message) =>
 const intIn = (v, min, max, fallback) =>
   Math.max(min, Math.min(max, parseInt(v, 10) || fallback));
 
-export const actions = {
+export const actions = adminActions({
   ban: async (event) => {
     const { fd, adminId, userId } = await setup(event);
     const duration = fd.get("duration") || "87600h";
@@ -139,4 +143,6 @@ export const actions = {
       "Amitié supprimée.",
     );
   },
-};
+});
+
+export const load = adminLoad(chargerPage);

@@ -1,8 +1,9 @@
+import { adminLoad } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 
 const rows = ({ data }) => data ?? [];
 
-export async function load({ url }) {
+async function chargerPage({ url }) {
   const days = [7, 30, 90].includes(Number(url.searchParams.get("j")))
     ? Number(url.searchParams.get("j"))
     : 30;
@@ -51,3 +52,5 @@ export async function load({ url }) {
     breakdown,
   };
 }
+
+export const load = adminLoad(chargerPage);

@@ -31,6 +31,7 @@ beforeEach(() => {
 describe("instantané d'un salon", () => {
   it("tout l'état passe en JSON, sans timers, sockets ni caches", () => {
     const salon = salonEnManche();
+    salon.game._resolving = { gen: 1 };
     const data = serializeSalon(salon);
     nettoie(salon);
     // Une Map ou un timer oublié ne survivrait pas à l'aller-retour
@@ -39,6 +40,7 @@ describe("instantané d'un salon", () => {
     expect(data._coalesce).toBeUndefined();
     expect(data.game.interval).toBeUndefined();
     expect(data.game.videos).toBeUndefined();
+    expect(data.game._resolving).toBeUndefined();
     expect(data.players.Ana._dcTimer).toBeUndefined();
     expect(data.banned).toEqual(["troll", "jeton-banni"]);
     expect(Object.values(data.departed)[0]).toMatchObject({

@@ -1,3 +1,7 @@
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { escapeIlike } from "$lib/shared/zikle/shared.js";
@@ -10,7 +14,7 @@ const SORTS = {
 };
 const FILTERS = ["all", "nopin", "nopreview", "reported"];
 
-export async function load({ url }) {
+async function chargerPage({ url }) {
   const sb = getAdminClient();
   const q = url.searchParams.get("q") || "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
@@ -108,7 +112,7 @@ export async function load({ url }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   editTrack: async ({ request, locals }) => {
     const fd = await request.formData();
     const id = fd.get("id");
@@ -165,4 +169,6 @@ export const actions = {
     });
     return { success: true, deleted: true };
   },
-};
+});
+
+export const load = adminLoad(chargerPage);

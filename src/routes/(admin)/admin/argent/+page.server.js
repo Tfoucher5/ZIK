@@ -1,3 +1,7 @@
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { getStripe } from "$lib/server/stripe.js";
 import { fail } from "@sveltejs/kit";
@@ -39,7 +43,7 @@ async function stripeCharges() {
   return charges;
 }
 
-export async function load({ url }) {
+async function chargerPage({ url }) {
   if (url.searchParams.has("refresh")) cache = null;
   const sb = getAdminClient();
   const { data: subs } = await sb
@@ -71,7 +75,7 @@ export async function load({ url }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   mailTest: async ({ request }) => {
     const c = campaign((await request.formData()).get("campaign"));
     if (!c) return fail(400, { mailError: "Mail inconnu." });
@@ -94,4 +98,6 @@ export const actions = {
     });
     return { mailSent: sent };
   },
-};
+});
+
+export const load = adminLoad(chargerPage);

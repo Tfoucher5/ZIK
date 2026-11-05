@@ -1,14 +1,13 @@
 import { randomBytes } from "crypto";
 
-// Cache des URLs audio YouTube extraites via ytdl — survie au hot-reload
+// Cache des liens audio (extraits Deezer et iTunes) — survie au hot-reload
 export const ytdlAudioCache = globalThis.__zik_ytdl_cache ?? new Map();
 globalThis.__zik_ytdl_cache = ytdlAudioCache;
-// entries: videoId -> { url, mimeType, fetchedAt }
-// TTL 2h (les stream URLs YouTube expirent)
+// entries: clé -> { url, mimeType, fetchedAt, query } (query : extraits seulement)
 
 // Jeton opaque -> clé du cache. L'URL audio envoyée aux joueurs ne doit rien
-// révéler : les clés d'extrait contiennent l'artiste et le titre, et un id
-// YouTube se retrouve en une recherche. Indispensable depuis que le titre
+// révéler : une clé stable laisserait reconnaître un titre déjà entendu.
+// Indispensable depuis que le titre
 // suivant est préchargé pendant la manche en cours.
 const audioTokens = globalThis.__zik_audio_tokens ?? new Map();
 globalThis.__zik_audio_tokens = audioTokens;

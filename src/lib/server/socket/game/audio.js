@@ -1,10 +1,14 @@
 import { execFile } from "child_process";
+import { createHash } from "crypto";
 import { promisify } from "util";
 import { ytdlAudioCache, audioUrlFor } from "../../audio/ytdlCache.js";
-import { YTDLP_BIN, getYtAudioUrl } from "../../audio/ytdlAudio.js";
+import { YTDLP_BIN } from "../../audio/ytdlAudio.js";
 import { roomGames } from "../../state.js";
-import { fetchDeezerTrackPreview } from "../../services/music/deezer.js";
-import { pickStart } from "../../services/music/trackIssues.js";
+import {
+  deezerPreviewMatch,
+  fetchDeezerTrackPreview,
+  iTunesPreviewMatch,
+} from "../../services/music/deezer.js";
 import { pickAutoIndex } from "../../../shared/youtube.js";
 
 const execFileAsync = promisify(execFile);
@@ -45,7 +49,7 @@ export async function ytsQuery(query, count = 5) {
       autoIndex: pickAutoIndex(results),
     };
   } catch {
-    return { results: [], autoIndex: -1 };
+    return { results: [], autoIndex: -1, failed: true };
   }
 }
 
@@ -82,30 +86,10 @@ export async function ytVideoInfo(videoId) {
   };
 }
 
-// Une vidéo épinglée court-circuite la recherche : c'est un choix humain, il
-// prime sur l'heuristique. Si son interrogation échoue, on l'utilise quand même
-// — l'extrait démarrera au début faute de connaître la durée.
-export async function resolveVideo(artist, track) {
-  if (track.youtube_id) {
-    const info = await ytVideoInfo(track.youtube_id).catch(() => null);
-    return info ?? { id: track.youtube_id, duration: 0, channel: { name: "" } };
-  }
-  return ytsSearch(artist, track.title);
-}
-
-// Départ de l'extrait : celui réglé dans l'admin pour une vidéo épinglée,
-// sinon au hasard dans la vidéo.
-export function videoStart(track, video, roundDuration) {
-  return pickStart({
-    pinned: track.youtube_id === video.id ? track.youtube_start : null,
-    durationSec: Math.round((video.duration || 0) / 1000),
-    roundDuration,
-    minStart: 0,
-  });
-}
-
 export function previewCacheKey(track) {
-  return `prev_${(track.cleanArtist + track.cleanTitle).replace(/\W/g, "").slice(0, 32)}`;
+  // Une empreinte : deux titres en cyrillique ou trop proches gardent chacun leur extrait
+  const id = `${track.cleanArtist}|${track.cleanTitle}`;
+  return `prev_${createHash("sha1").update(id).digest("hex")}`;
 }
 
 // Seuls les CDN Deezer et iTunes servent un fichier audio : un lien YouTube ou
@@ -122,32 +106,11 @@ export function validPreviewUrl(url) {
   return url;
 }
 
-export async function getDeezerPreview(artist, title) {
-  const q = encodeURIComponent(`${artist} ${title}`);
-  const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=5`, {
-    signal: AbortSignal.timeout(5000),
-  });
-  const data = await res.json();
-  return data.data?.[0]?.preview || null;
-}
-
-export async function getItunesPreview(artist, title) {
-  const q = encodeURIComponent(`${artist} ${title}`);
-  const res = await fetch(
-    `https://itunes.apple.com/search?term=${q}&entity=song&limit=5`,
-    {
-      signal: AbortSignal.timeout(5000),
-    },
-  );
-  const data = await res.json();
-  return data.results?.[0]?.previewUrl || null;
-}
-
 async function findPreview({ artist, title, externalId }) {
   return (
     (externalId && (await fetchDeezerTrackPreview(externalId))) ||
-    (await getDeezerPreview(artist, title).catch(() => null)) ||
-    (await getItunesPreview(artist, title).catch(() => null))
+    (await deezerPreviewMatch(artist, title)) ||
+    (await iTunesPreviewMatch(artist, title))
   );
 }
 
@@ -193,50 +156,26 @@ export async function prefetchNextRound(roomId, io) {
   if (!nextTrack) return;
 
   try {
-    const artist = nextTrack.mainArtist || nextTrack.artist;
-    const video = await resolveVideo(artist, nextTrack);
-
-    let videoId = null,
-      startSeconds = 0,
-      ytAudio = null;
-
-    if (video) {
-      videoId = video.id;
-      startSeconds = videoStart(nextTrack, video, game.roundDuration);
-      ytAudio = await Promise.race([
-        getYtAudioUrl(videoId).catch(() => null),
-        new Promise((resolve) => setTimeout(() => resolve(null), 12000)),
-      ]);
-      if (ytAudio) ytdlAudioCache.set(videoId, ytAudio);
-    }
-
-    // yt-dlp KO : l'extrait est prêt avant la manche au lieu d'être cherché
-    // pendant l'écran de chargement
-    if (!ytAudio) {
-      const preview = await getPreview(nextTrack);
-      if (preview) {
-        videoId = preview.pKey;
-        startSeconds = 0;
-        ytAudio = preview.entry;
-      }
-    }
+    // L'extrait est prêt avant la manche au lieu d'être cherché pendant
+    // l'écran de chargement
+    const preview = await getPreview(nextTrack);
+    if (!preview) return;
 
     const room2 = roomGames[roomId];
     if (!room2 || room2.game !== game) return;
     if (game.sessionPlaylist[game.sessionPlaylist.length - 1] !== nextTrack)
       return;
 
-    const audioUrl = ytAudio ? audioUrlFor(videoId) : null;
+    const audioUrl = audioUrlFor(preview.pKey);
     game.prefetchedRound = {
       track: nextTrack,
-      videoId,
-      startSeconds,
-      ytAudio,
+      videoId: preview.pKey,
+      ytAudio: preview.entry,
       audioUrl,
     };
     // Les joueurs téléchargent l'extrait pendant la manche en cours : la
     // suivante démarre sans attendre le réseau.
-    if (audioUrl) io.to(`room:${roomId}`).emit("next_audio", { audioUrl });
+    io.to(`room:${roomId}`).emit("next_audio", { audioUrl });
   } catch {
     // Échec silencieux — startNextRound fera le fetch normalement
   }

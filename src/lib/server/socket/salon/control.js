@@ -191,13 +191,9 @@ export function registerControl(socket, io) {
       game.videos?.delete(track);
       forgetVideo(track);
       const audio = await previewUrl(track);
-      if (
-        !audio ||
-        game.currentTrack !== track ||
-        game.phase !== "round" ||
-        game.timerActive
-      )
-        return skipTrack(salon.code, io);
+      // L'hôte a avancé pendant l'attente : la manche en cours n'est pas en cause
+      if (game.currentTrack !== track || game.phase !== "round") return;
+      if (!audio || game.timerActive) return skipTrack(salon.code, io);
       game.currentVideo = { id: audio, start: 0, audio: true };
       io.to(`salon:screens:${salon.code}`).emit("salon_use_audio", {
         audioUrl: audio,
@@ -244,6 +240,8 @@ export function registerControl(socket, io) {
     if (salon.game.phase !== "gameover" && salon.game.phase !== "summary")
       return;
     clearPause(code, io);
+    // Une recherche en cours appartient à la partie d'avant
+    salon.game.gen = (salon.game.gen ?? 0) + 1;
 
     // Clear any pending timers
     clearInterval(salon.game.interval);
