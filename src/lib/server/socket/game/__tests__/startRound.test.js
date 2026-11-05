@@ -75,7 +75,7 @@ describe("manche d'une room en ligne", () => {
     await vi.waitFor(() => expect(salle.room.game.readyRound).toBe(1));
 
     const { data } = salle.de("start_round")[0];
-    expect(data.videoId).toBeNull();
+    expect(data).not.toHaveProperty("videoId");
     expect(data.startSeconds).toBe(0);
     expect(data.audioUrl).toMatch(/^\/api\/game\/audio\?v=/);
 

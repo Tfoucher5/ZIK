@@ -187,8 +187,6 @@ export async function startNextRound(roomId, io) {
     // Même URL que celle annoncée en next_audio : le joueur l'a déjà en mémoire
     const audioUrl = prefetched?.audioUrl ?? audioUrlFor(videoId);
     game.lastRoundData = {
-      // Sans iframe, l'id ne sert à rien côté joueur et trahirait le titre
-      videoId: null,
       startSeconds: 0,
       trackId: track.id ?? null,
       round: game.currentRound,

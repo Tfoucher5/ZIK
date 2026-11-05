@@ -1,7 +1,5 @@
-// Lecture de l'extrait d'une manche : fichier audio (cas normal) ou lecteur
-// YouTube caché en secours. Tous les joueurs démarrent ensemble au signal
-// round_start_sync, puis un garde-fou recale la lecture si elle dérive.
-import { GameYoutube } from "./gameYoutube.js";
+// Lecture de l'extrait d'une manche. Tous les joueurs démarrent ensemble au
+// signal round_start_sync, puis un garde-fou recale la lecture si elle dérive.
 import { lockMediaSession, unlockMediaSession } from "./mediaSession.js";
 
 const audioEl = () => document.getElementById("previewAudio");
@@ -16,9 +14,7 @@ export function savedVolume() {
 export class GameAudio {
   roundActive = false;
   waitingForSync = false;
-  syncPaused = false;
   adminPaused = false;
-  usingIframe = false;
   // Instant (ms) où la lecture était à startSeconds : référence commune
   syncAnchor = null;
   lastVideo = null;
@@ -27,7 +23,6 @@ export class GameAudio {
   playingBlob = null;
   metaGuard = null;
   driftInterval = null;
-  yt = new GameYoutube(this);
 
   constructor({ onPlayerReady }) {
     this.onPlayerReady = onPlayerReady;
@@ -39,7 +34,6 @@ export class GameAudio {
   }
 
   setVolume(v) {
-    this.yt.player?.setVolume?.(v);
     const audio = audioEl();
     if (audio) audio.volume = v / 100;
     localStorage.setItem("zik_vol", v);
@@ -104,7 +98,6 @@ export class GameAudio {
   loadAudio(audioUrl, startSeconds, onReady) {
     const audio = audioEl();
     if (!audio) return;
-    this.yt.player?.stopVideo?.();
     audio.pause();
     audio.onloadedmetadata = null;
     audio.onended = null;
@@ -138,17 +131,10 @@ export class GameAudio {
     audio.load();
   }
 
-  // Joue la manche reçue : fichier audio, ou YouTube en secours
   playRound(data) {
-    if (data.audioUrl) {
-      this.usingIframe = false;
-      this.loadAudio(data.audioUrl, data.startSeconds, () =>
-        this.onPlayerReady(),
-      );
-    } else {
-      this.usingIframe = true;
-      this.yt.load(data.videoId, data.startSeconds);
-    }
+    this.loadAudio(data.audioUrl, data.startSeconds, () =>
+      this.onPlayerReady(),
+    );
   }
 
   // Position attendue dans l'extrait selon l'horloge de synchro (gère la boucle)
@@ -183,19 +169,8 @@ export class GameAudio {
   startSynced(elapsed, { play = true } = {}) {
     this.syncAnchor = Date.now() - elapsed * 1000;
     this.waitingForSync = false;
-    this.syncPaused = false;
     this.nextAudio?.start?.();
-    if (!play) return;
-    if (this.usingIframe) {
-      const yt = this.yt.player;
-      if (yt?.seekTo && this.lastVideo)
-        yt.seekTo(this.lastVideo.startSeconds + elapsed, true);
-      yt?.unMute?.();
-      yt?.setVolume?.(savedVolume());
-      yt?.playVideo?.();
-    } else {
-      this.playSynced();
-    }
+    if (play) this.playSynced();
   }
 
   // Recale la lecture si elle s'écarte de plus de 2 s de la référence
@@ -205,32 +180,20 @@ export class GameAudio {
       if (
         !this.roundActive ||
         this.syncAnchor === null ||
-        this.syncPaused ||
         this.adminPaused ||
         !this.lastVideo
       )
         return;
-      if (this.usingIframe) {
-        const yt = this.yt.player;
-        if (yt?.getPlayerState?.() === 1 && yt?.getCurrentTime) {
-          const expected =
-            this.lastVideo.startSeconds + (Date.now() - this.syncAnchor) / 1000;
-          if (Math.abs(yt.getCurrentTime() - expected) > 2)
-            yt.seekTo(expected, true);
-        }
-      } else {
-        const audio = audioEl();
-        if (audio && !audio.paused && audio.duration) {
-          const expected = this.#syncedPos(audio.duration);
-          if (Math.abs(audio.currentTime - expected) > 2)
-            audio.currentTime = expected;
-        }
+      const audio = audioEl();
+      if (audio && !audio.paused && audio.duration) {
+        const expected = this.#syncedPos(audio.duration);
+        if (Math.abs(audio.currentTime - expected) > 2)
+          audio.currentTime = expected;
       }
     }, 5000);
   }
 
   stop() {
-    if (this.yt.ready && this.yt.player) this.yt.player.stopVideo();
     const audio = audioEl();
     if (audio) {
       audio.onended = null;
@@ -251,21 +214,11 @@ export class GameAudio {
 
   pause() {
     this.adminPaused = true;
-    try {
-      this.yt.player?.pauseVideo();
-    } catch {
-      /* lecteur pas prêt */
-    }
     audioEl()?.pause();
   }
 
   resume() {
     this.adminPaused = false;
-    try {
-      this.yt.player?.playVideo();
-    } catch {
-      /* lecteur pas prêt */
-    }
     audioEl()
       ?.play()
       .catch(() => {});
