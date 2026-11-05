@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getMaintenance, setMaintenance } from "$lib/server/maintenance.js";
 import { publishSalonNotice } from "$lib/server/services/admin/salonNotice.js";
@@ -152,7 +155,7 @@ export const actions = adminActions({
   },
 });
 
-export async function load({ locals }) {
+async function chargerPage({ locals }) {
   const sb = getAdminClient();
   const [maintenance, video, profileRes, devicesRes] = await Promise.all([
     getMaintenance(),
@@ -184,3 +187,5 @@ export async function load({ locals }) {
     },
   };
 }
+
+export const load = adminLoad(chargerPage);

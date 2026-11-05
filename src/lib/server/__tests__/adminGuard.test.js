@@ -21,7 +21,7 @@ vi.mock("../config.js", () => ({
 const { handle } = await import("../../../hooks.server.js");
 const { makeAdminToken, readAdminToken, ADMIN_COOKIE } =
   await import("../maintenance.js");
-const { adminActions, requireAdmin } =
+const { adminActions, adminLoad, requireAdmin } =
   await import("../middleware/adminActions.js");
 
 const REGLAGES = "/(admin)/admin/reglages";
@@ -195,6 +195,18 @@ describe("second contrôle admin", () => {
     const action = vi.fn(() => "fait");
     expect(adminActions({ go: action }).go(event)).toBe("fait");
     expect(action).toHaveBeenCalledWith(event);
+  });
+
+  it("load : 403 sans admin, l'événement passe avec un admin", async () => {
+    const load = vi.fn(async () => ({ ok: true }));
+    const garde = adminLoad(load);
+    expect(() => garde({ locals: {} })).toThrow(
+      expect.objectContaining({ status: 403 }),
+    );
+    expect(load).not.toHaveBeenCalled();
+    const event = { locals: { adminId: "u1" } };
+    expect(await garde(event)).toEqual({ ok: true });
+    expect(load).toHaveBeenCalledWith(event);
   });
 
   it("requireAdmin refuse un adminId vide", () => {

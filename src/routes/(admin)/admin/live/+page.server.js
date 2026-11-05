@@ -1,6 +1,7 @@
+import { adminLoad } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 
-export async function load() {
+async function chargerPage() {
   const { data } = await getAdminClient()
     .from("rooms")
     .select("code, name, emoji, is_official")
@@ -14,3 +15,5 @@ export async function load() {
     ),
   };
 }
+
+export const load = adminLoad(chargerPage);

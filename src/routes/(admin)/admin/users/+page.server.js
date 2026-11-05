@@ -1,3 +1,4 @@
+import { adminLoad } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 
 const PAGE_SIZE = 40;
@@ -28,7 +29,7 @@ async function bannedIds(sb) {
   return ids;
 }
 
-export async function load({ url }) {
+async function chargerPage({ url }) {
   const sb = getAdminClient();
   const q = url.searchParams.get("q")?.trim() || "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
@@ -111,3 +112,5 @@ export async function load({ url }) {
     error,
   };
 }
+
+export const load = adminLoad(chargerPage);

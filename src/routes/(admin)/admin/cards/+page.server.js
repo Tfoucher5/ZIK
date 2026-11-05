@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import {
@@ -13,7 +16,7 @@ import { GRANT_STATUSES } from "$lib/shared/admin/cartes.js";
 
 const STATUSES = Object.keys(GRANT_STATUSES);
 
-export function load({ url }) {
+function chargerPage({ url }) {
   const param = (k) => url.searchParams.get(k);
   return cardsAdminBoard({
     who: param("who")?.trim() || "",
@@ -147,3 +150,5 @@ export const actions = adminActions({
     };
   },
 });
+
+export const load = adminLoad(chargerPage);

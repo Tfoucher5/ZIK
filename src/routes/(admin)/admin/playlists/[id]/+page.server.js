@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { error, redirect } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -14,7 +17,7 @@ function assertUuid(id) {
   if (!UUID_RE.test(id)) throw error(400, "ID invalide");
 }
 
-export async function load({ params }) {
+async function chargerPage({ params }) {
   assertUuid(params.id);
   const sb = getAdminClient();
 
@@ -234,3 +237,5 @@ export const actions = adminActions({
     redirect(302, "/admin/playlists");
   },
 });
+
+export const load = adminLoad(chargerPage);

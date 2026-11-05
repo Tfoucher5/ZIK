@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { error, fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -7,7 +10,7 @@ import { fetchAllRows } from "$lib/server/services/admin/paginate.js";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export async function load({ params }) {
+async function chargerPage({ params }) {
   const { date } = params;
   if (!DATE_RE.test(date)) throw error(400, "Date invalide");
 
@@ -113,3 +116,5 @@ export const actions = adminActions({
     return { done: `${count ?? 0} résultat(s) supprimé(s).` };
   },
 });
+
+export const load = adminLoad(chargerPage);

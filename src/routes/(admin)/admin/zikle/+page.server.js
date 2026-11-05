@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -15,7 +18,7 @@ function addDays(date, n) {
   return d.toISOString().slice(0, 10);
 }
 
-export async function load() {
+async function chargerPage() {
   const sb = getAdminClient();
   const today = todayParis();
   const from = addDays(today, -(PAST_DAYS - 1));
@@ -181,3 +184,5 @@ export const actions = adminActions({
     return { done: `${count ?? 0} résultat(s) supprimé(s).` };
   },
 });
+
+export const load = adminLoad(chargerPage);

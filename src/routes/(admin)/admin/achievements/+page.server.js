@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -27,7 +30,7 @@ function parseTiers(raw) {
   return parsed;
 }
 
-export async function load() {
+async function chargerPage() {
   const sb = getAdminClient();
 
   const [
@@ -234,3 +237,5 @@ export const actions = adminActions({
     return { done: `Succès attribué à ${username}.` };
   },
 });
+
+export const load = adminLoad(chargerPage);
