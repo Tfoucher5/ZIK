@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { todayParis } from "$lib/server/services/zikle.js";
@@ -25,7 +28,7 @@ function readChallenge(form) {
   return { type, target };
 }
 
-export async function load() {
+async function chargerPage() {
   const today = todayParis();
   const thisMonday = mondayOf(today);
   const nextMonday = mondayOf(today, 1);
@@ -120,3 +123,5 @@ export const actions = adminActions({
     return { nextCanceled: true };
   },
 });
+
+export const load = adminLoad(chargerPage);

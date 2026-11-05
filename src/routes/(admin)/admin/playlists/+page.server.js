@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { error } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -44,7 +47,7 @@ async function playCounts(sb, linked) {
   return rows.sort((a, b) => b.plays - a.plays);
 }
 
-export async function load({ url }) {
+async function chargerPage({ url }) {
   const sb = getAdminClient();
   const q = url.searchParams.get("q") || "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
@@ -187,3 +190,5 @@ export const actions = adminActions({
     return { success: true };
   },
 });
+
+export const load = adminLoad(chargerPage);

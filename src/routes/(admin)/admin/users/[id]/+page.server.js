@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { isUuid } from "$lib/shared/utils.js";
 import { getAdminUserDetail } from "$lib/server/services/admin/userDetail.js";
@@ -20,7 +23,7 @@ function assertUuid(id) {
   if (!isUuid(id)) throw error(400, "ID invalide");
 }
 
-export async function load({ params, locals }) {
+async function chargerPage({ params, locals }) {
   assertUuid(params.id);
   const detail = await getAdminUserDetail(params.id, locals.adminId);
   if (!detail) throw error(404, "Joueur introuvable");
@@ -141,3 +144,5 @@ export const actions = adminActions({
     );
   },
 });
+
+export const load = adminLoad(chargerPage);

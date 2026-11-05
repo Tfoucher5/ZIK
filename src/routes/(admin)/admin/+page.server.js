@@ -1,3 +1,4 @@
+import { adminLoad } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import {
   getTodo,
@@ -5,7 +6,7 @@ import {
   liveCounts,
 } from "$lib/server/services/admin/board.js";
 
-export async function load() {
+async function chargerPage() {
   const [{ items }, journal, pro] = await Promise.all([
     getTodo(),
     getJournal(2, 15),
@@ -17,3 +18,5 @@ export async function load() {
   ]);
   return { todo: items, journal, live: liveCounts(), pro: pro.count ?? 0 };
 }
+
+export const load = adminLoad(chargerPage);

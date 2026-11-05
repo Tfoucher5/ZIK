@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { error } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -17,7 +20,7 @@ function readId(formData) {
 const clamp = (v, min, max, def) =>
   Math.min(max, Math.max(min, parseInt(v, 10) || def));
 
-export async function load() {
+async function chargerPage() {
   const sb = getAdminClient();
   const since = new Date(Date.now() - 7 * DAY).toISOString();
 
@@ -130,3 +133,5 @@ export const actions = adminActions({
     return { success: true };
   },
 });
+
+export const load = adminLoad(chargerPage);

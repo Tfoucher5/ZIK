@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import path from "node:path";
 
 vi.mock("../config.js", () => ({
@@ -19,8 +19,6 @@ describe("arborescence des routes admin", () => {
       .slice(0, -1)
       .filter((s) => !/^\(.*\)$/.test(s))
       .join("/");
-  const lire = (segments) =>
-    readFileSync(path.join(ROUTES, ...segments), "utf8");
   const groupeAdmin = fichiers.filter((s) => s[0] === "(admin)");
 
   it("toute URL /admin reste dans le groupe (admin)", () => {
@@ -29,12 +27,23 @@ describe("arborescence des routes admin", () => {
     expect(urlsAdmin.filter((s) => s[0] !== "(admin)")).toEqual([]);
   });
 
-  it("toute action du groupe passe par adminActions", () => {
-    const sansGarde = groupeAdmin
-      .filter((s) => s.at(-1) === "+page.server.js")
-      .filter((s) => /export const actions\b/.test(lire(s)))
-      .filter((s) => !/export const actions = adminActions\(/.test(lire(s)));
-    expect(sansGarde).toEqual([]);
+  it("tout load et toute action du groupe refusent sans admin", async () => {
+    const pages = groupeAdmin.filter((f) => f.at(-1) === "+page.server.js");
+    expect(pages.length).toBeGreaterThan(10);
+    for (const s of pages) {
+      const module = await import(/* @vite-ignore */ path.join(ROUTES, ...s));
+      const appels = [
+        ["load", module.load],
+        ...Object.entries(module.actions ?? {}),
+      ];
+      expect(module.load, s.join("/")).toBeTypeOf("function");
+      for (const [nom, appel] of appels) {
+        await expect(
+          (async () => appel({ locals: {} }))(),
+          `${s.join("/")} ${nom}`,
+        ).rejects.toMatchObject({ status: 403 });
+      }
+    }
   });
 
   it("tout handler +server.js du groupe refuse sans admin", async () => {

@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -31,7 +34,7 @@ async function sendReplyMail(report, reply) {
   return res?.ok ?? false;
 }
 
-export async function load() {
+async function chargerPage() {
   const sb = getAdminClient();
   const [pendingRes, doneRes] = await Promise.all([
     sb
@@ -196,3 +199,5 @@ export const actions = adminActions({
     return { message: "Message supprimé.", deleted: id };
   },
 });
+
+export const load = adminLoad(chargerPage);

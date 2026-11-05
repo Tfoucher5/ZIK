@@ -1,4 +1,7 @@
-import { adminActions } from "$lib/server/middleware/adminActions.js";
+import {
+  adminActions,
+  adminLoad,
+} from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -16,7 +19,7 @@ import { closeSupport } from "$lib/server/socket/salon/support.js";
 
 const DAY = 24 * 3600_000;
 
-export async function load() {
+async function chargerPage() {
   const sb = getAdminClient();
   // Les salons qui appellent un admin passent en tête, le plus ancien d'abord
   const callAt = (s) =>
@@ -188,3 +191,5 @@ export const actions = adminActions({
     () => "Demande d'aide close.",
   ),
 });
+
+export const load = adminLoad(chargerPage);
