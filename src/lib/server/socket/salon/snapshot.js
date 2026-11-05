@@ -8,6 +8,9 @@ import { nextRound } from "./rounds.js";
 // Instantané d'un salon dans Postgres (salon.snapshots) : écrit à chaque
 // changement de phase, de joueurs ou de réglages et sur SIGTERM, relu quand un
 // écran ou un téléphone rejoint un code absent de la mémoire (déploiement, crash).
+// La playlist entière (jusqu'à plusieurs Mo) part dans une ligne à part,
+// « <code>:titres », réécrite seulement quand elle change : la réécrire à chaque
+// sauvegarde a saturé les écritures de la base le 05/11/2026.
 
 // Timers de game recréés au réveil ; le cache des vidéos (Map indexée par
 // titre) part à part, dans refs
@@ -17,7 +20,11 @@ const SKIP = [
   "musicReadyTimer",
   "outageTimer",
   "videos",
+  "fullPlaylist",
 ];
+const TITRES = ":titres";
+// La ligne des titres est rafraîchie pour ne pas expirer avant celle de l'état
+const PLAYLIST_REFRESH_MS = 30 * 60 * 1000;
 // Entracte de 2 h compris : au-delà, la soirée est finie
 const MAX_AGE_S = 2 * 60 * 60;
 // Un client qui tape des codes au hasard ne doit pas marteler la base
@@ -41,6 +48,7 @@ export function serializeSalon(salon) {
   // le même id)
   const at = (t) => g.fullPlaylist.indexOf(t);
   game.refs = {
+    playlist: salon._playlistAt ?? null,
     session: g.sessionPlaylist.map(at),
     played: g.played.map(at),
     current: g.currentTrack ? at(g.currentTrack) : -1,
@@ -53,7 +61,13 @@ export function serializeSalon(salon) {
   return { ...plain(salon), banned: [...salon.banned], players, game };
 }
 
-export function reviveSalon(data) {
+// Copie du dernier titre joué = titre en cours : la manche coupée est rejouée
+const sameCopy = (last, current) =>
+  last && JSON.stringify(last) === JSON.stringify(current) ? last : current;
+
+// Sans sa ligne de titres (ou avec une autre version), le salon repart avec
+// les titres de la soirée, copiés dans l'état
+export function reviveSalon(data, playlist = null) {
   const salon = {
     ...data,
     banned: new Set(data.banned ?? []),
@@ -63,14 +77,32 @@ export function reviveSalon(data) {
   const game = salon.game;
   const { refs } = game;
   delete game.refs;
-  const link = (copy, i) => game.fullPlaylist[i] ?? copy;
+  // Instantané écrit avant la 3.23.1 : la playlist est encore dans l'état
+  const legacy =
+    Array.isArray(game.fullPlaylist) && refs.playlist === undefined;
+  const fresh = playlist?.at != null && playlist.at === refs.playlist;
+  const same = legacy || fresh;
+  if (!legacy)
+    game.fullPlaylist = fresh
+      ? playlist.tracks
+      : [...new Set([...game.played, ...game.sessionPlaylist])];
+  if (fresh) {
+    salon._savedPlaylist = game.fullPlaylist;
+    salon._playlistAt = playlist.at;
+  }
+  const link = (copy, i) => (same && game.fullPlaylist[i]) || copy;
   game.sessionPlaylist = game.sessionPlaylist.map((t, k) =>
     link(t, refs.session[k]),
   );
   game.played = game.played.map((t, k) => link(t, refs.played[k]));
   if (game.currentTrack)
-    game.currentTrack = link(game.currentTrack, refs.current);
-  const videos = (refs.videos ?? []).filter(([i]) => game.fullPlaylist[i]);
+    game.currentTrack =
+      same && refs.current >= 0
+        ? link(game.currentTrack, refs.current)
+        : sameCopy(game.played.at(-1), game.currentTrack);
+  const videos = same
+    ? (refs.videos ?? []).filter(([i]) => game.fullPlaylist[i])
+    : [];
   if (videos.length)
     game.videos = new Map(videos.map(([i, v]) => [game.fullPlaylist[i], v]));
   Object.assign(game, {
@@ -125,14 +157,14 @@ export function resumeAfterRestart(salon, io) {
 }
 
 // Jamais bloquant ni levant : une base injoignable ne doit pas gêner la manche
-async function rpc(what, fn, args) {
+async function rpc(what, fn, args, onFail) {
   try {
     const { data, error } = await getAdminClient().rpc(fn, args);
     if (error) throw error;
     return data;
   } catch (e) {
     console.error(`[salon] ${what}:`, e?.message ?? e);
-    if (fn === "save_salon_snapshot") noteEvent("snapshot_failed");
+    onFail?.();
     return null;
   }
 }
@@ -142,10 +174,36 @@ let stopping = false;
 
 export function saveSnapshot(salon) {
   if (stopping) return Promise.resolve(null);
-  return rpc("instantané", "save_salon_snapshot", {
-    p_code: salon.code,
-    p_data: serializeSalon(salon),
-  });
+  const tracks = salon.game.fullPlaylist;
+  const now = Date.now();
+  if (
+    salon._savedPlaylist !== tracks ||
+    now - salon._playlistAt >= PLAYLIST_REFRESH_MS
+  ) {
+    salon._savedPlaylist = tracks;
+    salon._playlistAt = now;
+    // Écritures des titres à la file : une ancienne version (plusieurs Mo)
+    // ne doit pas arriver après la nouvelle
+    salon._titresWrite = (salon._titresWrite ?? Promise.resolve()).then(() =>
+      rpc(
+        "titres de l'instantané",
+        "save_salon_snapshot",
+        { p_code: salon.code + TITRES, p_data: { at: now, tracks } },
+        () => {
+          if (salon._playlistAt === now) salon._savedPlaylist = null;
+        },
+      ),
+    );
+  }
+  const etat = rpc(
+    "instantané",
+    "save_salon_snapshot",
+    { p_code: salon.code, p_data: serializeSalon(salon) },
+    () => noteEvent("snapshot_failed"),
+  );
+  // SIGTERM attend aussi les titres : sinon l'état pointerait vers une
+  // version jamais écrite
+  return Promise.all([salon._titresWrite, etat]).then(([, r]) => r);
 }
 
 // SIGTERM : plus rien ne bouge (chronos, enchaînements) pendant la sauvegarde,
@@ -167,9 +225,11 @@ export function freezeAndSaveAll() {
 }
 
 export function dropSnapshot(code) {
-  return rpc("suppression instantané", "delete_salon_snapshot", {
-    p_code: code,
-  });
+  return Promise.all(
+    [code, code + TITRES].map((p_code) =>
+      rpc("suppression instantané", "delete_salon_snapshot", { p_code }),
+    ),
+  );
 }
 
 // Au démarrage : les instantanés de plus d'un jour (crash sans reprise)
@@ -187,6 +247,7 @@ export async function restoreSalon(code, io, socket) {
   while (misses.length && now - misses[0] > MISS_WINDOW_MS) misses.shift();
   // « throttled » : on n'a pas regardé, ce n'est pas un salon fermé
   if (misses.length >= MAX_MISSES) return "throttled";
+  if (code.endsWith(TITRES)) return;
   await (pending[code] ??= load(code, io).finally(() => delete pending[code]));
   if (!salonRooms[code]) misses.push(now);
 }
@@ -197,8 +258,13 @@ async function load(code, io) {
     p_max_age_seconds: MAX_AGE_S,
   });
   if (!rows?.[0] || salonRooms[code]) return;
+  const titres = await rpc("reprise des titres", "load_salon_snapshot", {
+    p_code: code + TITRES,
+    p_max_age_seconds: MAX_AGE_S + PLAYLIST_REFRESH_MS / 1000,
+  });
+  if (salonRooms[code]) return;
   try {
-    const salon = reviveSalon(rows[0].data);
+    const salon = reviveSalon(rows[0].data, titres?.[0]?.data);
     salonRooms[code] = salon;
     for (const username of Object.keys(salon.players))
       scheduleDeparture(salon, username, io);
