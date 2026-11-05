@@ -2,10 +2,6 @@ import "dotenv/config";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import compression from "compression";
-import { execFile as _execFile } from "child_process";
-import { promisify as _promisify } from "util";
-import { join as _join } from "path";
-import { writeFileSync as _writeFileSync } from "fs";
 
 // SvelteKit production handler (built by `npm run build`)
 const { handler } = await import("./build/handler.js");
@@ -22,6 +18,7 @@ import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenan
 import { startPushSchedule } from "./src/lib/server/services/notify/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
 import { startVideoResolver } from "./src/lib/server/services/music/videoResolver.js";
+import { autoUpdateYtDlp } from "./src/lib/server/audio/ytdlpUpdate.js";
 import { announceLatestNews } from "./src/lib/server/services/notify/notifications.js";
 import { loadSalonNotice } from "./src/lib/server/services/admin/salonNotice.js";
 import {
@@ -48,51 +45,6 @@ process.on("unhandledRejection", (err) => {
 process.on("uncaughtException", (err) => {
   console.error("[uncaughtException]", err?.stack ?? err);
 });
-
-const _execAsync = _promisify(_execFile);
-const _YTDLP_BIN =
-  process.env.YOUTUBE_DL_PATH ||
-  _join(
-    process.cwd(),
-    "bin",
-    process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp",
-  );
-
-async function autoUpdateYtDlp() {
-  try {
-    const { stdout } = await _execAsync(_YTDLP_BIN, ["--version"], {
-      timeout: 5000,
-    });
-    const currentVersion = stdout.trim();
-    const res = await fetch(
-      "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest",
-    );
-    const { tag_name: latestVersion, assets } = await res.json();
-    if (currentVersion === latestVersion) {
-      console.log(`[yt-dlp] à jour (${currentVersion})`);
-      return;
-    }
-    console.log(`[yt-dlp] mise à jour ${currentVersion} → ${latestVersion}`);
-    const assetName =
-      process.platform === "win32"
-        ? "yt-dlp.exe"
-        : process.arch === "arm64"
-          ? "yt-dlp_linux_aarch64"
-          : "yt-dlp_linux";
-    const asset = assets.find((a) => a.name === assetName);
-    if (!asset) {
-      console.warn("[yt-dlp] asset introuvable pour cette plateforme");
-      return;
-    }
-    const dl = await fetch(asset.browser_download_url);
-    _writeFileSync(_YTDLP_BIN, Buffer.from(await dl.arrayBuffer()), {
-      mode: 0o755,
-    });
-    console.log(`[yt-dlp] mis à jour → ${latestVersion}`);
-  } catch (e) {
-    console.warn("[yt-dlp] auto-update ignoré :", e.message);
-  }
-}
 
 // Le gzip garde les événements SSE en tampon : le flux admin en direct n'arrivait jamais
 const compress = compression({
@@ -122,7 +74,7 @@ register(io);
 registerSalon(io);
 registerPresence(io);
 autoUpdateYtDlp();
-setInterval(autoUpdateYtDlp, 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h
+setInterval(() => autoUpdateYtDlp(), 24 * 60 * 60 * 1000); // vérif update yt-dlp toutes les 24h
 setTimeout(dailyCardsMaintenance, 60 * 1000);
 setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
 startPushSchedule();

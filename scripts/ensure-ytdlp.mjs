@@ -23,11 +23,11 @@ if (existsSync(binPath)) {
 
 // Lien direct, sans l'API GitHub : l'API refuse (403) les appels sans jeton au
 // build. Un binaire manquant ne doit pas bloquer une mise en prod : aucune
-// partie n'en dépend, seule la recherche de vidéos en tâche de fond s'arrête.
+// partie n'en dépend, et le serveur l'installe au démarrage (ytdlpUpdate.js).
 const url = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${getAssetName()}`;
 try {
   console.log("[yt-dlp] downloading", url);
-  const dl = await fetch(url);
+  const dl = await fetch(url, { signal: AbortSignal.timeout(120_000) });
   if (!dl.ok) throw new Error(`HTTP ${dl.status}`);
   const binary = Buffer.from(await dl.arrayBuffer());
   mkdirSync(binDir, { recursive: true });
