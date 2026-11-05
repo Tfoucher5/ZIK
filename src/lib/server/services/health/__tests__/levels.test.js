@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nextStreak, levelOf, worst, grade } from "../levels.js";
+import { pushResult, levelOf, worst, grade } from "../levels.js";
 import { fingerprintOf, collectErrors } from "../errorJournal.js";
 import {
   noteMediaMiss,
@@ -10,23 +10,46 @@ import {
 const suite = (results) =>
   results.reduce(
     (acc, r) => {
-      const streak = nextStreak(acc.streak, r);
-      return { streak, levels: [...acc.levels, levelOf(streak)] };
+      const recent = pushResult(acc.recent, r);
+      const level = levelOf(recent, acc.levels.at(-1));
+      return { recent, levels: [...acc.levels, level] };
     },
-    { streak: { warns: 0, fails: 0 }, levels: [] },
+    { recent: [], levels: [] },
   ).levels;
 
 describe("niveaux d'une sonde", () => {
-  it("seuil approché deux fois de suite : suspicion", () => {
-    expect(suite(["warn", "warn"])).toEqual(["ok", "suspect"]);
-    expect(suite(["warn", "ok", "warn"])).toEqual(["ok", "ok", "ok"]);
+  it("un échec ou une lenteur isolés ne changent rien", () => {
+    expect(suite(["fail", "ok", "ok"])).toEqual(["ok", "ok", "ok"]);
+    expect(suite(["warn", "warn", "ok"])).toEqual(["ok", "ok", "ok"]);
   });
 
-  it("trois échecs de suite : incident, et une mesure saine remet à zéro", () => {
-    expect(suite(["fail", "fail", "fail", "ok"])).toEqual([
+  it("la lenteur seule ne fait jamais un incident, au plus « perturbé »", () => {
+    expect(suite(Array(10).fill("warn")).at(-1)).toBe("suspect");
+    expect(suite(["warn", "warn", "warn"])).toEqual(["ok", "ok", "suspect"]);
+  });
+
+  it("deux échecs sur les cinq dernières mesures : perturbé", () => {
+    expect(suite(["fail", "ok", "fail"])).toEqual(["ok", "ok", "suspect"]);
+  });
+
+  it("trois échecs sur les cinq dernières : incident, même avec une mesure saine au milieu", () => {
+    expect(suite(["fail", "ok", "fail", "ok", "fail"])).toEqual([
+      "ok",
+      "ok",
       "suspect",
       "suspect",
       "incident",
+    ]);
+  });
+
+  it("fin d'incident après trois mesures de suite sans échec", () => {
+    expect(suite(["fail", "fail", "fail", "ok", "warn", "ok", "ok"])).toEqual([
+      "ok",
+      "suspect",
+      "incident",
+      "incident",
+      "incident",
+      "suspect",
       "ok",
     ]);
   });

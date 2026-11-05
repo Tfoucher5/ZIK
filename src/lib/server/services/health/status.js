@@ -2,6 +2,14 @@ import { getAdminClient } from "../../config.js";
 import { healthState } from "./monitor.js";
 import { worst } from "./levels.js";
 import { LABELS } from "./probes.js";
+import {
+  BLOCKING,
+  availabilityFrom,
+  dayLevel,
+  downtimeByDay,
+  firstSeen,
+  incidentSpans,
+} from "./downtime.js";
 
 // Données des pages /statut (public, par grand service) et /admin/statut
 // (détail par sonde). Historique : 30 jours, comme la purge d'ops.health_checks.
@@ -79,23 +87,35 @@ export function historyBy(rows, keys, days) {
 }
 
 /**
- * Part des mesures hors incident, en %. Arrondi vers le bas : un incident ne
- * s'affiche jamais 100 %. Plusieurs sondes : la moins disponible fait foi, les
- * pannes de deux sondes pouvant se recouvrir.
+ * Frise et disponibilité d'un groupe de sondes, à partir de la durée réelle de
+ * ses incidents (downtime.js). Sans transitions lisibles, la frise garde le
+ * pire niveau du jour et la disponibilité reste inconnue.
  */
-export function availabilityOf(rows, probes) {
-  let lowest = null;
-  for (const probe of probes) {
-    const own = (rows ?? []).filter((r) => r.probe === probe);
-    const total = own.reduce((n, r) => n + Number(r.checks), 0);
-    if (!total) continue;
-    const down = own
-      .filter((r) => r.level === "incident")
-      .reduce((n, r) => n + Number(r.checks), 0);
-    const pct = Math.floor(((total - down) / total) * 1000) / 10;
-    lowest = lowest === null ? pct : Math.min(lowest, pct);
-  }
-  return lowest;
+export function timeline(history, transitions, probes, days, now) {
+  if (transitions === null)
+    return { history, downtime: null, availability: null };
+  const spans = incidentSpans(transitions, probes, now);
+  const downtime = downtimeByDay(spans, days);
+  const blocking = downtimeByDay(
+    incidentSpans(
+      transitions,
+      probes.filter((p) => BLOCKING.includes(p)),
+      now,
+    ),
+    days,
+  );
+  const from = now - HISTORY_DAYS * 24 * 60 * 60 * 1000;
+  return {
+    history: downtime.map((m, i) =>
+      dayLevel(m, blocking[i], history[i] !== null),
+    ),
+    downtime,
+    availability: availabilityFrom(
+      spans,
+      firstSeen(transitions, probes, from),
+      now,
+    ),
+  };
 }
 
 /** Incidents à partir des changements de niveau, du plus récent au plus ancien. */
@@ -125,11 +145,21 @@ export function incidentsFrom(rows, probes, label = adminLabel) {
     .slice(0, MAX_INCIDENTS);
 }
 
+const PAGE = 1000;
+
+// Par pages : l'API coupe à son plafond de lignes, et des transitions qui
+// manquent fausseraient la durée des incidents
 async function read(fn, args) {
   try {
-    const { data, error } = await getAdminClient().rpc(fn, args);
-    if (error) throw error;
-    return data ?? [];
+    const out = [];
+    for (;;) {
+      const { data, error } = await getAdminClient()
+        .rpc(fn, args)
+        .range(out.length, out.length + PAGE - 1);
+      if (error) throw error;
+      out.push(...(data ?? []));
+      if ((data ?? []).length < PAGE) return out;
+    }
   } catch (e) {
     console.warn(`[statut] ${fn} :`, e?.message ?? e);
     return null;
@@ -138,7 +168,7 @@ async function read(fn, args) {
 
 const loadAll = () =>
   Promise.all(
-    ["health_history", "health_availability", "health_transitions"].map((fn) =>
+    ["health_history", "health_transitions"].map((fn) =>
       read(fn, { p_days: HISTORY_DAYS }),
     ),
   );
@@ -161,13 +191,26 @@ export function publicLevel() {
     : "ok";
 }
 
+// Disponibilité globale : temps où au moins un service public était en
+// incident, sans « media » comme la pastille
+function globalAvailability(transitions, now) {
+  if (transitions === null) return null;
+  const probes = PUBLIC_PROBES.filter((p) => p !== "media");
+  const from = now - HISTORY_DAYS * 24 * 60 * 60 * 1000;
+  return availabilityFrom(
+    incidentSpans(transitions, probes, now),
+    firstSeen(transitions, probes, from),
+    now,
+  );
+}
+
 let cache = null;
 
 export async function publicStatus(now = Date.now()) {
   if (cache && now - cache.at < CACHE_MS) return cache.value;
   const state = healthState();
   const days = lastDays(HISTORY_DAYS, now);
-  const [rows, counts, transitions] = await loadAll();
+  const [rows, transitions] = await loadAll();
   const history = historyBy(rows, GROUPS, days);
   const measured = Object.values(state.probes).map((p) => p.at);
   const value = {
@@ -176,7 +219,7 @@ export async function publicStatus(now = Date.now()) {
     checkedAt: measured.length ? Math.max(...measured) : null,
     days,
     historyAvailable: rows !== null,
-    availability: availabilityOf(counts, PUBLIC_PROBES),
+    availability: globalAvailability(transitions, now),
     incidents:
       transitions === null
         ? null
@@ -185,8 +228,7 @@ export async function publicStatus(now = Date.now()) {
       id: g.id,
       label: g.label,
       level: worst(g.probes.map((p) => state.probes[p]?.level ?? "ok")),
-      availability: availabilityOf(counts, g.probes),
-      history: history[g.id],
+      ...timeline(history[g.id], transitions, g.probes, days, now),
       probes: g.probes.map((id) => ({
         id,
         label: publicLabel(id),
@@ -205,7 +247,7 @@ export async function adminStatus(now = Date.now()) {
   const state = healthState();
   const days = lastDays(HISTORY_DAYS, now);
   const ids = Object.keys(LABELS);
-  const [rows, counts, transitions] = await loadAll();
+  const [rows, transitions] = await loadAll();
   const history = historyBy(
     rows,
     ids.map((id) => ({ id, probes: [id] })),
@@ -222,8 +264,7 @@ export async function adminStatus(now = Date.now()) {
       id,
       label: LABELS[id],
       ...(state.probes[id] ?? { level: null }),
-      availability: availabilityOf(counts, [id]),
-      history: history[id],
+      ...timeline(history[id], transitions, [id], days, now),
     })),
   };
 }

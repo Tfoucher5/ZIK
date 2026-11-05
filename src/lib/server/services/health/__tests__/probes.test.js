@@ -77,6 +77,33 @@ describe("site et comptes", () => {
     expect((await p.database()).result).toBe(attendu);
   });
 
+  it.each([
+    [300, "ok"],
+    [3500, "warn"],
+    [5000, "fail"],
+  ])("base qui répond en %i ms : %s", async (ms, attendu) => {
+    vi.useFakeTimers();
+    try {
+      const p = sondes({
+        db: () => ({
+          from: () => ({
+            select: () => ({
+              limit: () => ({
+                abortSignal: () =>
+                  new Promise((r) => setTimeout(() => r({ error: null }), ms)),
+              }),
+            }),
+          }),
+        }),
+      });
+      const mesure = p.db();
+      await vi.advanceTimersByTimeAsync(ms);
+      expect((await mesure).result).toBe(attendu);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("capacité de la base : fonction absente ou réponse vide = échec", async () => {
     const absente = sondes({
       db: () => ({ rpc: async () => ({ error: { message: "introuvable" } }) }),
@@ -227,12 +254,14 @@ describe("notifications et sauvegardes", () => {
     expect(await ok.push()).toEqual({ result: "ok" });
   });
 
-  it("sauvegarde des soirées : un échec alerte, cinq font un échec franc", async () => {
+  it("sauvegarde des soirées : un échec isolé passe, deux alertent, cinq font un échec franc", async () => {
     const p = sondes();
     expect((await p.snapshots()).result).toBe("ok");
     noteEvent("snapshot_failed");
-    expect(await p.snapshots()).toMatchObject({ result: "warn", value: 1 });
-    for (let i = 0; i < 4; i++) noteEvent("snapshot_failed");
+    expect(await p.snapshots()).toMatchObject({ result: "ok", value: 1 });
+    noteEvent("snapshot_failed");
+    expect(await p.snapshots()).toMatchObject({ result: "warn", value: 2 });
+    for (let i = 0; i < 3; i++) noteEvent("snapshot_failed");
     expect((await p.snapshots()).result).toBe("fail");
   });
 });

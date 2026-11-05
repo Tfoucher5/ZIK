@@ -2,7 +2,7 @@ import { getAdminClient } from "../../config.js";
 import { errorLog, healthProbes } from "../../state.js";
 import { alertAdminsSafe } from "../admin/alerts.js";
 import { sendMail, ADMIN_EMAIL } from "../../mail/send.js";
-import { LEVELS, levelOf, nextStreak, worst } from "./levels.js";
+import { LEVELS, levelOf, pushResult, worst } from "./levels.js";
 import { LABELS, makeProbes } from "./probes.js";
 import { collectErrors } from "./errorJournal.js";
 
@@ -100,11 +100,11 @@ export async function runChecks({
   const rows = [];
   const changes = [];
   for (const [name, r] of results) {
-    const prev = state[name] ?? { streak: { warns: 0, fails: 0 }, level: "ok" };
-    const streak = nextStreak(prev.streak, r.result);
-    const level = levelOf(streak);
+    const prev = state[name] ?? { recent: [], level: "ok" };
+    const recent = pushResult(prev.recent ?? [], r.result);
+    const level = levelOf(recent, prev.level);
     const detail = r.detail ? String(r.detail).slice(0, 500) : null;
-    state[name] = { streak, level, value: r.value ?? null, detail, at: now };
+    state[name] = { recent, level, value: r.value ?? null, detail, at: now };
     if (level !== prev.level)
       changes.push({ name, from: prev.level, to: level, detail });
     if (level !== prev.level || snapshot)
