@@ -24,7 +24,7 @@
         {#if check.audio} · {check.audio} en extrait audio (vidéo indisponible){/if}
         {#if check.missing} · {check.missing} remplacé{check.missing > 1 ? 's' : ''} automatiquement{/if}
       </span>
-      {#if alerte}<small>YouTube répond mal en ce moment : la partie marche quand même, avec plus d'extraits audio.</small>{/if}
+      {#if alerte}<small>Peu de vidéos sont prêtes pour ces titres : la partie marche quand même, avec plus d'extraits audio.</small>{/if}
     {/if}
   </div>
 {/if}

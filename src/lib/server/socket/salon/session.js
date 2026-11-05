@@ -1,6 +1,6 @@
 import { salonRooms } from "../../state.js";
 import { buildSessionPlaylist } from "./tracks.js";
-import { checkSession, findVideo } from "./media.js";
+import { checkSession, findVideo, previewUrl } from "./media.js";
 
 // Cherche la vidéo du prochain titre et l'annonce à l'hôte, qui la met en
 // mémoire tampon pendant la manche en cours : sur une connexion lente, la
@@ -17,7 +17,11 @@ export function prefetchNextVideo(code, io) {
       if (game.sessionPlaylist.at(-1) === nextTrack)
         announceNextVideo(salon, io);
     })
-    .catch(() => {});
+    .catch(() => {
+      // Sans vidéo : l'extrait est prêt avant la manche, rien à annoncer à la TV
+      game.prefetchedRound = null;
+      return previewUrl(nextTrack).catch(() => {});
+    });
 }
 
 export function announceNextVideo(salon, io) {

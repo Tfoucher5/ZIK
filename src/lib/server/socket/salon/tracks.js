@@ -1,15 +1,16 @@
 import { supabase, getAdminClient } from "../../config.js";
-import { ytsQuery, ytVideoInfo } from "../game/audio.js";
 import { displayString } from "../../services/music/trackText.js";
 import {
   buildTrackFromRow,
   TRACK_ROW_SELECT,
 } from "../../services/music/playlist.js";
 import {
+  DEFAULT_VIDEO_SETTINGS,
   getVideoSettings,
-  filterVideos,
   pickStart,
 } from "../../services/music/trackIssues.js";
+
+const SETTINGS_WAIT_MS = 2000;
 
 async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {
@@ -46,9 +47,7 @@ export async function loadSalonTracks(playlistIds, client = supabase) {
   return shuffle(all);
 }
 
-// Vidéos mémorisées (colonnes video_cache_*) : une vidéo trouvée une fois ne
-// dépend plus de la recherche YouTube. Lues et écrites à part : si la colonne
-// manque, le salon marche comme avant.
+// Vidéos mémorisées (colonnes video_cache_*), remplies hors partie.
 async function loadVideoCache(tracks) {
   const ids = [...new Set(tracks.map((t) => t.id).filter(Boolean))];
   const cache = new Map();
@@ -70,25 +69,27 @@ async function loadVideoCache(tracks) {
   }
 }
 
-function saveVideoCache(track, cached) {
-  track.cachedVideo = cached;
+// Vidéo refusée par la TV : on ne la propose plus
+export function forgetVideo(track) {
+  if (!track.cachedVideo) return;
+  const refused = track.cachedVideo.id;
+  track.cachedVideo = null;
   getAdminClient()
     .from("tracks")
     .update({
-      video_cache_id: cached?.id ?? null,
-      video_cache_duration: cached?.duration ?? null,
-      video_cache_at: cached ? new Date().toISOString() : null,
+      video_cache_id: null,
+      video_cache_duration: null,
+      video_cache_at: null,
+      video_refused_id: refused,
+      video_search_at: new Date().toISOString(),
     })
     .eq("id", track.id)
     .then(
-      () => {},
-      () => {},
+      ({ error }) => {
+        if (error) console.error("[forgetVideo]", error.message);
+      },
+      (e) => console.error("[forgetVideo]", e?.message ?? e),
     );
-}
-
-// Vidéo refusée par la TV : on ne la propose plus
-export function forgetVideo(track) {
-  if (track.cachedVideo) saveVideoCache(track, null);
 }
 
 function shuffle(arr) {
@@ -122,16 +123,33 @@ export function buildSessionPlaylist(fullPlaylist, count) {
   return shuffle(picked);
 }
 
-export async function searchTrackVideo(track, roundDuration) {
-  const { exclude, minStart } = await getVideoSettings();
-  // Vidéo choisie dans l'admin : elle prime sur la recherche
+// Base bloquée : la manche part avec les réglages par défaut au lieu d'attendre
+async function videoSettingsSoon() {
+  let timer;
+  const settings = await Promise.race([
+    getVideoSettings(),
+    new Promise((resolve) => {
+      timer = setTimeout(
+        () => resolve(DEFAULT_VIDEO_SETTINGS),
+        SETTINGS_WAIT_MS,
+      );
+    }),
+  ]);
+  clearTimeout(timer);
+  return settings;
+}
+
+// Vidéo déjà connue, sans appel YouTube : les recherches se font hors partie
+// (services/music/videoResolver.js). Celle choisie dans l'admin prime.
+export async function knownVideo(track, roundDuration) {
+  const { minStart } = await videoSettingsSoon();
   if (track.youtube_id) {
-    const pinned = await ytVideoInfo(track.youtube_id).catch(() => null);
     return {
       video: { id: track.youtube_id },
+      // shortcut: durée d'une vidéo épinglée inconnue, l'extrait part de son début sans youtube_start ; à stocker si les hôtes s'en plaignent
       safeStart: pickStart({
         pinned: track.youtube_start,
-        durationSec: Math.round((pinned?.duration || 0) / 1000),
+        durationSec: 0,
         roundDuration,
         minStart,
       }),
@@ -148,26 +166,7 @@ export async function searchTrackVideo(track, roundDuration) {
       }),
     };
   }
-  const artist = track.mainArtist || track.artist;
-  const { results: found } = await ytsQuery(`${artist} - ${track.title}`);
-  const results = filterVideos(found, exclude);
-  if (!results.length) throw new Error("No video");
-  const video =
-    results.find((v) => v.channel?.name?.endsWith("- Topic")) || results[0];
-  if (track.id)
-    saveVideoCache(track, {
-      id: video.id,
-      duration: Math.round((video.duration || 0) / 1000),
-    });
-  return {
-    video,
-    safeStart: pickStart({
-      pinned: null,
-      durationSec: Math.round((video.duration || 0) / 1000),
-      roundDuration,
-      minStart,
-    }),
-  };
+  throw new Error("No video");
 }
 
 export function currentTrackInfo(salon) {

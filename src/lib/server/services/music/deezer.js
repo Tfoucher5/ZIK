@@ -1,8 +1,52 @@
+import { cleanString } from "./trackText.js";
+
 const DEEZER_HEADERS = { "User-Agent": "ZIK-BlindTest/1.0" };
 
 export function parseExpFromUrl(url) {
   const m = url?.match(/hdnea=exp=(\d+)/);
   return m ? parseInt(m[1], 10) : null;
+}
+
+const comparable = (s) =>
+  cleanString((s ?? "").replace(/[\u2018\u2019]/g, "'")).replace(/\s+/g, " ");
+// « Titre - Remastered 2011 » : la version n'entre pas dans la comparaison
+const titleKey = (s) => comparable((s ?? "").split(" - ")[0]);
+const noThe = (s) => s.replace(/^the /, "");
+// Noms entiers : « Queen » ne doit jamais valider « Piano Queen »
+const artistNames = (s) =>
+  comparable(s)
+    .split(/\s*(?:,|&|\b(?:et|and|feat\.?|ft\.?)(?=\s|$))\s*/)
+    .map(noThe)
+    .filter(Boolean);
+
+// Extrait trouvé par nom : seulement si l'artiste et le titre correspondent.
+// Mieux vaut pas d'extrait qu'un autre morceau joué devant la salle.
+export async function deezerPreviewMatch(artist, title) {
+  try {
+    const q = encodeURIComponent(`${artist} ${title.split(" - ")[0]}`);
+    const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=5`, {
+      headers: DEEZER_HEADERS,
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const { data } = await res.json();
+    const t = titleKey(title);
+    if (!t) return null;
+    const names = artistNames(artist);
+    const candidates = (data ?? []).filter(
+      (r) => r.preview && titleKey(r.title_short ?? r.title) === t,
+    );
+    const same =
+      candidates.find(
+        (r) => noThe(comparable(r.artist?.name)) === noThe(comparable(artist)),
+      ) ??
+      candidates.find((r) =>
+        artistNames(r.artist?.name).some((n) => names.includes(n)),
+      );
+    return same?.preview ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchDeezerTrackPreview(trackId) {

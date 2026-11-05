@@ -30,8 +30,11 @@ vi.mock("../../../config.js", () => ({
   }),
 }));
 vi.mock("../../game/audio.js", () => ({
-  ytsQuery: async () => ({ results: [], autoIndex: -1 }),
-  ytVideoInfo: async () => null,
+  validPreviewUrl: () => null,
+}));
+vi.mock("../../../services/music/deezer.js", () => ({
+  fetchDeezerTrackPreview: async () => null,
+  deezerPreviewMatch: async () => null,
 }));
 
 const { salonRooms } = await import("../../../state.js");
