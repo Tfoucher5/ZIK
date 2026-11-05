@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   tracksFor: () => [],
   inColumns: {},
   ownerBatches: [],
+  trackSelect: null,
   gte: null,
   or: null,
 }));
@@ -21,7 +22,10 @@ vi.mock("../../../config.js", () => {
         ? { data: null, error: { message: m.tableErrors[table] } }
         : { data: rows(), error: null };
     const q = {
-      select: () => q,
+      select: (columns) => {
+        if (table === "tracks") m.trackSelect = columns;
+        return q;
+      },
       is: () => q,
       or: (filter) => {
         m.or = filter;
@@ -155,12 +159,25 @@ describe("ordre de priorité des titres", () => {
     const { resolveNextVideo } = await resolver();
     await resolveNextVideo();
     expect(m.inColumns.tracks).toBe("custom_playlist_tracks.playlist_id");
+    // Sans !inner, le filtre sur la table liée ne filtre plus les titres
+    expect(m.trackSelect).toContain("custom_playlist_tracks!inner");
     expect(m.inColumns.custom_playlists).toBe("owner_id");
     expect(m.gte).toEqual({
       col: "started_at",
       value: "2026-10-06T12:00:00.000Z",
     });
     expect(m.or).toContain("video_search_at.lt.2026-10-29T12:00:00.000Z");
+  });
+
+  it("manche démarrée pendant le choix du titre : pas de recherche", async () => {
+    const { resolveNextVideo } = await resolver();
+    const rooms = await salons();
+    m.tracksFor = () => {
+      rooms.ABC = { game: { phase: "round" } };
+      return [titre];
+    };
+    expect(await resolveNextVideo()).toBe("paused");
+    expect(m.search).not.toHaveBeenCalled();
   });
 
   it("abonnement expiré ou annulé : pas de priorité Pro", async () => {

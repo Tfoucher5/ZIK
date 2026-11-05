@@ -153,14 +153,18 @@ async function saveSearch(trackId, fields) {
   if (error) throw new Error(error.message);
 }
 
+const aRoundIsPlaying = () =>
+  Object.values(salonRooms).some((s) => PLAYING.includes(s.game?.phase));
+
 /** Résout un titre. Renvoie paused, idle, blocked, empty ou found. */
 export async function resolveNextVideo() {
   // Pas de recherche pendant une manche. Un salon au repos ne bloque rien : une
   // TV restée allumée n'arrêterait pas le remplissage pour tout le monde
-  if (Object.values(salonRooms).some((s) => PLAYING.includes(s.game?.phase)))
-    return "paused";
+  if (aRoundIsPlaying()) return "paused";
   const track = await nextPriorityTrack();
   if (!track) return "idle";
+  // Le choix du titre prend quelques requêtes : une manche a pu démarrer
+  if (aRoundIsPlaying()) return "paused";
 
   const { main } = parseFeaturing(track.artist || "");
   const { results, failed } = await ytsQuery(`${main} - ${track.title}`);
