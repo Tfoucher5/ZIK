@@ -164,8 +164,8 @@
   {:else if videoOutage}
     <div class="sh-outage" role="status">
       <p class="sx-kicker">Petite pause technique</p>
-      <h2>Les vidéos ne répondent pas</h2>
-      <p>YouTube ne répond pas pour le moment. On réessaie tout seul, la partie reprend dès que ça revient. Personne ne perd ses points.</p>
+      <h2>La musique ne répond pas</h2>
+      <p>Le service musical ne répond pas pour le moment. On réessaie tout seul, la partie reprend dès que ça revient. Personne ne perd ses points.</p>
     </div>
   {/if}
 

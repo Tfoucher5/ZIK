@@ -163,6 +163,8 @@ export async function startNextRound(code, io) {
   const salon = salonRooms[code];
   if (!salon) return;
   const game = salon.game;
+  // Un second « suivant » pendant la recherche ne doit pas consommer un titre
+  if (game._resolving && game._resolving.gen === game.gen) return;
 
   if (
     game.currentRound >= salon.settings.maxRounds ||
@@ -184,16 +186,22 @@ export async function startNextRound(code, io) {
 
   const track = game.currentTrack;
   const gen = game.gen;
+  // Relance, partie terminée ou salon fermé pendant la recherche : manche périmée
+  const stale = () =>
+    salonRooms[code] !== salon ||
+    game.currentTrack !== track ||
+    game.gen !== gen;
 
   try {
-    const { video, audio, safeStart } = await resolveMedia(salon, track);
-    // Relance, partie terminée ou salon fermé pendant la recherche : manche périmée
-    if (
-      salonRooms[code] !== salon ||
-      game.currentTrack !== track ||
-      game.gen !== gen
-    )
-      return;
+    const lock = { gen };
+    game._resolving = lock;
+    const { video, audio, safeStart } = await resolveMedia(
+      salon,
+      track,
+    ).finally(() => {
+      if (game._resolving === lock) game._resolving = null;
+    });
+    if (stale()) return;
     // Sans vidéo, la TV joue l'extrait audio : la manche a lieu quand même
     game.currentVideo = {
       id: video?.id ?? audio,
@@ -202,6 +210,8 @@ export async function startNextRound(code, io) {
     };
     game.phase = "round";
     saveSnapshot(salon);
+    clearInterval(game.interval);
+    game.interval = null;
     game.timerActive = false;
     game.timerValue = 0;
     game.startTime = 0;
@@ -251,7 +261,7 @@ export async function startNextRound(code, io) {
 
     prefetchNextVideo(code, io);
   } catch (err) {
-    if (salonRooms[code] !== salon || game.currentTrack !== track) return;
+    if (stale()) return;
     console.error(`Salon skip "${track.title}":`, err.message);
     // En panne, les titres ne sont pas en cause : pas de faux signalements
     if (!game.videoOutage)
@@ -259,7 +269,7 @@ export async function startNextRound(code, io) {
         track.id,
         "video",
         "auto",
-        "Aucune vidéo trouvée en salon",
+        "Ni vidéo ni extrait en salon",
         {
           salon: code,
         },
@@ -273,6 +283,10 @@ export function skipTrack(code, io) {
   const salon = salonRooms[code];
   const game = salon.game;
   clearTimeout(game.musicReadyTimer);
+  // Chrono déjà lancé par le filet : il couperait la manche suivante
+  clearInterval(game.interval);
+  game.interval = null;
+  game.timerActive = false;
   noteMediaMiss();
   game.currentRound--;
   game.skipStreak = (game.skipStreak ?? 0) + 1;

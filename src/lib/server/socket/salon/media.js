@@ -1,35 +1,65 @@
-import { fetchDeezerTrackPreview } from "../../services/music/deezer.js";
-import { searchTrackVideo } from "./tracks.js";
+import {
+  deezerPreviewMatch,
+  fetchDeezerTrackPreview,
+} from "../../services/music/deezer.js";
+import { validPreviewUrl } from "../game/audio.js";
+import { knownVideo } from "./tracks.js";
 import { staff } from "./players.js";
 
 // Ce que la TV joue pour un titre. Le 30/10, YouTube ne répondait plus et les
-// parties s'arrêtaient : la vidéo trouvée une fois est gardée pour tout le
-// salon, et sans vidéo on joue l'extrait Deezer plutôt que de sauter le titre.
+// parties s'arrêtaient : le serveur n'appelle plus YouTube en partie, et sans
+// vidéo connue on joue l'extrait Deezer plutôt que de sauter le titre.
 
-const searching = new WeakMap();
-
-export function findVideo(salon, track) {
+export async function findVideo(salon, track) {
   const known = salon.game.videos?.get(track);
-  if (known) return Promise.resolve(known);
-  let pending = searching.get(track);
-  if (!pending) {
-    pending = searchTrackVideo(track, salon.settings.roundDuration)
-      .then((found) => {
-        (salon.game.videos ??= new Map()).set(track, found);
-        return found;
-      })
-      .finally(() => searching.delete(track));
-    searching.set(track, pending);
-  }
-  return pending;
+  if (known) return known;
+  const found = await knownVideo(track, salon.settings.roundDuration);
+  const videos = (salon.game.videos ??= new Map());
+  // Deux demandes en même temps gardent le même départ : la TV précharge le bon
+  if (!videos.has(track)) videos.set(track, found);
+  return videos.get(track);
+}
+
+// Résultat gardé du lobby à la manche : Deezer a un quota
+const previews = new WeakMap();
+const PREVIEW_TTL_MS = 5 * 60 * 1000;
+const NO_PREVIEW_TTL_MS = 30 * 1000;
+// L'attente se passe dans le chemin d'une manche : elle reste courte
+const PREVIEW_WAIT_MS = 5000;
+
+async function fetchPreview(track) {
+  // Seuls les titres importés de Deezer ont un id numérique Deezer
+  const byId = /^\d+$/.test(track.external_id ?? "")
+    ? await fetchDeezerTrackPreview(track.external_id)
+    : null;
+  return (
+    byId ||
+    validPreviewUrl(track.preview_url) ||
+    deezerPreviewMatch(track.mainArtist || track.artist, track.title)
+  );
 }
 
 // Lien d'extrait frais : ceux de Deezer expirent, celui en base peut être périmé
 export async function previewUrl(track) {
-  const fresh = track.external_id
-    ? await fetchDeezerTrackPreview(track.external_id)
-    : null;
-  return fresh || track.preview_url || null;
+  const hit = previews.get(track);
+  if (hit && hit.exp > Date.now() && (!hit.url || validPreviewUrl(hit.url)))
+    return hit.url;
+  let timer;
+  const url = await Promise.race([
+    fetchPreview(track),
+    new Promise((resolve) => {
+      timer = setTimeout(
+        () => resolve(validPreviewUrl(track.preview_url)),
+        PREVIEW_WAIT_MS,
+      );
+    }),
+  ]);
+  clearTimeout(timer);
+  previews.set(track, {
+    url,
+    exp: Date.now() + (url ? PREVIEW_TTL_MS : NO_PREVIEW_TTL_MS),
+  });
+  return url;
 }
 
 export async function resolveMedia(salon, track) {

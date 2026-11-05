@@ -2,6 +2,13 @@ import { describe, it, expect, vi } from "vitest";
 
 // Fausse table salon.snapshots derrière les trois fonctions SQL
 const table = new Map();
+vi.mock("../../game/audio.js", () => ({
+  validPreviewUrl: () => null,
+}));
+vi.mock("../../../services/music/deezer.js", () => ({
+  fetchDeezerTrackPreview: async () => null,
+  deezerPreviewMatch: async () => null,
+}));
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
@@ -22,7 +29,7 @@ vi.mock("../../../services/music/trackIssues.js", () => ({
 vi.mock("../tracks.js", () => ({
   buildSessionPlaylist: () => [],
   currentTrackInfo: () => null,
-  searchTrackVideo: async (t) => ({
+  knownVideo: async (t) => ({
     video: { id: `v-${t.title}` },
     safeStart: 0,
   }),

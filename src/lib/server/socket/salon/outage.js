@@ -19,8 +19,8 @@ export function holdForVideos(salon, io, retry) {
     alertAdminsSafe(
       "admin_errors",
       {
-        title: `Salon ${salon.code} : vidéos en panne`,
-        body: "Les vidéos YouTube échouent en boucle, la partie attend et réessaie.",
+        title: `Salon ${salon.code} : musique en panne`,
+        body: "Plusieurs titres sans vidéo ni extrait d'affilée, la partie attend et réessaie.",
         url: `/admin/salons?code=${salon.code}`,
         tag: `outage:${salon.code}`,
       },
