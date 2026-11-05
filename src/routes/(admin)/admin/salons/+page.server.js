@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -147,7 +148,7 @@ function settingsPatch(fd) {
   return patch;
 }
 
-export const actions = {
+export const actions = adminActions({
   pause: supportAction(
     "salon_pause",
     (code) => supportPause(code),
@@ -186,4 +187,4 @@ export const actions = {
     (code) => closeSupport(code),
     () => "Demande d'aide close.",
   ),
-};
+});

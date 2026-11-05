@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { getStripe } from "$lib/server/stripe.js";
 import { fail } from "@sveltejs/kit";
@@ -71,7 +72,7 @@ export async function load({ url }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   mailTest: async ({ request }) => {
     const c = campaign((await request.formData()).get("campaign"));
     if (!c) return fail(400, { mailError: "Mail inconnu." });
@@ -94,4 +95,4 @@ export const actions = {
     });
     return { mailSent: sent };
   },
-};
+});

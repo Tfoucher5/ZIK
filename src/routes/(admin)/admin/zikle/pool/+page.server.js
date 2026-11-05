@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -70,7 +71,7 @@ export async function load({ url }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   addToPool: async ({ request, locals }) => {
     const form = await request.formData();
     const trackId = form.get("track_id");
@@ -137,4 +138,4 @@ export const actions = {
       return fail(500, { error: `Deezer ne répond pas : ${e.message}` });
     }
   },
-};
+});

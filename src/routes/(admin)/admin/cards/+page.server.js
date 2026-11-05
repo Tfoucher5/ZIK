@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import {
@@ -24,7 +25,7 @@ export function load({ url }) {
   });
 }
 
-export const actions = {
+export const actions = adminActions({
   correctCard: async ({ request, locals }) => {
     const formData = await request.formData();
     const reportId = formData.get("report_id");
@@ -145,4 +146,4 @@ export const actions = {
       message: `${deleted} carte${deleted > 1 ? "s" : ""} inutile${deleted > 1 ? "s" : ""} supprimée${deleted > 1 ? "s" : ""}.`,
     };
   },
-};
+});

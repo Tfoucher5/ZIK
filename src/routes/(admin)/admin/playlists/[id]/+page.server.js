@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { error, redirect } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -66,7 +67,7 @@ export async function load({ params }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   addTrack: async ({ request, params, locals }) => {
     assertUuid(params.id);
     const fd = await request.formData();
@@ -232,4 +233,4 @@ export const actions = {
     );
     redirect(302, "/admin/playlists");
   },
-};
+});

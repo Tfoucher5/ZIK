@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { escapeIlike } from "$lib/shared/zikle/shared.js";
@@ -108,7 +109,7 @@ export async function load({ url }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   editTrack: async ({ request, locals }) => {
     const fd = await request.formData();
     const id = fd.get("id");
@@ -165,4 +166,4 @@ export const actions = {
     });
     return { success: true, deleted: true };
   },
-};
+});
