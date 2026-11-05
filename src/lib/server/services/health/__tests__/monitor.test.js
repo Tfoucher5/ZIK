@@ -45,7 +45,7 @@ describe("moniteur de santé", () => {
 
   it("enregistre tout au premier passage, puis seulement les changements", async () => {
     const recorded = [];
-    const probes = { db: sonde("ok"), deezer: sonde("ok", "fail") };
+    const probes = { db: sonde("ok"), deezer: sonde("fail") };
     const record = async (rows) => recorded.push(rows);
     await runChecks({ probes, record, alert: () => {}, now: 1_000_000 });
     expect(recorded[0].map((r) => r.probe)).toEqual(["db", "deezer"]);
@@ -80,7 +80,8 @@ describe("moniteur de santé", () => {
       },
       db: sonde("ok"),
     };
-    await runChecks({ probes, record: async () => {}, alert: () => {} });
+    for (let i = 0; i < 2; i++)
+      await runChecks({ probes, record: async () => {}, alert: () => {} });
     expect(healthState().probes.casse).toMatchObject({
       level: "suspect",
       detail: "boum",
@@ -173,7 +174,9 @@ describe("sondes", () => {
     memoryLimit: () => 1000 * 1048576,
     db: () => ({
       from: () => ({
-        select: () => ({ limit: async () => ({ error: null }) }),
+        select: () => ({
+          limit: () => ({ abortSignal: async () => ({ error: null }) }),
+        }),
       }),
     }),
   };

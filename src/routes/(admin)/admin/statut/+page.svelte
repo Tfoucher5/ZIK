@@ -81,7 +81,7 @@
       {/each}
     </ul>
     <IncidentList incidents={status.incidents} />
-    <p class="ast-note">Sondes toutes les 60 s. Suspicion : seuil approché deux fois de suite ou premier échec. Incident : trois échecs de suite (push et mail).</p>
+    <p class="ast-note">Sondes toutes les 60 s. Perturbé : 2 échecs sur les 5 dernières mesures, ou 3 mesures lentes de suite. Incident : 3 échecs sur 5, jamais pour une simple lenteur (push et mail). Fin d’incident : 3 mesures de suite sans échec.</p>
   {/if}
 </div>
 

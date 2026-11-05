@@ -83,14 +83,15 @@ describe("pages de statut", () => {
   });
 
   it("public : état courant par service, historique, et cache d'une minute", async () => {
-    await runChecks({
-      probes: {
-        db: async () => ({ result: "ok" }),
-        youtube: async () => ({ result: "fail" }),
-      },
-      record: async () => {},
-      alert: () => {},
-    });
+    for (let i = 0; i < 2; i++)
+      await runChecks({
+        probes: {
+          db: async () => ({ result: "ok" }),
+          youtube: async () => ({ result: "fail" }),
+        },
+        record: async () => {},
+        alert: () => {},
+      });
     rows = [{ day: "2026-11-04", probe: "youtube", level: "suspect" }];
     const s = await publicStatus(NOW);
     expect(s.checked).toBe(true);
@@ -181,19 +182,20 @@ describe("pages de statut", () => {
   });
 
   it("public : temps de réponse oui, messages d'erreur et salons ouverts non", async () => {
-    await runChecks({
-      probes: {
-        db: async () => ({
-          result: "fail",
-          value: 80,
-          detail: "secret interne",
-        }),
-        memory: async () => ({ result: "ok", value: 512 }),
-        load: async () => ({ result: "ok", value: 7 }),
-      },
-      record: async () => {},
-      alert: () => {},
-    });
+    for (let i = 0; i < 2; i++)
+      await runChecks({
+        probes: {
+          db: async () => ({
+            result: "fail",
+            value: 80,
+            detail: "secret interne",
+          }),
+          memory: async () => ({ result: "ok", value: 512 }),
+          load: async () => ({ result: "ok", value: 7 }),
+        },
+        record: async () => {},
+        alert: () => {},
+      });
     const s = await publicStatus(NOW);
     const texte = JSON.stringify(s);
     expect(texte).not.toContain("secret interne");
