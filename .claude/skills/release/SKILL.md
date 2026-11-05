@@ -1,6 +1,6 @@
 ---
 name: release
-description: Prépare une mise en production de ZIK (develop vers master) — vérifie le gel, l'état du staging, la version, les notes, et ouvre la PR de release. À lancer uniquement par Théo avec /release.
+description: Prépare une mise en production de ZIK (develop vers master) — vérifie l'état du staging, la version, les notes, et ouvre la PR de release. À lancer uniquement par Théo avec /release.
 disable-model-invocation: true
 argument-hint: "[version voulue, sinon calculée]"
 allowed-tools: Bash(git log *) Bash(git fetch *) Bash(git rev-parse *) Bash(date *) Bash(node -p *)
@@ -17,7 +17,7 @@ allowed-tools: Bash(git log *) Bash(git fetch *) Bash(git rev-parse *) Bash(date
 
 Ne fusionne rien toi-même : tu prépares, Théo décide.
 
-1. **Gel.** Si on est entre jeudi 18 h et dimanche 2 h (heure de Paris), arrête-toi : pas de release pendant les soirées. Seul `/hotfix` passe, avec annonce de maintenance.
+1. **Soirées en cours.** Rappelle à Théo de vérifier dans l'admin les soirées en cours avant de fusionner : le redémarrage les met en pause. Ce n'est pas bloquant, il décide.
 2. **Il y a quelque chose à livrer.** Si la liste des commits est vide, dis-le et arrête.
 3. **Le staging est sain**, chaque point vérifié et noté :
    - CI verte sur `develop` (`gh run list --branch develop --limit 3`) ;

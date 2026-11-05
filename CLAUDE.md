@@ -41,7 +41,7 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - Release `develop` → `master` et report d'un hotfix `master` → `develop` : fusion en **merge commit**, jamais en squash. Un squash coupe l'historique commun : `master` et `develop` divergent et chaque release suivante repart en conflit
 - Message de commit et titre de PR : `type(zone): description (vX.Y.Z)`, types `feat`, `fix`, `perf`, `chore`, `docs`, `test`
 - Version : toujours incrémentée dans la PR de release (dans toutes les pages concernées et dans le commit)
-- **Gel des mises en prod du jeudi 18h au dimanche 2h** (heure de Paris) : aucune release. Seul un hotfix critique passe, après annonce de maintenance aux salons depuis l'admin
+- Avant de fusionner sur `master`, Théo vérifie dans l'admin les soirées en cours. Le redémarrage les met en pause, elles reprennent via l'instantané
 
 ## Définition de « terminé »
 
@@ -69,7 +69,7 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 | `/relire`                  | agent `reviewer` : relit le diff contre ce fichier, verdict fusionnable / bloqué          | Claude avant toute PR, ou Théo                       |
 | `/migration <changement>`  | migration Supabase selon les règles, testée sur le staging                                | Claude dès qu'un changement de schéma est nécessaire |
 | `/terminer`                | Définition de terminé vérifiée, plan coché, commit + PR vers `develop` après confirmation | Claude quand la tâche est finie, ou Théo             |
-| `/release`                 | gel, staging, version, notes, PR `develop` → `master`                                     | Théo seulement                                       |
+| `/release`                 | staging, version, notes, PR `develop` → `master`                                          | Théo seulement                                       |
 | `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Théo seulement                                       |
 | `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |
 

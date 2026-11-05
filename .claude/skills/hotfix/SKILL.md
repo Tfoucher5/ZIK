@@ -26,5 +26,5 @@ Un hotfix est le plus petit changement qui supprime le problème, rien de plus. 
 6. `/relire` avec `origin/master` comme base.
 7. Version : incrément de correctif (`X.Y.Z+1`) dans `package.json` et partout où elle est affichée.
 8. Après confirmation de Théo : push, `gh pr create --base master --title "fix(<zone>): … (vX.Y.Z)"`.
-9. **Pendant le gel** (jeudi 18 h → dimanche 2 h) : rappelle d'annoncer la maintenance aux salons ouverts depuis l'admin avant de fusionner, et de fusionner entre deux parties si possible.
+9. **Soirées en cours** : rappelle de les vérifier dans l'admin avant de fusionner, d'annoncer la maintenance aux salons ouverts s'il y en a, et de fusionner entre deux parties si possible.
 10. Après le merge : ouvre une PR `master` → `develop` (ou cherry-pick) pour que `develop` ait le correctif, et rappelle de surveiller `/admin/statut` et les logs.
