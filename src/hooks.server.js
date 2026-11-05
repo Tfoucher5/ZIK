@@ -59,6 +59,28 @@ function recordVisitSource(event) {
   }
 }
 
+// Taille bornée : une entrée par route et par admin
+const dernierAcces = new Map();
+const ACCES_GET_MS = 60_000;
+
+// Une ligne dans les logs Railway, jamais de query string. Les pages admin se
+// rafraîchissent toutes seules : un GET par minute, par route et par admin, et
+// de même pour les requêtes sans session admin. Les écritures d'un admin sont
+// toutes notées.
+function logAdminAccess(event, routeId) {
+  const method = event.request.method;
+  const suivie =
+    (routeId?.startsWith("/(admin)/") && routeId !== ADMIN_LOGIN_ROUTE) ||
+    (routeId?.startsWith("/(site)/api/admin/") && method !== "GET");
+  if (!suivie) return;
+  const ligne = `[admin-acces] ${method} ${routeId} admin=${event.locals.adminId ?? "aucun"}`;
+  if (method === "GET" || !event.locals.adminId) {
+    if (Date.now() - (dernierAcces.get(ligne) ?? 0) < ACCES_GET_MS) return;
+    dernierAcces.set(ligne, Date.now());
+  }
+  console.info(ligne);
+}
+
 export async function handle({ event, resolve }) {
   const path = event.url.pathname;
   event.locals.adminId = readAdminToken(event.cookies.get(ADMIN_COOKIE));
@@ -69,6 +91,7 @@ export async function handle({ event, resolve }) {
   // Sur route.id et pas sur le chemin : le routeur décode l'adresse, pas
   // url.pathname, et /%61dmin mène aussi à l'admin.
   const routeId = event.route.id;
+  logAdminAccess(event, routeId);
   if (
     !isAdmin &&
     routeId?.startsWith("/(admin)/") &&

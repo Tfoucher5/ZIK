@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { error } from "@sveltejs/kit";
 import { supabase, getAdminClient } from "../config.js";
 import { isUuid } from "../../shared/utils.js";
+import { alertAdminsSafe } from "../services/admin/alerts.js";
 
 // ─── JWT token cache (avoids a Supabase round-trip per request) ──────────────
 const _tokenCache = new Map(); // token -> { user, exp }
@@ -102,5 +103,16 @@ export async function logAdminAction(
           ? payload
           : { ...payload, target: targetId },
     });
-  if (err) console.error("[admin_audit_log]", err.message);
+  if (!err) return;
+  console.error("[admin_audit_log]", err.message);
+  alertAdminsSafe(
+    "admin_errors",
+    {
+      title: "Journal admin : écriture impossible",
+      body: `Action non journalisée : ${action}`,
+      url: "/admin/journal",
+      tag: "admin_audit_log",
+    },
+    { throttleMs: 10 * 60 * 1000 },
+  );
 }

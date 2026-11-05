@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { isUuid } from "$lib/shared/utils.js";
 import { getAdminUserDetail } from "$lib/server/services/admin/userDetail.js";
@@ -41,7 +42,7 @@ const reply = (res, message) =>
 const intIn = (v, min, max, fallback) =>
   Math.max(min, Math.min(max, parseInt(v, 10) || fallback));
 
-export const actions = {
+export const actions = adminActions({
   ban: async (event) => {
     const { fd, adminId, userId } = await setup(event);
     const duration = fd.get("duration") || "87600h";
@@ -139,4 +140,4 @@ export const actions = {
       "Amitié supprimée.",
     );
   },
-};
+});

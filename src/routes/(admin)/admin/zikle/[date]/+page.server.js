@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { error, fail } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -56,7 +57,7 @@ export async function load({ params }) {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   setTrack: async ({ request, locals, params }) => {
     const form = await request.formData();
     const trackId = form.get("track_id");
@@ -111,4 +112,4 @@ export const actions = {
     );
     return { done: `${count ?? 0} résultat(s) supprimé(s).` };
   },
-};
+});

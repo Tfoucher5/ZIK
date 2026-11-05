@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { error } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
@@ -71,7 +72,7 @@ export async function load() {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   toggleFlag: async ({ request, locals }) => {
     const formData = await request.formData();
     const id = readId(formData);
@@ -128,4 +129,4 @@ export const actions = {
     await logAdminAction(locals.adminId, "delete_room", id, "room", room);
     return { success: true };
   },
-};
+});

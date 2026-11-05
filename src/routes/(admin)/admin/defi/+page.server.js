@@ -1,3 +1,4 @@
+import { adminActions } from "$lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
 import { logAdminAction } from "$lib/server/middleware/auth.js";
 import { todayParis } from "$lib/server/services/zikle.js";
@@ -54,7 +55,7 @@ export async function load() {
   };
 }
 
-export const actions = {
+export const actions = adminActions({
   editCurrent: async ({ request, locals }) => {
     const form = await request.formData();
     const id = String(form.get("id") || "");
@@ -118,4 +119,4 @@ export const actions = {
     );
     return { nextCanceled: true };
   },
-};
+});

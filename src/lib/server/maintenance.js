@@ -15,15 +15,9 @@ const TTL = 15_000;
 export const ADMIN_COOKIE = "zik_admin";
 export const ADMIN_TTL_MS = 12 * 60 * 60 * 1000;
 
-function adminSecret() {
-  return (
-    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || "zik"
-  );
-}
-
 function sign(exp, uid) {
   return crypto
-    .createHmac("sha256", adminSecret())
+    .createHmac("sha256", process.env.SUPABASE_SERVICE_KEY)
     .update(`admin:${exp}:${uid}`)
     .digest("hex")
     .slice(0, 32);
@@ -36,15 +30,15 @@ export function makeAdminToken(uid) {
 
 // Renvoie l'id de l'admin si le cookie est valide, sinon null
 export function readAdminToken(token) {
-  if (!token) return null;
+  // Sans secret, personne n'est admin ; ce test évite aussi de lever dans le hook
+  if (!token || !process.env.SUPABASE_SERVICE_KEY) return null;
   const [expStr, uid, sig] = String(token).split(".");
   const exp = Number(expStr);
   if (!exp || exp < Date.now() || !uid || !sig) return null;
-  const expected = sign(exp, uid);
-  if (sig.length !== expected.length) return null;
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
-    ? uid
-    : null;
+  const recue = Buffer.from(sig);
+  const attendue = Buffer.from(sign(exp, uid));
+  if (recue.length !== attendue.length) return null;
+  return crypto.timingSafeEqual(recue, attendue) ? uid : null;
 }
 
 export async function getMaintenance() {
