@@ -27,6 +27,18 @@ const creer = (playlistIds) => POST(requete("POST", { playlistIds }));
 const changer = (playlistIds) =>
   PATCH(requete("PATCH", { code: "ABC", key: "k", playlistIds }));
 
+describe("/api/salon : réponses d'erreur", () => {
+  it("51 playlists : la limite est expliquée à l'hôte", async () => {
+    const res = await creer(ids(51));
+    expect((await res.json()).error).toBe("50 playlists maximum par soirée");
+  });
+
+  it("corps JSON null : erreur propre", async () => {
+    expect((await POST(requete("POST", null))).status).toBe(400);
+    expect((await PATCH(requete("PATCH", null))).status).toBe(401);
+  });
+});
+
 describe.each([
   ["POST", creer, m.create],
   ["PATCH", changer, m.change],

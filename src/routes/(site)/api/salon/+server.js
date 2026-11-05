@@ -46,7 +46,7 @@ export async function POST({ request }) {
     return json({ error: "Corps invalide" }, { status: 400 });
   }
 
-  const { playlistIds, settings, origin } = body;
+  const { playlistIds, settings, origin } = body ?? {};
   const playlistsErr = playlistsError(playlistIds);
   if (playlistsErr) return json({ error: playlistsErr }, { status: 400 });
 
@@ -102,7 +102,7 @@ export async function PATCH({ request }) {
     return json({ error: "Corps invalide" }, { status: 400 });
   }
 
-  const { code, playlistIds, key } = body;
+  const { code, playlistIds, key } = body ?? {};
   if (!user && !key) return json({ error: "Non authentifié" }, { status: 401 });
   if (!code) return json({ error: "Code requis" }, { status: 400 });
   const playlistsErr = playlistsError(playlistIds);
