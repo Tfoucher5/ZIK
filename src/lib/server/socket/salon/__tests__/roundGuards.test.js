@@ -220,6 +220,7 @@ describe("déroulé d'une manche", () => {
     await attente;
     expect(game.currentRound).toBe(3);
     expect(game.skipStreak ?? 0).toBe(0);
+    expect(h.emissions.some((e) => e.event === "salon_use_audio")).toBe(false);
   });
 
   it("préchargement sans vidéo : extrait prêt, rien d'annoncé à la TV", async () => {
