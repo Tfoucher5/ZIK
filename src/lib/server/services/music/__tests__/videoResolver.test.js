@@ -3,13 +3,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const m = vi.hoisted(() => ({ next: [], updates: [], search: vi.fn() }));
 
 vi.mock("../../../config.js", () => {
-  const query = () => {
+  const query = (table) => {
     const q = {
       select: () => q,
       is: () => q,
       or: () => q,
       order: () => q,
-      limit: async () => ({ data: m.next, error: null }),
+      neq: () => q,
+      gte: () => q,
+      in: () => q,
+      limit: async () => ({
+        data: table === "tracks" ? m.next : [],
+        error: null,
+      }),
+      then: (resolve) => resolve({ data: [], error: null }),
       update: (fields) => ({
         eq: async (_, id) => {
           m.updates.push({ id, fields });
