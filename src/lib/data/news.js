@@ -15,6 +15,7 @@ export const NEWS = [
       "En soirée : les vidéos sont préparées à l'avance, plus de recherche pendant la partie. Si une vidéo manque, un extrait audio prend le relais.",
       "En ligne : les manches démarrent plus vite.",
       "Partout : un extrait trouvé par nom doit correspondre au bon titre et au bon artiste, pour éviter d'entendre une reprise à la place de l'original.",
+      "En ligne : une revanche dans la même room compte bien pour tes scores, tes statistiques et tes succès.",
     ],
   },
   {

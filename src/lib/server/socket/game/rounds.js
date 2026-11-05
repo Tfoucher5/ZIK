@@ -39,6 +39,8 @@ export function endRound(roomId, reason, io) {
   const room = getOrCreateRoom(roomId);
   const game = room.game;
   clearInterval(game.interval);
+  // Une pause à l'entracte doit voir l'entracte, pas une manche en cours
+  game.interval = null;
   game.isActive = false;
 
   const track = game.currentTrack;
@@ -86,6 +88,22 @@ export function endRound(roomId, reason, io) {
   }, game.breakDuration * 1000);
 }
 
+export function announceRound(room, io) {
+  const { game, roomId } = room;
+  game._roundHeld = false;
+  game.isSyncWaiting = true;
+  game.readyPlayers = new Set();
+  game.readyRound = game.currentRound;
+
+  io.to(`room:${roomId}`).emit("start_round", game.lastRoundData);
+
+  const activePlayers = Object.values(room.players).filter(
+    (p) => !p._dcTimer,
+  ).length;
+  game.readyThreshold = Math.max(1, Math.round(activePlayers * 0.75));
+  game.readyTimer = setTimeout(() => triggerRoundStart(roomId, io), 6000);
+}
+
 export function startTimer(roomId, io) {
   const room = getOrCreateRoom(roomId);
   const game = room.game;
@@ -124,6 +142,11 @@ export async function startNextRound(roomId, io) {
     await finishGame(room, io);
     return;
   }
+
+  // Partie finie, relancée ou room libérée pendant la recherche : manche périmée
+  const prep = (game._prepId = (game._prepId ?? 0) + 1);
+  const stale = () =>
+    roomGames[roomId] !== room || !game.inProgress || game._prepId !== prep;
 
   io.to(`room:${roomId}`).emit("round_loading");
 
@@ -187,8 +210,6 @@ export async function startNextRound(roomId, io) {
     // Même URL que celle annoncée en next_audio : le joueur l'a déjà en mémoire
     const audioUrl = prefetched?.audioUrl ?? audioUrlFor(videoId);
     game.lastRoundData = {
-      // Sans iframe, l'id ne sert à rien côté joueur et trahirait le titre
-      videoId: null,
       startSeconds: 0,
       trackId: track.id ?? null,
       round: game.currentRound,
@@ -200,26 +221,22 @@ export async function startNextRound(roomId, io) {
       cardsOff: cardsOffReason(game),
     };
 
-    if (game.isPaused) return;
-
-    game.isSyncWaiting = true;
-    game.readyPlayers = new Set();
-    game.readyRound = game.currentRound;
-
-    io.to(`room:${roomId}`).emit("start_round", game.lastRoundData);
-
-    const activePlayers = Object.values(room.players).filter(
-      (p) => !p._dcTimer,
-    ).length;
-    game.readyThreshold = Math.max(1, Math.round(activePlayers * 0.75));
-    game.readyTimer = setTimeout(() => triggerRoundStart(roomId, io), 6000);
+    if (stale()) return;
 
     // Précharger la manche suivante pendant que celle-ci tourne
     if (game.sessionPlaylist.length > 0) {
       game._prefetchPromise = prefetchNextRound(roomId, io);
       game._prefetchPromise.catch(() => {});
     }
+
+    // Pause pendant la préparation : la reprise annoncera cette manche
+    if (game.isPaused) {
+      game._roundHeld = true;
+      return;
+    }
+    announceRound(room, io);
   } catch (err) {
+    if (stale()) return;
     console.error(`Skip "${game.currentTrack?.title}":`, err.message);
     reportTrackIssue(
       game.currentTrack?.id,
@@ -245,10 +262,16 @@ export async function finishGame(room, io) {
   const { game } = room;
   clearInterval(game.interval);
   clearTimeout(game.breakTimer);
+  clearTimeout(game.readyTimer);
   game.interval = null;
   game.breakTimer = null;
+  game.readyTimer = null;
+  game.isSyncWaiting = false;
   game.isActive = false;
   game.inProgress = false;
+  game.isPaused = false;
+  game._pausedState = null;
+  game._roundHeld = false;
   const finalScores = Object.values(room.players)
     .sort((a, b) => b.score - a.score)
     .map(sanitizePlayer);

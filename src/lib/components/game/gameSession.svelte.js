@@ -221,7 +221,7 @@ export class GameSession {
     this.gameoverShow = false;
     if (!d) return;
     this.player.playRound(d);
-    if (d.audioUrl && !this.player.waitingForSync) this.player.playSynced();
+    if (!this.player.waitingForSync) this.player.playSynced();
   };
 
   startCountdownUI = (seconds) => {
