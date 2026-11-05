@@ -176,7 +176,7 @@ export function registerJoin(socket, io) {
             : 0,
         });
       }
-      // Si isSyncWaiting, le client émettra player_ready quand YouTube sera prêt
+      // Si isSyncWaiting, le client émettra player_ready quand l'audio sera prêt
     } else if (autoStart && !room.game.inProgress) {
       if (autoStartCountdowns[roomId]) {
         // Countdown already running — tell this player the remaining time

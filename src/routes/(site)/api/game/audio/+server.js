@@ -1,17 +1,12 @@
 import { ytdlAudioCache, audioKeyFor } from "$lib/server/audio/ytdlCache.js";
-import { getYtAudioUrl } from "$lib/server/audio/ytdlAudio.js";
 import { refreshPreview } from "$lib/server/socket/game/audio.js";
-
-const TTL = 2 * 60 * 60 * 1000;
 
 export async function GET({ url, request }) {
   const videoId = audioKeyFor(url.searchParams.get("v"));
   if (!videoId) return new Response("Unknown audio", { status: 404 });
 
   let entry = ytdlAudioCache.get(videoId);
-  if (!entry || Date.now() - entry.fetchedAt > TTL) {
-    return new Response("Audio not cached", { status: 404 });
-  }
+  if (!entry) return new Response("Audio not cached", { status: 404 });
 
   const range = request.headers.get("range");
 
@@ -20,13 +15,10 @@ export async function GET({ url, request }) {
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
 
-  // URL expirée (403 ou erreur réseau) — régénérer via Deezer/iTunes ou yt-dlp
-  if (!upstream || upstream.status === 403) {
+  // URL expirée ou retirée (403, 404, réseau) — régénérer via Deezer/iTunes
+  if (!upstream || upstream.status === 403 || upstream.status === 404) {
     try {
-      ytdlAudioCache.delete(videoId);
-      entry = videoId.startsWith("prev_")
-        ? await refreshPreview(videoId, entry)
-        : await getYtAudioUrl(videoId);
+      entry = await refreshPreview(videoId, entry);
       upstream = await fetch(entry.url, {
         headers: range ? { Range: range } : {},
         signal: AbortSignal.timeout(8000),

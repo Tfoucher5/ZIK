@@ -68,7 +68,7 @@ export async function beginGame(room, io) {
   io.to(`room:${roomId}`).emit("init_history", []);
   io.to(`room:${roomId}`).emit("game_starting");
   // Premier titre préchargé tout de suite : startNextRound attend cette
-  // promesse si yt-dlp n'a pas fini
+  // promesse si l'extrait n'est pas encore trouvé
   game._prefetchPromise = prefetchNextRound(roomId, io);
   game._prefetchPromise.catch(() => {});
   try {
