@@ -1,16 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "fs";
 import { tmpdir } from "os";
-import { join } from "path";
+import { dirname, join } from "path";
 
-const m = vi.hoisted(() => ({ version: null }));
+const m = vi.hoisted(() => ({ version: null, error: null, tmpOk: true }));
 
 vi.mock("child_process", async (original) => ({
   ...(await original()),
-  execFile: (_bin, _args, _opts, cb) =>
-    m.version
+  execFile: (bin, _args, _opts, cb) => {
+    if (bin.includes(".tmp"))
+      return m.tmpOk
+        ? cb(null, { stdout: "ok\n", stderr: "" })
+        : cb(new Error("fichier cassé"));
+    if (m.error) return cb(m.error);
+    return m.version
       ? cb(null, { stdout: `${m.version}\n`, stderr: "" })
-      : cb(new Error("ENOENT")),
+      : cb(Object.assign(new Error("absent"), { code: "ENOENT" }));
+  },
 }));
 
 const { autoUpdateYtDlp } = await import("../ytdlpUpdate.js");
@@ -29,6 +43,8 @@ describe("autoUpdateYtDlp", () => {
     dir = mkdtempSync(join(tmpdir(), "ytdlp-"));
     bin = join(dir, "bin", "yt-dlp");
     m.version = null;
+    m.error = null;
+    m.tmpOk = true;
     warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
     f = vi.fn();
@@ -80,7 +96,28 @@ describe("autoUpdateYtDlp", () => {
     f.mockResolvedValue(new Response(null, { status: 403 }));
     await autoUpdateYtDlp(bin);
     expect(f).toHaveBeenCalledOnce();
-    expect(warn).not.toHaveBeenCalled();
+    expect(warn.mock.calls[0][0]).toContain("inconnue");
+  });
+
+  it("binaire lent ou en erreur : pas de téléchargement à l'aveugle", async () => {
+    m.error = Object.assign(new Error("délai"), { code: "ETIMEDOUT" });
+    await autoUpdateYtDlp(bin);
+    expect(f).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it("fichier téléchargé cassé : le binaire en place reste, pas de résidu", async () => {
+    m.version = "2026.01.01";
+    m.tmpOk = false;
+    mkdirSync(dirname(bin), { recursive: true });
+    writeFileSync(bin, "sain");
+    f.mockResolvedValueOnce(redirection("2026.10.26")).mockResolvedValueOnce(
+      new Response("cassé"),
+    );
+    await autoUpdateYtDlp(bin);
+    expect(readFileSync(bin, "utf8")).toBe("sain");
+    expect(readdirSync(dirname(bin))).toEqual(["yt-dlp"]);
+    expect(warn).toHaveBeenCalledOnce();
   });
 
   it.each([

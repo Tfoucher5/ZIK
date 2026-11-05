@@ -1,6 +1,6 @@
 import { execFile } from "child_process";
-import { mkdirSync, renameSync, writeFileSync } from "fs";
-import { dirname } from "path";
+import { mkdirSync, renameSync, rmSync, writeFileSync } from "fs";
+import { dirname, extname } from "path";
 import { promisify } from "util";
 import { YTDLP_BIN } from "./ytdlAudio.js";
 
@@ -19,8 +19,10 @@ async function installedVersion(bin) {
       timeout: 5000,
     });
     return stdout.trim();
-  } catch {
-    return null;
+  } catch (e) {
+    // Lent ou en erreur sous charge : il est là, on ne le remplace pas à l'aveugle
+    if (e.code === "ENOENT") return null;
+    throw e;
   }
 }
 
@@ -42,9 +44,16 @@ async function download(bin) {
   if (!dl.ok) throw new Error(`HTTP ${dl.status}`);
   const binary = Buffer.from(await dl.arrayBuffer());
   mkdirSync(dirname(bin), { recursive: true });
-  // Le binaire peut tourner : on ne l'écrase jamais à moitié
-  writeFileSync(`${bin}.tmp`, binary, { mode: 0o755 });
-  renameSync(`${bin}.tmp`, bin);
+  // Le binaire peut tourner : on ne l'écrase ni à moitié, ni par un fichier cassé
+  const tmp = `${bin}.tmp${extname(bin)}`;
+  writeFileSync(tmp, binary, { mode: 0o755 });
+  try {
+    await execFileAsync(tmp, ["--version"], { timeout: 15_000 });
+    renameSync(tmp, bin);
+  } catch (e) {
+    rmSync(tmp, { force: true });
+    throw e;
+  }
 }
 
 /** Installe yt-dlp s'il manque, le met à jour s'il est dépassé. Ne lève jamais. */
@@ -55,7 +64,11 @@ export async function autoUpdateYtDlp(bin = YTDLP_BIN) {
       console.warn("[yt-dlp] absent, installation");
     } else {
       const latest = await latestVersion();
-      if (!latest || current === latest) {
+      if (!latest) {
+        console.warn(`[yt-dlp] dernière version inconnue, ${current} gardée`);
+        return;
+      }
+      if (current === latest) {
         console.log(`[yt-dlp] à jour (${current})`);
         return;
       }
