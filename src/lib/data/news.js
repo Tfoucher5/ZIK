@@ -5,6 +5,19 @@
 
 export const NEWS = [
   {
+    date: "2026-11-05",
+    version: "3.24.0",
+    tag: "Amélioration",
+    title: "Une musique plus fiable, en soirée comme en ligne",
+    summary:
+      "La musique de tes parties est préparée à l'avance : moins d'attente, et moins de risque d'entendre le mauvais morceau.",
+    items: [
+      "En soirée : les vidéos sont préparées à l'avance, plus de recherche pendant la partie. Si une vidéo manque, un extrait audio prend le relais.",
+      "En ligne : les manches démarrent plus vite.",
+      "Partout : un extrait trouvé par nom doit correspondre au bon titre et au bon artiste, pour éviter d'entendre une reprise à la place de l'original.",
+    ],
+  },
+  {
     date: "2026-11-04",
     version: "3.23.0",
     tag: "Amélioration",
