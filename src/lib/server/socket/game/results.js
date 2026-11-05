@@ -58,6 +58,10 @@ export async function saveGameResults(roomId, finalScores, io) {
       }).catch(() => {});
 
   if (!dbGameId || room.game._ended) return;
+  // Posé avant les await : deux fins simultanées ne comptent pas la partie deux fois
+  room.game._ended = true;
+  // Déjà comptés à leur départ (saveMidGamePlayer)
+  const savedEarlier = new Set(room.game.savedPlayers);
 
   try {
     await supabase
@@ -84,7 +88,6 @@ export async function saveGameResults(roomId, finalScores, io) {
         bumpWeeklyChallenge("games_played", p.userId, 1);
     });
 
-    room.game._ended = true;
     const eloEligible =
       !!dbRooms[roomId]?.is_public &&
       finalScores.length >= 3 &&
@@ -99,7 +102,7 @@ export async function saveGameResults(roomId, finalScores, io) {
       const admin = getAdminClient();
       for (let i = 0; i < finalScores.length; i++) {
         const p = finalScores[i];
-        if (p.userId && !p.isGuest) {
+        if (p.userId && !p.isGuest && !savedEarlier.has(p.name)) {
           await admin.rpc("update_player_stats", {
             p_user_id: p.userId,
             p_score: p.score,

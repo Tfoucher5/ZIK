@@ -65,7 +65,7 @@ vi.mock("../../../services/music/playlist.js", () => ({
 }));
 
 const { getOrCreateRoom } = await import("../rooms.js");
-const { beginGame } = await import("../lobby.js");
+const { beginGame, leaveRoom } = await import("../lobby.js");
 const { finishGame } = await import("../rounds.js");
 
 const io = { to: () => ({ emit: () => {} }) };
@@ -103,6 +103,46 @@ describe("revanche dans la même room", () => {
     expect(m.inserts[1][0]).toMatchObject({ username: "alice", score: 5 });
     expect(m.inserts[1][0].game_id).not.toBe(m.inserts[0][0].game_id);
     expect(m.stats).toBe(2);
+  });
+
+  it("deux fins simultanées : la partie n'est comptée qu'une fois", async () => {
+    await beginGame(room, io);
+    clearTimeout(room.game.readyTimer);
+    room.players.alice.score = 5;
+    await Promise.all([finishGame(room, io), finishGame(room, io)]);
+    expect(m.inserts).toHaveLength(1);
+    expect(m.stats).toBe(1);
+  });
+
+  it("joueur déjà compté à son départ, revenu ensuite : stats une seule fois", async () => {
+    await beginGame(room, io);
+    clearTimeout(room.game.readyTimer);
+    room.players.alice.score = 5;
+    room.game.savedPlayers.add("alice");
+    await finishGame(room, io);
+    expect(m.inserts).toHaveLength(0);
+    expect(m.stats).toBe(0);
+  });
+
+  it("départ juste avant une revanche : la partie finie n'est pas réécrite", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      await jouer();
+      expect(m.stats).toBe(1);
+      const socket = { id: "s1", leave: () => {}, currentRoom: room.roomId };
+      room.socketToName.s1 = "alice";
+      room.nameToSocket.alice = "s1";
+      room.game.currentRound = 1;
+      leaveRoom(socket, room.roomId, io);
+      const inserts = m.inserts.length;
+      await beginGame(room, io);
+      clearTimeout(room.game.readyTimer);
+      await vi.advanceTimersByTimeAsync(6000);
+      expect(m.inserts).toHaveLength(inserts);
+      expect(m.stats).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("une même partie n'est jamais comptée deux fois", async () => {

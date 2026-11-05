@@ -139,6 +139,8 @@ export function leaveRoom(socket, roomId, io) {
       // Référence à l'objet game, pas à roomGames[roomId] : la room peut avoir
       // été libérée de la mémoire avant que ce timer ne se déclenche
       const gameRef = room.game;
+      // Une revanche remplace ce Set : le timer doit lire celui de sa partie
+      const savedPlayers = room.game.savedPlayers;
       const gameMode = room.game_mode;
       const totalPlayers = Object.keys(room.players).length;
 
@@ -148,9 +150,9 @@ export function leaveRoom(socket, roomId, io) {
           wasInGame &&
           dbGameId &&
           playerSnapshot.score > 0 &&
-          !gameRef.savedPlayers.has(name)
+          !savedPlayers.has(name)
         ) {
-          gameRef.savedPlayers.add(name);
+          savedPlayers.add(name);
           saveMidGamePlayer(
             dbGameId,
             playerSnapshot,
