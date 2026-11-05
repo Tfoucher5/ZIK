@@ -1,16 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 let rows = [];
+let transitions = [];
 let panne = false;
 let lectures = 0;
 vi.mock("../../../config.js", () => ({
   getAdminClient: () => ({
-    rpc: async () => {
-      lectures++;
-      return panne
-        ? { error: { message: "base injoignable" } }
-        : { data: rows, error: null };
-    },
+    rpc: (fn) => ({
+      range: async (from, to) => {
+        lectures++;
+        const data = fn === "health_transitions" ? transitions : rows;
+        return panne
+          ? { error: { message: "base injoignable" } }
+          : { data: data.slice(from, to + 1), error: null };
+      },
+    }),
   }),
 }));
 vi.mock("../../admin/alerts.js", () => ({ alertAdminsSafe: () => {} }));
@@ -22,7 +26,7 @@ vi.mock("../../../mail/send.js", () => ({
 const {
   lastDays,
   historyBy,
-  availabilityOf,
+  timeline,
   incidentsFrom,
   publicLevel,
   publicStatus,
@@ -39,6 +43,7 @@ describe("pages de statut", () => {
     resetHealth();
     resetStatusCache();
     rows = [];
+    transitions = [];
     panne = false;
     lectures = 0;
   });
@@ -101,8 +106,8 @@ describe("pages de statut", () => {
     expect(s.groups.find((g) => g.id === "site").level).toBe("ok");
     expect(s.groups[0].history).toHaveLength(30);
     await publicStatus(NOW + 30_000);
-    // Trois lectures au premier appel, aucune tant que le cache tient
-    expect(lectures).toBe(3);
+    // Deux lectures au premier appel, aucune tant que le cache tient
+    expect(lectures).toBe(2);
   });
 
   it("serveur qui vient de démarrer ou base en panne : la page le dit au lieu de mentir", async () => {
@@ -129,18 +134,63 @@ describe("pages de statut", () => {
     expect(copie.publicLevel()).toBe("ok");
   });
 
-  it("disponibilité : hors incident, jamais 100 % avec un incident, la pire sonde fait foi", () => {
-    const rows = [
-      { probe: "db", level: "ok", checks: 9999 },
-      { probe: "db", level: "incident", checks: 1 },
-      { probe: "auth", level: "ok", checks: 90 },
-      { probe: "auth", level: "suspect", checks: 10 },
+  it("frise : un incident court colore son jour en jaune, pas tout le mois ; le site tombé en rouge", () => {
+    const days = ["2026-11-02", "2026-11-03", "2026-11-04"];
+    const transitions = [
+      { probe: "youtube", level: "ok", checked_at: "2026-11-02T08:00:00Z" },
+      {
+        probe: "youtube",
+        level: "incident",
+        checked_at: "2026-11-03T09:40:00Z",
+      },
+      { probe: "youtube", level: "ok", checked_at: "2026-11-03T09:52:00Z" },
+      { probe: "deezer", level: "suspect", checked_at: "2026-11-04T08:00:00Z" },
     ];
-    expect(availabilityOf(rows, ["db"])).toBe(99.9);
-    expect(availabilityOf(rows, ["auth"])).toBe(100);
-    expect(availabilityOf(rows, ["db", "auth"])).toBe(99.9);
-    expect(availabilityOf(rows, ["inconnue"])).toBeNull();
-    expect(availabilityOf(null, ["db"])).toBeNull();
+    const t = timeline(
+      ["ok", "incident", "ok"],
+      transitions,
+      ["youtube", "deezer"],
+      days,
+      NOW,
+    );
+    expect(t.history).toEqual(["ok", "minor", "ok"]);
+    expect(t.downtime).toEqual([0, 12, 0]);
+    // 12 min sur 50 h de mesures
+    expect(t.availability).toBe(99.6);
+    const site = transitions.map((r) => ({
+      ...r,
+      probe: r.probe === "youtube" ? "site" : r.probe,
+    }));
+    expect(
+      timeline(["ok", "incident", "ok"], site, ["site", "deezer"], days, NOW)
+        .history[1],
+    ).toBe("incident");
+    // Jour sans mesure : rien d'inventé ; transitions illisibles : pire niveau gardé
+    expect(
+      timeline([null, "ok", "ok"], [], ["db"], days, NOW).history[0],
+    ).toBeNull();
+    expect(timeline(["incident"], null, ["db"], days, NOW)).toEqual({
+      history: ["incident"],
+      downtime: null,
+      availability: null,
+    });
+  });
+
+  it("transitions lues par pages : un incident ancien n'est pas perdu au plafond de l'API", async () => {
+    transitions = [
+      ...Array.from({ length: 2400 }, (_, i) => ({
+        probe: "youtube",
+        level: i % 2 ? "ok" : "suspect",
+        checked_at: new Date(NOW - i * 60_000).toISOString(),
+      })),
+      { probe: "db", level: "ok", checked_at: "2026-10-20T00:00:00Z" },
+      { probe: "db", level: "incident", checked_at: "2026-10-21T10:00:00Z" },
+      { probe: "db", level: "ok", checked_at: "2026-10-21T11:30:00Z" },
+    ].sort((a, b) => Date.parse(b.checked_at) - Date.parse(a.checked_at));
+    const s = await adminStatus(NOW);
+    const db = s.probes.find((p) => p.id === "db");
+    expect(db.downtime[s.days.indexOf("2026-10-21")]).toBe(90);
+    expect(lectures).toBe(4);
   });
 
   it("incidents : du début à la fin, en cours, sans les simples suspicions", () => {

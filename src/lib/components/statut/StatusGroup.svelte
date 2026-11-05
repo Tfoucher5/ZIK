@@ -13,7 +13,7 @@
     {#if checked}<span class="sg-etat {group.level}"><i aria-hidden="true"></i>{LEVEL_TEXT[group.level]}</span>{/if}
   </header>
 
-  {#if historyAvailable}<HistoryBar {days} levels={group.history} />{/if}
+  {#if historyAvailable}<HistoryBar {days} levels={group.history} minutes={group.downtime} />{/if}
 
   <ul class="sg-sondes">
     {#each group.probes as p (p.id)}

@@ -76,7 +76,7 @@
               {#if p.value != null}{p.value} {UNIT[p.id] ?? ''}{/if}{#if p.detail} · {p.detail}{/if}{#if p.availability != null} · {p.availability.toLocaleString('fr-FR')} % sur 30 jours{/if}
             </p>
           {/if}
-          <HistoryBar days={status.days} levels={p.history} />
+          <HistoryBar days={status.days} levels={p.history} minutes={p.downtime} />
         </li>
       {/each}
     </ul>

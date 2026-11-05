@@ -56,7 +56,7 @@
   <IncidentList incidents={s.incidents} />
 
   {#if s.historyAvailable}
-    <p class="stt-note">Chaque service est vérifié toutes les minutes. Chaque carré est une journée, de la plus ancienne (à gauche) à aujourd'hui. Gris : pas encore de mesure. La disponibilité compte le temps hors incident.</p>
+    <p class="stt-note">Chaque service est vérifié toutes les minutes. Chaque carré est une journée, de la plus ancienne (à gauche) à aujourd'hui : vert sans incident, jaune pour moins de 20 min d'incident, orange jusqu'à 1 h, rouge au-delà ou si le site est tombé, gris sans mesure. Un ralentissement n'est pas compté comme un incident. La disponibilité compte le temps hors incident.</p>
   {:else}
     <p class="stt-note">L'historique est momentanément indisponible.</p>
   {/if}
