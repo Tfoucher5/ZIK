@@ -17,7 +17,8 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - Pas de refactoring non demandé, pas de features supplémentaires
 - Préférer modifier un fichier existant plutôt qu'en créer un nouveau
 - Toujours supprimer les morceaux de code inutiles ou inutilisés
-- Toujours demander confirmation avant `git push`, `git commit`, un merge, ou toute écriture sur une base (staging comme prod)
+- Claude peut, sans demander, sur les branches de travail et `develop` : commit, push, ouvrir une PR et la fusionner en squash si la Définition de terminé est tenue et la CI verte ; appliquer une migration sur le staging via `/migration`
+- Toujours demander à Théo : tout ce qui touche `master` (release, hotfix), toute action sur `[PROD]`, écriture en base de prod, force push, suppression de données, idée à ajouter hors du plan. Théo valide les idées, répond aux questions et teste en réel
 - Ne jamais toucher à la prod directement : ni SQL dans le dashboard, ni variable Railway, ni déploiement manuel. Tout passe par une PR
 
 ## Environnements
