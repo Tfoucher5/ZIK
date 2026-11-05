@@ -116,7 +116,7 @@ export class GameAudio {
       audio.currentTime = startSeconds;
       // La lecture démarre au signal round_start_sync (tous les joueurs en même
       // temps). Signal déjà passé (reconnexion) : on démarre au bon endroit.
-      if (this.syncAnchor !== null) this.playSynced();
+      if (this.syncAnchor !== null && !this.adminPaused) this.playSynced();
     };
     audio.onended = () => {
       if (this.roundActive) {
@@ -149,14 +149,15 @@ export class GameAudio {
     if (audio.readyState >= 1)
       audio.currentTime = this.#syncedPos(audio.duration || null);
     audio.play().catch(() => {
-      // Lecture bloquée par le navigateur : reprise au premier geste
+      // Lecture bloquée par le navigateur : reprise au premier geste. Au toucher,
+      // pointerdown ne compte pas comme un geste qui autorise le son
       const resume = () => {
         audio.currentTime = this.#syncedPos(audio.duration || null);
         audio.play().catch(() => {});
-        document.removeEventListener("pointerdown", resume, true);
+        document.removeEventListener("pointerup", resume, true);
         document.removeEventListener("keydown", resume, true);
       };
-      document.addEventListener("pointerdown", resume, true);
+      document.addEventListener("pointerup", resume, true);
       document.addEventListener("keydown", resume, true);
     });
   }

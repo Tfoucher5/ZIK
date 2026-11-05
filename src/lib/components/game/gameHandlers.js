@@ -267,6 +267,9 @@ export function gameHandlers(g) {
       goto("/rooms");
     },
     adminPause() {
+      // Le serveur refuse les réponses : un choix touché resterait verrouillé.
+      // Le round_start_sync de la reprise rouvre la saisie
+      g.guessDisabled = true;
       g.player.pause();
     },
     adminResume() {
