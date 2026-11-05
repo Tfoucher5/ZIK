@@ -45,7 +45,7 @@ export async function ytsQuery(query, count = 5) {
       autoIndex: pickAutoIndex(results),
     };
   } catch {
-    return { results: [], autoIndex: -1 };
+    return { results: [], autoIndex: -1, failed: true };
   }
 }
 

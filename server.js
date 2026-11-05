@@ -21,6 +21,7 @@ import { registerPresence } from "./src/lib/server/socket/presence.js";
 import { dailyCardsMaintenance } from "./src/lib/server/services/cards/maintenance.js";
 import { startPushSchedule } from "./src/lib/server/services/notify/pushSchedule.js";
 import { pushError } from "./src/lib/server/state.js";
+import { startVideoResolver } from "./src/lib/server/services/music/videoResolver.js";
 import { announceLatestNews } from "./src/lib/server/services/notify/notifications.js";
 import { loadSalonNotice } from "./src/lib/server/services/admin/salonNotice.js";
 import {
@@ -126,6 +127,7 @@ setTimeout(dailyCardsMaintenance, 60 * 1000);
 setInterval(dailyCardsMaintenance, 24 * 60 * 60 * 1000);
 startPushSchedule();
 startHealthMonitor();
+startVideoResolver();
 
 // Déploiement : Railway envoie SIGTERM à l'ancien conteneur une fois le nouveau
 // prêt. Les salons sont prévenus et sauvegardés ; leurs écrans et téléphones se
