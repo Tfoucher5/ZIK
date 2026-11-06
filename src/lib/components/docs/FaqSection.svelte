@@ -1,3 +1,7 @@
+<script>
+  import { FREE_MAX_PLAYERS, TESTED_PLAYERS } from '$lib/data/proPlans.js';
+</script>
+
 <section>
   <h2 id="faq">FAQ</h2>
   <p>Réponses aux questions les plus fréquentes.</p>
@@ -70,7 +74,7 @@
       <summary>Combien de personnes peuvent jouer dans un salon ?</summary>
       <div class="faq-body">
         <p>
-          Il n'y a pas de limite stricte définie pour le Mode Salon. En pratique, des groupes de 5 à 50 personnes jouent sans problème. Pour des événements très larges (100+ personnes), assurez-vous que votre connexion internet (côté hôte) est stable. Le serveur gère les connexions Socket.io en temps réel.
+          ZIK Pro n'impose pas de limite, et la version gratuite s'arrête à {FREE_MAX_PLAYERS} joueurs. Nous avons testé {TESTED_PLAYERS} joueurs simultanés dans un salon : voir « Combien de joueurs ça tient » dans le guide du Mode Salon. Plus la salle est nombreuse, plus la connexion compte : conseillez la 4G ou la 5G si votre Wi-Fi est modeste.
         </p>
       </div>
     </details>

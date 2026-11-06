@@ -1,7 +1,15 @@
-import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/data/proPlans.js";
+import {
+  FREE_MAX_PLAYERS,
+  FREE_MAX_TEAMS,
+  TESTED_PLAYERS,
+} from "$lib/data/proPlans.js";
 
 export const COMPARE = [
-  ["Joueurs par salon", `jusqu'à ${FREE_MAX_PLAYERS}`, "illimité"],
+  [
+    "Joueurs par salon",
+    `jusqu'à ${FREE_MAX_PLAYERS}`,
+    `pas de limite imposée, testé à ${TESTED_PLAYERS}`,
+  ],
   ["Équipes", `jusqu'à ${FREE_MAX_TEAMS}`, "illimitées, renommables"],
   ["Classement", "partie par partie", "cumulé sur la soirée, podium final"],
   ["Modes de réponse", "texte libre, 4 choix", "+ buzzer avec l'animateur"],
@@ -145,7 +153,7 @@ export const FAQ_JSON_LD = JSON.stringify({
   mainEntity: [
     question(
       "Combien de personnes peuvent jouer en même temps ?",
-      `Jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, sans limite avec ZIK Pro. Chacun joue sur son propre téléphone, il n'y a rien à installer.`,
+      `Jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, pas de limite imposée avec ZIK Pro, testé à ${TESTED_PLAYERS} joueurs simultanés dans un salon. Chacun joue sur son propre téléphone, il n'y a rien à installer.`,
     ),
     question(
       "Faut-il créer un compte pour organiser une soirée ?",

@@ -1,4 +1,5 @@
 <script>
+  import { TESTED_PLAYERS } from '$lib/data/proPlans.js';
   import DocTable from './DocTable.svelte';
   import { salonSettings, qcmShapes } from './tables.js';
   import DocTip from './DocTip.svelte';
@@ -78,6 +79,16 @@
     <li><strong>Extrait audio en secours :</strong> si la vidéo YouTube d'un titre manque, la manche se joue avec son extrait audio de 30 secondes.</li>
     <li><strong>Pause automatique en cas de panne :</strong> si les vidéos ne répondent plus du tout, la partie attend et réessaie toute seule, sans rien perdre.</li>
   </ul>
+
+  <h3 id="capacite">Combien de joueurs ça tient</h3>
+  <p>ZIK Pro n'impose pas de limite de joueurs. Voici ce que nous avons réellement mesuré en novembre 2026 sur notre serveur de test, identique en puissance à celui du site :</p>
+  <ul class="doc-list">
+    <li><strong>{TESTED_PLAYERS} joueurs dans un salon :</strong> trois essais, trois parties complètes, aucune coupure. 95 % des réponses reçoivent un retour en moins de 0,6 seconde.</li>
+    <li><strong>2 000 joueurs répartis sur 10 salons :</strong> parties complètes aux trois essais, avec quelques joueurs coupés lors d'un essai.</li>
+    <li><strong>2 000 joueurs dans un seul salon :</strong> pas assez fiable. Selon l'essai, tout a tenu avec des réponses plus lentes, ou la partie a pris plus de 20 secondes de retard. Nous ne le recommandons pas.</li>
+    <li><strong>250 joueurs derrière une seule connexion limitée à 8 Mbit/s :</strong> partie complète. Seule l'arrivée dans le salon ralentit, jusqu'à une vingtaine de secondes.</li>
+  </ul>
+  <p>Ces essais utilisent des joueurs simulés depuis un centre de données, sur 5 manches. Ils ne couvrent ni une borne Wi-Fi saturée par de nombreux téléphones, ni une soirée de plusieurs heures : ce sont des mesures, pas une garantie. Pour une salle nombreuse, conseillez la 4G ou la 5G si votre Wi-Fi est modeste, et faites un essai avant le jour J.</p>
 
   <h3>Reconnexion automatique</h3>
   <p>

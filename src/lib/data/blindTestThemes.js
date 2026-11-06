@@ -1,4 +1,8 @@
-import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "./proPlans.js";
+import {
+  FREE_MAX_PLAYERS,
+  FREE_MAX_TEAMS,
+  TESTED_PLAYERS,
+} from "./proPlans.js";
 
 /**
  * Pages /blind-test/<slug> : une page par recherche Google visée
@@ -361,7 +365,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien d'invités peuvent jouer en même temps ?",
-        a: "Jusqu'à 8 téléphones en version gratuite, sans limite avec ZIK Pro. Pour un grand mariage, le jeu en équipes (une équipe par table) reste le plus lisible.",
+        a: `Jusqu'à ${FREE_MAX_PLAYERS} téléphones en version gratuite. ZIK Pro n'impose pas de limite, testé à ${TESTED_PLAYERS} joueurs simultanés. Pour un grand mariage, le jeu en équipes (une équipe par table) reste le plus lisible.`,
       },
       {
         q: "Faut-il une connexion internet dans la salle ?",
@@ -391,7 +395,7 @@ export const BLIND_TEST_THEMES = [
     faq: [
       {
         q: "Combien de joueurs peuvent participer ?",
-        a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs gratuitement, chacun sur son téléphone. Au-delà, ZIK Pro accueille autant de joueurs que vous voulez.`,
+        a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs gratuitement, chacun sur son téléphone. Au-delà, ZIK Pro n'impose pas de limite, testé à ${TESTED_PLAYERS} joueurs simultanés.`,
       },
       {
         q: "Faut-il installer une application ?",
@@ -460,7 +464,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Combien de participants au maximum ?",
-        a: `${FREE_MAX_PLAYERS} joueurs en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et d'équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.`,
+        a: `${FREE_MAX_PLAYERS} joueurs en version gratuite. ZIK Pro n'impose pas de limite de joueurs (testé à ${TESTED_PLAYERS} simultanés) ni d'équipes, pour 7,90 € la soirée ou 19 € par mois pendant la saison.`,
       },
     ],
     playlists: [PL.disney, PL.annees8090, PL.annees2000],
