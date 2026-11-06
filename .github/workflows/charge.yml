@@ -9,6 +9,9 @@ on:
       paliers:
         description: "Joueurs, ou joueurs x salons : 250 500 2000x10"
         default: "250 500 1000 2000 2000x10"
+      debit:
+        description: "Tous les téléphones sur un seul accès, descendant : 20mbit. Vide : sans bridage"
+        default: ""
   push:
     branches: ["chore/charge-*"]
 
@@ -28,6 +31,26 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      # Imite une salle derrière une seule box : montée au quart de la descente,
+      # 40 ms aller-retour, 0,5 % de pertes. Ne simule pas les limites d'une borne Wi-Fi
+      - name: Réseau bridé
+        if: inputs.debit != ''
+        env:
+          DEBIT: ${{ inputs.debit }}
+        run: |
+          if ! [[ "$DEBIT" =~ ^[0-9]+mbit$ ]]; then
+            echo "Débit invalide : $DEBIT"
+            exit 1
+          fi
+          mbit="${DEBIT%mbit}"
+          carte="$(ip route show default | awk '{print $5; exit}')"
+          sudo modprobe ifb numifbs=1
+          sudo ip link set ifb0 up
+          sudo tc qdisc add dev "$carte" handle ffff: ingress
+          sudo tc filter add dev "$carte" parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev ifb0
+          sudo tc qdisc add dev ifb0 root netem rate "$DEBIT" delay 20ms loss 0.5%
+          sudo tc qdisc add dev "$carte" root netem rate "$((mbit / 4 + 1))mbit" delay 20ms loss 0.5%
+          tc qdisc show dev ifb0
       - name: Paliers
         # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
         env:
