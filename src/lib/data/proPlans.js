@@ -3,11 +3,15 @@
 
 export const FREE_MAX_PLAYERS = 12;
 export const FREE_MAX_TEAMS = 2;
+// Plus gros salon tenu à chaque passage du test de charge (scripts/charge-salon.mjs)
+export const TESTED_PLAYERS = "1\u00a0000";
+// Toujours « simulés » : aucune vraie salle de cette taille n'a été mesurée (/docs#capacite)
+export const TESTED_LABEL = `testé à ${TESTED_PLAYERS} joueurs simulés`;
 
 // Ce que débloque n'importe quelle formule Pro
 export const PRO_PERKS = [
-  "Joueurs illimités dans le salon",
-  "Équipes illimitées, renommables",
+  `Pas de limite de joueurs imposée, ${TESTED_LABEL} dans un salon`,
+  "Plus d'équipes, renommables",
   "Classement de la soirée et podium final",
   "Mode buzzer : l'animateur valide les réponses à voix haute",
   "Manches spéciales au hasard : points doubles, intro éclair, sprint",

@@ -1,4 +1,5 @@
 <script>
+  import { TESTED_PLAYERS } from '$lib/data/proPlans.js';
   import DocTable from './DocTable.svelte';
   import { salonSettings, qcmShapes } from './tables.js';
   import DocTip from './DocTip.svelte';
@@ -78,6 +79,16 @@
     <li><strong>Extrait audio en secours :</strong> si la vidéo YouTube d'un titre manque, la manche se joue avec son extrait audio de 30 secondes.</li>
     <li><strong>Pause automatique en cas de panne :</strong> si les vidéos ne répondent plus du tout, la partie attend et réessaie toute seule, sans rien perdre.</li>
   </ul>
+
+  <h3 id="capacite">Combien de joueurs ça tient</h3>
+  <p>ZIK Pro n'impose pas de limite de joueurs. Voici ce que nous avons mesuré en novembre 2026, avec des joueurs simulés sur notre serveur de test. Il a les mêmes limites de ressources que celui du site, mais il n'avait aucune autre activité. En production, le même serveur sert aussi le site et les autres parties : ces chiffres sont un maximum observé, pas une garantie.</p>
+  <ul class="doc-list">
+    <li><strong>{TESTED_PLAYERS} joueurs dans un salon :</strong> trois essais, trois parties complètes, aucune coupure. 95 % des réponses reçoivent un retour en moins d'une seconde, environ 2 secondes au pire, hors réseau du téléphone.</li>
+    <li><strong>2 000 joueurs répartis sur 10 salons :</strong> deux essais sur trois sous nos seuils. Au troisième, 1 joueur n'est pas entré et 6 ont été coupés.</li>
+    <li><strong>2 000 joueurs dans un seul salon :</strong> pas assez fiable, nous ne le recommandons pas. Selon l'essai, les réponses ralentissent ou la partie prend plus de 20 secondes de retard. Au pire essai, l'écran et la régie ont été coupés et la partie n'est pas allée au bout.</li>
+    <li><strong>250 joueurs derrière une seule connexion limitée à 8 Mbit/s :</strong> un seul essai, avec le trafic du jeu seul : ni chargement de la page sur les téléphones, ni vidéo sur la TV. Partie complète, entrée dans le salon jusqu'à 23 secondes hors chargement de la page.</li>
+  </ul>
+  <p>Ces essais partent d'un centre de données, sur 5 manches en réponse libre, sans musique ni reconnexions. Ils ne couvrent ni de vrais téléphones, ni une borne Wi-Fi saturée, ni une soirée de plusieurs heures. Pour une salle nombreuse, gardez une connexion solide pour la TV, conseillez la 4G ou la 5G aux joueurs si votre Wi-Fi est modeste, et faites un essai avant le jour J.</p>
 
   <h3>Reconnexion automatique</h3>
   <p>

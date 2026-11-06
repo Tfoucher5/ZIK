@@ -1,4 +1,4 @@
-import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "$lib/data/proPlans.js";
+import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 
 const SITE = "https://www.zik-music.fr";
 
@@ -43,7 +43,7 @@ export const FAQ_GROUPS = [
     items: [
       {
         q: "Combien de joueurs peuvent participer ?",
-        a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro accueille un nombre illimité de joueurs et d'équipes.`,
+        a: `Jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes en version gratuite. ZIK Pro n'impose pas de limite de joueurs et ajoute des équipes.`,
       },
       {
         q: "Combien ça coûte ?",

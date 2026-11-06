@@ -28,7 +28,7 @@ export function proSoireeLaunch() {
       "Si vous les activez : points doubles, intro éclair ou sprint, tirés au hasard et annoncés en grand avant la musique.",
     ],
     [
-      "Des équipes illimitées",
+      "Plus d'équipes",
       "Une équipe par table, autant que vous voulez, chacune avec son nom.",
     ],
     [
