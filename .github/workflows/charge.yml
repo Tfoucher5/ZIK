@@ -79,3 +79,7 @@ jobs:
             sleep 60
           done
           exit $echec
+      # Preuve que le bridage a bien vu le trafic : compteurs à lire avec les mesures
+      - name: Compteurs du bridage
+        if: always() && inputs.debit != ''
+        run: tc -s qdisc show dev ifb0
