@@ -48,8 +48,8 @@ jobs:
           sudo ip link set ifb0 up
           sudo tc qdisc add dev "$carte" handle ffff: ingress
           sudo tc filter add dev "$carte" parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev ifb0
-          sudo tc qdisc add dev ifb0 root netem rate "$DEBIT" delay 20ms loss 0.5%
-          sudo tc qdisc add dev "$carte" root netem rate "$((mbit / 4 + 1))mbit" delay 20ms loss 0.5%
+          sudo tc qdisc replace dev ifb0 root netem rate "$DEBIT" delay 20ms loss 0.5%
+          sudo tc qdisc replace dev "$carte" root netem rate "$((mbit / 4 + 1))mbit" delay 20ms loss 0.5%
           tc qdisc show dev ifb0
       - name: Paliers
         # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
