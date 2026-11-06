@@ -3,6 +3,7 @@ import {
   firstMail,
   followUp,
 } from "../../../../scripts/prospection/templates.mjs";
+import { FREE_MAX_PLAYERS } from "../../data/proPlans.js";
 
 describe("mails de prospection", () => {
   it("nomme le bar dans l'objet", () => {
@@ -21,6 +22,16 @@ describe("mails de prospection", () => {
         expect(mail.text).toContain("« stop »");
         expect(mail.text).toContain("https://www.zik-music.fr/pro");
       }
+    }
+  });
+
+  it("annonce les limites et les prix réels, et ne dit pas « sans animateur »", () => {
+    for (const kind of ["bar", "camping", "association"]) {
+      const { text } = firstMail({ kind, name: "X" });
+      expect(text).toContain(`${FREE_MAX_PLAYERS} joueurs`);
+      expect(text).toContain("7,90 €");
+      expect(text).toContain("190 € par an");
+      expect(text).not.toMatch(/sans animateur|besoin d'animateur/);
     }
   });
 

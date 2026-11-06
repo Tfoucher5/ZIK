@@ -1,5 +1,10 @@
 // Mails de prospection, en texte brut : un mail perso, pas une newsletter.
 
+import {
+  FREE_MAX_PLAYERS,
+  FREE_MAX_TEAMS,
+} from "../../src/lib/data/proPlans.js";
+
 const FOOTER = `--
 J'ai trouvé votre adresse sur OpenStreetMap. Si vous ne souhaitez plus recevoir de message de ma part, répondez simplement « stop ».`;
 
@@ -30,11 +35,11 @@ export function firstMail({ kind, name }) {
     subject: p.subject(name),
     text: `Bonjour,
 
-Je m'appelle Théo, je suis étudiant à Angers et passionné de musique. Sur mon temps libre, je développe ZIK, ${p.hook} : la TV diffuse les extraits, les joueurs répondent depuis leur téléphone en scannant un QR code, en solo ou en équipes, avec un classement en direct. Pas d'appli à installer, pas besoin d'animateur.
+Je m'appelle Théo, je suis étudiant à Angers et passionné de musique. Sur mon temps libre, je développe ZIK, ${p.hook} : l'ordinateur relié à la TV (ou au vidéoprojecteur) diffuse les extraits, les joueurs répondent depuis leur téléphone en saisissant un code, en solo ou en équipes, avec un classement en direct. Pas d'appli à installer. La partie peut tourner toute seule, ou vous pouvez l'animer vous-même : une régie sur un second écran permet de lancer, révéler les réponses et corriger les points.
 
 ${p.use}
 
-Je vous écris surtout pour avoir l'avis de personnes qui organisent vraiment des soirées. Si vous avez dix minutes pour l'essayer (c'est gratuit jusqu'à 8 joueurs), votre retour m'aiderait beaucoup, même s'il est critique. Et si un jour ça vous sert pour une vraie soirée, tant mieux !
+Je vous écris surtout pour avoir l'avis de personnes qui organisent vraiment des soirées. Vous pouvez l'essayer gratuitement, jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes : votre retour m'aiderait beaucoup, même s'il est critique. Pour une vraie soirée, ZIK Pro lève ces limites : 7,90 € la soirée, 19 € par mois ou 190 € par an, sans engagement.
 
 Tout est expliqué ici : https://www.zik-music.fr/pro
 
