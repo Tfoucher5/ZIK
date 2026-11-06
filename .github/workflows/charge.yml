@@ -60,7 +60,7 @@ jobs:
           echo "nameserver 1.1.1.1" | sudo tee /etc/netns/salle/resolv.conf
           sudo tc qdisc add dev sortie root netem rate "$DEBIT" delay 20ms loss 0.5%
           sudo ip netns exec salle tc qdisc add dev salle0 root netem rate "$((mbit / 4 + 1))mbit" delay 20ms loss 0.5%
-          echo "LANCEUR=sudo -E env PATH=$PATH ip netns exec salle" >> "$GITHUB_ENV"
+          echo "LANCEUR=sudo env PATH=$PATH ip netns exec salle" >> "$GITHUB_ENV"
       - name: Paliers
         # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
         env:
@@ -75,6 +75,12 @@ jobs:
             exit 1
           fi
           ulimit -n 65536
+          # sudo ne transmet pas l'environnement : .env du runner, détruit avec lui
+          if [[ -n "${LANCEUR:-}" ]]; then
+            umask 077
+            printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_KEY=%s\n' \
+              "$SUPABASE_URL" "$SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_KEY" > .env
+          fi
           echec=0
           for palier in $PALIERS; do
             if ! [[ "$palier" =~ ^[0-9]+(x[0-9]+)?$ ]]; then
