@@ -1,0 +1,58 @@
+name: Test de charge
+
+# Sur le staging uniquement (garde-fou dans scripts/charge-salon-outils.mjs).
+# Le lancement manuel demande ce fichier sur master : d'ici là, un push sur une
+# branche chore/charge-* lance le test
+on:
+  workflow_dispatch:
+    inputs:
+      paliers:
+        description: "Joueurs, ou joueurs x salons : 250 500 2000x10"
+        default: "250 500 1000 2000 2000x10"
+  push:
+    branches: ["chore/charge-*"]
+
+permissions:
+  contents: read
+
+concurrency: test-de-charge
+
+jobs:
+  charge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Paliers
+        # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
+        env:
+          # Jamais secrets.SUPABASE_URL ni SUPABASE_SERVICE_KEY : ce sont ceux de la prod
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
+          PALIERS: ${{ inputs.paliers || '250 500 1000 2000 2000x10' }}
+        run: |
+          if [[ -z "${PALIERS// /}" ]]; then
+            echo "Aucun palier"
+            exit 1
+          fi
+          ulimit -n 65536
+          echec=0
+          for palier in $PALIERS; do
+            if ! [[ "$palier" =~ ^[0-9]+(x[0-9]+)?$ ]]; then
+              echo "Palier invalide : $palier"
+              exit 1
+            fi
+            joueurs="${palier%x*}"
+            salons=1
+            [[ "$palier" == *x* ]] && salons="${palier#*x}"
+            echo "=== $joueurs joueurs, $salons salon(s)"
+            node scripts/charge-salon.mjs --joueurs "$joueurs" --salons "$salons" || echec=1
+            sleep 60
+          done
+          exit $echec
