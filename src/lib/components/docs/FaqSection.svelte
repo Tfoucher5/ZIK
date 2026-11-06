@@ -1,5 +1,5 @@
 <script>
-  import { FREE_MAX_PLAYERS, TESTED_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS, TESTED_LABEL } from '$lib/data/proPlans.js';
 </script>
 
 <section>
@@ -74,7 +74,7 @@
       <summary>Combien de personnes peuvent jouer dans un salon ?</summary>
       <div class="faq-body">
         <p>
-          ZIK Pro n'impose pas de limite, et la version gratuite s'arrête à {FREE_MAX_PLAYERS} joueurs. Nous avons testé {TESTED_PLAYERS} joueurs simultanés dans un salon : voir « Combien de joueurs ça tient » dans le guide du Mode Salon. Plus la salle est nombreuse, plus la connexion compte : conseillez la 4G ou la 5G si votre Wi-Fi est modeste.
+          ZIK Pro n'impose pas de limite, et la version gratuite s'arrête à {FREE_MAX_PLAYERS} joueurs. Il a été {TESTED_LABEL} dans un salon : voir <a href="#capacite">le détail de ces mesures</a>. Plus la salle est nombreuse, plus la connexion compte : conseillez la 4G ou la 5G si votre Wi-Fi est modeste.
         </p>
       </div>
     </details>

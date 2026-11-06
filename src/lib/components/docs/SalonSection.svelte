@@ -81,14 +81,14 @@
   </ul>
 
   <h3 id="capacite">Combien de joueurs ça tient</h3>
-  <p>ZIK Pro n'impose pas de limite de joueurs. Voici ce que nous avons réellement mesuré en novembre 2026 sur notre serveur de test, identique en puissance à celui du site :</p>
+  <p>ZIK Pro n'impose pas de limite de joueurs. Voici ce que nous avons mesuré en novembre 2026, avec des joueurs simulés sur notre serveur de test. Il a les mêmes limites de ressources que celui du site, mais il n'avait aucune autre activité. En production, le même serveur sert aussi le site et les autres parties : ces chiffres sont un maximum observé, pas une garantie.</p>
   <ul class="doc-list">
-    <li><strong>{TESTED_PLAYERS} joueurs dans un salon :</strong> trois essais, trois parties complètes, aucune coupure. 95 % des réponses reçoivent un retour en moins de 0,6 seconde.</li>
-    <li><strong>2 000 joueurs répartis sur 10 salons :</strong> parties complètes aux trois essais, avec quelques joueurs coupés lors d'un essai.</li>
-    <li><strong>2 000 joueurs dans un seul salon :</strong> pas assez fiable. Selon l'essai, tout a tenu avec des réponses plus lentes, ou la partie a pris plus de 20 secondes de retard. Nous ne le recommandons pas.</li>
-    <li><strong>250 joueurs derrière une seule connexion limitée à 8 Mbit/s :</strong> partie complète. Seule l'arrivée dans le salon ralentit, jusqu'à une vingtaine de secondes.</li>
+    <li><strong>{TESTED_PLAYERS} joueurs dans un salon :</strong> trois essais, trois parties complètes, aucune coupure. 95 % des réponses reçoivent un retour en moins d'une seconde, environ 2 secondes au pire, hors réseau du téléphone.</li>
+    <li><strong>2 000 joueurs répartis sur 10 salons :</strong> deux essais sur trois sous nos seuils. Au troisième, 1 joueur n'est pas entré et 6 ont été coupés.</li>
+    <li><strong>2 000 joueurs dans un seul salon :</strong> pas assez fiable, nous ne le recommandons pas. Selon l'essai, les réponses ralentissent ou la partie prend plus de 20 secondes de retard. Au pire essai, l'écran et la régie ont été coupés et la partie n'est pas allée au bout.</li>
+    <li><strong>250 joueurs derrière une seule connexion limitée à 8 Mbit/s :</strong> un seul essai, avec le trafic du jeu seul : ni chargement de la page sur les téléphones, ni vidéo sur la TV. Partie complète, entrée dans le salon jusqu'à 22 secondes hors chargement de la page.</li>
   </ul>
-  <p>Ces essais utilisent des joueurs simulés depuis un centre de données, sur 5 manches. Ils ne couvrent ni une borne Wi-Fi saturée par de nombreux téléphones, ni une soirée de plusieurs heures : ce sont des mesures, pas une garantie. Pour une salle nombreuse, conseillez la 4G ou la 5G si votre Wi-Fi est modeste, et faites un essai avant le jour J.</p>
+  <p>Ces essais partent d'un centre de données, sur 5 manches en réponse libre, sans musique ni reconnexions. Ils ne couvrent ni de vrais téléphones, ni une borne Wi-Fi saturée, ni une soirée de plusieurs heures. Pour une salle nombreuse, gardez une connexion solide pour la TV, conseillez la 4G ou la 5G aux joueurs si votre Wi-Fi est modeste, et faites un essai avant le jour J.</p>
 
   <h3>Reconnexion automatique</h3>
   <p>

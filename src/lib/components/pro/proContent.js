@@ -1,16 +1,20 @@
 import {
   FREE_MAX_PLAYERS,
   FREE_MAX_TEAMS,
-  TESTED_PLAYERS,
-} from "$lib/data/proPlans.js";
+  TESTED_LABEL,
+} from "../../data/proPlans.js";
 
 export const COMPARE = [
   [
     "Joueurs par salon",
     `jusqu'à ${FREE_MAX_PLAYERS}`,
-    `pas de limite imposée, testé à ${TESTED_PLAYERS}`,
+    `pas de limite imposée, ${TESTED_LABEL}`,
   ],
-  ["Équipes", `jusqu'à ${FREE_MAX_TEAMS}`, "illimitées, renommables"],
+  [
+    "Équipes",
+    `jusqu'à ${FREE_MAX_TEAMS}`,
+    `plus de ${FREE_MAX_TEAMS}, renommables`,
+  ],
   ["Classement", "partie par partie", "cumulé sur la soirée, podium final"],
   ["Modes de réponse", "texte libre, 4 choix", "+ buzzer avec l'animateur"],
   ["Manches spéciales", "non", "points doubles, intro éclair, sprint"],
@@ -153,7 +157,7 @@ export const FAQ_JSON_LD = JSON.stringify({
   mainEntity: [
     question(
       "Combien de personnes peuvent jouer en même temps ?",
-      `Jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, pas de limite imposée avec ZIK Pro, testé à ${TESTED_PLAYERS} joueurs simultanés dans un salon. Chacun joue sur son propre téléphone, il n'y a rien à installer.`,
+      `Jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, pas de limite imposée avec ZIK Pro, ${TESTED_LABEL} dans un salon. Chacun joue sur son propre téléphone, il n'y a rien à installer.`,
     ),
     question(
       "Faut-il créer un compte pour organiser une soirée ?",
@@ -161,7 +165,7 @@ export const FAQ_JSON_LD = JSON.stringify({
     ),
     question(
       "Est-ce que c'est payant ?",
-      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque les joueurs et équipes illimités, le classement de la soirée et la régie complète, dès 7,90 € la soirée.`,
+      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque plus de joueurs et d'équipes, le classement de la soirée et la régie complète, dès 7,90 € la soirée.`,
     ),
     question(
       "Quel matériel faut-il prévoir ?",

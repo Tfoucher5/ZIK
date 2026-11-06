@@ -31,7 +31,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      # Imite une salle derrière une seule box : montée au quart de la descente,
+      # Imite une salle derrière une seule box : montée à environ un quart de la descente,
       # 40 ms aller-retour, 0,5 % de pertes. Le générateur vit dans un réseau isolé,
       # sa seule sortie est bridée. Ne simule pas les limites d'une borne Wi-Fi
       - name: Réseau bridé
@@ -98,4 +98,6 @@ jobs:
       # Preuve que le bridage a bien vu le trafic : compteurs à lire avec les mesures
       - name: Compteurs du bridage
         if: always() && inputs.debit != ''
-        run: tc -s qdisc show dev sortie
+        run: |
+          tc -s qdisc show dev sortie
+          sudo ip netns exec salle tc -s qdisc show dev salle0
