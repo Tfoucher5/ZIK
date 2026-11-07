@@ -1,7 +1,9 @@
 import { chatHistories, getIO, roomGames } from "../../state.js";
 import { addChatMessage } from "./chat.js";
 import { cancelAutoCountdown } from "./lobby.js";
-import { emitPlayers } from "./rooms.js";
+import { settleCards } from "./cardSettle.js";
+import { saveEveryone } from "./results.js";
+import { emitPlayers, stopGame } from "./rooms.js";
 import {
   announceRound,
   endRound,
@@ -113,6 +115,8 @@ export function adminSkipRound(roomId) {
 export async function adminEndGame(roomId) {
   const room = roomGames[roomId];
   if (!room) return false;
+  // Déjà finie : un second game_over remplacerait le classement à l'écran
+  if (!room.game.inProgress) return true;
   // Une partie coupée par l'admin compte comme une partie jouée
   await finishGame(room, getIO());
   return true;
@@ -151,9 +155,8 @@ export function adminCloseRoom(roomId) {
   const room = roomGames[roomId];
   if (!room) return false;
   const io = getIO();
-  clearInterval(room.game.interval);
-  clearTimeout(room.game.breakTimer);
-  clearTimeout(room.game.readyTimer);
+  saveEveryone(room);
+  stopGame(room);
   io?.to(`room:${roomId}`).emit("room_force_closed", {
     message: "La room a été fermée par un administrateur.",
   });
@@ -189,6 +192,12 @@ export function adminKickPlayer(roomId, username) {
     io?.to(socketId).emit("admin_kicked", {
       reason: "Expulsé par un administrateur",
     });
+  // Expulsé alors que connecté : ni score ni cartes, l'expulsion sanctionne
+  const { userId, isGuest } = room.players[username];
+  if (userId && !isGuest)
+    settleCards({ game: room.game, name: username, userId, keep: false }).catch(
+      (e) => console.error("[cards] expulsion :", e.message),
+    );
   delete room.players[username];
   delete room.nameToSocket[username];
   for (const sid of Object.keys(room.socketToName)) {

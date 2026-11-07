@@ -1,4 +1,4 @@
-import { supabase } from "../../config.js";
+import { getAdminClient } from "../../config.js";
 import { loadPlaylist } from "../../services/music/playlist.js";
 import { customRooms, roomGames } from "../../state.js";
 import { prefetchNextRound } from "./audio.js";
@@ -6,9 +6,15 @@ import { secureAt } from "./cardFlow.js";
 import { settleCards } from "./cardSettle.js";
 import { scheduleChatClear } from "./chat.js";
 import { AUTO_START_DELAY } from "./config.js";
-import { saveMidGamePlayer } from "./results.js";
-import { cleanupRoom, resetScores, sanitizePlayer } from "./rooms.js";
-import { startNextRound } from "./rounds.js";
+import { saveDeparted, saveMidGamePlayer } from "./results.js";
+import {
+  cleanupRoom,
+  resetPlayerRound,
+  resetScores,
+  sanitizePlayer,
+  stopGame,
+} from "./rooms.js";
+import { checkEveryoneFound, startNextRound } from "./rounds.js";
 
 // Map: roomId -> { timer, startAt, seconds }
 export const autoStartCountdowns = {};
@@ -57,6 +63,7 @@ export async function beginGame(room, io) {
     return;
   }
   game.history = [];
+  game.departed = {};
   game.currentRound = 0;
   game.fullPlaylist = [...playlist];
   const shuffled = [...playlist].sort(() => Math.random() - 0.5);
@@ -71,8 +78,12 @@ export async function beginGame(room, io) {
   // promesse si l'extrait n'est pas encore trouvé
   game._prefetchPromise = prefetchNextRound(roomId, io);
   game._prefetchPromise.catch(() => {});
+  // Insert en panne : un score ne doit pas aller sur la ligne de la partie d'avant
+  game.dbGameId = null;
+  game.savedPlayers = new Set();
+  game._ended = false;
   try {
-    const { data } = await supabase
+    const { data } = await getAdminClient()
       .from("games")
       .insert({
         room_id: roomId,
@@ -81,11 +92,7 @@ export async function beginGame(room, io) {
       })
       .select()
       .single();
-    if (data) {
-      game.dbGameId = data.id;
-      game.savedPlayers = new Set();
-      game._ended = false;
-    }
+    if (data) game.dbGameId = data.id;
   } catch {
     /* non bloquant */
   }
@@ -95,13 +102,15 @@ export async function beginGame(room, io) {
 /**
  * Session de jeu déjà ouverte par ce compte, toutes rooms confondues.
  * Un joueur en délai de grâce (_dcTimer) ne compte pas : son onglet est parti.
- * Rejoindre la room où il joue déjà, sous le même pseudo, est une reconnexion.
+ * Rejoindre la room où il joue déjà, sous le même pseudo ou depuis le même
+ * client (mySockets), est une reconnexion.
  */
-export function findAccountSession(userId, roomId, username) {
+export function findAccountSession(userId, roomId, username, mySockets = []) {
   for (const room of Object.values(roomGames)) {
     for (const p of Object.values(room.players)) {
       if (p.userId !== userId || p.isGuest || p._dcTimer) continue;
       if (room.roomId === roomId && p.name === username) continue;
+      if (room.roomId === roomId && mySockets.includes(p._lastSocket)) continue;
       return { roomId: room.roomId, name: p.name };
     }
   }
@@ -119,6 +128,16 @@ export function releaseAccountSession({ roomId, name }, io) {
   // l'id pour retrouver le joueur et sauvegarder son score en cours
   leaveRoom(old || { id: socketId, leave: () => {} }, roomId, io);
   old?.disconnect();
+}
+
+// Le joueur parti puis revenu dans la même partie retrouve ses points. Manche
+// changée entre-temps : ce qu'il avait trouvé ne vaut plus.
+export function restoreDeparted(room, name) {
+  const player = room.game.departed[name];
+  if (!player) return;
+  delete room.game.departed[name];
+  if (player.departedRound !== room.game.currentRound) resetPlayerRound(player);
+  room.players[name] = player;
 }
 
 export function leaveRoom(socket, roomId, io) {
@@ -144,53 +163,68 @@ export function leaveRoom(socket, roomId, io) {
       const gameMode = room.game_mode;
       const totalPlayers = Object.keys(room.players).length;
 
-      room.players[name]._dcTimer = setTimeout(() => {
-        // Sauvegarder si la partie était en cours et que ce joueur n'a pas déjà été persisté
-        if (
+      const graceTimer = setTimeout(() => {
+        const owed =
           wasInGame &&
           dbGameId &&
           playerSnapshot.score > 0 &&
-          !savedPlayers.has(name)
-        ) {
-          savedPlayers.add(name);
-          saveMidGamePlayer(
-            dbGameId,
-            playerSnapshot,
-            gameMode,
-            totalPlayers,
-          ).catch(() => {});
+          !savedPlayers.has(name);
+        const sameGame =
+          roomGames[roomId] === room &&
+          room.game.dbGameId === dbGameId &&
+          !room.game._ended;
+        const player = room.players[name];
+        const mine = player?._dcTimer === graceTimer;
+        // Expulsé par l'admin pendant le délai de grâce puis revenu : cette place
+        // est une nouvelle partie pour lui, elle garde sa propre ligne
+        const newSeat = !!player && !mine;
+        // Partie en cours : il reste compté au classement final et peut revenir,
+        // score et cartes attendent la fin de partie. Sinon (room libérée, partie
+        // déjà finie, expulsé), tout se règle maintenant.
+        if (owed && sameGame && mine) {
+          delete player._dcTimer;
+          player.departedRound = room.game.currentRound;
+          room.game.departed[name] = player;
+        } else {
+          if (owed) {
+            if (!newSeat) savedPlayers.add(name);
+            saveMidGamePlayer(
+              dbGameId,
+              playerSnapshot,
+              gameMode,
+              totalPlayers,
+            ).catch(() => {});
+          }
+          // Cartes provisoires : gardées si le joueur a fait au moins la moitié
+          // des manches, perdues sinon
+          if (playerSnapshot.userId && !playerSnapshot.isGuest)
+            settleCards({
+              game: gameRef,
+              name,
+              userId: playerSnapshot.userId,
+              keep:
+                (playerSnapshot.roundsPresent || 0) >=
+                secureAt(gameRef.plannedRounds),
+            }).catch((e) => console.error("[cards] départ :", e.message));
         }
 
-        // Cartes provisoires : gardées si le joueur a fait au moins la moitié
-        // des manches, perdues sinon
-        if (playerSnapshot.userId && !playerSnapshot.isGuest)
-          settleCards({
-            game: gameRef,
-            name,
-            userId: playerSnapshot.userId,
-            keep:
-              (playerSnapshot.roundsPresent || 0) >=
-              secureAt(gameRef.plannedRounds),
-          }).catch(() => {});
-
-        if (!roomGames[roomId]) return;
+        if (roomGames[roomId] !== room || newSeat) return;
         delete room.players[name];
         const active = Object.values(room.players)
           .filter((p) => !p._dcTimer)
           .map(sanitizePlayer);
         io.to(`room:${roomId}`).emit("update_players", active);
 
-        if (active.length === 0) {
+        // Un joueur encore en délai de grâce peut revenir : la room vit encore
+        if (Object.keys(room.players).length > 0) {
+          // Il était peut-être le dernier attendu : la manche se clôt sans lui.
+          // Pas pendant une pause admin : la réponse serait révélée sous l'écran.
+          if (!room.game.isPaused) checkEveryoneFound(roomId, io);
+        } else {
           cancelAutoCountdown(roomId, null); // cancel silently — no players to notify
           scheduleChatClear(roomId);
-          if (room.game.isActive) {
-            clearInterval(room.game.interval);
-            clearTimeout(room.game.breakTimer);
-            room.game.interval = null;
-            room.game.breakTimer = null;
-            room.game.isActive = false;
-            console.log(`Room "${roomId}" vide — partie stoppee`);
-          }
+          saveDeparted(room);
+          stopGame(room);
           if (customRooms[roomId]) {
             room._emptyTimer = setTimeout(
               () => cleanupRoom(roomId),
@@ -201,6 +235,7 @@ export function leaveRoom(socket, roomId, io) {
           }
         }
       }, 5_000);
+      room.players[name]._dcTimer = graceTimer;
     }
   }
   socket.leave(`room:${roomId}`);

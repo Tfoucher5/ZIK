@@ -1,0 +1,103 @@
+name: Test de charge
+
+# Sur le staging uniquement (garde-fou dans scripts/charge-salon-outils.mjs).
+# Le lancement manuel demande ce fichier sur master : d'ici là, un push sur une
+# branche chore/charge-* lance le test
+on:
+  workflow_dispatch:
+    inputs:
+      paliers:
+        description: "Joueurs, ou joueurs x salons : 250 500 2000x10"
+        default: "250 500 1000 2000 2000x10"
+      debit:
+        description: "Tous les téléphones sur un seul accès, descendant : 20mbit. Vide : sans bridage"
+        default: ""
+  push:
+    branches: ["chore/charge-*"]
+
+permissions:
+  contents: read
+
+concurrency: test-de-charge
+
+jobs:
+  charge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      # Imite une salle derrière une seule box : montée à environ un quart de la descente,
+      # 40 ms aller-retour, 0,5 % de pertes. Le générateur vit dans un réseau isolé,
+      # sa seule sortie est bridée. Ne simule pas les limites d'une borne Wi-Fi
+      - name: Réseau bridé
+        if: inputs.debit != ''
+        env:
+          DEBIT: ${{ inputs.debit }}
+        run: |
+          if ! [[ "$DEBIT" =~ ^[0-9]+mbit$ ]]; then
+            echo "Débit invalide : $DEBIT"
+            exit 1
+          fi
+          mbit="${DEBIT%mbit}"
+          sudo ip netns add salle
+          sudo ip link add sortie type veth peer name salle0
+          sudo ip link set salle0 netns salle
+          sudo ip addr add 10.9.0.1/24 dev sortie
+          sudo ip link set sortie up
+          sudo ip netns exec salle ip addr add 10.9.0.2/24 dev salle0
+          sudo ip netns exec salle ip link set salle0 up
+          sudo ip netns exec salle ip link set lo up
+          sudo ip netns exec salle ip route add default via 10.9.0.1
+          sudo sysctl -q net.ipv4.ip_forward=1
+          sudo iptables -t nat -A POSTROUTING -s 10.9.0.0/24 -j MASQUERADE
+          sudo iptables -P FORWARD ACCEPT
+          sudo mkdir -p /etc/netns/salle
+          echo "nameserver 1.1.1.1" | sudo tee /etc/netns/salle/resolv.conf
+          sudo tc qdisc add dev sortie root netem rate "$DEBIT" delay 20ms loss 0.5%
+          sudo ip netns exec salle tc qdisc add dev salle0 root netem rate "$((mbit / 4 + 1))mbit" delay 20ms loss 0.5%
+          echo "LANCEUR=sudo env PATH=$PATH ip netns exec salle" >> "$GITHUB_ENV"
+      - name: Paliers
+        # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
+        env:
+          # Jamais secrets.SUPABASE_URL ni SUPABASE_SERVICE_KEY : ce sont ceux de la prod
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
+          PALIERS: ${{ inputs.paliers || '250 500 1000 2000 2000x10' }}
+        run: |
+          if [[ -z "${PALIERS// /}" ]]; then
+            echo "Aucun palier"
+            exit 1
+          fi
+          ulimit -n 65536
+          # sudo ne transmet pas l'environnement : .env du runner, détruit avec lui
+          if [[ -n "${LANCEUR:-}" ]]; then
+            umask 077
+            printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_KEY=%s\n' \
+              "$SUPABASE_URL" "$SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_KEY" > .env
+          fi
+          echec=0
+          for palier in $PALIERS; do
+            if ! [[ "$palier" =~ ^[0-9]+(x[0-9]+)?$ ]]; then
+              echo "Palier invalide : $palier"
+              exit 1
+            fi
+            joueurs="${palier%x*}"
+            salons=1
+            [[ "$palier" == *x* ]] && salons="${palier#*x}"
+            echo "=== $joueurs joueurs, $salons salon(s)"
+            $LANCEUR node scripts/charge-salon.mjs --joueurs "$joueurs" --salons "$salons" || echec=1
+            sleep 60
+          done
+          exit $echec
+      # Preuve que le bridage a bien vu le trafic : compteurs à lire avec les mesures
+      - name: Compteurs du bridage
+        if: always() && inputs.debit != ''
+        run: |
+          tc -s qdisc show dev sortie
+          sudo ip netns exec salle tc -s qdisc show dev salle0

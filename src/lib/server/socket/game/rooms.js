@@ -1,4 +1,4 @@
-import { supabase } from "../../config.js";
+import { getAdminClient } from "../../config.js";
 import { customRooms, dbRooms, roomGames } from "../../state.js";
 import { resetCards } from "./cardFlow.js";
 import { DEFAULT_BREAK_DURATION, DEFAULT_ROUND_DURATION } from "./config.js";
@@ -12,6 +12,8 @@ export function sanitizePlayer(p) {
     foundArtist: p.foundArtist,
     foundTitle: p.foundTitle,
     foundFeats: p.foundFeats || [],
+    // Pseudo du profil : celui de la place peut être « Alice 2 »
+    profile: p.profileName,
   };
 }
 
@@ -62,6 +64,8 @@ export function getOrCreateRoom(roomId) {
       // Pseudos déjà écrits dans game_players pour la partie en cours — évite
       // qu'un joueur soit persisté deux fois (fin de partie + départ)
       savedPlayers: new Set(),
+      // Partis en cours de partie : comptés au classement final, ils peuvent revenir
+      departed: {},
       isSyncWaiting: false,
       readyPlayers: new Set(),
       readyTimer: null,
@@ -73,38 +77,54 @@ export function getOrCreateRoom(roomId) {
   return roomGames[roomId];
 }
 
+// Plus personne pour jouer : la partie s'arrête pour de bon, une nouvelle peut
+// démarrer. Sans inProgress à faux, une room gardée en mémoire resterait bloquée.
+export function stopGame(room) {
+  const { game } = room;
+  clearTimeout(room._emptyTimer);
+  clearInterval(game.interval);
+  clearTimeout(game.breakTimer);
+  clearTimeout(game.readyTimer);
+  game.interval = null;
+  game.breakTimer = null;
+  game.readyTimer = null;
+  game.isActive = false;
+  game.inProgress = false;
+  game.isSyncWaiting = false;
+  game.isPaused = false;
+  game._pausedState = null;
+  game._roundHeld = false;
+  if (game.dbGameId && !game._ended) {
+    game._ended = true;
+    (async () => {
+      await getAdminClient()
+        .from("games")
+        .update({ ended_at: new Date().toISOString() })
+        .eq("id", game.dbGameId);
+    })().catch(() => {});
+  }
+}
+
 export function cleanupRoom(roomId) {
   const room = roomGames[roomId];
   if (!room) return;
-  clearInterval(room.game.interval);
-  clearTimeout(room.game.breakTimer);
-  clearTimeout(room.game.readyTimer);
-  room.game.interval = null;
-  room.game.breakTimer = null;
-  room.game.readyTimer = null;
-  if (room.game.dbGameId && !room.game._ended) {
-    room.game._ended = true;
-    (async () => {
-      await supabase
-        .from("games")
-        .update({ ended_at: new Date().toISOString() })
-        .eq("id", room.game.dbGameId);
-    })().catch(() => {});
-  }
+  stopGame(room);
   delete roomGames[roomId];
   console.log(`Room "${roomId}" liberee de la memoire`);
 }
 
+export function resetPlayerRound(p) {
+  p.foundArtist = false;
+  p.foundTitle = false;
+  p.foundFeats = [];
+  p.foundExtras = [];
+  p._fullFoundCounted = false;
+  p._qcmAnswered = false;
+  p.guessesThisRound = 0;
+}
+
 export function resetRoundFlags(room) {
-  Object.keys(room.players).forEach((n) => {
-    room.players[n].foundArtist = false;
-    room.players[n].foundTitle = false;
-    room.players[n].foundFeats = [];
-    room.players[n].foundExtras = [];
-    room.players[n]._fullFoundCounted = false;
-    room.players[n]._qcmAnswered = false;
-    room.players[n].guessesThisRound = 0;
-  });
+  Object.values(room.players).forEach(resetPlayerRound);
 }
 
 export function resetScores(room, io) {

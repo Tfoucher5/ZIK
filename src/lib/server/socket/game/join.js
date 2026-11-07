@@ -8,6 +8,7 @@ import {
 } from "../../state.js";
 import { identifyPlayer } from "./cardFlow.js";
 import { cancelChatClear } from "./chat.js";
+import { accountName, seatName, verifiedAccount } from "./identity.js";
 import {
   autoStartCountdowns,
   beginGame,
@@ -15,6 +16,7 @@ import {
   findAccountSession,
   leaveRoom,
   releaseAccountSession,
+  restoreDeparted,
   startAutoCountdown,
 } from "./lobby.js";
 import { emitPlayers, getOrCreateRoom } from "./rooms.js";
@@ -27,6 +29,7 @@ const JOIN_ROOM = {
   isGuest: optional(bool()),
   takeover: optional(bool()),
   token: optional(str(8192)),
+  prevSid: optional(str(64)),
 };
 
 // Arrivée dans une room, lancement d'une partie, départ
@@ -39,32 +42,45 @@ export function registerJoin(socket, io) {
       isGuest,
       takeover,
       token,
+      prevSid,
     } = payload;
     let username = rawName;
     // Le pseudo sert de clé de room.players : « __proto__ » viserait Object.prototype
     if (!username.trim() || username.trim() in Object.prototype)
-      return socket.emit("error", "Pseudo requis");
+      return socket.emit("server_error", "Choisis un pseudo pour jouer.");
 
     // Client service : une room privée est invisible pour la clé anonyme
     if (!customRooms[roomId] && !dbRooms[roomId]) {
-      const { data: freshRoom } = await getAdminClient()
+      const { data: freshRoom, error } = await getAdminClient()
         .from("rooms")
         .select(
           "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id, is_public, is_official, game_mode",
         )
         .eq("code", roomId)
         .single();
-      if (!freshRoom) return socket.emit("error", "Room inconnue ou expiree");
+      // PGRST116 : aucune ligne. Toute autre erreur est une panne : la room existe
+      // peut-être, renvoyer le joueur le ferait sortir de sa partie.
+      if (!freshRoom && error && error.code !== "PGRST116")
+        return socket.emit("room_unavailable");
+      if (!freshRoom) return socket.emit("room_unknown");
       dbRooms[roomId] = freshRoom;
     }
 
-    username = username.trim();
+    const accountId = await verifiedAccount({ userId, isGuest, token });
+    const profileName = accountId ? await accountName(accountId) : null;
+    username = profileName ?? username.trim();
+    // Parti pendant les vérifications : son disconnect est déjà passé, personne
+    // ne libérerait la place
+    if (socket.connected === false) return;
 
     // Un compte ne tient qu'une session de jeu à la fois, toutes rooms
     // confondues : un second onglet doublerait son score. Rejoindre la même
     // room sous le même pseudo reste une reconnexion (géré plus bas).
-    if (userId && isGuest === false) {
-      const busy = findAccountSession(userId, roomId, username);
+    if (accountId) {
+      const busy = findAccountSession(accountId, roomId, username, [
+        socket.id,
+        prevSid,
+      ]);
       if (busy) {
         if (!takeover) {
           const meta = dbRooms[busy.roomId] || customRooms[busy.roomId] || {};
@@ -79,18 +95,25 @@ export function registerJoin(socket, io) {
     }
 
     const room = getOrCreateRoom(roomId);
+    const sameSocket = !!room.socketToName[socket.id];
+    // Calculé avant leaveRoom : qui rejoint sa propre room garde sa place
+    username = seatName(room, username, {
+      socketId: socket.id,
+      accountId,
+      prevSid,
+    });
 
     if (socket.currentRoom) leaveRoom(socket, socket.currentRoom, io);
 
     socket.join(`room:${roomId}`);
     socket.currentRoom = roomId;
-    socket.currentUser = { username, userId, isGuest };
+    restoreDeparted(room, username);
 
     if (!room.players[username]) {
       room.players[username] = {
         name: username,
-        userId: userId || null,
-        isGuest: isGuest !== false,
+        userId: accountId,
+        isGuest: !accountId,
         score: 0,
         foundArtist: false,
         foundTitle: false,
@@ -103,18 +126,39 @@ export function registerJoin(socket, io) {
       delete room.players[username]._dcTimer;
       const oldSocketId = room.nameToSocket[username];
       if (oldSocketId) delete room.socketToName[oldSocketId];
+      // Autre onglet encore ouvert : il ne jouerait plus, sans savoir pourquoi
+      if (oldSocketId && ![socket.id, prevSid].includes(oldSocketId)) {
+        const old = io.sockets?.sockets.get(oldSocketId);
+        old?.emit("session_taken_over");
+        old?.disconnect();
+      }
     }
 
     room.socketToName[socket.id] = username;
     room.nameToSocket[username] = socket.id;
 
     const joined = room.players[username];
-    identifyPlayer(joined, { token, userId }, socket)
-      .then(() => {
-        if (joined.cardsInPlay?.length)
-          socket.emit("cards_in_play", joined.cardsInPlay);
-      })
-      .catch(() => {});
+    joined._lastSocket = socket.id;
+    if (profileName) joined.profileName = profileName;
+    // Vérification ratée à l'arrivée, réussie maintenant : le compte retrouve
+    // sa place et ses points
+    if (accountId && !joined.userId) {
+      joined.userId = accountId;
+      joined.isGuest = false;
+    }
+    // Jeton déjà vérifié : un mauvais jeton ne coûte pas un second appel à l'auth.
+    // Un compte revenu pendant une panne d'auth garde ses droits aux cartes.
+    if (accountId || !joined.userId)
+      identifyPlayer(
+        joined,
+        { token: accountId ? token : null, userId: joined.userId },
+        socket,
+      )
+        .then(() => {
+          if (joined.cardsInPlay?.length)
+            socket.emit("cards_in_play", joined.cardsInPlay);
+        })
+        .catch(() => {});
 
     emitPlayers(room, io);
 
@@ -132,9 +176,9 @@ export function registerJoin(socket, io) {
     const autoStart = dbRoom?.auto_start || false;
     const ownerId = dbRoom?.owner_id || null;
     const isAdmin = !!(
-      userId &&
+      joined.userId &&
       ownerId &&
-      String(userId).trim().toLowerCase() ===
+      String(joined.userId).trim().toLowerCase() ===
         String(ownerId).trim().toLowerCase()
     );
 
@@ -154,8 +198,14 @@ export function registerJoin(socket, io) {
         hasOwner: !!ownerId,
         adminBlocked: room.game.adminBlocked ?? false,
         gameMode: room.game_mode || "classic",
+        // Ce que le serveur a retenu : le client s'y aligne
+        username,
+        isGuest: joined.isGuest,
       },
     });
+    // Nouvelle vérification du compte sur le même socket : rejouer la manche
+    // viderait la saisie du joueur et relancerait l'extrait
+    if (sameSocket) return;
     socket.emit("init_history", room.game.history);
 
     cancelChatClear(roomId);

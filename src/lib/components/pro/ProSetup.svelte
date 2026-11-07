@@ -1,7 +1,7 @@
 <script>
   import ProSection from './ProSection.svelte';
   import { BESOINS } from './proContent.js';
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS, TESTED_LABEL } from '$lib/data/proPlans.js';
 </script>
 
 <ProSection title="Ce qu'il vous faut">
@@ -9,7 +9,10 @@
     {#each BESOINS as b (b)}<li>{b}</li>{/each}
   </ul>
   <p>
-    Jusqu'à {FREE_MAX_PLAYERS} joueurs en version gratuite, sans limite avec ZIK Pro. Si quelqu'un perd sa
+    Jusqu'à {FREE_MAX_PLAYERS} joueurs en version gratuite. ZIK Pro n'impose pas de limite :
+    {TESTED_LABEL} dans un salon
+    (<a href="/docs#capacite">détail du test</a>). Dans une salle nombreuse, conseillez la 4G ou la 5G
+    aux joueurs si votre Wi-Fi est modeste. Si quelqu'un perd sa
     connexion en cours de route, il retrouve sa place et son score en
     rejoignant à nouveau.
   </p>

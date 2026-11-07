@@ -18,7 +18,7 @@
   import InviteFriendsModal from '$lib/components/game/InviteFriendsModal.svelte';
   import SessionNotices from '$lib/components/game/SessionNotices.svelte';
   import { GameAudio, savedVolume } from '$lib/components/game/gameAudio.js';
-  import { joinRoom } from '$lib/components/game/gameSocket.js';
+  import { joinPayload, joinRoom } from '$lib/components/game/gameSocket.js';
   import { GameSession } from '$lib/components/game/gameSession.svelte.js';
   import { gameHandlers } from '$lib/components/game/gameHandlers.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
@@ -40,13 +40,7 @@
     g.volume = savedVolume();
     g.player.startDriftGuard();
 
-    // Le jeton de session prouve au serveur que userId est bien le nôtre :
-    // sans lui, pas de carte
-    g.socket = await joinRoom(gameHandlers(g), async (extra = {}) => ({
-      roomId: g.roomId, username: g.username, userId: g.userId, isGuest: g.isGuest,
-      token: g.isGuest ? null : await g.getToken(),
-      ...extra,
-    }));
+    g.socket = await joinRoom(gameHandlers(g), joinPayload(g));
   });
 
   onDestroy(() => g.destroy());

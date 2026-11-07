@@ -5,6 +5,25 @@
 
 export const NEWS = [
   {
+    date: "2026-11-07",
+    version: "3.25.1",
+    tag: "Amélioration",
+    title: "En ligne : tes points restent, même si tu pars",
+    summary:
+      "Parties en ligne : si tu pars en cours de route, tes points restent au classement, et tu les retrouves en revenant.",
+    items: [
+      "Si tu quittes une partie en cours, tes points restent au classement final, marqués « a quitté ». Si tu reviens avant la fin, tu retrouves tes points et tes cartes.",
+      "Deux joueurs sous le même pseudo jouent chacun de leur côté : le second devient par exemple « Alice 2 ».",
+      "Si le dernier joueur attendu s'en va, la manche se termine sans attendre la fin du chrono.",
+      "Une mise à jour du site ou une room fermée en pleine partie ne fait plus perdre les points déjà marqués.",
+      "Un message t'explique ce qui se passe quand une room n'existe plus, a été fermée, ou quand ta session a expiré.",
+    ],
+    proItems: [
+      "La page ZIK Pro et la documentation indiquent la capacité réellement testée : 1 000 joueurs simulés dans un salon.",
+      "Les CGV sont reformulées sur ce point, sans garantie d'un nombre de joueurs.",
+    ],
+  },
+  {
     date: "2026-11-05",
     version: "3.24.0",
     tag: "Amélioration",
