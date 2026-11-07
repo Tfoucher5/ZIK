@@ -91,6 +91,7 @@ export function registerJoin(socket, io) {
     }
 
     const room = getOrCreateRoom(roomId);
+    const sameSocket = !!room.socketToName[socket.id];
     // Calculé avant leaveRoom : qui rejoint sa propre room garde sa place
     username = seatName(room, username, {
       socketId: socket.id,
@@ -133,17 +134,19 @@ export function registerJoin(socket, io) {
       joined.userId = accountId;
       joined.isGuest = false;
     }
-    // Jeton déjà vérifié : un mauvais jeton ne coûte pas un second appel à l'auth
-    identifyPlayer(
-      joined,
-      { token: accountId ? token : null, userId: joined.userId },
-      socket,
-    )
-      .then(() => {
-        if (joined.cardsInPlay?.length)
-          socket.emit("cards_in_play", joined.cardsInPlay);
-      })
-      .catch(() => {});
+    // Jeton déjà vérifié : un mauvais jeton ne coûte pas un second appel à l'auth.
+    // Un compte revenu pendant une panne d'auth garde ses droits aux cartes.
+    if (accountId || !joined.userId)
+      identifyPlayer(
+        joined,
+        { token: accountId ? token : null, userId: joined.userId },
+        socket,
+      )
+        .then(() => {
+          if (joined.cardsInPlay?.length)
+            socket.emit("cards_in_play", joined.cardsInPlay);
+        })
+        .catch(() => {});
 
     emitPlayers(room, io);
 
@@ -188,6 +191,9 @@ export function registerJoin(socket, io) {
         isGuest: joined.isGuest,
       },
     });
+    // Nouvelle vérification du compte sur le même socket : rejouer la manche
+    // viderait la saisie du joueur et relancerait l'extrait
+    if (sameSocket) return;
     socket.emit("init_history", room.game.history);
 
     cancelChatClear(roomId);

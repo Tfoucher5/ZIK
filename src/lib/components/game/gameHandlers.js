@@ -259,10 +259,9 @@ export function gameHandlers(g) {
       g.startDisabled = false;
       g.startLoading = false;
     },
-    accountUnverified() {
-      g.errorMsg =
-        "Ton compte n’a pas pu être vérifié : tes points ne comptent pas pour l’instant. Nouvel essai en cours.";
-      g.later("error", 6000, () => {
+    accountUnverified(msg) {
+      g.errorMsg = msg;
+      g.later("error", 8000, () => {
         g.errorMsg = "";
       });
     },

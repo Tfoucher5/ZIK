@@ -67,7 +67,7 @@ describe("compte non reconnu par le serveur", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("prévient une fois, retente au plus 3 fois, puis s'arrête", async () => {
+  it("prévient, retente au plus 3 fois, puis dit clairement que c'est fini", async () => {
     const h = page();
     await joinRoom(h, joinPayload(session()));
     await vi.advanceTimersByTimeAsync(0);
@@ -78,7 +78,10 @@ describe("compte non reconnu par le serveur", () => {
       await vi.advanceTimersByTimeAsync(10_000);
     }
 
-    expect(h.accountUnverified).toHaveBeenCalledTimes(1);
+    const messages = h.accountUnverified.mock.calls.map(([m]) => m);
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toContain("Nouvel essai");
+    expect(messages[1]).toContain("Recharge la page");
     expect(socket.emit).toHaveBeenCalledTimes(4);
     // Le jeton repart à chaque essai, le statut d'invité ne le coupe pas
     expect(envois().at(-1)).toMatchObject({ isGuest: false, token: "jwt" });
@@ -136,11 +139,11 @@ describe("la page s'aligne sur ce que le serveur a retenu", () => {
     expect(g).toMatchObject({ isGuest: false, canInviteFriends: true });
   });
 
-  it("le message n'annonce pas d'erreur définitive et s'efface", () => {
+  it("le message s'affiche puis s'efface", () => {
     let efface;
     const g = session({ later: (_, __, fn) => (efface = fn) });
-    gameHandlers(g).accountUnverified();
-    expect(g.errorMsg).toContain("Nouvel essai");
+    gameHandlers(g).accountUnverified("message");
+    expect(g.errorMsg).toBe("message");
     efface();
     expect(g.errorMsg).toBe("");
   });

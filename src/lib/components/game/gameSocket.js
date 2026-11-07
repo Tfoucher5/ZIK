@@ -1,5 +1,9 @@
 const ACCOUNT_RETRY_MS = 10_000;
 const ACCOUNT_RETRIES = 3;
+const ACCOUNT_RETRYING =
+  "Ton compte n’a pas pu être vérifié : tes points ne comptent pas pour l’instant. Nouvel essai en cours.";
+const ACCOUNT_GAVE_UP =
+  "Ton compte n’a toujours pas pu être vérifié : cette partie ne sera pas comptée. Recharge la page pour réessayer.";
 
 // Infos de join_room. Le jeton de session prouve au serveur que userId est bien
 // le nôtre ; figé à l'arrivée : un échec de vérification ne coupe pas les
@@ -52,7 +56,9 @@ export async function joinRoom(h, payload) {
     // Compte non reconnu (panne d'authentification) : la partie continue en
     // invité, on prévient et on retente pour ne pas perdre ses points
     if (roomConfig.isGuest && sent?.isGuest === false) {
-      if (accountRetries === 0) h.accountUnverified();
+      if (accountRetries === 0) h.accountUnverified(ACCOUNT_RETRYING);
+      if (accountRetries === ACCOUNT_RETRIES)
+        h.accountUnverified(ACCOUNT_GAVE_UP);
       if (accountRetries++ < ACCOUNT_RETRIES)
         setTimeout(() => {
           if (joined && socket.connected) join();
