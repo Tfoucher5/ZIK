@@ -12,6 +12,8 @@ export function sanitizePlayer(p) {
     foundArtist: p.foundArtist,
     foundTitle: p.foundTitle,
     foundFeats: p.foundFeats || [],
+    // Pseudo du profil : celui de la place peut être « Alice 2 »
+    profile: p.profileName,
   };
 }
 
@@ -73,38 +75,53 @@ export function getOrCreateRoom(roomId) {
   return roomGames[roomId];
 }
 
-export function cleanupRoom(roomId) {
-  const room = roomGames[roomId];
-  if (!room) return;
-  clearInterval(room.game.interval);
-  clearTimeout(room.game.breakTimer);
-  clearTimeout(room.game.readyTimer);
-  room.game.interval = null;
-  room.game.breakTimer = null;
-  room.game.readyTimer = null;
-  if (room.game.dbGameId && !room.game._ended) {
-    room.game._ended = true;
+// Plus personne pour jouer : la partie s'arrête pour de bon, une nouvelle peut
+// démarrer. Sans inProgress à faux, une room gardée en mémoire resterait bloquée.
+export function stopGame(room) {
+  const { game } = room;
+  clearInterval(game.interval);
+  clearTimeout(game.breakTimer);
+  clearTimeout(game.readyTimer);
+  game.interval = null;
+  game.breakTimer = null;
+  game.readyTimer = null;
+  game.isActive = false;
+  game.inProgress = false;
+  game.isSyncWaiting = false;
+  game.isPaused = false;
+  game._pausedState = null;
+  game._roundHeld = false;
+  if (game.dbGameId && !game._ended) {
+    game._ended = true;
     (async () => {
       await supabase
         .from("games")
         .update({ ended_at: new Date().toISOString() })
-        .eq("id", room.game.dbGameId);
+        .eq("id", game.dbGameId);
     })().catch(() => {});
   }
+}
+
+export function cleanupRoom(roomId) {
+  const room = roomGames[roomId];
+  if (!room) return;
+  stopGame(room);
   delete roomGames[roomId];
   console.log(`Room "${roomId}" liberee de la memoire`);
 }
 
+export function resetPlayerRound(p) {
+  p.foundArtist = false;
+  p.foundTitle = false;
+  p.foundFeats = [];
+  p.foundExtras = [];
+  p._fullFoundCounted = false;
+  p._qcmAnswered = false;
+  p.guessesThisRound = 0;
+}
+
 export function resetRoundFlags(room) {
-  Object.keys(room.players).forEach((n) => {
-    room.players[n].foundArtist = false;
-    room.players[n].foundTitle = false;
-    room.players[n].foundFeats = [];
-    room.players[n].foundExtras = [];
-    room.players[n]._fullFoundCounted = false;
-    room.players[n]._qcmAnswered = false;
-    room.players[n].guessesThisRound = 0;
-  });
+  Object.values(room.players).forEach(resetPlayerRound);
 }
 
 export function resetScores(room, io) {

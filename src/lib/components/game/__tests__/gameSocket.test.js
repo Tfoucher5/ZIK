@@ -100,6 +100,17 @@ describe("compte non reconnu par le serveur", () => {
     expect(h.accountUnverified).toHaveBeenCalledTimes(1);
   });
 
+  it("session expirée, pas de jeton : le dit tout de suite, aucun essai", async () => {
+    const h = page();
+    await joinRoom(h, joinPayload(session({ getToken: async () => null })));
+    await vi.advanceTimersByTimeAsync(0);
+    socket.handlers.room_joined({ roomConfig: { isGuest: true } });
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(socket.emit).toHaveBeenCalledTimes(1);
+    expect(h.accountUnverified.mock.calls[0][0]).toContain("session a expiré");
+  });
+
   it("invité volontaire : ni message ni essai", async () => {
     const h = page();
     await joinRoom(h, joinPayload(session({ isGuest: true, userId: null })));
@@ -121,6 +132,23 @@ describe("compte non reconnu par le serveur", () => {
 
     expect(socket.emit).toHaveBeenCalledTimes(1);
   });
+});
+
+describe("sortie imposée", () => {
+  for (const evt of ["admin_kicked", "room_force_closed"])
+    it(`${evt} : coupe, renvoie vers les rooms, ne rejoint plus`, async () => {
+      const kicked = vi.fn();
+      await joinRoom(page({ kicked }), joinPayload(session()));
+      await attendEnvois(1);
+      socket.handlers.connect();
+      socket.handlers[evt]({});
+      expect(socket.disconnect).toHaveBeenCalled();
+      expect(kicked).toHaveBeenCalledTimes(1);
+
+      socket.handlers.connect();
+      await new Promise((r) => setTimeout(r, 10));
+      expect(socket.emit).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("la page s'aligne sur ce que le serveur a retenu", () => {

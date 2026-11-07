@@ -20,7 +20,7 @@ export async function verifiedAccount({ userId, isGuest, token }) {
 }
 
 // Un compte joue sous le pseudo de son profil, pas sous celui qu'il annonce
-export async function accountName(accountId, fallback) {
+export async function accountName(accountId) {
   const res = await bounded(
     getAdminClient()
       .from("profiles")
@@ -28,14 +28,17 @@ export async function accountName(accountId, fallback) {
       .eq("id", accountId)
       .maybeSingle(),
   );
-  return res?.data?.username || fallback;
+  return res?.data?.username || null;
 }
 
 // Sa propre place, quel que soit le pseudo envoyé : celle de son compte, sinon
 // celle de ce client. L'id du dernier socket couvre le client qui revient, que
-// le serveur ait vu la coupure ou non.
+// le serveur ait vu la coupure ou non. Parti de la partie en cours compris.
 function ownSeat(room, { socketId, accountId, prevSid }) {
-  const players = Object.values(room.players);
+  const players = [
+    ...Object.values(room.players),
+    ...Object.values(room.game.departed ?? {}),
+  ];
   const sameClient = (p) =>
     p._lastSocket === socketId || (prevSid && p._lastSocket === prevSid);
   return (
@@ -46,14 +49,15 @@ function ownSeat(room, { socketId, accountId, prevSid }) {
 
 // Le pseudo est la clé de la place, score et compte compris : sans preuve, on ne
 // reprend qu'une place d'invité en délai de grâce (page rechargée). Sinon, deux
-// joueurs sous le même pseudo : le second devient « Alice 2 ».
-// shortcut: un compte renommé ainsi garde ce nom dans ses résultats et un lien de profil faux, à revoir si ça gêne
+// joueurs sous le même pseudo : le second devient « Alice 2 ». Le nom d'un joueur
+// parti reste pris : il figure au classement final.
+// shortcut: un compte renommé ainsi garde ce nom dans ses résultats de la partie, à revoir si ça gêne
 export function seatName(room, wanted, who) {
   const own = ownSeat(room, who);
   if (own) return own.name;
   for (let n = 1; ; n++) {
     const name = n === 1 ? wanted : `${wanted} ${n}`;
-    const player = room.players[name];
+    const player = room.players[name] ?? room.game.departed?.[name];
     if (!player) return name;
     if (!who.accountId && !player.userId && player._dcTimer) return name;
   }

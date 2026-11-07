@@ -2,6 +2,8 @@ const ACCOUNT_RETRY_MS = 10_000;
 const ACCOUNT_RETRIES = 3;
 const ACCOUNT_RETRYING =
   "Ton compte n’a pas pu être vérifié : tes points ne comptent pas pour l’instant. Nouvel essai en cours.";
+const SESSION_EXPIRED =
+  "Ta session a expiré : cette partie ne sera pas comptée. Reconnecte-toi pour garder tes points.";
 const ACCOUNT_GAVE_UP =
   "Ton compte n’a toujours pas pu être vérifié : cette partie ne sera pas comptée. Recharge la page pour réessayer.";
 
@@ -56,6 +58,8 @@ export async function joinRoom(h, payload) {
     // Compte non reconnu (panne d'authentification) : la partie continue en
     // invité, on prévient et on retente pour ne pas perdre ses points
     if (roomConfig.isGuest && sent?.isGuest === false) {
+      // Sans jeton, réessayer ne changerait rien
+      if (!sent.token) return h.accountUnverified(SESSION_EXPIRED);
       if (accountRetries === 0) h.accountUnverified(ACCOUNT_RETRYING);
       if (accountRetries === ACCOUNT_RETRIES)
         h.accountUnverified(ACCOUNT_GAVE_UP);
@@ -97,10 +101,13 @@ export async function joinRoom(h, payload) {
     joined = false;
     h.takenOver();
   });
-  socket.on("admin_kicked", () => {
+  const sentOut = () => {
+    joined = false;
     socket.disconnect();
     h.kicked();
-  });
+  };
+  socket.on("admin_kicked", sentOut);
+  socket.on("room_force_closed", sentOut);
   socket.on("admin_pause", h.adminPause);
   socket.on("admin_resume", h.adminResume);
   socket.on("admin_announce", ({ message }) => h.announce(message));

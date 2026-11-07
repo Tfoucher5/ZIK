@@ -45,9 +45,10 @@ export async function saveGameResults(roomId, finalScores, io) {
   const dbGameId = room.game.dbGameId;
   // _ended : partie déjà persistée — rejouer elo, stats et succès la compterait deux fois
   // Cartes provisoires des joueurs encore là : elles deviennent définitives.
-  // Idempotent : une carte déjà attribuée n'est plus en attente.
+  // Idempotent : une carte déjà attribuée n'est plus en attente. Celles d'un
+  // joueur parti ont été réglées à son départ.
   for (const p of finalScores)
-    if (p.userId && !p.isGuest)
+    if (p.userId && !p.isGuest && !p.left)
       await settleCards({
         game: room.game,
         name: p.name,
@@ -122,7 +123,9 @@ export async function saveGameResults(roomId, finalScores, io) {
           score: p.score,
           rank: i + 1,
           totalPlayers: finalScores.length,
-          correctRounds: room.players[p.name]?.roundsFullFound || 0,
+          correctRounds:
+            (room.players[p.name] ?? room.game.departed?.[p.name])
+              ?.roundsFullFound || 0,
           totalRounds,
         });
         const resultId = await saveGameResult({

@@ -16,6 +16,7 @@ import {
   findAccountSession,
   leaveRoom,
   releaseAccountSession,
+  restoreDeparted,
   startAutoCountdown,
 } from "./lobby.js";
 import { emitPlayers, getOrCreateRoom } from "./rooms.js";
@@ -46,7 +47,7 @@ export function registerJoin(socket, io) {
     let username = rawName;
     // Le pseudo sert de clé de room.players : « __proto__ » viserait Object.prototype
     if (!username.trim() || username.trim() in Object.prototype)
-      return socket.emit("error", "Pseudo requis");
+      return socket.emit("server_error", "Choisis un pseudo pour jouer.");
 
     // Client service : une room privée est invisible pour la clé anonyme
     if (!customRooms[roomId] && !dbRooms[roomId]) {
@@ -57,14 +58,17 @@ export function registerJoin(socket, io) {
         )
         .eq("code", roomId)
         .single();
-      if (!freshRoom) return socket.emit("error", "Room inconnue ou expiree");
+      if (!freshRoom)
+        return socket.emit(
+          "server_error",
+          "Cette room n’existe pas ou n’est plus disponible.",
+        );
       dbRooms[roomId] = freshRoom;
     }
 
     const accountId = await verifiedAccount({ userId, isGuest, token });
-    username = accountId
-      ? await accountName(accountId, username.trim())
-      : username.trim();
+    const profileName = accountId ? await accountName(accountId) : null;
+    username = profileName ?? username.trim();
     // Parti pendant les vérifications : son disconnect est déjà passé, personne
     // ne libérerait la place
     if (socket.connected === false) return;
@@ -103,6 +107,7 @@ export function registerJoin(socket, io) {
 
     socket.join(`room:${roomId}`);
     socket.currentRoom = roomId;
+    restoreDeparted(room, username);
 
     if (!room.players[username]) {
       room.players[username] = {
@@ -121,6 +126,12 @@ export function registerJoin(socket, io) {
       delete room.players[username]._dcTimer;
       const oldSocketId = room.nameToSocket[username];
       if (oldSocketId) delete room.socketToName[oldSocketId];
+      // Autre onglet encore ouvert : il ne jouerait plus, sans savoir pourquoi
+      if (oldSocketId && ![socket.id, prevSid].includes(oldSocketId)) {
+        const old = io.sockets?.sockets.get(oldSocketId);
+        old?.emit("session_taken_over");
+        old?.disconnect();
+      }
     }
 
     room.socketToName[socket.id] = username;
@@ -128,6 +139,7 @@ export function registerJoin(socket, io) {
 
     const joined = room.players[username];
     joined._lastSocket = socket.id;
+    if (profileName) joined.profileName = profileName;
     // Vérification ratée à l'arrivée, réussie maintenant : le compte retrouve
     // sa place et ses points
     if (accountId && !joined.userId) {

@@ -16,7 +16,7 @@
         <div class="g-strip-top">
           <span class="g-strip-rank">{String(i + 1).padStart(2, '0')}</span>
           <span class="g-strip-name">
-            <a href="/user/{p.name}" class="g-player-link" onclick={e => e.stopPropagation()}>{p.name}</a>
+            {#if p.isGuest}{p.name}{:else}<a href="/user/{p.profile ?? p.name}" class="g-player-link" onclick={e => e.stopPropagation()}>{p.name}</a>{/if}
             <span class="g-badges">
               <span class="g-badge {p.foundArtist ? 'found' : ''}" title={p.foundArtist ? 'Artiste trouvé' : 'Artiste pas encore trouvé'}>A</span>
               <span class="g-badge {p.foundTitle ? 'found' : ''}" title={p.foundTitle ? 'Titre trouvé' : 'Titre pas encore trouvé'}>T</span>
