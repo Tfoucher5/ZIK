@@ -116,6 +116,9 @@ describe("incidents pendant une partie de room", () => {
 
     const intrus = client();
     for (const payload of [undefined, null, 42, [], {}, { guess: 42 }, "x"]) {
+      // Un texte est une réponse valide : il consommerait la limite de débit
+      if (typeof payload !== "string")
+        alice.socket.emit("submit_guess", payload);
       alice.socket.emit("join_room", payload);
       alice.socket.emit("submit_choice", payload);
       intrus.socket.emit("submit_guess", payload);
@@ -139,7 +142,7 @@ describe("incidents pendant une partie de room", () => {
     for (let i = 0; i < 20; i++)
       alice.socket.emit("submit_guess", "qqqqqqqqqqqq");
     await pause(50);
-    expect(alice.de("feedback").length - avant).toBeLessThanOrEqual(4);
+    expect(alice.de("feedback").length - avant).toBe(4);
 
     await pause(1100);
     repondre(alice);

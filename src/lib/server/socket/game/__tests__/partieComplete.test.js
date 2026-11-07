@@ -136,6 +136,8 @@ describe("une partie complète de room", () => {
       ["carole", true],
     ]);
     expect(lignes().find((l) => l.username === "alice").rank).toBe(1);
+    for (const l of lignes())
+      expect(l.score).toBe(podium.find((p) => p.name === l.username).score);
     expect(
       stats()
         .map((s) => s.args.p_user_id)
@@ -190,17 +192,22 @@ describe("une partie complète de room", () => {
     await caler(1, alice, bob);
     repondre(bob);
     await bob.attend("feedback", 2);
+    const score = room().players.bob.score;
+    expect(score).toBeGreaterThan(0);
 
     bob.socket.disconnect();
-    await pause(5200);
-    expect(lignes()).toMatchObject([{ username: "bob", rank: null }]);
-    expect(stats()).toHaveLength(1);
-    expect(
-      alice
-        .de("update_players")
-        .at(-1)
-        .map((p) => p.name),
-    ).toEqual(["alice"]);
+    await vi.waitFor(() => expect(lignes()).toHaveLength(1), { timeout: 6000 });
+    expect(lignes()[0]).toMatchObject({ username: "bob", rank: null, score });
+    await vi.waitFor(() => expect(stats()).toHaveLength(1));
+    await vi.waitFor(() => expect(room().players.bob).toBeUndefined());
+    await vi.waitFor(() =>
+      expect(
+        alice
+          .de("update_players")
+          .at(-1)
+          .map((p) => p.name),
+      ).toEqual(["alice"]),
+    );
 
     // Revenu avant la fin : sa ligne existe déjà, elle n'est pas écrite deux fois
     const retour = await joueur("bob");
@@ -217,10 +224,12 @@ describe("une partie complète de room", () => {
     const alice = await joueur("alice");
     alice.socket.emit("request_new_game");
     await caler(1, alice);
+    const { game } = room();
 
     alice.socket.disconnect();
-    await pause(5200);
-    expect(room()).toBeUndefined();
+    await vi.waitFor(() => expect(room()).toBeUndefined(), { timeout: 6000 });
+    expect(game.interval).toBeNull();
+    expect(game.isActive).toBe(false);
   }, 20000);
 
   it("QCM : choix sans la bonne réponse, une seule réponse, pas de statistiques", async () => {

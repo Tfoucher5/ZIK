@@ -1,14 +1,15 @@
-import { expect, vi } from "vitest";
+import { vi } from "vitest";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { io as connectClient } from "socket.io-client";
 import { roomGames, dbRooms, playlistCache } from "../../../state.js";
 import { ytdlAudioCache } from "../../../audio/ytdlCache.js";
 import { register } from "../index.js";
 import { cleanupRoom } from "../rooms.js";
+import { pause, vraiClient } from "../../__tests__/vraiClient.js";
+
+export { pause };
 
 // Vrai serveur Socket.io et vrais clients pour jouer une partie de bout en bout
-export const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 export const extrait = (id) => `https://cdnt-preview.dzcdn.net/${id}.mp3`;
 
 export function partie(db) {
@@ -59,27 +60,7 @@ export function partie(db) {
     },
 
     client() {
-      const socket = connectClient(`http://localhost:${port}`, {
-        transports: ["websocket"],
-        forceNew: true,
-        reconnection: false,
-      });
-      const recus = [];
-      socket.onAny((event, data) => recus.push({ event, data }));
-      const c = {
-        socket,
-        recus,
-        de: (event) =>
-          recus.filter((r) => r.event === event).map((r) => r.data),
-        attend: (event, n = 1) =>
-          vi.waitFor(
-            () => {
-              expect(c.de(event).length).toBeGreaterThanOrEqual(n);
-              return c.de(event)[n - 1];
-            },
-            { timeout: 4000, interval: 10 },
-          ),
-      };
+      const c = vraiClient(port);
       clients.push(c);
       return c;
     },

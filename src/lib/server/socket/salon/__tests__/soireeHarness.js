@@ -1,10 +1,11 @@
-import { expect, vi } from "vitest";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { io as connectClient } from "socket.io-client";
 import { salonRooms } from "../../../state.js";
 import { registerSalon, createSalonRoom } from "../index.js";
 import { cleanupNow } from "../timers.js";
+import { pause, vraiClient } from "../../__tests__/vraiClient.js";
+
+export { pause };
 
 // Vrai serveur Socket.io et vrais clients pour jouer une soirée de bout en bout
 const TITRES = ["Papillonnage", "Hippopotamus", "Kaleidoscope", "Xylophonie"];
@@ -22,8 +23,6 @@ export const LIGNES_PLAYLIST = TITRES.map((title, i) => ({
   },
 }));
 const PLAYLIST = "11111111-1111-1111-1111-111111111111";
-
-export const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function soiree() {
   let http, server, port;
@@ -53,27 +52,7 @@ export function soiree() {
     },
 
     client() {
-      const socket = connectClient(`http://localhost:${port}`, {
-        transports: ["websocket"],
-        forceNew: true,
-        reconnection: false,
-      });
-      const recus = [];
-      socket.onAny((event, data) => recus.push({ event, data }));
-      const c = {
-        socket,
-        recus,
-        de: (event) =>
-          recus.filter((r) => r.event === event).map((r) => r.data),
-        attend: (event, n = 1) =>
-          vi.waitFor(
-            () => {
-              expect(c.de(event).length).toBeGreaterThanOrEqual(n);
-              return c.de(event)[n - 1];
-            },
-            { timeout: 4000, interval: 10 },
-          ),
-      };
+      const c = vraiClient(port);
       clients.push(c);
       return c;
     },
