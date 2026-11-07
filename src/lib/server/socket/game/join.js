@@ -58,11 +58,7 @@ export function registerJoin(socket, io) {
         )
         .eq("code", roomId)
         .single();
-      if (!freshRoom)
-        return socket.emit(
-          "server_error",
-          "Cette room n’existe pas ou n’est plus disponible.",
-        );
+      if (!freshRoom) return socket.emit("room_unknown");
       dbRooms[roomId] = freshRoom;
     }
 

@@ -1,7 +1,8 @@
 import { chatHistories, getIO, roomGames } from "../../state.js";
 import { addChatMessage } from "./chat.js";
 import { cancelAutoCountdown } from "./lobby.js";
-import { emitPlayers } from "./rooms.js";
+import { saveDeparted } from "./results.js";
+import { emitPlayers, stopGame } from "./rooms.js";
 import {
   announceRound,
   endRound,
@@ -151,9 +152,8 @@ export function adminCloseRoom(roomId) {
   const room = roomGames[roomId];
   if (!room) return false;
   const io = getIO();
-  clearInterval(room.game.interval);
-  clearTimeout(room.game.breakTimer);
-  clearTimeout(room.game.readyTimer);
+  saveDeparted(room).catch(() => {});
+  stopGame(room);
   io?.to(`room:${roomId}`).emit("room_force_closed", {
     message: "La room a été fermée par un administrateur.",
   });

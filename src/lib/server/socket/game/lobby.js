@@ -6,7 +6,7 @@ import { secureAt } from "./cardFlow.js";
 import { settleCards } from "./cardSettle.js";
 import { scheduleChatClear } from "./chat.js";
 import { AUTO_START_DELAY } from "./config.js";
-import { saveMidGamePlayer } from "./results.js";
+import { saveDeparted, saveMidGamePlayer } from "./results.js";
 import {
   cleanupRoom,
   resetPlayerRound,
@@ -140,23 +140,6 @@ export function restoreDeparted(room, name) {
   room.players[name] = player;
 }
 
-// Room vidée : pas de classement final à attendre, les scores partent en base
-function saveDeparted(room) {
-  const { game } = room;
-  const departed = Object.values(game.departed ?? {});
-  for (const player of departed) {
-    if (game.savedPlayers.has(player.name)) continue;
-    game.savedPlayers.add(player.name);
-    saveMidGamePlayer(
-      game.dbGameId,
-      player,
-      room.game_mode,
-      departed.length,
-    ).catch(() => {});
-  }
-  game.departed = {};
-}
-
 export function leaveRoom(socket, roomId, io) {
   const room = roomGames[roomId];
   if (!room) return;
@@ -190,36 +173,39 @@ export function leaveRoom(socket, roomId, io) {
           roomGames[roomId] === room &&
           room.game.dbGameId === dbGameId &&
           !room.game._ended;
-        // Partie en cours : il reste compté au classement final. Sinon (room
-        // libérée, partie déjà finie), son score part en base tout de suite.
-        if (owed && sameGame) {
-          const player = room.players[name];
+        // Absent : expulsé par l'admin pendant le délai de grâce
+        const player = room.players[name];
+        // Partie en cours : il reste compté au classement final et peut revenir,
+        // score et cartes attendent la fin de partie. Sinon (room libérée, partie
+        // déjà finie, expulsé), tout se règle maintenant.
+        if (owed && sameGame && player) {
           delete player._dcTimer;
           player.departedRound = room.game.currentRound;
           (room.game.departed ??= {})[name] = player;
-        } else if (owed) {
-          savedPlayers.add(name);
-          saveMidGamePlayer(
-            dbGameId,
-            playerSnapshot,
-            gameMode,
-            totalPlayers,
-          ).catch(() => {});
+        } else {
+          if (owed) {
+            savedPlayers.add(name);
+            saveMidGamePlayer(
+              dbGameId,
+              playerSnapshot,
+              gameMode,
+              totalPlayers,
+            ).catch(() => {});
+          }
+          // Cartes provisoires : gardées si le joueur a fait au moins la moitié
+          // des manches, perdues sinon
+          if (playerSnapshot.userId && !playerSnapshot.isGuest)
+            settleCards({
+              game: gameRef,
+              name,
+              userId: playerSnapshot.userId,
+              keep:
+                (playerSnapshot.roundsPresent || 0) >=
+                secureAt(gameRef.plannedRounds),
+            }).catch(() => {});
         }
 
-        // Cartes provisoires : gardées si le joueur a fait au moins la moitié
-        // des manches, perdues sinon
-        if (playerSnapshot.userId && !playerSnapshot.isGuest)
-          settleCards({
-            game: gameRef,
-            name,
-            userId: playerSnapshot.userId,
-            keep:
-              (playerSnapshot.roundsPresent || 0) >=
-              secureAt(gameRef.plannedRounds),
-          }).catch(() => {});
-
-        if (!roomGames[roomId]) return;
+        if (roomGames[roomId] !== room) return;
         delete room.players[name];
         const active = Object.values(room.players)
           .filter((p) => !p._dcTimer)
@@ -233,7 +219,7 @@ export function leaveRoom(socket, roomId, io) {
         } else {
           cancelAutoCountdown(roomId, null); // cancel silently — no players to notify
           scheduleChatClear(roomId);
-          saveDeparted(room);
+          saveDeparted(room).catch(() => {});
           stopGame(room);
           if (customRooms[roomId]) {
             room._emptyTimer = setTimeout(

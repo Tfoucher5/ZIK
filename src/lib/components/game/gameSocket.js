@@ -1,5 +1,6 @@
 const ACCOUNT_RETRY_MS = 10_000;
 const ACCOUNT_RETRIES = 3;
+const ROOM_UNKNOWN_DELAY_MS = 3000;
 const ACCOUNT_RETRYING =
   "Ton compte n’a pas pu être vérifié : tes points ne comptent pas pour l’instant. Nouvel essai en cours.";
 const SESSION_EXPIRED =
@@ -108,6 +109,11 @@ export async function joinRoom(h, payload) {
   };
   socket.on("admin_kicked", sentOut);
   socket.on("room_force_closed", sentOut);
+  // Lien périmé : rester sur une page vide n'avance à rien
+  socket.on("room_unknown", () => {
+    h.serverError("Cette room n’existe pas ou n’est plus disponible.");
+    setTimeout(sentOut, ROOM_UNKNOWN_DELAY_MS);
+  });
   socket.on("admin_pause", h.adminPause);
   socket.on("admin_resume", h.adminResume);
   socket.on("admin_announce", ({ message }) => h.announce(message));

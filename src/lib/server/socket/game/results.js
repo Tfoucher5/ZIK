@@ -4,7 +4,8 @@ import {
   saveGameResult,
 } from "../../services/achievements.js";
 import { bumpWeeklyChallenge } from "../../services/weeklyChallenge.js";
-import { customRooms, dbRooms } from "../../state.js";
+import { customRooms, dbRooms, roomGames } from "../../state.js";
+import { secureAt } from "./cardFlow.js";
 import { settleCards } from "./cardSettle.js";
 import { getOrCreateRoom } from "./rooms.js";
 
@@ -40,20 +41,64 @@ async function computeEloChanges(rankedPlayers) {
   return changes;
 }
 
+const keepsCards = (game, player) =>
+  (player?.roundsPresent || 0) >= secureAt(game.plannedRounds);
+
+// Pas de classement final à venir (room vidée, fermée, expirée, redémarrage) :
+// les scores des joueurs partis ne vivent qu'en mémoire, ils partent en base.
+export function saveDeparted(room) {
+  const { game } = room;
+  const departed = Object.values(game.departed ?? {});
+  game.departed = {};
+  return Promise.all(
+    departed.flatMap((player) => {
+      game.savedPlayers.add(player.name);
+      const jobs = [
+        saveMidGamePlayer(
+          game.dbGameId,
+          player,
+          room.game_mode,
+          departed.length,
+        ),
+      ];
+      if (player.userId && !player.isGuest)
+        jobs.push(
+          settleCards({
+            game,
+            name: player.name,
+            userId: player.userId,
+            keep: keepsCards(game, player),
+          }).catch(() => {}),
+        );
+      return jobs;
+    }),
+  );
+}
+
+const SIGTERM_BUDGET_MS = 5000;
+
+// Redémarrage : Railway n'attend pas indéfiniment
+export function saveAllDeparted() {
+  return Promise.race([
+    Promise.all(Object.values(roomGames).map(saveDeparted)),
+    new Promise((r) => setTimeout(r, SIGTERM_BUDGET_MS)),
+  ]);
+}
+
 export async function saveGameResults(roomId, finalScores, io) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
   // _ended : partie déjà persistée — rejouer elo, stats et succès la compterait deux fois
   // Cartes provisoires des joueurs encore là : elles deviennent définitives.
-  // Idempotent : une carte déjà attribuée n'est plus en attente. Celles d'un
-  // joueur parti ont été réglées à son départ.
+  // Idempotent : une carte déjà attribuée n'est plus en attente. Un joueur parti
+  // n'a de garanti que ce qu'il a gagné après la moitié des manches.
   for (const p of finalScores)
-    if (p.userId && !p.isGuest && !p.left)
+    if (p.userId && !p.isGuest)
       await settleCards({
         game: room.game,
         name: p.name,
         userId: p.userId,
-        keep: true,
+        keep: p.left ? keepsCards(room.game, room.game.departed[p.name]) : true,
         io,
         socketId: room.nameToSocket[p.name],
       }).catch(() => {});
@@ -63,6 +108,20 @@ export async function saveGameResults(roomId, finalScores, io) {
   room.game._ended = true;
   // Déjà comptés à leur départ (saveMidGamePlayer)
   const savedEarlier = new Set(room.game.savedPlayers);
+  // Un joueur déjà écrit (saveMidGamePlayer) a sa ligne : la réinsérer doublerait
+  // son score dans les classements. Marqué avant les await : un départ qui tombe
+  // pendant l'écriture ne le compte pas une seconde fois.
+  const players = finalScores
+    .map((p, i) => ({
+      game_id: dbGameId,
+      user_id: p.userId || null,
+      username: p.name,
+      score: p.score,
+      rank: i + 1,
+      is_guest: p.isGuest || !p.userId,
+    }))
+    .filter((row) => !savedEarlier.has(row.username));
+  finalScores.forEach((p) => room.game.savedPlayers.add(p.name));
 
   try {
     await supabase
@@ -70,20 +129,7 @@ export async function saveGameResults(roomId, finalScores, io) {
       .update({ ended_at: new Date().toISOString() })
       .eq("id", dbGameId);
 
-    // Un joueur parti en cours de partie a déjà sa ligne (saveMidGamePlayer) :
-    // le réinsérer doublerait son score dans les classements
-    const players = finalScores
-      .map((p, i) => ({
-        game_id: dbGameId,
-        user_id: p.userId || null,
-        username: p.name,
-        score: p.score,
-        rank: i + 1,
-        is_guest: p.isGuest || !p.userId,
-      }))
-      .filter((row) => !room.game.savedPlayers.has(row.username));
     if (players.length) await supabase.from("game_players").insert(players);
-    finalScores.forEach((p) => room.game.savedPlayers.add(p.name));
     finalScores.forEach((p) => {
       if (p.userId && !p.isGuest)
         bumpWeeklyChallenge("games_played", p.userId, 1);

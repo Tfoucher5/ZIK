@@ -77,8 +77,9 @@ describe("départs et retours", () => {
 
     bob.socket.disconnect();
     await parti("bob");
-    // Ses cartes ont été réglées à son départ : la fin de partie n'y touche plus
+    // Présent à moins de la moitié des manches : sa carte provisoire est perdue
     room().game.pendingGrants.bob = ["carte"];
+    expect(db.rpc.filter((r) => r.fn === "card_settle")).toEqual([]);
     repondre(alice);
 
     const podium = await alice.attend("game_over");
@@ -94,7 +95,9 @@ describe("départs et retours", () => {
     expect(lignes().every((l) => l.rank !== null)).toBe(true);
     expect(stats()).toHaveLength(2);
     expect(db.resultat).toHaveBeenCalledTimes(2);
-    expect(db.rpc.filter((r) => r.fn === "card_settle")).toEqual([]);
+    expect(db.rpc.filter((r) => r.fn === "card_settle")).toMatchObject([
+      { args: { p_user_id: "u-bob", p_keep: false } },
+    ]);
   }, 20000);
 
   it("le dernier joueur attendu part : la manche se clôt sans attendre le chrono", async () => {
@@ -227,7 +230,7 @@ describe("portes d'entrée", () => {
     db.room = null;
     const c = client();
     c.socket.emit("join_room", { roomId: h.code, username: "bob" });
-    expect(await c.attend("server_error")).toContain("n’existe pas");
+    await c.attend("room_unknown");
     expect(c.de("room_joined")).toEqual([]);
   });
 

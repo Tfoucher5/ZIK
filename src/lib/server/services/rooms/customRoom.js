@@ -1,4 +1,6 @@
 import { customRooms, roomGames } from "$lib/server/state.js";
+import { saveDeparted } from "$lib/server/socket/game/results.js";
+import { cleanupRoom } from "$lib/server/socket/game/rooms.js";
 
 const ROOM_TTL_MS = 4 * 60 * 60 * 1000;
 
@@ -35,8 +37,10 @@ export function createCustomRoom({
   };
 
   setTimeout(() => {
+    const room = roomGames[code];
+    if (room) saveDeparted(room).catch(() => {});
+    cleanupRoom(code);
     delete customRooms[code];
-    delete roomGames[code];
   }, ROOM_TTL_MS);
 
   return code;

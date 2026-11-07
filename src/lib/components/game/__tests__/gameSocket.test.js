@@ -151,6 +151,24 @@ describe("sortie imposée", () => {
     });
 });
 
+describe("room inconnue", () => {
+  it("le dit, puis renvoie vers les rooms", async () => {
+    vi.useFakeTimers();
+    try {
+      const kicked = vi.fn();
+      const serverError = vi.fn();
+      await joinRoom(page({ kicked, serverError }), joinPayload(session()));
+      socket.handlers.room_unknown();
+      expect(serverError.mock.calls[0][0]).toContain("n’existe pas");
+      expect(kicked).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(kicked).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe("la page s'aligne sur ce que le serveur a retenu", () => {
   const rejoint = (g, config) => gameHandlers(g).roomJoined(config);
 
