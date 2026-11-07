@@ -78,6 +78,10 @@ export async function beginGame(room, io) {
   // promesse si l'extrait n'est pas encore trouvé
   game._prefetchPromise = prefetchNextRound(roomId, io);
   game._prefetchPromise.catch(() => {});
+  // Insert en panne : un score ne doit pas aller sur la ligne de la partie d'avant
+  game.dbGameId = null;
+  game.savedPlayers = new Set();
+  game._ended = false;
   try {
     const { data } = await getAdminClient()
       .from("games")
@@ -88,11 +92,7 @@ export async function beginGame(room, io) {
       })
       .select()
       .single();
-    if (data) {
-      game.dbGameId = data.id;
-      game.savedPlayers = new Set();
-      game._ended = false;
-    }
+    if (data) game.dbGameId = data.id;
   } catch {
     /* non bloquant */
   }

@@ -16,6 +16,7 @@ vi.mock("$app/navigation", () => ({ goto: () => {} }));
 
 const { joinPayload, joinRoom } = await import("../gameSocket.js");
 const { gameHandlers } = await import("../gameHandlers.js");
+const { toastState } = await import("../../../client/toast.svelte.js");
 
 const envois = () => socket.emit.mock.calls.map(([, p]) => p);
 const attendEnvois = (n) =>
@@ -166,6 +167,41 @@ describe("room inconnue", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("room fermée", () => {
+  it("le joueur voit pourquoi en arrivant sur la liste des rooms", async () => {
+    await joinRoom(page({ kicked: () => {} }), joinPayload(session()));
+    socket.handlers.room_force_closed({ message: "Cette room a expiré." });
+    expect(toastState.msg).toBe("Cette room a expiré.");
+  });
+});
+
+describe("base indisponible", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("le dit et réessaie sans quitter la page", async () => {
+    const kicked = vi.fn();
+    const serverError = vi.fn();
+    await joinRoom(page({ kicked, serverError }), joinPayload(session()));
+    await vi.advanceTimersByTimeAsync(0);
+    socket.handlers.room_unavailable();
+    expect(serverError.mock.calls[0][0]).toContain("Nouvel essai");
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(socket.emit).toHaveBeenCalledTimes(2);
+    expect(kicked).not.toHaveBeenCalled();
+  });
+
+  it("page quittée entre-temps : pas de nouvel essai", async () => {
+    await joinRoom(page({ serverError: () => {} }), joinPayload(session()));
+    await vi.advanceTimersByTimeAsync(0);
+    socket.handlers.room_unavailable();
+    socket.connected = false;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(socket.emit).toHaveBeenCalledTimes(1);
   });
 });
 

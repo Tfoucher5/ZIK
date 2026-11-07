@@ -61,10 +61,7 @@ export function registerJoin(socket, io) {
       // PGRST116 : aucune ligne. Toute autre erreur est une panne : la room existe
       // peut-être, renvoyer le joueur le ferait sortir de sa partie.
       if (!freshRoom && error && error.code !== "PGRST116")
-        return socket.emit(
-          "server_error",
-          "Connexion à la room impossible pour l’instant. Recharge la page dans un moment.",
-        );
+        return socket.emit("room_unavailable");
       if (!freshRoom) return socket.emit("room_unknown");
       dbRooms[roomId] = freshRoom;
     }

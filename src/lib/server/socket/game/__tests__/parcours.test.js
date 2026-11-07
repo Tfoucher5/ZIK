@@ -243,7 +243,7 @@ describe("portes d'entrée", () => {
     db.erreurRoom = { code: "503", message: "indisponible" };
     const c = client();
     c.socket.emit("join_room", { roomId: h.code, username: "bob" });
-    expect(await c.attend("server_error")).toContain("Recharge la page");
+    await c.attend("room_unavailable");
     db.erreurRoom = null;
     expect(c.de("room_unknown")).toEqual([]);
   });

@@ -1,6 +1,9 @@
+import { toast } from "../../client/toast.svelte.js";
+
 const ACCOUNT_RETRY_MS = 10_000;
 const ACCOUNT_RETRIES = 3;
 const ROOM_UNKNOWN_DELAY_MS = 3000;
+const ROOM_RETRY_MS = 5000;
 const ACCOUNT_RETRYING =
   "Ton compte n’a pas pu être vérifié : tes points ne comptent pas pour l’instant. Nouvel essai en cours.";
 const SESSION_EXPIRED =
@@ -108,7 +111,19 @@ export async function joinRoom(h, payload) {
     h.kicked();
   };
   socket.on("admin_kicked", sentOut);
-  socket.on("room_force_closed", sentOut);
+  socket.on("room_force_closed", (d) => {
+    if (d?.message) toast(d.message);
+    sentOut();
+  });
+  // Base indisponible : la room existe peut-être, on réessaie sans quitter la page
+  socket.on("room_unavailable", () => {
+    h.serverError(
+      "Connexion à la room impossible pour l’instant. Nouvel essai en cours.",
+    );
+    setTimeout(() => {
+      if (joined && socket.connected) join({ prevSid: seatSocket });
+    }, ROOM_RETRY_MS);
+  });
   // Lien périmé : rester sur une page vide n'avance à rien
   socket.on("room_unknown", () => {
     h.serverError("Cette room n’existe pas ou n’est plus disponible.");

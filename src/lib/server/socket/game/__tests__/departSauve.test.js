@@ -143,6 +143,26 @@ describe("score d'un joueur parti", () => {
     expect(alice.de("game_over")[0].map((p) => p.name)).toContain("bob");
   });
 
+  it("revanche, insert en panne : pas de score sur la ligne d'avant, « Terminer » fonctionne", async () => {
+    ouvrir();
+    const alice = await joueur("alice");
+    alice.socket.emit("request_new_game");
+    await caler(1, alice);
+    repondre(alice);
+    await alice.attend("game_over");
+    await vi.waitFor(() => expect(lignes()).toHaveLength(1));
+
+    db.insertGameKo = true;
+    alice.socket.emit("request_new_game");
+    await alice.attend("start_round", 2);
+    db.insertGameKo = false;
+    expect(room().game.dbGameId).toBeNull();
+
+    await adminEndGame(h.code);
+    await alice.attend("game_over", 2);
+    expect(lignes()).toHaveLength(1);
+  });
+
   it("expulsé alors que connecté : ses cartes provisoires sont perdues", async () => {
     await partieAvecParti();
     room().game.pendingGrants.alice = ["carte"];

@@ -68,6 +68,7 @@ function connect(handlers) {
 function startFakeGame(roomId, name) {
   const room = roomGames[roomId];
   room.game.dbGameId = "game-1";
+  room.game.inProgress = true;
   room.game.currentRound = 3;
   room.game.savedPlayers = new Set();
   room.players[name].score = 42;

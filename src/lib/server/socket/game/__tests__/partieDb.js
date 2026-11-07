@@ -20,7 +20,7 @@ export function fauxConfig(db) {
     rooms: () => db.room,
     room_playlists: () => [{ playlist_id: "p", position: 0 }],
     custom_playlist_tracks: () => LIGNES,
-    games: () => ({ id: "partie" }),
+    games: () => (db.insertGameKo ? null : { id: "partie" }),
     profiles: () => db.profil ?? null,
   };
   const query = (table, anon) => {

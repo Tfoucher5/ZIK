@@ -116,7 +116,7 @@ export async function adminEndGame(roomId) {
   const room = roomGames[roomId];
   if (!room) return false;
   // Déjà finie : un second game_over remplacerait le classement à l'écran
-  if (room.game._ended) return true;
+  if (!room.game.inProgress) return true;
   // Une partie coupée par l'admin compte comme une partie jouée
   await finishGame(room, getIO());
   return true;
