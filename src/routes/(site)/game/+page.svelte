@@ -40,11 +40,12 @@
     g.volume = savedVolume();
     g.player.startDriftGuard();
 
-    // Le jeton de session prouve au serveur que userId est bien le nôtre :
-    // sans lui, pas de carte
+    // Le jeton de session prouve au serveur que userId est bien le nôtre : sans
+    // lui, on joue en invité. Une reconnexion le retente même après un échec.
+    const withAccount = !g.isGuest;
     g.socket = await joinRoom(gameHandlers(g), async (extra = {}) => ({
-      roomId: g.roomId, username: g.username, userId: g.userId, isGuest: g.isGuest,
-      token: g.isGuest ? null : await g.getToken(),
+      roomId: g.roomId, username: g.username, userId: g.userId, isGuest: !withAccount,
+      token: withAccount ? await g.getToken() : null,
       ...extra,
     }));
   });

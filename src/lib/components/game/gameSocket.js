@@ -10,12 +10,16 @@ export async function joinRoom(h, payload) {
     timeout: 10000,
   });
   let joined = false;
+  let lastId = null;
   const join = (extra) =>
     payload(extra).then((p) => socket.emit("join_room", p));
 
   socket.on("connect", () => {
     h.connected();
-    if (joined) join();
+    const prevSid = lastId;
+    lastId = socket.id;
+    // Au premier connect, le join_room du bas de la fonction est déjà en route
+    if (joined && prevSid) join({ prevSid });
   });
   socket.on("disconnect", h.disconnected);
   socket.on("room_joined", ({ roomConfig }) => {

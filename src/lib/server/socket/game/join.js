@@ -1,4 +1,5 @@
 import { getAdminClient } from "../../config.js";
+import { verifyToken } from "../../middleware/auth.js";
 import { loadPlaylist } from "../../services/music/playlist.js";
 import {
   chatHistories,
@@ -27,7 +28,46 @@ const JOIN_ROOM = {
   isGuest: optional(bool()),
   takeover: optional(bool()),
   token: optional(str(8192)),
+  prevSid: optional(str(64)),
 };
+
+// Le compte du joueur : seul un jeton valide le prouve, jamais le userId envoyé
+async function verifiedAccount({ userId, isGuest, token }) {
+  if (isGuest !== false || !userId || !token) return null;
+  const user = await verifyToken(token).catch(() => null);
+  return user?.id === userId ? user.id : null;
+}
+
+// Un compte joue sous le pseudo de son profil, pas sous celui qu'il annonce
+async function accountName(accountId, fallback) {
+  const { data } = await getAdminClient()
+    .from("profiles")
+    .select("username")
+    .eq("id", accountId)
+    .maybeSingle();
+  return data?.username || fallback;
+}
+
+// Le pseudo est la clé de la place, score et compte compris : on ne la reprend
+// qu'avec une preuve. L'id du socket précédent couvre le client qui revient
+// avant que le serveur ait vu la coupure. Un invité sans preuve ne reprend
+// qu'une place d'invité en délai de grâce (page rechargée).
+function canTakeSeat(room, player, { socketId, accountId, prevSid }) {
+  const holder = room.nameToSocket[player.name];
+  if (holder && (holder === socketId || holder === prevSid)) return true;
+  if (accountId) return player.userId === accountId;
+  return !player.userId && !!player._dcTimer;
+}
+
+// Deux joueurs sous le même pseudo : le second devient « Alice 2 »
+// shortcut: un compte renommé ainsi garde un lien de profil faux en fin de partie, à revoir si ça gêne
+function seatName(room, wanted, who) {
+  for (let n = 1; ; n++) {
+    const name = n === 1 ? wanted : `${wanted} ${n}`;
+    const player = room.players[name];
+    if (!player || canTakeSeat(room, player, who)) return name;
+  }
+}
 
 // Arrivée dans une room, lancement d'une partie, départ
 export function registerJoin(socket, io) {
@@ -39,6 +79,7 @@ export function registerJoin(socket, io) {
       isGuest,
       takeover,
       token,
+      prevSid,
     } = payload;
     let username = rawName;
     // Le pseudo sert de clé de room.players : « __proto__ » viserait Object.prototype
@@ -58,13 +99,16 @@ export function registerJoin(socket, io) {
       dbRooms[roomId] = freshRoom;
     }
 
-    username = username.trim();
+    const accountId = await verifiedAccount({ userId, isGuest, token });
+    username = accountId
+      ? await accountName(accountId, username.trim())
+      : username.trim();
 
     // Un compte ne tient qu'une session de jeu à la fois, toutes rooms
     // confondues : un second onglet doublerait son score. Rejoindre la même
     // room sous le même pseudo reste une reconnexion (géré plus bas).
-    if (userId && isGuest === false) {
-      const busy = findAccountSession(userId, roomId, username);
+    if (accountId) {
+      const busy = findAccountSession(accountId, roomId, username);
       if (busy) {
         if (!takeover) {
           const meta = dbRooms[busy.roomId] || customRooms[busy.roomId] || {};
@@ -79,18 +123,23 @@ export function registerJoin(socket, io) {
     }
 
     const room = getOrCreateRoom(roomId);
+    // Calculé avant leaveRoom : qui rejoint sa propre room garde sa place
+    username = seatName(room, username, {
+      socketId: socket.id,
+      accountId,
+      prevSid,
+    });
 
     if (socket.currentRoom) leaveRoom(socket, socket.currentRoom, io);
 
     socket.join(`room:${roomId}`);
     socket.currentRoom = roomId;
-    socket.currentUser = { username, userId, isGuest };
 
     if (!room.players[username]) {
       room.players[username] = {
         name: username,
-        userId: userId || null,
-        isGuest: isGuest !== false,
+        userId: accountId,
+        isGuest: !accountId,
         score: 0,
         foundArtist: false,
         foundTitle: false,
@@ -109,7 +158,7 @@ export function registerJoin(socket, io) {
     room.nameToSocket[username] = socket.id;
 
     const joined = room.players[username];
-    identifyPlayer(joined, { token, userId }, socket)
+    identifyPlayer(joined, { token, userId: joined.userId }, socket)
       .then(() => {
         if (joined.cardsInPlay?.length)
           socket.emit("cards_in_play", joined.cardsInPlay);
@@ -132,9 +181,9 @@ export function registerJoin(socket, io) {
     const autoStart = dbRoom?.auto_start || false;
     const ownerId = dbRoom?.owner_id || null;
     const isAdmin = !!(
-      userId &&
+      joined.userId &&
       ownerId &&
-      String(userId).trim().toLowerCase() ===
+      String(joined.userId).trim().toLowerCase() ===
         String(ownerId).trim().toLowerCase()
     );
 
@@ -154,6 +203,9 @@ export function registerJoin(socket, io) {
         hasOwner: !!ownerId,
         adminBlocked: room.game.adminBlocked ?? false,
         gameMode: room.game_mode || "classic",
+        // Ce que le serveur a retenu : le client s'y aligne
+        username,
+        isGuest: joined.isGuest,
       },
     });
     socket.emit("init_history", room.game.history);

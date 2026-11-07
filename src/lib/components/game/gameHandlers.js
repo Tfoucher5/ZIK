@@ -20,6 +20,9 @@ export function gameHandlers(g) {
         : "";
       g.roomLabel =
         `${roomConfig.emoji || ""} ${roomConfig.name || ""}${trackInfo}`.trim();
+      if (roomConfig.username) g.username = roomConfig.username;
+      g.isGuest = roomConfig.isGuest ?? g.isGuest;
+      g.canInviteFriends &&= !g.isGuest;
       g.autoStart = roomConfig.autoStart || false;
       g.isAdmin = roomConfig.isAdmin || false;
       g.hasOwner = roomConfig.hasOwner || false;

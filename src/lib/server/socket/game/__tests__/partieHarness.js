@@ -89,6 +89,7 @@ export function partie(db) {
         username,
         userId,
         isGuest: !userId,
+        token: userId ? `jeton:${userId}` : null,
       });
       await c.attend("room_joined");
       return c;

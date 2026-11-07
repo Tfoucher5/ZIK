@@ -16,9 +16,19 @@ vi.mock("../../../config.js", () => {
   });
   return {
     supabase: { from: table, rpc: async () => ({ data: null, error: null }) },
-    getAdminClient: () => ({ rpc: async () => ({ error: null }) }),
+    getAdminClient: () => ({
+      rpc: async () => ({ error: null }),
+      from: () => ({
+        select: () => ({
+          eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+        }),
+      }),
+    }),
   };
 });
+vi.mock("../../../middleware/auth.js", () => ({
+  verifyToken: async (token) => ({ id: token }),
+}));
 vi.mock("../../../services/achievements.js", () => ({
   checkAchievements: async () => [],
   saveGameResult: async () => null,
@@ -158,6 +168,7 @@ describe("un seul onglet par compte", () => {
     username,
     userId: "user-1",
     isGuest: false,
+    token: "user-1",
   });
 
   it("refuse un second pseudo pour le même compte", async () => {
