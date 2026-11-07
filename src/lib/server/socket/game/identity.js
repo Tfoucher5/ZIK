@@ -3,9 +3,9 @@ import { verifyToken } from "../../middleware/auth.js";
 
 // Qui est qui dans une room : ni le userId ni le pseudo envoyés ne font foi.
 
-// Authentification en panne : le joueur entre en invité plutôt que d'attendre,
-// et sa place n'expire pas pendant ce temps (délai de grâce de 5 s)
-const AUTH_TIMEOUT_MS = 3000;
+// Authentification en panne : le joueur entre en invité plutôt que d'attendre.
+// Deux attentes au plus à l'arrivée : la somme reste sous le délai de grâce (5 s)
+const AUTH_TIMEOUT_MS = 2000;
 const bounded = (promise) =>
   Promise.race([
     promise,

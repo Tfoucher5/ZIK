@@ -133,7 +133,12 @@ export function registerJoin(socket, io) {
       joined.userId = accountId;
       joined.isGuest = false;
     }
-    identifyPlayer(joined, { token, userId: joined.userId }, socket)
+    // Jeton déjà vérifié : un mauvais jeton ne coûte pas un second appel à l'auth
+    identifyPlayer(
+      joined,
+      { token: accountId ? token : null, userId: joined.userId },
+      socket,
+    )
       .then(() => {
         if (joined.cardsInPlay?.length)
           socket.emit("cards_in_play", joined.cardsInPlay);
