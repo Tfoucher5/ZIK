@@ -16,7 +16,7 @@ vi.mock("../../../config.js", () => {
   });
   return {
     supabase: { from: table, rpc: async () => ({ data: null, error: null }) },
-    getAdminClient: () => ({ rpc: async () => ({ error: null }) }),
+    getAdminClient: () => ({ from: table, rpc: async () => ({ error: null }) }),
   };
 });
 vi.mock("../../../services/achievements.js", () => ({

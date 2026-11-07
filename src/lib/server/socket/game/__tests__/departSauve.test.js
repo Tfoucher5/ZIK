@@ -36,9 +36,9 @@ vi.mock("../../../services/weeklyChallenge.js", () => ({
   bumpWeeklyChallenge: () => {},
 }));
 
-const { adminCloseRoom, adminKickPlayer, adminPauseRoom } =
+const { adminCloseRoom, adminEndGame, adminKickPlayer, adminPauseRoom } =
   await import("../index.js");
-const { saveAllDeparted } = await import("../results.js");
+const { saveAllPlayers } = await import("../results.js");
 const { partie, pause } = await import("./partieHarness.js");
 
 const h = partie(db);
@@ -89,11 +89,12 @@ describe("score d'un joueur parti", () => {
   it("redémarrage du serveur : écrit en base, attendu avant de quitter", async () => {
     const alice = await partieAvecParti();
 
-    await saveAllDeparted();
+    await saveAllPlayers();
 
     expect(lignes()).toMatchObject([{ username: "bob", score: 4, rank: null }]);
     expect(stats()).toHaveLength(1);
     expect(room().game.departed).toEqual({});
+    expect(db.ecrituresAnon).toEqual([]);
 
     // La partie reprise ensuite ne le réécrit pas
     repondre(alice);
@@ -101,11 +102,65 @@ describe("score d'un joueur parti", () => {
     expect(lignes().filter((l) => l.username === "bob")).toHaveLength(1);
   });
 
+  for (const [cas, sortir] of [
+    ["redémarrage", () => saveAllPlayers()],
+    ["fermeture par l'admin", () => adminCloseRoom(h.code)],
+  ])
+    it(`${cas} : les joueurs encore connectés gardent aussi leur score`, async () => {
+      await partieAvecParti();
+      room().players.alice.score = 6;
+
+      await sortir();
+
+      await vi.waitFor(() =>
+        expect(lignes().map((l) => [l.username, l.score])).toEqual([
+          ["bob", 4],
+          ["alice", 6],
+        ]),
+      );
+    });
+
+  it("partie déjà finie : un redémarrage ne réécrit rien", async () => {
+    ouvrir();
+    const alice = await joueur("alice");
+    alice.socket.emit("request_new_game");
+    await caler(1, alice);
+    repondre(alice);
+    await alice.attend("game_over");
+    await vi.waitFor(() => expect(lignes()).toHaveLength(1));
+
+    await saveAllPlayers();
+    expect(lignes()).toHaveLength(1);
+  });
+
+  it("l'admin termine deux fois : le classement à l'écran ne change pas", async () => {
+    const alice = await partieAvecParti();
+    await adminEndGame(h.code);
+    await adminEndGame(h.code);
+    await pause(30);
+
+    expect(alice.de("game_over")).toHaveLength(1);
+    expect(alice.de("game_over")[0].map((p) => p.name)).toContain("bob");
+  });
+
+  it("expulsé alors que connecté : ses cartes provisoires sont perdues", async () => {
+    await partieAvecParti();
+    room().game.pendingGrants.alice = ["carte"];
+
+    adminKickPlayer(h.code, "alice");
+
+    await vi.waitFor(() =>
+      expect(cartes()).toMatchObject([
+        { args: { p_user_id: "u-alice", p_keep: false } },
+      ]),
+    );
+  });
+
   it("présent à la moitié des manches : ses cartes restent acquises", async () => {
     await partieAvecParti();
     room().game.departed.bob.roundsPresent = 1;
 
-    await saveAllDeparted();
+    await saveAllPlayers();
 
     expect(cartes()).toMatchObject([{ args: { p_keep: true } }]);
   });

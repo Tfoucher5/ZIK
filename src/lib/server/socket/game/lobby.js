@@ -1,4 +1,4 @@
-import { supabase } from "../../config.js";
+import { getAdminClient } from "../../config.js";
 import { loadPlaylist } from "../../services/music/playlist.js";
 import { customRooms, roomGames } from "../../state.js";
 import { prefetchNextRound } from "./audio.js";
@@ -79,7 +79,7 @@ export async function beginGame(room, io) {
   game._prefetchPromise = prefetchNextRound(roomId, io);
   game._prefetchPromise.catch(() => {});
   try {
-    const { data } = await supabase
+    const { data } = await getAdminClient()
       .from("games")
       .insert({
         room_id: roomId,
@@ -133,7 +133,7 @@ export function releaseAccountSession({ roomId, name }, io) {
 // Le joueur parti puis revenu dans la même partie retrouve ses points. Manche
 // changée entre-temps : ce qu'il avait trouvé ne vaut plus.
 export function restoreDeparted(room, name) {
-  const player = room.game.departed?.[name];
+  const player = room.game.departed[name];
   if (!player) return;
   delete room.game.departed[name];
   if (player.departedRound !== room.game.currentRound) resetPlayerRound(player);
@@ -184,7 +184,7 @@ export function leaveRoom(socket, roomId, io) {
         if (owed && sameGame && mine) {
           delete player._dcTimer;
           player.departedRound = room.game.currentRound;
-          (room.game.departed ??= {})[name] = player;
+          room.game.departed[name] = player;
         } else {
           if (owed) {
             if (!newSeat) savedPlayers.add(name);

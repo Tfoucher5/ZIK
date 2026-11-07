@@ -7,7 +7,7 @@ import compression from "compression";
 const { handler } = await import("./build/handler.js");
 
 import { register } from "./src/lib/server/socket/game/index.js";
-import { saveAllDeparted } from "./src/lib/server/socket/game/results.js";
+import { saveAllPlayers } from "./src/lib/server/socket/game/results.js";
 import { registerSalon } from "./src/lib/server/socket/salon/index.js";
 import {
   freezeAndSaveAll,
@@ -89,7 +89,7 @@ startVideoResolver();
 process.once("SIGTERM", async () => {
   for (const code of Object.keys(salonRooms))
     io.to(`salon:${code}`).emit("salon_server_restart");
-  await Promise.all([freezeAndSaveAll(), saveAllDeparted()]);
+  await Promise.all([freezeAndSaveAll(), saveAllPlayers()]);
   process.exit(0);
 });
 

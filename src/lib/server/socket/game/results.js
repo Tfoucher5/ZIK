@@ -48,7 +48,7 @@ const keepsCards = (game, player) =>
 // les scores des joueurs partis ne vivent qu'en mémoire, ils partent en base.
 export function saveDeparted(room) {
   const { game } = room;
-  const departed = Object.values(game.departed ?? {});
+  const departed = Object.values(game.departed);
   game.departed = {};
   return Promise.all(
     departed.flatMap((player) => {
@@ -75,12 +75,23 @@ export function saveDeparted(room) {
   );
 }
 
+// Room fermée, expirée ou serveur qui redémarre : la partie s'arrête sans
+// classement final, les joueurs encore là sont comptés comme s'ils partaient
+export function saveEveryone(room) {
+  const { game } = room;
+  if (game.inProgress && game.dbGameId && !game._ended)
+    for (const player of Object.values(room.players))
+      if (player.score > 0 && !game.savedPlayers.has(player.name))
+        game.departed[player.name] = player;
+  return saveDeparted(room);
+}
+
 const SIGTERM_BUDGET_MS = 5000;
 
 // Redémarrage : Railway n'attend pas indéfiniment
-export function saveAllDeparted() {
+export function saveAllPlayers() {
   return Promise.race([
-    Promise.all(Object.values(roomGames).map(saveDeparted)),
+    Promise.all(Object.values(roomGames).map(saveEveryone)),
     new Promise((r) => setTimeout(r, SIGTERM_BUDGET_MS)),
   ]);
 }
@@ -126,12 +137,17 @@ export async function saveGameResults(roomId, finalScores, io, departed = {}) {
   if (!persist) return;
 
   try {
-    await supabase
+    const admin = getAdminClient();
+    await admin
       .from("games")
       .update({ ended_at: new Date().toISOString() })
       .eq("id", dbGameId);
 
-    if (players.length) await supabase.from("game_players").insert(players);
+    if (players.length) {
+      // Supabase ne lève pas : sans ce contrôle, un score perdu passerait inaperçu
+      const { error } = await admin.from("game_players").insert(players);
+      if (error) console.error("[rooms] joueurs de la partie :", error.message);
+    }
     finalScores.forEach((p) => {
       if (p.userId && !p.isGuest)
         bumpWeeklyChallenge("games_played", p.userId, 1);
@@ -148,7 +164,6 @@ export async function saveGameResults(roomId, finalScores, io, departed = {}) {
       : {};
 
     if (room.game_mode !== "qcm") {
-      const admin = getAdminClient();
       for (let i = 0; i < finalScores.length; i++) {
         const p = finalScores[i];
         if (p.userId && !p.isGuest && !savedEarlier.has(p.name)) {
@@ -209,7 +224,8 @@ export async function saveMidGamePlayer(
   totalPlayers,
 ) {
   try {
-    await supabase.from("game_players").insert({
+    const admin = getAdminClient();
+    const { error } = await admin.from("game_players").insert({
       game_id: dbGameId,
       user_id: player.userId || null,
       username: player.name,
@@ -217,8 +233,9 @@ export async function saveMidGamePlayer(
       rank: null,
       is_guest: player.isGuest || !player.userId,
     });
+    if (error) throw error;
     if (player.userId && !player.isGuest && gameMode !== "qcm") {
-      await getAdminClient().rpc("update_player_stats", {
+      await admin.rpc("update_player_stats", {
         p_user_id: player.userId,
         p_score: player.score,
         p_rank: null,

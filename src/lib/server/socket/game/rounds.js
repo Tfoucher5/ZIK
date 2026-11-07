@@ -274,7 +274,7 @@ export async function finishGame(room, io) {
   game._roundHeld = false;
   // Un joueur parti en cours de partie reste compté, avec ses points. Retiré
   // d'un coup : plus aucun autre chemin ne peut l'écrire ou le faire revenir.
-  const departed = game.departed ?? {};
+  const { departed } = game;
   game.departed = {};
   const finalScores = [
     ...Object.values(room.players).map((p) => ({

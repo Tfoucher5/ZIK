@@ -1,4 +1,4 @@
-import { supabase, getAdminClient } from "../../config.js";
+import { getAdminClient } from "../../config.js";
 import { gamePlayers } from "./departed.js";
 
 // Une partie salon n'a pas de ligne game_players : les invités n'ont pas de
@@ -8,7 +8,7 @@ import { gamePlayers } from "./departed.js";
 export async function recordSalonGameStart(salon) {
   salon.game.dbGameId = null;
   try {
-    const { data } = await supabase
+    const { data } = await getAdminClient()
       .from("games")
       .insert({
         room_id: salon.code,
@@ -55,7 +55,7 @@ export function recordSalonGameEnd(salon) {
   recordSalonPlayers(id, salon);
   const limitHits = salon.limitHits ?? 0;
   salon.limitHits = 0;
-  supabase
+  getAdminClient()
     .from("games")
     .update({
       ended_at: new Date().toISOString(),

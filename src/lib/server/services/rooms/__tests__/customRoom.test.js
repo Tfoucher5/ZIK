@@ -1,20 +1,24 @@
 import { describe, it, expect, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ saveDeparted: vi.fn(async () => {}) }));
+const m = vi.hoisted(() => ({
+  saveEveryone: vi.fn(async () => {}),
+  emit: vi.fn(),
+}));
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));
 vi.mock("../../../socket/game/results.js", () => ({
-  saveDeparted: m.saveDeparted,
+  saveEveryone: m.saveEveryone,
 }));
 
-const { customRooms, roomGames } = await import("../../../state.js");
+const { customRooms, roomGames, setIO } = await import("../../../state.js");
 const { createCustomRoom } = await import("../customRoom.js");
 
 describe("room éphémère", () => {
-  it("à 4 h : scores des joueurs partis sauvés, chronos arrêtés, room retirée", () => {
+  it("à 4 h : scores sauvés, joueurs prévenus, chronos arrêtés, room retirée", () => {
     vi.useFakeTimers();
+    setIO({ to: () => ({ emit: m.emit }) });
     vi.spyOn(console, "log").mockImplementation(() => {});
     try {
       const code = createCustomRoom({ name: "Test", tracks: [{}, {}, {}] });
@@ -28,7 +32,8 @@ describe("room éphémère", () => {
 
       vi.advanceTimersByTime(4 * 60 * 60 * 1000);
 
-      expect(m.saveDeparted).toHaveBeenCalledWith(room);
+      expect(m.saveEveryone).toHaveBeenCalledWith(room);
+      expect(m.emit.mock.calls[0][0]).toBe("room_force_closed");
       expect(room.game.interval).toBeNull();
       expect(roomGames[code]).toBeUndefined();
       expect(customRooms[code]).toBeUndefined();

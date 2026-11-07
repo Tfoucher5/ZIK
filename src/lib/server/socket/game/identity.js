@@ -37,7 +37,7 @@ export async function accountName(accountId) {
 function ownSeat(room, { socketId, accountId, prevSid }) {
   const players = [
     ...Object.values(room.players),
-    ...Object.values(room.game.departed ?? {}),
+    ...Object.values(room.game.departed),
   ];
   const sameClient = (p) =>
     p._lastSocket === socketId || (prevSid && p._lastSocket === prevSid);
@@ -57,7 +57,7 @@ export function seatName(room, wanted, who) {
   if (own) return own.name;
   for (let n = 1; ; n++) {
     const name = n === 1 ? wanted : `${wanted} ${n}`;
-    const player = room.players[name] ?? room.game.departed?.[name];
+    const player = room.players[name] ?? room.game.departed[name];
     if (!player) return name;
     if (!who.accountId && !player.userId && player._dcTimer) return name;
   }

@@ -1,4 +1,4 @@
-import { supabase } from "../../config.js";
+import { getAdminClient } from "../../config.js";
 import { customRooms, dbRooms, roomGames } from "../../state.js";
 import { resetCards } from "./cardFlow.js";
 import { DEFAULT_BREAK_DURATION, DEFAULT_ROUND_DURATION } from "./config.js";
@@ -64,6 +64,8 @@ export function getOrCreateRoom(roomId) {
       // Pseudos déjà écrits dans game_players pour la partie en cours — évite
       // qu'un joueur soit persisté deux fois (fin de partie + départ)
       savedPlayers: new Set(),
+      // Partis en cours de partie : comptés au classement final, ils peuvent revenir
+      departed: {},
       isSyncWaiting: false,
       readyPlayers: new Set(),
       readyTimer: null,
@@ -95,7 +97,7 @@ export function stopGame(room) {
   if (game.dbGameId && !game._ended) {
     game._ended = true;
     (async () => {
-      await supabase
+      await getAdminClient()
         .from("games")
         .update({ ended_at: new Date().toISOString() })
         .eq("id", game.dbGameId);

@@ -144,6 +144,7 @@ describe("une partie complète de room", () => {
         .sort(),
     ).toEqual(["u-alice", "u-bob"]);
     expect(db.resultat).toHaveBeenCalledTimes(2);
+    expect(db.ecrituresAnon).toEqual([]);
     expect(db.exec).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
 

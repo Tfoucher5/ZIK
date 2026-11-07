@@ -12,19 +12,17 @@ vi.mock("../snapshot.js", () => ({
 const inserts = [];
 const updates = [];
 vi.mock("../../../config.js", () => ({
-  supabase: {
-    from: () => ({
-      update: (row) => {
-        updates.push(row);
-        return { eq: () => ({ then: (r) => r({ error: null }) }) };
-      },
-    }),
-  },
+  // Clé publique absente : aucune écriture de partie ne doit passer par elle
+  supabase: {},
   getAdminClient: () => ({
     from: () => ({
       insert: (rows) => {
         inserts.push(rows);
         return { then: (r) => r({ error: null }) };
+      },
+      update: (row) => {
+        updates.push(row);
+        return { eq: () => ({ then: (r) => r({ error: null }) }) };
       },
     }),
   }),
