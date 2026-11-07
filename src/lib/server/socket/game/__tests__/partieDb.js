@@ -20,17 +20,22 @@ export function fauxConfig(db) {
     rooms: () => db.room,
     room_playlists: () => [{ playlist_id: "p", position: 0 }],
     custom_playlist_tracks: () => LIGNES,
-    games: () => ({ id: "partie" }),
+    games: () => (db.insertGameKo ? null : { id: "partie" }),
     profiles: () => db.profil ?? null,
   };
-  const query = (table) => {
+  const query = (table, anon) => {
     const chain = new Proxy(
       {},
       {
         get(_, name) {
+          if (anon && (name === "insert" || name === "update"))
+            (db.ecrituresAnon ??= []).push(table);
           if (name === "then")
             return (resolve) =>
-              resolve({ data: donnees[table]?.() ?? null, error: null });
+              resolve({
+                data: donnees[table]?.() ?? null,
+                error: table === "rooms" ? (db.erreurRoom ?? null) : null,
+              });
           if (name === "insert")
             return (rows) => {
               (db.inserts[table] ??= []).push(rows);
@@ -55,11 +60,15 @@ export function fauxConfig(db) {
         };
       },
     },
-    from: query,
+    from: (table) => query(table, false),
     rpc: async (fn, args) => {
       db.rpc.push({ fn, args });
       return { data: null, error: null };
     },
   };
-  return { supabase: client, getAdminClient: () => client };
+  return {
+    // Client distinct : une écriture avec la clé publique se voit dans les tests
+    supabase: { ...client, from: (table) => query(table, true) },
+    getAdminClient: () => client,
+  };
 }

@@ -16,7 +16,7 @@ vi.mock("../../../config.js", () => {
   });
   return {
     supabase: { from: table, rpc: async () => ({ data: null, error: null }) },
-    getAdminClient: () => ({ rpc: async () => ({ error: null }) }),
+    getAdminClient: () => ({ from: table, rpc: async () => ({ error: null }) }),
   };
 });
 vi.mock("../../../services/achievements.js", () => ({
@@ -68,6 +68,7 @@ function connect(handlers) {
 function startFakeGame(roomId, name) {
   const room = roomGames[roomId];
   room.game.dbGameId = "game-1";
+  room.game.inProgress = true;
   room.game.currentRound = 3;
   room.game.savedPlayers = new Set();
   room.players[name].score = 42;

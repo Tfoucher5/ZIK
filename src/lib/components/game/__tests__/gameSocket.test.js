@@ -16,6 +16,7 @@ vi.mock("$app/navigation", () => ({ goto: () => {} }));
 
 const { joinPayload, joinRoom } = await import("../gameSocket.js");
 const { gameHandlers } = await import("../gameHandlers.js");
+const { toastState } = await import("../../../client/toast.svelte.js");
 
 const envois = () => socket.emit.mock.calls.map(([, p]) => p);
 const attendEnvois = (n) =>
@@ -100,6 +101,17 @@ describe("compte non reconnu par le serveur", () => {
     expect(h.accountUnverified).toHaveBeenCalledTimes(1);
   });
 
+  it("session expirée, pas de jeton : le dit tout de suite, aucun essai", async () => {
+    const h = page();
+    await joinRoom(h, joinPayload(session({ getToken: async () => null })));
+    await vi.advanceTimersByTimeAsync(0);
+    socket.handlers.room_joined({ roomConfig: { isGuest: true } });
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(socket.emit).toHaveBeenCalledTimes(1);
+    expect(h.accountUnverified.mock.calls[0][0]).toContain("session a expiré");
+  });
+
   it("invité volontaire : ni message ni essai", async () => {
     const h = page();
     await joinRoom(h, joinPayload(session({ isGuest: true, userId: null })));
@@ -120,6 +132,95 @@ describe("compte non reconnu par le serveur", () => {
     await vi.advanceTimersByTimeAsync(10_000);
 
     expect(socket.emit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("sortie imposée", () => {
+  for (const evt of ["admin_kicked", "room_force_closed"])
+    it(`${evt} : coupe, renvoie vers les rooms, ne rejoint plus`, async () => {
+      const kicked = vi.fn();
+      await joinRoom(page({ kicked }), joinPayload(session()));
+      await attendEnvois(1);
+      socket.handlers.connect();
+      socket.handlers[evt]({});
+      expect(socket.disconnect).toHaveBeenCalled();
+      expect(kicked).toHaveBeenCalledTimes(1);
+
+      socket.handlers.connect();
+      await new Promise((r) => setTimeout(r, 10));
+      expect(socket.emit).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("room inconnue", () => {
+  it("le dit, puis renvoie vers les rooms", async () => {
+    vi.useFakeTimers();
+    try {
+      const kicked = vi.fn();
+      const serverError = vi.fn();
+      await joinRoom(page({ kicked, serverError }), joinPayload(session()));
+      socket.handlers.room_unknown();
+      expect(serverError.mock.calls[0][0]).toContain("n’existe pas");
+      expect(kicked).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(kicked).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("room fermée", () => {
+  it("le joueur voit pourquoi en arrivant sur la liste des rooms", async () => {
+    await joinRoom(page({ kicked: () => {} }), joinPayload(session()));
+    socket.handlers.room_force_closed({ message: "Cette room a expiré." });
+    expect(toastState.msg).toBe("Cette room a expiré.");
+  });
+});
+
+describe("base indisponible", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("le dit et réessaie sans quitter la page", async () => {
+    const kicked = vi.fn();
+    const serverError = vi.fn();
+    await joinRoom(page({ kicked, serverError }), joinPayload(session()));
+    await vi.advanceTimersByTimeAsync(0);
+    socket.handlers.room_unavailable();
+    expect(serverError.mock.calls[0][0]).toContain("Nouvel essai");
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(socket.emit).toHaveBeenCalledTimes(2);
+    expect(kicked).not.toHaveBeenCalled();
+  });
+
+  it("page quittée entre-temps : pas de nouvel essai", async () => {
+    await joinRoom(page({ serverError: () => {} }), joinPayload(session()));
+    await vi.advanceTimersByTimeAsync(0);
+    socket.handlers.room_unavailable();
+    socket.connected = false;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(socket.emit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("room inconnue, page quittée entre-temps", () => {
+  it("le joueur n'est pas renvoyé", async () => {
+    vi.useFakeTimers();
+    try {
+      const kicked = vi.fn();
+      await joinRoom(
+        page({ kicked, serverError: () => {} }),
+        joinPayload(session()),
+      );
+      socket.handlers.room_unknown();
+      socket.connected = false;
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(kicked).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

@@ -144,6 +144,7 @@ describe("une partie complète de room", () => {
         .sort(),
     ).toEqual(["u-alice", "u-bob"]);
     expect(db.resultat).toHaveBeenCalledTimes(2);
+    expect(db.ecrituresAnon).toEqual([]);
     expect(db.exec).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
 
@@ -184,7 +185,7 @@ describe("une partie complète de room", () => {
     await vi.waitFor(() => expect(lignes()).toHaveLength(2));
   }, 20000);
 
-  it("départ définitif : score enregistré une seule fois, la partie continue", async () => {
+  it("parti puis revenu dans la même manche : points gardés, rien de compté deux fois", async () => {
     ouvrir();
     const alice = await joueur("alice");
     const bob = await joueur("bob");
@@ -196,10 +197,11 @@ describe("une partie complète de room", () => {
     expect(score).toBeGreaterThan(0);
 
     bob.socket.disconnect();
-    await vi.waitFor(() => expect(lignes()).toHaveLength(1), { timeout: 6000 });
-    expect(lignes()[0]).toMatchObject({ username: "bob", rank: null, score });
-    await vi.waitFor(() => expect(stats()).toHaveLength(1));
-    await vi.waitFor(() => expect(room().players.bob).toBeUndefined());
+    await vi.waitFor(() => expect(room().players.bob).toBeUndefined(), {
+      timeout: 6000,
+    });
+    // Rien en base tant que la partie continue : il peut revenir
+    expect(lignes()).toEqual([]);
     await vi.waitFor(() =>
       expect(
         alice
@@ -209,13 +211,20 @@ describe("une partie complète de room", () => {
       ).toEqual(["alice"]),
     );
 
-    // Revenu avant la fin : sa ligne existe déjà, elle n'est pas écrite deux fois
+    // Même manche : ses réponses restent acquises, il ne remarque pas deux fois
     const retour = await joueur("bob");
+    expect(room().players.bob.score).toBe(score);
     repondre(alice);
     repondre(retour);
-    await alice.attend("game_over");
+    const podium = await alice.attend("game_over");
     await alice.attend("game_result_id");
-    expect(lignes().map((l) => l.username)).toEqual(["bob", "alice"]);
+    expect(podium.find((p) => p.name === "bob")).toMatchObject({
+      score,
+      left: false,
+    });
+    expect(lignes().filter((l) => l.username === "bob")).toMatchObject([
+      { score },
+    ]);
     expect(stats()).toHaveLength(2);
   }, 20000);
 

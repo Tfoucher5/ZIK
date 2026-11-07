@@ -1,4 +1,6 @@
-import { customRooms, roomGames } from "$lib/server/state.js";
+import { customRooms, getIO, roomGames } from "../../state.js";
+import { saveEveryone } from "../../socket/game/results.js";
+import { cleanupRoom } from "../../socket/game/rooms.js";
 
 const ROOM_TTL_MS = 4 * 60 * 60 * 1000;
 
@@ -35,8 +37,15 @@ export function createCustomRoom({
   };
 
   setTimeout(() => {
+    const room = roomGames[code];
+    if (room) {
+      saveEveryone(room);
+      getIO()
+        ?.to(`room:${code}`)
+        .emit("room_force_closed", { message: "Cette room a expiré." });
+    }
+    cleanupRoom(code);
     delete customRooms[code];
-    delete roomGames[code];
   }, ROOM_TTL_MS);
 
   return code;

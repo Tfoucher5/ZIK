@@ -75,7 +75,8 @@
           >
             <span class="g-go-tnum">{String(i + 1).padStart(2, '0')}</span>
             <span class="g-go-tname">
-              {#if p.isGuest}{p.name} <span class="g-go-guest">(invit&eacute;)</span>{:else}<a href="/user/{p.name}" class="g-go-link">{p.name}</a>{/if}
+              {#if p.isGuest}{p.name} <span class="g-go-guest">(invit&eacute;)</span>{:else}<a href="/user/{p.profile ?? p.name}" class="g-go-link">{p.name}</a>{/if}
+              {#if p.left}<span class="g-go-guest">(a quitt&eacute;)</span>{/if}
               {#if p.name === username}<span class="g-go-tyou">TOI</span>{/if}
             </span>
             <span class="g-go-tfill"></span>

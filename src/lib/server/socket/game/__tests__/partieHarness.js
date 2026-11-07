@@ -44,6 +44,7 @@ export function partie(db) {
       ytdlAudioCache.clear();
       db.inserts = {};
       db.rpc = [];
+      db.ecrituresAnon = [];
       db.preview.mockReset().mockImplementation(async (id) => extrait(id));
     },
 
