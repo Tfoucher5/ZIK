@@ -36,9 +36,10 @@ vi.mock("../../../services/weeklyChallenge.js", () => ({
   bumpWeeklyChallenge: () => {},
 }));
 
-const { adminCloseRoom, adminKickPlayer } = await import("../index.js");
+const { adminCloseRoom, adminKickPlayer, adminPauseRoom } =
+  await import("../index.js");
 const { saveAllDeparted } = await import("../results.js");
-const { partie } = await import("./partieHarness.js");
+const { partie, pause } = await import("./partieHarness.js");
 
 const h = partie(db);
 const { ouvrir, joueur, room, repondre, caler, lignes, stats } = h;
@@ -128,6 +129,62 @@ describe("score d'un joueur parti", () => {
     await joueur("bob");
     expect(room().game.pendingGrants.bob).toEqual(["carte"]);
   }, 20000);
+
+  it("expulsé pendant le délai de grâce puis revenu : ancien score écrit, nouvelle place intacte", async () => {
+    ouvrir({ max_rounds: 1 });
+    const alice = await joueur("alice");
+    const bob = await joueur("bob");
+    alice.socket.emit("request_new_game");
+    await caler(1, alice, bob);
+    repondre(bob);
+    await bob.attend("feedback", 2);
+    const ancien = room().players.bob.score;
+
+    bob.socket.disconnect();
+    await vi.waitFor(() => expect(room().players.bob._dcTimer).toBeDefined());
+    adminKickPlayer(h.code, "bob");
+    const retour = await joueur("bob");
+    await vi.waitFor(() => expect(lignes()).toHaveLength(1), { timeout: 6000 });
+
+    expect(lignes()[0]).toMatchObject({ username: "bob", score: ancien });
+    expect(room().players.bob).toMatchObject({ score: 0 });
+    expect(room().socketToName[retour.socket.id]).toBe("bob");
+    expect(room().game.departed.bob).toBeUndefined();
+
+    // Sa nouvelle place a sa propre ligne en fin de partie
+    repondre(alice);
+    repondre(retour);
+    await retour.attend("game_over");
+    await vi.waitFor(() => expect(lignes()).toHaveLength(3));
+  }, 20000);
+
+  it("pause admin : un départ ne clôt pas la manche sous l'écran de pause", async () => {
+    ouvrir();
+    const alice = await joueur("alice");
+    const bob = await joueur("bob");
+    alice.socket.emit("request_new_game");
+    await caler(1, alice, bob);
+    repondre(alice);
+    await alice.attend("feedback", 2);
+    adminPauseRoom(h.code);
+
+    bob.socket.disconnect();
+    await vi.waitFor(() => expect(room().players.bob).toBeUndefined(), {
+      timeout: 6000,
+    });
+    await pause(30);
+    expect(alice.de("round_end")).toEqual([]);
+  }, 20000);
+
+  it("fermeture admin : une room éphémère recréée n'est pas tuée par l'ancien minuteur", async () => {
+    await partieAvecParti();
+    const ancien = vi.fn();
+    room()._emptyTimer = setTimeout(ancien, 30);
+
+    adminCloseRoom(h.code);
+    await pause(60);
+    expect(ancien).not.toHaveBeenCalled();
+  });
 
   it("expulsé pendant le délai de grâce : pas de plantage, la room suit son cours", async () => {
     const erreurs = [];

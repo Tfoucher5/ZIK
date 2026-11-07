@@ -8,6 +8,7 @@ const db = vi.hoisted(() => ({
   liberer: null,
   bloque: null,
   settle: vi.fn(),
+  resultat: vi.fn(async () => null),
 }));
 
 // Une seule attente, partagée : le départ d'alice règle aussi ses cartes
@@ -34,7 +35,7 @@ vi.mock("../../../config.js", () => {
 });
 vi.mock("../../../services/achievements.js", () => ({
   checkAchievements: async () => [],
-  saveGameResult: async () => null,
+  saveGameResult: (...args) => db.resultat(...args),
 }));
 vi.mock("../../../services/weeklyChallenge.js", () => ({
   bumpWeeklyChallenge: () => {},
@@ -59,6 +60,8 @@ beforeEach(() => {
   db.stats = [];
   db.attente = null;
   db.settle.mockClear();
+  db.resultat.mockClear();
+  db.bloque = null;
 });
 afterEach(() => {
   delete roomGames.X;
@@ -94,6 +97,18 @@ function salle() {
   };
   return roomGames.X;
 }
+
+describe("deux fins de partie simultanées", () => {
+  it("résultats et succès ne sont écrits qu'une fois", async () => {
+    const room = salle();
+    await Promise.all([finishGame(room, io), finishGame(room, io)]);
+    expect(db.resultat).toHaveBeenCalledTimes(2);
+    expect(db.resultat.mock.calls.map(([r]) => r.username).sort()).toEqual([
+      "alice",
+      "bob",
+    ]);
+  });
+});
 
 describe("la room se vide pendant la fin de partie", () => {
   for (const [cas, bloque] of [

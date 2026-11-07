@@ -68,7 +68,7 @@ export function saveDeparted(room) {
             name: player.name,
             userId: player.userId,
             keep: keepsCards(game, player),
-          }).catch(() => {}),
+          }).catch((e) => console.error("[cards] départ :", e.message)),
         );
       return jobs;
     }),

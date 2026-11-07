@@ -79,6 +79,7 @@ export function getOrCreateRoom(roomId) {
 // démarrer. Sans inProgress à faux, une room gardée en mémoire resterait bloquée.
 export function stopGame(room) {
   const { game } = room;
+  clearTimeout(room._emptyTimer);
   clearInterval(game.interval);
   clearTimeout(game.breakTimer);
   clearTimeout(game.readyTimer);

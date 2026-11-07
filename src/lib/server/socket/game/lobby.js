@@ -163,7 +163,7 @@ export function leaveRoom(socket, roomId, io) {
       const gameMode = room.game_mode;
       const totalPlayers = Object.keys(room.players).length;
 
-      room.players[name]._dcTimer = setTimeout(() => {
+      const graceTimer = setTimeout(() => {
         const owed =
           wasInGame &&
           dbGameId &&
@@ -173,18 +173,21 @@ export function leaveRoom(socket, roomId, io) {
           roomGames[roomId] === room &&
           room.game.dbGameId === dbGameId &&
           !room.game._ended;
-        // Absent : expulsé par l'admin pendant le délai de grâce
         const player = room.players[name];
+        const mine = player?._dcTimer === graceTimer;
+        // Expulsé par l'admin pendant le délai de grâce puis revenu : cette place
+        // est une nouvelle partie pour lui, elle garde sa propre ligne
+        const newSeat = !!player && !mine;
         // Partie en cours : il reste compté au classement final et peut revenir,
         // score et cartes attendent la fin de partie. Sinon (room libérée, partie
         // déjà finie, expulsé), tout se règle maintenant.
-        if (owed && sameGame && player) {
+        if (owed && sameGame && mine) {
           delete player._dcTimer;
           player.departedRound = room.game.currentRound;
           (room.game.departed ??= {})[name] = player;
         } else {
           if (owed) {
-            savedPlayers.add(name);
+            if (!newSeat) savedPlayers.add(name);
             saveMidGamePlayer(
               dbGameId,
               playerSnapshot,
@@ -202,10 +205,10 @@ export function leaveRoom(socket, roomId, io) {
               keep:
                 (playerSnapshot.roundsPresent || 0) >=
                 secureAt(gameRef.plannedRounds),
-            }).catch(() => {});
+            }).catch((e) => console.error("[cards] départ :", e.message));
         }
 
-        if (roomGames[roomId] !== room) return;
+        if (roomGames[roomId] !== room || newSeat) return;
         delete room.players[name];
         const active = Object.values(room.players)
           .filter((p) => !p._dcTimer)
@@ -214,12 +217,13 @@ export function leaveRoom(socket, roomId, io) {
 
         // Un joueur encore en délai de grâce peut revenir : la room vit encore
         if (Object.keys(room.players).length > 0) {
-          // Il était peut-être le dernier attendu : la manche se clôt sans lui
-          checkEveryoneFound(roomId, io);
+          // Il était peut-être le dernier attendu : la manche se clôt sans lui.
+          // Pas pendant une pause admin : la réponse serait révélée sous l'écran.
+          if (!room.game.isPaused) checkEveryoneFound(roomId, io);
         } else {
           cancelAutoCountdown(roomId, null); // cancel silently — no players to notify
           scheduleChatClear(roomId);
-          saveDeparted(room).catch(() => {});
+          saveDeparted(room);
           stopGame(room);
           if (customRooms[roomId]) {
             room._emptyTimer = setTimeout(
@@ -231,6 +235,7 @@ export function leaveRoom(socket, roomId, io) {
           }
         }
       }, 5_000);
+      room.players[name]._dcTimer = graceTimer;
     }
   }
   socket.leave(`room:${roomId}`);

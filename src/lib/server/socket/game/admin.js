@@ -152,7 +152,7 @@ export function adminCloseRoom(roomId) {
   const room = roomGames[roomId];
   if (!room) return false;
   const io = getIO();
-  saveDeparted(room).catch(() => {});
+  saveDeparted(room);
   stopGame(room);
   io?.to(`room:${roomId}`).emit("room_force_closed", {
     message: "La room a été fermée par un administrateur.",

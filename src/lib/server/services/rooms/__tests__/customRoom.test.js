@@ -1,15 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
 
 const m = vi.hoisted(() => ({ saveDeparted: vi.fn(async () => {}) }));
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));
-vi.mock("$lib/server/socket/game/results.js", () => ({
+vi.mock("../../../socket/game/results.js", () => ({
   saveDeparted: m.saveDeparted,
 }));
 
-const { customRooms, roomGames } = await import("$lib/server/state.js");
+const { customRooms, roomGames } = await import("../../../state.js");
 const { createCustomRoom } = await import("../customRoom.js");
 
 describe("room éphémère", () => {
