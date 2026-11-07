@@ -20,6 +20,9 @@ export function gameHandlers(g) {
         : "";
       g.roomLabel =
         `${roomConfig.emoji || ""} ${roomConfig.name || ""}${trackInfo}`.trim();
+      if (roomConfig.username) g.username = roomConfig.username;
+      g.isGuest = roomConfig.isGuest ?? g.isGuest;
+      g.canInviteFriends = !g.isGuest && !!g.userId;
       g.autoStart = roomConfig.autoStart || false;
       g.isAdmin = roomConfig.isAdmin || false;
       g.hasOwner = roomConfig.hasOwner || false;
@@ -255,6 +258,12 @@ export function gameHandlers(g) {
       });
       g.startDisabled = false;
       g.startLoading = false;
+    },
+    accountUnverified(msg) {
+      g.errorMsg = msg;
+      g.later("error", 8000, () => {
+        g.errorMsg = "";
+      });
     },
     joinRefused(info) {
       g.joinConflict = info;

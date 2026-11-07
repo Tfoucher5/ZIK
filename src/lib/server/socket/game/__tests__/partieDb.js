@@ -21,6 +21,7 @@ export function fauxConfig(db) {
     room_playlists: () => [{ playlist_id: "p", position: 0 }],
     custom_playlist_tracks: () => LIGNES,
     games: () => ({ id: "partie" }),
+    profiles: () => db.profil ?? null,
   };
   const query = (table) => {
     const chain = new Proxy(
@@ -42,6 +43,18 @@ export function fauxConfig(db) {
     return chain;
   };
   const client = {
+    // Jeton de test : « jeton:<id du compte> »
+    auth: {
+      getUser: async (token) => {
+        await db.attenteAuth?.();
+        return {
+          data: {
+            user: token.startsWith("jeton:") ? { id: token.slice(6) } : null,
+          },
+          error: null,
+        };
+      },
+    },
     from: query,
     rpc: async (fn, args) => {
       db.rpc.push({ fn, args });

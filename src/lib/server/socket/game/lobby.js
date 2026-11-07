@@ -95,13 +95,15 @@ export async function beginGame(room, io) {
 /**
  * Session de jeu déjà ouverte par ce compte, toutes rooms confondues.
  * Un joueur en délai de grâce (_dcTimer) ne compte pas : son onglet est parti.
- * Rejoindre la room où il joue déjà, sous le même pseudo, est une reconnexion.
+ * Rejoindre la room où il joue déjà, sous le même pseudo ou depuis le même
+ * client (mySockets), est une reconnexion.
  */
-export function findAccountSession(userId, roomId, username) {
+export function findAccountSession(userId, roomId, username, mySockets = []) {
   for (const room of Object.values(roomGames)) {
     for (const p of Object.values(room.players)) {
       if (p.userId !== userId || p.isGuest || p._dcTimer) continue;
       if (room.roomId === roomId && p.name === username) continue;
+      if (room.roomId === roomId && mySockets.includes(p._lastSocket)) continue;
       return { roomId: room.roomId, name: p.name };
     }
   }
