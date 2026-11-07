@@ -1,5 +1,4 @@
 import { getAdminClient } from "../../config.js";
-import { verifyToken } from "../../middleware/auth.js";
 import { loadPlaylist } from "../../services/music/playlist.js";
 import {
   chatHistories,
@@ -9,6 +8,7 @@ import {
 } from "../../state.js";
 import { identifyPlayer } from "./cardFlow.js";
 import { cancelChatClear } from "./chat.js";
+import { accountName, seatName, verifiedAccount } from "./identity.js";
 import {
   autoStartCountdowns,
   beginGame,
@@ -30,44 +30,6 @@ const JOIN_ROOM = {
   token: optional(str(8192)),
   prevSid: optional(str(64)),
 };
-
-// Le compte du joueur : seul un jeton valide le prouve, jamais le userId envoyé
-async function verifiedAccount({ userId, isGuest, token }) {
-  if (isGuest !== false || !userId || !token) return null;
-  const user = await verifyToken(token).catch(() => null);
-  return user?.id === userId ? user.id : null;
-}
-
-// Un compte joue sous le pseudo de son profil, pas sous celui qu'il annonce
-async function accountName(accountId, fallback) {
-  const { data } = await getAdminClient()
-    .from("profiles")
-    .select("username")
-    .eq("id", accountId)
-    .maybeSingle();
-  return data?.username || fallback;
-}
-
-// Le pseudo est la clé de la place, score et compte compris : on ne la reprend
-// qu'avec une preuve. L'id du socket précédent couvre le client qui revient
-// avant que le serveur ait vu la coupure. Un invité sans preuve ne reprend
-// qu'une place d'invité en délai de grâce (page rechargée).
-function canTakeSeat(room, player, { socketId, accountId, prevSid }) {
-  const holder = room.nameToSocket[player.name];
-  if (holder && (holder === socketId || holder === prevSid)) return true;
-  if (accountId) return player.userId === accountId;
-  return !player.userId && !!player._dcTimer;
-}
-
-// Deux joueurs sous le même pseudo : le second devient « Alice 2 »
-// shortcut: un compte renommé ainsi garde un lien de profil faux en fin de partie, à revoir si ça gêne
-function seatName(room, wanted, who) {
-  for (let n = 1; ; n++) {
-    const name = n === 1 ? wanted : `${wanted} ${n}`;
-    const player = room.players[name];
-    if (!player || canTakeSeat(room, player, who)) return name;
-  }
-}
 
 // Arrivée dans une room, lancement d'une partie, départ
 export function registerJoin(socket, io) {
@@ -103,12 +65,18 @@ export function registerJoin(socket, io) {
     username = accountId
       ? await accountName(accountId, username.trim())
       : username.trim();
+    // Parti pendant les vérifications : son disconnect est déjà passé, personne
+    // ne libérerait la place
+    if (socket.connected === false) return;
 
     // Un compte ne tient qu'une session de jeu à la fois, toutes rooms
     // confondues : un second onglet doublerait son score. Rejoindre la même
     // room sous le même pseudo reste une reconnexion (géré plus bas).
     if (accountId) {
-      const busy = findAccountSession(accountId, roomId, username);
+      const busy = findAccountSession(accountId, roomId, username, [
+        socket.id,
+        prevSid,
+      ]);
       if (busy) {
         if (!takeover) {
           const meta = dbRooms[busy.roomId] || customRooms[busy.roomId] || {};
@@ -158,6 +126,13 @@ export function registerJoin(socket, io) {
     room.nameToSocket[username] = socket.id;
 
     const joined = room.players[username];
+    joined._lastSocket = socket.id;
+    // Vérification ratée à l'arrivée, réussie maintenant : le compte retrouve
+    // sa place et ses points
+    if (accountId && !joined.userId) {
+      joined.userId = accountId;
+      joined.isGuest = false;
+    }
     identifyPlayer(joined, { token, userId: joined.userId }, socket)
       .then(() => {
         if (joined.cardsInPlay?.length)

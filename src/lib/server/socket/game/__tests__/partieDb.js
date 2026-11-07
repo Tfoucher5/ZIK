@@ -45,12 +45,15 @@ export function fauxConfig(db) {
   const client = {
     // Jeton de test : « jeton:<id du compte> »
     auth: {
-      getUser: async (token) => ({
-        data: {
-          user: token.startsWith("jeton:") ? { id: token.slice(6) } : null,
-        },
-        error: null,
-      }),
+      getUser: async (token) => {
+        await db.attenteAuth?.();
+        return {
+          data: {
+            user: token.startsWith("jeton:") ? { id: token.slice(6) } : null,
+          },
+          error: null,
+        };
+      },
     },
     from: query,
     rpc: async (fn, args) => {

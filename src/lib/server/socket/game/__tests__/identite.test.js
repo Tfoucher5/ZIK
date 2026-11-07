@@ -41,7 +41,6 @@ const { partie, pause } = await import("./partieHarness.js");
 const h = partie(db);
 const { ouvrir, joueur, client, room, repondre, caler, lignes, stats } = h;
 
-// Se présente sous l'identité qu'on veut, avec ou sans preuve
 async function entre(identite) {
   const c = client();
   c.socket.emit("join_room", { roomId: h.code, ...identite });
@@ -53,6 +52,7 @@ beforeAll(() => h.start());
 beforeEach(() => {
   h.reset();
   db.profil = null;
+  db.attenteAuth = null;
 });
 afterEach(() => h.nettoyer());
 afterAll(() => h.stop());
@@ -187,6 +187,105 @@ describe("identité dans une room", () => {
     const pirate = await entre({ username: "bob", prevSid: "devine" });
     expect(pirate.config.username).toBe("bob 2");
     expect(room().players.bob.score).toBe(7);
+  });
+
+  it("compte renommé car un invité avait son pseudo : retrouve sa place à la reconnexion", async () => {
+    ouvrir();
+    db.profil = { username: "alice" };
+    await entre({ username: "alice" });
+    const compte = {
+      username: "alice",
+      userId: "u-alice",
+      isGuest: false,
+      token: "jeton:u-alice",
+    };
+    const a = await entre(compte);
+    expect(a.config.username).toBe("alice 2");
+    room().players["alice 2"].score = 9;
+
+    const retour = client();
+    retour.socket.emit("join_room", {
+      roomId: h.code,
+      ...compte,
+      prevSid: a.socket.id,
+    });
+    const { roomConfig } = await retour.attend("room_joined");
+    expect(roomConfig.username).toBe("alice 2");
+    expect(retour.de("join_refused")).toEqual([]);
+    expect(room().players["alice 2"].score).toBe(9);
+  });
+
+  for (const [cas, coupureVue] of [
+    ["coupure pas encore vue", false],
+    ["coupure déjà vue", true],
+  ])
+    it(`vérification ratée puis réussie (${cas}) : le compte retrouve place et points`, async () => {
+      ouvrir();
+      const a = await entre({
+        username: "bob",
+        userId: "u-bob",
+        isGuest: false,
+      });
+      expect(a.config.isGuest).toBe(true);
+      room().players.bob.score = 5;
+      const prevSid = a.socket.id;
+      if (coupureVue) {
+        a.socket.disconnect();
+        await pause(30);
+      }
+
+      const retour = await entre({
+        username: "bob",
+        userId: "u-bob",
+        isGuest: false,
+        token: "jeton:u-bob",
+        prevSid,
+      });
+      expect(retour.config).toMatchObject({ username: "bob", isGuest: false });
+      expect(room().players.bob).toMatchObject({
+        score: 5,
+        userId: "u-bob",
+        isGuest: false,
+      });
+    });
+
+  it("parti pendant la vérification du jeton : aucune place fantôme", async () => {
+    ouvrir();
+    db.attenteAuth = () => pause(80);
+    const c = client();
+    await new Promise((r) => c.socket.once("connect", r));
+    c.socket.emit("join_room", {
+      roomId: h.code,
+      username: "fantome",
+      userId: "u-fantome",
+      isGuest: false,
+      token: "jeton:u-fantome",
+    });
+    await pause(20);
+    c.socket.disconnect();
+    await pause(120);
+    expect(room()?.players.fantome).toBeUndefined();
+  }, 20000);
+
+  it("authentification muette : le joueur entre en invité sans attendre indéfiniment", async () => {
+    ouvrir();
+    db.attenteAuth = () => new Promise(() => {});
+    const c = await entre({
+      username: "lent",
+      userId: "u-muet",
+      isGuest: false,
+      token: "jeton:u-muet",
+    });
+    expect(c.config).toMatchObject({ username: "lent", isGuest: true });
+  }, 20000);
+
+  it("identifiant de socket précédent mal formé : message refusé", async () => {
+    ouvrir();
+    const c = client();
+    for (const prevSid of [42, {}, "x".repeat(65)])
+      c.socket.emit("join_room", { roomId: h.code, username: "bob", prevSid });
+    await pause(50);
+    expect(c.de("room_joined")).toEqual([]);
   });
 
   it("le même socket qui renvoie join_room garde sa place", async () => {
