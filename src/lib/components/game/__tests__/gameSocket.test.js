@@ -169,6 +169,25 @@ describe("room inconnue", () => {
   });
 });
 
+describe("room inconnue, page quittée entre-temps", () => {
+  it("le joueur n'est pas renvoyé", async () => {
+    vi.useFakeTimers();
+    try {
+      const kicked = vi.fn();
+      await joinRoom(
+        page({ kicked, serverError: () => {} }),
+        joinPayload(session()),
+      );
+      socket.handlers.room_unknown();
+      socket.connected = false;
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(kicked).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe("la page s'aligne sur ce que le serveur a retenu", () => {
   const rejoint = (g, config) => gameHandlers(g).roomJoined(config);
 

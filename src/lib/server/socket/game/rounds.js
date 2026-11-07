@@ -272,18 +272,20 @@ export async function finishGame(room, io) {
   game.isPaused = false;
   game._pausedState = null;
   game._roundHeld = false;
-  // Un joueur parti en cours de partie reste compté, avec ses points
+  // Un joueur parti en cours de partie reste compté, avec ses points. Retiré
+  // d'un coup : plus aucun autre chemin ne peut l'écrire ou le faire revenir.
+  const departed = game.departed ?? {};
+  game.departed = {};
   const finalScores = [
     ...Object.values(room.players).map((p) => ({
       ...sanitizePlayer(p),
       left: false,
     })),
-    ...Object.values(game.departed ?? {}).map((p) => ({
+    ...Object.values(departed).map((p) => ({
       ...sanitizePlayer(p),
       left: true,
     })),
   ].sort((a, b) => b.score - a.score);
   io?.to(`room:${room.roomId}`).emit("game_over", finalScores);
-  await saveGameResults(room.roomId, finalScores, io);
-  game.departed = {};
+  await saveGameResults(room.roomId, finalScores, io, departed);
 }

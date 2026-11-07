@@ -112,7 +112,10 @@ export async function joinRoom(h, payload) {
   // Lien périmé : rester sur une page vide n'avance à rien
   socket.on("room_unknown", () => {
     h.serverError("Cette room n’existe pas ou n’est plus disponible.");
-    setTimeout(sentOut, ROOM_UNKNOWN_DELAY_MS);
+    // Page déjà quittée : ne pas arracher le joueur à celle où il est
+    setTimeout(() => {
+      if (socket.connected) sentOut();
+    }, ROOM_UNKNOWN_DELAY_MS);
   });
   socket.on("admin_pause", h.adminPause);
   socket.on("admin_resume", h.adminResume);

@@ -30,7 +30,10 @@ export function fauxConfig(db) {
         get(_, name) {
           if (name === "then")
             return (resolve) =>
-              resolve({ data: donnees[table]?.() ?? null, error: null });
+              resolve({
+                data: donnees[table]?.() ?? null,
+                error: table === "rooms" ? (db.erreurRoom ?? null) : null,
+              });
           if (name === "insert")
             return (rows) => {
               (db.inserts[table] ??= []).push(rows);

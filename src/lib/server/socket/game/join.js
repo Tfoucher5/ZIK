@@ -51,13 +51,20 @@ export function registerJoin(socket, io) {
 
     // Client service : une room privée est invisible pour la clé anonyme
     if (!customRooms[roomId] && !dbRooms[roomId]) {
-      const { data: freshRoom } = await getAdminClient()
+      const { data: freshRoom, error } = await getAdminClient()
         .from("rooms")
         .select(
           "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id, is_public, is_official, game_mode",
         )
         .eq("code", roomId)
         .single();
+      // PGRST116 : aucune ligne. Toute autre erreur est une panne : la room existe
+      // peut-être, renvoyer le joueur le ferait sortir de sa partie.
+      if (!freshRoom && error && error.code !== "PGRST116")
+        return socket.emit(
+          "server_error",
+          "Connexion à la room impossible pour l’instant. Recharge la page dans un moment.",
+        );
       if (!freshRoom) return socket.emit("room_unknown");
       dbRooms[roomId] = freshRoom;
     }

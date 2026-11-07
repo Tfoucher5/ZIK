@@ -85,32 +85,18 @@ export function saveAllDeparted() {
   ]);
 }
 
-export async function saveGameResults(roomId, finalScores, io) {
+export async function saveGameResults(roomId, finalScores, io, departed = {}) {
   const room = getOrCreateRoom(roomId);
   const dbGameId = room.game.dbGameId;
-  // _ended : partie déjà persistée — rejouer elo, stats et succès la compterait deux fois
-  // Cartes provisoires des joueurs encore là : elles deviennent définitives.
-  // Idempotent : une carte déjà attribuée n'est plus en attente. Un joueur parti
-  // n'a de garanti que ce qu'il a gagné après la moitié des manches.
-  for (const p of finalScores)
-    if (p.userId && !p.isGuest)
-      await settleCards({
-        game: room.game,
-        name: p.name,
-        userId: p.userId,
-        keep: p.left ? keepsCards(room.game, room.game.departed[p.name]) : true,
-        io,
-        socketId: room.nameToSocket[p.name],
-      }).catch(() => {});
-
-  if (!dbGameId || room.game._ended) return;
-  // Posé avant les await : deux fins simultanées ne comptent pas la partie deux fois
-  room.game._ended = true;
+  // _ended : partie déjà persistée — rejouer elo, stats et succès la compterait
+  // deux fois. Posé avant tout await : ni une seconde fin simultanée, ni une room
+  // vidée pendant l'écriture ne compte la partie une seconde fois.
+  const persist = !!dbGameId && !room.game._ended;
+  if (persist) room.game._ended = true;
   // Déjà comptés à leur départ (saveMidGamePlayer)
   const savedEarlier = new Set(room.game.savedPlayers);
-  // Un joueur déjà écrit (saveMidGamePlayer) a sa ligne : la réinsérer doublerait
-  // son score dans les classements. Marqué avant les await : un départ qui tombe
-  // pendant l'écriture ne le compte pas une seconde fois.
+  // Un joueur déjà écrit a sa ligne : la réinsérer doublerait son score dans les
+  // classements
   const players = finalScores
     .map((p, i) => ({
       game_id: dbGameId,
@@ -121,7 +107,23 @@ export async function saveGameResults(roomId, finalScores, io) {
       is_guest: p.isGuest || !p.userId,
     }))
     .filter((row) => !savedEarlier.has(row.username));
-  finalScores.forEach((p) => room.game.savedPlayers.add(p.name));
+  if (persist) finalScores.forEach((p) => room.game.savedPlayers.add(p.name));
+
+  // Cartes provisoires des joueurs encore là : elles deviennent définitives.
+  // Idempotent : une carte déjà attribuée n'est plus en attente. Un joueur parti
+  // n'a de garanti que ce qu'il a gagné après la moitié des manches.
+  for (const p of finalScores)
+    if (p.userId && !p.isGuest)
+      await settleCards({
+        game: room.game,
+        name: p.name,
+        userId: p.userId,
+        keep: p.left ? keepsCards(room.game, departed[p.name]) : true,
+        io,
+        socketId: room.nameToSocket[p.name],
+      }).catch(() => {});
+
+  if (!persist) return;
 
   try {
     await supabase
@@ -170,8 +172,7 @@ export async function saveGameResults(roomId, finalScores, io) {
           rank: i + 1,
           totalPlayers: finalScores.length,
           correctRounds:
-            (room.players[p.name] ?? room.game.departed?.[p.name])
-              ?.roundsFullFound || 0,
+            (room.players[p.name] ?? departed[p.name])?.roundsFullFound || 0,
           totalRounds,
         });
         const resultId = await saveGameResult({

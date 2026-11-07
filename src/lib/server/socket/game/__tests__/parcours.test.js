@@ -230,8 +230,22 @@ describe("portes d'entrée", () => {
     db.room = null;
     const c = client();
     c.socket.emit("join_room", { roomId: h.code, username: "bob" });
-    await c.attend("room_unknown");
+    db.erreurRoom = { code: "PGRST116" };
+    c.socket.emit("join_room", { roomId: h.code, username: "bob" });
+    await c.attend("room_unknown", 2);
+    db.erreurRoom = null;
     expect(c.de("room_joined")).toEqual([]);
+  });
+
+  it("base indisponible : le joueur reste sur place, la room n'est pas déclarée inconnue", async () => {
+    ouvrir();
+    db.room = null;
+    db.erreurRoom = { code: "503", message: "indisponible" };
+    const c = client();
+    c.socket.emit("join_room", { roomId: h.code, username: "bob" });
+    expect(await c.attend("server_error")).toContain("Recharge la page");
+    db.erreurRoom = null;
+    expect(c.de("room_unknown")).toEqual([]);
   });
 
   it("pseudo vide : le joueur le voit", async () => {
