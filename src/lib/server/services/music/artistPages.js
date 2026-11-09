@@ -158,6 +158,8 @@ export async function startArtistRoom(artist) {
     .sort(() => Math.random() - 0.5)
     .slice(0, ROUNDS)
     .map((t) => ({ tracks: t }));
+  // Titres sortis du catalogue depuis l'index : pas de room plutôt qu'une erreur
+  if (rows.length < 3) return null;
   await refreshExpiredPreviews(rows);
 
   return createCustomRoom({

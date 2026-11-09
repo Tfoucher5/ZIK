@@ -269,7 +269,7 @@ describe("enrichTrack", () => {
 
   // dominantColor (enrich.js) : resvg rend une image qu'il ne sait pas lire
   // comme un pixel transparent (0, 0, 0, 0), et l'alpha n'est pas vérifié
-  it.fails("BUG : pochette illisible → #000000 au lieu de null", async () => {
+  it("pochette illisible : pas de couleur (null), jamais #000000", async () => {
     const bad = { ok: true, arrayBuffer: async () => new ArrayBuffer(3) };
     expect(await coverColor(async () => bad)).toBeNull();
   });

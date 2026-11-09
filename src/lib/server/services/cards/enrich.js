@@ -25,7 +25,9 @@ async function dominantColor(url) {
     if (!res.ok) return null;
     const b64 = Buffer.from(await res.arrayBuffer()).toString("base64");
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><image href="data:image/jpeg;base64,${b64}" width="1" height="1" preserveAspectRatio="none"/></svg>`;
-    const [r, g, b] = new Resvg(svg).render().pixels;
+    const [r, g, b, a] = new Resvg(svg).render().pixels;
+    // Pochette illisible : resvg rend un pixel transparent
+    if (!a) return null;
     return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
   } catch {
     return null;
