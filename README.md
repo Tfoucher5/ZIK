@@ -13,7 +13,7 @@ Les règles de travail sont dans [`CLAUDE.md`](CLAUDE.md). Ce README sert à s'y
 | Où regarder                                                                                             | Ce que ça dit                                                                      |
 | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Badges ci-dessus                                                                                        | CI de `develop`, part du serveur couverte par les tests, chien de garde de la prod |
-| [`/statut`](https://www.zik-music.fr/statut) · [`/admin/statut`](https://www.zik-music.fr/admin/statut) | État des services en prod, public et détaillé (17 sondes)                          |
+| [`/statut`](https://www.zik-music.fr/statut) · [`/admin/statut`](https://www.zik-music.fr/admin/statut) | État des services en prod, public et détaillé                                      |
 | Commentaire « Couverture » sur chaque PR                                                                | ✅ / ⚠️ / ❌ face au seuil, écart avec `develop`, zones les moins testées          |
 | Railway                                                                                                 | Logs et déploiements de `[PROD]` et `[DEV]`                                        |
 
@@ -71,7 +71,7 @@ Avec Claude Code : `/demarrer`, `/tests`, `/relire`, `/terminer`, `/migration`, 
 | `ci.yml`          | Contrôles, tests et couverture, puis migrations (staging sur `develop`, prod sur `master`). Railway attend son feu vert pour déployer |
 | `watchdog.yml`    | Vérifie la prod toutes les 5 min                                                                                                      |
 | `charge.yml`      | Test de charge des soirées, sur le staging uniquement                                                                                 |
-| `prospection.yml` | Mails de prospection ZIK Pro, trois créneaux par semaine                                                                              |
+| `prospection.yml` | Mails de prospection ZIK Pro, un envoi par jour de semaine                                                                            |
 | `indexnow.yml`    | Signale les pages mises à jour aux moteurs de recherche                                                                               |
 
 Stack : SvelteKit 5 (runes), Socket.io, Supabase, Node.js, hébergé sur Railway.

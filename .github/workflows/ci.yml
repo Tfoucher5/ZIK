@@ -28,15 +28,23 @@ jobs:
       - run: npx prettier --check .
       - run: npx svelte-check --threshold error
       - run: npx vitest run --coverage
-      # Couverture : comparée à la dernière mesure de develop (branche couverture)
+      # Couverture : comparée à la dernière mesure de develop (branche couverture).
+      # Aussi quand le seuil n'est pas tenu (vitest écrit le résumé avant de
+      # vérifier les seuils). Jamais bloquant : migrations et Railway en dépendent.
       - name: Résumé de couverture
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        continue-on-error: true
         run: |
-          git fetch --depth=1 origin couverture 2>/dev/null             && git show FETCH_HEAD:coverage-summary.json > "$RUNNER_TEMP/base.json"             || rm -f "$RUNNER_TEMP/base.json"
-          node scripts/couverture.mjs markdown coverage/coverage-summary.json             $( [ -s "$RUNNER_TEMP/base.json" ] && echo "$RUNNER_TEMP/base.json" )             > "$RUNNER_TEMP/couverture.md"
+          BASE="$RUNNER_TEMP/base.json"
+          if git fetch --depth=1 origin couverture 2>/dev/null; then
+            git show FETCH_HEAD:coverage-summary.json > "$BASE" || rm -f "$BASE"
+          fi
+          node scripts/couverture.mjs markdown coverage/coverage-summary.json \
+            $( [ -s "$BASE" ] && echo "$BASE" ) > "$RUNNER_TEMP/couverture.md"
           cat "$RUNNER_TEMP/couverture.md" >> "$GITHUB_STEP_SUMMARY"
       # PR d'un fork ou de Dependabot : jeton en lecture seule, pas de commentaire
       - name: Commentaire de couverture sur la PR
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles('coverage/coverage-summary.json') != '' }}
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
@@ -44,6 +52,7 @@ jobs:
           gh pr comment ${{ github.event.pull_request.number }}
           --body-file "$RUNNER_TEMP/couverture.md" --edit-last --create-if-none
       - if: github.event_name == 'push' && github.ref_name == 'develop'
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: couverture
@@ -74,10 +83,16 @@ jobs:
       - run: |
           M="$RUNNER_TEMP/mesure"
           node scripts/couverture.mjs badge "$M/coverage-summary.json" > "$M/badge.svg"
-          git fetch --depth=1 origin couverture && git checkout -qB couverture FETCH_HEAD             || { git checkout -q --orphan couverture && git rm -rfq .; }
+          if git fetch --depth=1 origin couverture; then
+            git checkout -qB couverture FETCH_HEAD
+          else
+            git checkout -q --orphan couverture && git rm -rfq .
+          fi
           cp "$M/coverage-summary.json" "$M/badge.svg" .
           git add coverage-summary.json badge.svg
-          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com"             commit -qm "couverture de ${GITHUB_SHA::7}" || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "couverture de ${GITHUB_SHA::7}" || exit 0
           git push origin couverture
 
   migrations:
