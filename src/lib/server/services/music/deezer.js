@@ -58,6 +58,7 @@ export async function deezerPreviewMatch(artist, title) {
 }
 
 export async function iTunesPreviewMatch(artist, title) {
+  if (!artist || !title) return null;
   try {
     const q = encodeURIComponent(`${artist} ${title.split(" - ")[0]}`);
     const res = await fetch(
@@ -85,22 +86,6 @@ export async function fetchDeezerTrackPreview(trackId) {
     const data = await deezerFetch(`/track/${trackId}`);
     if (data.error || !data.preview) return null;
     return data.preview;
-  } catch {
-    return null;
-  }
-}
-
-export async function iTunesPreviewSearch(artist, title) {
-  if (!artist || !title) return null;
-  try {
-    const res = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(`${artist} ${title}`)}&entity=musicTrack&limit=5`,
-      { signal: AbortSignal.timeout(8000) },
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    const track = (data.results || []).find((r) => r.previewUrl);
-    return track?.previewUrl || null;
   } catch {
     return null;
   }

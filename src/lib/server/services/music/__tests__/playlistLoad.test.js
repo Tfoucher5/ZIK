@@ -7,7 +7,7 @@ vi.mock("../../../config.js", async () =>
 vi.mock("../deezer.js", async (orig) => ({
   ...(await orig()),
   fetchDeezerTrackPreview: h.deezer,
-  iTunesPreviewSearch: h.itunes,
+  iTunesPreviewMatch: h.itunes,
 }));
 
 const { refreshExpiredPreviews, loadPlaylist, calcSpeedBonus } =

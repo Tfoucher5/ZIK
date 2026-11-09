@@ -25,7 +25,6 @@ vi.mock("../../../services/music/deezer.js", () => ({
   fetchDeezerTrackPreview: db.preview,
   deezerPreviewMatch: async () => null,
   iTunesPreviewMatch: async () => null,
-  iTunesPreviewSearch: async () => null,
   parseExpFromUrl: () => null,
 }));
 vi.mock("../../../services/achievements.js", () => ({
