@@ -1,85 +1,77 @@
-# ZIK. 🎵
+# ZIK. 🎵 — dépôt de l'équipe
 
-> Le blind test multijoueur en ligne. Un extrait, des joueurs, et le premier qui trouve marque.
+[![CI](https://github.com/Tfoucher5/ZIK/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Tfoucher5/ZIK/actions/workflows/ci.yml?query=branch%3Adevelop)
+[![Couverture des tests du serveur](https://github.com/Tfoucher5/ZIK/raw/couverture/badge.svg)](https://github.com/Tfoucher5/ZIK/actions/workflows/ci.yml?query=branch%3Adevelop)
+[![Surveillance](https://github.com/Tfoucher5/ZIK/actions/workflows/watchdog.yml/badge.svg)](https://github.com/Tfoucher5/ZIK/actions/workflows/watchdog.yml)
 
-**👉 [Jouer sur zik-music.fr](https://www.zik-music.fr)** · gratuit, sans installation, jouable sans compte
+Blind test multijoueur : **Jouer en ligne** (rooms, classements, cartes, Zikle) et **ZIK Soirée** (une TV, une régie, les téléphones des joueurs), vendu aux bars, campings, entreprises et associations avec **ZIK Pro**.
 
----
+Les règles de travail sont dans [`CLAUDE.md`](CLAUDE.md). Ce README sert à s'y retrouver vite.
 
-## C'est quoi, ZIK ?
+## 🚦 Tout va bien ?
 
-ZIK est un site de **blind test** qui se joue dans le navigateur, sur ordinateur comme sur téléphone. Un extrait se lance, tout le monde l'entend en même temps, et il faut trouver l'**artiste** et le **titre** avant les autres. Plus tu es rapide, plus tu marques.
+| Où regarder                                                                                             | Ce que ça dit                                                                      |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Badges ci-dessus                                                                                        | CI de `develop`, part du serveur couverte par les tests, chien de garde de la prod |
+| [`/statut`](https://www.zik-music.fr/statut) · [`/admin/statut`](https://www.zik-music.fr/admin/statut) | État des services en prod, public et détaillé                                      |
+| Commentaire « Couverture » sur chaque PR                                                                | ✅ / ⚠️ / ❌ face au seuil, écart avec `develop`, zones les moins testées          |
+| Railway                                                                                                 | Logs et déploiements de `[PROD]` et `[DEV]`                                        |
 
-Que ce soit pour une partie de cinq minutes entre deux trucs, une soirée entre amis devant la télé ou une animation dans un bar, ZIK a un mode pour ça.
+## 🌍 Environnements
 
----
+|                        | Prod                                         | Staging                                                                                      |
+| ---------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Branche                | `master`                                     | `develop`                                                                                    |
+| Site                   | [www.zik-music.fr](https://www.zik-music.fr) | [zik-dev-dev-developpement.up.railway.app](https://zik-dev-dev-developpement.up.railway.app) |
+| Railway                | `[PROD] - Production`                        | `[DEV] - Développement`                                                                      |
+| Supabase               | `ZIK`                                        | `ZIK-DEV`                                                                                    |
+| Paiements, mails, push | réels                                        | clés de test, rien ne part                                                                   |
 
-## 🎮 Les façons de jouer
+Le `.env` local pointe **toujours** sur le staging.
 
-### Blind test en ligne
+## 🛠️ Démarrer en local
 
-Rejoins une room et joue en direct contre les autres joueurs connectés. Les rooms officielles couvrent tous les goûts (années 80, rap français, Disney, tubes du moment…), et chacun peut créer la sienne avec ses propres playlists.
+```bash
+npm ci
+cp .env.example .env    # clés du projet ZIK-DEV, chaque variable dit où la trouver
+npm run dev             # site + Socket.io sur http://localhost:5173
+```
 
-- **Mode classique** : tape ta réponse, les fautes de frappe et les accents sont pardonnés.
-- **Mode QCM** : quatre propositions, une seule bonne. Idéal pour ceux qui connaissent la musique sans retenir les titres.
-- Les featurings comptent : trouve chaque artiste pour décrocher tous les points.
+Données de test sur le staging : `node scripts/seed-staging.mjs <pseudo admin>`.
 
-### Mode Salon 📺
+## ✅ Avant une PR
 
-Le blind test version soirée. La musique et le classement s'affichent sur la télé, les joueurs répondent depuis leur téléphone en scannant un QR code. Pas besoin de compte pour rejoindre, ni même pour organiser.
+```bash
+npx eslint . && npx prettier --check . && npx svelte-check && npx vitest run --coverage && npm run build
+```
 
-- Jeu en solo ou **en équipes**
-- Une **régie** pour piloter la soirée depuis un second écran ou un téléphone (pause, manche suivante, réglages)
-- Gratuit jusqu'à 12 joueurs. Pour les bars, campings et événements, **ZIK Pro** débloque plus de joueurs, plus d'équipes et la régie complète.
+Une tâche = une branche depuis `develop` (`feature/…`, `fix/…`, `chore/…`), une PR fusionnée en squash. `master` ne reçoit que les releases et les hotfix, en merge commit. Le détail, et la Définition de terminé, sont dans [`CLAUDE.md`](CLAUDE.md).
 
-### Zikle 🗓️
+Avec Claude Code : `/demarrer`, `/tests`, `/relire`, `/terminer`, `/migration`, `/release`, `/hotfix`, `/incident`, `/idees`.
 
-Une chanson par jour, la même pour tout le monde, à deviner en six essais. L'extrait commence à une seconde et s'allonge à chaque erreur. Garde ta série de jours gagnés, compare-toi au classement du jour et partage ta grille sans rien dévoiler.
+## 🗺️ Où est quoi
 
----
+| Dossier                      | Contenu                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------- |
+| `src/lib/server/socket/`     | Temps réel : `game/` (rooms en ligne), `salon/` (ZIK Soirée)                    |
+| `src/lib/server/services/`   | Accès base et logique métier, par domaine                                       |
+| `src/lib/components/`        | Composants Svelte, par domaine                                                  |
+| `src/routes/`                | Pages et API (fines : elles appellent les services)                             |
+| `supabase/migrations/`       | Toute modification de la base, appliquée par la CI                              |
+| `static/css/`                | CSS global par domaine                                                          |
+| `scripts/`                   | Seed du staging, test de charge, prospection, couverture                        |
+| `docs/audit/`                | Plan en cours : [`2026-11-02-a-valider.md`](docs/audit/2026-11-02-a-valider.md) |
+| `docs/design/` · `DESIGN.md` | Écrans cibles et charte                                                         |
+| `docs/idees/`                | Rapports de `/idees` et décisions                                               |
 
-## 🃏 Les cartes musicales
+## ⚙️ Automatisations (GitHub Actions)
 
-Chaque titre trouvé en premier en partie peut te rapporter **sa carte** : pochette, album, année et rareté, de Commune à Mythique. Plus un titre est un gros tube, plus sa carte est rare, et les plus rares demandent de trouver vraiment vite.
+| Workflow          | Rôle                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`          | Contrôles, tests et couverture, puis migrations (staging sur `develop`, prod sur `master`). Railway attend son feu vert pour déployer |
+| `watchdog.yml`    | Vérifie la prod toutes les 5 min                                                                                                      |
+| `charge.yml`      | Test de charge des soirées, sur le staging uniquement                                                                                 |
+| `prospection.yml` | Mails de prospection ZIK Pro, un envoi par jour de semaine                                                                            |
+| `indexnow.yml`    | Signale les pages mises à jour aux moteurs de recherche                                                                               |
 
-Ta collection se range par artiste et par album, les cartes qui manquent s'affichent en silhouette, et chaque set terminé est mis en avant. Les cartes ne s'achètent pas : elles se gagnent uniquement en jouant.
-
----
-
-## 🏆 La compétition
-
-- **Hit-parade** : le classement ELO de tous les joueurs, un classement des meilleurs scores par mode et par période, et le **classement des collectionneurs** de cartes
-- **Défi de la semaine** : un objectif commun à toute la communauté, avec un succès pour tous les participants s'il est atteint
-- **Succès** à débloquer, **séries** de jours joués et de victoires d'affilée
-- **Score partageable** en fin de partie pour défier tes amis
-
----
-
-## 👥 Entre joueurs
-
-- Profil public avec tes stats, tes meilleurs scores, tes succès et ta collection (ou profil privé si tu préfères)
-- Amis et abonnements, invitation d'un ami dans ta room en un clic
-- Chat pendant les parties
-- Six thèmes d'affichage, clairs et sombres
-
----
-
-## 🔗 Liens utiles
-
-- [Jouer](https://www.zik-music.fr)
-- [Toutes les rooms](https://www.zik-music.fr/rooms)
-- [Mode Salon](https://www.zik-music.fr/salon)
-- [Zikle du jour](https://www.zik-music.fr/zikle)
-- [Classements](https://www.zik-music.fr/classements)
-- [Comment ça marche](https://www.zik-music.fr/docs)
-- [Nouveautés](https://www.zik-music.fr/nouveautes)
-
-Une idée, un bug ? Le formulaire de contact est en bas de chaque page du site, ou ouvre une [issue](https://github.com/Tfoucher5/ZIK/issues).
-
----
-
-## 👨‍💻 Créateur
-
-**Théo Foucher**, parce qu'il kiffe la **ZIK.**
-
-> _Fait avec SvelteKit, Supabase, et beaucoup trop de musique en fond._
+Stack : SvelteKit 5 (runes), Socket.io, Supabase, Node.js, hébergé sur Railway.
