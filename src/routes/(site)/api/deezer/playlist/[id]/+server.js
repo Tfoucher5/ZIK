@@ -1,20 +1,17 @@
 import { json } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/server/middleware/auth.js";
+import { deezerFetch } from "$lib/server/services/music/deezerClient.js";
 
 export async function GET({ params, request }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   checkRateLimit(ip, 10, 60_000);
 
   try {
-    const headers = { "User-Agent": "ZIK-BlindTest/1.0" };
     const plId = params.id;
+    if (!/^\d+$/.test(plId)) throw new Error("Playlist introuvable");
+    const opts = { bulk: true, timeout: 10000 };
 
-    const r = await fetch(`https://api.deezer.com/playlist/${plId}`, {
-      headers,
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
+    const data = await deezerFetch(`/playlist/${plId}`, opts);
     if (data.error)
       throw new Error(data.error.message || "Playlist introuvable");
 
@@ -24,13 +21,11 @@ export async function GET({ params, request }) {
     let allTracks = [];
     while (allTracks.length < Math.min(total, 1000)) {
       const index = allTracks.length;
-      const nextR = await fetch(
-        `https://api.deezer.com/playlist/${plId}/tracks?index=${index}&limit=100`,
-        { headers, signal: AbortSignal.timeout(10000) },
-      );
-      if (!nextR.ok) break;
-      const nextData = await nextR.json();
-      if (nextData.error || !nextData.data?.length) break;
+      const nextData = await deezerFetch(
+        `/playlist/${plId}/tracks?index=${index}&limit=100`,
+        opts,
+      ).catch(() => null);
+      if (!nextData || nextData.error || !nextData.data?.length) break;
       allTracks = allTracks.concat(nextData.data);
       if (nextData.data.length < 100) break;
     }

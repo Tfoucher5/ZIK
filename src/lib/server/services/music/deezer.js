@@ -1,6 +1,5 @@
 import { cleanString } from "./trackText.js";
-
-const DEEZER_HEADERS = { "User-Agent": "ZIK-BlindTest/1.0" };
+import { deezerFetch } from "./deezerClient.js";
 
 export function parseExpFromUrl(url) {
   const m = url?.match(/hdnea=exp=(\d+)/);
@@ -41,12 +40,9 @@ function previewOf(results, artist, title) {
 export async function deezerPreviewMatch(artist, title) {
   try {
     const q = encodeURIComponent(`${artist} ${title.split(" - ")[0]}`);
-    const res = await fetch(`https://api.deezer.com/search?q=${q}&limit=5`, {
-      headers: DEEZER_HEADERS,
-      signal: AbortSignal.timeout(5000),
+    const { data } = await deezerFetch(`/search?q=${q}&limit=5`, {
+      timeout: 5000,
     });
-    if (!res.ok) return null;
-    const { data } = await res.json();
     return previewOf(
       (data ?? []).map((r) => ({
         preview: r.preview,
@@ -86,12 +82,7 @@ export async function iTunesPreviewMatch(artist, title) {
 
 export async function fetchDeezerTrackPreview(trackId) {
   try {
-    const res = await fetch(`https://api.deezer.com/track/${trackId}`, {
-      headers: DEEZER_HEADERS,
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
+    const data = await deezerFetch(`/track/${trackId}`);
     if (data.error || !data.preview) return null;
     return data.preview;
   } catch {

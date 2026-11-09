@@ -1,5 +1,6 @@
 import { getAdminClient } from "$lib/server/config.js";
 import { getSpotifyToken } from "./spotify.js";
+import { deezerFetch } from "./deezerClient.js";
 
 const _inProgress = new Set();
 
@@ -62,12 +63,9 @@ export async function backfillCovers(playlistIds) {
       const batch = deezer.slice(i, i + 10);
       const results = await Promise.allSettled(
         batch.map(async (t) => {
-          const res = await fetch(
-            `https://api.deezer.com/track/${t.external_id}`,
-            { signal: AbortSignal.timeout(8000) },
-          );
-          if (!res.ok) return null;
-          const d = await res.json();
+          const d = await deezerFetch(`/track/${t.external_id}`, {
+            bulk: true,
+          });
           const cover = d.album?.cover_xl || d.album?.cover_big || null;
           return cover ? { id: t.id, cover_url: cover } : null;
         }),

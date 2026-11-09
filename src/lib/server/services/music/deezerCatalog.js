@@ -1,17 +1,13 @@
 import { matchScore, parseLine } from "../../../shared/playlist/input.js";
 import { rankSuggestions } from "../../../shared/playlist/suggest.js";
+import { deezerFetch } from "./deezerClient.js";
 
-const HEADERS = { "User-Agent": "ZIK-BlindTest/1.0" };
 const HOUR = 60 * 60 * 1000;
+const BULK = { bulk: true };
 const cache = new Map();
 
-async function dz(path) {
-  const r = await fetch(`https://api.deezer.com${path}`, {
-    headers: HEADERS,
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!r.ok) throw new Error(`Deezer HTTP ${r.status}`);
-  const data = await r.json();
+async function dz(path, opts) {
+  const data = await deezerFetch(path, opts);
   if (data.error) throw new Error(data.error.message || "Deezer indisponible");
   return data;
 }
@@ -43,8 +39,11 @@ export function toTrack(t, album = t.album) {
 
 const playable = (t) => t.readable !== false;
 
-export async function searchTracks(q, limit = 20) {
-  const data = await dz(`/search?q=${encodeURIComponent(q)}&limit=${limit}`);
+export async function searchTracks(q, limit = 20, opts) {
+  const data = await dz(
+    `/search?q=${encodeURIComponent(q)}&limit=${limit}`,
+    opts,
+  );
   return (data.data || []).filter(playable).map((t) => toTrack(t));
 }
 
@@ -136,9 +135,9 @@ async function matchLine(line) {
   const q = parsed.artist
     ? `artist:"${parsed.artist}" track:"${parsed.title}"`
     : parsed.query;
-  let picks = await searchTracks(q, 5).catch(() => []);
+  let picks = await searchTracks(q, 5, BULK).catch(() => []);
   if (!picks.length && parsed.artist)
-    picks = await searchTracks(parsed.query, 5).catch(() => []);
+    picks = await searchTracks(parsed.query, 5, BULK).catch(() => []);
   const scores = picks.map((t) => matchScore(parsed, t));
   const best = scores.indexOf(Math.max(0, ...scores));
   if (best > 0) picks.unshift(...picks.splice(best, 1));
@@ -152,7 +151,7 @@ async function matchLine(line) {
 }
 
 // Une liste collée → le titre Deezer le plus probable pour chaque ligne.
-// 4 requêtes en parallèle : Deezer tolère 50 requêtes / 5 s.
+// 4 requêtes en parallèle, freinées par deezerClient.js.
 export async function matchLines(lines) {
   const out = new Array(lines.length);
   let next = 0;

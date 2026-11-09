@@ -2,6 +2,7 @@
 // garde-fou G12). Utilisé par /admin/cards et par les scripts de maintenance :
 // pas d'alias $lib ici.
 import { enrichTrack } from "./enrich.js";
+import { deezerFetch } from "../music/deezerClient.js";
 
 async function allRows(sb, table, columns, filter = (q) => q) {
   const rows = [];
@@ -121,9 +122,7 @@ export async function revokeGrants(sb, grantIds) {
 export async function correctCard(sb, cardId, deezerRef) {
   const deezerId = String(deezerRef).match(/(\d+)\D*$/)?.[1];
   const t = deezerId
-    ? await fetch(`https://api.deezer.com/track/${deezerId}`)
-        .then((r) => r.json())
-        .catch(() => null)
+    ? await deezerFetch(`/track/${deezerId}`).catch(() => null)
     : null;
   if (!t?.id || t.error) return { error: "Titre Deezer introuvable" };
 
