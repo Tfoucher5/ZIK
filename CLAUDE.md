@@ -72,10 +72,11 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 | `/release`                 | staging, version, notes, PR `develop` → `master`                                          | Théo seulement                                       |
 | `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Théo seulement                                       |
 | `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |
+| `/idees [axe]`             | agent `idees` : brainstorm produit classé par impact et effort, rangé dans `docs/idees/`  | Théo, ou Claude quand le plan est presque terminé    |
 
 Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (temps réel, salon, partie), `zik-supabase` (base, migrations, services), `zik-ui` (`.svelte`, CSS).
 
-Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod).
+Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod), `idees` (lecture seule, web autorisé).
 
 Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
 
