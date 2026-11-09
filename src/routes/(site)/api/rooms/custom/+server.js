@@ -9,30 +9,36 @@ export async function POST({ request }) {
 
   const { name, emoji, tracks, maxRounds, roundDuration, breakDuration } =
     await request.json();
-  if (!name?.trim() || !Array.isArray(tracks) || tracks.length < 3) {
+  if (!name?.trim() || !Array.isArray(tracks)) {
+    return json({ error: "name et au moins 3 tracks requis" }, { status: 400 });
+  }
+
+  // Le plancher de 3 titres compte ceux qui restent jouables
+  const jouables = tracks
+    .map((t) =>
+      buildTrack({
+        artist: String(t.artist || "").trim(),
+        title: String(t.title || "").trim(),
+        cover: t.cover_url,
+        preview_url: t.preview_url,
+        custom_artist: t.custom_artist || null,
+        custom_title: t.custom_title || null,
+        custom_feats: t.custom_feats || null,
+        extraAnswers: (t.track_answers || []).map((a) => ({
+          label: a.answer_types?.name || "",
+          value: a.value,
+        })),
+      }),
+    )
+    .filter((t) => t.artist && t.title);
+  if (jouables.length < 3) {
     return json({ error: "name et au moins 3 tracks requis" }, { status: 400 });
   }
 
   const code = createCustomRoom({
     name,
     emoji,
-    tracks: tracks
-      .map((t) =>
-        buildTrack({
-          artist: String(t.artist || "").trim(),
-          title: String(t.title || "").trim(),
-          cover: t.cover_url,
-          preview_url: t.preview_url,
-          custom_artist: t.custom_artist || null,
-          custom_title: t.custom_title || null,
-          custom_feats: t.custom_feats || null,
-          extraAnswers: (t.track_answers || []).map((a) => ({
-            label: a.answer_types?.name || "",
-            value: a.value,
-          })),
-        }),
-      )
-      .filter((t) => t.artist && t.title),
+    tracks: jouables,
     maxRounds,
     roundDuration,
     breakDuration,

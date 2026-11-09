@@ -105,20 +105,18 @@ describe("création : entrées bornées", () => {
     expect(make({ tracks: tracks(4), maxRounds: 10 }).maxRounds).toBe(4);
   });
 
-  it.fails(
-    "BUG : moins de 3 titres, une room de 0 à 2 manches est créée",
-    () => {
-      let code;
-      try {
-        code = createCustomRoom({ name: "R", tracks: [] });
-      } catch {
-        // un refus est le comportement attendu
-      }
-      expect(customRooms[code]).toBeUndefined();
-    },
-  );
+  it("moins de 3 titres : aucune room créée", () => {
+    let code;
+    try {
+      code = createCustomRoom({ name: "R", tracks: [] });
+    } catch {
+      // un refus est le comportement attendu
+    }
+    expect(customRooms[code]).toBeUndefined();
+  });
 
-  it.fails("BUG : emoji ni typé ni borné", () => {
+  it("emoji borné, et remplacé s'il n'est pas un texte", () => {
+    expect(make({ emoji: 42 }).emoji).toBe("🎵");
     expect(make({ emoji: "x".repeat(1_000_000) }).emoji.length).toBeLessThan(
       20,
     );

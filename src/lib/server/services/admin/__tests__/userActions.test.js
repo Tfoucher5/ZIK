@@ -208,17 +208,14 @@ describe("Pro offert", () => {
     expect(m.log).not.toHaveBeenCalled();
   });
 
-  it.fails(
-    "BUG : retrait du Pro (0 jour) en échec annoncé comme réussi",
-    async () => {
-      rows.pro_subscriptions = () => ({ error: { message: "panne" } });
-      expect(await grantPro(ADMIN, USER, 0)).toEqual({
-        status: 500,
-        error: "panne",
-      });
-      expect(m.log).not.toHaveBeenCalled();
-    },
-  );
+  it("retrait du Pro (0 jour) refusé par la base : erreur rendue, pas de journal", async () => {
+    rows.pro_subscriptions = () => ({ error: { message: "panne" } });
+    expect(await grantPro(ADMIN, USER, 0)).toEqual({
+      status: 500,
+      error: "panne",
+    });
+    expect(m.log).not.toHaveBeenCalled();
+  });
 });
 
 describe("suppression de compte", () => {
@@ -261,18 +258,15 @@ describe("suppression de compte", () => {
     expect(m.log).not.toHaveBeenCalled();
   });
 
-  it.fails(
-    "BUG : profil absent et confirmation vide, le compte est supprimé sans confirmation",
-    async () => {
-      rows.profiles = () => ({ data: null, error: { message: "0 rows" } });
-      // le TypeError qui suit la suppression ne doit pas masquer l'assertion
-      const res = await deleteUserAccount(ADMIN, USER, undefined).catch(
-        () => null,
-      );
-      expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
-      expect(res?.status).toBe(400);
-    },
-  );
+  it("profil absent et confirmation vide : rien n'est supprimé", async () => {
+    rows.profiles = () => ({ data: null, error: { message: "0 rows" } });
+    // le TypeError qui suit la suppression ne doit pas masquer l'assertion
+    const res = await deleteUserAccount(ADMIN, USER, undefined).catch(
+      () => null,
+    );
+    expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
+    expect(res?.status).toBe(400);
+  });
 });
 
 describe("liens sociaux", () => {
