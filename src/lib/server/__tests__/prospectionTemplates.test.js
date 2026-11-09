@@ -8,7 +8,7 @@ import { FREE_MAX_PLAYERS } from "../../data/proPlans.js";
 describe("mails de prospection", () => {
   it("nomme le bar dans l'objet", () => {
     expect(firstMail({ kind: "bar", name: "La Tribune" }).subject).toBe(
-      "Un blind test chez La Tribune ?",
+      "Un outil de blind test pour La Tribune ?",
     );
   });
 
@@ -35,9 +35,19 @@ describe("mails de prospection", () => {
     }
   });
 
+  it("dit que le lieu lance l'outil lui-même, sans prestation", () => {
+    for (const kind of ["bar", "camping", "association"]) {
+      const { subject, text } = firstMail({ kind, name: "X" });
+      expect(subject).toContain("outil");
+      expect(text).toContain("que vous lancez vous-même");
+      expect(text).toContain("Je ne propose pas de prestation");
+      expect(followUp({ kind, name: "X" }).text).toContain("vous-même");
+    }
+  });
+
   it("répond dans le fil du premier mail", () => {
     expect(followUp({ kind: "bar", name: "Le Zinc" }).subject).toBe(
-      "Re: Un blind test chez Le Zinc ?",
+      "Re: Un outil de blind test pour Le Zinc ?",
     );
   });
 });

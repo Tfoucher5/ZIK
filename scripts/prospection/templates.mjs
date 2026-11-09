@@ -11,20 +11,19 @@ J'ai trouvé votre adresse sur OpenStreetMap. Si vous ne souhaitez plus recevoir
 const SIGNATURE = `Théo
 ZIK - https://www.zik-music.fr`;
 
+// Des lieux ont cru à une prestation d'animation : le mail dit dès l'objet et
+// la première phrase que ZIK est un outil que le lieu lance lui-même.
 const PITCH = {
   bar: {
-    subject: (name) => `Un blind test chez ${name} ?`,
-    hook: "un blind test pensé pour les bars",
+    subject: (name) => `Un outil de blind test pour ${name} ?`,
     use: "Ça peut animer un soir de semaine, un afterwork ou une soirée à thème.",
   },
   camping: {
-    subject: () => "Une soirée blind test au camping cet été ?",
-    hook: "un blind test pensé pour les soirées de camping",
+    subject: () => "Un outil de blind test pour vos soirées de camping ?",
     use: "Ça se lance en quelques minutes au bar du camping ou dans la salle d'animation, pour les familles comme pour les ados.",
   },
   association: {
-    subject: () => "Un blind test pour votre association ?",
-    hook: "un blind test pensé pour les soirées entre adhérents",
+    subject: () => "Un outil de blind test pour votre association ?",
     use: "Ça marche pour une fête de village, une soirée d'adhérents ou un loto qui veut changer un peu, de 8 à 80 ans.",
   },
 };
@@ -35,7 +34,9 @@ export function firstMail({ kind, name }) {
     subject: p.subject(name),
     text: `Bonjour,
 
-Je m'appelle Théo, je suis étudiant à Angers et passionné de musique. Sur mon temps libre, je développe ZIK, ${p.hook} : l'ordinateur relié à la TV (ou au vidéoprojecteur) diffuse les extraits, les joueurs répondent depuis leur téléphone en saisissant un code, en solo ou en équipes, avec un classement en direct. Pas d'appli à installer. La partie peut tourner toute seule, ou vous pouvez l'animer vous-même : une régie sur un second écran permet de lancer, révéler les réponses et corriger les points.
+Je m'appelle Théo, je suis étudiant à Angers et je développe ZIK, un site de blind test que vous lancez vous-même sur place, sans matériel à acheter. Je ne propose pas de prestation : personne ne se déplace, c'est vous qui gardez la main sur la soirée.
+
+Comment ça marche : l'ordinateur relié à la TV (ou au vidéoprojecteur) diffuse les extraits, les joueurs répondent depuis leur téléphone en saisissant un code, en solo ou en équipes, avec un classement en direct. Pas d'appli à installer. La partie peut tourner toute seule, ou vous l'animez depuis une régie sur un second écran : lancer, révéler les réponses, corriger les points.
 
 ${p.use}
 
@@ -55,7 +56,7 @@ export function followUp({ kind, name }) {
     subject: `Re: ${PITCH[kind].subject(name)}`,
     text: `Bonjour,
 
-Je me permets une seule relance au sujet de ZIK, le blind test que je développe. Si vous avez cinq minutes pour y jeter un œil, même un avis rapide m'aiderait à améliorer le projet : https://www.zik-music.fr/pro
+Je me permets une seule relance au sujet de ZIK, l'outil de blind test que je développe et que vous pouvez lancer vous-même lors de vos soirées. Si vous avez cinq minutes pour y jeter un œil, même un avis rapide m'aiderait à améliorer le projet : https://www.zik-music.fr/pro
 
 Et si ce n'est pas le moment, aucun souci, je ne vous relancerai pas.
 
