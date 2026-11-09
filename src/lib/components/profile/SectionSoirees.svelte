@@ -8,7 +8,7 @@
   function load() {
     failed = false;
     sb.from('salon_players')
-      .select('score, rank, team, departed, created_at, games(player_count)')
+      .select('id, score, rank, team, departed, created_at, games(player_count)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(30)
@@ -31,14 +31,14 @@
   {:else if soirees === null}
     <p class="pv-empty">Chargement…</p>
   {:else if soirees.length}
-    {#each soirees as s, i (i)}
+    {#each soirees as s (s.id)}
       <div class="row" class:top={s.rank === 1 && !s.departed}>
         <span class="date">{fmtDate(s.created_at)}</span>
         <span class="rank">
           {place(s.rank)}{#if s.games?.player_count} <small>sur {s.games.player_count}</small>{/if}
         </span>
         <span class="team">{s.team ?? ''}</span>
-        {#if s.departed}<span class="left">parti en cours</span>{/if}
+        {#if s.departed}<span class="left">a quitté avant la fin</span>{/if}
         <span class="score">{s.score}</span>
       </div>
     {/each}
