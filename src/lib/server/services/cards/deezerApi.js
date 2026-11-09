@@ -1,33 +1,17 @@
 import { getSpotifyToken } from "../music/spotify.js";
+import { deezerFetch } from "../music/deezerClient.js";
 
-const DEEZER = "https://api.deezer.com";
-const HEADERS = { "User-Agent": "ZIK-BlindTest/1.0" };
-const MIN_GAP_MS = 130; // Deezer : 50 requêtes / 5 s, on reste sous 8 / s
 const MB_GAP_MS = 1_100; // MusicBrainz : 1 requête / s au maximum
 const MB_HEADERS = {
   "User-Agent": "ZIK-BlindTest/1.0 ( https://www.zik-music.fr )",
 };
 
-let nextSlot = 0;
+// Cartes : appels de fond, ils cèdent la place aux parties en cours
 export async function deezer(path) {
-  const wait = Math.max(0, nextSlot - Date.now());
-  nextSlot = Math.max(nextSlot, Date.now()) + MIN_GAP_MS;
-  if (wait) await new Promise((r) => setTimeout(r, wait));
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(`${DEEZER}${path}`, {
-      headers: HEADERS,
-      signal: AbortSignal.timeout(10_000),
-    }).catch(() => null);
-    const data = res?.ok ? await res.json().catch(() => null) : null;
-    // Code 4 = quota dépassé : Deezer demande d'attendre quelques secondes
-    if (data?.error?.code === 4) {
-      await new Promise((r) => setTimeout(r, 5_000));
-      continue;
-    }
-    return data && !data.error ? data : null;
-  }
-  return null;
+  const data = await deezerFetch(path, { bulk: true, timeout: 10_000 }).catch(
+    () => null,
+  );
+  return data && !data.error ? data : null;
 }
 
 // Date de première sortie d'un enregistrement, d'après MusicBrainz. Une

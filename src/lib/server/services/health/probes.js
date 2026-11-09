@@ -57,11 +57,13 @@ async function httpProbe(
   const r = await timed(async () => {
     const res = await fetchFn(url, { signal: signal(), headers });
     if (!accept(res)) throw new Error(`HTTP ${res.status}`);
-    if (check) check(await res.json());
+    if (check) return check(await res.json());
     // Corps non lu : on libère la connexion sans attendre le ramasse-miettes
-    else await res.body?.cancel();
+    await res.body?.cancel();
   });
   if (r.error) return { result: "fail", value: r.ms, detail: r.error };
+  // check rend un texte : service là mais freiné, seuil approché
+  if (r.value) return { result: "warn", value: r.ms, detail: r.value };
   return { result: grade(r.ms, 2000, Infinity), value: r.ms };
 }
 
@@ -164,8 +166,10 @@ export function makeProbes({
     },
     deezer: () =>
       httpProbe("https://api.deezer.com/track/3135556", fetchFn, {
-        // Deezer répond 200 avec { error } quand il refuse
+        // Deezer répond 200 avec { error } quand il refuse. Code 4 : quota
+        // du serveur atteint, Deezer répond toujours
         check: (body) => {
+          if (body?.error?.code === 4) return "Quota Deezer atteint";
           if (body?.error) throw new Error(body.error.message ?? "Deezer");
         },
       }),
