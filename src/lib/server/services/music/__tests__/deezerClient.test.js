@@ -71,7 +71,7 @@ describe("client Deezer commun", () => {
     reponses = [QUOTA];
     const partie = deezerFetch("/track/1");
     await vi.advanceTimersByTimeAsync(0);
-    deezerFetch("/bulk", { bulk: true });
+    const fond = deezerFetch("/bulk", { bulk: true });
     await vi.advanceTimersByTimeAsync(0);
     expect(appels.map((a) => a.url)).toEqual([
       "https://api.deezer.com/track/1",
@@ -82,6 +82,8 @@ describe("client Deezer commun", () => {
     await deezerFetch("/track/2");
     expect(appels).toHaveLength(3);
     expect(appels.some((a) => a.url.endsWith("/bulk"))).toBe(false);
+    await vi.advanceTimersByTimeAsync(5_000);
+    await fond;
   });
 
   it("partie : un seul nouvel essai rapide, puis le refus est rendu", async () => {
