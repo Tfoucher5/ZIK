@@ -114,23 +114,18 @@ describe("activateNight : passe Soirée de 24 h", () => {
     expect(upserts()[0].current_period_end).toBe(iso(NOW + 24 * H));
   });
 
-  // grantPro (admin/userActions.js) écrit plan « manual » sans abonnement
-  // Stripe : /api/pro/checkout laisse alors acheter un passe après
-  // confirmation, et activateNight remplace la date de fin par maintenant + 24 h.
-  it.fails(
-    "BUG : un passe acheté pendant un accès offert de 30 jours le raccourcit à 24 h",
-    async () => {
-      row({
-        plan: "manual",
-        status: "active",
-        current_period_end: iso(NOW + 30 * 24 * H),
-      });
-      await activateNight("u1", "cus_1", "cs_3");
-      expect(
-        Date.parse(upserts()[0].current_period_end),
-      ).toBeGreaterThanOrEqual(NOW + 30 * 24 * H);
-    },
-  );
+  // grantPro (admin/userActions.js) écrit plan « manual » sans abonnement Stripe
+  it("passe acheté pendant un accès offert de 30 jours : 24 h ajoutées à la suite", async () => {
+    row({
+      plan: "manual",
+      status: "active",
+      current_period_end: iso(NOW + 30 * 24 * H),
+    });
+    await activateNight("u1", "cus_1", "cs_3");
+    expect(Date.parse(upserts()[0].current_period_end)).toBe(
+      NOW + 30 * 24 * H + 24 * H,
+    );
+  });
 });
 
 const sub = (over = {}) => ({

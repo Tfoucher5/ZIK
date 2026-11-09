@@ -4,16 +4,9 @@ import { supabase, getAdminClient } from "../config.js";
 // 20260610_achievements_streaks_game_results ne sont pas encore en place,
 // le jeu continue normalement sans succès.
 
+// Toujours le client admin : ces écritures ne passent jamais par la clé anonyme
 let _admin = null;
-function db() {
-  if (_admin) return _admin;
-  try {
-    _admin = getAdminClient();
-  } catch {
-    _admin = supabase;
-  }
-  return _admin;
-}
+const db = () => (_admin ??= getAdminClient());
 
 let _defs = null;
 let _defsAt = 0;

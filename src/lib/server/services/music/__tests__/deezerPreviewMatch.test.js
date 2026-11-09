@@ -3,7 +3,6 @@ import {
   deezerPreviewMatch,
   iTunesPreviewMatch,
   fetchDeezerTrackPreview,
-  iTunesPreviewSearch,
   parseExpFromUrl,
 } from "../deezer.js";
 
@@ -192,35 +191,31 @@ describe("rafraîchissement d'un extrait", () => {
         { artistName: "Adele", trackName: "Hello", previewUrl: "bon" },
       ],
     });
-    expect(await iTunesPreviewSearch("Adele", "Hello")).toBe("bon");
+    expect(await iTunesPreviewMatch("Adele", "Hello")).toBe("bon");
   });
-  // Utilisé par refreshExpiredPreviews (playlist.js) : contraire à la règle de
-  // deezer.js « mieux vaut pas d'extrait qu'un autre morceau joué devant la salle »
-  it.fails(
-    "BUG : iTunes par nom accepte un autre morceau que celui demandé",
-    async () => {
-      repond({
-        results: [
-          { artistName: "Piano Queen", trackName: "Hello", previewUrl: "faux" },
-        ],
-      });
-      expect(await iTunesPreviewSearch("Adele", "Hello")).toBeNull();
-    },
-  );
+  // Utilisé aussi par refreshExpiredPreviews (playlist.js)
+  it("iTunes par nom : jamais l'extrait d'un autre morceau", async () => {
+    repond({
+      results: [
+        { artistName: "Piano Queen", trackName: "Hello", previewUrl: "faux" },
+      ],
+    });
+    expect(await iTunesPreviewMatch("Adele", "Hello")).toBeNull();
+  });
   it("iTunes : nom manquant, échec HTTP, aucun extrait ou panne : null", async () => {
     repond({ results: [] });
-    expect(await iTunesPreviewSearch("", "T")).toBeNull();
-    expect(await iTunesPreviewSearch("A", null)).toBeNull();
+    expect(await iTunesPreviewMatch("", "T")).toBeNull();
+    expect(await iTunesPreviewMatch("A", null)).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
-    expect(await iTunesPreviewSearch("A", "T")).toBeNull();
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
     repond({}, false);
-    expect(await iTunesPreviewSearch("A", "T")).toBeNull();
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
         throw new Error("réseau");
       }),
     );
-    expect(await iTunesPreviewSearch("A", "T")).toBeNull();
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
   });
 });
