@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,16 +41,7 @@ jobs:
           node scripts/couverture.mjs markdown coverage/coverage-summary.json \
             $( [ -s "$BASE" ] && echo "$BASE" ) > "$RUNNER_TEMP/couverture.md"
           cat "$RUNNER_TEMP/couverture.md" >> "$GITHUB_STEP_SUMMARY"
-      # PR d'un fork ou de Dependabot : jeton en lecture seule, pas de commentaire
-      - name: Commentaire de couverture sur la PR
-        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles('coverage/coverage-summary.json') != '' }}
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >
-          gh pr comment ${{ github.event.pull_request.number }}
-          --body-file "$RUNNER_TEMP/couverture.md" --edit-last --create-if-none
-      - if: github.event_name == 'push' && github.ref_name == 'develop'
+      - if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -64,36 +54,73 @@ jobs:
           SUPABASE_ANON_KEY: ci
           SUPABASE_SERVICE_KEY: ci
 
-  # Badge du README et mesure de référence des PR, sur une branche à part :
-  # aucun service tiers. Un échec ici ne bloque ni les migrations ni Railway.
+  # Graphiques, badge et commentaire de PR, publiés sur la branche `couverture` :
+  # aucun service tiers. Jamais bloquant : migrations et Railway n'en dépendent pas.
+  # PR d'un fork : jeton en lecture seule, rien n'est publié.
   couverture:
     needs: check
-    if: github.event_name == 'push' && github.ref_name == 'develop'
+    if: ${{ !cancelled() && ((github.event_name == 'push' && github.ref_name == 'develop') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: write
+      pull-requests: write
     concurrency: couverture
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      # Étapes en continue-on-error : un échec ici ne doit jamais mettre de check rouge
+      # Les seuils sont lus dans vitest.config.js
+      - run: npm ci
+        continue-on-error: true
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: couverture
           path: ${{ runner.temp }}/mesure
-      - run: |
+      - name: Graphiques et publication
+        continue-on-error: true
+        run: |
           M="$RUNNER_TEMP/mesure"
-          node scripts/couverture.mjs badge "$M/coverage-summary.json" > "$M/badge.svg"
+          R="$RUNNER_TEMP/branche"
+          C="node scripts/couverture.mjs"
           if git fetch --depth=1 origin couverture; then
-            git checkout -qB couverture FETCH_HEAD
+            git worktree add -q -B couverture "$R" FETCH_HEAD
           else
-            git checkout -q --orphan couverture && git rm -rfq .
+            git worktree add -q --orphan -b couverture "$R"
           fi
-          cp "$M/coverage-summary.json" "$M/badge.svg" .
-          git add coverage-summary.json badge.svg
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -qm "couverture de ${GITHUB_SHA::7}" || exit 0
-          git push origin couverture
+          BASE="$R/coverage-summary.json"; [ -s "$BASE" ] || BASE=-
+          HIST="$R/historique.json"; [ -s "$HIST" ] || HIST=-
+          QUAND="$(TZ=Europe/Paris date +'%d/%m %H:%M')"
+          if [ -n "$PR" ]; then
+            IMG="pr/$PR-${SHA::7}.svg"
+            mkdir -p "$R/pr" && rm -f "$R"/pr/"$PR"-*.svg
+            $C graphique "$M/coverage-summary.json" "$BASE" "$HIST" "PR #$PR · ${SHA::7} · $QUAND" > "$R/$IMG"
+          else
+            $C historique "$M/coverage-summary.json" "$HIST" "$SHA" > "$M/historique.json"
+            $C graphique "$M/coverage-summary.json" "$BASE" "$M/historique.json" "develop · ${SHA::7} · $QUAND" > "$M/graphique.svg"
+            $C badge "$M/coverage-summary.json" > "$M/badge.svg"
+            cp "$M"/coverage-summary.json "$M"/historique.json "$M"/graphique.svg "$M"/badge.svg "$R/"
+          fi
+          git -C "$R" add -A
+          git -C "$R" -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "couverture de ${PR:+PR #$PR }${SHA::7}" || true
+          git -C "$R" push -q origin couverture
+          if [ -n "$PR" ]; then
+            {
+              echo "![Couverture des tests](https://raw.githubusercontent.com/$GITHUB_REPOSITORY/couverture/$IMG)"
+              echo
+              $C markdown "$M/coverage-summary.json" $( [ "$BASE" != - ] && echo "$BASE" )
+            } > "$RUNNER_TEMP/commentaire.md"
+            gh pr comment "$PR" --body-file "$RUNNER_TEMP/commentaire.md" --edit-last --create-if-none
+          fi
 
   migrations:
     needs: check

@@ -38,7 +38,7 @@ describe("couverture des tests", () => {
     expect(zone(String.raw`C:\z\src\lib\server\services\music\deezer.js`)).toBe(
       "services/music",
     );
-    expect(zone("/x/src/lib/server/socket/index.js")).toBe("socket");
+    expect(zone("/x/src/lib/server/socket/index.js")).toBe("socket (racine)");
     expect(zone("/x/autre/fichier.js")).toBeNull();
   });
 
