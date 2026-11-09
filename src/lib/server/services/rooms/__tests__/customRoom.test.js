@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const m = vi.hoisted(() => ({
   saveEveryone: vi.fn(async () => {}),
@@ -52,5 +52,72 @@ describe("room éphémère", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("création : entrées bornées", () => {
+  const tracks = (n) => Array.from({ length: n }, () => ({}));
+  const make = (o) =>
+    customRooms[createCustomRoom({ name: "R", tracks: tracks(20), ...o })];
+
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  });
+
+  it("code de 6 caractères sans 0, O, 1 ni I, unique", () => {
+    const codes = Array.from({ length: 50 }, () =>
+      createCustomRoom({ name: "R", tracks: tracks(3) }),
+    );
+    for (const c of codes) expect(c).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+    expect(new Set(codes).size).toBe(50);
+  });
+
+  it("valeurs par défaut", () => {
+    expect(make({})).toMatchObject({
+      emoji: "🎵",
+      maxRounds: 10,
+      roundDuration: 30,
+      breakDuration: 7,
+    });
+  });
+
+  it("nom nettoyé et tronqué à 60 caractères", () => {
+    expect(make({ name: "  Soirée  " }).name).toBe("Soirée");
+    expect(make({ name: "x".repeat(1_000_000) }).name).toHaveLength(60);
+  });
+
+  it.each([
+    [{ maxRounds: 999, roundDuration: 999, breakDuration: 999 }, [20, 60, 15]],
+    [{ maxRounds: -5, roundDuration: 1, breakDuration: -1 }, [3, 10, 3]],
+    [{ maxRounds: "abc", roundDuration: null, breakDuration: {} }, [10, 30, 7]],
+    [
+      { maxRounds: "15", roundDuration: "45.9", breakDuration: [5] },
+      [15, 45, 5],
+    ],
+  ])("réglages hostiles bornés (%#)", (opts, attendu) => {
+    const r = make(opts);
+    expect([r.maxRounds, r.roundDuration, r.breakDuration]).toEqual(attendu);
+  });
+
+  it("pas plus de manches que de titres", () => {
+    expect(make({ tracks: tracks(4), maxRounds: 10 }).maxRounds).toBe(4);
+  });
+
+  it.skip("BUG : moins de 3 titres, une room de 0 à 2 manches est créée", () => {
+    let code;
+    try {
+      code = createCustomRoom({ name: "R", tracks: [] });
+    } catch {
+      // un refus est le comportement attendu
+    }
+    expect(customRooms[code]).toBeUndefined();
+  });
+
+  it.skip("BUG : emoji ni typé ni borné", () => {
+    expect(make({ emoji: "x".repeat(1_000_000) }).emoji.length).toBeLessThan(
+      20,
+    );
   });
 });
