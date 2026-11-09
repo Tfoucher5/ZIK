@@ -77,6 +77,8 @@ Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (te
 
 Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod).
 
+Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
+
 ## Base de données (Supabase)
 
 - **Toute** modification de schéma passe par un fichier dans `supabase/migrations/`, appliqué par la CI : staging sur `develop`, prod sur `master`. Jamais de SQL de structure tapé à la main
