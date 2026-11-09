@@ -8,6 +8,7 @@ export async function GET({ params, request }) {
 
   try {
     const plId = params.id;
+    if (!/^d+$/.test(plId)) throw new Error("Playlist introuvable");
     const opts = { bulk: true, timeout: 10000 };
 
     const data = await deezerFetch(`/playlist/${plId}`, opts);

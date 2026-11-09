@@ -96,4 +96,39 @@ describe("client Deezer commun", () => {
     fetch.mockResolvedValueOnce({ ok: false, status: 503 });
     await expect(deezerFetch("/track/1")).rejects.toThrow("Deezer HTTP 503");
   });
+
+  it("un seul compteur pour le serveur Node et le bundle", async () => {
+    vi.resetModules();
+    const copie = await import("../deezerClient.js");
+    const fond = Array.from({ length: 20 }, (_, n) => [
+      deezerFetch(`/a/${n}`, { bulk: true }),
+      copie.deezerFetch(`/b/${n}`, { bulk: true }),
+    ]).flat();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(appels).toHaveLength(35);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await Promise.all(fond);
+  });
+
+  it("pause plus longue que la fenêtre : le fond attend sans tourner en boucle", async () => {
+    // Refus reçu 2 s après l'envoi : la pause dure après la sortie de la fenêtre
+    fetch.mockImplementationOnce(async (url) => {
+      appels.push({ url, at: Date.now() });
+      await new Promise((r) => setTimeout(r, 2_000));
+      return { ok: true, status: 200, json: async () => QUOTA };
+    });
+    const premier = deezerFetch("/bulk/1", { bulk: true });
+    await vi.advanceTimersByTimeAsync(5_500);
+    const minuteurs = vi.spyOn(globalThis, "setTimeout");
+    const second = deezerFetch("/bulk/2", { bulk: true });
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(minuteurs.mock.calls.length).toBeLessThan(3);
+    await vi.advanceTimersByTimeAsync(1_000);
+    await Promise.all([premier, second]);
+    expect(appels.map((x) => x.url.slice(-6))).toEqual([
+      "bulk/1",
+      "bulk/1",
+      "bulk/2",
+    ]);
+  });
 });
