@@ -3,6 +3,8 @@
 //
 // Usage : node scripts/couverture.mjs markdown <résumé> [<résumé de develop>]
 //         node scripts/couverture.mjs badge <résumé> > badge.svg
+//         node scripts/couverture.mjs graphique <résumé> <base|-> <historique|-> [légende] > graphique.svg
+//         node scripts/couverture.mjs historique <résumé> <historique.json> <sha> > historique.json
 // <résumé> : coverage/coverage-summary.json (reporter json-summary de vitest)
 
 import { readFileSync } from "node:fs";
@@ -45,7 +47,7 @@ export function zone(fichier) {
   const m = fichier.replace(/\\/g, "/").match(/src\/lib\/server\/(.+)$/);
   if (!m) return null;
   const parts = m[1].split("/");
-  return parts.length > 2 ? `${parts[0]}/${parts[1]}` : parts[0];
+  return parts.length > 2 ? `${parts[0]}/${parts[1]}` : `${parts[0]} (racine)`;
 }
 
 export function parZone(resume) {
@@ -116,10 +118,22 @@ export function markdown(resume, base, seuils) {
   ].join("\n");
 }
 
+// Une mesure par fusion dans develop, 200 au plus
+export function historique(liste, total, sha, date = new Date()) {
+  const jour = date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Europe/Paris",
+  });
+  const point = { date: jour, sha: String(sha ?? "").slice(0, 7) };
+  for (const [cle] of MESURES) point[cle] = total[cle].pct;
+  return [...(Array.isArray(liste) ? liste : []), point].slice(-200);
+}
+
+// Mêmes paliers et teintes que le tableau de bord (couverture-graphique.mjs)
 export function couleur(p) {
-  if (p >= 80) return "#3fb950";
-  if (p >= 60) return "#a3c93a";
-  if (p >= 45) return "#d29922";
+  if (p >= 70) return "#2ea043";
+  if (p >= 50) return "#d29922";
   return "#e5534b";
 }
 
@@ -141,18 +155,29 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  const [mode, chemin, cheminBase] = process.argv.slice(2);
+  const [mode, chemin, arg3, arg4, arg5, arg6] = process.argv.slice(2);
   const resume = lire(chemin);
   if (!resume?.total) {
     console.error(`Résumé de couverture illisible : ${chemin}`);
     process.exit(1);
   }
-  if (mode === "badge") process.stdout.write(badge(resume.total));
-  else {
-    const { default: config } = await import("../vitest.config.js");
-    const seuils = config.test.coverage.thresholds;
-    process.stdout.write(
-      markdown(resume, cheminBase ? lire(cheminBase) : null, seuils),
-    );
-  }
+  const seuils = async () =>
+    (await import("../vitest.config.js")).default.test.coverage.thresholds;
+  let sortie;
+  if (mode === "badge") sortie = badge(resume.total);
+  else if (mode === "historique")
+    sortie = JSON.stringify(historique(lire(arg3) ?? [], resume.total, arg4));
+  else if (mode === "graphique") {
+    const { graphique } = await import("./couverture-graphique.mjs");
+    sortie = graphique({
+      resume,
+      zones: parZone(resume),
+      base: arg3 && arg3 !== "-" ? lire(arg3) : null,
+      historique: arg4 && arg4 !== "-" ? (lire(arg4) ?? []) : [],
+      seuils: await seuils(),
+      legende: arg5,
+      versus: arg6,
+    });
+  } else sortie = markdown(resume, arg3 ? lire(arg3) : null, await seuils());
+  process.stdout.write(sortie);
 }
