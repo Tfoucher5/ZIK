@@ -31,7 +31,10 @@ export function createCustomRoom({
   customRooms[code] = {
     id: code,
     name: String(name).trim().slice(0, 60),
-    emoji: (typeof emoji === "string" && emoji.trim().slice(0, 16)) || "🎵",
+    // 8 caractères entiers au plus : jamais une demi-paire UTF-16
+    emoji:
+      (typeof emoji === "string" && [...emoji.trim()].slice(0, 8).join("")) ||
+      "🎵",
     tracks,
     maxRounds: Math.min(Math.max(parseInt(maxRounds) || 10, 3), tracks.length),
     roundDuration: Math.min(Math.max(parseInt(roundDuration) || 30, 10), 60),

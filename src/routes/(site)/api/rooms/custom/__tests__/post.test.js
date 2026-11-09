@@ -45,10 +45,29 @@ describe("POST /api/rooms/custom", () => {
     expect(room.create.mock.calls[0][0].tracks).toHaveLength(3);
   });
 
-  it.each([{}, { name: " ", tracks: [] }, { name: "R", tracks: "x" }])(
-    "entrée invalide %j : refusée",
-    async (body) => {
-      expect((await creer(body)).status).toBe(400);
-    },
-  );
+  it("titre nul ou réponses anormales : ignorés, sans erreur 500", async () => {
+    const r = await creer({
+      name: "R",
+      tracks: [
+        null,
+        42,
+        titre("A", "1"),
+        titre("B", "2"),
+        { ...titre("C", "3"), track_answers: "x" },
+        { ...titre("D", "4"), track_answers: [null, 1] },
+      ],
+    });
+    expect(r.status).toBe(200);
+    expect(room.create.mock.calls[0][0].tracks).toHaveLength(4);
+  });
+
+  it.each([
+    {},
+    { name: " ", tracks: [] },
+    { name: "R", tracks: "x" },
+    { name: 42, tracks: [] },
+    { name: "R", tracks: Array.from({ length: 501 }, () => titre("A", "1")) },
+  ])("entrée invalide %j : refusée", async (body) => {
+    expect((await creer(body)).status).toBe(400);
+  });
 });

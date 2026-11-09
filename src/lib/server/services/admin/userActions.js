@@ -85,11 +85,13 @@ export async function grantPro(adminId, userId, days) {
       .eq("user_id", userId);
     if (err) return failed(err);
   } else {
-    const { data: cur } = await sb
+    const { data: cur, error: lu } = await sb
       .from("pro_subscriptions")
       .select("status, current_period_end")
       .eq("user_id", userId)
       .maybeSingle();
+    // Abonnement en cours illisible : ne jamais risquer de le raccourcir
+    if (lu) return failed(lu);
     const curEnd =
       cur?.status === "active" ? new Date(cur.current_period_end).getTime() : 0;
     const from = Math.max(Date.now(), curEnd);

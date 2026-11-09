@@ -117,6 +117,8 @@ describe("création : entrées bornées", () => {
 
   it("emoji borné, et remplacé s'il n'est pas un texte", () => {
     expect(make({ emoji: 42 }).emoji).toBe("🎵");
+    // Coupé sur des caractères entiers : pas de demi-paire UTF-16
+    expect(make({ emoji: "🎸".repeat(20) }).emoji).toBe("🎸".repeat(8));
     expect(make({ emoji: "x".repeat(1_000_000) }).emoji.length).toBeLessThan(
       20,
     );
