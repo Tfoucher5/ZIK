@@ -79,8 +79,8 @@ describe("couverture des tests", () => {
   it("badge : lignes couvertes arrondies, couleur selon le niveau", () => {
     expect(badge(resume(0, 0, 0, 64.7).total)).toContain(">65 %<");
     expect([couleur(85), couleur(65), couleur(50), couleur(30)]).toEqual([
-      "#3fb950",
-      "#a3c93a",
+      "#2ea043",
+      "#d29922",
       "#d29922",
       "#e5534b",
     ]);

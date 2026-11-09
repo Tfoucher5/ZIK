@@ -46,6 +46,15 @@ describe("tableau de bord de la couverture", () => {
     expect(svg).toContain("▲ +4,7 pt vs develop");
     expect(svg).toContain("PR #12 · &lt;abc&gt;");
     expect(svg).toContain("prefers-color-scheme: dark");
+    expect(
+      graphique({
+        resume: { total: total(65) },
+        zones: [],
+        base: { total: total(60) },
+        seuils: SEUILS,
+        versus: "la fusion précédente",
+      }),
+    ).toContain("pt vs la fusion précédente");
   });
 
   it("sans historique : message à la place de la courbe", () => {

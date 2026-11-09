@@ -130,10 +130,10 @@ export function historique(liste, total, sha, date = new Date()) {
   return [...(Array.isArray(liste) ? liste : []), point].slice(-200);
 }
 
+// Mêmes paliers et teintes que le tableau de bord (couverture-graphique.mjs)
 export function couleur(p) {
-  if (p >= 80) return "#3fb950";
-  if (p >= 60) return "#a3c93a";
-  if (p >= 45) return "#d29922";
+  if (p >= 70) return "#2ea043";
+  if (p >= 50) return "#d29922";
   return "#e5534b";
 }
 
@@ -155,7 +155,7 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  const [mode, chemin, arg3, arg4, arg5] = process.argv.slice(2);
+  const [mode, chemin, arg3, arg4, arg5, arg6] = process.argv.slice(2);
   const resume = lire(chemin);
   if (!resume?.total) {
     console.error(`Résumé de couverture illisible : ${chemin}`);
@@ -176,6 +176,7 @@ if (
       historique: arg4 && arg4 !== "-" ? (lire(arg4) ?? []) : [],
       seuils: await seuils(),
       legende: arg5,
+      versus: arg6,
     });
   } else sortie = markdown(resume, arg3 ? lire(arg3) : null, await seuils());
   process.stdout.write(sortie);

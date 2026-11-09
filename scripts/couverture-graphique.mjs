@@ -24,7 +24,7 @@ export const teinteZone = (p) => (p >= 70 ? VERT : p >= 50 ? ORANGE : ROUGE);
 // Mesures globales : rouge sous le seuil de la CI, sinon mêmes paliers que les zones
 export const teinteSeuil = (p, seuil) => (p < seuil ? ROUGE : teinteZone(p));
 
-function jauge(x, y, valeur, seuil, nom, ecart) {
+function jauge(x, y, valeur, seuil, nom, ecart, versus) {
   const r = 46;
   const c = 2 * Math.PI * r;
   const t = teinteSeuil(valeur, seuil);
@@ -34,7 +34,7 @@ function jauge(x, y, valeur, seuil, nom, ecart) {
   const delta =
     ecart == null || Math.abs(ecart) < 0.05
       ? ""
-      : `<text x="${x}" y="${y + 98}" class="petit" fill="${ecart > 0 ? VERT : ROUGE}" text-anchor="middle">${ecart > 0 ? "▲ +" : "▼ "}${virgule(ecart)} pt vs develop</text>`;
+      : `<text x="${x}" y="${y + 98}" class="petit" fill="${ecart > 0 ? VERT : ROUGE}" text-anchor="middle">${ecart > 0 ? "▲ +" : "▼ "}${virgule(ecart)} pt vs ${esc(versus)}</text>`;
   return `<g>
 <circle cx="${x}" cy="${y}" r="${r}" class="piste" stroke-width="12" fill="none"/>
 <circle cx="${x}" cy="${y}" r="${r}" stroke="${t}" stroke-width="12" fill="none" stroke-linecap="round"
@@ -109,6 +109,7 @@ export function graphique({
   seuils,
   historique = [],
   legende,
+  versus = "develop",
 }) {
   const t = resume.total;
   const ref = base?.total;
@@ -120,6 +121,7 @@ export function graphique({
       seuils[cle],
       nom,
       ref ? t[cle].pct - ref[cle].pct : null,
+      versus,
     ),
   ).join("\n");
   const z = zones(liste, 270);
