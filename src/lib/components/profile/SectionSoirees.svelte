@@ -55,7 +55,7 @@
   .row:last-child { border-bottom: none; }
   .date { font-family: "JetBrains Mono", monospace; font-size: 0.68rem; color: var(--mid); }
   .rank { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 0.9rem; }
-  .rank small { font-weight: 600; color: var(--dim); }
+  .rank small { margin-left: 0.35em; font-weight: 600; color: var(--dim); }
   .top .rank { color: var(--gold); }
   .team { font-size: 0.82rem; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .left { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
