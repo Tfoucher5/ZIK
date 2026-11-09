@@ -11,11 +11,11 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">PR #342 · dc00b86 · 10/11 00:20</text>
+<text x="836" y="38" class="petit" text-anchor="end">PR #342 · 6206f88 · 10/11 00:24</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="266.65587116257876 289.02652413026095" transform="rotate(-90 120 140)"/>
+  stroke-dasharray="266.7136764674048 289.02652413026095" transform="rotate(-90 120 140)"/>
 <polyline points="131.43362879187305,175.18909110292068 136.9959346906221,192.30810839623345" class="trait" stroke-width="3"/>
 <text x="120" y="147" class="valeur" text-anchor="middle">92,3<tspan class="unite"> %</tspan></text>
 <text x="120" y="206" class="nom" text-anchor="middle">Lignes</text>
@@ -24,7 +24,7 @@
 <g>
 <circle cx="327" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="327" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="262.00254412408157 289.02652413026095" transform="rotate(-90 327 140)"/>
+  stroke-dasharray="262.0603494289076 289.02652413026095" transform="rotate(-90 327 140)"/>
 <polyline points="342.7538337879077,173.47860094124272 350.417861036079,189.76548788563107" class="trait" stroke-width="3"/>
 <text x="327" y="147" class="valeur" text-anchor="middle">90,7<tspan class="unite"> %</tspan></text>
 <text x="327" y="206" class="nom" text-anchor="middle">Instructions</text>
@@ -77,16 +77,16 @@
 <rect x="190" y="410" width="455.98409542743536" height="14" rx="7" fill="#2ea043"/>
 <text x="674" y="422" class="chiffre">97,0 %</text>
 <text x="836" y="422" class="petit" text-anchor="end">488 / 503 lignes</text>
-<text x="24" y="447" class="zone">services (racine)</text>
+<text x="24" y="447" class="zone">services/cards</text>
 <rect x="190" y="436" width="470" height="14" rx="7" class="piste-plein"/>
-<rect x="190" y="436" width="467.4731182795699" height="14" rx="7" fill="#2ea043"/>
-<text x="674" y="448" class="chiffre">99,5 %</text>
-<text x="836" y="448" class="petit" text-anchor="end">185 / 186 lignes</text>
-<text x="24" y="473" class="zone">services/cards</text>
+<rect x="190" y="436" width="468.3479789103691" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="448" class="chiffre">99,6 %</text>
+<text x="836" y="448" class="petit" text-anchor="end">567 / 569 lignes</text>
+<text x="24" y="473" class="zone">services (racine)</text>
 <rect x="190" y="462" width="470" height="14" rx="7" class="piste-plein"/>
-<rect x="190" y="462" width="468.3479789103691" height="14" rx="7" fill="#2ea043"/>
-<text x="674" y="474" class="chiffre">99,6 %</text>
-<text x="836" y="474" class="petit" text-anchor="end">567 / 569 lignes</text>
+<rect x="190" y="462" width="470" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="474" class="chiffre">100,0 %</text>
+<text x="836" y="474" class="petit" text-anchor="end">186 / 186 lignes</text>
 <text x="24" y="499" class="zone">services/admin</text>
 <rect x="190" y="488" width="470" height="14" rx="7" class="piste-plein"/>
 <rect x="190" y="488" width="470" height="14" rx="7" fill="#2ea043"/>
