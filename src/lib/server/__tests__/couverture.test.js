@@ -38,7 +38,7 @@ describe("couverture des tests", () => {
     expect(zone(String.raw`C:\z\src\lib\server\services\music\deezer.js`)).toBe(
       "services/music",
     );
-    expect(zone("/x/src/lib/server/socket/index.js")).toBe("socket");
+    expect(zone("/x/src/lib/server/socket/index.js")).toBe("socket (racine)");
     expect(zone("/x/autre/fichier.js")).toBeNull();
   });
 
@@ -79,8 +79,8 @@ describe("couverture des tests", () => {
   it("badge : lignes couvertes arrondies, couleur selon le niveau", () => {
     expect(badge(resume(0, 0, 0, 64.7).total)).toContain(">65 %<");
     expect([couleur(85), couleur(65), couleur(50), couleur(30)]).toEqual([
-      "#3fb950",
-      "#a3c93a",
+      "#2ea043",
+      "#d29922",
       "#d29922",
       "#e5534b",
     ]);

@@ -10,12 +10,14 @@ Les règles de travail sont dans [`CLAUDE.md`](CLAUDE.md). Ce README sert à s'y
 
 ## 🚦 Tout va bien ?
 
-| Où regarder                                                                                             | Ce que ça dit                                                                      |
-| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Badges ci-dessus                                                                                        | CI de `develop`, part du serveur couverte par les tests, chien de garde de la prod |
-| [`/statut`](https://www.zik-music.fr/statut) · [`/admin/statut`](https://www.zik-music.fr/admin/statut) | État des services en prod, public et détaillé                                      |
-| Commentaire « Couverture » sur chaque PR                                                                | ✅ / ⚠️ / ❌ face au seuil, écart avec `develop`, zones les moins testées          |
-| Railway                                                                                                 | Logs et déploiements de `[PROD]` et `[DEV]`                                        |
+[![Tableau de bord de la couverture des tests](https://raw.githubusercontent.com/Tfoucher5/ZIK/couverture/graphique.svg)](https://github.com/Tfoucher5/ZIK/actions/workflows/ci.yml?query=branch%3Adevelop)
+
+| Où regarder                                                                                             | Ce que ça dit                                                                              |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Badges ci-dessus                                                                                        | CI de `develop`, part du serveur couverte par les tests, chien de garde de la prod         |
+| [`/statut`](https://www.zik-music.fr/statut) · [`/admin/statut`](https://www.zik-music.fr/admin/statut) | État des services en prod, public et détaillé                                              |
+| Commentaire « Couverture » sur chaque PR                                                                | Même tableau de bord pour la PR, plus ✅ / ⚠️ / ❌ face au seuil et l’écart avec `develop` |
+| Railway                                                                                                 | Logs et déploiements de `[PROD]` et `[DEV]`                                                |
 
 ## 🌍 Environnements
 
