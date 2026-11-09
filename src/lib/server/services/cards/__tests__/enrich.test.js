@@ -269,12 +269,9 @@ describe("enrichTrack", () => {
 
   // dominantColor (enrich.js) : resvg rend une image qu'il ne sait pas lire
   // comme un pixel transparent (0, 0, 0, 0), et l'alpha n'est pas vérifié
-  it.skip("BUG : pochette illisible → couleur noire #000000 au lieu de null", async () => {
-    const color = await coverColor(async () => ({
-      ok: true,
-      arrayBuffer: async () => new ArrayBuffer(3),
-    }));
-    expect(color).toBeNull();
+  it.fails("BUG : pochette illisible → #000000 au lieu de null", async () => {
+    const bad = { ok: true, arrayBuffer: async () => new ArrayBuffer(3) };
+    expect(await coverColor(async () => bad)).toBeNull();
   });
 
   it("créée entre-temps (23505) : relit la carte de l'autre traitement", async () => {

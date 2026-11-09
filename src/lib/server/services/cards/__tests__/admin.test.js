@@ -68,10 +68,13 @@ describe("auditCatalog", () => {
 describe("deleteCards", () => {
   it("supprime par paquets de 200 et recompte les sets touchés", async () => {
     const ids = Array.from({ length: 250 }, (_, i) => `c${i}`);
-    const counts = { s1: 4, s2: 0 };
+    const counts = { s1: 4, s2: 0, s3: 0 };
+    // 1er paquet : cartes de s1 (deux fois) et s2 ; 2e paquet : carte de s3
     const sb = fakeSupabase((q) => {
       if (q.table === "card_set_items" && arg(q, "in"))
-        return { data: [{ set_id: "s1" }, { set_id: "s2" }, { set_id: "s1" }] };
+        return arg(q, "in")[1].includes("c0")
+          ? { data: [{ set_id: "s1" }, { set_id: "s2" }, { set_id: "s1" }] }
+          : { data: [{ set_id: "s3" }] };
       if (q.table === "card_set_items")
         return { count: counts[eqOf(q, "set_id")] };
     });
@@ -81,11 +84,12 @@ describe("deleteCards", () => {
     );
     expect(dels).toEqual([200, 50]);
     // Set encore rempli : recompté ; set vidé : supprimé
-    const up = writes(sb, "card_sets", "update")[0];
-    expect(arg(up, "update")[0]).toEqual({ card_count: 4 });
-    expect(eqOf(up, "id")).toBe("s1");
+    const ups = writes(sb, "card_sets", "update");
+    expect(ups).toHaveLength(1);
+    expect(arg(ups[0], "update")[0]).toEqual({ card_count: 4 });
+    expect(eqOf(ups[0], "id")).toBe("s1");
     expect(writes(sb, "card_sets", "delete").map((q) => eqOf(q, "id"))).toEqual(
-      ["s2", "s2"],
+      ["s2", "s3"],
     );
   });
 

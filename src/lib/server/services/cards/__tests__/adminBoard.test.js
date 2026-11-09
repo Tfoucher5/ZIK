@@ -7,6 +7,7 @@ vi.mock("../../../config.js", () => ({ getAdminClient: () => m.sb }));
 const { cardsAdminBoard } = await import("../adminBoard.js");
 
 let found;
+let pairGrants;
 const respond = (q) => {
   const head = arg(q, "select")?.[1]?.head;
   switch (q.table) {
@@ -17,7 +18,8 @@ const respond = (q) => {
       };
     case "card_grants":
       if (head) return { count: eqOf(q, "status") === "granted" ? 12 : 0 };
-      if (has(q, "range")) return { data: [] };
+      if (has(q, "range"))
+        return { data: arg(q, "range")[0] === 0 ? pairGrants : [] };
       return {
         data: [{ id: "g1", user_id: "u1", cards: { number: 5 } }],
       };
@@ -41,6 +43,13 @@ const respond = (q) => {
         ],
         count: null,
       };
+    case "game_players":
+      return {
+        data: arg(q, "in")[1].flatMap((game_id) => [
+          { game_id, user_id: "u1" },
+          { game_id, user_id: "u9" },
+        ]),
+      };
     case "tracks":
       return { count: 4 };
     case "card_set_items":
@@ -52,6 +61,7 @@ const respond = (q) => {
 
 beforeEach(() => {
   found = null;
+  pairGrants = [];
   m.sb = fakeSupabase(respond);
 });
 
@@ -143,6 +153,26 @@ describe("cardsAdminBoard", () => {
       sets: [{ id: "s1" }],
       grants: { granted: 12, pending: 0 },
     });
+  });
+
+  it("duo suspect : pseudos du joueur et de son partenaire", async () => {
+    pairGrants = ["g0", "g1", "g2", "g3", "g4"].map((game_id) => ({
+      id: game_id,
+      user_id: "u1",
+      game_id,
+    }));
+    const b = await cardsAdminBoard({});
+    expect(b.pairs).toEqual([
+      {
+        userId: "u1",
+        partnerId: "u9",
+        games: 5,
+        together: 5,
+        cards: 5,
+        username: "name-u1",
+        partner: "name-u9",
+      },
+    ]);
   });
 
   it("fiche d'une carte inconnue : null", async () => {

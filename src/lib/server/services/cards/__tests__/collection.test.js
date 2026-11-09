@@ -4,8 +4,13 @@ import { fakeSupabase, arg, eqOf, has } from "./fakeSupabase.js";
 const m = vi.hoisted(() => ({ sb: null }));
 vi.mock("../../../config.js", () => ({ getAdminClient: () => m.sb }));
 
-const { getCollection, getSetCards, catalogTotals } =
-  await import("../collection.js");
+// Module rechargé à chaque test : le cache des totaux repart vide
+let getCollection, getSetCards, catalogTotals;
+beforeEach(async () => {
+  vi.resetModules();
+  ({ getCollection, getSetCards, catalogTotals } =
+    await import("../collection.js"));
+});
 
 const NOW = new Date("2026-06-15T12:00:00Z");
 const card = (id, number, extra = {}) => ({

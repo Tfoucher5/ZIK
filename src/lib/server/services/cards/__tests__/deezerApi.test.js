@@ -6,13 +6,15 @@ vi.mock("../../music/spotify.js", () => ({
   getSpotifyToken: async () => "tok",
 }));
 
-const { deezer, firstReleaseFromIsrc, cached, spotifyIsrc, youtubeTitle } =
-  await import("../deezerApi.js");
-
 const reply = (body, ok = true) => ({ ok, json: async () => body });
 let fetchMock;
+// Module rechargé à chaque test : le créneau MusicBrainz repart de zéro
+let deezer, firstReleaseFromIsrc, cached, spotifyIsrc, youtubeTitle;
 
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  ({ deezer, firstReleaseFromIsrc, cached, spotifyIsrc, youtubeTitle } =
+    await import("../deezerApi.js"));
   deezerFetch.mockReset();
   fetchMock = vi.fn();
   vi.stubGlobal("fetch", fetchMock);

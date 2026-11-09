@@ -60,6 +60,7 @@ function db() {
         return { data: world.links };
       case "rooms":
         world.roomFilter = arg(q, "or")[0];
+        world.publicOnly = eqOf(q, "is_public");
         return { data: world.rooms };
     }
   });
@@ -106,6 +107,7 @@ describe("notifySetsNearlyDone", () => {
           kind: "artist",
           setName: "Set s1",
           cover: "cover-s1",
+          // Voulu : le jeu rejoint une room par son code (/game?roomId=<code>)
           roomId: "ROOM1",
           roomCode: "ROOM1",
           roomName: "Années 80",
@@ -114,6 +116,7 @@ describe("notifySetsNearlyDone", () => {
       },
     ]);
     expect(world.roomFilter).toBe("playlist_id.in.(9),id.in.(r1)");
+    expect(world.publicOnly).toBe(true);
   });
 
   it("ne donne jamais l'id, le titre ni l'artiste de la carte manquante", async () => {
