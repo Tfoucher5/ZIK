@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resetFake } from "../../__tests__/fakeSupabase.js";
 
 const h = vi.hoisted(() => ({ deezer: vi.fn(), itunes: vi.fn() }));
-vi.mock("../../../config.js", async () => {
-  const { fakeClient } = await import("../../__tests__/fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("../../../config.js", async () =>
+  (await import("../../__tests__/fakeQuery.js")).fakeClients(h),
+);
 vi.mock("../deezer.js", async (orig) => ({
   ...(await orig()),
   fetchDeezerTrackPreview: h.deezer,
@@ -23,9 +20,10 @@ const DAY = 86_400_000;
 const sec = (ms) => Math.floor(ms / 1000);
 const dzUrl = (expMs) => `https://cdn/p.mp3?hdnea=exp=${sec(expMs)}~acl=x`;
 const updates = () =>
-  h.calls
-    .filter((q) => q.table === "tracks" && q.has("update"))
-    .map((q) => ({ id: q.ops.find(([o]) => o === "eq")[2], ...q.ops[0][1] }));
+  h.admin
+    .of("tracks")
+    .filter((q) => q.has("update"))
+    .map((q) => ({ id: q.args("eq")[1], ...q.args("update")[0] }));
 const meta = (id, o = {}) => ({
   id,
   artist: "A",
@@ -37,7 +35,7 @@ const meta = (id, o = {}) => ({
 });
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   h.deezer.mockReset().mockResolvedValue(null);
   h.itunes.mockReset().mockResolvedValue(null);
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -46,6 +44,11 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 afterEach(() => vi.useRealTimers());
+// Écritures et lectures du catalogue : client admin seulement
+afterEach(() => {
+  expect(h.anon.queries).toEqual([]);
+  vi.restoreAllMocks();
+});
 
 describe("calcSpeedBonus", () => {
   it.each([
@@ -157,13 +160,13 @@ describe("loadPlaylist", () => {
   it("room personnalisée : ses titres, sans base", async () => {
     customRooms[ROOM] = { tracks: ["x"] };
     expect(await loadPlaylist(ROOM)).toEqual(["x"]);
-    expect(h.calls).toEqual([]);
+    expect(h.admin.queries).toEqual([]);
   });
 
   it("cache utilisé, sauf en lancement de partie", async () => {
     playlistCache[ROOM] = [{ title: "cache" }];
     expect(await loadPlaylist(ROOM)).toEqual([{ title: "cache" }]);
-    expect(h.calls).toEqual([]);
+    expect(h.admin.queries).toEqual([]);
     // Room inconnue en base : la dernière version connue plutôt que rien
     expect(await loadPlaylist(ROOM, { fresh: true })).toEqual([
       { title: "cache" },
@@ -185,12 +188,8 @@ describe("loadPlaylist", () => {
     const tracks = await loadPlaylist(ROOM);
     expect(tracks.map((t) => t.id)).toEqual(["t1", "t2", "t3"]);
     expect(playlistCache[ROOM]).toBe(tracks);
-    const q = h.calls.find((c) => c.table === "custom_playlist_tracks");
-    expect(q.ops.find(([o]) => o === "in")).toEqual([
-      "in",
-      "playlist_id",
-      ["p1", "p2"],
-    ]);
+    const [q] = h.admin.of("custom_playlist_tracks");
+    expect(q.args("in")).toEqual(["playlist_id", ["p1", "p2"]]);
   });
 
   it("moins de 3 titres via room_playlists : repli sur playlist_id", async () => {

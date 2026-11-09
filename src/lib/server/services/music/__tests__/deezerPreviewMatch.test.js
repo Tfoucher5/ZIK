@@ -185,12 +185,28 @@ describe("rafraîchissement d'un extrait", () => {
     expect(await fetchDeezerTrackPreview("42")).toBeNull();
   });
 
-  it("iTunes par nom : premier résultat avec extrait", async () => {
+  it("iTunes par nom : extrait du bon titre", async () => {
     repond({
-      results: [{ trackName: "x" }, { previewUrl: "https://it/p.m4a" }],
+      results: [
+        { artistName: "Adele", trackName: "Hello" },
+        { artistName: "Adele", trackName: "Hello", previewUrl: "bon" },
+      ],
     });
-    expect(await iTunesPreviewSearch("A", "T")).toBe("https://it/p.m4a");
+    expect(await iTunesPreviewSearch("Adele", "Hello")).toBe("bon");
   });
+  // Utilisé par refreshExpiredPreviews (playlist.js) : contraire à la règle de
+  // deezer.js « mieux vaut pas d'extrait qu'un autre morceau joué devant la salle »
+  it.fails(
+    "BUG : iTunes par nom accepte un autre morceau que celui demandé",
+    async () => {
+      repond({
+        results: [
+          { artistName: "Piano Queen", trackName: "Hello", previewUrl: "faux" },
+        ],
+      });
+      expect(await iTunesPreviewSearch("Adele", "Hello")).toBeNull();
+    },
+  );
   it("iTunes : nom manquant, échec HTTP, aucun extrait ou panne : null", async () => {
     repond({ results: [] });
     expect(await iTunesPreviewSearch("", "T")).toBeNull();

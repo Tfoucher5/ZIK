@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resetFake } from "./fakeSupabase.js";
 
 const h = vi.hoisted(() => ({}));
-vi.mock("../../config.js", async () => {
-  const { fakeClient } = await import("./fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("../../config.js", async () =>
+  (await import("./fakeQuery.js")).fakeClients(h),
+);
 vi.mock("../../stripe.js", () => ({
   planForPrice: (id) => ({ p_m: "monthly", p_y: "yearly" })[id] ?? null,
 }));
@@ -17,14 +14,18 @@ const { isProActive, isPro, getProRow, activateNight, syncSubscription } =
 const NOW = Date.parse("2026-11-09T20:00:00Z");
 const H = 3600_000;
 const iso = (ms) => new Date(ms).toISOString();
-const upserts = () =>
-  h.calls
-    .filter((q) => q.ops)
-    .flatMap((q) => q.ops.filter(([o]) => o === "upsert").map(([, v]) => v));
+// Accès Pro : écrit par le client admin seulement, jamais par l'anonyme
+const upserts = () => {
+  expect(h.writes(h.anon)).toEqual([]);
+  return h.admin
+    .of("pro_subscriptions")
+    .filter((q) => q.has("upsert"))
+    .map((q) => q.args("upsert")[0]);
+};
 const row = (r) => (h.tables.pro_subscriptions = { data: r, error: null });
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
@@ -53,13 +54,14 @@ describe("isPro", () => {
   it("faux sans userId, sans requête", async () => {
     expect(await isPro(null)).toBe(false);
     expect(await isPro("")).toBe(false);
-    expect(h.calls).toHaveLength(0);
+    expect(h.all()).toHaveLength(0);
   });
   it("lit la ligne du compte", async () => {
     row({ status: "active", current_period_end: iso(NOW + H) });
     expect(await isPro("u1")).toBe(true);
-    expect(h.calls[0].table).toBe("pro_subscriptions");
-    expect(h.calls[0].has("eq", "user_id", "u1")).toBe(true);
+    const [q] = h.admin.of("pro_subscriptions");
+    expect(q.has("eq", "user_id", "u1")).toBe(true);
+    expect(h.anon.queries).toEqual([]);
   });
   it("faux sans abonnement", async () => {
     row(null);
@@ -115,17 +117,20 @@ describe("activateNight : passe Soirée de 24 h", () => {
   // grantPro (admin/userActions.js) écrit plan « manual » sans abonnement
   // Stripe : /api/pro/checkout laisse alors acheter un passe après
   // confirmation, et activateNight remplace la date de fin par maintenant + 24 h.
-  it.skip("BUG : un passe acheté pendant un accès offert de 30 jours le raccourcit à 24 h", async () => {
-    row({
-      plan: "manual",
-      status: "active",
-      current_period_end: iso(NOW + 30 * 24 * H),
-    });
-    await activateNight("u1", "cus_1", "cs_3");
-    expect(Date.parse(upserts()[0].current_period_end)).toBeGreaterThanOrEqual(
-      NOW + 30 * 24 * H,
-    );
-  });
+  it.fails(
+    "BUG : un passe acheté pendant un accès offert de 30 jours le raccourcit à 24 h",
+    async () => {
+      row({
+        plan: "manual",
+        status: "active",
+        current_period_end: iso(NOW + 30 * 24 * H),
+      });
+      await activateNight("u1", "cus_1", "cs_3");
+      expect(
+        Date.parse(upserts()[0].current_period_end),
+      ).toBeGreaterThanOrEqual(NOW + 30 * 24 * H);
+    },
+  );
 });
 
 const sub = (over = {}) => ({
@@ -146,7 +151,7 @@ describe("syncSubscription : abonnement Stripe recopié", () => {
   it("ignoré sans user_id dans les métadonnées", async () => {
     expect(await syncSubscription(sub({ metadata: {} }))).toBeNull();
     expect(await syncSubscription(sub({ metadata: undefined }))).toBeNull();
-    expect(h.calls).toHaveLength(0);
+    expect(h.all()).toHaveLength(0);
   });
   it("ignoré si le prix ne correspond à aucune formule", async () => {
     const s = sub();
@@ -211,6 +216,6 @@ describe("syncSubscription : abonnement Stripe recopié", () => {
   });
   it("actif : ne relit pas la ligne courante", async () => {
     await syncSubscription(sub());
-    expect(h.calls.filter((q) => q.has?.("select", "*"))).toHaveLength(0);
+    expect(h.all().filter((q) => q.has("select", "*"))).toHaveLength(0);
   });
 });

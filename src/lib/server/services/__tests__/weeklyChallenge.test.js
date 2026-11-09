@@ -1,12 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { resetFake } from "./fakeSupabase.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const h = vi.hoisted(() => ({}));
-vi.mock("../../config.js", async () => {
-  const { fakeClient } = await import("./fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("../../config.js", async () =>
+  (await import("./fakeQuery.js")).fakeClients(h),
+);
 
 const w = await import("../weeklyChallenge.js");
 
@@ -20,8 +17,14 @@ const contrib = (name, amount, prive = false) => ({
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   vi.spyOn(console, "error").mockImplementation(() => {});
+});
+// Défi et contributions : tout passe par le client admin, jamais l'anonyme
+afterEach(() => {
+  expect(h.anon.queries).toEqual([]);
+  expect(h.anon.client.rpc).not.toHaveBeenCalled();
+  vi.restoreAllMocks();
 });
 
 describe("défi courant", () => {
@@ -64,7 +67,7 @@ describe("défi courant", () => {
     const s = await w.getWeeklyChallengeState();
     expect(s.top.map((r) => r.profiles.username)).toEqual(["a", "b", "c"]);
     expect(s.top[0].profiles).toEqual({ username: "a", avatar_url: "a.png" });
-    expect(h.calls.at(-1).has("eq", "challenge_id", 7)).toBe(true);
+    expect(h.admin.queries.at(-1).has("eq", "challenge_id", 7)).toBe(true);
   });
   it("état homepage : contributions en panne → top vide", async () => {
     h.rpcs.pick_weekly_challenge = ok([{ id: 7, type: "zikle_wins" }]);
@@ -121,7 +124,7 @@ describe("classements et archives", () => {
       { username: "q", is_private: false },
     ]);
     expect(a[0].label).toBe("Bonnes réponses");
-    const q = h.calls[0];
+    const [q] = h.admin.queries;
     expect(q.has("neq", "status", "active") && q.has("limit", 10)).toBe(true);
   });
   it("archives en panne : []", async () => {
@@ -164,11 +167,11 @@ describe("bumpWeeklyChallenge : fire-and-forget", () => {
     h.rpcs.increment_weekly_challenge = ok(null);
     expect(w.bumpWeeklyChallenge("games_played", "u1", 2)).toBeUndefined();
     await flush();
-    expect(h.calls).toEqual([
-      {
-        rpc: "increment_weekly_challenge",
-        args: { p_type: "games_played", p_user_id: "u1", p_amount: 2 },
-      },
+    expect(h.admin.client.rpc.mock.calls).toEqual([
+      [
+        "increment_weekly_challenge",
+        { p_type: "games_played", p_user_id: "u1", p_amount: 2 },
+      ],
     ]);
   });
   it.each([
@@ -177,7 +180,7 @@ describe("bumpWeeklyChallenge : fire-and-forget", () => {
     ["u1", -3],
   ])("ignoré : user %s, montant %i", (user, amount) => {
     w.bumpWeeklyChallenge("games_played", user, amount);
-    expect(h.calls).toEqual([]);
+    expect(h.admin.client.rpc).not.toHaveBeenCalled();
   });
   it("erreur et rejet absorbés, journalisés", async () => {
     h.rpcs.increment_weekly_challenge = KO;

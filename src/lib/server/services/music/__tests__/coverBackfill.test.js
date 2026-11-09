@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resetFake } from "../../__tests__/fakeSupabase.js";
 
 const h = vi.hoisted(() => ({ dz: vi.fn(), token: vi.fn() }));
-vi.mock("$lib/server/config.js", async () => {
-  const { fakeClient } = await import("../../__tests__/fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("$lib/server/config.js", async () =>
+  (await import("../../__tests__/fakeQuery.js")).fakeClients(h),
+);
 vi.mock("../deezerClient.js", () => ({ deezerFetch: h.dz }));
 vi.mock("../spotify.js", () => ({ getSpotifyToken: h.token }));
 
@@ -15,13 +12,14 @@ const { backfillCovers } = await import("../coverBackfill.js");
 const sp = (i) => ({ id: `s${i}`, external_id: `sp${i}`, source: "spotify" });
 const dzT = (i) => ({ id: `d${i}`, external_id: `dz${i}`, source: "deezer" });
 const written = () =>
-  h.calls
-    .filter((q) => q.has?.("update"))
-    .map((q) => [q.ops.find(([o]) => o === "eq")[2], q.ops[0][1].cover_url]);
+  h.admin
+    .of("tracks")
+    .filter((q) => q.has("update"))
+    .map((q) => [q.args("eq")[1], q.args("update")[0].cover_url]);
 let spotifyRes;
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   h.dz.mockReset().mockResolvedValue({});
   h.token.mockReset().mockResolvedValue("tok");
   spotifyRes = (ids) => ({
@@ -42,6 +40,11 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 afterEach(() => vi.unstubAllGlobals());
+// Écritures et lectures du catalogue : client admin seulement
+afterEach(() => {
+  expect(h.anon.queries).toEqual([]);
+  vi.restoreAllMocks();
+});
 
 describe("backfillCovers", () => {
   it("Spotify par paquets de 50, pochette moyenne", async () => {
@@ -56,7 +59,7 @@ describe("backfillCovers", () => {
     expect(written()[0]).toEqual(["s0", "sp0-300"]);
   });
 
-  it("Spotify : paquet refusé sauté, titre sans pochette ignoré", async () => {
+  it("Spotify : titre sans pochette ignoré, pochette unique gardée", async () => {
     h.tables.tracks = (q) => (q.has("limit") ? { data: [sp(1), sp(2)] } : {});
     spotifyRes = () => ({
       ok: true,
@@ -66,11 +69,21 @@ describe("backfillCovers", () => {
     });
     await backfillCovers(["p1"]);
     expect(written()).toEqual([["s1", "seule"]]);
-    spotifyRes = () => ({ ok: false });
-    resetFake(h);
-    h.tables.tracks = (q) => (q.has("limit") ? { data: [sp(1)] } : {});
+  });
+
+  it("Spotify : un paquet refusé n'arrête pas le suivant", async () => {
+    h.tables.tracks = (q) =>
+      q.has("limit")
+        ? { data: Array.from({ length: 52 }, (_, i) => sp(i)) }
+        : {};
+    const ok = spotifyRes;
+    spotifyRes = (ids) => (ids.includes("sp0") ? { ok: false } : ok(ids));
     await backfillCovers(["p1"]);
-    expect(written()).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(written()).toEqual([
+      ["s50", "sp50-300"],
+      ["s51", "sp51-300"],
+    ]);
   });
 
   it("Spotify non configuré : Deezer traité quand même", async () => {
@@ -110,12 +123,12 @@ describe("backfillCovers", () => {
     const premier = backfillCovers(["p9"]);
     await backfillCovers(["p9"]);
     await new Promise((r) => setTimeout(r, 0));
-    expect(h.calls.filter((q) => q.has?.("limit"))).toHaveLength(1);
+    expect(h.admin.queries.filter((q) => q.has("limit"))).toHaveLength(1);
     lache();
     await premier;
     h.tables.tracks = { data: [] };
     await backfillCovers(["p9"]);
-    expect(h.calls.filter((q) => q.has?.("limit"))).toHaveLength(2);
+    expect(h.admin.queries.filter((q) => q.has("limit"))).toHaveLength(2);
   });
 
   it("base en panne : journalisé, verrou libéré", async () => {
@@ -129,6 +142,6 @@ describe("backfillCovers", () => {
     );
     h.tables.tracks = { data: [] };
     await backfillCovers(["p1"]);
-    expect(h.calls).toHaveLength(2);
+    expect(h.admin.queries).toHaveLength(2);
   });
 });

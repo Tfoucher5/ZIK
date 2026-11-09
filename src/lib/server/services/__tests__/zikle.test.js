@@ -184,9 +184,23 @@ describe("refreshZiklePool", () => {
   });
   it("7 jours pile : remplie, en appel de fond", async () => {
     latest = { added_at: new Date(NOW - 7 * DAY).toISOString() };
-    expect(await refreshZiklePool(sb())).toEqual({ refreshed: true, added: 1 });
+    const c = sb();
+    expect(await refreshZiklePool(c)).toEqual({ refreshed: true, added: 1 });
     expect(m.fetch).toHaveBeenCalledWith("/chart/0/tracks?limit=100", {
       bulk: true,
+    });
+    expect(c.rpc).toHaveBeenCalledWith("resolve_tracks", {
+      p_tracks: [
+        {
+          artist: "A",
+          title: "T",
+          preview_url: "https://cdn/p",
+          preview_expires_at: "2099-01-01T00:00:00.000Z",
+          cover_url: null,
+          external_id: "5",
+          source: "deezer",
+        },
+      ],
     });
     expect(m.enqueue).toHaveBeenCalledWith(["t1"]);
     expect(insert.calls).toEqual([

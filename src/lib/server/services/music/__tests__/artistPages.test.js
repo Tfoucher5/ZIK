@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resetFake } from "../../__tests__/fakeSupabase.js";
 
 const h = vi.hoisted(() => ({ refresh: vi.fn(), room: vi.fn() }));
-vi.mock("$lib/server/config.js", async () => {
-  const { fakeClient } = await import("../../__tests__/fakeSupabase.js");
-  return { supabase: fakeClient(h) };
-});
+vi.mock("$lib/server/config.js", async () => ({
+  supabase: (await import("../../__tests__/fakeQuery.js")).fakeClients(h)
+    .supabase,
+}));
 vi.mock("$lib/server/services/music/playlist.js", async () => ({
   ...(await import("../playlist.js")),
   refreshExpiredPreviews: h.refresh,
@@ -23,9 +22,9 @@ const index = (tracks, fans) => {
 };
 
 beforeEach(async () => {
-  resetFake(h);
   vi.resetModules();
   ap = await import("../artistPages.js");
+  h.reset();
   h.refresh.mockReset();
   h.room.mockReset().mockImplementation((r) => r);
   h.artistRows = () => ({ data: [] });
@@ -54,11 +53,9 @@ describe("index des artistes", () => {
       { slug: "angele", name: "Angèle", trackCount: 10, nbFan: 3_000_000 },
       { slug: "stromae", name: "Stromae", trackCount: 12, nbFan: 2_000_000 },
     ]);
-    expect(
-      h.calls
-        .find((q) => q.table === "card_artists")
-        .has("gte", "nb_fan", 50_000),
-    ).toBe(true);
+    expect(h.anon.of("card_artists")[0].has("gte", "nb_fan", 50_000)).toBe(
+      true,
+    );
   });
 
   it("même slug : l'artiste le plus suivi gagne", async () => {
@@ -91,10 +88,10 @@ describe("index des artistes", () => {
     index(many("A", 10), [{ name: "A", nb_fan: 60_000 }]);
     await ap.listArtists();
     await ap.findArtist("a");
-    const n = h.calls.length;
+    const n = h.anon.queries.length;
     vi.advanceTimersByTime(6 * 3600_000 + 1);
     await ap.listArtists();
-    expect(h.calls.length).toBe(n + 2);
+    expect(h.anon.queries.length).toBe(n + 2);
   });
 
   it("erreur de base : levée, puis nouvel essai au prochain appel", async () => {

@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resetFake } from "./fakeSupabase.js";
 
 const h = vi.hoisted(() => ({}));
-vi.mock("../../config.js", async () => {
-  const { fakeClient } = await import("./fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("../../config.js", async () =>
+  (await import("./fakeQuery.js")).fakeClients(h),
+);
 
 const { checkAchievements, saveGameResult } =
   await import("../achievements.js");
@@ -63,14 +60,24 @@ const game = (o = {}) => ({
   totalRounds: 10,
   ...o,
 });
-const saved = () =>
-  h.calls
-    .find((q) => q.table === "user_achievements" && q.has("upsert"))
-    ?.ops.find(([o]) => o === "upsert");
+// Succès : écrits par le client admin seulement, jamais par l'anonyme
+const saved = () => {
+  expect(h.writes(h.anon)).toEqual([]);
+  return h.admin
+    .of("user_achievements")
+    .find((q) => q.has("upsert"))
+    ?.args("upsert");
+};
+const streakCall = () => {
+  expect(h.anon.client.rpc).not.toHaveBeenCalled();
+  return h.admin.client.rpc.mock.calls.find(
+    ([n]) => n === "update_player_streaks",
+  );
+};
 const ids = (r) => r.map((u) => `${u.id}:${u.tier ?? ""}`);
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   vi.useFakeTimers();
   t += 11 * 60_000; // cache des définitions (10 min) expiré à chaque test
   vi.setSystemTime(t);
@@ -86,7 +93,10 @@ beforeEach(() => {
   upsertError = null;
   setup();
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("checkAchievements : seuils", () => {
   it("rien à débloquer : aucune écriture", async () => {
@@ -97,17 +107,17 @@ describe("checkAchievements : seuils", () => {
   it("victoire à 2 joueurs : first_win, streak notée gagnée", async () => {
     const r = await checkAchievements("u1", game({ rank: 1, totalPlayers: 2 }));
     expect(ids(r)).toEqual(["first_win:"]);
-    expect(h.calls.find((c) => c.rpc)).toEqual({
-      rpc: "update_player_streaks",
-      args: { p_user_id: "u1", p_won: true },
-    });
+    expect(streakCall()).toEqual([
+      "update_player_streaks",
+      { p_user_id: "u1", p_won: true },
+    ]);
   });
 
   it("1er seul dans la partie : pas une victoire", async () => {
     expect(
       await checkAchievements("u1", game({ rank: 1, totalPlayers: 1 })),
     ).toEqual([]);
-    expect(h.calls.find((c) => c.rpc).args.p_won).toBe(false);
+    expect(streakCall()[1].p_won).toBe(false);
   });
 
   it.each([
@@ -187,7 +197,7 @@ describe("checkAchievements : pas de double attribution", () => {
 
   it("écriture idempotente côté base (ignoreDuplicates)", async () => {
     await checkAchievements("u1", game({ score: 40 }));
-    const [, rows, opts] = saved();
+    const [rows, opts] = saved();
     expect(rows).toEqual([
       { user_id: "u1", achievement_id: "big_game", tier: null },
     ]);
@@ -215,7 +225,7 @@ describe("checkAchievements : pannes silencieuses", () => {
     vi.resetModules();
     const neuf = await import("../achievements.js");
     expect(await neuf.checkAchievements("u1", game({ score: 40 }))).toEqual([]);
-    expect(h.calls.some((q) => q.table === "profiles")).toBe(false);
+    expect(h.all().some((q) => q.table === "profiles")).toBe(false);
   });
 
   it("RPC qui lève : rien, pas d'exception", async () => {
@@ -243,7 +253,7 @@ describe("checkAchievements : pannes silencieuses", () => {
     expect(ids(await checkAchievements("u1", game({ score: 40 })))).toEqual([
       "big_game:",
     ]);
-    expect(h.calls.filter((q) => q.table === "achievements")).toHaveLength(2);
+    expect(h.anon.of("achievements")).toHaveLength(2);
   });
 });
 
@@ -260,7 +270,8 @@ describe("saveGameResult", () => {
   it("insère et rend l'id", async () => {
     h.tables.game_results = { data: { id: "r1" }, error: null };
     expect(await saveGameResult(result)).toBe("r1");
-    const insert = h.calls[0].ops.find(([o]) => o === "insert")[1];
+    expect(h.anon.queries).toEqual([]);
+    const insert = h.admin.of("game_results")[0].args("insert")[0];
     expect(insert).toEqual({
       game_id: "g1",
       user_id: null,

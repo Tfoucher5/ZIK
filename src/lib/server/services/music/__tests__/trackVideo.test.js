@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resetFake } from "../../__tests__/fakeSupabase.js";
 
 const h = vi.hoisted(() => ({ cands: vi.fn(), info: vi.fn() }));
-vi.mock("../../../config.js", async () => {
-  const { fakeClient } = await import("../../__tests__/fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("../../../config.js", async () =>
+  (await import("../../__tests__/fakeQuery.js")).fakeClients(h),
+);
 vi.mock("../../../socket/game/audio.js", () => ({
   ytsCandidates: h.cands,
   ytVideoInfo: h.info,
@@ -24,13 +21,18 @@ const v = (id, title = "Clip") => ({
 });
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   h.cands.mockReset();
   h.info.mockReset();
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(Date.parse("2026-11-09T12:00:00Z"));
 });
 afterEach(() => vi.useRealTimers());
+// Écritures et lectures du catalogue : client admin seulement
+afterEach(() => {
+  expect(h.anon.queries).toEqual([]);
+  vi.restoreAllMocks();
+});
 
 describe("listVersions", () => {
   it("vidéo déjà fixée au catalogue : verrouillé, sans recherche", async () => {
@@ -40,9 +42,9 @@ describe("listVersions", () => {
       trackId: "t1",
       video: { id: ID },
     });
-    expect(h.calls[0].has("eq", "norm_key", "daft punk|one more time")).toBe(
-      true,
-    );
+    expect(
+      h.admin.queries[0].has("eq", "norm_key", "daft punk|one more time"),
+    ).toBe(true);
     expect(h.cands).not.toHaveBeenCalled();
   });
 
@@ -105,12 +107,11 @@ describe("pinVideoIfEmpty", () => {
   it("fixe seulement si aucune vidéo n'est déjà choisie", async () => {
     h.tables.tracks = { data: [{ id: "t1" }], error: null };
     expect(await pinVideoIfEmpty("t1", ID)).toBe(true);
-    const q = h.calls[0];
-    expect(
-      q.has("update") &&
-        q.has("eq", "id", "t1") &&
-        q.has("is", "youtube_id", null),
-    ).toBe(true);
+    const [q] = h.admin.of("tracks");
+    expect(q.args("update")).toEqual([{ youtube_id: ID }]);
+    expect(q.has("eq", "id", "t1") && q.has("is", "youtube_id", null)).toBe(
+      true,
+    );
   });
   it("déjà prise par un autre joueur : false", async () => {
     h.tables.tracks = { data: [], error: null };

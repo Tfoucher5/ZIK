@@ -1,12 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { resetFake } from "./fakeSupabase.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const h = vi.hoisted(() => ({}));
-vi.mock("../../config.js", async () => {
-  const { fakeClient } = await import("./fakeSupabase.js");
-  const c = fakeClient(h);
-  return { supabase: c, getAdminClient: () => c };
-});
+vi.mock("../../config.js", async () =>
+  (await import("./fakeQuery.js")).fakeClients(h),
+);
 
 const w = await import("../weeklyChallenge.js");
 
@@ -19,8 +16,14 @@ const contrib = (name, amount, prive = false) => ({
 });
 
 beforeEach(() => {
-  resetFake(h);
+  h.reset();
   vi.spyOn(console, "error").mockImplementation(() => {});
+});
+// Défi et contributions : tout passe par le client admin, jamais l'anonyme
+afterEach(() => {
+  expect(h.anon.queries).toEqual([]);
+  expect(h.anon.client.rpc).not.toHaveBeenCalled();
+  vi.restoreAllMocks();
 });
 
 describe("outils admin purs", () => {
@@ -102,8 +105,7 @@ describe("actions admin", () => {
     await expect(w.getWeeklyContributorsForAdmin(3)).rejects.toEqual(KO.error);
   });
 
-  const writes = (table, op) =>
-    h.calls.filter((q) => q.table === table && q.has(op));
+  const writes = (table, op) => h.admin.of(table).filter((q) => q.has(op));
   it("même type : seul l'objectif change", async () => {
     h.tables.weekly_challenges = (q) =>
       q.has("single")
@@ -113,9 +115,7 @@ describe("actions admin", () => {
       { reset: false },
     );
     expect(writes("weekly_challenge_contributions", "delete")).toHaveLength(0);
-    expect(writes("weekly_challenges", "update")[0].has("update")).toBe(true);
-    expect(writes("weekly_challenges", "update")[0].ops[0]).toEqual([
-      "update",
+    expect(writes("weekly_challenges", "update")[0].args("update")).toEqual([
       { target: 400 },
     ]);
   });
@@ -135,8 +135,7 @@ describe("actions admin", () => {
         1,
       ),
     ).toBe(true);
-    expect(writes("weekly_challenges", "update")[0].ops[0]).toEqual([
-      "update",
+    expect(writes("weekly_challenges", "update")[0].args("update")).toEqual([
       { type: "zikle_wins", target: 100, current_value: 0 },
     ]);
   });
@@ -175,7 +174,7 @@ describe("actions admin", () => {
   it("programmation : RPC et erreur remontée", async () => {
     h.rpcs.admin_schedule_weekly_challenge = ok(null);
     await w.scheduleWeeklyChallenge("2026-11-16", "games_played", 300);
-    expect(h.calls[0].args).toEqual({
+    expect(h.admin.client.rpc.mock.calls[0][1]).toEqual({
       p_week_start: "2026-11-16",
       p_type: "games_played",
       p_target: 300,
@@ -193,12 +192,12 @@ describe("actions admin", () => {
     await expect(w.cancelScheduledWeeklyChallenge(ws, today)).rejects.toThrow(
       "à venir",
     );
-    expect(h.calls).toEqual([]);
+    expect(h.admin.queries).toEqual([]);
   });
   it("annulation d'une semaine future : seulement un défi vierge", async () => {
     h.tables.weekly_challenges = ok(null);
     await w.cancelScheduledWeeklyChallenge("2026-11-16", "2026-11-15");
-    const q = h.calls[0];
+    const [q] = h.admin.queries;
     expect(q.has("delete")).toBe(true);
     expect(
       q.has("eq", "status", "active") && q.has("eq", "current_value", 0),
