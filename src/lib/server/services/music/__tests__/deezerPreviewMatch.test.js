@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { deezerPreviewMatch, iTunesPreviewMatch } from "../deezer.js";
+import {
+  deezerPreviewMatch,
+  iTunesPreviewMatch,
+  fetchDeezerTrackPreview,
+  iTunesPreviewSearch,
+  parseExpFromUrl,
+} from "../deezer.js";
 
 const reponse = (data) =>
   vi.stubGlobal(
@@ -142,5 +148,63 @@ describe("extrait iTunes trouvé par nom", () => {
       }),
     );
     expect(await iTunesPreviewMatch("A", "T")).toBeNull();
+  });
+});
+
+describe("rafraîchissement d'un extrait", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const repond = (body, ok = true) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok,
+        status: ok ? 200 : 500,
+        json: async () => body,
+      })),
+    );
+
+  it("parseExpFromUrl : expiration du jeton hdnea, sinon null", () => {
+    expect(parseExpFromUrl("https://cdn/p.mp3?hdnea=exp=1767225600~acl")).toBe(
+      1767225600,
+    );
+    expect(parseExpFromUrl("https://cdn/p.mp3")).toBeNull();
+    expect(parseExpFromUrl(null)).toBeNull();
+  });
+
+  it("Deezer par id : nouveau lien", async () => {
+    repond({ preview: "https://cdn/neuf.mp3" });
+    expect(await fetchDeezerTrackPreview("42")).toBe("https://cdn/neuf.mp3");
+    expect(fetch.mock.calls[0][0]).toBe("https://api.deezer.com/track/42");
+  });
+  it.each([
+    ["titre supprimé", { error: { code: 800 } }, true],
+    ["sans extrait", { preview: "" }, true],
+    ["HTTP 500", {}, false],
+  ])("Deezer par id, %s : null", async (_, body, ok) => {
+    repond(body, ok);
+    expect(await fetchDeezerTrackPreview("42")).toBeNull();
+  });
+
+  it("iTunes par nom : premier résultat avec extrait", async () => {
+    repond({
+      results: [{ trackName: "x" }, { previewUrl: "https://it/p.m4a" }],
+    });
+    expect(await iTunesPreviewSearch("A", "T")).toBe("https://it/p.m4a");
+  });
+  it("iTunes : nom manquant, échec HTTP, aucun extrait ou panne : null", async () => {
+    repond({ results: [] });
+    expect(await iTunesPreviewSearch("", "T")).toBeNull();
+    expect(await iTunesPreviewSearch("A", null)).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(await iTunesPreviewSearch("A", "T")).toBeNull();
+    repond({}, false);
+    expect(await iTunesPreviewSearch("A", "T")).toBeNull();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("réseau");
+      }),
+    );
+    expect(await iTunesPreviewSearch("A", "T")).toBeNull();
   });
 });
