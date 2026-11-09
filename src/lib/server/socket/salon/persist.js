@@ -38,6 +38,7 @@ function recordSalonPlayers(gameId, salon) {
       score: p.score,
       rank: i + 1,
       team: teamName(p.team),
+      departed: Boolean(p.left),
     }));
   if (!rows.length) return;
   getAdminClient()

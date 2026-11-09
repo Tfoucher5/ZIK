@@ -11,6 +11,7 @@
   import ProfileSummary from '$lib/components/profile/ProfileSummary.svelte';
   import ProfileSection from '$lib/components/profile/ProfileSection.svelte';
   import SectionHistory from '$lib/components/profile/SectionHistory.svelte';
+  import SectionSoirees from '$lib/components/profile/SectionSoirees.svelte';
   import SectionFriends from '$lib/components/profile/SectionFriends.svelte';
   import SectionBestScores from '$lib/components/profile/SectionBestScores.svelte';
   import SectionCards from '$lib/components/profile/SectionCards.svelte';
@@ -98,6 +99,7 @@
     { id: 'rider', t: 'Performances', quand: () => stats != null },
     { id: 'tour',  t: 'Meilleurs scores', quand: () => itinerary.length > 0 || typeTotal > 0 },
     { id: 'log',   t: 'Dernières parties', quand: () => carnet.length > 0 },
+    { id: 'soirees', t: 'Mes soirées', quand: () => isOwn },
     { id: 'case',  t: 'Badges', quand: () => true },
     { id: 'cards', t: 'Cartes', quand: () => !!profile?.username },
     { id: 'guests', t: 'Amis', quand: () => true },
@@ -172,6 +174,11 @@
     {#if visible.has('log')}
       <ProfileSection id="log" num={numDe('log')} titre="Dernières parties" sub={`${carnet.length} dernière${carnet.length > 1 ? 's' : ''}`}>
         <SectionHistory parties={carnet} />
+      </ProfileSection>
+    {/if}
+    {#if visible.has('soirees')}
+      <ProfileSection id="soirees" num={numDe('soirees')} titre="Mes soirées" sub="ZIK Soirée">
+        <SectionSoirees {sb} userId={profile.id} />
       </ProfileSection>
     {/if}
     {#if visible.has('case')}
