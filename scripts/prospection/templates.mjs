@@ -56,7 +56,7 @@ export function followUp({ kind, name }) {
     subject: `Re: ${PITCH[kind].subject(name)}`,
     text: `Bonjour,
 
-Je me permets une seule relance au sujet de ZIK, l'outil de blind test que je développe et que vous pouvez lancer vous-même lors de vos soirées. Si vous avez cinq minutes pour y jeter un œil, même un avis rapide m'aiderait à améliorer le projet : https://www.zik-music.fr/pro
+Je me permets une seule relance au sujet de ZIK, l'outil de blind test que je développe. Pour être clair : ce n'est pas une prestation d'animation, personne ne se déplace. C'est un site que vous lancez vous-même sur votre TV, et les joueurs répondent depuis leur téléphone. Si vous avez cinq minutes pour y jeter un œil, même un avis rapide m'aiderait à améliorer le projet : https://www.zik-music.fr/pro
 
 Et si ce n'est pas le moment, aucun souci, je ne vous relancerai pas.
 

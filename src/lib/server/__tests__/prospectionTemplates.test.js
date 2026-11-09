@@ -41,7 +41,9 @@ describe("mails de prospection", () => {
       expect(subject).toContain("outil");
       expect(text).toContain("que vous lancez vous-même");
       expect(text).toContain("Je ne propose pas de prestation");
-      expect(followUp({ kind, name: "X" }).text).toContain("vous-même");
+      const relance = followUp({ kind, name: "X" }).text;
+      expect(relance).toContain("vous lancez vous-même");
+      expect(relance).toContain("pas une prestation");
     }
   });
 
