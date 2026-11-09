@@ -11,42 +11,42 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">develop · dde4e60 · 10/11 00:27</text>
+<text x="836" y="38" class="petit" text-anchor="end">develop · d83d014 · 10/11 00:32</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
   stroke-dasharray="266.7136764674048 289.02652413026095" transform="rotate(-90 120 140)"/>
-<polyline points="131.43362879187305,175.18909110292068 136.9959346906221,192.30810839623345" class="trait" stroke-width="3"/>
+<polyline points="100.17440858577714,108.75986675642544 90.5295262761552,93.56196409738916" class="trait" stroke-width="3"/>
 <text x="120" y="147" class="valeur" text-anchor="middle">92,3<tspan class="unite"> %</tspan></text>
 <text x="120" y="206" class="nom" text-anchor="middle">Lignes</text>
-<text x="120" y="222" class="petit" text-anchor="middle">seuil 45 %</text>
+<text x="120" y="222" class="petit" text-anchor="middle">seuil 91 %</text>
 </g>
 <g>
 <circle cx="327" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="327" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
   stroke-dasharray="262.0603494289076 289.02652413026095" transform="rotate(-90 327 140)"/>
-<polyline points="342.7538337879077,173.47860094124272 350.417861036079,189.76548788563107" class="trait" stroke-width="3"/>
+<polyline points="303.4153123792985,111.49101001729582 291.94168056382205,97.62177164733161" class="trait" stroke-width="3"/>
 <text x="327" y="147" class="valeur" text-anchor="middle">90,7<tspan class="unite"> %</tspan></text>
 <text x="327" y="206" class="nom" text-anchor="middle">Instructions</text>
-<text x="327" y="222" class="petit" text-anchor="middle">seuil 43 %</text>
+<text x="327" y="222" class="petit" text-anchor="middle">seuil 89 %</text>
 </g>
 <g>
 <circle cx="534" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="534" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
   stroke-dasharray="259.7770398882785 289.02652413026095" transform="rotate(-90 534 140)"/>
-<polyline points="555.7480543348215,169.93362879187305 566.3281888760861,184.4959346906221" class="trait" stroke-width="3"/>
+<polyline points="508.6717570806385,113.02816078540778 496.34990917392213,99.90672549182239" class="trait" stroke-width="3"/>
 <text x="534" y="147" class="valeur" text-anchor="middle">89,9<tspan class="unite"> %</tspan></text>
 <text x="534" y="206" class="nom" text-anchor="middle">Fonctions</text>
-<text x="534" y="222" class="petit" text-anchor="middle">seuil 40 %</text>
+<text x="534" y="222" class="petit" text-anchor="middle">seuil 88 %</text>
 </g>
 <g>
 <circle cx="741" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="741" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
   stroke-dasharray="240.87470521015948 289.02652413026095" transform="rotate(-90 741 140)"/>
-<polyline points="770.933628791873,161.7480543348215 785.4959346906221,172.32818887608602" class="trait" stroke-width="3"/>
+<polyline points="707.5213990587573,124.24616621209233 691.234512114369,116.58213896392103" class="trait" stroke-width="3"/>
 <text x="741" y="147" class="valeur" text-anchor="middle">83,3<tspan class="unite"> %</tspan></text>
 <text x="741" y="206" class="nom" text-anchor="middle">Branches</text>
-<text x="741" y="222" class="petit" text-anchor="middle">seuil 35 %</text>
+<text x="741" y="222" class="petit" text-anchor="middle">seuil 82 %</text>
 </g>
 <text x="24" y="284" class="titre2">Par zone : lignes couvertes, de la moins à la mieux testée</text>
 <line x1="425" x2="425" y1="300" y2="564" class="repere"/>
@@ -102,12 +102,12 @@
 <rect x="190" y="540" width="470" height="14" rx="7" fill="#2ea043"/>
 <text x="674" y="552" class="chiffre">100,0 %</text>
 <text x="836" y="552" class="petit" text-anchor="end">40 / 40 lignes</text>
-<text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">30 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">65 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
-<line x1="60" x2="830" y1="718.2857142857143" y2="718.2857142857143" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
-<text x="830" y="712.2857142857143" class="petit" fill="#e5534b" text-anchor="end">seuil 45 %</text>
-<polygon points="60,744 60,684.5657142857143 214,663.4285714285714 368,650.9142857142857 522,650.9485714285714 676,637.3028571428572 830,637.2342857142858 830,744" fill="url(#degrade)"/>
-<polyline points="60,684.5657142857143 214,663.4285714285714 368,650.9142857142857 522,650.9485714285714 676,637.3028571428572 830,637.2342857142858" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
-<circle cx="830" cy="637.2342857142858" r="5" fill="#a371f7"/>
+<text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">50 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">75 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
+<line x1="60" x2="830" y1="645.6" y2="645.6" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
+<text x="830" y="639.6" class="petit" fill="#e5534b" text-anchor="end">seuil 91 %</text>
+<polygon points="60,744 60,708.792 188.33333333333334,679.2 316.6666666666667,661.6800000000001 445,661.728 573.3333333333334,642.624 701.6666666666666,642.528 830,642.528 830,744" fill="url(#degrade)"/>
+<polyline points="60,708.792 188.33333333333334,679.2 316.6666666666667,661.6800000000001 445,661.728 573.3333333333334,642.624 701.6666666666666,642.528 830,642.528" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="830" cy="642.528" r="5" fill="#a371f7"/>
 <text x="60" y="766" class="petit">9 nov.</text>
 <text x="830" y="766" class="petit" text-anchor="end">10 nov.</text>
 </svg>
