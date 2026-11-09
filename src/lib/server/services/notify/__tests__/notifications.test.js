@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({
   db: null,
@@ -50,7 +50,7 @@ beforeEach(() => {
   m.refresh = vi.fn();
   m.pushToUser = vi.fn(async () => 1);
   m.news = [{ version: "3.26.0", title: "Soirées", tag: "Nouveauté" }];
-  m.db = fakeSupabase((q) => rows[q.table]?.(q));
+  m.db = fakeQuery((q) => rows[q.table]?.(q));
 });
 
 describe("notification d'un joueur", () => {

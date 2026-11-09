@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null }));
 vi.mock("../../../config.js", () => ({
@@ -18,7 +18,7 @@ const {
 
 beforeEach(() => {
   for (const k of Object.keys(roomGames)) delete roomGames[k];
-  m.db = fakeSupabase();
+  m.db = fakeQuery();
 });
 
 describe("joueurs en ligne", () => {

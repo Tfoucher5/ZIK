@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null, calls: 0, maintenance: null }));
 vi.mock("../../../config.js", () => ({
@@ -22,7 +22,7 @@ beforeEach(() => {
   rows = {};
   m.calls = 0;
   m.maintenance = null;
-  m.db = fakeSupabase((q) => rows[q.table]?.(q));
+  m.db = fakeQuery((q) => rows[q.table]?.(q));
   for (const k of ["__zik_roomGames", "__zik_salonRooms", "__zik_errorLog"])
     saved[k] = globalThis[k];
 });

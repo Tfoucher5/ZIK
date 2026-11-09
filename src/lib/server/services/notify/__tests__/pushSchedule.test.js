@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({
   db: null,
@@ -58,7 +58,7 @@ beforeEach(() => {
     unit: "bonnes réponses",
   };
   m.news = [{ version: "3.26.0", tag: "Correctif", title: "x" }];
-  m.db = fakeSupabase(() => ({ data: m.played }));
+  m.db = fakeQuery(() => ({ data: m.played }));
 });
 afterEach(() => {
   vi.clearAllTimers();

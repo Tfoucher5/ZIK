@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null, send: null, vapid: null }));
 vi.mock("../../../config.js", () => ({
@@ -31,7 +31,7 @@ beforeEach(async () => {
   m.vapid = vi.fn();
   m.send = vi.fn(async () => {});
   rows = {};
-  m.db = fakeSupabase((q) => rows[q.table]?.(q));
+  m.db = fakeQuery((q) => rows[q.table]?.(q));
   push = await import("../push.js");
 });
 afterEach(() => vi.unstubAllEnvs());
@@ -46,12 +46,22 @@ describe("clés VAPID", () => {
     expect(m.db.queries).toHaveLength(0);
   });
 
-  it("avec clés : configuré une seule fois, sujet par défaut", () => {
+  it("avec clés : configuré une seule fois, avec le sujet fourni", () => {
+    vi.stubEnv("VAPID_SUBJECT", "mailto:test@example.com");
     expect(push.ready()).toBe(true);
     expect(push.ready()).toBe(true);
     expect(m.vapid).toHaveBeenCalledTimes(1);
     expect(m.vapid).toHaveBeenCalledWith(
-      "mailto:theo@zik-music.fr",
+      "mailto:test@example.com",
+      "pub",
+      "priv",
+    );
+  });
+
+  it("sans sujet : un mailto par défaut", () => {
+    expect(push.ready()).toBe(true);
+    expect(m.vapid).toHaveBeenCalledWith(
+      expect.stringMatching(/^mailto:/),
       "pub",
       "priv",
     );

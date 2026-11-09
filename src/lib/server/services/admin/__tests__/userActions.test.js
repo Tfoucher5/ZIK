@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null, log: null }));
 vi.mock("../../../config.js", () => ({
@@ -31,7 +31,7 @@ let rows;
 beforeEach(() => {
   rows = {};
   m.log = vi.fn(async () => {});
-  m.db = fakeSupabase((q) => rows[q.table]?.(q));
+  m.db = fakeQuery((q) => rows[q.table]?.(q));
 });
 afterEach(() => vi.useRealTimers());
 
@@ -208,14 +208,17 @@ describe("Pro offert", () => {
     expect(m.log).not.toHaveBeenCalled();
   });
 
-  it.skip("BUG : retrait du Pro (0 jour) en échec annoncé comme réussi", async () => {
-    rows.pro_subscriptions = () => ({ error: { message: "panne" } });
-    expect(await grantPro(ADMIN, USER, 0)).toEqual({
-      status: 500,
-      error: "panne",
-    });
-    expect(m.log).not.toHaveBeenCalled();
-  });
+  it.fails(
+    "BUG : retrait du Pro (0 jour) en échec annoncé comme réussi",
+    async () => {
+      rows.pro_subscriptions = () => ({ error: { message: "panne" } });
+      expect(await grantPro(ADMIN, USER, 0)).toEqual({
+        status: 500,
+        error: "panne",
+      });
+      expect(m.log).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("suppression de compte", () => {
@@ -258,12 +261,18 @@ describe("suppression de compte", () => {
     expect(m.log).not.toHaveBeenCalled();
   });
 
-  it.skip("BUG : profil absent et confirmation vide, le compte est supprimé sans confirmation", async () => {
-    rows.profiles = () => ({ data: null, error: { message: "0 rows" } });
-    const res = await deleteUserAccount(ADMIN, USER, undefined);
-    expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
-    expect(res?.status).toBe(400);
-  });
+  it.fails(
+    "BUG : profil absent et confirmation vide, le compte est supprimé sans confirmation",
+    async () => {
+      rows.profiles = () => ({ data: null, error: { message: "0 rows" } });
+      // le TypeError qui suit la suppression ne doit pas masquer l'assertion
+      const res = await deleteUserAccount(ADMIN, USER, undefined).catch(
+        () => null,
+      );
+      expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
+      expect(res?.status).toBe(400);
+    },
+  );
 });
 
 describe("liens sociaux", () => {

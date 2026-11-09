@@ -2,7 +2,7 @@ import { vi } from "vitest";
 
 // Faux client Supabase : chaque requête note sa table et ses appels chaînés
 // (q.ops), et se résout par resolve(q) -> { data, error, count }.
-export function fakeSupabase(resolve = () => {}) {
+export function fakeQuery(resolve = () => {}) {
   const queries = [];
   const from = (table) => {
     const q = { table, ops: [] };

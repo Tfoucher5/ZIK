@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({
   db: null,
@@ -43,7 +43,7 @@ beforeEach(() => {
     { user_id: "u3" },
   ];
   sent = [];
-  m.db = fakeSupabase((q) =>
+  m.db = fakeQuery((q) =>
     q.table === "pro_subscriptions" ? { data: subs } : { data: sent },
   );
   m.db.client.auth.admin.getUserById.mockImplementation(async (id) => ({

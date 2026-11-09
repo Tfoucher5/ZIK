@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null }));
 vi.mock("../../../config.js", () => ({
@@ -19,7 +19,7 @@ const reset = (o) => {
 
 beforeEach(() => {
   rows = {};
-  m.db = fakeSupabase((q) => rows[q.table]?.(q));
+  m.db = fakeQuery((q) => rows[q.table]?.(q));
   reset(playlistCache);
   reset(dbRooms);
 });
@@ -43,11 +43,18 @@ describe("cache des playlists", () => {
     expect(m.db.queries).toHaveLength(0);
   });
 
-  it("lectures en échec : rien n'est oublié à tort", async () => {
+  it("lectures en échec : pas de plantage, rien n'est oublié à tort", async () => {
     dbRooms.ROCK = { id: 1 };
     playlistCache.ROCK = [1];
-    await forgetPlaylists([5]);
+    const error = { message: "panne" };
+    rows.room_playlists = () => ({ data: null, error });
+    rows.custom_playlists = () => ({ data: null, error });
+    await expect(forgetPlaylists([5])).resolves.toBeUndefined();
     expect(playlistCache.ROCK).toEqual([1]);
+    expect(m.db.of("room_playlists")[0].args("in")).toEqual([
+      "playlist_id",
+      [5],
+    ]);
   });
 });
 

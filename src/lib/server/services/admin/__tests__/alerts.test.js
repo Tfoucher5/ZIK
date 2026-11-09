@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null, ready: true, deliver: null }));
 vi.mock("../../../config.js", () => ({
@@ -23,7 +23,7 @@ beforeEach(() => {
   m.ready = true;
   subs = SUBS;
   m.deliver = vi.fn(async (list) => list.length);
-  m.db = fakeSupabase(() => ({ data: subs }));
+  m.db = fakeQuery(() => ({ data: subs }));
 });
 afterEach(() => vi.useRealTimers());
 

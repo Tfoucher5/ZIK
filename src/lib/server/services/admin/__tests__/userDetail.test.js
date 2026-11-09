@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { fakeSupabase } from "../../__tests__/fakeSupabase.js";
+import { fakeQuery } from "../../__tests__/fakeQuery.js";
 
 const m = vi.hoisted(() => ({ db: null }));
 vi.mock("../../../config.js", () => ({
@@ -15,7 +15,7 @@ let rows;
 
 beforeEach(() => {
   rows = { profiles: () => ({ data: { id: ID, username: "lea" } }) };
-  m.db = fakeSupabase((q) => rows[q.table]?.(q));
+  m.db = fakeQuery((q) => rows[q.table]?.(q));
 });
 
 describe("fiche joueur de l'admin", () => {
@@ -147,7 +147,7 @@ describe("fiche joueur de l'admin", () => {
     expect(d.salon.played).toHaveLength(1);
   });
 
-  it("l'id n'est utilisé que dans les filtres attendus", async () => {
+  it("filtres construits sur l'id", async () => {
     await getAdminUserDetail(ID, "admin");
     const reports = m.db.of("reports")[0];
     expect(reports.args("or")).toEqual([
