@@ -13,5 +13,7 @@ export async function POST({ params, request }) {
   );
   const artist = await findArtist(params.slug);
   if (!artist) error(404, "Artiste introuvable");
-  return json({ code: await startArtistRoom(artist) });
+  const code = await startArtistRoom(artist);
+  if (!code) error(409, "Pas assez de titres pour cet artiste");
+  return json({ code });
 }
