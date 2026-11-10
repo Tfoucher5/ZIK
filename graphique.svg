@@ -11,7 +11,7 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">develop · 8eb53fa · 10/11 17:58</text>
+<text x="836" y="38" class="petit" text-anchor="end">develop · 10669d7 · 10/11 18:33</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
@@ -105,8 +105,8 @@
 <text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">50 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">75 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
 <line x1="60" x2="830" y1="645.6" y2="645.6" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
 <text x="830" y="639.6" class="petit" fill="#e5534b" text-anchor="end">seuil 91 %</text>
-<polygon points="60,744 60,708.792 156.25,679.2 252.5,661.6800000000001 348.75,661.728 445,642.624 541.25,642.528 637.5,642.528 733.75,642.528 830,642.528 830,744" fill="url(#degrade)"/>
-<polyline points="60,708.792 156.25,679.2 252.5,661.6800000000001 348.75,661.728 445,642.624 541.25,642.528 637.5,642.528 733.75,642.528 830,642.528" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="60,744 60,708.792 145.55555555555554,679.2 231.11111111111111,661.6800000000001 316.6666666666667,661.728 402.22222222222223,642.624 487.77777777777777,642.528 573.3333333333334,642.528 658.8888888888889,642.528 744.4444444444445,642.528 830,642.528 830,744" fill="url(#degrade)"/>
+<polyline points="60,708.792 145.55555555555554,679.2 231.11111111111111,661.6800000000001 316.6666666666667,661.728 402.22222222222223,642.624 487.77777777777777,642.528 573.3333333333334,642.528 658.8888888888889,642.528 744.4444444444445,642.528 830,642.528" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
 <circle cx="830" cy="642.528" r="5" fill="#a371f7"/>
 <text x="60" y="766" class="petit">9 nov.</text>
 <text x="830" y="766" class="petit" text-anchor="end">10 nov.</text>
