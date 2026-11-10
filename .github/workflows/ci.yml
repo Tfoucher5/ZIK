@@ -14,6 +14,8 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,12 +27,107 @@ jobs:
       - run: npx prettier --check .
       - run: npx svelte-check --threshold error
       - run: npx vitest run --coverage
+      # Couverture : comparée à la dernière mesure de develop (branche couverture).
+      # Aussi quand le seuil n'est pas tenu (vitest écrit le résumé avant de
+      # vérifier les seuils). Jamais bloquant : migrations et Railway en dépendent.
+      - name: Résumé de couverture
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        continue-on-error: true
+        run: |
+          BASE="$RUNNER_TEMP/base.json"
+          if git fetch --depth=1 origin couverture 2>/dev/null; then
+            git show FETCH_HEAD:coverage-summary.json > "$BASE" || rm -f "$BASE"
+          fi
+          node scripts/couverture.mjs markdown coverage/coverage-summary.json \
+            $( [ -s "$BASE" ] && echo "$BASE" ) > "$RUNNER_TEMP/couverture.md"
+          cat "$RUNNER_TEMP/couverture.md" >> "$GITHUB_STEP_SUMMARY"
+      - if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: couverture
+          path: coverage/coverage-summary.json
       # config.js crée le client Supabase au chargement : valeurs factices, jamais appelées
       - run: npm run build
         env:
           SUPABASE_URL: http://localhost:54321
           SUPABASE_ANON_KEY: ci
           SUPABASE_SERVICE_KEY: ci
+
+  # Graphiques, badge et commentaire de PR, publiés sur la branche `couverture` :
+  # aucun service tiers. Jamais bloquant : migrations et Railway n'en dépendent pas.
+  # PR d'un fork : jeton en lecture seule, rien n'est publié.
+  couverture:
+    needs: check
+    if: ${{ !cancelled() && ((github.event_name == 'push' && github.ref_name == 'develop') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    # Un groupe par PR et un pour develop : jamais d'annulation entre eux
+    concurrency: couverture-${{ github.event.pull_request.number || 'develop' }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        continue-on-error: true
+      - uses: actions/setup-node@v4
+        continue-on-error: true
+        with:
+          node-version: "22"
+          cache: npm
+      # Étapes en continue-on-error : un échec ici ne doit jamais mettre de check rouge
+      # Les seuils sont lus dans vitest.config.js
+      - run: npm ci
+        continue-on-error: true
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: couverture
+          path: ${{ runner.temp }}/mesure
+      - name: Graphiques et publication
+        continue-on-error: true
+        run: |
+          M="$RUNNER_TEMP/mesure"
+          R="$RUNNER_TEMP/branche"
+          C="node scripts/couverture.mjs"
+          if git fetch --depth=1 origin couverture; then
+            git worktree add -q -B couverture "$R" FETCH_HEAD
+          else
+            git worktree add -q --orphan -b couverture "$R"
+          fi
+          BASE="$R/coverage-summary.json"; [ -s "$BASE" ] || BASE=-
+          HIST="$R/historique.json"; [ -s "$HIST" ] || HIST=-
+          QUAND="$(TZ=Europe/Paris date +'%d/%m %H:%M')"
+          if [ -n "$PR" ]; then
+            IMG="pr/$PR-${SHA::7}.svg"
+            mkdir -p "$R/pr" && rm -f "$R"/pr/"$PR"-*.svg
+            $C graphique "$M/coverage-summary.json" "$BASE" "$HIST" "PR #$PR · ${SHA::7} · $QUAND" > "$R/$IMG"
+          else
+            $C historique "$M/coverage-summary.json" "$HIST" "$SHA" > "$M/historique.json"
+            $C graphique "$M/coverage-summary.json" "$BASE" "$M/historique.json" "develop · ${SHA::7} · $QUAND" "la fusion précédente" > "$M/graphique.svg"
+            $C badge "$M/coverage-summary.json" > "$M/badge.svg"
+            cp "$M"/coverage-summary.json "$M"/historique.json "$M"/graphique.svg "$M"/badge.svg "$R/"
+          fi
+          git -C "$R" add -A
+          git -C "$R" -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "couverture de ${PR:+PR #$PR }${SHA::7}" || true
+          # Une PR et develop peuvent publier en même temps : fichiers distincts, rebase sûr
+          for essai in 1 2 3; do
+            git -C "$R" push -q origin couverture && break
+            git -C "$R" pull -q --rebase origin couverture
+          done
+          if [ -n "$PR" ]; then
+            {
+              echo "![Couverture des tests](https://raw.githubusercontent.com/$GITHUB_REPOSITORY/couverture/$IMG)"
+              echo
+              $C markdown "$M/coverage-summary.json" $( [ "$BASE" != - ] && echo "$BASE" )
+            } > "$RUNNER_TEMP/commentaire.md"
+            gh pr comment "$PR" --body-file "$RUNNER_TEMP/commentaire.md" --edit-last --create-if-none
+          fi
 
   migrations:
     needs: check

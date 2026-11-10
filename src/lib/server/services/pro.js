@@ -21,11 +21,11 @@ export async function isPro(userId) {
   return isProActive(await getProRow(userId));
 }
 
-// Passe Soirée : 24 h, ajoutées à la suite d'un passe encore en cours
+// Passe Soirée : 24 h, ajoutées à la suite d'un passe ou d'un accès offert en cours
 export async function activateNight(userId, customerId, sessionId) {
   const row = await getProRow(userId);
   const from =
-    isProActive(row) && row.plan === "night"
+    isProActive(row) && ["night", "manual"].includes(row.plan)
       ? new Date(row.current_period_end).getTime()
       : Date.now();
   await getAdminClient()

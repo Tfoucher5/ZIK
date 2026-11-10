@@ -79,13 +79,19 @@ export function resetUserStats(adminId, userId) {
 export async function grantPro(adminId, userId, days) {
   const sb = getAdminClient();
   if (days === 0) {
-    await sb.from("pro_subscriptions").delete().eq("user_id", userId);
+    const { error: err } = await sb
+      .from("pro_subscriptions")
+      .delete()
+      .eq("user_id", userId);
+    if (err) return failed(err);
   } else {
-    const { data: cur } = await sb
+    const { data: cur, error: lu } = await sb
       .from("pro_subscriptions")
       .select("status, current_period_end")
       .eq("user_id", userId)
       .maybeSingle();
+    // Abonnement en cours illisible : ne jamais risquer de le raccourcir
+    if (lu) return failed(lu);
     const curEnd =
       cur?.status === "active" ? new Date(cur.current_period_end).getTime() : 0;
     const from = Math.max(Date.now(), curEnd);
@@ -119,7 +125,8 @@ export async function deleteUserAccount(adminId, userId, confirmUsername) {
     .select("username")
     .eq("id", userId)
     .single();
-  if (confirmUsername !== profile?.username)
+  // Profil introuvable : jamais de suppression, même sans pseudo saisi
+  if (!profile || confirmUsername !== profile.username)
     return { status: 400, error: "Pseudo incorrect, suppression annulée." };
   const { error: err } = await sb.auth.admin.deleteUser(userId);
   if (err) return failed(err);

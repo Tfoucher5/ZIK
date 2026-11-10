@@ -3,7 +3,7 @@ import { playlistCache, customRooms, dbRooms } from "../../state.js";
 import { CARD_SELECT, toCardView } from "../../../components/card/cardView.js";
 import {
   fetchDeezerTrackPreview,
-  iTunesPreviewSearch,
+  iTunesPreviewMatch,
   parseExpFromUrl,
 } from "./deezer.js";
 import { cleanString, parseFeaturing } from "./trackText.js";
@@ -140,7 +140,8 @@ export async function refreshExpiredPreviews(trackRows) {
           if (!freshUrl) {
             const artist = row.custom_artist || meta.artist;
             const title = row.custom_title || meta.title;
-            freshUrl = await iTunesPreviewSearch(artist, title);
+            // Même règle qu'en partie : jamais l'extrait d'un autre morceau
+            freshUrl = await iTunesPreviewMatch(artist, title);
           }
 
           if (!freshUrl) return;

@@ -1,18 +1,11 @@
-import { supabase, getAdminClient } from "../config.js";
+import { getAdminClient } from "../config.js";
 
 // Toutes les fonctions échouent en silence : si la migration 20260806_weekly_challenges
 // n'est pas encore en place, ni le jeu ni la homepage ne doivent planter.
 
+// Toujours le client admin : ces écritures ne passent jamais par la clé anonyme
 let _admin = null;
-function db() {
-  if (_admin) return _admin;
-  try {
-    _admin = getAdminClient();
-  } catch {
-    _admin = supabase;
-  }
-  return _admin;
-}
+const db = () => (_admin ??= getAdminClient());
 
 export const CHALLENGE_TYPES = {
   correct_answers: { label: "Bonnes réponses", unit: "réponses" },

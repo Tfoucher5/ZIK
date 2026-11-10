@@ -5,6 +5,19 @@
 
 export const NEWS = [
   {
+    date: "2026-11-10",
+    version: "3.26.0",
+    tag: "Nouveauté",
+    title: "Tes soirées ZIK sur ton profil",
+    summary:
+      "Nouveau sur ton profil : « Mes soirées » garde ta place et ton score à chaque soirée ZIK jouée avec ton compte.",
+    items: [
+      "Ton profil a une section « Mes soirées » : date, place, score et équipe de chaque soirée ZIK jouée avec ton compte.",
+      "Si tu quittes une soirée avant la fin, ton score au moment du départ y figure, avec la mention « a quitté avant la fin ».",
+      "Elle n'est visible que par toi.",
+    ],
+  },
+  {
     date: "2026-11-07",
     version: "3.25.1",
     tag: "Amélioration",

@@ -1,5 +1,6 @@
 .github/workflows/
 node_modules/
+.claude/worktrees/
 build/
 .svelte-kit/
 dist/

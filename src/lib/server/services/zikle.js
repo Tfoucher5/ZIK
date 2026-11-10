@@ -1,10 +1,10 @@
 export { todayParis } from "../../shared/zikle/shared.js";
 
 import { parseExpFromUrl } from "./music/deezer.js";
+import { deezerFetch } from "./music/deezerClient.js";
 import { enqueueCardEnrichment } from "./cards/maintenance.js";
 
 const REFRESH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
-const DEEZER_CHART_URL = "https://api.deezer.com/chart/0/tracks?limit=100";
 const PERMANENT_EXPIRY = "2099-01-01T00:00:00.000Z";
 
 export function mapDeezerChartTracks(json) {
@@ -44,12 +44,7 @@ export async function refreshZiklePool(sb, force = false) {
     }
   }
 
-  const res = await fetch(DEEZER_CHART_URL, {
-    headers: { "User-Agent": "ZIK-BlindTest/1.0" },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
+  const json = await deezerFetch("/chart/0/tracks?limit=100", { bulk: true });
   const candidates = mapDeezerChartTracks(json);
   if (!candidates.length) return { refreshed: false, added: 0 };
 

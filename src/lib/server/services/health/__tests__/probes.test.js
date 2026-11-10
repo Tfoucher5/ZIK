@@ -142,6 +142,17 @@ describe("temps réel", () => {
   });
 });
 
+describe("Deezer", () => {
+  it.each([
+    ["quota atteint : lent, pas en panne", { error: { code: 4 } }, "warn"],
+    ["autre refus", { error: { code: 800, message: "x" } }, "fail"],
+    ["titre rendu", { id: 3135556 }, "ok"],
+  ])("%s", async (_, body, attendu) => {
+    const p = sondes({ fetchFn: async () => reponse(200, body) });
+    expect((await p.deezer()).result).toBe(attendu);
+  });
+});
+
 describe("Spotify", () => {
   it("un 401 sans jeton veut dire que l'API répond ; un 503 non", async () => {
     expect(

@@ -53,8 +53,14 @@ describe("fin de partie en base", () => {
         user_id: "u-ana",
         score: 500,
         rank: 1,
+        departed: true,
       }),
-      expect.objectContaining({ username: "Bob", score: 200, rank: 2 }),
+      expect.objectContaining({
+        username: "Bob",
+        score: 200,
+        rank: 2,
+        departed: false,
+      }),
     ]);
     expect(updates[0].player_count).toBe(2);
   });

@@ -1,6 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
+import { deezerFetch } from "$lib/server/services/music/deezerClient.js";
 
 async function checkAdmin(token) {
   if (!token) throw error(403, "Token manquant");
@@ -15,12 +16,10 @@ async function checkAdmin(token) {
 }
 
 async function chercherDeezer(q) {
-  const res = await fetch(
-    `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=8`,
-    { signal: AbortSignal.timeout(6000) },
-  );
-  if (!res.ok) throw new Error(`Deezer HTTP ${res.status}`);
-  const data = await res.json();
+  const data = await deezerFetch(`/search?q=${encodeURIComponent(q)}&limit=8`, {
+    timeout: 6000,
+  });
+  if (data.error) throw new Error(data.error.message ?? "Deezer");
   return (data.data ?? [])
     .filter((t) => t.preview)
     .map((t) => ({

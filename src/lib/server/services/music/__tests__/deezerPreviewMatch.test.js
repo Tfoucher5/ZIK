@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { deezerPreviewMatch, iTunesPreviewMatch } from "../deezer.js";
+import {
+  deezerPreviewMatch,
+  iTunesPreviewMatch,
+  fetchDeezerTrackPreview,
+  parseExpFromUrl,
+} from "../deezer.js";
 
 const reponse = (data) =>
   vi.stubGlobal(
@@ -135,6 +140,76 @@ describe("extrait iTunes trouvé par nom", () => {
   });
 
   it("panne : null, jamais d'exception", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("réseau");
+      }),
+    );
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
+  });
+});
+
+describe("rafraîchissement d'un extrait", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const repond = (body, ok = true) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok,
+        status: ok ? 200 : 500,
+        json: async () => body,
+      })),
+    );
+
+  it("parseExpFromUrl : expiration du jeton hdnea, sinon null", () => {
+    expect(parseExpFromUrl("https://cdn/p.mp3?hdnea=exp=1767225600~acl")).toBe(
+      1767225600,
+    );
+    expect(parseExpFromUrl("https://cdn/p.mp3")).toBeNull();
+    expect(parseExpFromUrl(null)).toBeNull();
+  });
+
+  it("Deezer par id : nouveau lien", async () => {
+    repond({ preview: "https://cdn/neuf.mp3" });
+    expect(await fetchDeezerTrackPreview("42")).toBe("https://cdn/neuf.mp3");
+    expect(fetch.mock.calls[0][0]).toBe("https://api.deezer.com/track/42");
+  });
+  it.each([
+    ["titre supprimé", { error: { code: 800 } }, true],
+    ["sans extrait", { preview: "" }, true],
+    ["HTTP 500", {}, false],
+  ])("Deezer par id, %s : null", async (_, body, ok) => {
+    repond(body, ok);
+    expect(await fetchDeezerTrackPreview("42")).toBeNull();
+  });
+
+  it("iTunes par nom : extrait du bon titre", async () => {
+    repond({
+      results: [
+        { artistName: "Adele", trackName: "Hello" },
+        { artistName: "Adele", trackName: "Hello", previewUrl: "bon" },
+      ],
+    });
+    expect(await iTunesPreviewMatch("Adele", "Hello")).toBe("bon");
+  });
+  // Utilisé aussi par refreshExpiredPreviews (playlist.js)
+  it("iTunes par nom : jamais l'extrait d'un autre morceau", async () => {
+    repond({
+      results: [
+        { artistName: "Piano Queen", trackName: "Hello", previewUrl: "faux" },
+      ],
+    });
+    expect(await iTunesPreviewMatch("Adele", "Hello")).toBeNull();
+  });
+  it("iTunes : nom manquant, échec HTTP, aucun extrait ou panne : null", async () => {
+    repond({ results: [] });
+    expect(await iTunesPreviewMatch("", "T")).toBeNull();
+    expect(await iTunesPreviewMatch("A", null)).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
+    repond({}, false);
+    expect(await iTunesPreviewMatch("A", "T")).toBeNull();
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
