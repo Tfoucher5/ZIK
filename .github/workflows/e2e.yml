@@ -1,0 +1,41 @@
+name: Scénario salon
+
+# Soirée complète dans de vrais navigateurs, sur le staging uniquement (garde-fou
+# dans playwright.config.js). Une branche release/* part de develop, déjà
+# déployé sur [DEV] : le scénario teste exactement ce qui part en prod
+on:
+  workflow_dispatch:
+  push:
+    branches: ["release/**", "chore/e2e-*"]
+
+permissions:
+  contents: read
+
+concurrency: scenario-salon
+
+jobs:
+  salon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Scénario
+        # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
+        env:
+          # Jamais secrets.SUPABASE_URL ni SUPABASE_SERVICE_KEY : ce sont ceux de la prod
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 7

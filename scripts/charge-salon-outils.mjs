@@ -1,8 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
-const DEV_URL = "https://zik-dev-dev-developpement.up.railway.app";
+export const DEV_URL = "https://zik-dev-dev-developpement.up.railway.app";
 const STAGING_REF = "ieuknbblonybkiqknonn";
+export const PLAYLIST = "6e9ccdc8-1257-4977-8ad3-9e4db3691cdd";
 const COMPTE = "charge-test@zik-music.invalid";
 const LIMITE_MS = 1000;
 const GENERATEUR_MAX_MS = 200;

@@ -39,3 +39,7 @@ graphify-out/
 
 # Rapports de couverture
 coverage/
+
+# Playwright
+test-results/
+playwright-report/

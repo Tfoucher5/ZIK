@@ -18,10 +18,10 @@ import {
   jetonDeTest,
   lireArgs,
   percentile,
+  PLAYLIST,
   verdict,
 } from "./charge-salon-outils.mjs";
 
-const PLAYLIST = "6e9ccdc8-1257-4977-8ad3-9e4db3691cdd";
 const ATTENTE_MAX_MS = 10 * 60 * 1000;
 const CALME_MAX_MS = 60 * 1000;
 
