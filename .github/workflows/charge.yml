@@ -71,8 +71,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
-          PALIERS: ${{ inputs.paliers || '250 500 1000 2000 2000x10' }}
-          DEFLATE: ${{ inputs.deflate || 'oui' }}
+          PALIERS: ${{ inputs.paliers || '2000 2000 2000' }}
+          DEFLATE: ${{ inputs.deflate || 'non' }}
         run: |
           if [[ -z "${PALIERS// /}" ]]; then
             echo "Aucun palier"
