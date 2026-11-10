@@ -5,7 +5,7 @@
 
 export const NEWS = [
   {
-    date: "2026-11-09",
+    date: "2026-11-10",
     version: "3.26.0",
     tag: "Nouveauté",
     title: "Tes soirées ZIK sur ton profil",
