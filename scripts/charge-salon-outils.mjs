@@ -7,7 +7,7 @@ export const PLAYLIST = "6e9ccdc8-1257-4977-8ad3-9e4db3691cdd";
 const COMPTE = "charge-test@zik-music.invalid";
 const LIMITE_MS = 1000;
 const GENERATEUR_MAX_MS = 200;
-const OPTIONS = ["url", "joueurs", "salons", "manches", "rythme"];
+const OPTIONS = ["url", "joueurs", "salons", "manches", "rythme", "deflate"];
 
 // Renvoie l'origine vérifiée : seule valeur à utiliser ensuite. Socket.io ne lit
 // pas une URL comme fetch, une adresse brute pourrait viser un autre hôte
@@ -79,12 +79,15 @@ export function lireArgs(argv) {
       throw new Error(`--${nom} doit être un entier de ${min} à ${max}`);
     return n;
   };
+  if (!["oui", "non"].includes(args.deflate ?? "oui"))
+    throw new Error("--deflate doit valoir oui ou non");
   return {
     url: args.url ?? DEV_URL,
     joueurs: entier("joueurs", 250, 1, 5000),
     salons: entier("salons", 1, 1, 20),
     manches: entier("manches", 5, 5, 20),
     rythme: entier("rythme", 50, 1, 500),
+    deflate: args.deflate !== "non",
   };
 }
 
