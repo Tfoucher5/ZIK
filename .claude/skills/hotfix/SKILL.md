@@ -1,6 +1,6 @@
 ---
 name: hotfix
-description: Corrige en urgence un bug de production ZIK sans passer par develop — branche depuis master, test qui reproduit, correctif minimal, PR vers master et fusion, report dans develop. Utilise ce skill dès qu'un bug de prod est établi (après /incident), ou quand Théo lance /hotfix.
+description: Corrige en urgence un bug de production ZIK sans passer par develop — branche depuis master, test qui reproduit, correctif minimal, PR vers master prête pour Théo, report dans develop. Utilise ce skill dès qu'un bug de prod est établi (après /incident), ou quand Théo lance /hotfix.
 argument-hint: "[bug à corriger]"
 allowed-tools: Bash(git status *) Bash(git fetch *) Bash(git log *) Bash(git rev-parse *) Bash(date *)
 ---
@@ -25,5 +25,5 @@ Un hotfix est le plus petit changement qui supprime le problème, rien de plus. 
 6. `/relire` avec `origin/master` comme base.
 7. Version : incrément de correctif (`X.Y.Z+1`) dans `package.json` et partout où elle est affichée.
 8. Push, `gh pr create --base master --title "fix(<zone>): … (vX.Y.Z)"`.
-9. **Soirées en cours** : lecture seule de `salon.snapshots` en prod. Si une soirée tourne et que le bug ne la casse pas, attends sa fin ; si le bug la casse déjà, fusionne. CI verte : `gh pr merge --squash`.
-10. Après le merge : PR `master` → `develop` en merge commit, déploiement `[PROD]` vérifié (piège SKIPPED), `/statut` et logs surveillés 30 minutes, rapport à Théo.
+9. CI verte : préviens Théo que c'est prêt. Il fusionne (squash) en tenant compte des soirées en cours.
+10. Après le merge : PR `master` → `develop` en merge commit, déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK.

@@ -17,7 +17,7 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - Pas de refactoring non demandé, pas de features supplémentaires
 - Préférer modifier un fichier existant plutôt qu'en créer un nouveau
 - Toujours supprimer les morceaux de code inutiles ou inutilisés
-- Claude est autonome de bout en bout (accord de Théo du 10/11/2026) : commit, push, PR, fusion vers `develop`, migration sur le staging via `/migration`, et **release ou hotfix sur `master`** via `/release` et `/hotfix`, à condition que la porte de mise en prod (section Branches) soit tenue
+- Claude est autonome jusqu’à `develop` : commit, push, PR, fusion vers `develop`, migration sur le staging via `/migration`. Il prépare aussi les releases et hotfix (`/release`, `/hotfix`) jusqu’à la PR vers `master` verte, puis prévient Théo : **Théo fusionne sur `master`**, au moment qu’il choisit
 - Claude peut aussi améliorer de lui-même la logique, l'accessibilité et la praticité pour les joueurs et les clients Pro, par petites tâches dans le plan. Il note l'ajout dans `docs/audit/2026-11-02-a-valider.md` et le signale dans le compte rendu
 - Toujours demander à Théo : écriture ou suppression de données en base de prod hors migration, force push, variable ou réglage Railway `[PROD]`, tout ce qui touche l'argent (offres, prix, Stripe en mode live), une grosse fonctionnalité nouvelle (nouvelle page, nouveau mode de jeu), un vrai blocage. Théo répond aux questions et teste en réel
 - Ne jamais toucher à la prod directement : ni SQL dans le dashboard, ni variable Railway, ni déploiement manuel. Tout passe par une PR
@@ -42,11 +42,11 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - Release `develop` → `master` et report d'un hotfix `master` → `develop` : fusion en **merge commit**, jamais en squash. Un squash coupe l'historique commun : `master` et `develop` divergent et chaque release suivante repart en conflit
 - Message de commit et titre de PR : `type(zone): description (vX.Y.Z)`, types `feat`, `fix`, `perf`, `chore`, `docs`, `test`
 - Version : toujours incrémentée dans la PR de release (dans toutes les pages concernées et dans le commit)
-- **Porte de mise en prod** (Claude fusionne sur `master` seulement si tout est vrai, sinon il attend ou demande) :
+- **PR vers `master` prête** (Claude prévient Théo seulement si tout est vrai) :
   1. Définition de terminé tenue pour chaque PR embarquée, CI verte sur `develop` et sur la PR
   2. Contenu déployé sur `[DEV]` et vérifié en vrai par Claude : déploiement réussi, sondes vertes, scénario Playwright du salon vert, contrôle visuel desktop et mobile (390 px) des écrans touchés
-  3. Aucune soirée en cours : lecture seule de `salon.snapshots` en prod (rien de modifié dans les 30 dernières minutes). Le redémarrage les met en pause. Éviter vendredi et samedi après 18 h (heure de Paris)
-  4. Après la fusion : déploiement `[PROD]` réussi (attention au piège SKIPPED), `/statut` et logs surveillés 30 min ; au moindre doute, PR de revert immédiate puis rapport à Théo
+  3. Théo fusionne quand aucune soirée ne tourne (il voit les salons en cours dans l’admin). Le redémarrage les met en pause, elles reprennent via l’instantané
+  4. Après la fusion, sans attendre : Claude vérifie que le déploiement `[PROD]` est en `SUCCESS` (piège SKIPPED) et que `/healthz` répond, reporte `master` dans `develop`, puis passe à la tâche suivante. Un souci remonté plus tard = `/incident`, puis `/hotfix` ou revert
 
 ## Définition de « terminé »
 
@@ -74,7 +74,7 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 | `/relire`                  | agent `reviewer` : relit le diff contre ce fichier, verdict fusionnable / bloqué          | Claude avant toute PR, ou Théo                       |
 | `/migration <changement>`  | migration Supabase selon les règles, testée sur le staging                                | Claude dès qu'un changement de schéma est nécessaire |
 | `/terminer`                | Définition de terminé vérifiée, plan coché, commit + PR vers `develop` après confirmation | Claude quand la tâche est finie, ou Théo             |
-| `/release`                 | porte de mise en prod, version, notes, PR `develop` → `master` et fusion                  | Claude quand `develop` a de quoi livrer, ou Théo     |
+| `/release`                 | vérifications, version, notes, PR `develop` → `master` prête pour Théo                    | Claude quand `develop` a de quoi livrer, ou Théo     |
 | `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Claude dès qu'un bug prod est établi, ou Théo        |
 | `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |
 | `/idees [axe]`             | agent `idees` : brainstorm produit classé par impact et effort, rangé dans `docs/idees/`  | Théo, ou Claude quand le plan est presque terminé    |
