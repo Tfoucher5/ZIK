@@ -1,7 +1,6 @@
 ---
 name: release
-description: Prépare une mise en production de ZIK (develop vers master) — vérifie l'état du staging, la version, les notes, et ouvre la PR de release. À lancer uniquement par Théo avec /release.
-disable-model-invocation: true
+description: Met en production ZIK (develop vers master) — vérifie la porte de mise en prod du CLAUDE.md, la version, les notes, ouvre la PR de release et la fusionne. Utilise ce skill quand develop contient des changements à livrer, ou quand Théo lance /release.
 argument-hint: "[version voulue, sinon calculée]"
 allowed-tools: Bash(git log *) Bash(git fetch *) Bash(git rev-parse *) Bash(date *) Bash(node -p *)
 ---
@@ -15,19 +14,20 @@ allowed-tools: Bash(git log *) Bash(git fetch *) Bash(git rev-parse *) Bash(date
 
 ## Étapes
 
-Ne fusionne rien toi-même : tu prépares, Théo décide.
+Tu fusionnes toi-même, seulement si la porte de mise en prod du CLAUDE.md est tenue. Un point rouge = tu attends ou tu demandes à Théo.
 
-1. **Soirées en cours.** Rappelle à Théo de vérifier dans l'admin les soirées en cours avant de fusionner : le redémarrage les met en pause. Ce n'est pas bloquant, il décide.
+1. **Soirées en cours.** Lecture seule en prod : `salon.snapshots` modifiés dans les 30 dernières minutes. S'il y en a, ou vendredi/samedi après 18 h à Paris, attends.
 2. **Il y a quelque chose à livrer.** Si la liste des commits est vide, dis-le et arrête.
 3. **Le staging est sain**, chaque point vérifié et noté :
    - CI verte sur `develop` (`gh run list --branch develop --limit 3`) ;
    - dernier déploiement de `[DEV] - Développement` réussi (MCP Railway `list-deployments`) ;
-   - sondes de `/admin/statut` au vert sur le staging, si la phase 2 est faite ;
-   - scénario Playwright du salon vert sur le staging, si il existe ;
+   - sondes de `/admin/statut` au vert sur le staging ;
+   - scénario Playwright du salon vert sur le staging ;
+   - contrôle visuel desktop et mobile (390 px) des écrans touchés, fait par toi sur `[DEV]` ;
    - migrations en attente appliquées sur le staging sans nouvel avertissement des conseillers.
 4. **Version.** Une `feat` dans la liste = version mineure ; seulement `fix`, `perf`, `chore`, `docs` = correctif. Incrémente-la partout où elle apparaît (`package.json` et les pages qui l'affichent : cherche l'ancienne version avec Grep).
 5. **Notes.** Rédige les notes de release : d'abord ce qui change pour les joueurs et les clients Pro, puis le technique. Ajoute une entrée dans `src/lib/data/news.js` seulement si l'expérience change pour eux.
-6. **Branche de release** `release/vX.Y.Z` depuis `develop` avec le bump de version et les notes, puis PR vers `master` (`gh pr create --base master --title "release vX.Y.Z"`), après confirmation de Théo.
-7. **Après le merge** (fait par Théo) : rappelle de reporter `master` dans `develop` si la branche de release a reçu des commits, et de surveiller `/admin/statut` et les logs Railway pendant 30 minutes.
+6. **Branche de release** `release/vX.Y.Z` depuis `develop` avec le bump de version et les notes, puis PR vers `master` (`gh pr create --base master --title "release vX.Y.Z"`). CI verte : `gh pr merge --merge` (merge commit, jamais squash).
+7. **Après le merge** : reporte `master` dans `develop` (PR en merge commit) ; vérifie que le déploiement `[PROD]` est parti et a réussi (piège SKIPPED) ; surveille `/statut` et les logs Railway 30 minutes. Au moindre doute : PR de revert sur `master` tout de suite, puis rapport à Théo.
 
-Rapport final : version, contenu, état de chaque vérification, risques à surveiller.
+Rapport final à Théo : version, contenu, état de chaque vérification, ce qu'il peut tester en prod, risques à surveiller.
