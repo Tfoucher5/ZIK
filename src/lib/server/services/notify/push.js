@@ -1,6 +1,5 @@
 import webpush from "web-push";
 import { getAdminClient } from "../../config.js";
-import { profilesByIds } from "../profiles.js";
 
 // Notifications sur l'appareil (Web Push), même site fermé. Sans clés VAPID
 // dans l'environnement, rien n'est envoyé (les notifications du site restent).
@@ -98,23 +97,15 @@ export async function pushToAll(category, payload, { skip = new Set() } = {}) {
     const { data, error } = await sb
       .schema("social")
       .from("push_subscriptions")
-      .select("id, user_id, endpoint, p256dh, auth")
+      .select("id, user_id, endpoint, p256dh, auth, profile!inner(notif_prefs)")
+      .eq(`profile.notif_prefs->>${category}`, "true")
+      .order("id")
       .range(from, from + 999);
     if (error) throw error;
     subs.push(...data.filter((s) => !skip.has(s.user_id)));
     if (data.length < 1000) break;
   }
-  const people = await profilesByIds(
-    sb,
-    subs.map((s) => s.user_id),
-    "id, notif_prefs",
-  );
-  return deliver(
-    subs.filter(
-      (s) => String(people.get(s.user_id)?.notif_prefs?.[category]) === "true",
-    ),
-    payload,
-  );
+  return deliver(subs, payload);
 }
 
 /** Vrai la première fois qu'une clé est vue : un envoi ne part qu'une fois. */

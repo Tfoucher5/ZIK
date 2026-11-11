@@ -2,9 +2,45 @@ import { describe, it, expect } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-// Tables sorties de public (phase 4) : la vue de compatibilité disparaîtra,
-// toute requête doit donc nommer le schéma.
+// Schéma de chaque table (phase 4 du plan). Une table hors de public se lit
+// par .schema("…") ; une jointure ne vise qu'une table du même schéma
+// (PostgREST ne suit pas une clé étrangère d'un schéma à l'autre, PGRST200),
+// sinon elle passe par une fonction de lien (computed relationship).
+const PUBLIC = [
+  "achievements",
+  "answer_types",
+  "card_albums",
+  "card_artists",
+  "card_grants",
+  "card_set_items",
+  "card_sets",
+  "card_signals",
+  "cards",
+  "custom_playlist_tracks",
+  "custom_playlists",
+  "daily_results",
+  "daily_songs",
+  "game_players",
+  "game_results",
+  "games",
+  "pro_subscriptions",
+  "profiles",
+  "room_playlists",
+  "rooms",
+  "salon_players",
+  "track_answers",
+  "track_issues",
+  "track_stats",
+  "tracks",
+  "user_achievements",
+  "user_card_sets",
+  "user_cards",
+  "weekly_challenge_contributions",
+  "weekly_challenges",
+  "zikle_pool",
+];
 const SCHEMA_OF = {
+  ...Object.fromEntries(PUBLIC.map((t) => [t, "public"])),
   follows: "social",
   friendships: "social",
   notifications: "social",
@@ -16,6 +52,9 @@ const SCHEMA_OF = {
   prospect_replies: "ops",
   visit_sources: "ops",
   site_settings: "ops",
+  health_checks: "ops",
+  errors: "ops",
+  snapshots: "salon",
 };
 
 function files(dir) {
@@ -27,21 +66,23 @@ function files(dir) {
   });
 }
 
+const QUERY =
+  /(?:\.schema\(\s*["'`](\w+)["'`]\s*\)\s*)?\.from\(\s*["'`](\w+)["'`]\s*\)(?:(?:(?!\.from\()[\s\S])*?\.select\(\s*(?:"([^"]*)"|'([^']*)'|`([^`]*)`))?/g;
+const EMBED = /(?:\w+:)?(\w+)(?:!\w+)?\s*\(/g;
+
 function wrongSchemaCalls(source) {
   const bad = [];
-  for (const m of source.matchAll(/\.from\(\s*["'`]([a-z_]+)["'`]\s*\)/g)) {
-    const want = SCHEMA_OF[m[1]];
+  for (const [, schema = "public", table, ...selects] of source.matchAll(
+    QUERY,
+  )) {
+    const want = SCHEMA_OF[table];
     if (!want) continue;
-    const before = source.slice(0, m.index).trimEnd();
-    if (!before.endsWith(`.schema("${want}")`)) bad.push(m[1]);
+    if (want !== schema) bad.push(table);
+    const cols = selects.find((c) => c !== undefined) ?? "";
+    for (const [, name] of cols.matchAll(EMBED))
+      if (SCHEMA_OF[name] && SCHEMA_OF[name] !== want)
+        bad.push(`${want} -> ${name}`);
   }
-  // PostgREST ne joint pas d'un schéma à l'autre (PGRST200) : une jointure
-  // dans le select doit viser une table du même schéma.
-  const query =
-    /\.schema\("(\w+)"\)\s*\.from\("\w+"\)(?:(?!\.from\()[\s\S])*?\.select\(\s*"([^"]*)"/g;
-  for (const [, schema, cols] of source.matchAll(query))
-    for (const [, name] of cols.matchAll(/(?:\w+:)?(\w+)(?:!\w+)?\s*\(/g))
-      if (SCHEMA_OF[name] !== schema) bad.push(`${schema} -> ${name}`);
   return bad;
 }
 
@@ -55,6 +96,9 @@ describe("tables rangées par domaine", () => {
       wrongSchemaCalls('sb\n  .schema("social")\n  .from("follows")'),
     ).toEqual([]);
     expect(wrongSchemaCalls('sb.from("profiles")')).toEqual([]);
+    expect(wrongSchemaCalls('sb.schema("social").from("profiles")')).toEqual([
+      "profiles",
+    ]);
   });
 
   it("repère une jointure vers un autre schéma", () => {
@@ -64,9 +108,20 @@ describe("tables rangées par domaine", () => {
       ),
     ).toEqual(["social -> profiles"]);
     expect(
+      wrongSchemaCalls('sb.from("profiles").select("id, follows(id)")'),
+    ).toEqual(["public -> follows"]);
+    expect(
       wrongSchemaCalls(
         'sb.schema("ops").from("prospect_replies").select("id, prospects(name)")',
       ),
+    ).toEqual([]);
+    expect(
+      wrongSchemaCalls(
+        'sb.schema("social").from("follows").select("id, user:following(id)")',
+      ),
+    ).toEqual([]);
+    expect(
+      wrongSchemaCalls("sb.from('tracks').select('id, cards(number)')"),
     ).toEqual([]);
   });
 

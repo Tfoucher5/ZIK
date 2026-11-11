@@ -39,13 +39,12 @@ const NOTIF = {
   id: 5,
   type: "friend_request",
   payload: {},
-  actor_id: "u2",
+  actor: { username: "lea" },
 };
-const LEA = { id: "u2", username: "lea" };
 let rows;
 
 beforeEach(() => {
-  rows = { profiles: () => ({ data: [LEA] }) };
+  rows = {};
   m.online = false;
   m.pushNotify = vi.fn();
   m.refresh = vi.fn();
@@ -63,7 +62,7 @@ describe("notification d'un joueur", () => {
       type: "friend_request",
       actorId: "u2",
     });
-    expect(m.pushNotify).toHaveBeenCalledWith("u1", { ...NOTIF, actor: LEA });
+    expect(m.pushNotify).toHaveBeenCalledWith("u1", NOTIF);
     expect(m.pushToUser).not.toHaveBeenCalled();
     expect(m.db.of("notifications")[0].args("insert")).toEqual([
       { user_id: "u1", type: "friend_request", actor_id: "u2", payload: {} },
