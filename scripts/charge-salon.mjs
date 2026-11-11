@@ -56,7 +56,7 @@ function connecter(url, m, role) {
     forceNew: true,
     reconnection: false,
     timeout: 30000,
-    // false : la connexion ne négocie pas la compression, le serveur ne compresse pas
+    // false : pas de compression négociée, sinon même seuil que le serveur (server.js)
     perMessageDeflate: m.deflate && { threshold: 1024 },
   });
   socket.on("disconnect", (raison) => {
