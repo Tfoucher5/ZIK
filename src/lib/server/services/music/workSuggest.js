@@ -1,5 +1,6 @@
 import { fetchAllRows } from "../admin/paginate.js";
 import { deezerFetch } from "./deezerClient.js";
+import { frenchTitle } from "./wikidata.js";
 import {
   guessWork,
   isWork,
@@ -89,6 +90,7 @@ export async function suggestWorks(db, playlistId, userId, from = 0) {
     userId,
   );
   const suggestions = [];
+  let wikidataDown = false;
   for (const r of page) {
     const meta = r.tracks ?? {};
     const artist = r.custom_artist || meta.artist || "";
@@ -99,11 +101,23 @@ export async function suggestWorks(db, playlistId, userId, from = 0) {
     let album = null;
     if (!knownWork && meta.source === "deezer" && meta.external_id)
       album = await deezerAlbum(meta.external_id);
+    let value = guessWork({ known: knownWork, album, artist: meta.artist });
+    // Hors film déjà saisi ou bande originale française : souvent le titre anglais
+    if (
+      value &&
+      !knownWork &&
+      !wikidataDown &&
+      !/bande originale/i.test(album ?? "")
+    ) {
+      const fr = await frenchTitle(value);
+      if (fr === undefined) wikidataDown = true;
+      value = fr ?? value;
+    }
     suggestions.push({
       id: r.id,
       artist,
       title: r.custom_title || meta.title || "",
-      value: guessWork({ known: knownWork, album, artist: meta.artist }),
+      value,
     });
   }
   const next = from + PAGE < missing.length ? from + PAGE : null;

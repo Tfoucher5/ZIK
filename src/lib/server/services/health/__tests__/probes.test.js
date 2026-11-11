@@ -153,6 +153,22 @@ describe("Deezer", () => {
   });
 });
 
+describe("Wikidata", () => {
+  it("répond : ok, en se présentant ; en erreur : échec", async () => {
+    const appels = [];
+    const ok = sondes({
+      fetchFn: async (url, opts) => {
+        appels.push(opts.headers);
+        return reponse(200);
+      },
+    });
+    expect((await ok.wikidata()).result).toBe("ok");
+    expect(appels[0]["User-Agent"]).toMatch(/ZIK/);
+    const ko = sondes({ fetchFn: async () => reponse(503) });
+    expect((await ko.wikidata()).result).toBe("fail");
+  });
+});
+
 describe("Spotify", () => {
   it("un 401 sans jeton veut dire que l'API répond ; un 503 non", async () => {
     expect(

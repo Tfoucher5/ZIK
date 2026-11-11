@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const h = vi.hoisted(() => ({ deezer: vi.fn() }));
+const h = vi.hoisted(() => ({ deezer: vi.fn(), fr: vi.fn() }));
 vi.mock("../../../config.js", async () =>
   (await import("../../__tests__/fakeQuery.js")).fakeClients(h),
 );
 vi.mock("../deezerClient.js", () => ({ deezerFetch: h.deezer }));
+vi.mock("../wikidata.js", () => ({ frenchTitle: h.fr }));
 
 const { suggestWorks, saveWorks, canEditPlaylist, PAGE } =
   await import("../workSuggest.js");
@@ -30,6 +31,7 @@ const film = (value) => [{ value, answer_types: { name: "Film" } }];
 beforeEach(() => {
   h.reset();
   h.deezer.mockReset().mockResolvedValue({ album: { title: "Best Of" } });
+  h.fr.mockReset().mockResolvedValue(null);
 });
 
 describe("suggestWorks", () => {
@@ -111,6 +113,66 @@ describe("suggestWorks", () => {
       value: "Les Aristochats",
     });
     expect(h.deezer).not.toHaveBeenCalled();
+  });
+
+  it("titre anglais traduit par Wikidata", async () => {
+    h.tables.custom_playlist_tracks = { data: [row("b")] };
+    h.tables.track_answers = { data: [] };
+    h.deezer.mockResolvedValue({
+      album: { title: "The Aristocats Original Soundtrack" },
+    });
+    h.fr.mockResolvedValue("Les Aristochats");
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
+    expect(h.fr).toHaveBeenCalledWith("Aristocats");
+    expect(suggestions[0].value).toBe("Les Aristochats");
+  });
+
+  it("bande originale française ou film déjà saisi : pas de traduction", async () => {
+    h.tables.custom_playlist_tracks = {
+      data: [row("b", { tracks: { ...row("b").tracks, artist: "X" } })],
+    };
+    h.tables.track_answers = { data: [] };
+    h.deezer.mockResolvedValue({
+      album: {
+        title: "La Reine des Neiges (Bande Originale Française du Film)",
+      },
+    });
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
+    expect(suggestions[0].value).toBe("La Reine des Neiges");
+    expect(h.fr).not.toHaveBeenCalled();
+  });
+
+  it("film déjà saisi ailleurs : pas de traduction", async () => {
+    h.tables.custom_playlist_tracks = { data: [row("b")] };
+    h.tables.track_answers = {
+      data: [
+        {
+          value: "Les Aristochats",
+          answer_types: { name: "Film" },
+          custom_playlist_tracks: {
+            track_id: "tb",
+            custom_playlists: { owner_id: "x", is_official: true },
+          },
+        },
+      ],
+    };
+    await suggestWorks(getAdminClient(), PL, "moi");
+    expect(h.fr).not.toHaveBeenCalled();
+  });
+
+  it("Wikidata injoignable : un seul essai pour tout le passage", async () => {
+    h.tables.custom_playlist_tracks = {
+      data: [row("a"), row("b"), row("c")],
+    };
+    h.tables.track_answers = { data: [] };
+    h.fr.mockResolvedValue(undefined);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
+    expect(h.fr).toHaveBeenCalledTimes(1);
+    expect(suggestions.map((s) => s.value)).toEqual([
+      "Aristocats",
+      "Aristocats",
+      "Aristocats",
+    ]);
   });
 
   it("Deezer en panne : pas de proposition, pas d'erreur", async () => {
