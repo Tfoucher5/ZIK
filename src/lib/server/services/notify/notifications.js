@@ -57,10 +57,9 @@ export function purgeCutoff() {
 
 // Une notification pour chaque profil (annonce de l'admin ou nouveauté).
 export async function broadcastNotification(type, payload) {
-  const { data, error } = await getAdminClient().rpc(
-    "admin_broadcast_notification",
-    { p_type: type, p_payload: payload },
-  );
+  const { data, error } = await getAdminClient()
+    .schema("social")
+    .rpc("admin_broadcast_notification", { p_type: type, p_payload: payload });
   if (error) throw new Error(error.message);
   refreshAllNotifications();
   return data;

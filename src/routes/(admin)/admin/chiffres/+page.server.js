@@ -18,16 +18,26 @@ async function chargerPage({ url }) {
     cohorts,
     breakdown,
   ] = await Promise.all([
-    sb.rpc("admin_dau_wau_mau").then((r) => r.data?.[0] ?? null),
-    sb.rpc("admin_active_players_per_day", { p_days: days }).then(rows),
-    sb.rpc("admin_signups_per_day", { p_days: days }).then(rows),
-    sb.rpc("admin_traffic_daily", { p_days: days }).then(rows),
-    sb.rpc("admin_traffic_sources", { p_days: days }).then(rows),
-    sb.rpc("admin_traffic_landings", { p_days: days, p_limit: 8 }).then(rows),
     sb
+      .schema("ops")
+      .rpc("admin_dau_wau_mau")
+      .then((r) => r.data?.[0] ?? null),
+    sb
+      .schema("ops")
+      .rpc("admin_active_players_per_day", { p_days: days })
+      .then(rows),
+    sb.schema("ops").rpc("admin_signups_per_day", { p_days: days }).then(rows),
+    sb.schema("ops").rpc("admin_traffic_daily", { p_days: days }).then(rows),
+    sb.schema("ops").rpc("admin_traffic_sources", { p_days: days }).then(rows),
+    sb
+      .schema("ops")
+      .rpc("admin_traffic_landings", { p_days: days, p_limit: 8 })
+      .then(rows),
+    sb
+      .schema("ops")
       .rpc("admin_retention_cohorts", { p_activity: "blindtest", p_weeks: 8 })
       .then(rows),
-    sb.rpc("admin_activity_breakdown", { p_weeks: 8 }).then(rows),
+    sb.schema("ops").rpc("admin_activity_breakdown", { p_weeks: 8 }).then(rows),
   ]);
 
   const byMedium = {};
