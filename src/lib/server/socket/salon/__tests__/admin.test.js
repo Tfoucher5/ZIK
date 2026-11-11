@@ -193,6 +193,17 @@ describe("dépannage d'un salon depuis l'admin", () => {
     expect(vus(h, "salon_round_end")[0].payload.reason).toMatch(/support/);
   });
 
+  it("musique de film : la révélation porte le film en réponse principale", () => {
+    salonRooms[CODE].game.currentTrack.extraAnswers = [
+      { label: "Personnage", value: "Maui", work: false },
+      { label: "Film", value: "Vaiana", work: true },
+    ];
+    supportSkip(CODE);
+    const [fin] = vus(h, "salon_round_end");
+    expect(fin.payload.work).toEqual({ label: "Film", value: "Vaiana" });
+    expect(fin.payload.answer).toMatch(/Daft Punk/);
+  });
+
   it("lance la suite quand la réponse est affichée", () => {
     salonRooms[CODE].game.phase = "summary";
     expect(supportSkip(CODE)).toBe("next");

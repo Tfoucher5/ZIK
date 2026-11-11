@@ -5,7 +5,9 @@ import {
   checkMatch,
   gradeGuess,
   makeChoices,
+  workAnswer,
 } from "../scoring.js";
+import { isWork } from "../../../shared/playlist/work.js";
 
 describe("calcQcmPoints", () => {
   it("retourne le score max pour une réponse immédiate", () => {
@@ -121,6 +123,20 @@ describe("œuvre (film, série…)", () => {
   it("trouver le film valide toute la manche", () => {
     const kinds = gradeGuess("tarzan", tarzan, fresh()).hits.map((p) => p.kind);
     expect(kinds).toEqual(["artist", "title", "extra"]);
+  });
+
+  it("l'œuvre est la réponse affichée en grand, pas un personnage", () => {
+    expect(workAnswer(tarzan)).toEqual({ label: "Film", value: "Tarzan" });
+    const perso = song("A", "a", [extra("Personnage", "Maui")]);
+    expect(workAnswer(perso)).toBeNull();
+    expect(workAnswer(song("A", "a"))).toBeNull();
+  });
+
+  it("film, série, jeu vidéo et animé sont des œuvres", () => {
+    for (const l of ["Film", "Série", "Jeu vidéo", "Animé"])
+      expect(isWork(l)).toBe(true);
+    for (const l of ["Personnage", "Artiste", "", undefined])
+      expect(isWork(l)).toBe(false);
   });
 
   it("un personnage reste un bonus", () => {

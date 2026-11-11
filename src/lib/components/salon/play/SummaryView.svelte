@@ -47,7 +47,13 @@
     {#if roundEnd.cover}<img src={roundEnd.cover} alt="">{/if}
     <div>
       <p class="sx-kicker">Manche <b>{round}</b> / {total}</p>
-      <div class="sp-answer-txt">{roundEnd.answer}</div>
+      {#if roundEnd.work}
+        <div class="sp-answer-sub">{roundEnd.work.label}</div>
+      {/if}
+      <div class="sp-answer-txt">{roundEnd.work?.value ?? roundEnd.answer}</div>
+      {#if roundEnd.work}
+        <div class="sp-answer-sub">{roundEnd.answer}</div>
+      {/if}
       {#if roundEnd.featArtists?.length}
         <div class="sp-answer-sub">feat. {roundEnd.featArtists.join(', ')}</div>
       {/if}
