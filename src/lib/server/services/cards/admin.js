@@ -45,12 +45,17 @@ export async function auditCatalog(sb) {
 async function recountSets(sb, setIds) {
   for (const id of new Set(setIds)) {
     const { count } = await sb
+      .schema("cards")
       .from("card_set_items")
       .select("card_id", { count: "exact", head: true })
       .eq("set_id", id);
     if (count)
-      await sb.from("card_sets").update({ card_count: count }).eq("id", id);
-    else await sb.from("card_sets").delete().eq("id", id);
+      await sb
+        .schema("cards")
+        .from("card_sets")
+        .update({ card_count: count })
+        .eq("id", id);
+    else await sb.schema("cards").from("card_sets").delete().eq("id", id);
   }
 }
 
@@ -60,10 +65,15 @@ export async function deleteCards(sb, ids) {
   for (let i = 0; i < ids.length; i += 200) {
     const chunk = ids.slice(i, i + 200);
     const { data: items } = await sb
+      .schema("cards")
       .from("card_set_items")
       .select("set_id")
       .in("card_id", chunk);
-    const { error } = await sb.from("cards").delete().in("id", chunk);
+    const { error } = await sb
+      .schema("cards")
+      .from("cards")
+      .delete()
+      .in("id", chunk);
     if (error) throw error;
     deleted += chunk.length;
     await recountSets(
@@ -81,6 +91,7 @@ export async function deleteCards(sb, ids) {
  */
 export async function revokeGrants(sb, grantIds) {
   const { data: grants } = await sb
+    .schema("cards")
     .from("card_grants")
     .select("id, user_id, card_id, status")
     .in("id", grantIds)
@@ -88,23 +99,27 @@ export async function revokeGrants(sb, grantIds) {
 
   for (const g of grants || []) {
     await sb
+      .schema("cards")
       .from("card_grants")
       .update({ status: "revoked", settled_at: new Date().toISOString() })
       .eq("id", g.id);
     if (g.status !== "granted") continue;
 
     await sb
+      .schema("cards")
       .from("user_cards")
       .delete()
       .eq("user_id", g.user_id)
       .eq("card_id", g.card_id);
     const { data: items } = await sb
+      .schema("cards")
       .from("card_set_items")
       .select("set_id")
       .eq("card_id", g.card_id);
     const setIds = (items || []).map((r) => r.set_id);
     if (setIds.length)
       await sb
+        .schema("cards")
         .from("user_card_sets")
         .delete()
         .eq("user_id", g.user_id)
@@ -137,20 +152,27 @@ export async function correctCard(sb, cardId, deezerRef) {
 
   await sb.from("tracks").update({ card_id: newId }).eq("card_id", cardId);
   const { data: owners } = await sb
+    .schema("cards")
     .from("user_cards")
     .select("*")
     .eq("card_id", cardId);
   for (const o of owners || []) {
     // Déjà possédée sous sa bonne version : rien à ajouter (pas de doublons)
     await sb
+      .schema("cards")
       .from("user_cards")
       .upsert(
         { ...o, card_id: newId },
         { onConflict: "user_id,card_id", ignoreDuplicates: true },
       );
   }
-  await sb.from("card_grants").update({ card_id: newId }).eq("card_id", cardId);
+  await sb
+    .schema("cards")
+    .from("card_grants")
+    .update({ card_id: newId })
+    .eq("card_id", cardId);
   const { data: items } = await sb
+    .schema("cards")
     .from("card_set_items")
     .select("set_id")
     .in("card_id", [cardId, newId]);
@@ -165,17 +187,20 @@ export async function correctCard(sb, cardId, deezerRef) {
 async function recheckSets(sb, userId, setIds) {
   for (const setId of setIds) {
     const { data: set } = await sb
+      .schema("cards")
       .from("card_sets")
       .select("card_count")
       .eq("id", setId)
       .maybeSingle();
     const { data: items } = await sb
+      .schema("cards")
       .from("card_set_items")
       .select("card_id")
       .eq("set_id", setId);
     const ids = (items || []).map((r) => r.card_id);
     const { count } = ids.length
       ? await sb
+          .schema("cards")
           .from("user_cards")
           .select("card_id", { count: "exact", head: true })
           .eq("user_id", userId)
@@ -184,6 +209,7 @@ async function recheckSets(sb, userId, setIds) {
     const done = !!set && set.card_count >= 3 && count === ids.length;
     if (done)
       await sb
+        .schema("cards")
         .from("user_card_sets")
         .upsert(
           { user_id: userId, set_id: setId },
@@ -191,6 +217,7 @@ async function recheckSets(sb, userId, setIds) {
         );
     else
       await sb
+        .schema("cards")
         .from("user_card_sets")
         .delete()
         .eq("user_id", userId)

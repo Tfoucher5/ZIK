@@ -21,7 +21,7 @@ for (let from = 0; ; from += 1000) {
   const { data, error } = await sb
     .from("tracks")
     .select(
-      "id, artist, title, norm_key, external_id, source, cover_url, cards(title, artist, deezer_track_id, card_albums(cover_url))",
+      "id, artist, title, norm_key, external_id, source, cover_url, cards(title, artist, deezer_track_id, card_albums)",
     )
     .not("card_id", "is", null)
     .order("id")

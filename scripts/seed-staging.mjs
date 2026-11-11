@@ -88,10 +88,24 @@ const TABLES = [
 ];
 
 const tableNames = TABLES.map((x) => `'${x.t}'`).join(",");
+// Schéma de chaque table dans chaque base (phase 4 : la prod suit le staging
+// à la release, les deux peuvent différer entre-temps)
+const SCHEMAS = "'public','cards'";
+const qualified = (ref) => {
+  const m = {};
+  for (const r of read(
+    ref,
+    `select table_name t, table_schema s from information_schema.tables where table_type = 'BASE TABLE' and table_schema in (${SCHEMAS}) and table_name in (${tableNames})`,
+  ))
+    m[r.t] = `${r.s}.${r.t}`;
+  return m;
+};
+const prodName = qualified(PROD);
+const stagingName = qualified(STAGING);
 const cols = {};
 for (const r of read(
   PROD,
-  `select table_name t, string_agg(column_name, ',' order by ordinal_position) c from information_schema.columns where table_schema = 'public' and table_name in (${tableNames}) and is_generated = 'NEVER' and coalesce(identity_generation, '') <> 'ALWAYS' group by 1`,
+  `select table_name t, string_agg(column_name, ',' order by ordinal_position) c from information_schema.columns where table_schema in (${SCHEMAS}) and table_name in (${tableNames}) and is_generated = 'NEVER' and coalesce(identity_generation, '') <> 'ALWAYS' group by 1`,
 ))
   cols[r.t] = r.c.split(",");
 
@@ -99,7 +113,7 @@ for (const r of read(
 const pk = {};
 for (const r of read(
   PROD,
-  `select c.relname t, string_agg(quote_ident(a.attname), ',' order by k.n) k from pg_index i join pg_class c on c.oid = i.indrelid join pg_namespace s on s.oid = c.relnamespace cross join lateral unnest(i.indkey) with ordinality k(attnum, n) join pg_attribute a on a.attrelid = c.oid and a.attnum = k.attnum where i.indisprimary and s.nspname = 'public' and c.relname in (${tableNames}) group by 1`,
+  `select c.relname t, string_agg(quote_ident(a.attname), ',' order by k.n) k from pg_index i join pg_class c on c.oid = i.indrelid join pg_namespace s on s.oid = c.relnamespace cross join lateral unnest(i.indkey) with ordinality k(attnum, n) join pg_attribute a on a.attrelid = c.oid and a.attnum = k.attnum where i.indisprimary and s.nspname in (${SCHEMAS}) and c.relname in (${tableNames}) group by 1`,
 ))
   pk[r.t] = r.k;
 
@@ -110,7 +124,7 @@ write(
   HEAD +
     TABLES.slice()
       .reverse()
-      .map((x) => `delete from public.${x.t};`)
+      .map((x) => `delete from ${stagingName[x.t]};`)
       .join("\n") +
     `\nupdate public.profiles set role = 'super_admin' where id = '${admin.id}';`,
 );
@@ -127,7 +141,7 @@ function insert(t, list, rows) {
   }
   write(
     // do nothing : le serveur de staging peut créer des cartes pendant la copie
-    `${HEAD}insert into public.${t} (${list}) select ${list} from json_populate_recordset(null::public.${t}, $seed$${json}$seed$) on conflict do nothing;`,
+    `${HEAD}insert into ${stagingName[t]} (${list}) select ${list} from json_populate_recordset(null::${stagingName[t]}, $seed$${json}$seed$) on conflict do nothing;`,
   );
 }
 
@@ -137,7 +151,7 @@ for (const { t, where, set, fix } of TABLES) {
   for (let offset = 0; ; offset += CHUNK) {
     const rows = read(
       PROD,
-      `select ${list} from public.${t} ${where ? `where ${where}` : ""} order by ${pk[t] ?? list} limit ${CHUNK} offset ${offset}`,
+      `select ${list} from ${prodName[t]} ${where ? `where ${where}` : ""} order by ${pk[t] ?? list} limit ${CHUNK} offset ${offset}`,
     );
     if (!rows.length) break;
     for (const row of rows) Object.assign(row, set);
@@ -151,11 +165,11 @@ for (const { t, where, set, fix } of TABLES) {
 
 // Les séquences repartent après les ids copiés
 write(`do $$ declare s record; begin
-  for s in select pg_get_serial_sequence(format('public.%I', c.table_name), c.column_name) seq, c.table_name t, c.column_name col
+  for s in select pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) seq, c.table_schema sch, c.table_name t, c.column_name col
     from information_schema.columns c
-    where c.table_schema = 'public' and pg_get_serial_sequence(format('public.%I', c.table_name), c.column_name) is not null
+    where c.table_schema in (${SCHEMAS}) and pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) is not null
   loop
-    execute format('select setval(%L, coalesce((select max(%I) from public.%I), 0) + 1, false)', s.seq, s.col, s.t);
+    execute format('select setval(%L, coalesce((select max(%I) from %I.%I), 0) + 1, false)', s.seq, s.col, s.sch, s.t);
   end loop;
 end $$;`);
 console.log("Seed terminé.");

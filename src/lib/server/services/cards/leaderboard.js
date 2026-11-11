@@ -9,10 +9,12 @@ const PAGE_SIZE = 20;
  */
 export async function cardsLeaderboardPage(offset) {
   const sb = getAdminClient();
-  const { data: rows, error } = await sb.rpc("cards_leaderboard", {
-    p_offset: offset,
-    p_limit: PAGE_SIZE,
-  });
+  const { data: rows, error } = await sb
+    .schema("cards")
+    .rpc("cards_leaderboard", {
+      p_offset: offset,
+      p_limit: PAGE_SIZE,
+    });
   if (error) throw error;
   if (!rows.length) return rows;
 
@@ -25,15 +27,21 @@ export async function cardsLeaderboardPage(offset) {
     );
   const idOf = new Map(profiles.map((p) => [p.username, p.id]));
 
-  const { data: showcase, error: scErr } = await sb.rpc("cards_showcase", {
-    p_user_ids: [...idOf.values()],
-  });
+  const { data: showcase, error: scErr } = await sb
+    .schema("cards")
+    .rpc("cards_showcase", {
+      p_user_ids: [...idOf.values()],
+    });
   if (scErr) throw scErr;
   const byUser = new Map(showcase.map((s) => [s.user_id, s]));
 
   const cardIds = showcase.flatMap((s) => s.best);
   const { data: cards } = cardIds.length
-    ? await sb.from("cards").select(CARD_SELECT).in("id", cardIds)
+    ? await sb
+        .schema("cards")
+        .from("cards")
+        .select(CARD_SELECT)
+        .in("id", cardIds)
     : { data: [] };
   const cardOf = new Map(cards.map((c) => [c.id, toCardView(c)]));
 
