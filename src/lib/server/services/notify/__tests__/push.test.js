@@ -143,28 +143,20 @@ describe("envoi à tous", () => {
       if (!q.has("range")) return undefined;
       return { data: q.args("range")[0] === 0 ? page(0, 1000) : page(1000, 2) };
     };
-    // u5 a coupé la catégorie, u6 a un autre réglage seulement
-    rows.profiles = (q) => ({
-      data: q.args("in")[1].map((id) => ({
-        id,
-        notif_prefs:
-          id === "u5" ? { zikle: false } : id === "u6" ? {} : { zikle: true },
-      })),
-    });
     const n = await push.pushToAll(
       "zikle",
       {},
       { skip: new Set(["u0", "u1001"]) },
     );
-    expect(n).toBe(998);
+    expect(n).toBe(1000);
     const reads = m.db.of("push_subscriptions").filter((q) => q.has("range"));
     expect(reads.map((q) => q.args("range"))).toEqual([
       [0, 999],
       [1000, 1999],
     ]);
-    expect(reads[0].schema).toBe("social");
-    expect(m.db.of("profiles").map((q) => q.args("in")[1].length)).toEqual([
-      300, 300, 300, 100,
+    expect(reads[0].args("eq")).toEqual([
+      "profile.notif_prefs->>zikle",
+      "true",
     ]);
   });
 

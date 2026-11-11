@@ -21,21 +21,12 @@ export async function alertAdmins(kind, payload, { throttleMs = 0 } = {}) {
   const now = Date.now();
   if (throttleMs && now - (lastSent.get(tag) ?? 0) < throttleMs) return 0;
   lastSent.set(tag, now);
-  const sb = getAdminClient();
-  const { data: admins } = await sb
-    .from("profiles")
-    .select("id")
-    .eq("role", "super_admin")
-    .eq(`notif_prefs->>${kind}`, "true");
-  if (!admins?.length) return 0;
-  const { data } = await sb
+  const { data } = await getAdminClient()
     .schema("social")
     .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth")
-    .in(
-      "user_id",
-      admins.map((a) => a.id),
-    );
+    .select("id, endpoint, p256dh, auth, profile!inner(role, notif_prefs)")
+    .eq("profile.role", "super_admin")
+    .eq(`profile.notif_prefs->>${kind}`, "true");
   return data?.length ? deliver(data, { ...payload, tag }) : 0;
 }
 
