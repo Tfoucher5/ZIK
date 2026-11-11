@@ -1,7 +1,7 @@
 -- Phase 4 : fonctions de public rangées dans le schéma de leur domaine.
 -- ops : statistiques admin, sondes et journal d'erreurs, vue admin_user_activity.
 -- social : admin_broadcast_notification. play : admin_schedule_weekly_challenge.
--- Toutes en security invoker, noms qualifiés, appelées par le serveur seulement,
+-- Toutes en security invoker (mode par défaut), noms qualifiés, serveur seulement,
 -- sauf ops.admin_weekly_kpis (security definer : service_role ne lit pas auth.users).
 -- Les anciennes public.* restent le temps que le code arrive en prod ; elles
 -- partent avec les vues de compatibilité.
