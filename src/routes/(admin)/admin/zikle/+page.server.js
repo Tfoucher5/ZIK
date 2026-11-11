@@ -27,19 +27,25 @@ async function chargerPage() {
   const [{ data: songs }, results, { count: poolCount }, { data: latestPool }] =
     await Promise.all([
       sb
+        .schema("play")
         .from("daily_songs")
         .select("date, track_id, tracks(artist, title, cover_url)")
         .gte("date", from)
         .lte("date", to),
       fetchAllRows(() =>
         sb
+          .schema("play")
           .from("daily_results")
           .select("id, date, attempts, won")
           .gte("date", from)
           .order("id"),
       ),
-      sb.from("zikle_pool").select("track_id", { count: "exact", head: true }),
       sb
+        .schema("play")
+        .from("zikle_pool")
+        .select("track_id", { count: "exact", head: true }),
+      sb
+        .schema("play")
         .from("zikle_pool")
         .select("added_at")
         .order("added_at", { ascending: false })
@@ -94,6 +100,7 @@ export const actions = adminActions({
     const trackId = form.get("track_id");
     if (!date || !trackId) return fail(400, { error: "Choisis un titre." });
     const { error } = await getAdminClient()
+      .schema("play")
       .from("daily_songs")
       .upsert({ date, track_id: trackId }, { onConflict: "date" });
     if (error) return fail(500, { error: error.message });
@@ -114,10 +121,15 @@ export const actions = adminActions({
     const cutoff = addDays(date, -365);
     const [pool, recent] = await Promise.all([
       fetchAllRows(() =>
-        sb.from("zikle_pool").select("track_id").order("track_id"),
+        sb
+          .schema("play")
+          .from("zikle_pool")
+          .select("track_id")
+          .order("track_id"),
       ),
       fetchAllRows(() =>
         sb
+          .schema("play")
           .from("daily_songs")
           .select("track_id")
           .gt("date", cutoff)
@@ -135,6 +147,7 @@ export const actions = adminActions({
       });
     const trackId = candidates[Math.floor(Math.random() * candidates.length)];
     const { error } = await sb
+      .schema("play")
       .from("daily_songs")
       .upsert({ date, track_id: trackId }, { onConflict: "date" });
     if (error) return fail(500, { error: error.message });
@@ -153,6 +166,7 @@ export const actions = adminActions({
     if (!date || date <= todayParis())
       return fail(400, { error: "Seul un jour à venir peut être libéré." });
     const { error } = await getAdminClient()
+      .schema("play")
       .from("daily_songs")
       .delete()
       .eq("date", date);
@@ -170,6 +184,7 @@ export const actions = adminActions({
     const { date } = await readDate(request);
     if (!date) return fail(400, { error: "Date invalide" });
     const { error, count } = await getAdminClient()
+      .schema("play")
       .from("daily_results")
       .delete({ count: "exact" })
       .eq("date", date);

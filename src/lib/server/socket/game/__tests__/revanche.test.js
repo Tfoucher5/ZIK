@@ -26,6 +26,9 @@ vi.mock("../../../config.js", () => {
     return chain;
   };
   const client = {
+    schema() {
+      return this;
+    },
     from: query,
     rpc: async (fn) => {
       if (fn === "update_player_stats") m.stats++;

@@ -56,6 +56,7 @@ async function chargerPage({ params }) {
       .eq("status", "open"),
     playlist.linked_room_id
       ? sb
+          .schema("play")
           .from("games")
           .select("id", { count: "exact", head: true })
           .eq("room_id", playlist.linked_room_id)

@@ -32,10 +32,12 @@ async function playCounts(sb, linked) {
     linked.map(async (p) => {
       const [all, month] = await Promise.all([
         sb
+          .schema("play")
           .from("games")
           .select("id", { count: "exact", head: true })
           .eq("room_id", p.linked_room_id),
         sb
+          .schema("play")
           .from("games")
           .select("id", { count: "exact", head: true })
           .eq("room_id", p.linked_room_id)

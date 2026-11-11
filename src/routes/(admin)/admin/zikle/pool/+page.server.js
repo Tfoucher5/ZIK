@@ -23,6 +23,7 @@ async function chargerPage({ url }) {
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1") || 1);
 
   let query = sb
+    .schema("play")
     .from("zikle_pool")
     .select(
       "track_id, added_at, tracks!inner(id, artist, title, cover_url, preview_url)",
@@ -40,10 +41,15 @@ async function chargerPage({ url }) {
   const [{ data: rows, count, error }, pool, played] = await Promise.all([
     query,
     fetchAllRows(() =>
-      sb.from("zikle_pool").select("track_id, added_at").order("track_id"),
+      sb
+        .schema("play")
+        .from("zikle_pool")
+        .select("track_id, added_at")
+        .order("track_id"),
     ),
     fetchAllRows(() =>
       sb
+        .schema("play")
         .from("daily_songs")
         .select("track_id, date")
         .gt("date", yearAgo())
@@ -80,6 +86,7 @@ export const actions = adminActions({
     const trackId = form.get("track_id");
     if (!trackId) return fail(400, { error: "Choisis un titre." });
     const { error } = await getAdminClient()
+      .schema("play")
       .from("zikle_pool")
       .upsert(
         { track_id: trackId },
@@ -100,6 +107,7 @@ export const actions = adminActions({
     const trackId = form.get("track_id");
     if (!trackId) return fail(400, { error: "Titre introuvable" });
     const { error } = await getAdminClient()
+      .schema("play")
       .from("zikle_pool")
       .delete()
       .eq("track_id", trackId);
@@ -118,6 +126,7 @@ export const actions = adminActions({
     const size = async () =>
       (
         await sb
+          .schema("play")
           .from("zikle_pool")
           .select("track_id", { count: "exact", head: true })
       ).count ?? 0;

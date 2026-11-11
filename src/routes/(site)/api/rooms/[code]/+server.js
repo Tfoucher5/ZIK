@@ -16,9 +16,10 @@ export async function GET({ params }) {
     });
   }
   const { data, error } = await supabase
+    .schema("play")
     .from("rooms")
     .select(
-      "id, code, name, emoji, description, is_public, auto_start, game_mode, max_rounds, round_duration, break_duration, playlist_id, profiles!owner_id(username), room_playlists(playlist_id, position)",
+      "id, code, name, emoji, description, is_public, auto_start, game_mode, max_rounds, round_duration, break_duration, playlist_id, profiles:owner(username), room_playlists(playlist_id, position)",
     )
     .eq("code", code)
     .single();
@@ -68,6 +69,7 @@ export async function PATCH({ params, request }) {
   }
 
   const { error } = await userClient(token)
+    .schema("play")
     .from("rooms")
     .update(updates)
     .eq("id", params.code);
@@ -76,13 +78,17 @@ export async function PATCH({ params, request }) {
   // Mettre à jour room_playlists si playlist_ids fourni
   if (playlist_ids !== undefined) {
     const db = userClient(token);
-    await db.from("room_playlists").delete().eq("room_id", params.code);
+    await db
+      .schema("play")
+      .from("room_playlists")
+      .delete()
+      .eq("room_id", params.code);
     const links = playlist_ids.map((pid, i) => ({
       room_id: params.code,
       playlist_id: pid,
       position: i,
     }));
-    await db.from("room_playlists").insert(links);
+    await db.schema("play").from("room_playlists").insert(links);
   }
 
   // Invalider le cache mémoire (config + playlist)
@@ -100,6 +106,7 @@ export async function PATCH({ params, request }) {
 export async function DELETE({ params, request }) {
   const { token } = await requireAuth(request);
   const { error } = await userClient(token)
+    .schema("play")
     .from("rooms")
     .delete()
     .eq("id", params.code);

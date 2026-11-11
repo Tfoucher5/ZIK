@@ -3,6 +3,7 @@ import { getAdminClient } from "$lib/server/config.js";
 
 async function chargerPage() {
   const { data } = await getAdminClient()
+    .schema("play")
     .from("rooms")
     .select("code, name, emoji, is_official")
     .limit(5000);

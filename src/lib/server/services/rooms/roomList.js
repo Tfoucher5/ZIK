@@ -3,7 +3,7 @@ import { roomGames } from "../../state.js";
 import { seededShuffle } from "../../../shared/utils.js";
 
 export const ROOM_PLAYLISTS_SELECT =
-  "playlist_id, custom_playlists!playlist_id(id, name, track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))";
+  "playlist_id, custom_playlists(id, name, track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))";
 
 // Joueurs présents dans une room (les déconnectés en sursis ne comptent pas)
 export function onlineCount(code, { verifiedOnly = false } = {}) {

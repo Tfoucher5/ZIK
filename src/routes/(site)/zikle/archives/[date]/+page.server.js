@@ -12,6 +12,7 @@ export async function load({ params }) {
 
   const sb = getAdminClient();
   const { data: song, error: songErr } = await sb
+    .schema("play")
     .from("daily_songs")
     .select(
       "track_id, tracks(id, preview_url, preview_expires_at, external_id, artist, title)",

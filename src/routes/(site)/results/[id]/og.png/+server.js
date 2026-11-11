@@ -19,6 +19,7 @@ export async function GET({ params, setHeaders }) {
   if (cached) return new Response(cached);
 
   const { data: result } = await supabase
+    .schema("play")
     .from("game_results")
     .select("username, score, rank, total_players, room_name")
     .eq("id", params.id)

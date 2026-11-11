@@ -98,6 +98,7 @@ export function stopGame(room) {
     game._ended = true;
     (async () => {
       await getAdminClient()
+        .schema("play")
         .from("games")
         .update({ ended_at: new Date().toISOString() })
         .eq("id", game.dbGameId);

@@ -31,7 +31,8 @@ vi.mock("../../../config.js", () => {
       return {};
     },
   });
-  return { supabase: { from, rpc }, getAdminClient: () => ({ from, rpc }) };
+  const client = { from, rpc, schema: () => client };
+  return { supabase: client, getAdminClient: () => client };
 });
 vi.mock("../../../services/achievements.js", () => ({
   checkAchievements: async () => [],

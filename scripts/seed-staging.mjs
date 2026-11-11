@@ -90,7 +90,7 @@ const TABLES = [
 const tableNames = TABLES.map((x) => `'${x.t}'`).join(",");
 // Schéma de chaque table dans chaque base (phase 4 : la prod suit le staging
 // à la release, les deux peuvent différer entre-temps)
-const SCHEMAS = "'public','cards','catalog'";
+const SCHEMAS = "'public','cards','catalog','play'";
 const qualified = (ref) => {
   const m = {};
   for (const r of read(

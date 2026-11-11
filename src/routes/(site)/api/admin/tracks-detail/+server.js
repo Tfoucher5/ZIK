@@ -38,6 +38,7 @@ export async function GET({ url }) {
       .eq("track_id", id)
       .eq("status", "open"),
     sb
+      .schema("play")
       .from("daily_songs")
       .select("date")
       .eq("track_id", id)

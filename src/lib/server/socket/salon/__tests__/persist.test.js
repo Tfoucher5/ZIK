@@ -15,6 +15,9 @@ vi.mock("../../../config.js", () => ({
   // Clé publique absente : aucune écriture de partie ne doit passer par elle
   supabase: {},
   getAdminClient: () => ({
+    schema() {
+      return this;
+    },
     from: () => ({
       insert: (rows) => {
         inserts.push(rows);

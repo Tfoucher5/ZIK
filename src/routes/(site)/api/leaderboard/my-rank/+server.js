@@ -60,12 +60,14 @@ export async function GET({ url }) {
       });
     }
 
-    const { data, error } = await supabase.rpc("leaderboard_score_my_rank", {
-      p_user_id: userId,
-      p_mode: mode,
-      p_rooms: rooms,
-      p_period: periode,
-    });
+    const { data, error } = await supabase
+      .schema("play")
+      .rpc("leaderboard_score_my_rank", {
+        p_user_id: userId,
+        p_mode: mode,
+        p_rooms: rooms,
+        p_period: periode,
+      });
 
     if (error || !data?.length) return json(null);
 

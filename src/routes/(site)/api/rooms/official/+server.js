@@ -11,6 +11,7 @@ const cache = makeCache(30_000);
 
 async function loadOfficialRooms() {
   const { data, error } = await supabase
+    .schema("play")
     .from("rooms")
     .select("code, name, emoji, description, game_mode, playlist_id")
     .eq("is_official", true)

@@ -7,7 +7,9 @@ const _cache = makeCache(60_000);
 export async function GET() {
   const cached = _cache.get();
   if (cached) return json(cached);
-  const { data, error } = await supabase.rpc("weekly_leaderboard");
+  const { data, error } = await supabase
+    .schema("play")
+    .rpc("weekly_leaderboard");
   if (error) return json({ error: error.message }, { status: 500 });
 
   // Enrich top entries with avatar_url from profiles

@@ -73,7 +73,11 @@ async function chargerPage() {
       ? sb.from("profiles").select("id, username, avatar_url").in("id", userIds)
       : { data: [] },
     roomCodes.length
-      ? sb.from("rooms").select("code, name, emoji").in("code", roomCodes)
+      ? sb
+          .schema("play")
+          .from("rooms")
+          .select("code, name, emoji")
+          .in("code", roomCodes)
       : { data: [] },
     trackIds.length
       ? sb

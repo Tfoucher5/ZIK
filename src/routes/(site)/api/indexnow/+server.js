@@ -23,6 +23,7 @@ export async function POST({ request }) {
   }
 
   const { data: rooms } = await supabase
+    .schema("play")
     .from("rooms")
     .select("code")
     .eq("is_public", true)

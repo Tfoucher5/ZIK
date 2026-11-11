@@ -18,6 +18,7 @@ export async function GET() {
     ] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase
+        .schema("play")
         .from("rooms")
         .select("id", { count: "exact", head: true })
         .eq("is_public", true),
@@ -27,6 +28,7 @@ export async function GET() {
         .select("id", { count: "exact", head: true })
         .eq("is_public", true),
       supabase
+        .schema("play")
         .from("games")
         .select("id, game_players!inner(id)", { count: "exact", head: true })
         .gte("started_at", since30d),

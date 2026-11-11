@@ -15,8 +15,20 @@ vi.mock("../../../config.js", () => {
     update: () => ({ eq: async () => ({ error: null }) }),
   });
   return {
-    supabase: { from: table, rpc: async () => ({ data: null, error: null }) },
-    getAdminClient: () => ({ from: table, rpc: async () => ({ error: null }) }),
+    supabase: {
+      schema() {
+        return this;
+      },
+      from: table,
+      rpc: async () => ({ data: null, error: null }),
+    },
+    getAdminClient: () => ({
+      schema() {
+        return this;
+      },
+      from: table,
+      rpc: async () => ({ error: null }),
+    }),
   };
 });
 vi.mock("../../../services/achievements.js", () => ({

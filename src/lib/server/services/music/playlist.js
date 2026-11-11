@@ -209,6 +209,7 @@ async function fetchPlaylist(roomId) {
   // Essayer d'abord room_playlists (multi-playlist)
   try {
     const { data: links } = await db
+      .schema("play")
       .from("room_playlists")
       .select("playlist_id, position")
       .eq("room_id", dbRoom.id)

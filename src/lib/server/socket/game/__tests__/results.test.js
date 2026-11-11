@@ -13,8 +13,20 @@ vi.mock("../../../config.js", () => {
     then: (r) => r({ data: [], error: null }),
   };
   return {
-    supabase: { from: () => query, rpc: anonRpc },
-    getAdminClient: () => ({ from: () => query, rpc: adminRpc }),
+    supabase: {
+      schema() {
+        return this;
+      },
+      from: () => query,
+      rpc: anonRpc,
+    },
+    getAdminClient: () => ({
+      schema() {
+        return this;
+      },
+      from: () => query,
+      rpc: adminRpc,
+    }),
   };
 });
 

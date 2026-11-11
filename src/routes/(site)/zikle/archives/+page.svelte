@@ -33,6 +33,7 @@
   async function loadPlayed() {
     if (user) {
       const { data: rows } = await sb
+        .schema('play')
         .from("daily_results")
         .select("date, won, attempts")
         .limit(500);
