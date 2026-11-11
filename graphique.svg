@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="860" height="794" viewBox="0 0 860 794" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Couverture des tests du serveur : 92,3 % des lignes">
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="794" viewBox="0 0 860 794" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Couverture des tests du serveur : 92,4 % des lignes">
 <style>
 .fond{fill:#ffffff}.titre{fill:#1f2328;font-size:20px;font-weight:700}.titre2{fill:#1f2328;font-size:14px;font-weight:600}
 .valeur{fill:#1f2328;font-size:22px;font-weight:700}.unite{font-size:13px;font-weight:600}.nom{fill:#1f2328;font-size:14px;font-weight:600}
@@ -11,40 +11,40 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">develop · 9f8107e · 11/11 01:52</text>
+<text x="836" y="38" class="petit" text-anchor="end">develop · 2a07247 · 11/11 02:11</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="266.7136764674048 289.02652413026095" transform="rotate(-90 120 140)"/>
+  stroke-dasharray="266.944897686709 289.02652413026095" transform="rotate(-90 120 140)"/>
 <polyline points="100.17440858577714,108.75986675642544 90.5295262761552,93.56196409738916" class="trait" stroke-width="3"/>
-<text x="120" y="147" class="valeur" text-anchor="middle">92,3<tspan class="unite"> %</tspan></text>
+<text x="120" y="147" class="valeur" text-anchor="middle">92,4<tspan class="unite"> %</tspan></text>
 <text x="120" y="206" class="nom" text-anchor="middle">Lignes</text>
 <text x="120" y="222" class="petit" text-anchor="middle">seuil 91 %</text>
-</g>
+<text x="120" y="238" class="petit" fill="#2ea043" text-anchor="middle">▲ +0,1 pt vs la fusion précédente</text></g>
 <g>
 <circle cx="327" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="327" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="262.0603494289076 289.02652413026095" transform="rotate(-90 327 140)"/>
+  stroke-dasharray="262.34937595303785 289.02652413026095" transform="rotate(-90 327 140)"/>
 <polyline points="303.4153123792985,111.49101001729582 291.94168056382205,97.62177164733161" class="trait" stroke-width="3"/>
-<text x="327" y="147" class="valeur" text-anchor="middle">90,7<tspan class="unite"> %</tspan></text>
+<text x="327" y="147" class="valeur" text-anchor="middle">90,8<tspan class="unite"> %</tspan></text>
 <text x="327" y="206" class="nom" text-anchor="middle">Instructions</text>
 <text x="327" y="222" class="petit" text-anchor="middle">seuil 89 %</text>
-</g>
+<text x="327" y="238" class="petit" fill="#2ea043" text-anchor="middle">▲ +0,1 pt vs la fusion précédente</text></g>
 <g>
 <circle cx="534" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="534" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="259.7770398882785 289.02652413026095" transform="rotate(-90 534 140)"/>
+  stroke-dasharray="260.4128982413651 289.02652413026095" transform="rotate(-90 534 140)"/>
 <polyline points="508.6717570806385,113.02816078540778 496.34990917392213,99.90672549182239" class="trait" stroke-width="3"/>
-<text x="534" y="147" class="valeur" text-anchor="middle">89,9<tspan class="unite"> %</tspan></text>
+<text x="534" y="147" class="valeur" text-anchor="middle">90,1<tspan class="unite"> %</tspan></text>
 <text x="534" y="206" class="nom" text-anchor="middle">Fonctions</text>
 <text x="534" y="222" class="petit" text-anchor="middle">seuil 88 %</text>
-</g>
+<text x="534" y="238" class="petit" fill="#2ea043" text-anchor="middle">▲ +0,2 pt vs la fusion précédente</text></g>
 <g>
 <circle cx="741" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="741" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="240.87470521015948 289.02652413026095" transform="rotate(-90 741 140)"/>
+  stroke-dasharray="240.93251051498552 289.02652413026095" transform="rotate(-90 741 140)"/>
 <polyline points="707.5213990587573,124.24616621209233 691.234512114369,116.58213896392103" class="trait" stroke-width="3"/>
-<text x="741" y="147" class="valeur" text-anchor="middle">83,3<tspan class="unite"> %</tspan></text>
+<text x="741" y="147" class="valeur" text-anchor="middle">83,4<tspan class="unite"> %</tspan></text>
 <text x="741" y="206" class="nom" text-anchor="middle">Branches</text>
 <text x="741" y="222" class="petit" text-anchor="middle">seuil 82 %</text>
 </g>
@@ -64,9 +64,9 @@
 <text x="836" y="344" class="petit" text-anchor="end">790 / 955 lignes</text>
 <text x="24" y="369" class="zone">socket/salon</text>
 <rect x="190" y="358" width="470" height="14" rx="7" class="piste-plein"/>
-<rect x="190" y="358" width="429.39690301548495" height="14" rx="7" fill="#2ea043"/>
-<text x="674" y="370" class="chiffre">91,4 %</text>
-<text x="836" y="370" class="petit" text-anchor="end">1121 / 1227 lignes</text>
+<rect x="190" y="358" width="430.771653543307" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="370" class="chiffre">91,7 %</text>
+<text x="836" y="370" class="petit" text-anchor="end">1164 / 1270 lignes</text>
 <text x="24" y="395" class="zone">services/health</text>
 <rect x="190" y="384" width="470" height="14" rx="7" class="piste-plein"/>
 <rect x="190" y="384" width="445.73369565217394" height="14" rx="7" fill="#2ea043"/>
@@ -105,9 +105,9 @@
 <text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">50 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">75 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
 <line x1="60" x2="830" y1="645.6" y2="645.6" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
 <text x="830" y="639.6" class="petit" fill="#e5534b" text-anchor="end">seuil 91 %</text>
-<polygon points="60,744 60,708.792 124.16666666666667,679.2 188.33333333333334,661.6800000000001 252.5,661.728 316.6666666666667,642.624 380.8333333333333,642.528 445,642.528 509.1666666666667,642.528 573.3333333333334,642.528 637.5,642.528 701.6666666666666,642.528 765.8333333333334,642.528 830,642.528 830,744" fill="url(#degrade)"/>
-<polyline points="60,708.792 124.16666666666667,679.2 188.33333333333334,661.6800000000001 252.5,661.728 316.6666666666667,642.624 380.8333333333333,642.528 445,642.528 509.1666666666667,642.528 573.3333333333334,642.528 637.5,642.528 701.6666666666666,642.528 765.8333333333334,642.528 830,642.528" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
-<circle cx="830" cy="642.528" r="5" fill="#a371f7"/>
+<polygon points="60,744 60,708.792 119.23076923076923,679.2 178.46153846153845,661.6800000000001 237.69230769230768,661.728 296.9230769230769,642.624 356.15384615384613,642.528 415.38461538461536,642.528 474.61538461538464,642.528 533.8461538461538,642.528 593.0769230769231,642.528 652.3076923076923,642.528 711.5384615384615,642.528 770.7692307692307,642.528 830,642.336 830,744" fill="url(#degrade)"/>
+<polyline points="60,708.792 119.23076923076923,679.2 178.46153846153845,661.6800000000001 237.69230769230768,661.728 296.9230769230769,642.624 356.15384615384613,642.528 415.38461538461536,642.528 474.61538461538464,642.528 533.8461538461538,642.528 593.0769230769231,642.528 652.3076923076923,642.528 711.5384615384615,642.528 770.7692307692307,642.528 830,642.336" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="830" cy="642.336" r="5" fill="#a371f7"/>
 <text x="60" y="766" class="petit">9 nov.</text>
 <text x="830" y="766" class="petit" text-anchor="end">11 nov.</text>
 </svg>
