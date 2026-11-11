@@ -8,6 +8,7 @@
   import PlaylistFormModal from '$lib/components/playlist/PlaylistFormModal.svelte';
   import RoomLaunchModal from '$lib/components/playlist/launch/RoomLaunchModal.svelte';
   import AnswersModal from '$lib/components/playlist/AnswersModal.svelte';
+  import WorkSuggestModal from '$lib/components/playlist/WorkSuggestModal.svelte';
   import { PlaylistStore } from '$lib/components/playlist/playlistStore.svelte.js';
   import { handleSpotifyCallback } from '$lib/components/playlist/spotify.js';
   import { player } from '$lib/components/playlist/previewPlayer.svelte.js';
@@ -35,6 +36,7 @@
   let formPlaylist = $state(null);
   let roomOpen = $state(false);
   let answersTrack = $state(null);
+  let filmsOpen = $state(false);
   let addOpen = $state(false);
 
   onMount(() => {
@@ -122,7 +124,7 @@
         <PlaylistNav {store} onCreate={() => openForm()} />
       </div>
       <div class="studio-main">
-        <PlaylistHeader {store} onSettings={() => openForm(store.current)} onLaunch={() => roomOpen = true} />
+        <PlaylistHeader {store} onSettings={() => openForm(store.current)} onLaunch={() => roomOpen = true} onFilms={() => filmsOpen = true} />
         <div class="studio">
           <div class="studio-tracks">
             <PlaylistTracks {store} onEditAnswers={(t) => answersTrack = t} />
@@ -145,6 +147,9 @@
   <RoomLaunchModal open={roomOpen} playlist={store.current} tracks={store.tracks} {user} onClose={() => roomOpen = false} />
 {/if}
 <AnswersModal track={answersTrack} {store} onClose={() => answersTrack = null} />
+{#if filmsOpen && store.current}
+  <WorkSuggestModal playlistId={store.current.id} api={(p, o) => store.api(p, o)} onClose={() => filmsOpen = false} />
+{/if}
 
 <style>
   .page-head.compact { padding-bottom: 22px; }

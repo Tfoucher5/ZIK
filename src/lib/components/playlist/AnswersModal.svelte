@@ -124,7 +124,7 @@
         </section>
 
         <section class="am-card">
-          <span class="am-label">Réponses bonus <em>(générique de film, série, jeu...)</em></span>
+          <span class="am-label">Film, série, jeu… <em>(si l'œuvre est renseignée, c'est elle qu'on cherche)</em></span>
           {#if extras.length}
             <ul class="am-extras">
               {#each extras as x, i (i)}
