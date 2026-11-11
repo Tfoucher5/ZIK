@@ -10,6 +10,7 @@ import {
   parseExpFromUrl,
 } from "./deezer.js";
 import { cleanString, parseFeaturing } from "./trackText.js";
+import { fetchAllRows } from "../admin/paginate.js";
 
 // Œuvre d'où vient la musique : on la reconnaît souvent mieux que le titre
 const WORK_TYPES = new Set(["Film", "Série", "Jeu vidéo", "Animé"]);
@@ -176,14 +177,18 @@ export async function refreshExpiredPreviews(trackRows) {
 
 // ─── Playlist loading ─────────────────────────────────────────────────────────
 
-function dedup(tracks) {
-  const seen = new Set();
-  return tracks.filter((t) => {
+// Un titre présent dans plusieurs playlists garde sa place, mais la copie la
+// plus riche l'emporte : une œuvre (film, série…) à deviner, sinon une réponse
+const richness = (t) =>
+  t.extraAnswers.some((e) => e.work) ? 2 : t.extraAnswers.length ? 1 : 0;
+export function dedup(tracks) {
+  const kept = new Map();
+  for (const t of tracks) {
     const key = t.cleanArtist + "|" + t.cleanTitle;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+    const prev = kept.get(key);
+    if (!prev || richness(t) > richness(prev)) kept.set(key, t);
+  }
+  return [...kept.values()];
 }
 
 // fresh : relit la base (lancement de partie). Les playlists sont modifiées
@@ -217,14 +222,18 @@ async function fetchPlaylist(roomId) {
 
     if (links?.length > 0) {
       const playlistIds = links.map((l) => l.playlist_id);
-      const { data: trackRows } = await db
-        .schema("catalog")
-        .from("custom_playlist_tracks")
-        .select(TRACK_ROW_SELECT)
-        .in("playlist_id", playlistIds)
-        .order("position");
+      // Une room à plusieurs playlists dépasse vite les 1000 lignes d'une réponse
+      const trackRows = await fetchAllRows(() =>
+        db
+          .schema("catalog")
+          .from("custom_playlist_tracks")
+          .select(TRACK_ROW_SELECT)
+          .in("playlist_id", playlistIds)
+          .order("position")
+          .order("id"),
+      );
 
-      if (trackRows?.length >= 3) {
+      if (trackRows.length >= 3) {
         const tracks = dedup(trackRows.map(buildTrackFromRow));
         playlistCache[roomId] = tracks;
         console.log(
@@ -240,13 +249,16 @@ async function fetchPlaylist(roomId) {
   // Fallback : playlist_id unique (legacy)
   if (dbRoom.playlist_id) {
     try {
-      const { data: trackRows } = await db
-        .schema("catalog")
-        .from("custom_playlist_tracks")
-        .select(TRACK_ROW_SELECT)
-        .eq("playlist_id", dbRoom.playlist_id)
-        .order("position");
-      if (trackRows?.length >= 3) {
+      const trackRows = await fetchAllRows(() =>
+        db
+          .schema("catalog")
+          .from("custom_playlist_tracks")
+          .select(TRACK_ROW_SELECT)
+          .eq("playlist_id", dbRoom.playlist_id)
+          .order("position")
+          .order("id"),
+      );
+      if (trackRows.length >= 3) {
         const tracks = dedup(trackRows.map(buildTrackFromRow));
         playlistCache[roomId] = tracks;
         console.log(
