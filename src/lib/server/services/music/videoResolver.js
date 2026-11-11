@@ -54,6 +54,7 @@ function rowsOf({ data, error }) {
 async function proPlaylists(db) {
   const subs = rowsOf(
     await db
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id, status, current_period_end"),
   );

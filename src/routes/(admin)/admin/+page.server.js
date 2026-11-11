@@ -11,6 +11,7 @@ async function chargerPage() {
     getTodo(),
     getJournal(2, 15),
     getAdminClient()
+      .schema("salon")
       .from("pro_subscriptions")
       .select("plan", { count: "exact", head: true })
       .eq("status", "active")

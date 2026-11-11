@@ -59,6 +59,7 @@ export async function getAdminUserDetail(id, adminId) {
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
       .order("created_at", { ascending: false }),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("plan, status, current_period_end, stripe_subscription_id")
       .eq("user_id", id)
@@ -88,6 +89,7 @@ export async function getAdminUserDetail(id, adminId) {
       .order("started_at", { ascending: false })
       .limit(500),
     sb
+      .schema("salon")
       .from("salon_players")
       .select(
         "id, score, rank, team, games(id, room_id, started_at, player_count)",

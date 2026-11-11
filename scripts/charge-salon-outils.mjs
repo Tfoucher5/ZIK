@@ -117,12 +117,15 @@ export async function jetonDeTest() {
     if (error) throw error;
     user = data.user;
   }
-  const { error: e2 } = await admin.from("pro_subscriptions").upsert({
-    user_id: user.id,
-    plan: "monthly",
-    status: "active",
-    current_period_end: new Date(Date.now() + 3600_000).toISOString(),
-  });
+  const { error: e2 } = await admin
+    .schema("salon")
+    .from("pro_subscriptions")
+    .upsert({
+      user_id: user.id,
+      plan: "monthly",
+      status: "active",
+      current_period_end: new Date(Date.now() + 3600_000).toISOString(),
+    });
   if (e2) throw e2;
   const anon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false },

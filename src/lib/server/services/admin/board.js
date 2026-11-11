@@ -34,7 +34,11 @@ export async function getTodo() {
   const [pastDue, issues, reports, replies, limit, maintenance] =
     await Promise.all([
       count(
-        sb.from("pro_subscriptions").select("*", head).eq("status", "past_due"),
+        sb
+          .schema("salon")
+          .from("pro_subscriptions")
+          .select("*", head)
+          .eq("status", "past_due"),
       ),
       count(
         sb
@@ -165,6 +169,7 @@ export async function getJournal(days = 2, limit = 60) {
       .order("created_at", { ascending: false })
       .limit(limit),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id, plan, status, created_at, updated_at")
       .gte("updated_at", since),

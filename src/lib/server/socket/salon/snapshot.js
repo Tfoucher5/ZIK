@@ -159,7 +159,9 @@ export function resumeAfterRestart(salon, io) {
 // Jamais bloquant ni levant : une base injoignable ne doit pas gêner la manche
 async function rpc(what, fn, args, onFail) {
   try {
-    const { data, error } = await getAdminClient().rpc(fn, args);
+    const { data, error } = await getAdminClient()
+      .schema("salon")
+      .rpc(fn, args);
     if (error) throw error;
     return data;
   } catch (e) {

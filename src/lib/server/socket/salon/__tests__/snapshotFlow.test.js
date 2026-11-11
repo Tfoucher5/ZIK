@@ -12,14 +12,21 @@ vi.mock("../../../services/music/deezer.js", () => ({
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
-    rpc: async (fn, a) => {
-      if (fn === "save_salon_snapshot")
-        table.set(a.p_code, JSON.parse(JSON.stringify(a.p_data)));
-      if (fn === "delete_salon_snapshot") table.delete(a.p_code);
-      if (fn === "load_salon_snapshot" && table.has(a.p_code))
-        return { data: [{ code: a.p_code, data: table.get(a.p_code) }] };
-      return { data: null, error: null };
-    },
+    schema: (s) =>
+      s === "salon"
+        ? {
+            rpc: async (fn, a) => {
+              if (fn === "save_salon_snapshot")
+                table.set(a.p_code, JSON.parse(JSON.stringify(a.p_data)));
+              if (fn === "delete_salon_snapshot") table.delete(a.p_code);
+              if (fn === "load_salon_snapshot" && table.has(a.p_code))
+                return {
+                  data: [{ code: a.p_code, data: table.get(a.p_code) }],
+                };
+              return { data: null, error: null };
+            },
+          }
+        : null,
   }),
 }));
 vi.mock("../persist.js", () => ({ recordSalonGameEnd: () => {} }));

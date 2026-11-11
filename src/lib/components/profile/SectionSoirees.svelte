@@ -7,7 +7,7 @@
 
   function load() {
     failed = false;
-    sb.from('salon_players')
+    sb.schema('salon').from('salon_players')
       .select('id, score, rank, team, departed, created_at, games(player_count)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })

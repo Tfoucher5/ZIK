@@ -55,6 +55,7 @@ async function chargerPage({ url }) {
       .gte("games.started_at", weekAgo)
       .limit(10000),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id")
       .eq("status", "active")
