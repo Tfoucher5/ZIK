@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
+import { supabase, getAdminClient } from "$lib/server/config.js";
+import { verifyToken } from "$lib/server/middleware/auth.js";
 import { playlistCache } from "$lib/server/state.js";
 
 export async function POST({ params, request }) {
@@ -18,7 +18,7 @@ export async function POST({ params, request }) {
     return json({ error: "Super-admin uniquement" }, { status: 403 });
 
   const { is_official, linked_room_id } = await request.json();
-  const { error } = await userClient(token)
+  const { error } = await getAdminClient()
     .schema("catalog")
     .from("custom_playlists")
     .update({
