@@ -1,11 +1,12 @@
 -- Phase 4 du plan : RLS en (select auth.uid()), politiques fusionnées, index des
 -- clés étrangères, search_path fixé, fonctions security definer fermées à la clé publique.
--- Aucun changement de droit d'accès : chaque politique garde la même condition,
+-- Aucun changement de politique : chaque politique garde la même condition,
 -- les politiques en double sont réunies en une seule par action.
 -- Les politiques réservées au propriétaire passent de « public » à « authenticated » :
 -- sans session, auth.uid() est nul et elles ne laissaient déjà rien passer.
 -- Pour défaire : recréer les politiques et fonctions telles qu'écrites dans
--- 20261102220000_baseline.sql, puis drop index des 15 index *_fk_idx ci-dessous.
+-- 20261102220000_baseline.sql (alter function … reset search_path, grant execute
+-- des 5 fonctions à anon et authenticated), puis drop index des 15 index *_fk_idx.
 
 -- ── Politiques : auth.uid() évalué une fois par requête ──────────────────────
 
