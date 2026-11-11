@@ -9,7 +9,7 @@
   const token = $derived(adminCtx?.token ?? '');
 
   // Unité de la valeur mesurée par chaque sonde
-  const UNIT = { site: 'ms', db: 'ms', database: 'Mo', auth: 'ms', realtime: 'ms', deezer: 'ms', youtube: 'ms', spotify: 'ms', stripe: 'ms', mail: 'ms', eventLoop: 'ms', memory: 'Mo', errors: 'en 5 min', media: 'en 5 min', snapshots: 'en échec en 15 min', load: 'salons' };
+  const UNIT = { site: 'ms', db: 'ms', database: 'Mo', auth: 'ms', realtime: 'ms', deezer: 'ms', youtube: 'ms', spotify: 'ms', wikidata: 'ms', stripe: 'ms', mail: 'ms', eventLoop: 'ms', memory: 'Mo', errors: 'en 5 min', media: 'en 5 min', snapshots: 'en échec en 15 min', load: 'salons' };
 
   function depuis(s) {
     const h = Math.floor(s / 3600);
