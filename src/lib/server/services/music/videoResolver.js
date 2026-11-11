@@ -79,6 +79,7 @@ async function mostPlayedPlaylists(db) {
   const since = new Date(Date.now() - PLAYED_SINCE_MS).toISOString();
   const games = rowsOf(
     await db
+      .schema("play")
       .from("games")
       .select("room_id")
       .neq("source", "salon")
@@ -94,6 +95,7 @@ async function mostPlayedPlaylists(db) {
   if (!top.length) return [];
   const rooms = rowsOf(
     await db
+      .schema("play")
       .from("rooms")
       .select("code, playlist_id, room_playlists(playlist_id)")
       .in("code", top),

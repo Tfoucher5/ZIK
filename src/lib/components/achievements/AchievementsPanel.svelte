@@ -29,8 +29,8 @@
   onMount(async () => {
     if (!sb || !userId) return;
     const [{ data: d }, { data: u }, { data: p }] = await Promise.all([
-      sb.from('achievements').select('*'),
-      sb.from('user_achievements').select('achievement_id, tier, unlocked_at, count').eq('user_id', userId),
+      sb.schema('play').from('achievements').select('*'),
+      sb.schema('play').from('user_achievements').select('achievement_id, tier, unlocked_at, count').eq('user_id', userId),
       sb.from('profiles').select('current_streak, best_streak, win_streak, best_win_streak').eq('id', userId).single(),
     ]);
     if (d?.length) defs = d;

@@ -29,9 +29,11 @@ async function loadArtists(playlistId) {
 }
 
 async function loadLeaderboard(code) {
-  const { data } = await supabase.rpc("weekly_leaderboard_by_room", {
-    p_room_code: code,
-  });
+  const { data } = await supabase
+    .schema("play")
+    .rpc("weekly_leaderboard_by_room", {
+      p_room_code: code,
+    });
   return data ?? [];
 }
 
@@ -39,9 +41,10 @@ export async function load({ params, setHeaders }) {
   const code = params.code.toUpperCase();
 
   const { data: room } = await supabase
+    .schema("play")
     .from("rooms")
     .select(
-      "code, name, emoji, description, is_public, is_official, game_mode, max_rounds, round_duration, playlist_id, last_active_at, profiles!owner_id(username)",
+      "code, name, emoji, description, is_public, is_official, game_mode, max_rounds, round_duration, playlist_id, last_active_at, profiles:owner(username)",
     )
     .eq("code", code)
     .single();

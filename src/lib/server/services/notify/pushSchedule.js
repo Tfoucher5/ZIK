@@ -83,6 +83,7 @@ async function challengeLastDay() {
 async function zikleReminder(now) {
   if (!(await firstTime(`zikle_reminder:${now.date}`))) return;
   const { data: played } = await getAdminClient()
+    .schema("play")
     .from("daily_results")
     .select("user_id")
     .eq("date", now.date);

@@ -28,11 +28,16 @@ export async function GET({ url }) {
       sb.rpc("admin_games_per_day", { p_days: 14 }),
       sb.rpc("admin_zikle_per_day", { p_days: 14 }),
       sb
+        .schema("play")
         .from("daily_songs")
         .select("tracks(artist, title)")
         .eq("date", today)
         .maybeSingle(),
-      sb.from("daily_results").select("attempts, won").eq("date", today),
+      sb
+        .schema("play")
+        .from("daily_results")
+        .select("attempts, won")
+        .eq("date", today),
     ]);
 
   if (pulse.error) {

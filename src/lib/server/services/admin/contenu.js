@@ -6,7 +6,11 @@ export async function forgetPlaylists(playlistIds) {
   if (!playlistIds.length) return;
   const sb = getAdminClient();
   const [{ data: links }, { data: linked }] = await Promise.all([
-    sb.from("room_playlists").select("room_id").in("playlist_id", playlistIds),
+    sb
+      .schema("play")
+      .from("room_playlists")
+      .select("room_id")
+      .in("playlist_id", playlistIds),
     sb
       .schema("catalog")
       .from("custom_playlists")

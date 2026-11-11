@@ -14,7 +14,10 @@ const DEFS_TTL = 10 * 60 * 1000;
 
 async function loadDefs() {
   if (_defs && Date.now() - _defsAt < DEFS_TTL) return _defs;
-  const { data, error } = await supabase.from("achievements").select("*");
+  const { data, error } = await supabase
+    .schema("play")
+    .from("achievements")
+    .select("*");
   if (error || !data?.length) return _defs || [];
   _defs = data;
   _defsAt = Date.now();
@@ -54,15 +57,18 @@ export async function checkAchievements(userId, gameData) {
           .eq("id", userId)
           .single(),
         supabase
+          .schema("play")
           .from("user_achievements")
           .select("achievement_id, tier")
           .eq("user_id", userId),
         supabase
+          .schema("play")
           .from("game_players")
           .select("id", { count: "exact", head: true })
           .eq("user_id", userId)
           .eq("rank", 1),
         supabase
+          .schema("play")
           .from("game_players")
           .select("id", { count: "exact", head: true })
           .eq("user_id", userId)
@@ -146,6 +152,7 @@ export async function checkAchievements(userId, gameData) {
     if (!unlocks.length) return [];
 
     const { error } = await db()
+      .schema("play")
       .from("user_achievements")
       .upsert(
         unlocks.map(({ user_id, achievement_id, tier }) => ({
@@ -175,6 +182,7 @@ export async function checkAchievements(userId, gameData) {
 export async function saveGameResult(result) {
   try {
     const { data, error } = await db()
+      .schema("play")
       .from("game_results")
       .insert({
         game_id: result.gameId,

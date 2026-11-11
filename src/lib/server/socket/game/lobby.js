@@ -84,6 +84,7 @@ export async function beginGame(room, io) {
   game._ended = false;
   try {
     const { data } = await getAdminClient()
+      .schema("play")
       .from("games")
       .insert({
         room_id: roomId,

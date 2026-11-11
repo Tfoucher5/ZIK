@@ -84,6 +84,7 @@ async function roomWithCard(sb, cardId) {
   if (!pids.length) return null;
 
   const { data: linked } = await sb
+    .schema("play")
     .from("room_playlists")
     .select("room_id")
     .in("playlist_id", pids);
@@ -95,6 +96,7 @@ async function roomWithCard(sb, cardId) {
     ? `playlist_id.in.(${pids.join(",")}),id.in.(${roomIds.join(",")})`
     : `playlist_id.in.(${pids.join(",")})`;
   const { data: rooms } = await sb
+    .schema("play")
     .from("rooms")
     .select("code, name, game_mode")
     .eq("is_public", true)

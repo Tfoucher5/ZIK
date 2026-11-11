@@ -20,7 +20,9 @@ export const CHALLENGE_TYPES = {
  */
 export async function getOrCreateWeeklyChallenge() {
   try {
-    const { data, error } = await db().rpc("pick_weekly_challenge");
+    const { data, error } = await db()
+      .schema("play")
+      .rpc("pick_weekly_challenge");
     if (error) throw error;
     const row = data?.[0];
     if (!row) return null;
@@ -51,8 +53,9 @@ export async function getWeeklyChallengeState() {
   if (!challenge) return null;
   try {
     const { data: top } = await db()
+      .schema("play")
       .from("weekly_challenge_contributions")
-      .select("amount, profiles(username, avatar_url, is_private)")
+      .select("amount, profiles:profile(username, avatar_url, is_private)")
       .eq("challenge_id", challenge.id)
       .order("amount", { ascending: false })
       .limit(20);
@@ -66,8 +69,11 @@ export async function getWeeklyChallengeState() {
 export async function getWeeklyChallengeFullRanking(challengeId) {
   try {
     const { data } = await db()
+      .schema("play")
       .from("weekly_challenge_contributions")
-      .select("user_id, amount, profiles(username, avatar_url, is_private)")
+      .select(
+        "user_id, amount, profiles:profile(username, avatar_url, is_private)",
+      )
       .eq("challenge_id", challengeId)
       .order("amount", { ascending: false });
     return dropPrivate(data);
@@ -80,9 +86,10 @@ export async function getWeeklyChallengeFullRanking(challengeId) {
 export async function getWeeklyChallengeArchives(limit = 52) {
   try {
     const { data } = await db()
+      .schema("play")
       .from("weekly_challenges")
       .select(
-        "id, week_start, week_end, type, target, current_value, status, top_contributor_amount, top_contributor:profiles(username, avatar_url, is_private)",
+        "id, week_start, week_end, type, target, current_value, status, top_contributor_amount, top_contributor(username, avatar_url, is_private)",
       )
       .neq("status", "active")
       .order("week_start", { ascending: false })
@@ -104,6 +111,7 @@ export async function getWeeklyChallengeArchives(limit = 52) {
 export async function getWeeklyChallengeByWeekStart(weekStart) {
   try {
     const { data: row, error } = await db()
+      .schema("play")
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
@@ -125,6 +133,7 @@ export function bumpWeeklyChallenge(type, userId, amount = 1) {
   if (!userId || amount <= 0) return;
   try {
     db()
+      .schema("play")
       .rpc("increment_weekly_challenge", {
         p_type: type,
         p_user_id: userId,
@@ -192,9 +201,10 @@ export function suggestTarget(weeks, type) {
 
 export async function getWeeklyChallengesForAdmin(limit = 26) {
   const { data, error } = await db()
+    .schema("play")
     .from("weekly_challenges")
     .select(
-      "id, week_start, week_end, type, target, current_value, status, top_contributor_amount, closed_at, top_contributor:profiles(id, username)",
+      "id, week_start, week_end, type, target, current_value, status, top_contributor_amount, closed_at, top_contributor(id, username)",
     )
     .order("week_start", { ascending: false })
     .limit(limit);
@@ -205,8 +215,9 @@ export async function getWeeklyChallengesForAdmin(limit = 26) {
 /** Contributeurs d'un défi, profils privés compris (vue admin). */
 export async function getWeeklyContributorsForAdmin(challengeId, limit = 10) {
   const { data, error, count } = await db()
+    .schema("play")
     .from("weekly_challenge_contributions")
-    .select("user_id, amount, profiles(username, avatar_url)", {
+    .select("user_id, amount, profiles:profile(username, avatar_url)", {
       count: "exact",
     })
     .eq("challenge_id", challengeId)
@@ -223,6 +234,7 @@ export async function getWeeklyContributorsForAdmin(challengeId, limit = 10) {
 export async function updateActiveWeeklyChallenge(id, type, target) {
   const sb = db();
   const { data: row, error } = await sb
+    .schema("play")
     .from("weekly_challenges")
     .select("type, status")
     .eq("id", id)
@@ -232,12 +244,14 @@ export async function updateActiveWeeklyChallenge(id, type, target) {
   const reset = row.type !== type;
   if (reset) {
     const { error: delErr } = await sb
+      .schema("play")
       .from("weekly_challenge_contributions")
       .delete()
       .eq("challenge_id", id);
     if (delErr) throw delErr;
   }
   const { error: upErr } = await sb
+    .schema("play")
     .from("weekly_challenges")
     .update(reset ? { type, target, current_value: 0 } : { target })
     .eq("id", id);
@@ -259,6 +273,7 @@ export async function cancelScheduledWeeklyChallenge(weekStart, today) {
   if (weekStart <= mondayOf(today))
     throw new Error("Seule une semaine à venir peut être annulée.");
   const { error } = await db()
+    .schema("play")
     .from("weekly_challenges")
     .delete()
     .eq("week_start", weekStart)

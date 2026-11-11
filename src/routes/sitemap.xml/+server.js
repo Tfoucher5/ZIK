@@ -136,6 +136,7 @@ export async function GET() {
 
   // `rooms` n'a pas de colonne updated_at : le lastmod vient de last_active_at.
   const { data: rooms, error: roomsError } = await supabase
+    .schema("play")
     .from("rooms")
     .select("code, last_active_at")
     .eq("is_public", true)

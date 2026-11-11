@@ -37,6 +37,7 @@ export async function POST({ request }) {
   // feat.), et proposer la mauvaise ne doit pas coûter un essai.
   const [song, guess] = await Promise.all([
     sb
+      .schema("play")
       .from("daily_songs")
       .select("tracks(artist, title)")
       .eq("date", date)

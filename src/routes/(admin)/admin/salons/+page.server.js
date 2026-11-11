@@ -38,6 +38,7 @@ async function chargerPage() {
     { data: playlists },
   ] = await Promise.all([
     sb
+      .schema("play")
       .from("games")
       .select("host_id, player_count, limit_hits, started_at")
       .eq("source", "salon")

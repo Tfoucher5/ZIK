@@ -39,18 +39,25 @@ async function chargerPage() {
     { count: players },
     { data: unlocks, error: unlocksErr },
   ] = await Promise.all([
-    sb.from("achievements").select("*").order("category").order("id"),
+    sb
+      .schema("play")
+      .from("achievements")
+      .select("*")
+      .order("category")
+      .order("id"),
     fetchAllRows(() =>
       sb
+        .schema("play")
         .from("user_achievements")
         .select("user_id, achievement_id, tier")
         .order("id"),
     ),
     sb.from("profiles").select("id", { count: "exact", head: true }),
     sb
+      .schema("play")
       .from("user_achievements")
       .select(
-        "id, user_id, achievement_id, tier, count, unlocked_at, profiles(username), achievements(name, icon)",
+        "id, user_id, achievement_id, tier, count, unlocked_at, profiles:profile(username), achievements(name, icon)",
       )
       .order("unlocked_at", { ascending: false })
       .limit(UNLOCKS_LIMIT),
@@ -123,6 +130,7 @@ export const actions = adminActions({
     const { def, error } = readDef(formData);
     if (error) return fail(400, { defError: error });
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("achievements")
       .insert({ id, ...def });
     if (err)
@@ -149,6 +157,7 @@ export const actions = adminActions({
     const { def, error } = readDef(formData);
     if (error) return fail(400, { defError: error });
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("achievements")
       .update(def)
       .eq("id", id);
@@ -167,6 +176,7 @@ export const actions = adminActions({
     const formData = await request.formData();
     const id = formData.get("id");
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("achievements")
       .delete()
       .eq("id", id);
@@ -184,6 +194,7 @@ export const actions = adminActions({
     const formData = await request.formData();
     const id = formData.get("id");
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("user_achievements")
       .delete()
       .eq("id", id);
@@ -215,6 +226,7 @@ export const actions = adminActions({
       return fail(400, { grantError: `Aucun joueur nommé « ${username} ».` });
 
     const { error: err } = await sb
+      .schema("play")
       .from("user_achievements")
       .insert({ user_id: profile.id, achievement_id: achievementId, tier });
     if (err)

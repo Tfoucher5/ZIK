@@ -256,6 +256,7 @@ export async function suspiciousPairs(
   const players = new Map();
   for (let i = 0; i < gameIds.length; i += 200) {
     const { data } = await sb
+      .schema("play")
       .from("game_players")
       .select("game_id, user_id")
       .in("game_id", gameIds.slice(i, i + 200))

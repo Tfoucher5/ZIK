@@ -48,6 +48,7 @@ async function chargerPage({ url }) {
     sb.from("profiles").select("id", head),
     sb.from("profiles").select("id", head).gte("created_at", weekAgo),
     sb
+      .schema("play")
       .from("game_players")
       .select("user_id, games!inner(started_at)")
       .not("user_id", "is", null)

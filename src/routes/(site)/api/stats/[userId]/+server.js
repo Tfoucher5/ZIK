@@ -80,9 +80,11 @@ export async function GET({ params, url }) {
 
     const [roomsRes, playersRes, aboveRes, totalRes] = await Promise.all([
       supabase
+        .schema("play")
         .from("rooms")
         .select("code, name, emoji, is_official, is_public"),
       supabase
+        .schema("play")
         .from("game_players")
         .select("score, rank, games!inner(room_id, ended_at, mode)")
         .eq("user_id", params.userId)

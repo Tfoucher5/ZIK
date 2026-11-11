@@ -9,6 +9,7 @@ export async function recordSalonGameStart(salon) {
   salon.game.dbGameId = null;
   try {
     const { data } = await getAdminClient()
+      .schema("play")
       .from("games")
       .insert({
         room_id: salon.code,
@@ -57,6 +58,7 @@ export function recordSalonGameEnd(salon) {
   const limitHits = salon.limitHits ?? 0;
   salon.limitHits = 0;
   getAdminClient()
+    .schema("play")
     .from("games")
     .update({
       ended_at: new Date().toISOString(),

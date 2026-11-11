@@ -18,21 +18,24 @@ async function chargerPage({ params }) {
   const [{ data: daily }, results, dayNumber, { data: prev }, { data: next }] =
     await Promise.all([
       sb
+        .schema("play")
         .from("daily_songs")
         .select("date, track_id, tracks(artist, title, cover_url)")
         .eq("date", date)
         .maybeSingle(),
       fetchAllRows(() =>
         sb
+          .schema("play")
           .from("daily_results")
           .select(
-            "id, user_id, attempts, won, solve_time_seconds, created_at, profiles(username)",
+            "id, user_id, attempts, won, solve_time_seconds, created_at, profiles:profile(username)",
           )
           .eq("date", date)
           .order("created_at", { ascending: true }),
       ),
       getDayNumber(sb, date),
       sb
+        .schema("play")
         .from("daily_songs")
         .select("date")
         .lt("date", date)
@@ -40,6 +43,7 @@ async function chargerPage({ params }) {
         .limit(1)
         .maybeSingle(),
       sb
+        .schema("play")
         .from("daily_songs")
         .select("date")
         .gt("date", date)
@@ -67,6 +71,7 @@ export const actions = adminActions({
     if (!DATE_RE.test(params.date) || !trackId)
       return fail(400, { error: "Choisis un titre." });
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("daily_songs")
       .upsert({ date: params.date, track_id: trackId }, { onConflict: "date" });
     if (err) return fail(500, { error: err.message });
@@ -85,6 +90,7 @@ export const actions = adminActions({
     const id = form.get("id");
     if (!id) return fail(400, { error: "Résultat introuvable" });
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("daily_results")
       .delete()
       .eq("id", id);
@@ -102,6 +108,7 @@ export const actions = adminActions({
     if (!DATE_RE.test(params.date))
       return fail(400, { error: "Date invalide" });
     const { error: err, count } = await getAdminClient()
+      .schema("play")
       .from("daily_results")
       .delete({ count: "exact" })
       .eq("date", params.date);

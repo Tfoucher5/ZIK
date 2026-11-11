@@ -22,6 +22,7 @@ export async function getAdminUserDetail(id, adminId) {
     sb.from("profiles").select("*").eq("id", id).single(),
     sb.auth.admin.getUserById(id),
     sb
+      .schema("play")
       .from("game_players")
       .select(
         "id, score, rank, games(id, room_id, started_at, rounds, mode, player_count)",
@@ -63,11 +64,12 @@ export async function getAdminUserDetail(id, adminId) {
       .eq("user_id", id)
       .maybeSingle(),
     sb
+      .schema("play")
       .from("user_achievements")
       .select("id, achievement_id, tier, unlocked_at")
       .eq("user_id", id)
       .order("unlocked_at", { ascending: false }),
-    sb.from("achievements").select("id, name, icon"),
+    sb.schema("play").from("achievements").select("id, name, icon"),
     sb
       .schema("ops")
       .from("admin_audit_log")
@@ -76,6 +78,7 @@ export async function getAdminUserDetail(id, adminId) {
       .order("created_at", { ascending: false })
       .limit(30),
     sb
+      .schema("play")
       .from("games")
       .select(
         "id, room_id, started_at, ended_at, rounds, player_count, limit_hits",
@@ -117,7 +120,11 @@ export async function getAdminUserDetail(id, adminId) {
   const adminIds = [...new Set(audit.map((a) => a.admin_id))].filter(Boolean);
   const [roomsRes, adminsRes] = await Promise.all([
     roomCodes.length
-      ? sb.from("rooms").select("code, name, emoji").in("code", roomCodes)
+      ? sb
+          .schema("play")
+          .from("rooms")
+          .select("code, name, emoji")
+          .in("code", roomCodes)
       : { data: [] },
     adminIds.length
       ? sb.from("profiles").select("id, username").in("id", adminIds)

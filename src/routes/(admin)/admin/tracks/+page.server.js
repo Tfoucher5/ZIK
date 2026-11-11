@@ -87,7 +87,11 @@ async function chargerPage({ url }) {
           .in("track_id", ids)
       : Promise.resolve({ data: [] }),
     ids.length
-      ? sb.from("daily_songs").select("track_id").in("track_id", ids)
+      ? sb
+          .schema("play")
+          .from("daily_songs")
+          .select("track_id")
+          .in("track_id", ids)
       : Promise.resolve({ data: [] }),
   ]);
 

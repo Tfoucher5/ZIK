@@ -6,6 +6,7 @@ export async function load({ params }) {
   if (!isUuid(params.id)) throw error(404, "Résultat introuvable");
 
   const { data: result } = await supabase
+    .schema("play")
     .from("game_results")
     .select(
       "id, username, score, rank, total_players, room_name, room_emoji, achievement_ids, created_at",
@@ -21,6 +22,7 @@ export async function load({ params }) {
       ...new Set(result.achievement_ids.map((a) => a.split(":")[0])),
     ];
     const { data: defs } = await supabase
+      .schema("play")
       .from("achievements")
       .select("id, name, icon, rarity")
       .in("id", baseIds);

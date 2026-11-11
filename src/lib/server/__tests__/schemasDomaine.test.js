@@ -1,28 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { ROOM_PLAYLISTS_SELECT } from "../services/rooms/roomList.js";
 
 // Schéma de chaque table (phase 4 du plan). Une table hors de public se lit
 // par .schema("…") ; une jointure ne vise qu'une table du même schéma
 // (PostgREST ne suit pas une clé étrangère d'un schéma à l'autre, PGRST200),
 // sinon elle passe par une fonction de lien (computed relationship).
-const PUBLIC = [
-  "achievements",
-  "daily_results",
-  "daily_songs",
-  "game_players",
-  "game_results",
-  "games",
-  "pro_subscriptions",
-  "profiles",
-  "room_playlists",
-  "rooms",
-  "salon_players",
-  "user_achievements",
-  "weekly_challenge_contributions",
-  "weekly_challenges",
-  "zikle_pool",
-];
+const PUBLIC = ["pro_subscriptions", "profiles", "salon_players"];
 const SCHEMA_OF = {
   ...Object.fromEntries(PUBLIC.map((t) => [t, "public"])),
   follows: "social",
@@ -39,6 +24,18 @@ const SCHEMA_OF = {
   health_checks: "ops",
   errors: "ops",
   snapshots: "salon",
+  achievements: "play",
+  daily_results: "play",
+  daily_songs: "play",
+  game_players: "play",
+  game_results: "play",
+  games: "play",
+  room_playlists: "play",
+  rooms: "play",
+  user_achievements: "play",
+  weekly_challenge_contributions: "play",
+  weekly_challenges: "play",
+  zikle_pool: "play",
   card_albums: "cards",
   card_artists: "cards",
   card_grants: "cards",
@@ -68,7 +65,12 @@ const LINKS = new Set([
   "cards.first_owner",
   "catalog.owner",
   "catalog.cards",
-  "public.tracks",
+  "play.tracks",
+  "play.owner",
+  "play.profile",
+  "play.top_contributor",
+  "play.custom_playlists",
+  "public.games",
 ]);
 const LINK_NAMES = new Set([...LINKS].map((l) => l.split(".")[1]));
 // Fonctions SQL appelées par .rpc, rangées hors de public
@@ -81,6 +83,15 @@ const RPC_SCHEMA = {
   record_round_stats: "catalog",
   report_track_issue: "catalog",
   resolve_tracks: "catalog",
+  increment_weekly_challenge: "play",
+  leaderboard_score: "play",
+  leaderboard_score_my_rank: "play",
+  pick_daily_song: "play",
+  pick_weekly_challenge: "play",
+  weekly_leaderboard: "play",
+  weekly_leaderboard_by_room: "play",
+  zikle_complete: "play",
+  zikle_leaderboard: "play",
 };
 const RPC =
   /(?:\.schema\(\s*["'`](\w+)["'`]\s*\)\s*)?\.rpc\(\s*["'`](\w+)["'`]/g;
@@ -155,7 +166,7 @@ describe("tables rangées par domaine", () => {
       ),
     ).toEqual([]);
     expect(
-      wrongSchemaCalls('sb.from("rooms").select("id, profiles:owner(id)")'),
+      wrongSchemaCalls('sb.from("profiles").select("id, x:owner(id)")'),
     ).toEqual(["public -> owner"]);
     expect(
       wrongSchemaCalls(
@@ -182,6 +193,14 @@ describe("tables rangées par domaine", () => {
       wrongSchemaCalls('sb\n  .schema("cards")\n  .rpc("card_settle", {})'),
     ).toEqual([]);
     expect(wrongSchemaCalls('sb.rpc("admin_pulse")')).toEqual([]);
+  });
+
+  it("la sélection partagée des playlists d'une room reste dans play", () => {
+    expect(
+      wrongSchemaCalls(
+        `sb.schema("play").from("rooms").select("id, ${ROOM_PLAYLISTS_SELECT}")`,
+      ),
+    ).toEqual([]);
   });
 
   it("le code serveur et les scripts passent par le bon schéma", () => {

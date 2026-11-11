@@ -59,6 +59,7 @@ export async function getTodo() {
           .in("category", ["interested", "question"]),
       ),
       sb
+        .schema("play")
         .from("games")
         .select("limit_hits")
         .eq("source", "salon")
@@ -168,6 +169,7 @@ export async function getJournal(days = 2, limit = 60) {
       .select("user_id, plan, status, created_at, updated_at")
       .gte("updated_at", since),
     sb
+      .schema("play")
       .from("games")
       .select("id, room_id, host_id, player_count, limit_hits, ended_at")
       .eq("source", "salon")

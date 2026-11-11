@@ -26,13 +26,15 @@ async function chargerPage() {
 
   const [{ data: rooms, error: err }, { data: games }] = await Promise.all([
     sb
+      .schema("play")
       .from("rooms")
       .select(
-        "id, code, name, emoji, description, owner_id, is_public, is_official, auto_start, max_rounds, round_duration, break_duration, created_at, last_active_at, profiles!owner_id(username)",
+        "id, code, name, emoji, description, owner_id, is_public, is_official, auto_start, max_rounds, round_duration, break_duration, created_at, last_active_at, profiles:owner(username)",
       )
       .order("last_active_at", { ascending: false, nullsFirst: false })
       .limit(5000),
     sb
+      .schema("play")
       .from("games")
       .select("room_id, started_at, player_count")
       .eq("source", "web")
@@ -83,6 +85,7 @@ export const actions = adminActions({
     const value = formData.get("value") === "true";
     if (!ALLOWED_FLAGS.includes(field)) throw error(400, "Champ invalide");
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("rooms")
       .update({ [field]: value })
       .eq("id", id);
@@ -110,6 +113,7 @@ export const actions = adminActions({
       auto_start: formData.get("auto_start") === "on",
     };
     const { error: err } = await getAdminClient()
+      .schema("play")
       .from("rooms")
       .update(fields)
       .eq("id", id);
@@ -122,12 +126,17 @@ export const actions = adminActions({
     const id = readId(await request.formData());
     const sb = getAdminClient();
     const { data: room } = await sb
+      .schema("play")
       .from("rooms")
       .select("code, name")
       .eq("id", id)
       .single();
     if (!room) return { success: false, error: "Room introuvable" };
-    const { error: err } = await sb.from("rooms").delete().eq("id", id);
+    const { error: err } = await sb
+      .schema("play")
+      .from("rooms")
+      .delete()
+      .eq("id", id);
     if (err) return { success: false, error: err.message };
     await logAdminAction(locals.adminId, "delete_room", id, "room", room);
     return { success: true };
