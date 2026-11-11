@@ -160,7 +160,9 @@ describe("refreshZiklePool", () => {
         return { error: insert.error };
       }),
     };
-    return { from: () => q, rpc: vi.fn(async () => resolved) };
+    const sb = { from: () => q, rpc: vi.fn(async () => resolved) };
+    sb.schema = () => sb;
+    return sb;
   };
 
   beforeEach(() => {

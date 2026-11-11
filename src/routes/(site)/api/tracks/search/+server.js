@@ -17,11 +17,13 @@ export async function GET({ request, url }) {
   // le morceau exact hors des 8 résultats bruts.
   const [byArtist, byTitle] = await Promise.all([
     sb
+      .schema("catalog")
       .from("tracks")
       .select("id, artist, title, cover_url")
       .ilike("artist", pattern)
       .limit(40),
     sb
+      .schema("catalog")
       .from("tracks")
       .select("id, artist, title, cover_url")
       .ilike("title", pattern)

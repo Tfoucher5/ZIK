@@ -73,9 +73,11 @@ export async function POST({ request }) {
     videos.push([i, id]);
   }
 
-  const { data, error } = await getAdminClient().rpc("resolve_tracks", {
-    p_tracks: rows,
-  });
+  const { data, error } = await getAdminClient()
+    .schema("catalog")
+    .rpc("resolve_tracks", {
+      p_tracks: rows,
+    });
   if (error) return json({ error: error.message }, { status: 400 });
 
   // false : le titre avait déjà une version vérifiée, la vidéo collée est ignorée

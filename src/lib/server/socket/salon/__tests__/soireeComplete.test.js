@@ -47,6 +47,7 @@ vi.mock("../../../config.js", () => {
     from: query,
     rpc: async () => ({ data: null, error: null }),
   };
+  client.schema = () => client;
   return { supabase: client, getAdminClient: () => client };
 });
 vi.mock("../../../services/music/deezer.js", () => ({

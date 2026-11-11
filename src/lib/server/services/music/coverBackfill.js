@@ -13,6 +13,7 @@ export async function backfillCovers(playlistIds) {
     const admin = getAdminClient();
 
     const { data: tracks } = await admin
+      .schema("catalog")
       .from("tracks")
       .select(
         "id, external_id, source, custom_playlist_tracks!inner(playlist_id)",
@@ -79,7 +80,11 @@ export async function backfillCovers(playlistIds) {
 
     await Promise.all(
       updates.map((u) =>
-        admin.from("tracks").update({ cover_url: u.cover_url }).eq("id", u.id),
+        admin
+          .schema("catalog")
+          .from("tracks")
+          .update({ cover_url: u.cover_url })
+          .eq("id", u.id),
       ),
     );
 

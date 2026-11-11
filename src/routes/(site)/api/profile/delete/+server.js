@@ -13,17 +13,26 @@ export async function DELETE({ request }) {
 
   // 1. Delete custom playlist tracks (may not cascade automatically)
   const { data: playlists } = await client
+    .schema("catalog")
     .from("custom_playlists")
     .select("id")
     .eq("user_id", user.id);
 
   if (playlists?.length) {
     const ids = playlists.map((p) => p.id);
-    await client.from("custom_playlist_tracks").delete().in("playlist_id", ids);
+    await client
+      .schema("catalog")
+      .from("custom_playlist_tracks")
+      .delete()
+      .in("playlist_id", ids);
   }
 
   // 2. Delete custom playlists
-  await client.from("custom_playlists").delete().eq("user_id", user.id);
+  await client
+    .schema("catalog")
+    .from("custom_playlists")
+    .delete()
+    .eq("user_id", user.id);
 
   // 3. Delete profile (scores and other data linked to user.id may cascade in Supabase)
   await client.from("profiles").delete().eq("id", user.id);

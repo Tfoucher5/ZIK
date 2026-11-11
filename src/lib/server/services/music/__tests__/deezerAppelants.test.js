@@ -17,7 +17,9 @@ vi.mock("$lib/server/config.js", () => {
     }),
     update: (v) => ({ eq: async () => maj.push(v) }),
   };
-  return { getAdminClient: () => ({ from: () => chaine }) };
+  const sb = { from: () => chaine };
+  sb.schema = () => sb;
+  return { getAdminClient: () => sb };
 });
 
 const QUOTA = { error: { code: 4, message: "Quota limit exceeded" } };

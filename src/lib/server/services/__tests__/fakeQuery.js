@@ -33,7 +33,10 @@ export function fakeQuery(resolve = () => {}, rpc = () => {}) {
   };
   const client = {
     from,
-    schema: (name) => ({ from: (table) => from(table, name) }),
+    schema: (name) => ({
+      from: (table) => from(table, name),
+      rpc: (...a) => client.rpc(...a),
+    }),
     rpc: vi.fn(
       async (name, args) =>
         (await rpc(name, args)) ?? { data: null, error: null },

@@ -8,6 +8,7 @@ const supabase = getAdminClient();
 async function loadTrackCount(playlistId) {
   if (!playlistId) return null;
   const { data } = await supabase
+    .schema("catalog")
     .from("custom_playlists")
     .select("track_count")
     .eq("id", playlistId)
@@ -18,6 +19,7 @@ async function loadTrackCount(playlistId) {
 async function loadArtists(playlistId) {
   if (!playlistId) return [];
   const { data } = await supabase
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("custom_artist, tracks(artist)")
     .eq("playlist_id", playlistId);

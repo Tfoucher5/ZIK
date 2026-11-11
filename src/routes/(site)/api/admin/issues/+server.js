@@ -13,7 +13,10 @@ export async function GET({ url }) {
   const open = url.searchParams.get("status") !== "done";
   const kind = url.searchParams.get("kind");
 
-  let q = getAdminClient().from("track_issues").select(SELECT);
+  let q = getAdminClient()
+    .schema("catalog")
+    .from("track_issues")
+    .select(SELECT);
   if (kind) q = q.eq("kind", kind);
   q = open
     ? q.eq("status", "open").order("count", { ascending: false })
@@ -44,6 +47,7 @@ export async function POST({ url, request }) {
     return json({ error: "Action invalide" }, { status: 400 });
 
   const { data, error } = await getAdminClient()
+    .schema("catalog")
     .from("track_issues")
     .update({
       status,

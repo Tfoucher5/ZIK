@@ -26,19 +26,27 @@ async function chargerPage({ url }) {
     : "all";
 
   const head = (fn) =>
-    fn(sb.from("tracks").select("id", { count: "exact", head: true })).then(
-      (r) => r.count ?? 0,
-    );
+    fn(
+      sb
+        .schema("catalog")
+        .from("tracks")
+        .select("id", { count: "exact", head: true }),
+    ).then((r) => r.count ?? 0);
 
   const [total, pinned, noPreview, answers, issuesRes] = await Promise.all([
     head((x) => x),
     head((x) => x.not("youtube_id", "is", null)),
     head((x) => x.is("preview_url", null)),
     sb
+      .schema("catalog")
       .from("track_answers")
       .select("id", { count: "exact", head: true })
       .then((r) => r.count ?? 0),
-    sb.from("track_issues").select("track_id").eq("status", "open"),
+    sb
+      .schema("catalog")
+      .from("track_issues")
+      .select("track_id")
+      .eq("status", "open"),
   ]);
   const reportedIds = [
     ...new Set((issuesRes.data ?? []).map((i) => i.track_id)),
@@ -46,6 +54,7 @@ async function chargerPage({ url }) {
 
   const [col, asc] = SORTS[sort];
   let query = sb
+    .schema("catalog")
     .from("tracks")
     .select(
       "id, artist, title, cover_url, preview_url, youtube_id, source, created_at",
@@ -71,7 +80,11 @@ async function chargerPage({ url }) {
 
   const [{ data: plRows }, { data: dsRows }] = await Promise.all([
     ids.length
-      ? sb.from("custom_playlist_tracks").select("track_id").in("track_id", ids)
+      ? sb
+          .schema("catalog")
+          .from("custom_playlist_tracks")
+          .select("track_id")
+          .in("track_id", ids)
       : Promise.resolve({ data: [] }),
     ids.length
       ? sb.from("daily_songs").select("track_id").in("track_id", ids)
@@ -125,6 +138,7 @@ export const actions = adminActions({
         error: "L'artiste et le titre sont obligatoires.",
       };
     const { error: err } = await getAdminClient()
+      .schema("catalog")
       .from("tracks")
       .update({ artist, title, cover_url: coverUrl })
       .eq("id", id);
@@ -149,11 +163,16 @@ export const actions = adminActions({
     const id = fd.get("id");
     const sb = getAdminClient();
     const { data: track } = await sb
+      .schema("catalog")
       .from("tracks")
       .select("artist, title")
       .eq("id", id)
       .single();
-    const { error: err } = await sb.from("tracks").delete().eq("id", id);
+    const { error: err } = await sb
+      .schema("catalog")
+      .from("tracks")
+      .delete()
+      .eq("id", id);
     if (err) {
       return {
         success: false,

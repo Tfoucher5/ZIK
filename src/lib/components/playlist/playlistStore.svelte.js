@@ -88,6 +88,7 @@ export class PlaylistStore {
     }
     this.loading = true;
     const { data } = await this.#sb
+      .schema("catalog")
       .from("custom_playlists")
       .select("*, custom_playlist_tracks!playlist_id(count)")
       .eq("owner_id", user.id)
@@ -120,6 +121,7 @@ export class PlaylistStore {
       /* stockage bloqué */
     }
     const { data, error } = await this.#sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .select("*, tracks(*)")
       .eq("playlist_id", pl.id)
@@ -145,6 +147,7 @@ export class PlaylistStore {
       // eslint-disable-next-line svelte/prefer-svelte-reactivity -- simple horodatage
       const updated_at = new Date().toISOString();
       const { error } = await this.#sb
+        .schema("catalog")
         .from("custom_playlists")
         .update({ name, emoji, is_public, updated_at })
         .eq("id", existing.id);
@@ -157,6 +160,7 @@ export class PlaylistStore {
       return;
     }
     const { data, error } = await this.#sb
+      .schema("catalog")
       .from("custom_playlists")
       .insert({ owner_id: this.#getUser().id, name, emoji, is_public })
       .select()
@@ -206,6 +210,7 @@ export class PlaylistStore {
     }
     if (!rows.length) return 0;
     const { data, error } = await this.#sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .insert(rows)
       .select("*, tracks(*)");
@@ -254,6 +259,7 @@ export class PlaylistStore {
 
   async unlink(row) {
     const { error } = await this.#sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .delete()
       .eq("id", row.id);

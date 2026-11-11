@@ -22,6 +22,7 @@ export async function GET() {
         .select("id", { count: "exact", head: true })
         .eq("is_public", true),
       supabase
+        .schema("catalog")
         .from("custom_playlists")
         .select("id", { count: "exact", head: true })
         .eq("is_public", true),

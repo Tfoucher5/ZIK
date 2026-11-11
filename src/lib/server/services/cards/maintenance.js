@@ -114,6 +114,7 @@ async function drain() {
       const ids = [...queue].slice(0, 50);
       ids.forEach((id) => queue.delete(id));
       const { data: tracks } = await sb
+        .schema("catalog")
         .from("tracks")
         .select(TRACK_FIELDS)
         .in("id", ids)

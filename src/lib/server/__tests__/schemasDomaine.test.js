@@ -8,9 +8,6 @@ import { join } from "node:path";
 // sinon elle passe par une fonction de lien (computed relationship).
 const PUBLIC = [
   "achievements",
-  "answer_types",
-  "custom_playlist_tracks",
-  "custom_playlists",
   "daily_results",
   "daily_songs",
   "game_players",
@@ -21,10 +18,6 @@ const PUBLIC = [
   "room_playlists",
   "rooms",
   "salon_players",
-  "track_answers",
-  "track_issues",
-  "track_stats",
-  "tracks",
   "user_achievements",
   "weekly_challenge_contributions",
   "weekly_challenges",
@@ -56,15 +49,38 @@ const SCHEMA_OF = {
   user_card_sets: "cards",
   user_cards: "cards",
   card_view: "cards",
+  tracks: "catalog",
+  custom_playlists: "catalog",
+  custom_playlist_tracks: "catalog",
+  track_answers: "catalog",
+  answer_types: "catalog",
+  track_stats: "catalog",
+  track_issues: "catalog",
 };
-// Fonctions de lien qui portent le nom d’une table d’un autre schéma
-const LINKS = new Set(["public.cards"]);
+// Fonctions de lien (computed relationships), chacune dans son schéma de départ
+const LINKS = new Set([
+  "social.following",
+  "social.follower",
+  "social.requester",
+  "social.addressee",
+  "social.actor",
+  "social.profile",
+  "cards.first_owner",
+  "catalog.owner",
+  "catalog.cards",
+  "public.tracks",
+]);
+const LINK_NAMES = new Set([...LINKS].map((l) => l.split(".")[1]));
 // Fonctions SQL appelées par .rpc, rangées hors de public
 const RPC_SCHEMA = {
   card_settle: "cards",
   cards_leaderboard: "cards",
   cards_leaderboard_my_rank: "cards",
   cards_showcase: "cards",
+  get_covers_by_playlists: "catalog",
+  record_round_stats: "catalog",
+  report_track_issue: "catalog",
+  resolve_tracks: "catalog",
 };
 const RPC =
   /(?:\.schema\(\s*["'`](\w+)["'`]\s*\)\s*)?\.rpc\(\s*["'`](\w+)["'`]/g;
@@ -91,13 +107,13 @@ function wrongSchemaCalls(source) {
     if (!want) continue;
     if (want !== schema) bad.push(table);
     const cols = selects.find((c) => c !== undefined) ?? "";
-    for (const [, name] of cols.matchAll(EMBED))
-      if (
-        SCHEMA_OF[name] &&
-        SCHEMA_OF[name] !== want &&
-        !LINKS.has(`${want}.${name}`)
-      )
+    for (const [, name] of cols.matchAll(EMBED)) {
+      const cross = SCHEMA_OF[name]
+        ? SCHEMA_OF[name] !== want
+        : LINK_NAMES.has(name);
+      if (cross && !LINKS.has(`${want}.${name}`))
         bad.push(`${want} -> ${name}`);
+    }
   }
   for (const [, schema = "public", fn] of source.matchAll(RPC))
     if (RPC_SCHEMA[fn] && RPC_SCHEMA[fn] !== schema) bad.push(`rpc ${fn}`);
@@ -139,11 +155,23 @@ describe("tables rangées par domaine", () => {
       ),
     ).toEqual([]);
     expect(
-      wrongSchemaCalls("sb.from('tracks').select('id, cards(number)')"),
+      wrongSchemaCalls('sb.from("rooms").select("id, profiles:owner(id)")'),
+    ).toEqual(["public -> owner"]);
+    expect(
+      wrongSchemaCalls(
+        'sb.schema("catalog").from("custom_playlists").select("id, profiles:owner(id)")',
+      ),
     ).toEqual([]);
     expect(
-      wrongSchemaCalls("sb.from('tracks').select('id, user_cards(card_id)')"),
-    ).toEqual(["public -> user_cards"]);
+      wrongSchemaCalls(
+        "sb.schema('catalog').from('tracks').select('id, cards(number)')",
+      ),
+    ).toEqual([]);
+    expect(
+      wrongSchemaCalls(
+        "sb.schema('catalog').from('tracks').select('id, user_cards(card_id)')",
+      ),
+    ).toEqual(["catalog -> user_cards"]);
   });
 
   it("repère un rpc sans son schéma", () => {

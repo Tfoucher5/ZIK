@@ -67,6 +67,7 @@ async function cardDetail(sb, number) {
       .select("*", { count: "exact", head: true })
       .eq("card_id", card.id),
     sb
+      .schema("catalog")
       .from("tracks")
       .select("*", { count: "exact", head: true })
       .eq("card_id", card.id),

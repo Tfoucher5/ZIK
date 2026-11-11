@@ -53,6 +53,7 @@ export async function POST({ url, request }) {
   }
 
   const { error: dbError } = await getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .update(patch)
     .eq("id", trackId);

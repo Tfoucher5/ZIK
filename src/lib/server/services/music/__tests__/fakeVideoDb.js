@@ -50,5 +50,7 @@ export function fakeVideoDb(m) {
     };
     return q;
   };
-  return { from: query };
+  const sb = { from: query };
+  sb.schema = () => sb;
+  return sb;
 }

@@ -48,9 +48,11 @@ export async function refreshZiklePool(sb, force = false) {
   const candidates = mapDeezerChartTracks(json);
   if (!candidates.length) return { refreshed: false, added: 0 };
 
-  const { data: ids, error } = await sb.rpc("resolve_tracks", {
-    p_tracks: candidates,
-  });
+  const { data: ids, error } = await sb
+    .schema("catalog")
+    .rpc("resolve_tracks", {
+      p_tracks: candidates,
+    });
   if (error) throw error;
   enqueueCardEnrichment(ids);
 

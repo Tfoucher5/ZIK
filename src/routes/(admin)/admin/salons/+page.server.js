@@ -44,6 +44,7 @@ async function chargerPage() {
       .gte("started_at", since)
       .not("ended_at", "is", null),
     sb
+      .schema("catalog")
       .from("track_issues")
       .select("*", { count: "exact", head: true })
       .eq("status", "open")
@@ -54,7 +55,11 @@ async function chargerPage() {
       .eq("status", "active")
       .gt("current_period_end", new Date().toISOString()),
     playlistIds.length
-      ? sb.from("custom_playlists").select("id, name").in("id", playlistIds)
+      ? sb
+          .schema("catalog")
+          .from("custom_playlists")
+          .select("id, name")
+          .in("id", playlistIds)
       : { data: [] },
   ]);
   const playlistName = Object.fromEntries(

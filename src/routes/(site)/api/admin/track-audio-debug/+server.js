@@ -82,6 +82,7 @@ export async function POST({ url, request }) {
   if (!trackId) return json({ error: "trackId requis" }, { status: 400 });
 
   const { data: track } = await getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .select(
       "id, artist, title, preview_url, preview_expires_at, external_id, youtube_id, source",

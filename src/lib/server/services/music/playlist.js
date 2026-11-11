@@ -151,6 +151,7 @@ export async function refreshExpiredPreviews(trackRows) {
 
           const exp = parseExpFromUrl(freshUrl);
           await getAdminClient()
+            .schema("catalog")
             .from("tracks")
             .update({
               preview_url: freshUrl,
@@ -216,6 +217,7 @@ async function fetchPlaylist(roomId) {
     if (links?.length > 0) {
       const playlistIds = links.map((l) => l.playlist_id);
       const { data: trackRows } = await db
+        .schema("catalog")
         .from("custom_playlist_tracks")
         .select(TRACK_ROW_SELECT)
         .in("playlist_id", playlistIds)
@@ -238,6 +240,7 @@ async function fetchPlaylist(roomId) {
   if (dbRoom.playlist_id) {
     try {
       const { data: trackRows } = await db
+        .schema("catalog")
         .from("custom_playlist_tracks")
         .select(TRACK_ROW_SELECT)
         .eq("playlist_id", dbRoom.playlist_id)
