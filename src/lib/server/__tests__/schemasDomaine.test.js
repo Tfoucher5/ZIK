@@ -59,6 +59,15 @@ const SCHEMA_OF = {
 };
 // Fonctions de lien qui portent le nom d’une table d’un autre schéma
 const LINKS = new Set(["public.cards"]);
+// Fonctions SQL appelées par .rpc, rangées hors de public
+const RPC_SCHEMA = {
+  card_settle: "cards",
+  cards_leaderboard: "cards",
+  cards_leaderboard_my_rank: "cards",
+  cards_showcase: "cards",
+};
+const RPC =
+  /(?:\.schema\(\s*["'`](\w+)["'`]\s*\)\s*)?\.rpc\(\s*["'`](\w+)["'`]/g;
 
 function files(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -90,6 +99,8 @@ function wrongSchemaCalls(source) {
       )
         bad.push(`${want} -> ${name}`);
   }
+  for (const [, schema = "public", fn] of source.matchAll(RPC))
+    if (RPC_SCHEMA[fn] && RPC_SCHEMA[fn] !== schema) bad.push(`rpc ${fn}`);
   return bad;
 }
 
@@ -133,6 +144,16 @@ describe("tables rangées par domaine", () => {
     expect(
       wrongSchemaCalls("sb.from('tracks').select('id, user_cards(card_id)')"),
     ).toEqual(["public -> user_cards"]);
+  });
+
+  it("repère un rpc sans son schéma", () => {
+    expect(wrongSchemaCalls('sb.rpc("card_settle", {})')).toEqual([
+      "rpc card_settle",
+    ]);
+    expect(
+      wrongSchemaCalls('sb\n  .schema("cards")\n  .rpc("card_settle", {})'),
+    ).toEqual([]);
+    expect(wrongSchemaCalls('sb.rpc("admin_pulse")')).toEqual([]);
   });
 
   it("le code serveur et les scripts passent par le bon schéma", () => {
