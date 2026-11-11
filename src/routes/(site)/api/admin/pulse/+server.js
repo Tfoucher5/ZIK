@@ -21,12 +21,12 @@ export async function GET({ url }) {
   });
   const [pulse, weekly, signups, players, games, zikle, song, results] =
     await Promise.all([
-      sb.rpc("admin_pulse", { p_days: days }),
-      sb.rpc("admin_weekly_kpis", { p_weeks: 8 }),
-      sb.rpc("admin_signups_per_day", { p_days: 14 }),
-      sb.rpc("admin_active_players_per_day", { p_days: 14 }),
-      sb.rpc("admin_games_per_day", { p_days: 14 }),
-      sb.rpc("admin_zikle_per_day", { p_days: 14 }),
+      sb.schema("ops").rpc("admin_pulse", { p_days: days }),
+      sb.schema("ops").rpc("admin_weekly_kpis", { p_weeks: 8 }),
+      sb.schema("ops").rpc("admin_signups_per_day", { p_days: 14 }),
+      sb.schema("ops").rpc("admin_active_players_per_day", { p_days: 14 }),
+      sb.schema("ops").rpc("admin_games_per_day", { p_days: 14 }),
+      sb.schema("ops").rpc("admin_zikle_per_day", { p_days: 14 }),
       sb
         .schema("play")
         .from("daily_songs")

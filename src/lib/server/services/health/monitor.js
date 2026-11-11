@@ -23,7 +23,7 @@ const lastDbWarn = {};
 // quart d'heure et par écriture
 async function rpc(fn, args) {
   try {
-    const { error } = await getAdminClient().rpc(fn, args);
+    const { error } = await getAdminClient().schema("ops").rpc(fn, args);
     if (error) throw error;
   } catch (e) {
     if (Date.now() - (lastDbWarn[fn] ?? 0) < 15 * 60 * 1000) return;

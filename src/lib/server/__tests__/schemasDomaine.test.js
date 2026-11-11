@@ -98,6 +98,26 @@ const RPC_SCHEMA = {
   load_salon_snapshot: "salon",
   delete_salon_snapshot: "salon",
   purge_salon_snapshots: "salon",
+  admin_active_players_per_day: "ops",
+  admin_activity_breakdown: "ops",
+  admin_dau_wau_mau: "ops",
+  admin_games_per_day: "ops",
+  admin_pulse: "ops",
+  admin_retention_cohorts: "ops",
+  admin_signups_per_day: "ops",
+  admin_traffic_daily: "ops",
+  admin_traffic_landings: "ops",
+  admin_traffic_sources: "ops",
+  admin_weekly_kpis: "ops",
+  admin_zikle_per_day: "ops",
+  db_stats: "ops",
+  health_history: "ops",
+  health_transitions: "ops",
+  purge_ops: "ops",
+  record_errors: "ops",
+  record_health: "ops",
+  admin_broadcast_notification: "social",
+  admin_schedule_weekly_challenge: "play",
 };
 const RPC =
   /(?:\.schema\(\s*["'`](\w+)["'`]\s*\)\s*)?\.rpc\(\s*["'`](\w+)["'`]/g;
@@ -198,7 +218,7 @@ describe("tables rangées par domaine", () => {
     expect(
       wrongSchemaCalls('sb\n  .schema("cards")\n  .rpc("card_settle", {})'),
     ).toEqual([]);
-    expect(wrongSchemaCalls('sb.rpc("admin_pulse")')).toEqual([]);
+    expect(wrongSchemaCalls('sb.rpc("update_player_stats")')).toEqual([]);
   });
 
   it("la sélection partagée des playlists d'une room reste dans play", () => {

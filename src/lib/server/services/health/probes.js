@@ -92,7 +92,7 @@ export function makeProbes({
     // Plan Pro de Supabase : 8 Go de disque inclus
     async database() {
       const r = await timed(async () => {
-        const { data, error } = await db().rpc("db_stats");
+        const { data, error } = await db().schema("ops").rpc("db_stats");
         if (error) throw new Error(error.message);
         return data?.[0];
       });

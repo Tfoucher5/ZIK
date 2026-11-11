@@ -261,11 +261,13 @@ export async function updateActiveWeeklyChallenge(id, type, target) {
 
 /** Programme (ou remplace) le défi d'une semaine future. Voir 20261010_admin_defi_semaine.sql. */
 export async function scheduleWeeklyChallenge(weekStart, type, target) {
-  const { error } = await db().rpc("admin_schedule_weekly_challenge", {
-    p_week_start: weekStart,
-    p_type: type,
-    p_target: target,
-  });
+  const { error } = await db()
+    .schema("play")
+    .rpc("admin_schedule_weekly_challenge", {
+      p_week_start: weekStart,
+      p_type: type,
+      p_target: target,
+    });
   if (error) throw error;
 }
 
