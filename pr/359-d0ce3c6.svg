@@ -11,7 +11,7 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">PR #359 · 5943eba · 11/11 18:14</text>
+<text x="836" y="38" class="petit" text-anchor="end">PR #359 · d0ce3c6 · 11/11 18:19</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
