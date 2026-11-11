@@ -53,7 +53,7 @@ export async function getAdminUserDetail(id, adminId) {
       .schema("social")
       .from("friendships")
       .select(
-        "id, status, created_at, accepted_at, requester_id, requester:requester(id, username, avatar_url), addressee:addressee(id, username, avatar_url)",
+        "id, status, created_at, accepted_at, requester_id, requester(id, username, avatar_url), addressee(id, username, avatar_url)",
       )
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
       .order("created_at", { ascending: false }),

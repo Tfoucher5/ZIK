@@ -99,6 +99,7 @@ export async function pushToAll(category, payload, { skip = new Set() } = {}) {
       .from("push_subscriptions")
       .select("id, user_id, endpoint, p256dh, auth, profile!inner(notif_prefs)")
       .eq(`profile.notif_prefs->>${category}`, "true")
+      .order("id")
       .range(from, from + 999);
     if (error) throw error;
     subs.push(...data.filter((s) => !skip.has(s.user_id)));

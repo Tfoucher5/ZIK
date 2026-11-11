@@ -158,6 +158,8 @@ describe("envoi à tous", () => {
       "profile.notif_prefs->>zikle",
       "true",
     ]);
+    // Sans ordre fixe, les pages peuvent sauter ou doubler un abonnement
+    expect(reads.every((q) => q.has("order", "id"))).toBe(true);
   });
 
   it("erreur de lecture : remontée, rien envoyé", async () => {
