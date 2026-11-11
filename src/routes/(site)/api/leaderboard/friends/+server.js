@@ -6,6 +6,7 @@ export async function GET({ request }) {
   const { user } = await requireAuth(request);
 
   const { data: rows, error } = await supabase
+    .schema("social")
     .from("friendships")
     .select("requester_id, addressee_id")
     .eq("status", "accepted")

@@ -41,6 +41,7 @@ export const actions = adminActions({
     if (res.error) return { success: false, error: res.error };
     if (reportId)
       await sb
+        .schema("ops")
         .from("reports")
         .update({ status: "resolved", resolved_at: new Date().toISOString() })
         .eq("id", reportId);
@@ -55,6 +56,7 @@ export const actions = adminActions({
     const id = (await request.formData()).get("id");
     if (!id) return { success: false };
     await getAdminClient()
+      .schema("ops")
       .from("reports")
       .update({ status: "dismissed", resolved_at: new Date().toISOString() })
       .eq("id", id);

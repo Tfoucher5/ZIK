@@ -29,6 +29,7 @@ export async function getAdminUserDetail(id, adminId) {
       .eq("user_id", id)
       .limit(2000),
     sb
+      .schema("ops")
       .from("reports")
       .select(
         "id, type, subject, status, message, created_at, reporter_id, reported_user_id, room_id",
@@ -37,6 +38,7 @@ export async function getAdminUserDetail(id, adminId) {
       .order("created_at", { ascending: false })
       .limit(20),
     sb
+      .schema("social")
       .from("follows")
       .select(
         "id, created_at, user:profiles!follows_following_id_fkey(id, username, avatar_url)",
@@ -44,6 +46,7 @@ export async function getAdminUserDetail(id, adminId) {
       .eq("follower_id", id)
       .order("created_at", { ascending: false }),
     sb
+      .schema("social")
       .from("follows")
       .select(
         "id, created_at, user:profiles!follows_follower_id_fkey(id, username, avatar_url)",
@@ -51,6 +54,7 @@ export async function getAdminUserDetail(id, adminId) {
       .eq("following_id", id)
       .order("created_at", { ascending: false }),
     sb
+      .schema("social")
       .from("friendships")
       .select(
         "id, status, created_at, accepted_at, requester_id, requester:profiles!friendships_requester_id_fkey(id, username, avatar_url), addressee:profiles!friendships_addressee_id_fkey(id, username, avatar_url)",
@@ -69,6 +73,7 @@ export async function getAdminUserDetail(id, adminId) {
       .order("unlocked_at", { ascending: false }),
     sb.from("achievements").select("id, name, icon"),
     sb
+      .schema("ops")
       .from("admin_audit_log")
       .select("id, admin_id, action, payload, created_at")
       .eq("target_id", id)

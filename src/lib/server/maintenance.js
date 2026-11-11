@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { supabase, getAdminClient } from "./config.js";
+import { getAdminClient } from "./config.js";
 
 // Fail-open : si la table site_settings n'existe pas encore ou si la requête
 // échoue, le site reste accessible normalement.
@@ -44,7 +44,8 @@ export function readAdminToken(token) {
 export async function getMaintenance() {
   if (Date.now() - _cache.at < TTL) return _cache.value;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getAdminClient()
+      .schema("ops")
       .from("site_settings")
       .select("value")
       .eq("key", "maintenance")
@@ -58,6 +59,7 @@ export async function getMaintenance() {
 
 export async function setMaintenance(enabled, message) {
   const { error } = await getAdminClient()
+    .schema("ops")
     .from("site_settings")
     .upsert(
       {

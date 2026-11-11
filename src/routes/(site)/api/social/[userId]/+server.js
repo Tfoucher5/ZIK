@@ -38,9 +38,18 @@ export async function GET({ params, request }) {
     const isOwn = viewerId && viewerId === userId;
 
     const [followingRes, followersRes, friendRes] = await Promise.all([
-      supabase.from("follows").select("following_id").eq("follower_id", userId),
-      supabase.from("follows").select("follower_id").eq("following_id", userId),
       supabase
+        .schema("social")
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", userId),
+      supabase
+        .schema("social")
+        .from("follows")
+        .select("follower_id")
+        .eq("following_id", userId),
+      supabase
+        .schema("social")
         .from("friendships")
         .select("requester_id, addressee_id, status")
         .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`),

@@ -35,6 +35,7 @@ export async function POST({ request }) {
   if (action === "request") {
     // Une demande inverse existe déjà ? Alors les deux se sont demandés → on accepte.
     const { data: inverse } = await client
+      .schema("social")
       .from("friendships")
       .select("id, status")
       .eq("requester_id", targetId)
@@ -44,6 +45,7 @@ export async function POST({ request }) {
     if (inverse) {
       if (inverse.status === "pending") {
         const { error } = await client
+          .schema("social")
           .from("friendships")
           .update({ status: "accepted", accepted_at: new Date().toISOString() })
           .eq("id", inverse.id);
@@ -63,6 +65,7 @@ export async function POST({ request }) {
     }
 
     const { data: existing } = await client
+      .schema("social")
       .from("friendships")
       .select("status")
       .eq("requester_id", user.id)
@@ -76,6 +79,7 @@ export async function POST({ request }) {
       });
 
     const { error } = await client
+      .schema("social")
       .from("friendships")
       .insert({ requester_id: user.id, addressee_id: targetId });
     if (error) return json({ error: error.message }, { status: 400 });
@@ -89,6 +93,7 @@ export async function POST({ request }) {
 
   if (action === "accept") {
     const { data: req } = await client
+      .schema("social")
       .from("friendships")
       .select("id")
       .eq("requester_id", targetId)
@@ -99,6 +104,7 @@ export async function POST({ request }) {
       return json({ error: "Aucune demande à accepter" }, { status: 404 });
 
     const { error } = await client
+      .schema("social")
       .from("friendships")
       .update({ status: "accepted", accepted_at: new Date().toISOString() })
       .eq("id", req.id);
@@ -118,6 +124,7 @@ export async function POST({ request }) {
 
   // remove : annule une demande sortante, refuse une entrante, ou retire un ami.
   const { error } = await client
+    .schema("social")
     .from("friendships")
     .delete()
     .or(

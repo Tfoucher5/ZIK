@@ -52,9 +52,15 @@ export async function deliver(subs, payload) {
       ),
     );
   }
-  if (gone.length) await sb.from("push_subscriptions").delete().in("id", gone);
+  if (gone.length)
+    await sb
+      .schema("social")
+      .from("push_subscriptions")
+      .delete()
+      .in("id", gone);
   if (delivered.length)
     await sb
+      .schema("social")
       .from("push_subscriptions")
       .update({ last_success_at: new Date().toISOString() })
       .in("id", delivered);
@@ -72,6 +78,7 @@ export async function pushToUser(userId, category, payload) {
     .maybeSingle();
   if (!profile?.notif_prefs?.[category]) return 0;
   const { data: subs } = await sb
+    .schema("social")
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
     .eq("user_id", userId);
@@ -88,6 +95,7 @@ export async function pushToAll(category, payload, { skip = new Set() } = {}) {
   const subs = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
+      .schema("social")
       .from("push_subscriptions")
       .select(
         "id, user_id, endpoint, p256dh, auth, profiles!inner(notif_prefs)",
@@ -106,6 +114,7 @@ export async function firstTime(key) {
   // ON CONFLICT DO NOTHING : une clé déjà vue ne renvoie aucune ligne, sans
   // remplir les logs Postgres d'erreurs de doublon
   const { data, error } = await getAdminClient()
+    .schema("social")
     .from("notification_once")
     .upsert({ key }, { onConflict: "key", ignoreDuplicates: true })
     .select("key");
@@ -114,6 +123,7 @@ export async function firstTime(key) {
 
 export async function saveSubscription(userId, sub, userAgent) {
   const { error } = await getAdminClient()
+    .schema("social")
     .from("push_subscriptions")
     .upsert(
       {
@@ -130,6 +140,7 @@ export async function saveSubscription(userId, sub, userAgent) {
 
 export async function deleteSubscription(endpoint) {
   await getAdminClient()
+    .schema("social")
     .from("push_subscriptions")
     .delete()
     .eq("endpoint", endpoint);

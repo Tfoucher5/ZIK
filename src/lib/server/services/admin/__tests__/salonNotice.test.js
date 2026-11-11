@@ -10,16 +10,18 @@ const db = vi.hoisted(() => ({
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => ({ data: db.row, error: db.readError }),
+    schema: () => ({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: db.row, error: db.readError }),
+          }),
         }),
+        upsert: async (row) => {
+          db.writes.push(row);
+          return { error: db.writeError };
+        },
       }),
-      upsert: async (row) => {
-        db.writes.push(row);
-        return { error: db.writeError };
-      },
     }),
   }),
 }));

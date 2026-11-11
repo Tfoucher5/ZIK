@@ -33,6 +33,7 @@ async function recipients(c, scope) {
   const ids = [...new Set((data ?? []).map((s) => s.user_id))];
   const { data: sent } = ids.length
     ? await sb
+        .schema("social")
         .from("notification_once")
         .select("key")
         .in(

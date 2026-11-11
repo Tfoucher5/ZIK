@@ -22,6 +22,7 @@ export async function alertAdmins(kind, payload, { throttleMs = 0 } = {}) {
   if (throttleMs && now - (lastSent.get(tag) ?? 0) < throttleMs) return 0;
   lastSent.set(tag, now);
   const { data } = await getAdminClient()
+    .schema("social")
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth, profiles!inner(role, notif_prefs)")
     .eq("profiles.role", "super_admin")

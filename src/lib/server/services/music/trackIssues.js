@@ -42,6 +42,7 @@ export async function getVideoSettings() {
   let value = DEFAULT_VIDEO_SETTINGS;
   try {
     const { data } = await getAdminClient()
+      .schema("ops")
       .from("site_settings")
       .select("value")
       .eq("key", "video_search")

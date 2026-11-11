@@ -38,12 +38,14 @@ async function chargerPage() {
   const sb = getAdminClient();
   const [pendingRes, doneRes] = await Promise.all([
     sb
+      .schema("ops")
       .from("reports")
       .select("*")
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(500),
     sb
+      .schema("ops")
       .from("reports")
       .select("*")
       .neq("status", "pending")
@@ -131,6 +133,7 @@ export const actions = adminActions({
 
     const sb = getAdminClient();
     const { data: report } = await sb
+      .schema("ops")
       .from("reports")
       .select("reporter_email, reporter_name, type, subject, admin_reply")
       .eq("id", id)
@@ -138,6 +141,7 @@ export const actions = adminActions({
     if (!report) return fail(404, { error: "Message introuvable" });
 
     const { error: err } = await sb
+      .schema("ops")
       .from("reports")
       .update({
         status,
@@ -171,6 +175,7 @@ export const actions = adminActions({
 
     const sb = getAdminClient();
     const { data: report } = await sb
+      .schema("ops")
       .from("reports")
       .select("reporter_email, reporter_name, type, subject")
       .eq("id", id)
@@ -178,7 +183,11 @@ export const actions = adminActions({
     if (!report?.reporter_email)
       return fail(400, { error: "Pas d'email pour répondre." });
 
-    await sb.from("reports").update({ admin_reply: reply }).eq("id", id);
+    await sb
+      .schema("ops")
+      .from("reports")
+      .update({ admin_reply: reply })
+      .eq("id", id);
     if (!(await sendReplyMail(report, reply)))
       return fail(502, {
         error: "Réponse enregistrée, mais l'email n'est pas parti.",
@@ -191,6 +200,7 @@ export const actions = adminActions({
     const id = fd.get("id");
     if (!id) return fail(400, { error: "id requis" });
     const { error: err } = await getAdminClient()
+      .schema("ops")
       .from("reports")
       .delete()
       .eq("id", id);

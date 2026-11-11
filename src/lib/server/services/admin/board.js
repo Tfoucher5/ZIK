@@ -37,9 +37,16 @@ export async function getTodo() {
         sb.from("pro_subscriptions").select("*", head).eq("status", "past_due"),
       ),
       count(sb.from("track_issues").select("*", head).eq("status", "open")),
-      count(sb.from("reports").select("*", head).eq("status", "pending")),
       count(
         sb
+          .schema("ops")
+          .from("reports")
+          .select("*", head)
+          .eq("status", "pending"),
+      ),
+      count(
+        sb
+          .schema("ops")
           .from("prospect_replies")
           .select("*", head)
           .eq("handled", false)
@@ -162,6 +169,7 @@ export async function getJournal(days = 2, limit = 60) {
       .order("ended_at", { ascending: false })
       .limit(limit),
     sb
+      .schema("ops")
       .from("reports")
       .select("id, type, subject, reporter_name, created_at")
       .gte("created_at", since)
@@ -172,6 +180,7 @@ export async function getJournal(days = 2, limit = 60) {
       .gte("created_at", since)
       .limit(limit),
     sb
+      .schema("ops")
       .from("prospect_replies")
       .select("id, from_email, category, summary, received_at")
       .gte("received_at", since)
