@@ -97,9 +97,7 @@ export async function pushToAll(category, payload, { skip = new Set() } = {}) {
     const { data, error } = await sb
       .schema("social")
       .from("push_subscriptions")
-      .select(
-        "id, user_id, endpoint, p256dh, auth, profile!inner(notif_prefs)",
-      )
+      .select("id, user_id, endpoint, p256dh, auth, profile!inner(notif_prefs)")
       .eq(`profile.notif_prefs->>${category}`, "true")
       .range(from, from + 999);
     if (error) throw error;

@@ -40,17 +40,13 @@ export async function getAdminUserDetail(id, adminId) {
     sb
       .schema("social")
       .from("follows")
-      .select(
-        "id, created_at, user:following(id, username, avatar_url)",
-      )
+      .select("id, created_at, user:following(id, username, avatar_url)")
       .eq("follower_id", id)
       .order("created_at", { ascending: false }),
     sb
       .schema("social")
       .from("follows")
-      .select(
-        "id, created_at, user:follower(id, username, avatar_url)",
-      )
+      .select("id, created_at, user:follower(id, username, avatar_url)")
       .eq("following_id", id)
       .order("created_at", { ascending: false }),
     sb
