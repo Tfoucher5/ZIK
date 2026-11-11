@@ -52,6 +52,7 @@ async function notifyMythics(userId, cardIds) {
     .eq("rarity", "mythic");
   if (!mythics?.length) return;
   const { data: links } = await db()
+    .schema("social")
     .from("friendships")
     .select("requester_id, addressee_id")
     .eq("status", "accepted")

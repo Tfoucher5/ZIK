@@ -4,7 +4,9 @@ const m = vi.hoisted(() => ({ insert: vi.fn(), alert: vi.fn() }));
 
 vi.mock("../../config.js", () => ({
   supabase: {},
-  getAdminClient: () => ({ from: () => ({ insert: m.insert }) }),
+  getAdminClient: () => ({
+    schema: () => ({ from: () => ({ insert: m.insert }) }),
+  }),
 }));
 vi.mock("../../services/admin/alerts.js", () => ({ alertAdminsSafe: m.alert }));
 

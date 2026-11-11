@@ -5,13 +5,22 @@ import {
   refreshAllNotifications,
 } from "../../socket/presence.js";
 import { NEWS } from "../../../data/news.js";
+import { profilesByIds } from "../profiles.js";
 import { pushToUser } from "./push.js";
 import { CATEGORY_OF_TYPE, pushMessageFor } from "./pushMessages.js";
 
 const TTL_MS = 24 * 60 * 60 * 1000;
 
-export const NOTIF_SELECT =
-  "id, type, actor_id, payload, read, created_at, actor:actor_id(id, username, avatar_url)";
+export const NOTIF_SELECT = "id, type, actor_id, payload, read, created_at";
+
+/** Ajoute `actor` (profil) à chaque notification. */
+export async function withActors(sb, rows) {
+  const people = await profilesByIds(
+    sb,
+    rows.map((n) => n.actor_id),
+  );
+  return rows.map((n) => ({ ...n, actor: people.get(n.actor_id) ?? null }));
+}
 
 // Insert (service role — pas de policy INSERT) + push temps réel. Joueur sans
 // onglet ouvert : notification sur ses appareils à la place.
@@ -23,12 +32,15 @@ export async function createNotification({
   payload = {},
 }) {
   try {
-    const { data } = await getAdminClient()
+    const sb = getAdminClient();
+    const { data: row } = await sb
+      .schema("social")
       .from("notifications")
       .insert({ user_id: userId, type, actor_id: actorId, payload })
       .select(NOTIF_SELECT)
       .single();
-    if (!data) return;
+    if (!row) return;
+    const [data] = await withActors(sb, [row]);
     if (isOnline(userId)) pushNotify(userId, data);
     else
       pushToUser(userId, CATEGORY_OF_TYPE[type], pushMessageFor(data)).catch(
@@ -42,7 +54,7 @@ export async function createNotification({
 // Supprime les notifications devenues obsolètes (ex. demande d'ami annulée/traitée).
 export async function deleteNotifications(filters) {
   try {
-    let q = getAdminClient().from("notifications").delete();
+    let q = getAdminClient().schema("social").from("notifications").delete();
     for (const [col, val] of Object.entries(filters)) q = q.eq(col, val);
     await q;
   } catch {
@@ -73,20 +85,24 @@ export async function announceLatestNews() {
   if (!latest) return;
   const sb = getAdminClient();
   const { data, error } = await sb
+    .schema("ops")
     .from("site_settings")
     .select("value")
     .eq("key", "news_notified")
     .maybeSingle();
   if (error || data?.value?.version === latest.version) return;
 
-  const { error: setErr } = await sb.from("site_settings").upsert(
-    {
-      key: "news_notified",
-      value: { version: latest.version },
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "key" },
-  );
+  const { error: setErr } = await sb
+    .schema("ops")
+    .from("site_settings")
+    .upsert(
+      {
+        key: "news_notified",
+        value: { version: latest.version },
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key" },
+    );
   if (setErr || !data) return;
 
   const n = await broadcastNotification("news", {

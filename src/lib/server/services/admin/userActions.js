@@ -137,7 +137,11 @@ export async function deleteUserAccount(adminId, userId, confirmUsername) {
 
 export function deleteFollow(adminId, userId, followId) {
   return run(
-    getAdminClient().from("follows").delete().eq("id", followId),
+    getAdminClient()
+      .schema("social")
+      .from("follows")
+      .delete()
+      .eq("id", followId),
     adminId,
     "delete_follow",
     userId,
@@ -147,7 +151,11 @@ export function deleteFollow(adminId, userId, followId) {
 
 export function deleteFriendship(adminId, userId, friendshipId) {
   return run(
-    getAdminClient().from("friendships").delete().eq("id", friendshipId),
+    getAdminClient()
+      .schema("social")
+      .from("friendships")
+      .delete()
+      .eq("id", friendshipId),
     adminId,
     "delete_friendship",
     userId,

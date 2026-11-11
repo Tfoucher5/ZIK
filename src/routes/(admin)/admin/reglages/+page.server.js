@@ -43,6 +43,7 @@ export const actions = adminActions({
     if (!pushReady())
       return fail(500, { alertsError: "Clés VAPID absentes du serveur." });
     const { data } = await getAdminClient()
+      .schema("social")
       .from("push_subscriptions")
       .select("id, endpoint, p256dh, auth")
       .eq("user_id", locals.adminId);
@@ -107,14 +108,17 @@ export const actions = adminActions({
       Math.max(Number(form.get("minStart")) || 0, 0),
       90,
     );
-    const { error } = await getAdminClient().from("site_settings").upsert(
-      {
-        key: "video_search",
-        value: { exclude, minStart },
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "key" },
-    );
+    const { error } = await getAdminClient()
+      .schema("ops")
+      .from("site_settings")
+      .upsert(
+        {
+          key: "video_search",
+          value: { exclude, minStart },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "key" },
+      );
     if (error) return fail(500, { videoError: error.message });
     clearVideoSettingsCache();
     await logAdminAction(locals.adminId, "video_settings", null, "site", {
@@ -166,6 +170,7 @@ async function chargerPage({ locals }) {
       .eq("id", locals.adminId)
       .maybeSingle(),
     sb
+      .schema("social")
       .from("push_subscriptions")
       .select("user_agent, last_success_at, created_at")
       .eq("user_id", locals.adminId)

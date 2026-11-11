@@ -25,7 +25,10 @@ export function fakeSupabase(respond = () => ({ data: null, error: null })) {
   };
   return {
     calls,
-    from: (table) => builder({ table, ops: [] }),
+    from: (table) => builder({ table, schema: "public", ops: [] }),
+    schema: (schema) => ({
+      from: (table) => builder({ table, schema, ops: [] }),
+    }),
     rpc: (fn, args) => {
       const q = { table: null, rpc: fn, args, ops: [] };
       calls.push(q);

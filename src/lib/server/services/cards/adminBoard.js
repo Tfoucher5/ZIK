@@ -173,6 +173,7 @@ export async function cardsAdminBoard({
       .limit(100),
     grantsQuery,
     sb
+      .schema("ops")
       .from("reports")
       .select("id, message, metadata, created_at", { count: "exact" })
       .eq("subject", "card")

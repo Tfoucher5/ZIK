@@ -37,6 +37,7 @@ async function prospectFromContent(sb, mail, from) {
   );
   if (emails.length) {
     const { data } = await sb
+      .schema("ops")
       .from("prospects")
       .select("id, status")
       .in("email", emails)
@@ -45,8 +46,13 @@ async function prospectFromContent(sb, mail, from) {
   }
 
   contacted ??=
-    (await sb.from("prospects").select("id, status, name").neq("status", "new"))
-      .data ?? [];
+    (
+      await sb
+        .schema("ops")
+        .from("prospects")
+        .select("id, status, name")
+        .neq("status", "new")
+    ).data ?? [];
   const haystack = norm(text);
   const hits = contacted.filter(
     (p) => p.name.length >= 6 && haystack.includes(norm(p.name)),
@@ -71,6 +77,7 @@ try {
     if (!messageId || !from) continue;
 
     const { data: known } = await sb
+      .schema("ops")
       .from("prospect_replies")
       .select("id")
       .eq("message_id", messageId)
@@ -85,23 +92,28 @@ try {
         ...new Set((mail.text ?? "").toLowerCase().match(EMAIL_RE) ?? []),
       ];
       const { data: hits } = await sb
+        .schema("ops")
         .from("prospects")
         .select("id")
         .in("email", emails);
       for (const hit of hits ?? []) {
         await sb
+          .schema("ops")
           .from("prospects")
           .update({ status: "bounced" })
           .eq("id", hit.id);
-        await sb.from("prospect_replies").insert({
-          prospect_id: hit.id,
-          message_id: `${messageId}#${hit.id}`,
-          received_at,
-          from_email: from,
-          subject: mail.subject,
-          category: "bounce",
-          handled: true,
-        });
+        await sb
+          .schema("ops")
+          .from("prospect_replies")
+          .insert({
+            prospect_id: hit.id,
+            message_id: `${messageId}#${hit.id}`,
+            received_at,
+            from_email: from,
+            subject: mail.subject,
+            category: "bounce",
+            handled: true,
+          });
         added++;
       }
       continue;
@@ -114,6 +126,7 @@ try {
     let prospect = null;
     if (refs.length) {
       const { data } = await sb
+        .schema("ops")
         .from("prospects")
         .select("id, status")
         .in("message_id", refs)
@@ -123,6 +136,7 @@ try {
     }
     if (!prospect) {
       const { data } = await sb
+        .schema("ops")
         .from("prospects")
         .select("id, status")
         .eq("email", from)
@@ -134,7 +148,7 @@ try {
     const excerpt = ownText(mail.text);
     if (!prospect || prospect.status === "new") {
       if (from === FROM_EMAIL) continue;
-      await sb.from("prospect_replies").insert({
+      await sb.schema("ops").from("prospect_replies").insert({
         message_id: messageId,
         received_at,
         from_email: from,
@@ -146,16 +160,20 @@ try {
     }
 
     const isStop = STOP_RE.test(excerpt) || STOP_RE.test(mail.subject ?? "");
-    await sb.from("prospect_replies").insert({
-      prospect_id: prospect.id,
-      message_id: messageId,
-      received_at,
-      from_email: from,
-      subject: mail.subject,
-      excerpt,
-      ...(isStop ? { category: "stop", handled: true } : {}),
-    });
     await sb
+      .schema("ops")
+      .from("prospect_replies")
+      .insert({
+        prospect_id: prospect.id,
+        message_id: messageId,
+        received_at,
+        from_email: from,
+        subject: mail.subject,
+        excerpt,
+        ...(isStop ? { category: "stop", handled: true } : {}),
+      });
+    await sb
+      .schema("ops")
       .from("prospects")
       .update({
         replied_at: received_at,
@@ -174,6 +192,7 @@ try {
 }
 
 const { count: pending } = await sb
+  .schema("ops")
   .from("prospect_replies")
   .select("*", { count: "exact", head: true })
   .is("category", null);

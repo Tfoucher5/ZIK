@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { getAdminClient } from "../../config.js";
+import { profilesByIds } from "../profiles.js";
 
 // Notifications sur l'appareil (Web Push), même site fermé. Sans clés VAPID
 // dans l'environnement, rien n'est envoyé (les notifications du site restent).
@@ -52,9 +53,15 @@ export async function deliver(subs, payload) {
       ),
     );
   }
-  if (gone.length) await sb.from("push_subscriptions").delete().in("id", gone);
+  if (gone.length)
+    await sb
+      .schema("social")
+      .from("push_subscriptions")
+      .delete()
+      .in("id", gone);
   if (delivered.length)
     await sb
+      .schema("social")
       .from("push_subscriptions")
       .update({ last_success_at: new Date().toISOString() })
       .in("id", delivered);
@@ -72,6 +79,7 @@ export async function pushToUser(userId, category, payload) {
     .maybeSingle();
   if (!profile?.notif_prefs?.[category]) return 0;
   const { data: subs } = await sb
+    .schema("social")
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
     .eq("user_id", userId);
@@ -88,17 +96,25 @@ export async function pushToAll(category, payload, { skip = new Set() } = {}) {
   const subs = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
+      .schema("social")
       .from("push_subscriptions")
-      .select(
-        "id, user_id, endpoint, p256dh, auth, profiles!inner(notif_prefs)",
-      )
-      .eq(`profiles.notif_prefs->>${category}`, "true")
+      .select("id, user_id, endpoint, p256dh, auth")
       .range(from, from + 999);
     if (error) throw error;
     subs.push(...data.filter((s) => !skip.has(s.user_id)));
     if (data.length < 1000) break;
   }
-  return deliver(subs, payload);
+  const people = await profilesByIds(
+    sb,
+    subs.map((s) => s.user_id),
+    "id, notif_prefs",
+  );
+  return deliver(
+    subs.filter(
+      (s) => String(people.get(s.user_id)?.notif_prefs?.[category]) === "true",
+    ),
+    payload,
+  );
 }
 
 /** Vrai la première fois qu'une clé est vue : un envoi ne part qu'une fois. */
@@ -106,6 +122,7 @@ export async function firstTime(key) {
   // ON CONFLICT DO NOTHING : une clé déjà vue ne renvoie aucune ligne, sans
   // remplir les logs Postgres d'erreurs de doublon
   const { data, error } = await getAdminClient()
+    .schema("social")
     .from("notification_once")
     .upsert({ key }, { onConflict: "key", ignoreDuplicates: true })
     .select("key");
@@ -114,6 +131,7 @@ export async function firstTime(key) {
 
 export async function saveSubscription(userId, sub, userAgent) {
   const { error } = await getAdminClient()
+    .schema("social")
     .from("push_subscriptions")
     .upsert(
       {
@@ -130,6 +148,7 @@ export async function saveSubscription(userId, sub, userAgent) {
 
 export async function deleteSubscription(endpoint) {
   await getAdminClient()
+    .schema("social")
     .from("push_subscriptions")
     .delete()
     .eq("endpoint", endpoint);

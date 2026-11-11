@@ -141,18 +141,21 @@ export async function POST({ request }) {
     resolvedEmail = authUser?.user?.email || null;
   }
 
-  const { error } = await supabase.from("reports").insert({
-    type,
-    message: message.trim(),
-    reporter_id: reporterUuid,
-    reporter_name: reporter_name?.trim() || null,
-    reporter_email: resolvedEmail,
-    reported_user_id: asUuidOrNull(reported_user_id),
-    reported_username: reported_username?.trim() || null,
-    room_id: room_id || null,
-    subject: subject?.trim() || null,
-    metadata: safeMetadata,
-  });
+  const { error } = await supabase
+    .schema("ops")
+    .from("reports")
+    .insert({
+      type,
+      message: message.trim(),
+      reporter_id: reporterUuid,
+      reporter_name: reporter_name?.trim() || null,
+      reporter_email: resolvedEmail,
+      reported_user_id: asUuidOrNull(reported_user_id),
+      reported_username: reported_username?.trim() || null,
+      room_id: room_id || null,
+      subject: subject?.trim() || null,
+      metadata: safeMetadata,
+    });
 
   if (error) return json({ error: error.message }, { status: 500 });
 

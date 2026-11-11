@@ -49,6 +49,7 @@ function recordVisitSource(event) {
 
   try {
     getAdminClient()
+      .schema("ops")
       .from("visit_sources")
       .insert(buildVisitRow(event))
       .then(({ error }) => {

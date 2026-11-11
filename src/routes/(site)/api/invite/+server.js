@@ -26,6 +26,7 @@ export async function POST({ request, getClientAddress }) {
     return json({ error: "Requête invalide" }, { status: 400 });
 
   const { data: friendship } = await supabase
+    .schema("social")
     .from("friendships")
     .select("id")
     .eq("status", "accepted")

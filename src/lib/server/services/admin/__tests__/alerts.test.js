@@ -32,11 +32,14 @@ describe("alertes aux admins", () => {
     expect(
       await alertAdmins("admin_money", { title: "Paiement", tag: "t1" }),
     ).toBe(1);
-    const [q] = m.db.of("push_subscriptions");
-    expect(q.ops.filter(([n]) => n === "eq").map(([, a]) => a)).toEqual([
-      ["profiles.role", "super_admin"],
-      ["profiles.notif_prefs->>admin_money", "true"],
+    const [admins] = m.db.of("profiles");
+    expect(admins.ops.filter(([n]) => n === "eq").map(([, a]) => a)).toEqual([
+      ["role", "super_admin"],
+      ["notif_prefs->>admin_money", "true"],
     ]);
+    const [q] = m.db.of("push_subscriptions");
+    expect(q.schema).toBe("social");
+    expect(q.args("in")).toEqual(["user_id", [1]]);
     expect(m.deliver).toHaveBeenCalledWith(SUBS, {
       title: "Paiement",
       tag: "t1",

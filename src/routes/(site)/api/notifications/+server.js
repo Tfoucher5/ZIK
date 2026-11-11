@@ -3,6 +3,7 @@ import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
 import {
   NOTIF_SELECT,
   purgeCutoff,
+  withActors,
 } from "$lib/server/services/notify/notifications.js";
 
 export async function GET({ request }) {
@@ -12,12 +13,14 @@ export async function GET({ request }) {
   try {
     // Purge lazy : TTL 24 h
     await client
+      .schema("social")
       .from("notifications")
       .delete()
       .eq("user_id", user.id)
       .lt("created_at", purgeCutoff());
 
     const { data, error } = await client
+      .schema("social")
       .from("notifications")
       .select(NOTIF_SELECT)
       .eq("user_id", user.id)
@@ -25,7 +28,7 @@ export async function GET({ request }) {
       .limit(50);
 
     if (error) return json({ notifications: [], unreadCount: 0 });
-    const notifications = data || [];
+    const notifications = await withActors(client, data || []);
     return json({
       notifications,
       unreadCount: notifications.filter((n) => !n.read).length,
@@ -42,6 +45,7 @@ export async function POST({ request }) {
     return json({ error: "Action invalide" }, { status: 400 });
 
   await userClient(token)
+    .schema("social")
     .from("notifications")
     .update({ read: true })
     .eq("user_id", user.id)

@@ -5,8 +5,8 @@ import { vi } from "vitest";
 // Les RPC se résolvent par rpc(nom, args), même forme.
 export function fakeQuery(resolve = () => {}, rpc = () => {}) {
   const queries = [];
-  const from = (table) => {
-    const q = { table, ops: [] };
+  const from = (table, schema = "public") => {
+    const q = { table, schema, ops: [] };
     q.args = (name) => q.ops.find(([n]) => n === name)?.[1];
     // has("eq", "id", 1) : appel avec ces premiers arguments
     q.has = (name, ...want) =>
@@ -33,6 +33,7 @@ export function fakeQuery(resolve = () => {}, rpc = () => {}) {
   };
   const client = {
     from,
+    schema: (name) => ({ from: (table) => from(table, name) }),
     rpc: vi.fn(
       async (name, args) =>
         (await rpc(name, args)) ?? { data: null, error: null },
