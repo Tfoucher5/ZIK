@@ -112,15 +112,19 @@ function joueur(url, salon, numero, m) {
     socket.salonEnvoi = null;
   });
   socket.on("salon_game_over", () => m.finis++);
+  let connecte = 0;
   socket.once("salon_joined", () => {
     m.rejoints.push(Date.now() - debut);
+    m.joinSeul.push(Date.now() - connecte);
   });
-  socket.once("connect", () =>
+  socket.once("connect", () => {
+    connecte = Date.now();
+    m.connexions.push(connecte - debut);
     socket.emit("salon_join_player", {
       code: salon.code,
       username: `s${salon.indice}j${numero}`,
-    }),
-  );
+    });
+  });
 }
 
 async function ouvrirSalon(url, jeton, indice, opts, m) {
@@ -172,6 +176,8 @@ async function principal() {
     coupures: [],
     erreurs: [],
     rejoints: [],
+    connexions: [],
+    joinSeul: [],
     diffusion: [],
     reponses: [],
     envoyes: 0,
@@ -235,6 +241,8 @@ async function principal() {
   for (const s of m.sockets) s.disconnect();
 
   console.log(resume("Entrée dans le salon", m.rejoints));
+  console.log(resume("  dont connexion", m.connexions));
+  console.log(resume("  dont salon_join", m.joinSeul));
   console.log(resume("Début de manche reçu", m.diffusion));
   console.log(resume("Réponse à un essai", m.reponses));
   console.log(`Essais chronométrés : ${m.envoyes}`);
