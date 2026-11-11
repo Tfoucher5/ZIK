@@ -15,6 +15,7 @@ const SETTINGS_WAIT_MS = 2000;
 async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {
     const { data: rows } = await client
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .select(TRACK_ROW_SELECT)
       .eq("playlist_id", playlistId)
@@ -53,6 +54,7 @@ async function loadVideoCache(tracks) {
   const cache = new Map();
   for (let i = 0; i < ids.length; i += 300) {
     const { data } = await getAdminClient()
+      .schema("catalog")
       .from("tracks")
       .select("id, video_cache_id, video_cache_duration")
       .in("id", ids.slice(i, i + 300))
@@ -75,6 +77,7 @@ export function forgetVideo(track) {
   const refused = track.cachedVideo.id;
   track.cachedVideo = null;
   getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .update({
       video_cache_id: null,

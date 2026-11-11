@@ -9,6 +9,7 @@ const ARTIST_SAMPLE = 12;
 // et un aperçu concret de ce qu'on va entendre.
 async function topArtists(playlistId) {
   const { data } = await supabase
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("tracks(artist)")
     .eq("playlist_id", playlistId)

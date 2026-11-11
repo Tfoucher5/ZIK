@@ -19,6 +19,7 @@ export async function POST({ params, request }) {
 
   const { is_official, linked_room_id } = await request.json();
   const { error } = await userClient(token)
+    .schema("catalog")
     .from("custom_playlists")
     .update({
       is_official: !!is_official,

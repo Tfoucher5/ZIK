@@ -63,11 +63,13 @@ async function missingCards(sb, userId, setId) {
 // Room publique la plus active dont une playlist contient le titre de la carte
 async function roomWithCard(sb, cardId) {
   const { data: tracks } = await sb
+    .schema("catalog")
     .from("tracks")
     .select("id")
     .eq("card_id", cardId);
   if (!tracks?.length) return null;
   const { data: rows } = await sb
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("playlist_id")
     .in(

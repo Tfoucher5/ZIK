@@ -36,7 +36,13 @@ export async function getTodo() {
       count(
         sb.from("pro_subscriptions").select("*", head).eq("status", "past_due"),
       ),
-      count(sb.from("track_issues").select("*", head).eq("status", "open")),
+      count(
+        sb
+          .schema("catalog")
+          .from("track_issues")
+          .select("*", head)
+          .eq("status", "open"),
+      ),
       count(
         sb
           .schema("ops")
@@ -175,6 +181,7 @@ export async function getJournal(days = 2, limit = 60) {
       .gte("created_at", since)
       .limit(limit),
     sb
+      .schema("catalog")
       .from("track_issues")
       .select("id, kind, source, created_at, track:track_id(artist, title)")
       .gte("created_at", since)

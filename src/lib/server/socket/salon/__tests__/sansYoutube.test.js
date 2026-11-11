@@ -23,17 +23,21 @@ vi.mock("../persist.js", () => ({
 }));
 vi.mock("../../../config.js", () => ({
   supabase: {},
-  getAdminClient: () => ({
-    rpc: () => ({ then: () => {} }),
-    from: () => ({
-      update: (fields) => ({
-        eq: () => {
-          m.updates.push(fields);
-          return Promise.resolve({ error: null });
-        },
+  getAdminClient: () => {
+    const sb = {
+      rpc: () => ({ then: () => {} }),
+      from: () => ({
+        update: (fields) => ({
+          eq: () => {
+            m.updates.push(fields);
+            return Promise.resolve({ error: null });
+          },
+        }),
       }),
-    }),
-  }),
+    };
+    sb.schema = () => sb;
+    return sb;
+  },
 }));
 vi.mock("../../../services/music/deezer.js", () => ({
   fetchDeezerTrackPreview: m.byId,

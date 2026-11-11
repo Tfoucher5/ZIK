@@ -189,6 +189,7 @@ export async function enrichOne(sb, track) {
     console.error(`[cards] ${track.artist} - ${track.title} :`, e.message);
   }
   await sb
+    .schema("catalog")
     .from("tracks")
     .update({ card_id: cardId, card_checked_at: new Date().toISOString() })
     .eq("id", track.id);
@@ -213,6 +214,7 @@ export async function enrichPending({
     : `card_checked_at.is.null,and(card_id.is.null,card_checked_at.lt.${retryBefore})`;
 
   const { count: total } = await sb
+    .schema("catalog")
     .from("tracks")
     .select("id", { count: "exact", head: true })
     .or(filter);
@@ -222,7 +224,11 @@ export async function enrichPending({
   // Curseur sur l'id : un titre resté sans carte correspond toujours au filtre
   let lastId = null;
   for (;;) {
-    let query = sb.from("tracks").select(TRACK_FIELDS).or(filter);
+    let query = sb
+      .schema("catalog")
+      .from("tracks")
+      .select(TRACK_FIELDS)
+      .or(filter);
     if (lastId !== null) query = query.gt("id", lastId);
     const { data: batch, error } = await query
       .order("id")

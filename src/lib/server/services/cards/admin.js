@@ -150,7 +150,11 @@ export async function correctCard(sb, cardId, deezerRef) {
   if (!newId) return { error: "Carte impossible à créer" };
   if (newId === cardId) return { cardId };
 
-  await sb.from("tracks").update({ card_id: newId }).eq("card_id", cardId);
+  await sb
+    .schema("catalog")
+    .from("tracks")
+    .update({ card_id: newId })
+    .eq("card_id", cardId);
   const { data: owners } = await sb
     .schema("cards")
     .from("user_cards")

@@ -51,10 +51,12 @@ export function roomPlaylists(r) {
 
 export async function coversByPlaylist(pids, maxPerPlaylist) {
   if (!pids.length) return {};
-  const { data } = await getAdminClient().rpc("get_covers_by_playlists", {
-    pids: [...new Set(pids)],
-    max_per_playlist: maxPerPlaylist,
-  });
+  const { data } = await getAdminClient()
+    .schema("catalog")
+    .rpc("get_covers_by_playlists", {
+      pids: [...new Set(pids)],
+      max_per_playlist: maxPerPlaylist,
+    });
   return data ?? {};
 }
 

@@ -28,6 +28,7 @@ export function pickVideo(results, exclude) {
 async function nextTrack(playlistIds) {
   const before = new Date(Date.now() - RETRY_EMPTY_MS).toISOString();
   let query = getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .select(
       "id, artist, title, video_refused_id, custom_playlist_tracks!inner(id)",
@@ -62,6 +63,7 @@ async function proPlaylists(db) {
   for (let i = 0; i < owners.length; i += MAX_IDS) {
     const lists = rowsOf(
       await db
+        .schema("catalog")
         .from("custom_playlists")
         .select("id")
         .in("owner_id", owners.slice(i, i + MAX_IDS)),
@@ -147,6 +149,7 @@ async function nextPriorityTrack() {
 
 async function saveSearch(trackId, fields) {
   const { error } = await getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .update({ video_search_at: new Date().toISOString(), ...fields })
     .eq("id", trackId);

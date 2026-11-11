@@ -12,6 +12,7 @@ export function reportTrackIssue(
   if (!trackId) return;
   try {
     getAdminClient()
+      .schema("catalog")
       .rpc("report_track_issue", {
         p_track: trackId,
         p_kind: kind,

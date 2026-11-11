@@ -12,6 +12,7 @@ function normKey(artist, title) {
 
 async function catalogTrack(artist, title) {
   const { data } = await getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .select("id, youtube_id")
     .eq("norm_key", normKey(artist, title))
@@ -56,6 +57,7 @@ export async function checkVideo(input) {
 
 export async function pinVideoIfEmpty(trackId, youtubeId) {
   const { data, error } = await getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .update({ youtube_id: youtubeId })
     .eq("id", trackId)

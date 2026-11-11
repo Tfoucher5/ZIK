@@ -101,6 +101,7 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
 
   if (!skipped && mode === "classic" && track.id)
     db()
+      .schema("catalog")
       .rpc("record_round_stats", {
         p_track_id: track.id,
         p_exposed: present.length,

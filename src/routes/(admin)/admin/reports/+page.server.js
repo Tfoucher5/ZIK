@@ -77,12 +77,14 @@ async function chargerPage() {
       : { data: [] },
     trackIds.length
       ? sb
+          .schema("catalog")
           .from("tracks")
           .select("id, artist, title, cover_url")
           .in("id", trackIds)
       : { data: [] },
     trackIds.length
       ? sb
+          .schema("catalog")
           .from("track_issues")
           .select("track_id")
           .eq("status", "open")

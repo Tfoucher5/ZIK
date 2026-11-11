@@ -22,6 +22,7 @@ export async function getCardByNumber(number) {
       .eq("card_id", row.id)
       .lte("visible_at", new Date().toISOString()),
     sb
+      .schema("catalog")
       .from("tracks")
       .select("track_stats(players_exposed, found_full)")
       .eq("card_id", row.id),

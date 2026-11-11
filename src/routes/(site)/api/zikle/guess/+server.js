@@ -41,7 +41,12 @@ export async function POST({ request }) {
       .select("tracks(artist, title)")
       .eq("date", date)
       .single(),
-    sb.from("tracks").select("artist, title").eq("id", trackId).maybeSingle(),
+    sb
+      .schema("catalog")
+      .from("tracks")
+      .select("artist, title")
+      .eq("id", trackId)
+      .maybeSingle(),
   ]);
   if (song.error || !song.data?.tracks)
     return json({ error: "Aucune chanson pour cette date" }, { status: 404 });

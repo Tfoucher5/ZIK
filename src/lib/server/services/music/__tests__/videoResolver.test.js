@@ -26,7 +26,9 @@ vi.mock("../../../config.js", () => {
     };
     return q;
   };
-  return { supabase: {}, getAdminClient: () => ({ from: query }) };
+  const sb = { from: query };
+  sb.schema = () => sb;
+  return { supabase: {}, getAdminClient: () => sb };
 });
 vi.mock("../../../socket/game/audio.js", () => ({ ytsQuery: m.search }));
 vi.mock("../trackIssues.js", () => ({
