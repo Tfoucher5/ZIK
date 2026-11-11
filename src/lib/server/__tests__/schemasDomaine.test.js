@@ -35,6 +35,13 @@ function wrongSchemaCalls(source) {
     const before = source.slice(0, m.index).trimEnd();
     if (!before.endsWith(`.schema("${want}")`)) bad.push(m[1]);
   }
+  // PostgREST ne joint pas d'un schéma à l'autre (PGRST200) : une jointure
+  // dans le select doit viser une table du même schéma.
+  const query =
+    /\.schema\("(\w+)"\)\s*\.from\("\w+"\)(?:(?!\.from\()[\s\S])*?\.select\(\s*"([^"]*)"/g;
+  for (const [, schema, cols] of source.matchAll(query))
+    for (const [, name] of cols.matchAll(/(?:\w+:)?(\w+)(?:!\w+)?\s*\(/g))
+      if (SCHEMA_OF[name] !== schema) bad.push(`${schema} -> ${name}`);
   return bad;
 }
 
@@ -48,6 +55,19 @@ describe("tables rangées par domaine", () => {
       wrongSchemaCalls('sb\n  .schema("social")\n  .from("follows")'),
     ).toEqual([]);
     expect(wrongSchemaCalls('sb.from("profiles")')).toEqual([]);
+  });
+
+  it("repère une jointure vers un autre schéma", () => {
+    expect(
+      wrongSchemaCalls(
+        'sb.schema("social").from("follows").select("id, user:profiles!follows_fkey(id)")',
+      ),
+    ).toEqual(["social -> profiles"]);
+    expect(
+      wrongSchemaCalls(
+        'sb.schema("ops").from("prospect_replies").select("id, prospects(name)")',
+      ),
+    ).toEqual([]);
   });
 
   it("le code serveur et les scripts passent par le bon schéma", () => {

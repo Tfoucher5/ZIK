@@ -93,7 +93,14 @@ describe("fiche joueur de l'admin", () => {
     });
     rows.profiles = (q) =>
       q.has("in")
-        ? { data: [{ id: "a1", username: "theo" }] }
+        ? {
+            data: [
+              { id: "a1", username: "theo" },
+              { id: "b", username: "B" },
+              { id: "x", username: "X" },
+              { id: "u", username: "U" },
+            ],
+          }
         : { data: { id: ID } };
     rows.user_achievements = () => ({
       data: [
@@ -109,20 +116,20 @@ describe("fiche joueur de l'admin", () => {
         {
           id: 1,
           requester_id: ID,
-          addressee: "B",
-          requester: "moi",
+          addressee_id: "b",
           created_at: "c",
         },
         {
           id: 2,
           requester_id: "x",
-          addressee: "moi",
-          requester: "X",
+          addressee_id: ID,
           accepted_at: "a",
         },
       ],
     });
-    rows.follows = () => ({ data: [{ id: 9, created_at: "t", user: "U" }] });
+    rows.follows = () => ({
+      data: [{ id: 9, created_at: "t", following_id: "u", follower_id: "u" }],
+    });
     rows.pro_subscriptions = () => ({ data: { plan: "monthly" } });
     rows.salon_players = () => ({
       data: [
@@ -138,10 +145,13 @@ describe("fiche joueur de l'admin", () => {
       ["retire", "🏅"],
     ]);
     expect(d.friendships).toEqual([
-      { id: 1, status: undefined, at: "c", user: "B" },
-      { id: 2, status: undefined, at: "a", user: "X" },
+      { id: 1, status: undefined, at: "c", user: { id: "b", username: "B" } },
+      { id: 2, status: undefined, at: "a", user: { id: "x", username: "X" } },
     ]);
-    expect(d.following).toEqual([{ id: 9, at: "t", user: "U" }]);
+    expect(d.following).toEqual([
+      { id: 9, at: "t", user: { id: "u", username: "U" } },
+    ]);
+    expect(m.db.of("profiles").filter((q) => q.has("in"))).toHaveLength(1);
     expect(d.followers).toHaveLength(1);
     expect(d.pro).toEqual({ plan: "monthly" });
     expect(d.salon.played).toHaveLength(1);

@@ -3,6 +3,7 @@ import { requireAuth, userClient } from "$lib/server/middleware/auth.js";
 import {
   NOTIF_SELECT,
   purgeCutoff,
+  withActors,
 } from "$lib/server/services/notify/notifications.js";
 
 export async function GET({ request }) {
@@ -27,7 +28,7 @@ export async function GET({ request }) {
       .limit(50);
 
     if (error) return json({ notifications: [], unreadCount: 0 });
-    const notifications = data || [];
+    const notifications = await withActors(client, data || []);
     return json({
       notifications,
       unreadCount: notifications.filter((n) => !n.read).length,

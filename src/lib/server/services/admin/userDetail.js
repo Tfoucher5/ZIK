@@ -1,4 +1,5 @@
 import { getAdminClient } from "../../config.js";
+import { profilesByIds } from "../profiles.js";
 
 // Fiche joueur de /admin/users/[id] : profil, compte, parties, social, Pro.
 // Retourne null si le joueur n'existe pas.
@@ -40,25 +41,19 @@ export async function getAdminUserDetail(id, adminId) {
     sb
       .schema("social")
       .from("follows")
-      .select(
-        "id, created_at, user:profiles!follows_following_id_fkey(id, username, avatar_url)",
-      )
+      .select("id, created_at, following_id")
       .eq("follower_id", id)
       .order("created_at", { ascending: false }),
     sb
       .schema("social")
       .from("follows")
-      .select(
-        "id, created_at, user:profiles!follows_follower_id_fkey(id, username, avatar_url)",
-      )
+      .select("id, created_at, follower_id")
       .eq("following_id", id)
       .order("created_at", { ascending: false }),
     sb
       .schema("social")
       .from("friendships")
-      .select(
-        "id, status, created_at, accepted_at, requester_id, requester:profiles!friendships_requester_id_fkey(id, username, avatar_url), addressee:profiles!friendships_addressee_id_fkey(id, username, avatar_url)",
-      )
+      .select("id, status, created_at, accepted_at, requester_id, addressee_id")
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
       .order("created_at", { ascending: false }),
     sb
@@ -118,20 +113,22 @@ export async function getAdminUserDetail(id, adminId) {
   const roomCodes = [...new Set(recent.map((g) => g.games.room_id))].filter(
     Boolean,
   );
-  const adminIds = [...new Set(audit.map((a) => a.admin_id))].filter(Boolean);
-  const [roomsRes, adminsRes] = await Promise.all([
+  const following = followingRes.data ?? [];
+  const followers = followersRes.data ?? [];
+  const friendships = friendshipsRes.data ?? [];
+  const [roomsRes, people] = await Promise.all([
     roomCodes.length
       ? sb.from("rooms").select("code, name, emoji").in("code", roomCodes)
       : { data: [] },
-    adminIds.length
-      ? sb.from("profiles").select("id, username").in("id", adminIds)
-      : { data: [] },
+    profilesByIds(sb, [
+      ...audit.map((a) => a.admin_id),
+      ...following.map((f) => f.following_id),
+      ...followers.map((f) => f.follower_id),
+      ...friendships.flatMap((f) => [f.requester_id, f.addressee_id]),
+    ]),
   ]);
   const rooms = Object.fromEntries(
     (roomsRes.data ?? []).map((r) => [r.code, r]),
-  );
-  const admins = Object.fromEntries(
-    (adminsRes.data ?? []).map((a) => [a.id, a.username]),
   );
   const catalog = Object.fromEntries(
     (catalogRes.data ?? []).map((a) => [a.id, a]),
@@ -175,22 +172,27 @@ export async function getAdminUserDetail(id, adminId) {
       icon: catalog[u.achievement_id]?.icon ?? "🏅",
     })),
     reports: reportsRes.data ?? [],
-    audit: audit.map((a) => ({ ...a, admin: admins[a.admin_id] ?? null })),
-    following: (followingRes.data ?? []).map((f) => ({
+    audit: audit.map((a) => ({
+      ...a,
+      admin: people.get(a.admin_id)?.username ?? null,
+    })),
+    following: following.map((f) => ({
       id: f.id,
       at: f.created_at,
-      user: f.user,
+      user: people.get(f.following_id) ?? null,
     })),
-    followers: (followersRes.data ?? []).map((f) => ({
+    followers: followers.map((f) => ({
       id: f.id,
       at: f.created_at,
-      user: f.user,
+      user: people.get(f.follower_id) ?? null,
     })),
-    friendships: (friendshipsRes.data ?? []).map((f) => ({
+    friendships: friendships.map((f) => ({
       id: f.id,
       status: f.status,
       at: f.accepted_at ?? f.created_at,
-      user: f.requester_id === id ? f.addressee : f.requester,
+      user:
+        people.get(f.requester_id === id ? f.addressee_id : f.requester_id) ??
+        null,
     })),
     pro: proRes.data ?? null,
   };
