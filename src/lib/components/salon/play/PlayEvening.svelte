@@ -1,6 +1,6 @@
 <script>
   /** Téléphone pendant l'entracte ou le podium final de la soirée. */
-  let { intermission = null, finale = null, username = '', myTeam = null } = $props();
+  let { intermission = null, finale = null, myTeam = null } = $props();
 
   let reprise = $derived(
     intermission?.until
@@ -10,8 +10,8 @@
   let place = $derived(
     finale
       ? (finale.teams
-          ? finale.teams.findIndex(t => t.id === myTeam)
-          : finale.players.findIndex(p => p.username === username)) + 1
+          ? finale.teams.findIndex(t => t.id === myTeam) + 1
+          : (finale.ranking.me?.rank ?? 0))
       : 0
   );
 </script>

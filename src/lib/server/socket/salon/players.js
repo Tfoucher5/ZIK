@@ -7,6 +7,13 @@ import { eveningView } from "./evening.js";
 import { saveSnapshot } from "./snapshot.js";
 import { timerClock } from "./timers.js";
 import {
+  emitSplit,
+  phoneNight,
+  phoneRoster,
+  phoneTeams,
+  ranker,
+} from "./phoneView.js";
+import {
   closeDeparted,
   departed,
   gamePlayers,
@@ -92,10 +99,7 @@ export function reconnectView(salon, player) {
     paused: salon.game.paused,
     round: salon.game.currentRound,
     team: player.team,
-    teams: standings(salon),
-    night: nightView(salon),
-    evening: eveningView(salon),
-    players: getPlayerList(salon),
+    ...phoneLists(salon, player.username),
     score: player.score,
     foundArtist: player.foundArtist,
     foundTitle: player.foundTitle,
@@ -117,6 +121,20 @@ export function reconnectView(salon, player) {
     }
   }
   return data;
+}
+
+// Équipes, soirée et salle d'attente vues d'un téléphone (salon_joined)
+export function phoneLists(salon, username) {
+  const evening = eveningView(salon);
+  return {
+    teams: phoneTeams(standings(salon)),
+    night: phoneNight(nightView(salon))?.(username) ?? null,
+    evening: {
+      ...evening,
+      finale: phoneNight(evening.finale)?.(username) ?? null,
+    },
+    roster: phoneRoster(getPlayerList(salon)),
+  };
 }
 
 export function standings(salon) {
@@ -169,23 +187,32 @@ function coalesce(code, key, send) {
 }
 
 export function broadcastRoster(code, io) {
-  coalesce(code, "roster", (salon) =>
-    io.to(`salon:${code}`).emit("salon_roster", {
-      players: getPlayerList(salon),
-      teams: standings(salon),
-    }),
-  );
+  coalesce(code, "roster", (salon) => {
+    const players = getPlayerList(salon);
+    const teams = standings(salon);
+    const roster = phoneRoster(players);
+    const pTeams = phoneTeams(teams);
+    emitSplit(io, code, "salon_roster", { players, teams }, (username) => ({
+      roster,
+      teams: pTeams,
+      team: salon.players[username]?.team ?? null,
+    }));
+  });
   // Arrivées, départs, équipes, retraits : l'instantané suit, au plus 1 par seconde
   coalesce(code, "snapshot", saveSnapshot);
 }
 
 export function broadcastScores(code, io) {
-  coalesce(code, "scores", (salon) =>
-    io.to(`salon:${code}`).emit("salon_scores_update", {
-      scores: sortedScores(salon),
-      teams: standings(salon),
-    }),
-  );
+  coalesce(code, "scores", (salon) => {
+    const scores = sortedScores(salon);
+    const teams = standings(salon);
+    const rank = ranker(scores);
+    const pTeams = phoneTeams(teams);
+    emitSplit(io, code, "salon_scores_update", { scores, teams }, (u) => ({
+      ranking: rank(u),
+      teams: pTeams,
+    }));
+  });
 }
 
 // Fonction ZIK Pro : refusée aux salons gratuits, l'hôte voit l'offre

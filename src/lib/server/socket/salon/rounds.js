@@ -23,6 +23,7 @@ import {
   resetRoundFlags,
   standings,
 } from "./players.js";
+import { emitGameOver, emitRoundEnd } from "./phoneView.js";
 import { scheduleCleanup, startTimer, clearPause } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
@@ -70,7 +71,7 @@ export function finishGame(code, io) {
       ...(p.left && { left: true }),
     }))
     .sort((a, b) => b.score - a.score);
-  io.to(`salon:${code}`).emit("salon_game_over", {
+  emitGameOver(io, code, {
     scores,
     teams: standings(salon),
     history: game.history,
@@ -147,7 +148,7 @@ export function endRound(code, reason, io) {
   };
 
   game.history.push({ answer, cover: track.cover });
-  io.to(`salon:${code}`).emit("salon_round_end", roundSummary);
+  emitRoundEnd(io, code, roundSummary);
   scheduleCleanup(code);
   saveSnapshot(salon);
 

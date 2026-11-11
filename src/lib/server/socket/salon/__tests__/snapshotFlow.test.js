@@ -41,7 +41,10 @@ const { cleanupNow } = await import("../timers.js");
 const { restoreSalon } = await import("../snapshot.js");
 
 const CODE = "FLOW01";
-const io = { to: () => ({ emit: () => {} }) };
+const io = {
+  to: () => ({ emit: () => {} }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const phase = () => table.get(CODE)?.game.phase;
 
 describe("instantané au fil d'une soirée", () => {

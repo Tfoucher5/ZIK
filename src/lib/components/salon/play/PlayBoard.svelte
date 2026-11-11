@@ -4,7 +4,7 @@
 </script>
 
 <section class="sp-board">
-  <p class="sx-kicker">{p.myRank > 0 ? `Tu es ${p.myRank}${p.myRank === 1 ? 'er' : 'e'} sur ${p.scores.length}` : 'Classement'}</p>
+  <p class="sx-kicker">{p.myRank > 0 ? `Tu es ${p.myRank}${p.myRank === 1 ? 'er' : 'e'} sur ${p.ranking.count}` : 'Classement'}</p>
   <ol class="sp-list">
     {#each p.board as pl (pl.username)}
       <li class:me={pl.username === p.username}>

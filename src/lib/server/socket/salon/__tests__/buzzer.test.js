@@ -19,12 +19,15 @@ vi.mock("../session.js", () => ({
 const { salonRooms } = await import("../../../state.js");
 const { registerBuzzer } = await import("../buzzer.js");
 const { registerEvening } = await import("../evening.js");
-const { addPlayer } = await import("../players.js");
+const { addPlayer, broadcastRoster } = await import("../players.js");
 const { drawSpecial, roundMult } = await import("../specials.js");
 
 const CODE = "BUZZ01";
 const sent = [];
-const io = { to: () => ({ emit: (ev, d) => sent.push([ev, d]) }) };
+const io = {
+  to: () => ({ emit: (ev, d) => sent.push([ev, d]) }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 
 // Faux socket : garde les gestionnaires pour les appeler à la main
 function sock(props) {
@@ -57,6 +60,19 @@ function salonDeTest() {
   const salon = salonRooms[CODE];
   for (const u of ["Ana", "Bob"]) addPlayer(salon, u, `s-${u}`);
   return salon;
+}
+
+// Seul téléphone branché dans la salle des joueurs : reçoit sa propre vue
+function telephone(code, u) {
+  const recus = [];
+  io.sockets.adapter.rooms.clear();
+  io.sockets.sockets.clear();
+  io.sockets.adapter.rooms.set(`salon:players:${code}`, new Set([`s-${u}`]));
+  io.sockets.sockets.set(`s-${u}`, {
+    salonUsername: u,
+    emit: (ev, d) => recus.push([ev, d]),
+  });
+  return recus;
 }
 
 const joueur = (u) => sock({ salonCode: CODE, salonUsername: u });
@@ -170,5 +186,43 @@ describe("entracte et podium final", () => {
       username: "Ana",
       score: 900,
     });
+  });
+
+  it("podium final : le téléphone reçoit sa place, pas la liste", () => {
+    const salon = salonDeTest();
+    const bob = telephone(CODE, "Bob");
+    salon.game.phase = "gameover";
+    salon.nightGames = 1;
+    salon.players.Ana.night = 900;
+    salon.players.Bob.night = 100;
+    regie()("salon_finale");
+    const [ev, vue] = bob.at(-1);
+    expect(ev).toBe("salon_evening");
+    expect(vue.finale).not.toHaveProperty("players");
+    expect(vue.finale.ranking.me).toMatchObject({ username: "Bob", rank: 2 });
+    expect(vue.finale.ranking.count).toBe(2);
+  });
+
+  it("liste des joueurs : le téléphone reçoit son équipe, pas les membres", () => {
+    const salon = salonDeTest();
+    salon.settings.teams = [
+      { id: 0, name: "A" },
+      { id: 1, name: "B" },
+    ];
+    salon.players.Bob.team = 1;
+    const bob = telephone(CODE, "Bob");
+    broadcastRoster(CODE, io);
+    const [, vue] = bob.find(([ev]) => ev === "salon_roster");
+    expect(vue.team).toBe(1);
+    expect(vue).not.toHaveProperty("players");
+    expect(vue.roster).toEqual({
+      recent: [
+        { username: "Ana", team: null },
+        { username: "Bob", team: 1 },
+      ],
+      count: 2,
+    });
+    expect(vue.teams.find((t) => t.id === 1)).toMatchObject({ size: 1 });
+    expect(vue.teams[0]).not.toHaveProperty("members");
   });
 });

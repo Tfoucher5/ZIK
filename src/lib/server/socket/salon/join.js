@@ -9,6 +9,7 @@ import {
   cleanUsername,
   getPlayerList,
   nightView,
+  phoneLists,
   reconnectView,
   standings,
 } from "./players.js";
@@ -235,9 +236,7 @@ export function registerJoin(socket, io) {
           maxRounds: salon.settings.maxRounds,
         },
         team: player.team,
-        teams: standings(salon),
-        players: getPlayerList(salon),
-        evening: eveningView(salon),
+        ...phoneLists(salon, username),
       });
       sendNotice(socket);
       broadcastRoster(code, io);

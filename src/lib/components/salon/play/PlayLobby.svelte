@@ -17,7 +17,7 @@
       {#each p.teams as t (t.id)}
         <button class="sp-team" class:on={p.myTeam === t.id} style="--tc:{teamColor(t.id)}" onclick={() => p.pickTeam(t.id)}>
           <b>{t.name}</b>
-          <small>{t.members.length} joueur{t.members.length > 1 ? 's' : ''}</small>
+          <small>{t.size} joueur{t.size > 1 ? 's' : ''}</small>
         </button>
       {/each}
     </div>
@@ -25,12 +25,13 @@
 {/if}
 
 <section>
-  <p class="sx-kicker">Dans le salon · {p.roster.length}</p>
+  <p class="sx-kicker">Dans le salon · {p.roster.count}</p>
   <ul class="sp-roster">
-    {#each p.roster as pl (pl.username)}
+    {#each p.roster.recent as pl (pl.username)}
       <li class:me={pl.username === p.username}>
         {#if p.teams && pl.team != null}<i style="--tc:{teamColor(pl.team)}"></i>{/if}{pl.username}
       </li>
     {/each}
   </ul>
+  {#if p.roster.count > p.roster.recent.length}<p class="sp-hint">et {p.roster.count - p.roster.recent.length} autres</p>{/if}
 </section>
