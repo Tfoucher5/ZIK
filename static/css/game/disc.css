@@ -262,6 +262,17 @@
     color 0.25s,
     border-color 0.25s;
 }
+/* L'œuvre (film, série…) est la réponse principale : seule sur sa ligne, en grand */
+.g-slot-work {
+  flex-basis: 100%;
+}
+.g-slot-work .g-slot-label {
+  color: var(--accent);
+}
+.g-slot-work .g-slot-val {
+  display: inline-block;
+  font-size: clamp(1.4rem, 4.2vh, 2rem);
+}
 .g-slot.found .g-slot-val {
   color: var(--success);
   border-bottom-color: var(--success);

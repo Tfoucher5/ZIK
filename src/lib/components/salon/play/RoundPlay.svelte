@@ -1,5 +1,6 @@
 <script>
   import { SPECIALS } from '$lib/data/salonOptions.js';
+  import { isWork } from '$lib/shared/playlist/work.js';
 
   let {
     round = 0, total = 10,
@@ -52,13 +53,20 @@
 
 {:else if answerMode === 'free'}
   <div class="sp-chips">
+    {#each extras as label, i (i)}
+      {#if isWork(label)}
+        <span class="sp-chip" class:found={foundExtras[i]}>{label}</span>
+      {/if}
+    {/each}
     <span class="sp-chip" class:found={foundArtist}>Artiste</span>
     {#each foundFeats as ff, i (i)}
       <span class="sp-chip" class:found={ff}>Feat {i + 1}</span>
     {/each}
     <span class="sp-chip" class:found={foundTitle}>Titre</span>
     {#each extras as label, i (i)}
-      <span class="sp-chip" class:found={foundExtras[i]}>{label}</span>
+      {#if !isWork(label)}
+        <span class="sp-chip" class:found={foundExtras[i]}>{label}</span>
+      {/if}
     {/each}
   </div>
 

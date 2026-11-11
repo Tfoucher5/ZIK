@@ -11,9 +11,7 @@ import {
 } from "./deezer.js";
 import { cleanString, parseFeaturing } from "./trackText.js";
 import { fetchAllRows } from "../admin/paginate.js";
-
-// Œuvre d'où vient la musique : on la reconnaît souvent mieux que le titre
-const WORK_TYPES = new Set(["Film", "Série", "Jeu vidéo", "Animé"]);
+import { isWork } from "../../../shared/playlist/work.js";
 
 export function buildTrack({
   artist,
@@ -41,7 +39,7 @@ export function buildTrack({
     label: e.label,
     value: e.value,
     clean: cleanString(e.value),
-    work: WORK_TYPES.has(e.label),
+    work: isWork(e.label),
   }));
   return {
     artist: effectiveArtist,

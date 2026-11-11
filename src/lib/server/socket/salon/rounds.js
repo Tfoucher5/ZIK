@@ -1,7 +1,7 @@
 import { salonRooms } from "../../state.js";
 import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
-import { makeChoices } from "../scoring.js";
+import { makeChoices, workAnswer } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
 import { gamePlayers } from "./departed.js";
 import { saveSnapshot } from "./snapshot.js";
@@ -139,6 +139,7 @@ export function endRound(code, reason, io) {
     reason,
     firstFinder: game.firstFinder,
     featArtists: (track.featArtists || []).map(displayString),
+    work: workAnswer(track),
     scores,
     teams: standings(salon),
     correctChoiceIndex:
