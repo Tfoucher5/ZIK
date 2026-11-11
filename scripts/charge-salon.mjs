@@ -3,7 +3,7 @@
 // seulement que la musique a démarré.
 //
 // Usage : node scripts/charge-salon.mjs --joueurs 250 [--salons 1] [--manches 5]
-//         [--rythme 50] [--url http://localhost:3000]
+//         [--rythme 50] [--deflate oui|non] [--url http://localhost:3000]
 // Compte Pro de test créé sur le staging avec le .env local. Jamais sur la prod.
 //
 // Un échec peut venir du réseau du poste de test (ETIMEDOUT, ping timeout) comme
@@ -56,6 +56,8 @@ function connecter(url, m, role) {
     forceNew: true,
     reconnection: false,
     timeout: 30000,
+    // false : pas de compression négociée, sinon même seuil que le serveur (server.js)
+    perMessageDeflate: m.deflate && { threshold: 1024 },
   });
   socket.on("disconnect", (raison) => {
     if (m.fin) return;
@@ -165,6 +167,7 @@ async function principal() {
   const url = assertCibleAutorisee(opts.url, process.env.SUPABASE_URL);
 
   const m = {
+    deflate: opts.deflate,
     sockets: [],
     coupures: [],
     erreurs: [],
