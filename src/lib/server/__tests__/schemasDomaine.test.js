@@ -73,6 +73,9 @@ const LINKS = new Set([
   "play.top_contributor",
   "play.custom_playlists",
   "salon.games",
+  "ops.reporter",
+  "ops.reported",
+  "ops.admin",
 ]);
 const LINK_NAMES = new Set([...LINKS].map((l) => l.split(".")[1]));
 // Fonctions SQL appelées par .rpc, rangées hors de public

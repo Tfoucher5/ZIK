@@ -74,7 +74,7 @@ export async function getAdminUserDetail(id, adminId) {
     sb
       .schema("ops")
       .from("admin_audit_log")
-      .select("id, admin_id, action, payload, created_at")
+      .select("id, admin_id, action, payload, created_at, admin(username)")
       .eq("target_id", id)
       .order("created_at", { ascending: false })
       .limit(30),
@@ -119,24 +119,15 @@ export async function getAdminUserDetail(id, adminId) {
   const roomCodes = [...new Set(recent.map((g) => g.games.room_id))].filter(
     Boolean,
   );
-  const adminIds = [...new Set(audit.map((a) => a.admin_id))].filter(Boolean);
-  const [roomsRes, adminsRes] = await Promise.all([
-    roomCodes.length
-      ? sb
-          .schema("play")
-          .from("rooms")
-          .select("code, name, emoji")
-          .in("code", roomCodes)
-      : { data: [] },
-    adminIds.length
-      ? sb.from("profiles").select("id, username").in("id", adminIds)
-      : { data: [] },
-  ]);
+  const roomsRes = roomCodes.length
+    ? await sb
+        .schema("play")
+        .from("rooms")
+        .select("code, name, emoji")
+        .in("code", roomCodes)
+    : { data: [] };
   const rooms = Object.fromEntries(
     (roomsRes.data ?? []).map((r) => [r.code, r]),
-  );
-  const admins = Object.fromEntries(
-    (adminsRes.data ?? []).map((a) => [a.id, a.username]),
   );
   const catalog = Object.fromEntries(
     (catalogRes.data ?? []).map((a) => [a.id, a]),
@@ -180,7 +171,7 @@ export async function getAdminUserDetail(id, adminId) {
       icon: catalog[u.achievement_id]?.icon ?? "🏅",
     })),
     reports: reportsRes.data ?? [],
-    audit: audit.map((a) => ({ ...a, admin: admins[a.admin_id] ?? null })),
+    audit: audit.map((a) => ({ ...a, admin: a.admin?.username ?? null })),
     following: (followingRes.data ?? []).map((f) => ({
       id: f.id,
       at: f.created_at,
