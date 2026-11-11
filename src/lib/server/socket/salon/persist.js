@@ -43,6 +43,7 @@ function recordSalonPlayers(gameId, salon) {
     }));
   if (!rows.length) return;
   getAdminClient()
+    .schema("salon")
     .from("salon_players")
     .insert(rows)
     .then(({ error }) => {

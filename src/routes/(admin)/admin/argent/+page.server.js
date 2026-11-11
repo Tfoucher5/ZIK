@@ -47,6 +47,7 @@ async function chargerPage({ url }) {
   if (url.searchParams.has("refresh")) cache = null;
   const sb = getAdminClient();
   const { data: subs } = await sb
+    .schema("salon")
     .from("pro_subscriptions")
     .select(
       "user_id, plan, status, current_period_end, stripe_customer_id, created_at",

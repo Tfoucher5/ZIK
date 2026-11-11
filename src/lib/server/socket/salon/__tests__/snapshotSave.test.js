@@ -5,11 +5,18 @@ let reponse = { data: null, error: null };
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
-    rpc: async (fn, args) => {
-      calls.push([fn, args]);
-      if (reponse === "panne") throw new Error("fetch failed");
-      return typeof reponse === "function" ? reponse(fn, args) : reponse;
-    },
+    schema: (s) =>
+      s === "salon"
+        ? {
+            rpc: async (fn, args) => {
+              calls.push([fn, args]);
+              if (reponse === "panne") throw new Error("fetch failed");
+              return typeof reponse === "function"
+                ? reponse(fn, args)
+                : reponse;
+            },
+          }
+        : null,
   }),
 }));
 

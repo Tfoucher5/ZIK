@@ -51,7 +51,10 @@ export async function GET({ url }) {
         .or("category.is.null,category.neq.bounce")
         .order("received_at", { ascending: false })
         .limit(100),
-      sb.from("pro_subscriptions").select("user_id, plan, created_at"),
+      sb
+        .schema("salon")
+        .from("pro_subscriptions")
+        .select("user_id, plan, created_at"),
     ]);
 
   const perDay = {};

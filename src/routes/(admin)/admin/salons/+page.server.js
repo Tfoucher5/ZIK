@@ -51,6 +51,7 @@ async function chargerPage() {
       .eq("status", "open")
       .eq("kind", "video"),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id")
       .eq("status", "active")

@@ -7,7 +7,7 @@ import { ROOM_PLAYLISTS_SELECT } from "../services/rooms/roomList.js";
 // par .schema("…") ; une jointure ne vise qu'une table du même schéma
 // (PostgREST ne suit pas une clé étrangère d'un schéma à l'autre, PGRST200),
 // sinon elle passe par une fonction de lien (computed relationship).
-const PUBLIC = ["pro_subscriptions", "profiles", "salon_players"];
+const PUBLIC = ["profiles"];
 const SCHEMA_OF = {
   ...Object.fromEntries(PUBLIC.map((t) => [t, "public"])),
   follows: "social",
@@ -24,6 +24,8 @@ const SCHEMA_OF = {
   health_checks: "ops",
   errors: "ops",
   snapshots: "salon",
+  salon_players: "salon",
+  pro_subscriptions: "salon",
   achievements: "play",
   daily_results: "play",
   daily_songs: "play",
@@ -70,7 +72,7 @@ const LINKS = new Set([
   "play.profile",
   "play.top_contributor",
   "play.custom_playlists",
-  "public.games",
+  "salon.games",
 ]);
 const LINK_NAMES = new Set([...LINKS].map((l) => l.split(".")[1]));
 // Fonctions SQL appelées par .rpc, rangées hors de public
@@ -92,6 +94,10 @@ const RPC_SCHEMA = {
   weekly_leaderboard_by_room: "play",
   zikle_complete: "play",
   zikle_leaderboard: "play",
+  save_salon_snapshot: "salon",
+  load_salon_snapshot: "salon",
+  delete_salon_snapshot: "salon",
+  purge_salon_snapshots: "salon",
 };
 const RPC =
   /(?:\.schema\(\s*["'`](\w+)["'`]\s*\)\s*)?\.rpc\(\s*["'`](\w+)["'`]/g;

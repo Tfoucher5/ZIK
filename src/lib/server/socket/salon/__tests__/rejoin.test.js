@@ -21,8 +21,15 @@ vi.mock("../../../config.js", () => ({
     rpc: async () => ({ data: null, error: null }),
   },
   getAdminClient: () => ({
-    rpc: async (fn, args) => db.reply(fn, args),
-    from: () => ({ insert: () => ({ then: (r) => r({ error: null }) }) }),
+    schema: (s) =>
+      s === "salon"
+        ? {
+            rpc: async (fn, args) => db.reply(fn, args),
+            from: () => ({
+              insert: () => ({ then: (r) => r({ error: null }) }),
+            }),
+          }
+        : null,
   }),
 }));
 vi.mock("../../game/audio.js", () => ({
