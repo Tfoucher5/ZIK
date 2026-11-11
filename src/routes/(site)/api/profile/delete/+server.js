@@ -1,7 +1,8 @@
 import { json } from "@sveltejs/kit";
-import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
+import { verifyToken } from "$lib/server/middleware/auth.js";
 import { getAdminClient } from "$lib/server/config.js";
 
+// Le profil, ses playlists et leurs titres partent en cascade depuis auth.users.
 export async function DELETE({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
   if (!token) return json({ error: "Non authentifié" }, { status: 401 });
@@ -9,52 +10,13 @@ export async function DELETE({ request }) {
   const user = await verifyToken(token);
   if (!user) return json({ error: "Session invalide" }, { status: 401 });
 
-  const client = userClient(token);
-
-  // 1. Delete custom playlist tracks (may not cascade automatically)
-  const { data: playlists } = await client
-    .schema("catalog")
-    .from("custom_playlists")
-    .select("id")
-    .eq("user_id", user.id);
-
-  if (playlists?.length) {
-    const ids = playlists.map((p) => p.id);
-    await client
-      .schema("catalog")
-      .from("custom_playlist_tracks")
-      .delete()
-      .in("playlist_id", ids);
-  }
-
-  // 2. Delete custom playlists
-  await client
-    .schema("catalog")
-    .from("custom_playlists")
-    .delete()
-    .eq("user_id", user.id);
-
-  // 3. Delete profile (scores and other data linked to user.id may cascade in Supabase)
-  await client.from("profiles").delete().eq("id", user.id);
-
-  // 4. Delete the auth user via admin API (requires SUPABASE_SERVICE_KEY)
-  try {
-    const admin = getAdminClient();
-    const { error: deleteErr } = await admin.auth.admin.deleteUser(user.id);
-    if (deleteErr) throw deleteErr;
-  } catch (e) {
-    // If admin deletion fails, the profile data is already deleted.
-    // Return a specific error so the client can still sign out.
+  const { error } = await getAdminClient().auth.admin.deleteUser(user.id);
+  if (error) {
+    console.error("[profile/delete]", error.message);
     return json(
-      {
-        error:
-          "Données supprimées mais l'erreur suivante s'est produite lors de la suppression du compte auth : " +
-          e.message,
-        partial: true,
-      },
+      { error: "Suppression impossible, réessaie ou contacte-nous" },
       { status: 500 },
     );
   }
-
   return json({ ok: true });
 }

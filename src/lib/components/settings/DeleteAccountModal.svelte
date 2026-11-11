@@ -41,8 +41,7 @@
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       const d = await r.json();
-      if (!r.ok && !d.partial) throw new Error(d.error || `HTTP ${r.status}`);
-      // Déconnexion locale dans tous les cas
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
       await sb.auth.signOut();
       window.location.href = '/?deleted=1';
     } catch (e) {
