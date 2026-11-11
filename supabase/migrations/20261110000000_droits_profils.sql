@@ -1,8 +1,6 @@
--- Droits de public.profiles réduits au strict nécessaire.
--- anon et authenticated avaient tous les droits par défaut (dont UPDATE de
--- toutes les colonnes de sa propre ligne et TRUNCATE, qui ignore les RLS).
--- Le serveur écrit le reste (scores, niveau, rôle, préférences) par le client
--- admin. Le joueur ne modifie que les colonnes de /api/profile/update.
+-- Droits de public.profiles réduits au strict nécessaire. Le joueur ne modifie
+-- que les colonnes de /api/profile/update, le serveur écrit le reste par le
+-- client admin.
 -- Horodatage placé avant les migrations de develop pas encore livrées.
 -- Pour défaire : grant all on table public.profiles to anon, authenticated;
 
