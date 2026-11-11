@@ -2,13 +2,14 @@ import { json } from "@sveltejs/kit";
 import { getAdminClient } from "$lib/server/config.js";
 import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
 import {
-  WORK_TYPE_IDS,
   canEditPlaylist,
   saveWorks,
   suggestWorks,
 } from "$lib/server/services/music/workSuggest.js";
+import { forgetPlaylists } from "$lib/server/services/admin/contenu.js";
+import { WORK_ANSWER_TYPES } from "$lib/shared/playlist/work.js";
 
-const TYPE_IDS = new Set(Object.values(WORK_TYPE_IDS));
+const TYPE_IDS = new Set(WORK_ANSWER_TYPES.map((t) => t.id));
 const UUID = /^[0-9a-f-]{36}$/i;
 const MAX = 500;
 
@@ -20,18 +21,20 @@ async function access(params, request) {
   return { db, user };
 }
 
-// GET : films proposés pour les titres qui n'en ont pas
-export async function GET({ params, request }) {
+// GET ?from=N : films proposés pour les titres qui n'en ont pas, par passages
+export async function GET({ params, request, url }) {
   const { db, user, refus } = await access(params, request);
   if (refus) return refus;
   checkRateLimit(`films:${user.id}`, 5, 60_000);
-  return json(await suggestWorks(db, params.id));
+  const from = Math.max(0, parseInt(url.searchParams.get("from")) || 0);
+  return json(await suggestWorks(db, params.id, user.id, from));
 }
 
 // POST { answers: [{ id, type_id, value }] } : œuvres validées par le joueur
 export async function POST({ params, request }) {
-  const { db, refus } = await access(params, request);
+  const { db, user, refus } = await access(params, request);
   if (refus) return refus;
+  checkRateLimit(`films-save:${user.id}`, 10, 60_000);
   const { answers } = (await request.json().catch(() => null)) ?? {};
   const valid =
     Array.isArray(answers) &&
@@ -47,5 +50,7 @@ export async function POST({ params, request }) {
         a.value.length <= 120,
     );
   if (!valid) return json({ error: "Réponses invalides" }, { status: 400 });
-  return json({ saved: await saveWorks(db, params.id, answers) });
+  const saved = await saveWorks(db, params.id, answers);
+  if (saved) await forgetPlaylists([params.id]);
+  return json({ saved });
 }

@@ -1,6 +1,13 @@
 // Réponses qui désignent une œuvre : la trouver vaut toute la manche, et c'est
 // elle qu'on affiche en premier (musique de film, générique de série…)
-const WORK_TYPES = new Set(["Film", "Série", "Jeu vidéo", "Animé"]);
+// Ids de catalog.answer_types
+export const WORK_ANSWER_TYPES = [
+  { id: 3, name: "Film" },
+  { id: 4, name: "Série" },
+  { id: 7, name: "Animé" },
+  { id: 6, name: "Jeu vidéo" },
+];
+const WORK_TYPES = new Set(WORK_ANSWER_TYPES.map((t) => t.name));
 export const isWork = (label) => WORK_TYPES.has(label);
 
 const MARKER =

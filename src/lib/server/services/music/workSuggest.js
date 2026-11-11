@@ -6,10 +6,8 @@ import {
   workFromArtist,
 } from "../../../shared/playlist/work.js";
 
-// Types de réponse « œuvre » (catalog.answer_types), mêmes ids que l'éditeur
-export const WORK_TYPE_IDS = { Film: 3, Série: 4, "Jeu vidéo": 6, Animé: 7 };
-// Appels Deezer de fond : au-delà, on relance pour la suite
-export const MAX_LOOKUPS = 200;
+// Titres examinés par passage (au plus autant d'appels Deezer de fond)
+export const PAGE = 200;
 
 // Le propriétaire de la playlist, ou un super admin
 export async function canEditPlaylist(db, playlistId, userId) {
@@ -45,20 +43,27 @@ const playlistRows = (db, playlistId) =>
 const noWork = (r) =>
   !(r.track_answers ?? []).some((a) => isWork(a.answer_types?.name));
 
-// Œuvre déjà saisie pour la même chanson dans une autre playlist
-async function knownWorks(db, trackIds) {
+// Œuvre déjà saisie pour la même chanson dans une autre playlist, publique,
+// officielle ou à soi : jamais le texte d'une playlist privée d'un autre
+async function knownWorks(db, trackIds, userId) {
   const known = new Map();
   for (let i = 0; i < trackIds.length; i += 100) {
-    const { data } = await db
-      .schema("catalog")
-      .from("track_answers")
-      .select(
-        "value, answer_types(name), custom_playlist_tracks!inner(track_id)",
-      )
-      .in("custom_playlist_tracks.track_id", trackIds.slice(i, i + 100));
-    for (const a of data ?? [])
-      if (isWork(a.answer_types?.name))
+    const rows = await fetchAllRows(() =>
+      db
+        .schema("catalog")
+        .from("track_answers")
+        .select(
+          "id, value, answer_types(name), custom_playlist_tracks!inner(track_id, custom_playlists!inner(owner_id, is_public, is_official))",
+        )
+        .in("custom_playlist_tracks.track_id", trackIds.slice(i, i + 100))
+        .order("id"),
+    );
+    for (const a of rows) {
+      const pl = a.custom_playlist_tracks.custom_playlists ?? {};
+      const visible = pl.is_public || pl.is_official || pl.owner_id === userId;
+      if (visible && isWork(a.answer_types?.name))
         known.set(a.custom_playlist_tracks.track_id, a.value);
+    }
   }
   return known;
 }
@@ -72,17 +77,19 @@ async function deezerAlbum(id) {
   }
 }
 
-// Titres de la playlist sans œuvre, avec le film proposé quand on en trouve un
-export async function suggestWorks(db, playlistId) {
+// Titres de la playlist sans œuvre, par passages de PAGE à partir de `from`,
+// avec le film proposé quand on en trouve un. next : début du passage suivant
+export async function suggestWorks(db, playlistId, userId, from = 0) {
   const rows = await playlistRows(db, playlistId);
   const missing = rows.filter(noWork);
+  const page = missing.slice(from, from + PAGE);
   const known = await knownWorks(
     db,
-    missing.map((r) => r.track_id).filter(Boolean),
+    page.map((r) => r.track_id).filter(Boolean),
+    userId,
   );
-  let lookups = 0;
   const suggestions = [];
-  for (const r of missing) {
+  for (const r of page) {
     const meta = r.tracks ?? {};
     const artist = r.custom_artist || meta.artist || "";
     // Artiste d'origine « Cast - … » renommé à la main : c'est souvent le film
@@ -90,15 +97,8 @@ export async function suggestWorks(db, playlistId) {
       r.custom_artist && workFromArtist(meta.artist) ? r.custom_artist : null;
     const knownWork = known.get(r.track_id) ?? renamed;
     let album = null;
-    if (
-      !knownWork &&
-      meta.source === "deezer" &&
-      meta.external_id &&
-      lookups < MAX_LOOKUPS
-    ) {
-      lookups++;
+    if (!knownWork && meta.source === "deezer" && meta.external_id)
       album = await deezerAlbum(meta.external_id);
-    }
     suggestions.push({
       id: r.id,
       artist,
@@ -106,7 +106,8 @@ export async function suggestWorks(db, playlistId) {
       value: guessWork({ known: knownWork, album, artist: meta.artist }),
     });
   }
-  return { suggestions, truncated: lookups >= MAX_LOOKUPS };
+  const next = from + PAGE < missing.length ? from + PAGE : null;
+  return { suggestions, next, total: missing.length };
 }
 
 // Enregistre les œuvres validées, seulement sur les titres de cette playlist

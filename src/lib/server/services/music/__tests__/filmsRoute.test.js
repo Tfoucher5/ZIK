@@ -5,14 +5,17 @@ const h = vi.hoisted(() => ({
   can: true,
   save: vi.fn(),
   suggest: vi.fn(),
+  forget: vi.fn(),
 }));
 vi.mock("$lib/server/config.js", () => ({ getAdminClient: () => ({}) }));
 vi.mock("$lib/server/middleware/auth.js", () => ({
   requireAuth: async () => ({ user: h.user }),
   checkRateLimit: () => {},
 }));
+vi.mock("$lib/server/services/admin/contenu.js", () => ({
+  forgetPlaylists: h.forget,
+}));
 vi.mock("$lib/server/services/music/workSuggest.js", () => ({
-  WORK_TYPE_IDS: { Film: 3, Série: 4, "Jeu vidéo": 6, Animé: 7 },
   canEditPlaylist: async () => h.can,
   saveWorks: h.save,
   suggestWorks: h.suggest,
@@ -35,6 +38,7 @@ const post = (body, id = PL) =>
 beforeEach(() => {
   h.can = true;
   h.save.mockReset().mockResolvedValue(1);
+  h.forget.mockReset();
   h.suggest
     .mockReset()
     .mockResolvedValue({ suggestions: [], truncated: false });
@@ -46,11 +50,25 @@ describe("/api/playlists/[id]/films", () => {
     const get = await route.GET({
       params: { id: PL },
       request: new Request("http://x"),
+      url: new URL("http://x/"),
     });
     expect(get.status).toBe(403);
     expect((await post({ answers: [] })).status).toBe(403);
     expect(h.suggest).not.toHaveBeenCalled();
     expect(h.save).not.toHaveBeenCalled();
+  });
+
+  it("GET : passage demandé transmis, valeur absurde ramenée à 0", async () => {
+    const get = (q) =>
+      route.GET({
+        params: { id: PL },
+        request: new Request("http://x"),
+        url: new URL(`http://x/?${q}`),
+      });
+    await get("from=200");
+    await get("from=-5");
+    await get("from=abc");
+    expect(h.suggest.mock.calls.map((c) => c[3])).toEqual([200, 0, 0]);
   });
 
   it("identifiant de playlist mal formé : refus", async () => {
@@ -87,5 +105,7 @@ describe("/api/playlists/[id]/films", () => {
     const res = await post({ answers });
     expect(await res.json()).toEqual({ saved: 1 });
     expect(h.save).toHaveBeenCalledWith({}, PL, answers);
+    // Les rooms qui jouent la playlist relisent la base à la prochaine partie
+    expect(h.forget).toHaveBeenCalledWith([PL]);
   });
 });

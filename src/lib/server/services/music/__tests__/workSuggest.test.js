@@ -6,7 +6,7 @@ vi.mock("../../../config.js", async () =>
 );
 vi.mock("../deezerClient.js", () => ({ deezerFetch: h.deezer }));
 
-const { suggestWorks, saveWorks, canEditPlaylist, MAX_LOOKUPS } =
+const { suggestWorks, saveWorks, canEditPlaylist, PAGE } =
   await import("../workSuggest.js");
 const { getAdminClient } = await import("../../../config.js");
 
@@ -38,7 +38,7 @@ describe("suggestWorks", () => {
       data: [row("a", { track_answers: film("Vaiana") }), row("b")],
     };
     h.tables.track_answers = { data: [] };
-    const { suggestions } = await suggestWorks(getAdminClient(), PL);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
     expect(suggestions).toEqual([
       {
         id: "b",
@@ -60,7 +60,7 @@ describe("suggestWorks", () => {
       ],
     };
     h.tables.track_answers = { data: [] };
-    const { suggestions } = await suggestWorks(getAdminClient(), PL);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
     expect(suggestions.map((s) => s.id)).toEqual(["a"]);
   });
 
@@ -71,11 +71,14 @@ describe("suggestWorks", () => {
         {
           value: "Les Aristochats",
           answer_types: { name: "Film" },
-          custom_playlist_tracks: { track_id: "tb" },
+          custom_playlist_tracks: {
+            track_id: "tb",
+            custom_playlists: { owner_id: "x", is_public: true },
+          },
         },
       ],
     };
-    const { suggestions } = await suggestWorks(getAdminClient(), PL);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
     expect(suggestions[0].value).toBe("Les Aristochats");
     expect(h.deezer).not.toHaveBeenCalled();
   });
@@ -92,7 +95,7 @@ describe("suggestWorks", () => {
         title: "La Reine des Neiges (Bande Originale Française du Film)",
       },
     });
-    const { suggestions } = await suggestWorks(getAdminClient(), PL);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
     expect(suggestions[0].value).toBe("La Reine des Neiges");
     expect(h.deezer).toHaveBeenCalledWith("/track/dzb", { bulk: true });
   });
@@ -102,7 +105,7 @@ describe("suggestWorks", () => {
       data: [row("b", { custom_artist: "Les Aristochats" })],
     };
     h.tables.track_answers = { data: [] };
-    const { suggestions } = await suggestWorks(getAdminClient(), PL);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
     expect(suggestions[0]).toMatchObject({
       artist: "Les Aristochats",
       value: "Les Aristochats",
@@ -116,23 +119,45 @@ describe("suggestWorks", () => {
     };
     h.tables.track_answers = { data: [] };
     h.deezer.mockRejectedValue(new Error("down"));
-    const { suggestions } = await suggestWorks(getAdminClient(), PL);
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
     expect(suggestions[0].value).toBeNull();
   });
 
-  it(`au plus ${MAX_LOOKUPS} appels Deezer, puis on le signale`, async () => {
-    const rows = Array.from({ length: MAX_LOOKUPS + 5 }, (_, i) =>
-      row(`r${i}`),
-    );
+  it("le film saisi dans la playlist privée d'un autre n'est pas proposé", async () => {
+    h.tables.custom_playlist_tracks = {
+      data: [row("b", { tracks: { ...row("b").tracks, artist: "X" } })],
+    };
+    h.tables.track_answers = {
+      data: [
+        {
+          value: "Texte privé",
+          answer_types: { name: "Film" },
+          custom_playlist_tracks: {
+            track_id: "tb",
+            custom_playlists: { owner_id: "autre", is_public: false },
+          },
+        },
+      ],
+    };
+    const { suggestions } = await suggestWorks(getAdminClient(), PL, "moi");
+    expect(suggestions[0].value).toBeNull();
+  });
+
+  it(`grosse playlist : passages de ${PAGE} titres, le suivant reprend où on s'est arrêté`, async () => {
+    const rows = Array.from({ length: PAGE + 5 }, (_, i) => row(`r${i}`));
     h.tables.custom_playlist_tracks = (q) => {
       const [from, to] = q.args("range");
       return { data: rows.slice(from, to + 1) };
     };
     h.tables.track_answers = { data: [] };
-    const r = await suggestWorks(getAdminClient(), PL);
-    expect(h.deezer).toHaveBeenCalledTimes(MAX_LOOKUPS);
-    expect(r.truncated).toBe(true);
-    expect(r.suggestions).toHaveLength(MAX_LOOKUPS + 5);
+    const first = await suggestWorks(getAdminClient(), PL, "moi");
+    expect(h.deezer).toHaveBeenCalledTimes(PAGE);
+    expect(first).toMatchObject({ next: PAGE, total: PAGE + 5 });
+    expect(first.suggestions).toHaveLength(PAGE);
+    const second = await suggestWorks(getAdminClient(), PL, "moi", PAGE);
+    expect(second.suggestions.map((x) => x.id)[0]).toBe(`r${PAGE}`);
+    expect(second).toMatchObject({ next: null, total: PAGE + 5 });
+    expect(second.suggestions).toHaveLength(5);
   });
 });
 

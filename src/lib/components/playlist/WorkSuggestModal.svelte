@@ -1,37 +1,42 @@
 <script>
   import { toast } from '$lib/client/toast.svelte.js';
+  import { WORK_ANSWER_TYPES as TYPES } from '$lib/shared/playlist/work.js';
 
   // Films, séries… proposés pour les titres qui n'en ont pas : rien n'est
   // enregistré sans validation, chaque nom se corrige avant
   let { playlistId, api, onClose, onSaved = () => {} } = $props();
 
-  const TYPES = [
-    { id: 3, name: 'Film' },
-    { id: 4, name: 'Série' },
-    { id: 7, name: 'Animé' },
-    { id: 6, name: 'Jeu vidéo' },
-  ];
-
   let loading = $state(true);
   let failed = $state(false);
   let saving = $state(false);
-  let truncated = $state(false);
+  let next = $state(null);
+  let total = $state(0);
+  let more = $state(false);
   let rows = $state([]);
 
   const chosen = $derived(rows.filter((r) => r.on && r.value.trim()));
   const found = $derived(rows.filter((r) => r.guessed).length);
 
+  const toRow = (s) => ({ ...s, value: s.value ?? '', guessed: !!s.value, on: !!s.value, type: 3 });
+
+  async function fetchPage(from) {
+    const d = await api(`/api/playlists/${playlistId}/films?from=${from}`);
+    next = d.next;
+    total = d.total;
+    return d.suggestions.map(toRow);
+  }
+
   async function load() {
     loading = true;
     failed = false;
-    try {
-      const d = await api(`/api/playlists/${playlistId}/films`);
-      truncated = d.truncated;
-      rows = d.suggestions.map((s) => ({ ...s, value: s.value ?? '', guessed: !!s.value, on: !!s.value, type: 3 }));
-    } catch {
-      failed = true;
-    }
+    try { rows = await fetchPage(0); } catch { failed = true; }
     loading = false;
+  }
+
+  async function loadMore() {
+    more = true;
+    try { rows = [...rows, ...(await fetchPage(next))]; } catch (e) { toast(e.message, 'error'); }
+    more = false;
   }
 
   $effect(() => { if (playlistId) load(); });
@@ -74,10 +79,9 @@
         <p class="ws-msg">Tous les titres ont déjà leur film ou leur série.</p>
       {:else}
         <p class="ws-msg">
-          {found} proposition{found > 1 ? 's' : ''} sur {rows.length} titre{rows.length > 1 ? 's' : ''} sans œuvre.
+          {found} proposition{found > 1 ? 's' : ''} pour {rows.length} titre{rows.length > 1 ? 's' : ''} examiné{rows.length > 1 ? 's' : ''}, sur {total} sans œuvre.
           Corrige les noms, décoche ce qui n'est pas un film ou une série, puis enregistre.
         </p>
-        {#if truncated}<p class="ws-msg">Grosse playlist : relance après l'enregistrement pour la suite.</p>{/if}
         <ul class="ws-list">
           {#each rows as r (r.id)}
             <li class="ws-row" class:off={!r.on}>
@@ -94,6 +98,11 @@
             </li>
           {/each}
         </ul>
+        {#if next !== null}
+          <button class="btn-ghost" onclick={loadMore} disabled={more}>
+            {more ? 'On cherche…' : `Examiner les titres suivants (${total - rows.length} restants)`}
+          </button>
+        {/if}
       {/if}
     </div>
 
