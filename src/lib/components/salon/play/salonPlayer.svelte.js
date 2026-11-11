@@ -2,6 +2,13 @@ import { io } from "socket.io-client";
 import { listenPlayer } from "./playerEvents.js";
 import { forgetResume, leaveResume, readResume } from "./resume.js";
 
+// Les trois premiers, plus soi-même si on n'y est pas
+export function podium(ranking) {
+  if (!ranking) return [];
+  const { top, me } = ranking;
+  return me && me.rank > 3 ? [...top, me] : top;
+}
+
 // État du téléphone d'un joueur du mode Salon et connexion à la partie.
 export class SalonPlayer {
   // Formulaire pour rejoindre
@@ -21,7 +28,8 @@ export class SalonPlayer {
   round = $state(0);
   total = $state(10);
   myScore = $state(0);
-  scores = $state([]);
+  // Classement vu du téléphone : { top, me, count }, jamais la liste complète
+  ranking = $state(null);
   timerVal = $state(0);
   timerMax = $state(30);
   choices = $state(null);
@@ -40,11 +48,11 @@ export class SalonPlayer {
 
   guess = $state("");
   roundEnd = $state(null);
-  finalScores = $state([]);
+  finalRanking = $state(null);
   feedback = $state(null);
   error = $state("");
 
-  roster = $state([]);
+  roster = $state({ recent: [], count: 0 });
   teams = $state(null);
   night = $state(null);
   buzzer = $state(null);
@@ -68,21 +76,8 @@ export class SalonPlayer {
   errorTimer = null;
   #sb;
 
-  myRank = $derived(
-    this.scores.findIndex((s) => s.username === this.username) + 1,
-  );
-  // Podium en cours de partie : les trois premiers, plus soi-même si on n'y est pas
-  board = $derived.by(() => {
-    const list = (this.scores.length ? this.scores : this.roster).map(
-      (p, i) => ({
-        ...p,
-        rank: i + 1,
-      }),
-    );
-    const top = list.slice(0, 3);
-    const me = list.find((p) => p.username === this.username);
-    return me && me.rank > 3 ? [...top, me] : top;
-  });
+  myRank = $derived(this.ranking?.me?.rank ?? 0);
+  board = $derived(podium(this.ranking));
   teamName = $derived(this.teams?.find((t) => t.id === this.myTeam)?.name);
 
   constructor(sb) {

@@ -18,7 +18,10 @@ const { serializeSalon, reviveSalon, saveSnapshot, restoreSalon } =
   await import("../snapshot.js");
 const { timerClock } = await import("../timers.js");
 
-const io = { to: () => ({ emit: () => {} }) };
+const io = {
+  to: () => ({ emit: () => {} }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const { salonEnManche, nettoie, viaBase, titresDe, revive } =
   await import("./snapshotHarness.js");
 

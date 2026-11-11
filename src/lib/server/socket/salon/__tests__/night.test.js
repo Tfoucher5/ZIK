@@ -29,7 +29,10 @@ const { addPlayer, nightView, resetStats, standings } =
 
 const CODE = "NIGHT1";
 const sent = [];
-const io = { to: () => ({ emit: (ev, d) => sent.push([ev, d]) }) };
+const io = {
+  to: () => ({ emit: (ev, d) => sent.push([ev, d]) }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 
 function salonDeTest(pro, teams = null) {
   salonRooms[CODE] = {

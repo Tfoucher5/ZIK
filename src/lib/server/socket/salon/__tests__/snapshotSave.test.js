@@ -23,7 +23,10 @@ const {
 } = await import("../snapshot.js");
 const { broadcastRoster } = await import("../players.js");
 
-const io = { to: () => ({ emit: () => {} }) };
+const io = {
+  to: () => ({ emit: () => {} }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const { salonEnManche, nettoie, viaBase, json } =
   await import("./snapshotHarness.js");
 
@@ -150,7 +153,7 @@ describe("sauvegardes", () => {
       data: a.p_code === "SNAP01" ? [{ code: "SNAP01", data: etat }] : [],
       error: null,
     });
-    await restoreSalon("SNAP01", { to: () => ({ emit: () => {} }) }, {});
+    await restoreSalon("SNAP01", io, {});
     const lectures = calls.filter(([fn]) => fn === "load_salon_snapshot");
     expect(lectures.map(([, a]) => a.p_max_age_seconds)).toEqual([7200, 9000]);
     nettoie(salonRooms.SNAP01);

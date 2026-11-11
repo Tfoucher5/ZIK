@@ -1,5 +1,6 @@
 import { adminSalon, nightView, requirePro } from "./players.js";
 import { num, optional, safe } from "../safe.js";
+import { emitSplit, phoneNight } from "./phoneView.js";
 
 // Entre deux parties : entracte (pour tous) et podium final de la soirée (Pro)
 export function eveningView(salon) {
@@ -10,8 +11,14 @@ export function eveningView(salon) {
 }
 
 const idle = (salon) => ["lobby", "gameover"].includes(salon.game.phase);
-const emit = (salon, io) =>
-  io.to(`salon:${salon.code}`).emit("salon_evening", eveningView(salon));
+const emit = (salon, io) => {
+  const view = eveningView(salon);
+  const finale = phoneNight(view.finale);
+  emitSplit(io, salon.code, "salon_evening", view, (u) => ({
+    ...view,
+    finale: finale?.(u) ?? null,
+  }));
+};
 
 // Une partie qui démarre referme l'entracte et le podium
 export function closeEvening(salon, io) {

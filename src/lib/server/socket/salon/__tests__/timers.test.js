@@ -21,7 +21,10 @@ const { startTimer, pauseGame, resumeGame, timerClock } =
 
 const CODE = "CHRONO";
 const sent = [];
-const io = { to: () => ({ emit: (ev, d) => sent.push([ev, d]) }) };
+const io = {
+  to: () => ({ emit: (ev, d) => sent.push([ev, d]) }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const game = () => salonRooms[CODE].game;
 const dernier = (ev) => sent.filter(([e]) => e === ev).at(-1)?.[1];
 

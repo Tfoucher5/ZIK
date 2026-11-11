@@ -19,9 +19,9 @@ export function listenPlayer(p, socket, c, u) {
   });
 
   const resetScores = () => {
-    p.scores = [];
+    p.ranking = null;
     p.myScore = 0;
-    p.finalScores = [];
+    p.finalRanking = null;
   };
   socket.on("salon_game_starting", () => {
     p.phase = "starting";
@@ -29,11 +29,10 @@ export function listenPlayer(p, socket, c, u) {
   });
   socket.on("salon_restarted", resetScores);
 
-  socket.on("salon_roster", ({ players, teams }) => {
-    p.roster = players;
+  socket.on("salon_roster", ({ roster, teams, team }) => {
+    p.roster = roster;
     p.teams = teams;
-    p.myTeam =
-      players.find((pl) => pl.username === p.username)?.team ?? p.myTeam;
+    p.myTeam = team ?? p.myTeam;
   });
   socket.on("salon_video_outage", ({ retryIn }) => {
     p.videoOutage = retryIn;
@@ -115,17 +114,16 @@ export function listenPlayer(p, socket, c, u) {
 
   socket.on("salon_feedback", (data) => onFeedback(p, data));
 
-  socket.on("salon_scores_update", ({ scores, teams }) => {
-    p.scores = scores;
+  socket.on("salon_scores_update", ({ ranking, teams }) => {
+    p.ranking = ranking;
     if (teams) p.teams = teams;
-    const me = scores.find((s) => s.username === p.username);
-    if (me) p.myScore = me.score;
+    if (ranking.me) p.myScore = ranking.me.score;
   });
 
   socket.on("salon_round_end", (data) => {
     p.roundEnd = data;
     p.allFound = true;
-    if (data.scores) p.scores = data.scores;
+    p.ranking = data.ranking;
     p.teams = data.teams;
 
     if (p.answerMode === "multiple" && data.correctChoiceIndex !== undefined) {
@@ -142,9 +140,9 @@ export function listenPlayer(p, socket, c, u) {
     }
   });
 
-  socket.on("salon_game_over", ({ scores, teams, night }) => {
+  socket.on("salon_game_over", ({ ranking, teams, night }) => {
     p.phase = "gameover";
-    p.finalScores = scores;
+    p.finalRanking = ranking;
     p.teams = teams;
     p.night = night;
   });
@@ -184,7 +182,7 @@ function onJoined(p, data, c, u) {
   localStorage.setItem("salon_user", u);
   localStorage.setItem("zik_salon_player_" + c, data.token);
   localStorage.setItem("salon_at", String(Date.now()));
-  p.roster = data.players || [];
+  p.roster = data.roster;
   p.teams = data.teams;
   p.night = data.night ?? null;
   p.intermission = data.evening?.intermission ?? null;
@@ -220,7 +218,7 @@ function onJoined(p, data, c, u) {
     // Nouvelle arrivée : tout repart de zéro
     p.phase = "lobby";
     p.myScore = 0;
-    p.scores = [];
+    p.ranking = null;
     p.foundArtist = false;
     p.foundTitle = false;
     p.foundFeats = [];
