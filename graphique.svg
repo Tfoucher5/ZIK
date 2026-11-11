@@ -11,11 +11,11 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">develop · 2c4befe · 12/11 00:16</text>
+<text x="836" y="38" class="petit" text-anchor="end">develop · 9a3f935 · 12/11 00:18</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="267.3495348204914 289.02652413026095" transform="rotate(-90 120 140)"/>
+  stroke-dasharray="267.32063216807836 289.02652413026095" transform="rotate(-90 120 140)"/>
 <polyline points="100.17440858577714,108.75986675642544 90.5295262761552,93.56196409738916" class="trait" stroke-width="3"/>
 <text x="120" y="147" class="valeur" text-anchor="middle">92,5<tspan class="unite"> %</tspan></text>
 <text x="120" y="206" class="nom" text-anchor="middle">Lignes</text>
@@ -24,7 +24,7 @@
 <g>
 <circle cx="327" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="327" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="262.66730512958117 289.02652413026095" transform="rotate(-90 327 140)"/>
+  stroke-dasharray="262.63840247716814 289.02652413026095" transform="rotate(-90 327 140)"/>
 <polyline points="303.4153123792985,111.49101001729582 291.94168056382205,97.62177164733161" class="trait" stroke-width="3"/>
 <text x="327" y="147" class="valeur" text-anchor="middle">90,9<tspan class="unite"> %</tspan></text>
 <text x="327" y="206" class="nom" text-anchor="middle">Instructions</text>
@@ -33,7 +33,7 @@
 <g>
 <circle cx="534" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="534" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="261.5111990330601 289.02652413026095" transform="rotate(-90 534 140)"/>
+  stroke-dasharray="261.4822963806471 289.02652413026095" transform="rotate(-90 534 140)"/>
 <polyline points="508.6717570806385,113.02816078540778 496.34990917392213,99.90672549182239" class="trait" stroke-width="3"/>
 <text x="534" y="147" class="valeur" text-anchor="middle">90,5<tspan class="unite"> %</tspan></text>
 <text x="534" y="206" class="nom" text-anchor="middle">Fonctions</text>
@@ -91,7 +91,7 @@
 <rect x="190" y="488" width="470" height="14" rx="7" class="piste-plein"/>
 <rect x="190" y="488" width="470" height="14" rx="7" fill="#2ea043"/>
 <text x="674" y="500" class="chiffre">100,0 %</text>
-<text x="836" y="500" class="petit" text-anchor="end">223 / 223 lignes</text>
+<text x="836" y="500" class="petit" text-anchor="end">220 / 220 lignes</text>
 <text x="24" y="525" class="zone">services/notify</text>
 <rect x="190" y="514" width="470" height="14" rx="7" class="piste-plein"/>
 <rect x="190" y="514" width="470" height="14" rx="7" fill="#2ea043"/>
@@ -105,9 +105,9 @@
 <text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">50 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">75 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
 <line x1="60" x2="830" y1="645.6" y2="645.6" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
 <text x="830" y="639.6" class="petit" fill="#e5534b" text-anchor="end">seuil 91 %</text>
-<polygon points="60,744 60,708.792 84.0625,679.2 108.125,661.6800000000001 132.1875,661.728 156.25,642.624 180.3125,642.528 204.375,642.528 228.4375,642.528 252.5,642.528 276.5625,642.528 300.625,642.528 324.6875,642.528 348.75,642.528 372.8125,642.336 396.875,642.336 420.9375,642.336 445,642.336 469.0625,642.336 493.125,642.336 517.1875,642.288 541.25,642.384 565.3125,642.384 589.375,642.336 613.4375,642.336 637.5,642.336 661.5625,642.288 685.625,642.264 709.6875,642.072 733.75,641.952 757.8125,641.952 781.875,641.952 805.9375,642 830,642 830,744" fill="url(#degrade)"/>
-<polyline points="60,708.792 84.0625,679.2 108.125,661.6800000000001 132.1875,661.728 156.25,642.624 180.3125,642.528 204.375,642.528 228.4375,642.528 252.5,642.528 276.5625,642.528 300.625,642.528 324.6875,642.528 348.75,642.528 372.8125,642.336 396.875,642.336 420.9375,642.336 445,642.336 469.0625,642.336 493.125,642.336 517.1875,642.288 541.25,642.384 565.3125,642.384 589.375,642.336 613.4375,642.336 637.5,642.336 661.5625,642.288 685.625,642.264 709.6875,642.072 733.75,641.952 757.8125,641.952 781.875,641.952 805.9375,642 830,642" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
-<circle cx="830" cy="642" r="5" fill="#a371f7"/>
+<polygon points="60,744 60,708.792 83.33333333333333,679.2 106.66666666666666,661.6800000000001 130,661.728 153.33333333333331,642.624 176.66666666666669,642.528 200,642.528 223.33333333333334,642.528 246.66666666666666,642.528 270,642.528 293.33333333333337,642.528 316.6666666666667,642.528 340,642.528 363.3333333333333,642.336 386.6666666666667,642.336 410,642.336 433.3333333333333,642.336 456.6666666666667,642.336 480,642.336 503.3333333333333,642.288 526.6666666666667,642.384 550,642.384 573.3333333333334,642.336 596.6666666666666,642.336 620,642.336 643.3333333333334,642.288 666.6666666666666,642.264 690,642.072 713.3333333333334,641.952 736.6666666666666,641.952 760,641.952 783.3333333333334,642 806.6666666666666,642 830,642.024 830,744" fill="url(#degrade)"/>
+<polyline points="60,708.792 83.33333333333333,679.2 106.66666666666666,661.6800000000001 130,661.728 153.33333333333331,642.624 176.66666666666669,642.528 200,642.528 223.33333333333334,642.528 246.66666666666666,642.528 270,642.528 293.33333333333337,642.528 316.6666666666667,642.528 340,642.528 363.3333333333333,642.336 386.6666666666667,642.336 410,642.336 433.3333333333333,642.336 456.6666666666667,642.336 480,642.336 503.3333333333333,642.288 526.6666666666667,642.384 550,642.384 573.3333333333334,642.336 596.6666666666666,642.336 620,642.336 643.3333333333334,642.288 666.6666666666666,642.264 690,642.072 713.3333333333334,641.952 736.6666666666666,641.952 760,641.952 783.3333333333334,642 806.6666666666666,642 830,642.024" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="830" cy="642.024" r="5" fill="#a371f7"/>
 <text x="60" y="766" class="petit">9 nov.</text>
 <text x="830" y="766" class="petit" text-anchor="end">12 nov.</text>
 </svg>
