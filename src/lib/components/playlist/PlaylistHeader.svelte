@@ -1,5 +1,5 @@
 <script>
-  let { store, onSettings, onLaunch } = $props();
+  let { store, onSettings, onLaunch, onFilms } = $props();
 
   const pl = $derived(store.current);
   const n = $derived(store.tracks.length);
@@ -12,6 +12,9 @@
     <span class="phead-meta">{n} titre{n !== 1 ? 's' : ''} · {pl.is_public ? 'Publique' : 'Privée'}</span>
   </div>
   <div class="phead-acts">
+    {#if n > 0}
+      <button class="phead-films" onclick={onFilms} title="Proposer les films et séries manquants">🎬 Films</button>
+    {/if}
     <button class="phead-gear" onclick={onSettings} aria-label="Réglages de la playlist" title="Renommer, visibilité, supprimer">⚙</button>
     <button class="phead-launch" onclick={onLaunch} disabled={n < 3} title={n < 3 ? 'Il faut au moins 3 titres' : ''}>Lancer une room →</button>
   </div>
@@ -52,6 +55,18 @@
     cursor: pointer;
   }
   .phead-gear:hover { color: var(--text); border-color: var(--text); }
+  .phead-films {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--mid);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .phead-films:hover { color: var(--text); border-color: var(--text); }
   .phead-launch {
     height: 40px;
     padding: 0 16px;

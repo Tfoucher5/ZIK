@@ -1,5 +1,7 @@
 <script>
   import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
+  import WorkSuggestModal from '$lib/components/playlist/WorkSuggestModal.svelte';
   import PageHeader from '$lib/components/admin/PageHeader.svelte';
   import Sheet from '$lib/components/admin/Sheet.svelte';
   import TrackRepair from '$lib/components/admin/TrackRepair.svelte';
@@ -38,6 +40,18 @@
   let addOpen = $state(false);
   let plOpen = $state(false);
   let deleteOpen = $state(false);
+  let filmsOpen = $state(false);
+
+  async function api(path, { method = 'GET', body } = {}) {
+    const r = await fetch(path, {
+      method,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: body && JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || d.message || `HTTP ${r.status}`);
+    return d;
+  }
 
   const editing = $derived(tracks.find((t) => t.id === editId));
   const repairing = $derived(tracks.find((t) => t.id === repairId));
@@ -122,6 +136,9 @@
         <span class="a-sr">Rechercher dans la playlist</span>
         <input type="search" placeholder="Artiste, titre, feat, réponse…" bind:value={query} />
       </label>
+      {#if tracks.length}
+        <button class="a-btn" type="button" onclick={() => (filmsOpen = true)}>🎬 Films manquants</button>
+      {/if}
     </div>
     <div class="a-chips" role="group" aria-label="Filtrer les titres">
       {#each VIEWS as [k, l] (k)}
@@ -151,6 +168,10 @@
 </div>
 
 <PlaylistAddSheet bind:open={addOpen} {inPlaylist} {keep} />
+
+{#if filmsOpen}
+  <WorkSuggestModal playlistId={playlist.id} {api} onClose={() => (filmsOpen = false)} onSaved={invalidateAll} />
+{/if}
 
 <PlaylistTrackEdit bind:open={editOpen} {editing} playlistName={playlist.name} types={data.types} {token} {busy} {closing} />
 
