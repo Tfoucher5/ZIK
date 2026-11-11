@@ -37,6 +37,7 @@ export async function catalogTotals(sb) {
   await Promise.all(
     RARITY_ORDER.map(async (r) => {
       const { count } = await sb
+        .schema("cards")
         .from("cards")
         .select("id", { count: "exact", head: true })
         .eq("rarity", r);
@@ -62,9 +63,10 @@ export async function getCollection(userId, { withPending = false } = {}) {
 
   const owned = await pages(() => {
     let q = sb
+      .schema("cards")
       .from("user_cards")
       .select(
-        `first_obtained_at, visible_at, cards(${CARD_SELECT}, first_owner:profiles!cards_first_owner_id_fkey(username))`,
+        `first_obtained_at, visible_at, cards(${CARD_SELECT}, first_owner(username))`,
       )
       .eq("user_id", userId)
       .order("first_obtained_at", { ascending: false });
@@ -85,6 +87,7 @@ export async function getCollection(userId, { withPending = false } = {}) {
   const ids = cards.map((c) => c.id);
   const items = await chunked(ids, async (chunk) => {
     const { data } = await sb
+      .schema("cards")
       .from("card_set_items")
       .select("set_id, card_id")
       .in("card_id", chunk);
@@ -97,6 +100,7 @@ export async function getCollection(userId, { withPending = false } = {}) {
 
   const setRows = await chunked([...ownedBySet.keys()], async (chunk) => {
     const { data } = await sb
+      .schema("cards")
       .from("card_sets")
       .select("id, kind, key, name, cover_url, card_count")
       .in("id", chunk)
@@ -105,6 +109,7 @@ export async function getCollection(userId, { withPending = false } = {}) {
   });
 
   const { data: done } = await sb
+    .schema("cards")
     .from("user_card_sets")
     .select("set_id, completed_at")
     .eq("user_id", userId);
@@ -134,6 +139,7 @@ export async function getCollection(userId, { withPending = false } = {}) {
 export async function getSetCards(setId, userId) {
   const sb = getAdminClient();
   const { data: set } = await sb
+    .schema("cards")
     .from("card_sets")
     .select("id, kind, key, name, cover_url, card_count")
     .eq("id", setId)
@@ -142,6 +148,7 @@ export async function getSetCards(setId, userId) {
 
   const rows = await pages(() =>
     sb
+      .schema("cards")
       .from("card_set_items")
       .select(`cards(${CARD_SELECT})`)
       .eq("set_id", setId),
@@ -150,6 +157,7 @@ export async function getSetCards(setId, userId) {
 
   const { data: mine } = userId
     ? await sb
+        .schema("cards")
         .from("user_cards")
         .select("card_id, first_obtained_at")
         .eq("user_id", userId)

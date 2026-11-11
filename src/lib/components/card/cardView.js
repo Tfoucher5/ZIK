@@ -1,7 +1,11 @@
 // Forme d'une carte telle que l'affichent Card, CardDrop et CardTray, à partir
 // d'une ligne `cards` jointe à son album et son artiste.
-export const CARD_SELECT =
-  "id, number, title, artist, artist_id, album_id, year, rarity, deezer_rank, rarity_locked_at, card_albums(title, genre, cover_url, cover_md_url, dominant_color), card_artists(nb_fan)";
+const CARD_COLUMNS =
+  "id, number, title, artist, artist_id, album_id, year, rarity, deezer_rank, rarity_locked_at";
+export const CARD_SELECT = `${CARD_COLUMNS}, card_albums(title, genre, cover_url, cover_md_url, dominant_color), card_artists(nb_fan)`;
+// Depuis un autre schéma (lien public.cards(tracks)) : la vue cards.card_view
+// porte déjà album et artiste sous la même forme.
+export const CARD_VIEW_SELECT = `${CARD_COLUMNS}, card_albums, card_artists`;
 
 export function toCardView(row, successRate = null) {
   if (!row) return null;

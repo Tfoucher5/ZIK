@@ -68,6 +68,7 @@ export const actions = adminActions({
     const id = (await request.formData()).get("id");
     if (!id) return { success: false };
     await getAdminClient()
+      .schema("cards")
       .from("card_signals")
       .update({ reviewed: true })
       .eq("id", id);
@@ -79,7 +80,11 @@ export const actions = adminActions({
     if (!id) return { success: false };
     const sb = getAdminClient();
     const revoked = await revokeGrants(sb, [id]);
-    await sb.from("card_signals").update({ reviewed: true }).eq("grant_id", id);
+    await sb
+      .schema("cards")
+      .from("card_signals")
+      .update({ reviewed: true })
+      .eq("grant_id", id);
     await logAdminAction(
       locals.adminId,
       "revoke_card",
@@ -97,6 +102,7 @@ export const actions = adminActions({
     if (!userId) return { success: false };
     const sb = getAdminClient();
     const { data } = await sb
+      .schema("cards")
       .from("card_grants")
       .select("id")
       .eq("user_id", userId)
@@ -104,6 +110,7 @@ export const actions = adminActions({
     const ids = (data || []).map((g) => g.id);
     const revoked = ids.length ? await revokeGrants(sb, ids) : 0;
     await sb
+      .schema("cards")
       .from("card_signals")
       .update({ reviewed: true })
       .eq("user_id", userId);

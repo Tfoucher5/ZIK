@@ -9,13 +9,6 @@ import { join } from "node:path";
 const PUBLIC = [
   "achievements",
   "answer_types",
-  "card_albums",
-  "card_artists",
-  "card_grants",
-  "card_set_items",
-  "card_sets",
-  "card_signals",
-  "cards",
   "custom_playlist_tracks",
   "custom_playlists",
   "daily_results",
@@ -33,8 +26,6 @@ const PUBLIC = [
   "track_stats",
   "tracks",
   "user_achievements",
-  "user_card_sets",
-  "user_cards",
   "weekly_challenge_contributions",
   "weekly_challenges",
   "zikle_pool",
@@ -55,7 +46,19 @@ const SCHEMA_OF = {
   health_checks: "ops",
   errors: "ops",
   snapshots: "salon",
+  card_albums: "cards",
+  card_artists: "cards",
+  card_grants: "cards",
+  card_set_items: "cards",
+  card_sets: "cards",
+  card_signals: "cards",
+  cards: "cards",
+  user_card_sets: "cards",
+  user_cards: "cards",
+  card_view: "cards",
 };
+// Fonctions de lien qui portent le nom d’une table d’un autre schéma
+const LINKS = new Set(["public.cards"]);
 
 function files(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -80,7 +83,11 @@ function wrongSchemaCalls(source) {
     if (want !== schema) bad.push(table);
     const cols = selects.find((c) => c !== undefined) ?? "";
     for (const [, name] of cols.matchAll(EMBED))
-      if (SCHEMA_OF[name] && SCHEMA_OF[name] !== want)
+      if (
+        SCHEMA_OF[name] &&
+        SCHEMA_OF[name] !== want &&
+        !LINKS.has(`${want}.${name}`)
+      )
         bad.push(`${want} -> ${name}`);
   }
   return bad;
@@ -123,6 +130,9 @@ describe("tables rangées par domaine", () => {
     expect(
       wrongSchemaCalls("sb.from('tracks').select('id, cards(number)')"),
     ).toEqual([]);
+    expect(
+      wrongSchemaCalls("sb.from('tracks').select('id, user_cards(card_id)')"),
+    ).toEqual(["public -> user_cards"]);
   });
 
   it("le code serveur et les scripts passent par le bon schéma", () => {

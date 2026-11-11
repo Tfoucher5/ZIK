@@ -1,6 +1,9 @@
 import { getAdminClient } from "../../config.js";
 import { playlistCache, customRooms, dbRooms } from "../../state.js";
-import { CARD_SELECT, toCardView } from "../../../components/card/cardView.js";
+import {
+  CARD_VIEW_SELECT,
+  toCardView,
+} from "../../../components/card/cardView.js";
 import {
   fetchDeezerTrackPreview,
   iTunesPreviewMatch,
@@ -88,7 +91,7 @@ export function buildTrackFromRow(row) {
   });
 }
 
-export const TRACK_ROW_SELECT = `id, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, youtube_id, youtube_start, source, preview_expires_at, cards(${CARD_SELECT})), track_answers(value, answer_types(name))`;
+export const TRACK_ROW_SELECT = `id, position, created_at, custom_artist, custom_title, custom_feats, tracks(id, artist, title, cover_url, preview_url, external_id, youtube_id, youtube_start, source, preview_expires_at, cards(${CARD_VIEW_SELECT})), track_answers(value, answer_types(name))`;
 
 export function calcSpeedBonus(timeTaken) {
   if (timeTaken < 10) return 2;

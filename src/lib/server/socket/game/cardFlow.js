@@ -35,6 +35,7 @@ export async function identifyPlayer(player, { token, userId }, socket) {
   const owned = new Set();
   for (let from = 0; ; from += 1000) {
     const { data } = await db()
+      .schema("cards")
       .from("user_cards")
       .select("card_id")
       .eq("user_id", userId)
@@ -172,6 +173,7 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
         .map((x) => x.ip),
     ).size;
     const job = db()
+      .schema("cards")
       .from("card_grants")
       .insert({
         user_id: p.userId,
@@ -193,6 +195,7 @@ export function onRoundEnd(room, track, { skipped = false } = {}) {
         const signals = res.signals.filter((s) => s.name === res.winner);
         if (signals.length)
           return db()
+            .schema("cards")
             .from("card_signals")
             .insert(
               signals.map(({ reason, ...details }) => ({

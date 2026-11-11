@@ -37,6 +37,7 @@ async function buildIndex() {
     ),
     fetchAll(() =>
       supabase
+        .schema("cards")
         .from("card_artists")
         .select("name, nb_fan")
         .gte("nb_fan", MIN_FANS)

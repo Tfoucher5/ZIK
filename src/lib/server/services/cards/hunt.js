@@ -13,6 +13,7 @@ export async function notifySetsNearlyDone(userId, cardIds) {
   if (!cardIds.length) return;
   const sb = getAdminClient();
   const { data: links } = await sb
+    .schema("cards")
     .from("card_set_items")
     .select("set_id, card_sets!inner(id, kind, name, card_count, cover_url)")
     .in("card_id", cardIds)
@@ -44,11 +45,13 @@ export async function notifySetsNearlyDone(userId, cardIds) {
 
 async function missingCards(sb, userId, setId) {
   const { data: items } = await sb
+    .schema("cards")
     .from("card_set_items")
     .select("card_id")
     .eq("set_id", setId);
   const ids = (items ?? []).map((i) => i.card_id);
   const { data: owned } = await sb
+    .schema("cards")
     .from("user_cards")
     .select("card_id")
     .eq("user_id", userId)

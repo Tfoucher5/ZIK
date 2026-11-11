@@ -46,14 +46,17 @@ function isProvisional(releaseDate, now = new Date()) {
 
 async function upsertArtist(sb, artist) {
   const full = await cached(artistCache, artist.id, `/artist/${artist.id}`);
-  await sb.from("card_artists").upsert(
-    {
-      deezer_id: artist.id,
-      name: full?.name || artist.name,
-      nb_fan: full?.nb_fan ?? null,
-    },
-    { onConflict: "deezer_id" },
-  );
+  await sb
+    .schema("cards")
+    .from("card_artists")
+    .upsert(
+      {
+        deezer_id: artist.id,
+        name: full?.name || artist.name,
+        nb_fan: full?.nb_fan ?? null,
+      },
+      { onConflict: "deezer_id" },
+    );
   return full;
 }
 
@@ -103,31 +106,36 @@ export async function enrichTrack(sb, track) {
     if (album.artist?.id && album.artist.id !== best.artist.id)
       await upsertArtist(sb, album.artist);
     const { data: known } = await sb
+      .schema("cards")
       .from("card_albums")
       .select("deezer_id")
       .eq("deezer_id", album.id)
       .maybeSingle();
     if (!known) {
-      await sb.from("card_albums").insert({
-        deezer_id: album.id,
-        artist_id: album.artist?.id || best.artist.id,
-        title: album.title,
-        record_type: album.record_type || null,
-        year: album.release_date
-          ? Number(album.release_date.slice(0, 4))
-          : null,
-        genre: album.genres?.data?.[0]?.name || null,
-        cover_url: album.cover_xl || null,
-        cover_md_url: album.cover_medium || null,
-        dominant_color: album.cover_small
-          ? await dominantColor(album.cover_small)
-          : null,
-      });
+      await sb
+        .schema("cards")
+        .from("card_albums")
+        .insert({
+          deezer_id: album.id,
+          artist_id: album.artist?.id || best.artist.id,
+          title: album.title,
+          record_type: album.record_type || null,
+          year: album.release_date
+            ? Number(album.release_date.slice(0, 4))
+            : null,
+          genre: album.genres?.data?.[0]?.name || null,
+          cover_url: album.cover_xl || null,
+          cover_md_url: album.cover_medium || null,
+          dominant_color: album.cover_small
+            ? await dominantColor(album.cover_small)
+            : null,
+        });
     }
   }
 
   // Une carte existante n'est jamais modifiée : sa rareté est figée
   const { data: existing } = await sb
+    .schema("cards")
     .from("cards")
     .select("id")
     .eq("artist_id", best.artist.id)
@@ -136,6 +144,7 @@ export async function enrichTrack(sb, track) {
   if (existing) return existing.id;
 
   const { data: created, error } = await sb
+    .schema("cards")
     .from("cards")
     .insert({
       deezer_track_id: best.id,
@@ -160,6 +169,7 @@ export async function enrichTrack(sb, track) {
   if (error?.code === "23505") {
     // Créée entre-temps par un autre traitement (file en ligne ou backfill)
     const { data } = await sb
+      .schema("cards")
       .from("cards")
       .select("id")
       .eq("artist_id", best.artist.id)
