@@ -25,6 +25,7 @@ import {
 } from "./players.js";
 import { emitGameOver, emitRoundEnd } from "./phoneView.js";
 import { mediaOf } from "./tracks.js";
+import { note } from "./journal.js";
 import { armNext, clearPause, scheduleCleanup, startTimer } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
@@ -256,6 +257,7 @@ export async function startNextRound(code, io) {
   } catch (err) {
     if (stale()) return;
     console.error(`Salon skip "${track.title}":`, err.message);
+    note(salon, `Titre injouable passé : ${track.artist} - ${track.title}`);
     // En panne, les titres ne sont pas en cause : pas de faux signalements
     if (!game.videoOutage)
       reportTrackIssue(

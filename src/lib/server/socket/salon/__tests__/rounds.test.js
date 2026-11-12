@@ -108,6 +108,9 @@ describe("titre sans vidéo en salon", () => {
     await startNextRound(CODE, io);
     expect(game.currentRound).toBe(2);
     expect(game.currentTrack).toBe(spare);
+    expect(salonRooms[CODE]._journal[0].text).toBe(
+      "Titre injouable passé : A - KO",
+    );
     clearTimeout(game.musicReadyTimer);
   });
 

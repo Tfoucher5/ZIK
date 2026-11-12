@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { FREE_MAX_PLAYERS } from "../../../../data/proPlans.js";
 
 // Base simulée : chaque test choisit ce que renvoient les fonctions SQL
 const db = vi.hoisted(() => ({ reply: () => ({ data: null, error: null }) }));
@@ -235,5 +236,52 @@ describe("joueur parti puis revenu, par les handlers", () => {
     expect(Object.values(salon.departed)[0].night).toBe(0);
     salon.nightGames = 1;
     expect(nightView(salon).players).toEqual([]);
+  });
+});
+
+describe("journal du salon pour l'admin", () => {
+  let h;
+  const journal = () => (salonRooms[CODE]._journal ?? []).map((e) => e.text);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+    salonDeTest();
+    h = makeIo();
+    registerSalon(h.io);
+  });
+
+  afterEach(() => {
+    clearTimeout(salonRooms[CODE]?._hostDcTimer);
+    vi.useRealTimers();
+  });
+
+  function rejoint(id, event) {
+    const s = makeSocket(id, h.rooms);
+    h.connecte(s);
+    s.handlers[event]({ code: CODE, key: CLE });
+    return s;
+  }
+
+  it("note la coupure de l'hôte puis son retour, rien sans coupure", () => {
+    const tv = rejoint("tv1", "salon_join_host");
+    const regie = rejoint("regie", "salon_join_control");
+    expect(journal()).toEqual([]);
+    tv.deconnecte();
+    expect(journal()).toEqual([]);
+    regie.deconnecte();
+    expect(journal()).toEqual(["Hôte déconnecté : plus de TV ni de régie"]);
+    rejoint("tv2", "salon_join_host");
+    expect(journal()[0]).toBe("Hôte revenu (TV)");
+  });
+
+  it("note un joueur refusé par la limite gratuite", async () => {
+    const salon = salonRooms[CODE];
+    for (let i = 0; i < FREE_MAX_PLAYERS; i++)
+      salon.players[`J${i}`] = { username: `J${i}`, score: 0 };
+    const tel = makeSocket("tel", h.rooms);
+    h.connecte(tel);
+    await tel.handlers.salon_join_player({ code: CODE, username: "Zoé" });
+    expect(journal()).toEqual(["Zoé refusé : limite gratuite atteinte"]);
   });
 });

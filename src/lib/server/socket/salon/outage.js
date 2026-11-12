@@ -1,4 +1,5 @@
 import { alertAdminsSafe } from "../../services/admin/alerts.js";
+import { note } from "./journal.js";
 
 // Panne vidéo (YouTube bloque le serveur, réseau coupé…) : après plusieurs
 // échecs d'affilée, ce ne sont plus des titres injouables. Le 30/10, chaque
@@ -15,7 +16,8 @@ export function holdForVideos(salon, io, retry) {
     game.sessionPlaylist.unshift(game.currentTrack);
   }
   const retryIn = Math.min(MAX_WAIT, 10 * (game.skipStreak - OUTAGE_AFTER + 1));
-  if (!game.videoOutage)
+  if (!game.videoOutage) {
+    note(salon, "Musique en panne : la partie attend");
     alertAdminsSafe(
       "admin_errors",
       {
@@ -26,6 +28,7 @@ export function holdForVideos(salon, io, retry) {
       },
       { throttleMs: 30 * 60 * 1000 },
     );
+  }
   game.videoOutage = true;
   io.to(`salon:${salon.code}`).emit("salon_video_outage", { retryIn });
   clearTimeout(game.outageTimer);
@@ -43,5 +46,6 @@ export function clearOutage(salon, io) {
   game.outageTimer = null;
   if (!game.videoOutage) return;
   game.videoOutage = false;
+  note(salon, "La musique joue de nouveau");
   io.to(`salon:${salon.code}`).emit("salon_video_outage", { retryIn: null });
 }
