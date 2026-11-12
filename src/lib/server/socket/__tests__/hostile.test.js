@@ -215,7 +215,7 @@ describe("entrées hostiles sur tous les handlers", () => {
     salon_rename_team: [{ team: 1, name: "Les Rouges" }],
     salon_set_player_team: [{ username: "Julie", team: 2 }],
     salon_video_failed: [{ videoId: "dQw4w9WgXcQ" }],
-    salon_report_video: [{ reason: "mal calée" }],
+    salon_report_video: [{ reason: "mal calée" }, { reason: "x", round: 1 }],
     salon_intermission: [{ minutes: 0 }, { minutes: 15 }, { minutes: null }],
     salon_support_call: [{ message: "" }, { message: "La musique coupe" }],
     salon_support_send: [{ text: "Merci" }],

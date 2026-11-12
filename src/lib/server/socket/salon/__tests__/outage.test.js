@@ -28,6 +28,7 @@ vi.mock("../../../services/admin/alerts.js", () => ({
 }));
 let recherches = 0;
 vi.mock("../tracks.js", () => ({
+  mediaOf: (t) => ({ trackId: t.id }),
   buildSessionPlaylist: () => [],
   currentTrackInfo: () => null,
   forgetVideo: () => {},
