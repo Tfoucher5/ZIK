@@ -17,10 +17,10 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - Pas de refactoring non demandé, pas de features supplémentaires
 - Préférer modifier un fichier existant plutôt qu'en créer un nouveau
 - Toujours supprimer les morceaux de code inutiles ou inutilisés
-- Claude est autonome jusqu’à `develop` : commit, push, PR, fusion vers `develop`, migration sur le staging via `/migration`. Il prépare aussi les releases et hotfix (`/release`, `/hotfix`) jusqu’à la PR vers `master` verte, puis prévient Théo : **Théo fusionne sur `master`**, au moment qu’il choisit
+- Claude est autonome jusqu’à la prod : commit, push, PR, fusion vers `develop`, migration sur le staging via `/migration`, releases et hotfix (`/release`, `/hotfix`) **fusionnés sur `master` par Claude** quand la porte de mise en prod est tenue. Théo vérifie, teste en réel et approuve les idées proposées
 - Claude peut aussi améliorer de lui-même la logique, l'accessibilité et la praticité pour les joueurs et les clients Pro, par petites tâches dans le plan. Il note l'ajout dans `docs/audit/2026-11-02-a-valider.md` et le signale dans le compte rendu
-- Toujours demander à Théo : écriture ou suppression de données en base de prod hors migration, force push, variable ou réglage Railway `[PROD]`, tout ce qui touche l'argent (offres, prix, Stripe en mode live), une grosse fonctionnalité nouvelle (nouvelle page, nouveau mode de jeu), un vrai blocage. Théo répond aux questions et teste en réel
-- Ne jamais toucher à la prod directement : ni SQL dans le dashboard, ni variable Railway, ni déploiement manuel. Tout passe par une PR
+- Toujours demander à Théo : écriture ou suppression de données en base de prod hors migration, force push, tout ce qui touche l'argent (offres, prix, Stripe en mode live), une grosse fonctionnalité nouvelle (nouvelle page, nouveau mode de jeu), un vrai blocage
+- Le code et le schéma passent toujours par une PR : jamais de SQL dans un dashboard, jamais de déploiement manuel. Les réglages qu'aucune PR ne peut faire (Supabase Exposed schemas, réglages Auth, variables et réglages Railway `[PROD]`…) : Claude les fait lui-même avec Claude in Chrome dans la session de Théo, d'abord sur le staging quand il existe, avec capture avant/après et une ligne dans le compte rendu. Jamais d'argent, de données ni de SQL par ce chemin
 
 ## Environnements
 
@@ -42,11 +42,11 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - Release `develop` → `master` et report d'un hotfix `master` → `develop` : fusion en **merge commit**, jamais en squash. Un squash coupe l'historique commun : `master` et `develop` divergent et chaque release suivante repart en conflit
 - Message de commit et titre de PR : `type(zone): description (vX.Y.Z)`, types `feat`, `fix`, `perf`, `chore`, `docs`, `test`
 - Version : toujours incrémentée dans la PR de release (dans toutes les pages concernées et dans le commit)
-- **PR vers `master` prête** (Claude prévient Théo seulement si tout est vrai) :
+- **Porte de mise en prod** (Claude fusionne la PR vers `master` seulement si tout est vrai) :
   1. Définition de terminé tenue pour chaque PR embarquée, CI verte sur `develop` et sur la PR
   2. Contenu déployé sur `[DEV]` et vérifié en vrai par Claude : déploiement réussi, sondes vertes, scénario Playwright du salon vert, contrôle visuel desktop et mobile (390 px) des écrans touchés
-  3. Théo fusionne quand aucune soirée ne tourne (il voit les salons en cours dans l’admin). Le redémarrage les met en pause, elles reprennent via l’instantané
-  4. Après la fusion, sans attendre : Claude vérifie que le déploiement `[PROD]` est en `SUCCESS` (piège SKIPPED) et que `/healthz` répond, reporte `master` dans `develop`, puis passe à la tâche suivante. Un souci remonté plus tard = `/incident`, puis `/hotfix` ou revert
+  3. Aucun salon avec un joueur connecté : Claude ouvre `/admin/salons` en prod avec Claude in Chrome juste avant de fusionner (un salon resté ouvert sans joueur connecté ne bloque pas). N'importe quel jour, n'importe quelle heure. Sinon il réessaie plus tard
+  4. Après la fusion, sans attendre : Claude prévient Théo (version, contenu, quoi tester), vérifie que le déploiement `[PROD]` est en `SUCCESS` (piège SKIPPED) et que `/healthz` répond, reporte `master` dans `develop`, puis passe à la tâche suivante. Un souci remonté plus tard = `/incident`, puis `/hotfix` ou revert
 
 ## Définition de « terminé »
 
@@ -164,6 +164,7 @@ Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel 
 ## MCPs disponibles
 
 - **Supabase** : inspecter la base. Écritures et migrations uniquement sur le staging, via `/migration`
-- **Railway** : lire logs, métriques, déploiements. Aucune modification de `[PROD]` sans demande explicite
+- **Railway** : lire logs, métriques, déploiements. Réglages `[PROD]` selon les règles générales (jamais de déploiement manuel)
+- **Claude in Chrome** : réglages de dashboard sans API (Supabase, Railway), vérification des salons avant une mise en prod, contrôles visuels
 - **Stripe** : système de paiement (abonnements, factures), mode test hors prod
 - **Notion** : tâches et doc projet
