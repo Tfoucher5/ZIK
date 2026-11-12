@@ -114,6 +114,12 @@ export class SalonHost {
   restartGame = () => {
     this.socket?.emit("salon_restart");
   };
+  // La réponse « salon_closed » ramène sur /salon ; connexion coupée : pas de
+  // réponse, on part quand même
+  closeSalon = () => {
+    this.socket?.emit("salon_close");
+    setTimeout(() => (window.location.href = "/salon"), 2000);
+  };
   togglePause = () => {
     this.socket?.emit(this.paused ? "salon_resume" : "salon_pause");
   };

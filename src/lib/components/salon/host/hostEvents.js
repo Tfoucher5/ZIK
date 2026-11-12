@@ -232,6 +232,11 @@ export function listenHost(h, socket) {
     },
   );
 
+  socket.on("salon_closed", () => {
+    forgetSalon(h.code);
+    window.location.href = "/salon";
+  });
+
   socket.on("salon_error", ({ message }) => {
     if (!h.joined) forgetSalon(h.code);
     h.restarting = false;

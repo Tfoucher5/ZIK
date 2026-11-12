@@ -25,7 +25,13 @@ import { forgetVideo } from "./tracks.js";
 import { closeEvening } from "./evening.js";
 import { emitSplit } from "./phoneView.js";
 import { clearOutage } from "./outage.js";
-import { clearPause, pauseGame, resumeGame, startTimer } from "./timers.js";
+import {
+  cleanupNow,
+  clearPause,
+  pauseGame,
+  resumeGame,
+  startTimer,
+} from "./timers.js";
 import { int, key, num, object, optional, safe, str } from "../safe.js";
 
 const ADJUST_SCORE = {
@@ -59,6 +65,13 @@ export function registerControl(socket, io) {
     if (!salon || !["round", "summary"].includes(salon.game.phase)) return;
     if (!requirePro(socket, salon, "endGame")) return;
     finishGame(salon.code, io);
+  });
+
+  // « Fermer la soirée » : fermé tout de suite pour tout le monde, sans
+  // attendre le délai prévu pour une simple déconnexion de l'hôte
+  safe(socket, "salon_close", {}, () => {
+    const salon = adminSalon(socket);
+    if (salon) cleanupNow(salon.code, io, "L'hôte a fermé la soirée.");
   });
 
   safe(socket, "salon_volume", { volume: num(0, 100) }, ({ volume }) => {
