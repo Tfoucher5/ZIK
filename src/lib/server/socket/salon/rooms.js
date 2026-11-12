@@ -4,13 +4,16 @@ import { userClient } from "../../middleware/auth.js";
 import { salonRooms, getIO } from "../../state.js";
 import { isPro } from "../../services/pro.js";
 import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
+import {
+  REVEAL_COUNTDOWN_S,
+  START_COUNTDOWN_S,
+} from "../../../data/salonOptions.js";
 import { makeTeams } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";
 import { broadcastRoster, teamLimit } from "./players.js";
 import { saveSnapshot } from "./snapshot.js";
-import { scheduleCleanup } from "./timers.js";
-import { startNextRound } from "./rounds.js";
+import { armNext, scheduleCleanup } from "./timers.js";
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -54,6 +57,8 @@ export async function createSalonRoom({
     specials: pro && settings.specials === true,
     buzzSound: true,
     finaleSound: true,
+    startCountdown: START_COUNTDOWN_S,
+    revealCountdown: REVEAL_COUNTDOWN_S,
     showAnswerDuration: Math.min(
       Math.max(settings.showAnswerDuration || 7, 3),
       15,
@@ -247,12 +252,8 @@ export function applySettings(code, patch, io, allow) {
     !s.manualNext &&
     !game.breakTimer &&
     !game.paused
-  ) {
-    game.breakTimer = setTimeout(() => {
-      game.breakTimer = null;
-      startNextRound(code, io);
-    }, s.showAnswerDuration * 1000);
-  }
+  )
+    armNext(code, io, s.showAnswerDuration);
   saveSnapshot(salon);
   io.to(`salon:${code}`).emit("salon_settings", { settings: s });
 }

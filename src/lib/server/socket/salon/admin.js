@@ -1,8 +1,7 @@
 import { salonRooms, getIO } from "../../state.js";
 import { displayString } from "../../services/music/trackText.js";
 import { kickPlayer, staff } from "./players.js";
-import { pauseGame, resumeGame } from "./timers.js";
-import { revealRound, nextRound } from "./rounds.js";
+import { nextRound, pauseGame, resumeGame, revealRound } from "./timers.js";
 import { applySettings } from "./rooms.js";
 import { supportView } from "./support.js";
 

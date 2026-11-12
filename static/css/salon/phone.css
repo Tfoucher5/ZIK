@@ -58,6 +58,11 @@
   color: var(--danger);
   font-size: 0.9rem;
 }
+.sp-next {
+  text-align: center;
+  color: var(--mid);
+  font-family: var(--s-mono);
+}
 
 /* En-tête de partie */
 .sp-head {

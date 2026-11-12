@@ -70,7 +70,13 @@ export function salonDeTest() {
     origin: null,
     _hostDcTimer: null,
     _cleanupTimer: null,
-    settings: { maxRounds: 10, roundDuration: 30, playlistIds: [] },
+    settings: {
+      maxRounds: 10,
+      roundDuration: 30,
+      playlistIds: [],
+      startCountdown: 0,
+      revealCountdown: 0,
+    },
     players: {},
     banned: new Set(),
     game: {

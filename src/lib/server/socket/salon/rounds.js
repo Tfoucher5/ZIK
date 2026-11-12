@@ -24,7 +24,13 @@ import {
   standings,
 } from "./players.js";
 import { emitGameOver, emitRoundEnd } from "./phoneView.js";
-import { scheduleCleanup, startTimer, clearPause } from "./timers.js";
+import {
+  armNext,
+  clearPause,
+  endSoon,
+  scheduleCleanup,
+  startTimer,
+} from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
   const salon = salonRooms[code];
@@ -41,7 +47,7 @@ export function checkEveryoneDone(code, io) {
       : mode === "multiple"
         ? players.every((p) => p._fullFoundCounted)
         : players.every((p) => playerFullyFound(p, salon.game.currentTrack));
-  if (allDone) endRound(code, "Tout le monde a répondu !", io);
+  if (allDone) endSoon(code, "Tout le monde a répondu !", io);
 }
 
 export function finishGame(code, io) {
@@ -51,6 +57,7 @@ export function finishGame(code, io) {
   game.interval = null;
   clearTimeout(game.breakTimer);
   game.breakTimer = null;
+  game._starting = false;
   clearTimeout(game.musicReadyTimer);
   game.musicReadyTimer = null;
   if (game.paused) clearPause(code, io);
@@ -81,20 +88,6 @@ export function finishGame(code, io) {
   saveSnapshot(salon);
   prepareSession(code, io);
   scheduleCleanup(code);
-}
-
-export function revealRound(code, reason, io) {
-  clearPause(code, io);
-  clearTimeout(salonRooms[code].game.musicReadyTimer);
-  endRound(code, reason, io);
-}
-
-export function nextRound(code, io) {
-  const game = salonRooms[code].game;
-  clearPause(code, io);
-  clearTimeout(game.breakTimer);
-  game.breakTimer = null;
-  startNextRound(code, io);
 }
 
 export function endRound(code, reason, io) {
@@ -153,12 +146,8 @@ export function endRound(code, reason, io) {
   scheduleCleanup(code);
   saveSnapshot(salon);
 
-  if (!salon.settings.manualNext) {
-    game.breakTimer = setTimeout(() => {
-      game.breakTimer = null;
-      startNextRound(code, io);
-    }, salon.settings.showAnswerDuration * 1000);
-  }
+  if (!salon.settings.manualNext)
+    armNext(code, io, salon.settings.showAnswerDuration);
 }
 
 export async function startNextRound(code, io) {

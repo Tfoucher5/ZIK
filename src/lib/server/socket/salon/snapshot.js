@@ -2,8 +2,7 @@ import { getAdminClient } from "../../config.js";
 import { salonRooms } from "../../state.js";
 import { noteEvent } from "../../services/health/opsEvents.js";
 import { scheduleDeparture } from "./leave.js";
-import { scheduleCleanup } from "./timers.js";
-import { nextRound } from "./rounds.js";
+import { nextRound, scheduleCleanup } from "./timers.js";
 
 // Instantané d'un salon dans Postgres (salon.snapshots) : écrit à chaque
 // changement de phase, de joueurs ou de réglages et sur SIGTERM, relu quand un
