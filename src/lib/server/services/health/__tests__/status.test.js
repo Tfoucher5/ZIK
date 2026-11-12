@@ -243,7 +243,8 @@ describe("pages de statut", () => {
             value: 80,
             detail: "secret interne",
           }),
-          memory: async () => ({ result: "ok", value: 512 }),
+          // Décimal : un horodatage ne peut pas contenir la valeur par hasard
+          memory: async () => ({ result: "ok", value: 512.37 }),
           load: async () => ({ result: "ok", value: 7 }),
         },
         record: async () => {},
@@ -259,7 +260,7 @@ describe("pages de statut", () => {
       ms: null,
     });
     expect(texte).not.toContain('"memory"');
-    expect(texte).not.toContain("512");
+    expect(texte).not.toContain("512.37");
     for (const mot of [
       "Socket.io",
       "Resend",
