@@ -1,10 +1,7 @@
 import { salonRooms, getIO } from "../../state.js";
 import { endRound, startNextRound } from "./rounds.js";
 import { clearOutage } from "./outage.js";
-import {
-  REVEAL_COUNTDOWN_S,
-  START_COUNTDOWN_S,
-} from "../../../data/salonOptions.js";
+import { START_COUNTDOWN_S } from "../../../data/salonOptions.js";
 import { dropSnapshot } from "./snapshot.js";
 import { recordSalonGameEnd } from "./persist.js";
 
@@ -77,7 +74,6 @@ export function startTimer(code, io) {
   game.timerValue = duration;
   game.timerMax = duration;
   game.timerActive = true;
-  game._endReason = null;
 
   io.to(`salon:${code}`).emit("salon_timer_started", {
     max: duration,
@@ -98,8 +94,7 @@ function runTimer(code, io) {
   const game = salonRooms[code].game;
   game.interval = setInterval(() => {
     game.timerValue = Math.max(0, Math.ceil((game.endsAt - Date.now()) / 1000));
-    if (game.timerValue <= 0)
-      endRound(code, game._endReason ?? "Temps écoulé !", io);
+    if (game.timerValue <= 0) endRound(code, "Temps écoulé !", io);
   }, 1000);
 }
 
@@ -192,20 +187,3 @@ export const armStart = (salon, io) =>
     salon.settings.startCountdown ?? START_COUNTDOWN_S,
     "start",
   );
-
-// Tout le monde a répondu : le chrono finit sur un court décompte plutôt
-// qu'une révélation sèche
-export function endSoon(code, reason, io) {
-  const salon = salonRooms[code];
-  const game = salon.game;
-  if (game._endReason && game.timerActive) return;
-  const ms = (salon.settings.revealCountdown ?? REVEAL_COUNTDOWN_S) * 1000;
-  if (!ms || !game.timerActive || game.paused || game.endsAt - Date.now() <= ms)
-    return endRound(code, reason, io);
-  game._endReason = reason;
-  game.endsAt = Date.now() + ms;
-  io.to(`salon:${code}`).emit("salon_timer_update", {
-    max: game.timerMax,
-    ...timerClock(game),
-  });
-}

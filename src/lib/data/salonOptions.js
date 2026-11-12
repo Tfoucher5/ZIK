@@ -4,10 +4,8 @@ export const SALON_DURATIONS = [15, 20, 30, 45, 60];
 export const SALON_REVEALS = [5, 7, 10, 15];
 export const SALON_TEAMS = [0, 2, 3, 4, 6, 8, 12, 16];
 export const SALON_INTERMISSIONS = [0, 5, 10, 15, 20, 30];
-// Décomptes affichés sur la TV et les téléphones avant le lancement d'une
-// partie et avant la révélation quand tout le monde a répondu
+// Décompte affiché sur la TV et les téléphones avant le lancement d'une partie
 export const START_COUNTDOWN_S = 5;
-export const REVEAL_COUNTDOWN_S = 3;
 // Annonce plein écran d'une manche spéciale, avant que la musique démarre
 export const SPECIAL_INTRO_MS = 4000;
 // Manches spéciales tirées au hasard (ZIK Pro)

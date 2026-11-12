@@ -46,6 +46,26 @@
   font-size: 1.6rem;
   color: var(--text);
 }
+.sh-reveal-next {
+  min-width: 140px;
+  padding-left: 24px;
+  border-left: 1px solid var(--border);
+  text-align: center;
+  font-family: var(--s-mono);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mid);
+}
+.sh-reveal-next b {
+  display: block;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--text);
+}
 
 /* Écran TV ouvert sans la clé du salon */
 .sh-locked {

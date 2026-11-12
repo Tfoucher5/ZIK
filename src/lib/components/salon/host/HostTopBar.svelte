@@ -19,7 +19,6 @@
     {#if h.phase === 'round' || h.phase === 'summary'}
       <span class="sh-round">Manche <b>{h.round} / {h.total}</b></span>
       {#if h.phase === 'summary' && !h.paused && (h.settings.manualNext || h.nextSec > 0)}
-        {#if !h.settings.manualNext}<span class="sh-round">Suite dans <b>{h.nextSec} s</b></span>{/if}
         <button class="sx-btn sh-regie-btn" onclick={h.nextRound}>{h.settings.manualNext ? 'Manche suivante' : 'Maintenant'}</button>
       {/if}
       <button class="sh-icon-btn" onclick={h.togglePause} title={h.paused ? 'Reprendre' : 'Pause'} aria-label={h.paused ? 'Reprendre' : 'Pause'}>{h.paused ? '▶' : '❚❚'}</button>

@@ -68,7 +68,6 @@ export function soiree() {
         maxRounds,
         showAnswerDuration: 0.05,
         startCountdown: 0,
-        revealCountdown: 0,
       });
       const tv = h.client();
       tv.socket.emit("salon_join_host", { code: h.code, key: salon.key });

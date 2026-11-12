@@ -24,13 +24,7 @@ import {
   standings,
 } from "./players.js";
 import { emitGameOver, emitRoundEnd } from "./phoneView.js";
-import {
-  armNext,
-  clearPause,
-  endSoon,
-  scheduleCleanup,
-  startTimer,
-} from "./timers.js";
+import { armNext, clearPause, scheduleCleanup, startTimer } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
   const salon = salonRooms[code];
@@ -47,7 +41,7 @@ export function checkEveryoneDone(code, io) {
       : mode === "multiple"
         ? players.every((p) => p._fullFoundCounted)
         : players.every((p) => playerFullyFound(p, salon.game.currentTrack));
-  if (allDone) endSoon(code, "Tout le monde a répondu !", io);
+  if (allDone) endRound(code, "Tout le monde a répondu !", io);
 }
 
 export function finishGame(code, io) {

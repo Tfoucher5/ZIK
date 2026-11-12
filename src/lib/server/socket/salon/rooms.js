@@ -4,10 +4,7 @@ import { userClient } from "../../middleware/auth.js";
 import { salonRooms, getIO } from "../../state.js";
 import { isPro } from "../../services/pro.js";
 import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
-import {
-  REVEAL_COUNTDOWN_S,
-  START_COUNTDOWN_S,
-} from "../../../data/salonOptions.js";
+import { START_COUNTDOWN_S } from "../../../data/salonOptions.js";
 import { makeTeams } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";
@@ -58,7 +55,6 @@ export async function createSalonRoom({
     buzzSound: true,
     finaleSound: true,
     startCountdown: START_COUNTDOWN_S,
-    revealCountdown: REVEAL_COUNTDOWN_S,
     showAnswerDuration: Math.min(
       Math.max(settings.showAnswerDuration || 7, 3),
       15,

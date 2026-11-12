@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-const m = vi.hoisted(() => ({ manches: 0, fins: [] }));
+const m = vi.hoisted(() => ({ manches: 0 }));
 
 vi.mock("../snapshot.js", () => ({
   saveSnapshot: async () => {},
@@ -20,18 +20,16 @@ vi.mock("../rounds.js", () => ({
   finishGame: () => {},
   skipTrack: () => {},
   checkEveryoneDone: () => {},
-  endRound: (code, reason) => {
+  endRound: (code) => {
     const g = salonRooms[code].game;
     clearInterval(g.interval);
     g.interval = null;
     g.phase = "summary";
-    m.fins.push(reason);
   },
 }));
 
 const { salonRooms } = await import("../../../state.js");
-const { startTimer, armNext, endSoon, pauseGame, resumeGame } =
-  await import("../timers.js");
+const { armNext, pauseGame, resumeGame } = await import("../timers.js");
 const { registerSalon } = await import("../index.js");
 const { CODE, CLE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
@@ -47,11 +45,9 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(1_000_000);
   m.manches = 0;
-  m.fins = [];
   salonDeTest();
   Object.assign(salonRooms[CODE].settings, {
     startCountdown: 5,
-    revealCountdown: 3,
     showAnswerDuration: 7,
   });
   h = makeIo();
@@ -97,48 +93,6 @@ describe("décompte avant le titre suivant", () => {
     });
     vi.advanceTimersByTime(3_000);
     expect(m.manches).toBe(1);
-  });
-});
-
-describe("décompte avant la révélation", () => {
-  beforeEach(() => {
-    game().phase = "round";
-    startTimer(CODE, h.io);
-  });
-
-  it("tout le monde a répondu : le chrono saute à 3 s puis révèle avec la bonne raison", () => {
-    vi.advanceTimersByTime(5_000);
-    endSoon(CODE, "Tout le monde a répondu !", h.io);
-    const maj = h.emissions
-      .filter((e) => e.event === "salon_timer_update")
-      .at(-1);
-    expect(maj.payload).toMatchObject({ endsAt: 1_008_000 });
-    expect(game().phase).toBe("round");
-    // Un second appel (dernier joueur qui revient) ne relance rien
-    endSoon(CODE, "Tout le monde a répondu !", h.io);
-    vi.advanceTimersByTime(3_000);
-    expect(m.fins).toEqual(["Tout le monde a répondu !"]);
-  });
-
-  it("moins de 3 s restantes ou décompte désactivé : révélation immédiate", () => {
-    vi.advanceTimersByTime(28_000);
-    endSoon(CODE, "Tout le monde a répondu !", h.io);
-    expect(m.fins).toEqual(["Tout le monde a répondu !"]);
-
-    game().phase = "round";
-    startTimer(CODE, h.io);
-    salonRooms[CODE].settings.revealCountdown = 0;
-    endSoon(CODE, "Fini", h.io);
-    expect(m.fins.at(-1)).toBe("Fini");
-  });
-
-  it("la manche suivante repart avec la raison par défaut", () => {
-    endSoon(CODE, "Tout le monde a répondu !", h.io);
-    vi.advanceTimersByTime(3_000);
-    game().phase = "round";
-    startTimer(CODE, h.io);
-    vi.advanceTimersByTime(30_000);
-    expect(m.fins.at(-1)).toBe("Temps écoulé !");
   });
 });
 
