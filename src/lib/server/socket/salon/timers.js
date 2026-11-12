@@ -25,7 +25,7 @@ export function scheduleCleanup(code) {
       clearTimeout(s.game.musicReadyTimer);
     }
     delete salonRooms[code];
-    dropSnapshot(code);
+    dropSnapshot(code, s);
     console.log(`Salon "${code}" libere de la memoire`);
   }, SALON_CLEANUP_DELAY);
 }
@@ -43,7 +43,7 @@ export function cleanupNow(code, io, message = "L'hôte a quitté le salon.") {
   clearTimeout(salon.game.outageTimer);
   io?.to(`salon:${code}`).emit("salon_closed", { message });
   delete salonRooms[code];
-  dropSnapshot(code);
+  dropSnapshot(code, salon);
   console.log(`Salon "${code}" ferme`);
 }
 
