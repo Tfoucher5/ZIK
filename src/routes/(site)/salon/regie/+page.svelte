@@ -13,7 +13,7 @@
   import TabSettings from '$lib/components/salon/regie/TabSettings.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
-  import { SalonRegie, PHASES } from '$lib/components/salon/regie/salonRegie.svelte.js';
+  import { SalonRegie } from '$lib/components/salon/regie/salonRegie.svelte.js';
   import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -31,7 +31,7 @@
 
 <div class="rg">
   <RegieHeader
-    code={r.code} phase={r.phase} phaseLabel={PHASES[r.phase]} paused={r.paused} round={r.round} maxRounds={r.settings.maxRounds ?? 0}
+    code={r.code} phase={r.phase} phaseLabel={r.phaseLabel} paused={r.paused} round={r.round} maxRounds={r.settings.maxRounds ?? 0}
     timerVal={r.timerVal} timerMax={r.timerMax} timerOn={r.timerOn} screens={r.screens}
     joueurs={r.players.length} repondu={r.answered}
     pro={r.pro} maxGratuit={FREE_MAX_PLAYERS} tvUrl={r.tvUrl} regieUrl={r.regieUrl}
@@ -74,7 +74,7 @@
             phase={r.phase} code={r.code} track={r.track} answerMode={r.settings.answerMode}
             volume={r.volume} pro={r.pro} history={r.history}
             onVolume={r.setVolume}
-            onReport={(reason) => r.send('salon_report_video', { reason })}
+            onReport={(reason, round) => r.send('salon_report_video', { reason, round })}
           />
         {:else if r.onglet === 'joueurs'}
           <NightBoard night={r.night} pro={r.pro} onReset={() => r.send('salon_reset_night')} onUpsell={() => (r.upsell = 'night')} />

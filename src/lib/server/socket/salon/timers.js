@@ -1,6 +1,7 @@
 import { salonRooms, getIO } from "../../state.js";
 import { endRound, startNextRound } from "./rounds.js";
 import { clearOutage } from "./outage.js";
+import { START_COUNTDOWN_S } from "../../../data/salonOptions.js";
 import { dropSnapshot } from "./snapshot.js";
 import { recordSalonGameEnd } from "./persist.js";
 
@@ -25,7 +26,7 @@ export function scheduleCleanup(code) {
       clearTimeout(s.game.musicReadyTimer);
     }
     delete salonRooms[code];
-    dropSnapshot(code);
+    dropSnapshot(code, s);
     console.log(`Salon "${code}" libere de la memoire`);
   }, SALON_CLEANUP_DELAY);
 }
@@ -43,7 +44,7 @@ export function cleanupNow(code, io, message = "L'hôte a quitté le salon.") {
   clearTimeout(salon.game.outageTimer);
   io?.to(`salon:${code}`).emit("salon_closed", { message });
   delete salonRooms[code];
-  dropSnapshot(code);
+  dropSnapshot(code, salon);
   console.log(`Salon "${code}" ferme`);
 }
 
@@ -111,6 +112,7 @@ export function pauseGame(code, io) {
   game.musicReadyTimer = null;
   clearTimeout(game.breakTimer);
   game.breakTimer = null;
+  game._starting = false;
   io.to(`salon:${code}`).emit("salon_paused", { paused: true });
 }
 
@@ -137,10 +139,54 @@ export function resumeGame(code, io) {
       });
       runTimer(code, io);
     } else game.musicReadyTimer = setTimeout(() => startTimer(code, io), 12000);
-  } else if (game.phase === "summary" && !salon.settings.manualNext) {
-    game.breakTimer = setTimeout(() => {
-      game.breakTimer = null;
-      startNextRound(code, io);
-    }, 3000);
-  }
+  } else if (game.phase === "summary" && !salon.settings.manualNext)
+    armNext(code, io, 3);
 }
+
+export function revealRound(code, reason, io) {
+  clearPause(code, io);
+  clearTimeout(salonRooms[code].game.musicReadyTimer);
+  endRound(code, reason, io);
+}
+
+export function nextRound(code, io) {
+  const game = salonRooms[code].game;
+  clearPause(code, io);
+  clearTimeout(game.breakTimer);
+  game.breakTimer = null;
+  game._starting = false;
+  startNextRound(code, io);
+}
+
+// Titre suivant (ou première manche) dans s secondes : l'heure de reprise
+// part à tous les écrans, qui affichent le décompte
+export function armNext(code, io, s, kind = "next") {
+  const { game, settings } = salonRooms[code];
+  clearTimeout(game.breakTimer);
+  game.breakTimer = null;
+  game._starting = false;
+  if (!s) return startNextRound(code, io);
+  game._starting = kind === "start";
+  game.breakTimer = setTimeout(() => {
+    game.breakTimer = null;
+    game._starting = false;
+    startNextRound(code, io);
+  }, s * 1000);
+  const now = Date.now();
+  io.to(`salon:${code}`).emit("salon_countdown", {
+    kind,
+    endsAt: now + s * 1000,
+    now,
+    // Décompte coupé par l'hôte : l'heure de reprise part quand même (bouton
+    // « Maintenant » de la TV, régie), seul le 3, 2, 1 est masqué
+    ...(kind === "next" && { show: settings.countNext !== false }),
+  });
+}
+
+export const armStart = (salon, io) =>
+  armNext(
+    salon.code,
+    io,
+    salon.settings.countStart === false ? 0 : START_COUNTDOWN_S,
+    "start",
+  );

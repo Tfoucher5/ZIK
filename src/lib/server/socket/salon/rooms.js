@@ -9,8 +9,7 @@ import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";
 import { broadcastRoster, teamLimit } from "./players.js";
 import { saveSnapshot } from "./snapshot.js";
-import { scheduleCleanup } from "./timers.js";
-import { startNextRound } from "./rounds.js";
+import { armNext, scheduleCleanup } from "./timers.js";
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -54,6 +53,8 @@ export async function createSalonRoom({
     specials: pro && settings.specials === true,
     buzzSound: true,
     finaleSound: true,
+    countStart: true,
+    countNext: true,
     showAnswerDuration: Math.min(
       Math.max(settings.showAnswerDuration || 7, 3),
       15,
@@ -92,6 +93,7 @@ export async function createSalonRoom({
       startTime: 0,
       firstFinder: null,
       history: [],
+      historyMedia: [],
       played: [],
       paused: false,
     },
@@ -179,11 +181,16 @@ export function applySettings(code, patch, io, allow) {
   const s = salon.settings;
   const game = salon.game;
   const idle = game.phase === "lobby" || game.phase === "gameover";
-  // Sons de la TV : pour tous, à tout moment, sans passer par l'offre Pro
-  const sons = ["buzzSound", "finaleSound"].filter((k) => k in patch);
+  // Sons de la TV et décomptes : pour tous, à tout moment, sans passer par
+  // l'offre Pro
+  const sons = ["buzzSound", "finaleSound", "countStart", "countNext"].filter(
+    (k) => k in patch,
+  );
   for (const k of sons) s[k] = patch[k] !== false;
-  if (sons.length && sons.length === Object.keys(patch).length)
+  if (sons.length && sons.length === Object.keys(patch).length) {
+    saveSnapshot(salon);
     return io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+  }
   if (!idle && !allow("liveSettings")) return;
   const clamp = (v, lo, hi, d) =>
     Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);
@@ -247,12 +254,8 @@ export function applySettings(code, patch, io, allow) {
     !s.manualNext &&
     !game.breakTimer &&
     !game.paused
-  ) {
-    game.breakTimer = setTimeout(() => {
-      game.breakTimer = null;
-      startNextRound(code, io);
-    }, s.showAnswerDuration * 1000);
-  }
+  )
+    armNext(code, io, s.showAnswerDuration);
   saveSnapshot(salon);
   io.to(`salon:${code}`).emit("salon_settings", { settings: s });
 }

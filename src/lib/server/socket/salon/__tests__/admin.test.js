@@ -48,6 +48,8 @@ const {
   supportGiftPro,
   supportSettings,
 } = await import("../admin.js");
+const { departPlayer } = await import("../departed.js");
+const { note } = await import("../journal.js");
 
 const CODE = "AIDE01";
 
@@ -164,6 +166,32 @@ describe("dépannage d'un salon depuis l'admin", () => {
       ["Mehdi", true],
       ["Camille", false],
     ]);
+  });
+
+  it("montre les partis, les titres joués, les téléphones et le journal", () => {
+    const salon = salonRooms[CODE];
+    h.rooms.set(`salon:players:${CODE}`, new Set(["tel1"]));
+    salon.game.history = [{ answer: "Daft Punk - Da Funk", cover: null }];
+    salon.game.videoOutage = true;
+    departPlayer(salon, "Mehdi");
+    supportKick(CODE, "Camille");
+    const s = salonLiveState(CODE);
+    expect(s).toMatchObject({ phones: 1, outage: true });
+    expect(s.history).toEqual(["Daft Punk - Da Funk"]);
+    expect(s.roster).toEqual([
+      expect.objectContaining({ username: "Mehdi", left: true }),
+    ]);
+    expect(s.journal.map((e) => e.text)).toEqual([
+      "Camille retiré de la soirée",
+      "Mehdi est parti",
+    ]);
+  });
+
+  it("garde les 30 derniers événements", () => {
+    const salon = salonRooms[CODE];
+    for (let i = 0; i < 40; i++) note(salon, `e${i}`);
+    expect(salon._journal).toHaveLength(30);
+    expect(salon._journal[0].text).toBe("e39");
   });
 
   it("renvoie null pour un salon inconnu", () => {

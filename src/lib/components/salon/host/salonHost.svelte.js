@@ -55,7 +55,9 @@ export class SalonHost {
   settings = $state({});
   choices = $state(null);
   error = $state("");
-  autoNextSec = $state(0);
+  startSec = $state(0);
+  nextSec = $state(0);
+  nextShown = $state(true);
   volume = $state(100);
   helpOpen = $state(false);
   userId = $state(null);
@@ -63,7 +65,6 @@ export class SalonHost {
 
   /** Lecteur vidéo (HostCenter), branché par bind:this */
   hostCenter = null;
-  #autoNextTimer = null;
   #sb;
 
   timerLevel = $derived(
@@ -89,19 +90,8 @@ export class SalonHost {
     this.hostCenter?.setVolume(v);
   };
 
-  startAutoNextCountdown(s) {
-    this.autoNextSec = s;
-    this.clearAutoNext();
-    this.#autoNextTimer = setInterval(() => {
-      if (--this.autoNextSec <= 0) this.clearAutoNext();
-    }, 1000);
-  }
-
-  clearAutoNext() {
-    clearInterval(this.#autoNextTimer);
-    this.#autoNextTimer = null;
-    this.autoNextSec = 0;
-  }
+  /** Branché par listenCountdowns */
+  stopCountdowns = () => {};
 
   startGame = () => {
     this.socket?.emit("salon_start");
@@ -109,7 +99,7 @@ export class SalonHost {
   };
   nextRound = () => {
     this.socket?.emit("salon_next_round");
-    this.clearAutoNext();
+    this.stopCountdowns();
   };
   restartGame = () => {
     this.socket?.emit("salon_restart");
@@ -206,6 +196,6 @@ export class SalonHost {
 
   destroy() {
     this.socket?.disconnect();
-    this.clearAutoNext();
+    this.stopCountdowns();
   }
 }

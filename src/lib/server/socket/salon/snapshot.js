@@ -2,8 +2,7 @@ import { getAdminClient } from "../../config.js";
 import { salonRooms } from "../../state.js";
 import { noteEvent } from "../../services/health/opsEvents.js";
 import { scheduleDeparture } from "./leave.js";
-import { scheduleCleanup } from "./timers.js";
-import { nextRound } from "./rounds.js";
+import { nextRound, scheduleCleanup } from "./timers.js";
 
 // Instantané d'un salon dans Postgres (salon.snapshots) : écrit à chaque
 // changement de phase, de joueurs ou de réglages et sur SIGTERM, relu quand un
@@ -175,7 +174,7 @@ async function rpc(what, fn, args, onFail) {
 let stopping = false;
 
 export function saveSnapshot(salon) {
-  if (stopping) return Promise.resolve(null);
+  if (stopping || salon._closed) return Promise.resolve(null);
   const tracks = salon.game.fullPlaylist;
   const now = Date.now();
   if (
@@ -205,7 +204,10 @@ export function saveSnapshot(salon) {
   );
   // SIGTERM attend aussi les titres : sinon l'état pointerait vers une
   // version jamais écrite
-  return Promise.all([salon._titresWrite, etat]).then(([, r]) => r);
+  const save = Promise.all([salon._titresWrite, etat]).then(([, r]) => r);
+  // dropSnapshot attend toutes les écritures en vol, pas seulement la dernière
+  salon._saves = Promise.all([salon._saves, save]).then(() => {});
+  return save;
 }
 
 // SIGTERM : plus rien ne bouge (chronos, enchaînements) pendant la sauvegarde,
@@ -221,17 +223,32 @@ export function freezeAndSaveAll() {
   const saves = Object.values(salonRooms).map(saveSnapshot);
   stopping = true;
   return Promise.race([
-    Promise.all(saves),
+    Promise.all([...saves, ...Object.values(closing)]),
     new Promise((r) => setTimeout(r, SIGTERM_BUDGET_MS)),
   ]);
 }
 
-export function dropSnapshot(code) {
-  return Promise.all(
-    [code, code + TITRES].map((p_code) =>
-      rpc("suppression instantané", "delete_salon_snapshot", { p_code }),
-    ),
-  );
+// Salons fermés dont l'instantané n'est pas encore effacé : une reprise attend
+// la fin de l'effacement, sinon le salon renaîtrait
+const closing = {};
+
+// L'effacement passe après les sauvegardes encore en vol : l'une d'elles
+// réécrirait sinon l'instantané d'un salon fermé
+export function dropSnapshot(code, salon) {
+  if (salon) salon._closed = true;
+  const done = Promise.resolve(salon?._saves)
+    .then(() =>
+      Promise.all(
+        [code, code + TITRES].map((p_code) =>
+          rpc("suppression instantané", "delete_salon_snapshot", { p_code }),
+        ),
+      ),
+    )
+    .finally(() => {
+      if (closing[code] === done) delete closing[code];
+    });
+  closing[code] = done;
+  return done;
 }
 
 // Au démarrage : les instantanés de plus d'un jour (crash sans reprise)
@@ -250,6 +267,7 @@ export async function restoreSalon(code, io, socket) {
   // « throttled » : on n'a pas regardé, ce n'est pas un salon fermé
   if (misses.length >= MAX_MISSES) return "throttled";
   if (code.endsWith(TITRES)) return;
+  await closing[code];
   await (pending[code] ??= load(code, io).finally(() => delete pending[code]));
   if (!salonRooms[code]) misses.push(now);
 }

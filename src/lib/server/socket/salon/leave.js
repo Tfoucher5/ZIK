@@ -4,6 +4,7 @@ import { checkEveryoneDone } from "./rounds.js";
 import { departPlayer } from "./departed.js";
 import { cleanupNow } from "./timers.js";
 import { safe } from "../safe.js";
+import { note } from "./journal.js";
 
 // Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
 // fermer la soirée
@@ -46,6 +47,7 @@ export function registerLeave(socket, io) {
         (rooms.get(`salon:ctrl:${code}`)?.size ?? 0);
       if (left > 0) return;
       clearTimeout(salon._hostDcTimer);
+      note(salon, "Hôte déconnecté : plus de TV ni de régie");
       const idle =
         salon.game.paused ||
         salon.game.phase === "lobby" ||

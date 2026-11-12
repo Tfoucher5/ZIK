@@ -24,7 +24,9 @@ import {
   standings,
 } from "./players.js";
 import { emitGameOver, emitRoundEnd } from "./phoneView.js";
-import { scheduleCleanup, startTimer, clearPause } from "./timers.js";
+import { mediaOf } from "./tracks.js";
+import { note } from "./journal.js";
+import { armNext, clearPause, scheduleCleanup, startTimer } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
   const salon = salonRooms[code];
@@ -51,6 +53,7 @@ export function finishGame(code, io) {
   game.interval = null;
   clearTimeout(game.breakTimer);
   game.breakTimer = null;
+  game._starting = false;
   clearTimeout(game.musicReadyTimer);
   game.musicReadyTimer = null;
   if (game.paused) clearPause(code, io);
@@ -81,20 +84,6 @@ export function finishGame(code, io) {
   saveSnapshot(salon);
   prepareSession(code, io);
   scheduleCleanup(code);
-}
-
-export function revealRound(code, reason, io) {
-  clearPause(code, io);
-  clearTimeout(salonRooms[code].game.musicReadyTimer);
-  endRound(code, reason, io);
-}
-
-export function nextRound(code, io) {
-  const game = salonRooms[code].game;
-  clearPause(code, io);
-  clearTimeout(game.breakTimer);
-  game.breakTimer = null;
-  startNextRound(code, io);
 }
 
 export function endRound(code, reason, io) {
@@ -149,16 +138,19 @@ export function endRound(code, reason, io) {
   };
 
   game.history.push({ answer, cover: track.cover });
+  // Pour signaler un titre déjà joué depuis la régie ; ne part jamais aux téléphones
+  // Même case que history : un salon repris d'un instantané plus ancien a un
+  // history sans historyMedia, ses premières cases restent vides
+  (game.historyMedia ??= [])[game.history.length - 1] = mediaOf(
+    track,
+    game.currentVideo,
+  );
   emitRoundEnd(io, code, roundSummary);
   scheduleCleanup(code);
   saveSnapshot(salon);
 
-  if (!salon.settings.manualNext) {
-    game.breakTimer = setTimeout(() => {
-      game.breakTimer = null;
-      startNextRound(code, io);
-    }, salon.settings.showAnswerDuration * 1000);
-  }
+  if (!salon.settings.manualNext)
+    armNext(code, io, salon.settings.showAnswerDuration);
 }
 
 export async function startNextRound(code, io) {
@@ -265,6 +257,7 @@ export async function startNextRound(code, io) {
   } catch (err) {
     if (stale()) return;
     console.error(`Salon skip "${track.title}":`, err.message);
+    note(salon, `Titre injouable passé : ${track.artist} - ${track.title}`);
     // En panne, les titres ne sont pas en cause : pas de faux signalements
     if (!game.videoOutage)
       reportTrackIssue(

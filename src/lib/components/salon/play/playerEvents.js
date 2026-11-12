@@ -1,9 +1,10 @@
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
-import { countdown } from "../countdown.js";
+import { countdown, listenCountdowns } from "../countdown.js";
 
 // Réactions du téléphone joueur aux événements du salon (état p : SalonPlayer).
 export function listenPlayer(p, socket, c, u) {
   const chrono = countdown((v) => (p.timerVal = v));
+  p.stopCountdowns = listenCountdowns(p, socket);
   socket.on("salon_joined", (data) => {
     onJoined(p, data, c, u);
     if (data.endsAt) chrono.start(data.endsAt, data.now);

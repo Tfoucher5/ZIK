@@ -31,6 +31,9 @@ export class SalonPlayer {
   // Classement vu du téléphone : { top, me, count }, jamais la liste complète
   ranking = $state(null);
   timerVal = $state(0);
+  startSec = $state(0);
+  nextSec = $state(0);
+  nextShown = $state(true);
   timerMax = $state(30);
   choices = $state(null);
 
@@ -199,6 +202,7 @@ export class SalonPlayer {
 
   destroy() {
     this.socket?.disconnect();
+    this.stopCountdowns?.();
     clearTimeout(this.#feedbackTimer);
     clearTimeout(this.errorTimer);
     clearTimeout(this.revealTimer);

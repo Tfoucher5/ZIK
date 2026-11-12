@@ -5,6 +5,7 @@
   import HostBuzz from './HostBuzz.svelte';
   import MediaCheck from '../regie/MediaCheck.svelte';
   import HostIntermission from './HostIntermission.svelte';
+  import AudioReveal from './AudioReveal.svelte';
   import { HostYoutube } from './hostYoutube.svelte.js';
   import { HostAudio } from './hostAudio.js';
   import { salonQrUrl } from '$lib/client/salonClient.js';
@@ -29,7 +30,7 @@
   const yt = new HostYoutube(() => onMusicReady?.(), (videoId) => onVideoError?.(videoId));
   // Sans vidéo, la manche se joue avec l'extrait audio
   const audio = new HostAudio(() => onMusicReady?.(), (url) => onVideoError?.(url));
-  let enAudio = false;
+  let enAudio = $state(false);
 
   const useAudio = (url) => {
     enAudio = true;
@@ -64,6 +65,8 @@
   </div>
 
   <div class="sh-cover" class:off={phase === 'summary'}></div>
+  <!-- Sans vidéo, le lecteur garde la vidéo d'avant : la pochette la cache -->
+  {#if phase === 'summary' && enAudio && roundEnd}<AudioReveal cover={roundEnd.cover} />{/if}
 
   <section class="sh-layer" class:on={phase === 'lobby' || phase === 'starting'}>
     <div class="sh-lobby">

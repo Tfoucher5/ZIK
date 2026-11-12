@@ -14,6 +14,8 @@
     roundDuration: x.settings.roundDuration,
     manualNext: x.settings.manualNext ? '1' : '0',
     showAnswerDuration: x.settings.showAnswerDuration,
+    countStart: x.settings.countStart ? '1' : '0',
+    countNext: x.settings.countNext ? '1' : '0',
     answerMode: x.settings.answerMode,
     teamCount: x.settings.teams.length,
   });
@@ -60,6 +62,18 @@
   <label class="a-label">Réponse affichée
     <select class="a-select" name="showAnswerDuration" bind:value={v.showAnswerDuration}>
       {#each SALON_REVEALS as n (n)}<option value={n}>{n} s</option>{/each}
+    </select>
+  </label>
+  <label class="a-label">Décompte avant la partie
+    <select class="a-select" name="countStart" bind:value={v.countStart}>
+      <option value="1">Oui</option>
+      <option value="0">Non</option>
+    </select>
+  </label>
+  <label class="a-label">Décompte avant le titre suivant
+    <select class="a-select" name="countNext" bind:value={v.countNext}>
+      <option value="1">Oui</option>
+      <option value="0">Non</option>
     </select>
   </label>
   <label class="a-label">Réponses

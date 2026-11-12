@@ -35,9 +35,7 @@ const ECRANS = [
     ecoute: (s) => listenHost(s, s.socket),
     etat: () => ({
       mergeRoster() {},
-      clearAutoNext() {},
       applyVolume() {},
-      startAutoNextCountdown() {},
       chat: { update() {} },
       players: [],
       settings: {},
@@ -127,6 +125,43 @@ describe.each(ECRANS)("chrono : $nom", ({ rejoint, ecoute, etat, extra }) => {
     recoit("salon_timer_update", { max: 45, endsAt: 20_000, now: 0 });
     vi.advanceTimersByTime(1000);
     expect(e).toMatchObject({ timerVal: 19, timerMax: 45 });
+  });
+
+  it("décompte de lancement : compte seul, disparaît quand la manche arrive", () => {
+    recoit("salon_countdown", { kind: "start", endsAt: 5_000, now: 0 });
+    vi.advanceTimersByTime(2000);
+    expect(e).toMatchObject({ startSec: 3, nextSec: 0 });
+    recoit("salon_round_start", { round: 1, total: 10 });
+    expect(e.startSec).toBe(0);
+  });
+
+  it("titre suivant : décompte coupé par la pause, puis remplacé", () => {
+    recoit("salon_countdown", { kind: "next", endsAt: 7_000, now: 0 });
+    vi.advanceTimersByTime(1000);
+    expect(e.nextSec).toBe(6);
+    recoit("salon_paused", { paused: true });
+    vi.advanceTimersByTime(10_000);
+    expect(e.nextSec).toBe(0);
+    recoit("salon_countdown", { kind: "start", endsAt: 16_000, now: 11_000 });
+    expect(e).toMatchObject({ startSec: 5, nextSec: 0 });
+  });
+
+  it("décompte coupé par l'hôte : le temps court toujours, l'affichage est masqué", () => {
+    recoit("salon_countdown", {
+      kind: "next",
+      endsAt: 7_000,
+      now: 0,
+      show: false,
+    });
+    vi.advanceTimersByTime(1000);
+    expect(e).toMatchObject({ nextSec: 6, nextShown: false });
+    recoit("salon_countdown", {
+      kind: "next",
+      endsAt: 20_000,
+      now: 13_000,
+      show: true,
+    });
+    expect(e.nextShown).toBe(true);
   });
 });
 

@@ -124,6 +124,8 @@ describe("une soirée complète", () => {
 
     const fin = await alice.attend("salon_round_end");
     expect(fin.title ?? fin.answer).toBeTruthy();
+    // Tout le monde a répondu : la réponse tombe tout de suite, sans décompte
+    expect(fin.reason).toBe("Tout le monde a répondu !");
 
     // Les téléphones n'ont rien appris avant la révélation
     for (const tel of [alice, bob]) {

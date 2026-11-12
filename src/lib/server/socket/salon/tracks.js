@@ -179,3 +179,10 @@ export function currentTrackInfo(salon) {
     correctChoiceIndex: salon.game.correctChoiceIndex,
   };
 }
+
+// Ce que la régie signale d'un titre : la vidéo exacte qui passait
+export const mediaOf = (track, video) => ({
+  trackId: track.id,
+  videoId: video?.id ?? null,
+  start: video?.start ?? null,
+});

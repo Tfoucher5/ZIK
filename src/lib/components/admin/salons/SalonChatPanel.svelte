@@ -2,7 +2,7 @@
   import { tick, untrack } from 'svelte';
   import { enhance } from '$app/forms';
   import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { since } from './since.js';
+  import { clock, since } from './since.js';
 
   /** Chat en direct avec l'organisateur du salon, rafraîchi toutes les 2 s. */
   let { code, initial = null, busy, submit, onUnread = () => {} } = $props();
@@ -19,7 +19,6 @@
   let error = $state('');
   let list = $state();
 
-  const time = (t) => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const status = $derived(
     !support ? "Pas encore d'échange. Écris le premier message : il s'affiche sur la régie et l'écran TV."
     : !support.open ? `Demande close ${ago(new Date(support.closedAt).toISOString())}.`
@@ -88,7 +87,7 @@
   <ol bind:this={list}>
     {#each support?.messages ?? [] as m (m.id)}
       <li class={m.from}>
-        <small>{m.from === 'admin' ? 'Toi' : 'Organisateur'} · {time(m.at)}</small>
+        <small>{m.from === 'admin' ? 'Toi' : 'Organisateur'} · {clock(m.at)}</small>
         <p>{m.text}</p>
       </li>
     {/each}

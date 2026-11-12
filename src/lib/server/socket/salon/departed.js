@@ -2,6 +2,8 @@
 // restent comptés dans la partie en cours et dans la soirée, rangés par jeton
 // dans salon.departed, et retrouvent leurs points s'ils reviennent.
 
+import { note } from "./journal.js";
+
 export const departed = (salon) => Object.values(salon.departed ?? {});
 
 export function departPlayer(salon, username) {
@@ -9,6 +11,8 @@ export function departPlayer(salon, username) {
   delete salon.players[username];
   const inGame = !["lobby", "gameover"].includes(salon.game.phase);
   if (!inGame && !p.night) return;
+  // Lobby : un téléphone rechargé revient aussitôt, pas la peine de le noter
+  note(salon, `${username} est parti`);
   (salon.departed ??= {})[p.token] = {
     username: p.username,
     token: p.token,

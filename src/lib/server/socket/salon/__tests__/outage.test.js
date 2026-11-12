@@ -28,6 +28,7 @@ vi.mock("../../../services/admin/alerts.js", () => ({
 }));
 let recherches = 0;
 vi.mock("../tracks.js", () => ({
+  mediaOf: (t) => ({ trackId: t.id }),
   buildSessionPlaylist: () => [],
   currentTrackInfo: () => null,
   forgetVideo: () => {},
@@ -152,5 +153,13 @@ describe("panne de recherche vidéo", () => {
     await vi.advanceTimersByTimeAsync(60_000);
     expect(game.phase).toBe("round");
     expect(game.currentRound).toBe(1);
+    expect(
+      salonRooms[CODE]._journal
+        .map((e) => e.text)
+        .filter((x) => !x.startsWith("Titre injouable")),
+    ).toEqual([
+      "La musique joue de nouveau",
+      "Musique en panne : la partie attend",
+    ]);
   });
 });

@@ -41,6 +41,14 @@ export class SalonRegie {
   intermission = $state(null);
   finale = $state(null);
   timerVal = $state(0);
+  startSec = $state(0);
+  nextSec = $state(0);
+  phaseLabel = $derived(
+    this.startSec
+      ? `Lancement dans ${this.startSec} s`
+      : PHASES[this.phase] +
+          (this.nextSec ? ` · suite dans ${this.nextSec} s` : ""),
+  );
   timerMax = $state(30);
   timerOn = $state(false);
   track = $state(null);
@@ -201,5 +209,6 @@ export class SalonRegie {
 
   destroy() {
     this.socket?.disconnect();
+    this.stopCountdowns?.();
   }
 }

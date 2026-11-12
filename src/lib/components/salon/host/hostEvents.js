@@ -1,11 +1,12 @@
 import { playSound, SOUNDS } from "./sounds.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
-import { countdown } from "../countdown.js";
+import { countdown, listenCountdowns } from "../countdown.js";
 import { forgetSalon } from "../../../client/salonClient.js";
 
 // Réactions de l'écran TV aux événements du salon (état h : SalonHost).
 export function listenHost(h, socket) {
   const chrono = countdown((v) => (h.timerVal = v));
+  h.stopCountdowns = listenCountdowns(h, socket);
   socket.on("salon_server_restart", () => {
     h.restarting = true;
     h.hostCenter?.pauseVideo();
@@ -87,7 +88,6 @@ export function listenHost(h, socket) {
     if (paused) chrono.stop();
     if (paused) h.hostCenter?.pauseVideo();
     else if (!h.flashCut) h.hostCenter?.resumeVideo();
-    if (paused) h.clearAutoNext();
   });
 
   socket.on("salon_scores_update", ({ scores, teams }) => {
@@ -122,7 +122,6 @@ export function listenHost(h, socket) {
     h.timerVal = 0;
     h.timerStarted = false;
     h.choices = data.choices || null;
-    h.clearAutoNext();
     h.players = h.players.map((p) => ({
       ...p,
       foundThisRound: false,
@@ -199,8 +198,6 @@ export function listenHost(h, socket) {
         .map((p) => ({ ...p, score: m[p.username] ?? p.score }))
         .sort((a, b) => b.score - a.score);
     }
-    if (!h.settings.manualNext)
-      h.startAutoNextCountdown(h.settings.showAnswerDuration || 7);
   });
 
   socket.on("salon_game_over", (data) => {
@@ -208,7 +205,6 @@ export function listenHost(h, socket) {
     h.gameOver = data;
     h.teams = data.teams;
     h.night = data.night;
-    h.clearAutoNext();
     h.hostCenter?.fadeOut();
   });
 
@@ -216,7 +212,6 @@ export function listenHost(h, socket) {
     h.mergeRoster(players);
     h.roundEnd = null;
     h.gameOver = null;
-    h.clearAutoNext();
   });
 
   socket.on(

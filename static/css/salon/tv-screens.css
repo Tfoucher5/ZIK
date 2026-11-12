@@ -46,7 +46,6 @@
   font-size: 1.6rem;
   color: var(--text);
 }
-
 /* Écran TV ouvert sans la clé du salon */
 .sh-locked {
   min-height: 100dvh;

@@ -4,6 +4,7 @@ import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { teamStandings } from "./teams.js";
 import { checkEveryoneDone } from "./rounds.js";
 import { eveningView } from "./evening.js";
+import { note } from "./journal.js";
 import { saveSnapshot } from "./snapshot.js";
 import { timerClock } from "./timers.js";
 import {
@@ -283,6 +284,7 @@ export function kickPlayer(salon, username, io) {
   // Ni ce pseudo ni ce téléphone ne reviennent dans la soirée
   salon.banned.add(username.toLowerCase());
   salon.banned.add(player.token);
+  note(salon, `${username} retiré de la soirée`);
   const target = player.socketId && io.sockets.sockets.get(player.socketId);
   if (target) {
     target.emit("salon_kicked");
