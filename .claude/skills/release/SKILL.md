@@ -1,6 +1,6 @@
 ---
 name: release
-description: Met en production ZIK (develop vers master) — vérifie la porte de mise en prod du CLAUDE.md, la version, les notes, ouvre la PR de release et prévient Théo, qui fusionne. Utilise ce skill quand develop contient des changements à livrer, ou quand Théo lance /release.
+description: Met en production ZIK (develop vers master) — vérifie la porte de mise en prod du CLAUDE.md, la version, les notes, ouvre la PR de release, la fusionne quand aucun salon n'a de joueur connecté et prévient Théo. Utilise ce skill quand develop contient des changements à livrer, ou quand Théo lance /release.
 argument-hint: "[version voulue, sinon calculée]"
 allowed-tools: Bash(git log *) Bash(git fetch *) Bash(git rev-parse *) Bash(date *) Bash(node -p *)
 ---
@@ -14,7 +14,7 @@ allowed-tools: Bash(git log *) Bash(git fetch *) Bash(git rev-parse *) Bash(date
 
 ## Étapes
 
-Tu prépares jusqu'à la PR verte, Théo fusionne quand aucune soirée ne tourne. Pas d'attente de ton côté.
+Tu vas jusqu'à la prod : PR verte, fusion, vérification du déploiement. Théo est prévenu après coup.
 
 1. **Il y a quelque chose à livrer.** Si la liste des commits est vide, dis-le et arrête.
 2. **Le staging est sain**, chaque point vérifié et noté :
@@ -26,7 +26,8 @@ Tu prépares jusqu'à la PR verte, Théo fusionne quand aucune soirée ne tourne
    - migrations en attente appliquées sur le staging sans nouvel avertissement des conseillers.
 3. **Version.** Une `feat` dans la liste = version mineure ; seulement `fix`, `perf`, `chore`, `docs` = correctif. Incrémente-la partout où elle apparaît (`package.json` et les pages qui l'affichent : cherche l'ancienne version avec Grep).
 4. **Notes.** Rédige les notes de release : d'abord ce qui change pour les joueurs et les clients Pro, puis le technique. Ajoute une entrée dans `src/lib/data/news.js` seulement si l'expérience change pour eux.
-5. **Branche de release** `release/vX.Y.Z` depuis `develop` avec le bump de version et les notes, puis PR vers `master` (`gh pr create --base master --title "release vX.Y.Z"`). CI verte, workflow « Scénario salon » compris (lancé par le push de la branche de release) : préviens Théo que c'est prêt (il fusionne en merge commit, jamais squash), et passe à la tâche suivante.
-6. **Après le merge** (quand Théo le signale ou à la reprise) : déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK, report `master` → `develop` en merge commit. Pas de surveillance prolongée.
+5. **Branche de release** `release/vX.Y.Z` depuis `develop` avec le bump de version et les notes, puis PR vers `master` (`gh pr create --base master --title "release vX.Y.Z"`). CI verte, workflow « Scénario salon » compris (lancé par le push de la branche de release).
+6. **Fusion.** Juste avant, ouvre `/admin/salons` en prod avec Claude in Chrome : si un salon a au moins un joueur connecté (pas « hors ligne »), attends et réessaie plus tard. Sinon `gh pr merge --merge` (merge commit, jamais squash). Vérifie aussi les réglages de dashboard que la release exige (ex : Exposed schemas) et fais-les avant la fusion.
+7. **Après le merge**, sans attendre : déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK, report `master` → `develop` en merge commit. Pas de surveillance prolongée.
 
-Message à Théo : version, contenu, état de chaque vérification, ce qu'il peut tester en prod.
+Message à Théo après la mise en prod : version, contenu, état de chaque vérification, ce qu'il peut tester en prod.

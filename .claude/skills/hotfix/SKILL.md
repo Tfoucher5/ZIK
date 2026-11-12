@@ -25,5 +25,5 @@ Un hotfix est le plus petit changement qui supprime le problème, rien de plus. 
 6. `/relire` avec `origin/master` comme base.
 7. Version : incrément de correctif (`X.Y.Z+1`) dans `package.json` et partout où elle est affichée.
 8. Push, `gh pr create --base master --title "fix(<zone>): … (vX.Y.Z)"`.
-9. CI verte : préviens Théo que c'est prêt. Il fusionne (squash) en tenant compte des soirées en cours.
-10. Après le merge : PR `master` → `develop` en merge commit, déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK.
+9. CI verte : vérifie `/admin/salons` en prod avec Claude in Chrome. Aucun salon avec un joueur connecté : `gh pr merge --squash --delete-branch`. Sinon, attends qu'ils partent (sauf si le bug casse justement ces soirées : alors fusionne, l'instantané les reprend).
+10. Après le merge : préviens Théo (bug, correctif, quoi tester), PR `master` → `develop` en merge commit, déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK.
