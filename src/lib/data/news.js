@@ -6,6 +6,22 @@
 export const NEWS = [
   {
     date: "2026-11-12",
+    version: "3.29.0",
+    tag: "Amélioration",
+    title: "Des soirées mieux rythmées",
+    summary:
+      "En soirée, un décompte annonce le début de la partie et chaque titre suivant. Chaque décompte se coupe dans la régie.",
+    items: [
+      "5 secondes « La partie commence » sur la TV et les téléphones avant la première manche, et à la revanche.",
+      "Après la réponse, un gros 3, 2, 1 au milieu de la TV annonce le titre suivant. Les téléphones affichent « Titre suivant dans X s ».",
+      "Quand tout le monde a répondu, la réponse s'affiche tout de suite.",
+      "Une manche jouée sans vidéo montre la pochette en grand sur la TV à la révélation, au lieu de la vidéo d'avant.",
+      "Dans la régie, onglet Réglages, « Décompte avant la partie » et « Décompte avant le titre suivant » se coupent chacun à part.",
+      "Chaque titre déjà joué se signale depuis « Titres joués », même après la manche ou au podium.",
+    ],
+  },
+  {
+    date: "2026-11-12",
     version: "3.28.0",
     tag: "Amélioration",
     title: "Fermer la soirée pour de bon",
