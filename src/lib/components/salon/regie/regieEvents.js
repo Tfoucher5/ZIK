@@ -141,10 +141,14 @@ export function listenRegie(r, socket) {
     r.mergeRoster(players);
     r.history = [];
   });
-  socket.on("salon_playlists_changed", ({ trackCount, appliedNow }) =>
-    r.flash(
-      `Playlist changée (${trackCount} titres), ${appliedNow ? "dès la manche suivante" : "pour la prochaine partie"}.`,
-    ),
+  socket.on(
+    "salon_playlists_changed",
+    ({ playlistIds, trackCount, appliedNow }) => {
+      r.settings = { ...r.settings, playlistIds };
+      r.flash(
+        `Playlist changée (${trackCount} titres), ${appliedNow ? "dès la manche suivante" : "pour la prochaine partie"}.`,
+      );
+    },
   );
   socket.on("salon_screens", ({ count }) => {
     r.screens = count;
