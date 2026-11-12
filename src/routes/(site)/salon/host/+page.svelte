@@ -53,7 +53,7 @@
       settings={h.settings}
       onSetting={(patch) => h.socket?.emit('salon_update_settings', patch)}
       onChangePlaylists={h.canChangePlaylists ? h.openPicker : null}
-      onNewSalon={() => window.location.href = '/salon'}
+      onNewSalon={h.closeSalon}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
       buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} mediaCheck={h.mediaCheck}

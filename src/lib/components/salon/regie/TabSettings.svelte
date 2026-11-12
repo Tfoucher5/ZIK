@@ -1,5 +1,6 @@
 <script>
   import SpecialsInfo from '$lib/components/salon/setup/SpecialsInfo.svelte';
+  import CloseEvening from '$lib/components/salon/regie/CloseEvening.svelte';
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
   import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
 
@@ -14,9 +15,10 @@
    *   onRenameTeam: (team: number, name: string) => void,
    *   onUpsell: (f: string) => void,
    *   onOpenPlaylists: () => void, playlistNames: string[],
+   *   onClose: () => void,
    * }}
    */
-  let { settings, phase, round, pro, onSet, onRenameTeam, onUpsell, onOpenPlaylists, onSound, playlistNames = [] } = $props();
+  let { settings, phase, round, pro, onSet, onRenameTeam, onUpsell, onOpenPlaylists, onSound, onClose, playlistNames = [] } = $props();
 
   const idle = $derived(phase === 'lobby' || phase === 'gameover');
 </script>
@@ -133,6 +135,8 @@
     </div>
   </div>
 {/if}
+
+<CloseEvening {onClose} />
 
 <style>
   .ts-titre { margin: 0 0 6px; font-size: 1.2rem; }

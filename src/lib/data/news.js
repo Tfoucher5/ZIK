@@ -6,6 +6,20 @@
 export const NEWS = [
   {
     date: "2026-11-12",
+    version: "3.28.0",
+    tag: "Amélioration",
+    title: "Fermer la soirée pour de bon",
+    summary:
+      "Nouveau dans la régie : « Fermer la soirée » ferme le salon tout de suite pour la TV et tous les téléphones.",
+    items: [
+      "Dans la régie, onglet Réglages, « Fermer la soirée » ferme le salon tout de suite. Les téléphones reviennent à l'écran d'accueil avec un message, plus besoin d'attendre.",
+      "Sur la TV, « Nouveau salon » ferme aussi l'ancien pour tout le monde.",
+      "Un PC en veille ou un onglet fermé ne ferme toujours rien : la soirée attend votre retour, et /salon propose de la reprendre.",
+      "Une partie interrompue par la fermeture garde ses scores.",
+    ],
+  },
+  {
+    date: "2026-11-12",
     version: "3.27.0",
     tag: "Nouveauté",
     title: "Le film ou la série d'abord",

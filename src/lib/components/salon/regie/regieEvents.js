@@ -1,5 +1,6 @@
 import { SPECIALS } from "../../../data/salonOptions.js";
 import { countdown } from "../countdown.js";
+import { forgetSalon } from "../../../client/salonClient.js";
 
 // Réactions de la régie aux événements du salon (état r : SalonRegie).
 export function listenRegie(r, socket) {
@@ -154,6 +155,10 @@ export function listenRegie(r, socket) {
     r.pro = pro;
     r.upsell = null;
     r.flash("ZIK Pro activé pour ce salon.");
+  });
+  socket.on("salon_closed", () => {
+    forgetSalon(r.code);
+    window.location.href = "/salon";
   });
   socket.on("salon_error", ({ message }) => {
     r.restarting = false;
