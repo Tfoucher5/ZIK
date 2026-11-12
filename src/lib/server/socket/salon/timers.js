@@ -172,13 +172,14 @@ export function armNext(code, io, s, kind = "next") {
     game._starting = false;
     startNextRound(code, io);
   }, s * 1000);
-  // Décompte du titre suivant coupé par l'hôte : la suite arrive quand même
-  if (kind === "next" && settings.countNext === false) return;
   const now = Date.now();
   io.to(`salon:${code}`).emit("salon_countdown", {
     kind,
     endsAt: now + s * 1000,
     now,
+    // Décompte coupé par l'hôte : l'heure de reprise part quand même (bouton
+    // « Maintenant » de la TV, régie), seul le 3, 2, 1 est masqué
+    ...(kind === "next" && { show: settings.countNext !== false }),
   });
 }
 

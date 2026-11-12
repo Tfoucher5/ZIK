@@ -64,7 +64,7 @@
   </div>
 
   <BigCountdown sec={h.startSec} label="La partie commence" />
-  <BigCountdown sec={h.nextSec <= 3 && !h.paused ? h.nextSec : 0} />
+  <BigCountdown sec={h.nextShown && h.nextSec <= 3 && !h.paused ? h.nextSec : 0} />
 
   {#if h.phase === 'lobby'}
     <footer class="sh-foot">

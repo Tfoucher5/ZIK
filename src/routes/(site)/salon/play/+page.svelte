@@ -94,7 +94,7 @@
           round={p.round} total={p.total}
           onLeave={p.leave}
         />
-        {#if p.phase === 'summary' && p.nextSec > 0}<p class="sp-next">Titre suivant dans {p.nextSec} s</p>{/if}
+        {#if p.phase === 'summary' && p.nextShown && p.nextSec > 0}<p class="sp-next">Titre suivant dans {p.nextSec} s</p>{/if}
       {/if}
 
       {#if p.restarting}<p class="sp-error">Mise à jour en cours : reconnexion automatique dans quelques secondes. La manche en cours sera rejouée.</p>{/if}

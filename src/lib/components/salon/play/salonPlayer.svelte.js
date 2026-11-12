@@ -33,6 +33,7 @@ export class SalonPlayer {
   timerVal = $state(0);
   startSec = $state(0);
   nextSec = $state(0);
+  nextShown = $state(true);
   timerMax = $state(30);
   choices = $state(null);
 

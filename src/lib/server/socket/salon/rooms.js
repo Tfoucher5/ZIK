@@ -186,8 +186,10 @@ export function applySettings(code, patch, io, allow) {
     (k) => k in patch,
   );
   for (const k of sons) s[k] = patch[k] !== false;
-  if (sons.length && sons.length === Object.keys(patch).length)
+  if (sons.length && sons.length === Object.keys(patch).length) {
+    saveSnapshot(salon);
     return io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+  }
   if (!idle && !allow("liveSettings")) return;
   const clamp = (v, lo, hi, d) =>
     Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);

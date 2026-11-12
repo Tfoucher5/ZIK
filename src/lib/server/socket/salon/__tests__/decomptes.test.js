@@ -64,7 +64,7 @@ describe("décompte avant le titre suivant", () => {
   it("annonce l'heure de reprise à tout le salon puis lance la manche", () => {
     armNext(CODE, h.io, 7);
     expect(decomptes()).toEqual([
-      { kind: "next", endsAt: 1_007_000, now: 1_000_000 },
+      { kind: "next", endsAt: 1_007_000, now: 1_000_000, show: true },
     ]);
     expect(h.emissions.at(-1).cibles).toEqual([`salon:${CODE}`]);
     vi.advanceTimersByTime(6_999);
@@ -73,10 +73,12 @@ describe("décompte avant le titre suivant", () => {
     expect(m.manches).toBe(1);
   });
 
-  it("décompte coupé par l'hôte : rien d'annoncé, la manche part à l'heure", () => {
+  it("décompte coupé par l'hôte : l'heure de reprise part quand même, sans affichage", () => {
     salonRooms[CODE].settings.countNext = false;
     armNext(CODE, h.io, 7);
-    expect(decomptes()).toEqual([]);
+    expect(decomptes()).toEqual([
+      { kind: "next", endsAt: 1_007_000, now: 1_000_000, show: false },
+    ]);
     vi.advanceTimersByTime(7_000);
     expect(m.manches).toBe(1);
   });
