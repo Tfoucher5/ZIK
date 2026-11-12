@@ -7,7 +7,7 @@
 </script>
 
 <section class="a-card block">
-  <h3>Joueurs ({s.players})</h3>
+  <h3>Joueurs ({s.roster.length})</h3>
   <ul class="a-list">
     {#each s.roster as p (p.username)}
       <li class="a-row">
@@ -26,7 +26,7 @@
       <li class="a-empty">Personne pour l'instant.</li>
     {/each}
   </ul>
-  <p class="a-muted hint">Un joueur retiré ne peut plus revenir de la soirée, ni avec ce pseudo ni avec ce téléphone.</p>
+  <p class="a-muted hint">Un joueur retiré ne peut plus revenir de la soirée, ni avec ce pseudo ni avec ce téléphone. Un joueur parti que l'on retire perd aussi ses points de la partie.</p>
 </section>
 
 <style>

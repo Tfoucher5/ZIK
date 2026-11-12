@@ -1,15 +1,15 @@
 <script>
+  import { clock } from './since.js';
+
   /** Ce qui s'est passé dans le salon et les titres déjà joués. */
   let { s } = $props();
-
-  const time = (ms) => new Date(ms).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 </script>
 
 <section class="a-card block">
   <h3>Journal</h3>
   <ul class="a-list">
     {#each s.journal as e, i (i)}
-      <li class="line"><span class="a-muted at">{time(e.at)}</span><span>{e.text}</span></li>
+      <li class="line"><span class="a-muted at">{clock(e.at)}</span><span>{e.text}</span></li>
     {:else}
       <li class="a-empty">Rien à signaler depuis l'ouverture ou le dernier redémarrage.</li>
     {/each}

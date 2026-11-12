@@ -16,8 +16,8 @@ export function holdForVideos(salon, io, retry) {
     game.sessionPlaylist.unshift(game.currentTrack);
   }
   const retryIn = Math.min(MAX_WAIT, 10 * (game.skipStreak - OUTAGE_AFTER + 1));
-  if (!game.videoOutage) note(salon, "Musique en panne : la partie attend");
-  if (!game.videoOutage)
+  if (!game.videoOutage) {
+    note(salon, "Musique en panne : la partie attend");
     alertAdminsSafe(
       "admin_errors",
       {
@@ -28,6 +28,7 @@ export function holdForVideos(salon, io, retry) {
       },
       { throttleMs: 30 * 60 * 1000 },
     );
+  }
   game.videoOutage = true;
   io.to(`salon:${salon.code}`).emit("salon_video_outage", { retryIn });
   clearTimeout(game.outageTimer);

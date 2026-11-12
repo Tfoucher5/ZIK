@@ -9,9 +9,10 @@ export const departed = (salon) => Object.values(salon.departed ?? {});
 export function departPlayer(salon, username) {
   const p = salon.players[username];
   delete salon.players[username];
-  note(salon, `${username} est parti`);
   const inGame = !["lobby", "gameover"].includes(salon.game.phase);
   if (!inGame && !p.night) return;
+  // Lobby : un téléphone rechargé revient aussitôt, pas la peine de le noter
+  note(salon, `${username} est parti`);
   (salon.departed ??= {})[p.token] = {
     username: p.username,
     token: p.token,

@@ -48,7 +48,7 @@
     <div class="a-card fact">
       <span class="lbl">Joueurs</span>
       <b>{s.roster.filter((p) => !p.offline && !p.left).length} en ligne</b>
-      <span class="a-muted">{s.phones} téléphone{s.phones > 1 ? 's' : ''} · {s.players} au total{s.pro ? '' : ` · max ${FREE_MAX_PLAYERS}`}</span>
+      <span class="a-muted">{s.phones} téléphone{s.phones > 1 ? 's' : ''} · {s.players} dans le salon{s.pro ? '' : ` · max ${FREE_MAX_PLAYERS}`}</span>
     </div>
     <div class="a-card fact">
       <span class="lbl">Offre</span>
