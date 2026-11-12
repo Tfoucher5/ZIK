@@ -20,7 +20,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: rgb(0 0 0 / 0.85);
+    background: rgb(0 0 0 / 0.95);
     text-align: center;
   }
   .start-cd p {
