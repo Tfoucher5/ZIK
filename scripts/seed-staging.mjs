@@ -65,22 +65,22 @@ const TABLES = [
   },
   {
     t: "custom_playlist_tracks",
-    where: `playlist_id in (select id from public.custom_playlists where ${official})`,
+    where: `playlist_id in (select id from catalog.custom_playlists where ${official})`,
   },
   {
     t: "track_answers",
-    where: `track_id in (select c.id from public.custom_playlist_tracks c join public.custom_playlists p on p.id = c.playlist_id where p.${official})`,
+    where: `track_id in (select c.id from catalog.custom_playlist_tracks c join catalog.custom_playlists p on p.id = c.playlist_id where p.${official})`,
   },
   {
     t: "rooms",
     where: official,
     set: { owner_id: admin.id },
     // une room officielle peut pointer vers une playlist non copiée
-    fix: `update public.rooms set playlist_id = null where playlist_id not in (select id from public.custom_playlists)`,
+    fix: `update play.rooms set playlist_id = null where playlist_id not in (select id from catalog.custom_playlists)`,
   },
   {
     t: "room_playlists",
-    where: `room_id in (select id from public.rooms where ${official}) and playlist_id in (select id from public.custom_playlists where ${official})`,
+    where: `room_id in (select id from play.rooms where ${official}) and playlist_id in (select id from catalog.custom_playlists where ${official})`,
   },
   { t: "daily_songs" },
   { t: "zikle_pool" },

@@ -6,14 +6,14 @@
 select
   (select count(*) from (
     select g.id
-    from games g
-    join game_players gp on gp.game_id = g.id
+    from play.games g
+    join play.game_players gp on gp.game_id = g.id
     where g.ended_at is not null
       and g.started_at > now() - interval '7 days'
     group by g.id
     having count(gp.id) >= 2
   ) x) as rooms_multi,
-  (select count(*) from games
+  (select count(*) from play.games
    where source = 'salon'
      and ended_at is not null
      and player_count >= 2
@@ -23,36 +23,36 @@ select
 select
   count(*) as parties_lancees,
   count(*) filter (where ended_at is not null) as parties_finies,
-  (select count(*) from profiles where created_at > now() - interval '7 days') as inscrits,
-  (select count(*) from daily_results where created_at > now() - interval '7 days') as parties_zikle
-from games
+  (select count(*) from public.profiles where created_at > now() - interval '7 days') as inscrits,
+  (select count(*) from play.daily_results where created_at > now() - interval '7 days') as parties_zikle
+from play.games
 where started_at > now() - interval '7 days';
 
 -- 3. Activation : inscrits de la semaine précédente qui ont joué
 with nouveaux as (
-  select id from profiles
+  select id from public.profiles
   where created_at between now() - interval '14 days' and now() - interval '7 days'
 )
 select
   count(*) as inscrits,
   count(*) filter (where exists (
-    select 1 from game_players gp where gp.user_id = n.id
+    select 1 from play.game_players gp where gp.user_id = n.id
   ) or exists (
-    select 1 from daily_results d where d.user_id = n.id
+    select 1 from play.daily_results d where d.user_id = n.id
   )) as ont_joue
 from nouveaux n;
 
 -- 4. Retour J+1 à J+7 (inscrits entre J-14 et J-7)
 with nouveaux as (
-  select id, created_at::date as d0 from profiles
+  select id, created_at::date as d0 from public.profiles
   where created_at between now() - interval '14 days' and now() - interval '7 days'
 ),
 activite as (
   select gp.user_id, g.started_at::date as d
-  from game_players gp join games g on g.id = gp.game_id
+  from play.game_players gp join play.games g on g.id = gp.game_id
   where gp.user_id is not null
   union all
-  select user_id, date from daily_results
+  select user_id, date from play.daily_results
 )
 select
   count(*) as inscrits,
@@ -64,14 +64,14 @@ from nouveaux n;
 
 -- 5. Provenance des nouveaux visiteurs
 select coalesce(nullif(source, ''), referrer_host, '(direct)') as source, count(*)
-from visit_sources
+from ops.visit_sources
 where created_at > now() - interval '7 days'
 group by 1
 order by 2 desc;
 
 -- 6. Signalements de la semaine
 select type, subject, count(*)
-from reports
+from ops.reports
 where created_at > now() - interval '7 days'
 group by 1, 2
 order by 3 desc;
@@ -82,7 +82,7 @@ select
   count(*) filter (where ended_at is not null) as salons_finis,
   round(avg(player_count) filter (where ended_at is not null), 1) as joueurs_moyens,
   count(*) filter (where origin = 'invite') as depuis_invitation
-from games
+from play.games
 where source = 'salon'
   and started_at > now() - interval '7 days';
 
