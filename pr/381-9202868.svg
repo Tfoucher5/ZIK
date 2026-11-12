@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="794" viewBox="0 0 860 794" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Couverture des tests du serveur : 92,5 % des lignes">
+<style>
+.fond{fill:#ffffff}.titre{fill:#1f2328;font-size:20px;font-weight:700}.titre2{fill:#1f2328;font-size:14px;font-weight:600}
+.valeur{fill:#1f2328;font-size:22px;font-weight:700}.unite{font-size:13px;font-weight:600}.nom{fill:#1f2328;font-size:14px;font-weight:600}
+.petit{fill:#656d76;font-size:11px}.zone{fill:#1f2328;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+.chiffre{fill:#1f2328;font-size:12px;font-weight:700}.piste{stroke:#eaeef2}.piste-plein{fill:#eaeef2}.trait{stroke:#1f2328}
+.repere{stroke:#8c959f;stroke-dasharray:3 3}.grille{stroke:#eaeef2}.bord{fill:none;stroke:#d0d7de}
+@media (prefers-color-scheme: dark){.fond{fill:#0d1117}.titre,.titre2,.valeur,.nom,.zone,.chiffre{fill:#e6edf3}.petit{fill:#8d96a0}
+.piste{stroke:#21262d}.piste-plein{fill:#21262d}.trait{stroke:#e6edf3}.repere{stroke:#6e7681}.grille{stroke:#21262d}.bord{stroke:#30363d}}
+</style>
+<defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
+<rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
+<text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
+<text x="836" y="38" class="petit" text-anchor="end">PR #381 · 9202868 · 12/11 18:50</text>
+<g>
+<circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
+<circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
+  stroke-dasharray="267.32063216807836 289.02652413026095" transform="rotate(-90 120 140)"/>
+<polyline points="100.17440858577714,108.75986675642544 90.5295262761552,93.56196409738916" class="trait" stroke-width="3"/>
+<text x="120" y="147" class="valeur" text-anchor="middle">92,5<tspan class="unite"> %</tspan></text>
+<text x="120" y="206" class="nom" text-anchor="middle">Lignes</text>
+<text x="120" y="222" class="petit" text-anchor="middle">seuil 91 %</text>
+</g>
+<g>
+<circle cx="327" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
+<circle cx="327" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
+  stroke-dasharray="262.63840247716814 289.02652413026095" transform="rotate(-90 327 140)"/>
+<polyline points="303.4153123792985,111.49101001729582 291.94168056382205,97.62177164733161" class="trait" stroke-width="3"/>
+<text x="327" y="147" class="valeur" text-anchor="middle">90,9<tspan class="unite"> %</tspan></text>
+<text x="327" y="206" class="nom" text-anchor="middle">Instructions</text>
+<text x="327" y="222" class="petit" text-anchor="middle">seuil 89 %</text>
+</g>
+<g>
+<circle cx="534" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
+<circle cx="534" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
+  stroke-dasharray="261.4822963806471 289.02652413026095" transform="rotate(-90 534 140)"/>
+<polyline points="508.6717570806385,113.02816078540778 496.34990917392213,99.90672549182239" class="trait" stroke-width="3"/>
+<text x="534" y="147" class="valeur" text-anchor="middle">90,5<tspan class="unite"> %</tspan></text>
+<text x="534" y="206" class="nom" text-anchor="middle">Fonctions</text>
+<text x="534" y="222" class="petit" text-anchor="middle">seuil 88 %</text>
+</g>
+<g>
+<circle cx="741" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
+<circle cx="741" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
+  stroke-dasharray="241.2504396915288 289.02652413026095" transform="rotate(-90 741 140)"/>
+<polyline points="707.5213990587573,124.24616621209233 691.234512114369,116.58213896392103" class="trait" stroke-width="3"/>
+<text x="741" y="147" class="valeur" text-anchor="middle">83,5<tspan class="unite"> %</tspan></text>
+<text x="741" y="206" class="nom" text-anchor="middle">Branches</text>
+<text x="741" y="222" class="petit" text-anchor="middle">seuil 82 %</text>
+</g>
+<text x="24" y="284" class="titre2">Par zone : lignes couvertes, de la moins à la mieux testée</text>
+<line x1="425" x2="425" y1="300" y2="564" class="repere"/>
+<text x="425" y="296" class="petit" text-anchor="middle">50 %</text><line x1="519" x2="519" y1="300" y2="564" class="repere"/>
+<text x="519" y="296" class="petit" text-anchor="middle">70 %</text>
+<text x="24" y="317" class="zone">socket (racine)</text>
+<rect x="190" y="306" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="306" width="376.6911764705882" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="318" class="chiffre">80,1 %</text>
+<text x="836" y="318" class="petit" text-anchor="end">109 / 136 lignes</text>
+<text x="24" y="343" class="zone">socket/game</text>
+<rect x="190" y="332" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="332" width="388.7958115183246" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="344" class="chiffre">82,7 %</text>
+<text x="836" y="344" class="petit" text-anchor="end">790 / 955 lignes</text>
+<text x="24" y="369" class="zone">socket/salon</text>
+<rect x="190" y="358" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="358" width="430.64770932069507" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="370" class="chiffre">91,6 %</text>
+<text x="836" y="370" class="petit" text-anchor="end">1160 / 1266 lignes</text>
+<text x="24" y="395" class="zone">services/health</text>
+<rect x="190" y="384" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="384" width="444.5257452574525" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="396" class="chiffre">94,6 %</text>
+<text x="836" y="396" class="petit" text-anchor="end">349 / 369 lignes</text>
+<text x="24" y="421" class="zone">services/music</text>
+<rect x="190" y="410" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="410" width="458.73287671232873" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="422" class="chiffre">97,6 %</text>
+<text x="836" y="422" class="petit" text-anchor="end">570 / 584 lignes</text>
+<text x="24" y="447" class="zone">services/cards</text>
+<rect x="190" y="436" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="436" width="468.3479789103691" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="448" class="chiffre">99,6 %</text>
+<text x="836" y="448" class="petit" text-anchor="end">567 / 569 lignes</text>
+<text x="24" y="473" class="zone">services (racine)</text>
+<rect x="190" y="462" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="462" width="470" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="474" class="chiffre">100,0 %</text>
+<text x="836" y="474" class="petit" text-anchor="end">186 / 186 lignes</text>
+<text x="24" y="499" class="zone">services/admin</text>
+<rect x="190" y="488" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="488" width="470" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="500" class="chiffre">100,0 %</text>
+<text x="836" y="500" class="petit" text-anchor="end">220 / 220 lignes</text>
+<text x="24" y="525" class="zone">services/notify</text>
+<rect x="190" y="514" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="514" width="470" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="526" class="chiffre">100,0 %</text>
+<text x="836" y="526" class="petit" text-anchor="end">127 / 127 lignes</text>
+<text x="24" y="551" class="zone">services/rooms</text>
+<rect x="190" y="540" width="470" height="14" rx="7" class="piste-plein"/>
+<rect x="190" y="540" width="470" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="552" class="chiffre">100,0 %</text>
+<text x="836" y="552" class="petit" text-anchor="end">40 / 40 lignes</text>
+<text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">50 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">75 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
+<line x1="60" x2="830" y1="645.6" y2="645.6" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
+<text x="830" y="639.6" class="petit" fill="#e5534b" text-anchor="end">seuil 91 %</text>
+<polygon points="60,744 60,708.792 79.74358974358975,679.2 99.48717948717949,661.6800000000001 119.23076923076923,661.728 138.97435897435898,642.624 158.71794871794873,642.528 178.46153846153845,642.528 198.2051282051282,642.528 217.94871794871796,642.528 237.69230769230768,642.528 257.43589743589746,642.528 277.1794871794872,642.528 296.9230769230769,642.528 316.6666666666667,642.336 336.4102564102564,642.336 356.15384615384613,642.336 375.8974358974359,642.336 395.64102564102564,642.336 415.38461538461536,642.336 435.12820512820514,642.288 454.87179487179486,642.384 474.61538461538464,642.384 494.35897435897436,642.336 514.1025641025641,642.336 533.8461538461538,642.336 553.5897435897436,642.288 573.3333333333334,642.264 593.0769230769231,642.072 612.8205128205128,641.952 632.5641025641025,641.952 652.3076923076923,641.952 672.0512820512821,642 691.7948717948718,642 711.5384615384615,642.024 731.2820512820513,642.024 751.025641025641,642.024 770.7692307692307,642.024 790.5128205128206,642.024 810.2564102564103,642.024 830,642.024 830,744" fill="url(#degrade)"/>
+<polyline points="60,708.792 79.74358974358975,679.2 99.48717948717949,661.6800000000001 119.23076923076923,661.728 138.97435897435898,642.624 158.71794871794873,642.528 178.46153846153845,642.528 198.2051282051282,642.528 217.94871794871796,642.528 237.69230769230768,642.528 257.43589743589746,642.528 277.1794871794872,642.528 296.9230769230769,642.528 316.6666666666667,642.336 336.4102564102564,642.336 356.15384615384613,642.336 375.8974358974359,642.336 395.64102564102564,642.336 415.38461538461536,642.336 435.12820512820514,642.288 454.87179487179486,642.384 474.61538461538464,642.384 494.35897435897436,642.336 514.1025641025641,642.336 533.8461538461538,642.336 553.5897435897436,642.288 573.3333333333334,642.264 593.0769230769231,642.072 612.8205128205128,641.952 632.5641025641025,641.952 652.3076923076923,641.952 672.0512820512821,642 691.7948717948718,642 711.5384615384615,642.024 731.2820512820513,642.024 751.025641025641,642.024 770.7692307692307,642.024 790.5128205128206,642.024 810.2564102564103,642.024 830,642.024" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="830" cy="642.024" r="5" fill="#a371f7"/>
+<text x="60" y="766" class="petit">9 nov.</text>
+<text x="830" y="766" class="petit" text-anchor="end">12 nov.</text>
+</svg>
