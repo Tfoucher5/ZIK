@@ -15,7 +15,7 @@
     roundEnd = null, gameOver = null,
     round = 0, total = 10,
     choices = null, answerMode = 'free',
-    paused = false, pro = false, settings = {},
+    paused = false, pro = false, settings = {}, nextSec = 0,
     onSetting,
     onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
     buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, mediaCheck = null, onJudge,
@@ -130,6 +130,9 @@
       </div>
       {#if roundEnd.firstFinder}
         <div class="sh-reveal-first">Le plus rapide<b>{roundEnd.firstFinder}</b></div>
+      {/if}
+      {#if nextSec > 0 && !paused}
+        <div class="sh-reveal-next" role="timer">Titre suivant<b>{nextSec}</b></div>
       {/if}
     </div>
   {/if}

@@ -75,7 +75,6 @@ export function salonDeTest() {
       roundDuration: 30,
       playlistIds: [],
       startCountdown: 0,
-      revealCountdown: 0,
     },
     players: {},
     banned: new Set(),
