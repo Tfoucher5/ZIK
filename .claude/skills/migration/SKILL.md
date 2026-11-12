@@ -15,7 +15,7 @@ Les règles de la base sont dans le skill `zik-supabase` : charge-le si ce n'est
 
 ## Étapes
 
-1. **Regarder la vraie base, sur le staging.** Structure actuelle des tables concernées (MCP Supabase `list_tables` avec `verbose: true` sur le projet de staging), politiques existantes, et conseillers de sécurité et de performance (`get_advisors`) pour avoir un « avant ». N'utilise pas `supabase_schema.sql`, qui a divergé de la base.
+1. **Regarder la vraie base, sur le staging.** Structure actuelle des tables concernées (MCP Supabase `list_tables` avec `verbose: true` sur le projet de staging), politiques existantes, et conseillers de sécurité et de performance (`get_advisors`) pour avoir un « avant ».
 2. **Écrire le fichier** `supabase/migrations/<AAAAMMJJHHMMSS>_<sujet>.sql` (horodatage UTC du moment, sujet en snake_case), avec :
    - en tête, en commentaire : ce que fait la migration, pourquoi (item du plan), et comment la défaire ;
    - la table dans le schéma de son domaine, RLS activé, droits explicites pour `anon`, `authenticated` et `service_role` ;

@@ -29,7 +29,7 @@ Supabase (Postgres 17). Deux environnements : la **base de staging** pour le tra
 
 ## Lire l'état réel avant d'écrire
 
-Ne te fie pas à `supabase_schema.sql` ni aux anciens fichiers de migration : ils ont divergé de la base. Avant toute modification, regarde la vraie structure sur le staging (MCP `list_tables` avec `verbose: true`, ou `execute_sql` en lecture) et les conseillers (`get_advisors` sécurité et performance).
+Ne te fie pas aux anciens fichiers de migration (`migrations_archive`) : ils ont divergé de la base. Avant toute modification, regarde la vraie structure sur le staging (MCP `list_tables` avec `verbose: true`, ou `execute_sql` en lecture) et les conseillers (`get_advisors` sécurité et performance).
 
 ## Modèles SQL
 
