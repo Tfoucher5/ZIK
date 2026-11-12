@@ -51,10 +51,10 @@
   padding-left: 24px;
   border-left: 1px solid var(--border);
   text-align: center;
-  font-family: var(--s-mono);
-  font-size: 1rem;
+  font-family: var(--s-cond);
+  font-size: 1.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   color: var(--mid);
 }
 .sh-reveal-next b {
