@@ -19,6 +19,7 @@ import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
+import { note } from "./journal.js";
 import { scheduleCleanup, timerClock } from "./timers.js";
 import { key, optional, safe, str } from "../safe.js";
 
@@ -50,6 +51,7 @@ export function registerJoin(socket, io) {
         message: "Cet écran est réservé à l'hôte du salon.",
       });
 
+    if (salon._hostDcTimer) note(salon, "Hôte revenu (TV)");
     clearTimeout(salon._hostDcTimer);
     salon._hostDcTimer = null;
 
@@ -95,6 +97,7 @@ export function registerJoin(socket, io) {
         message: "Lien de régie invalide.",
       });
 
+    if (salon._hostDcTimer) note(salon, "Hôte revenu (régie)");
     clearTimeout(salon._hostDcTimer);
     salon._hostDcTimer = null;
     socket.join(`salon:${code}`);
@@ -162,6 +165,7 @@ export function registerJoin(socket, io) {
         Object.keys(salon.players).length >= FREE_MAX_PLAYERS
       ) {
         salon.limitHits = (salon.limitHits ?? 0) + 1;
+        note(salon, `${username} refusé : limite gratuite atteinte`);
         alertAdminsSafe(
           "admin_upsell",
           {

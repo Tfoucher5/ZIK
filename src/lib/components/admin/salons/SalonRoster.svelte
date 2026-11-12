@@ -15,7 +15,7 @@
           <span class="a-row-title">{p.username}</span>
           <span class="a-row-sub">{p.score} pts{p.team != null && s.settings.teams[p.team] ? ` · ${s.settings.teams[p.team]}` : ''}</span>
         </span>
-        {#if p.offline}<em class="a-tag warn">Parti</em>{/if}
+        {#if p.left}<em class="a-tag">Parti</em>{:else if p.offline}<em class="a-tag warn">Hors ligne</em>{/if}
         <form method="POST" action="?/kick" use:enhance={submit} class="inline">
           <input type="hidden" name="code" value={s.code} />
           <input type="hidden" name="username" value={p.username} />

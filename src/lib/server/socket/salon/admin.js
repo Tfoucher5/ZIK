@@ -4,6 +4,7 @@ import { kickPlayer, staff } from "./players.js";
 import { nextRound, pauseGame, resumeGame, revealRound } from "./timers.js";
 import { applySettings } from "./rooms.js";
 import { supportView } from "./support.js";
+import { departed } from "./departed.js";
 
 // Dépannage à distance depuis /admin/salons : mêmes fonctions que la régie.
 
@@ -43,13 +44,16 @@ export function salonLiveState(code) {
     screens,
     controls,
     hostConnected: screens + controls > 0,
+    phones: socketCount(io, `salon:players:${code}`),
+    outage: !!g.videoOutage,
     players: Object.keys(salon.players).length,
-    roster: Object.values(salon.players)
+    roster: [...Object.values(salon.players), ...departed(salon)]
       .map((p) => ({
         username: p.username,
         score: p.score,
         team: p.team,
         offline: !!p._disconnected,
+        left: !!p.left,
       }))
       .sort((a, b) => b.score - a.score),
     settings: {
@@ -75,6 +79,8 @@ export function salonLiveState(code) {
       : null,
     video: t ? (g.currentVideo ?? null) : null,
     support: supportView(salon),
+    history: g.history.map((h) => h.answer),
+    journal: salon._journal ?? [],
   };
 }
 

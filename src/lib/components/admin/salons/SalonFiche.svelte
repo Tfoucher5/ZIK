@@ -5,6 +5,7 @@
   import SalonTools from './SalonTools.svelte';
   import SalonRoster from './SalonRoster.svelte';
   import SalonSettingsForm from './SalonSettingsForm.svelte';
+  import SalonJournal from './SalonJournal.svelte';
   import { phaseLabel } from './phase.js';
 
   /**
@@ -46,8 +47,8 @@
     </div>
     <div class="a-card fact">
       <span class="lbl">Joueurs</span>
-      <b>{s.roster.filter((p) => !p.offline).length} en ligne</b>
-      <span class="a-muted">{s.players} au total{s.pro ? '' : ` · max ${FREE_MAX_PLAYERS}`}</span>
+      <b>{s.roster.filter((p) => !p.offline && !p.left).length} en ligne</b>
+      <span class="a-muted">{s.phones} téléphone{s.phones > 1 ? 's' : ''} · {s.players} au total{s.pro ? '' : ` · max ${FREE_MAX_PLAYERS}`}</span>
     </div>
     <div class="a-card fact">
       <span class="lbl">Offre</span>
@@ -71,6 +72,7 @@
     <div class="tools">
       <div class="pane" class:on={tab === 'outils'}>
         <SalonTools {s} {token} {busy} {submit} bind:fixer />
+        <SalonJournal {s} />
       </div>
       <div class="pane" class:on={tab === 'joueurs'}>
         <SalonRoster {s} {busy} {submit} />
