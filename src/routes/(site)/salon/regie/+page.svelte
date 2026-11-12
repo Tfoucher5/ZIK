@@ -98,6 +98,7 @@
             onUpsell={(f) => (r.upsell = f)}
             onOpenPlaylists={r.openPlaylists}
             onSound={(patch) => r.send('salon_update_settings', patch)}
+            onClose={() => r.send('salon_close')}
           />
         {/if}
       </div>

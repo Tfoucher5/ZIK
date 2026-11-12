@@ -2,6 +2,7 @@ import { salonRooms, getIO } from "../../state.js";
 import { endRound, startNextRound } from "./rounds.js";
 import { clearOutage } from "./outage.js";
 import { dropSnapshot } from "./snapshot.js";
+import { recordSalonGameEnd } from "./persist.js";
 
 const SALON_CLEANUP_DELAY = 30 * 60 * 1000; // 30 min
 
@@ -29,21 +30,21 @@ export function scheduleCleanup(code) {
   }, SALON_CLEANUP_DELAY);
 }
 
-export function cleanupNow(code, io) {
+export function cleanupNow(code, io, message = "L'hôte a quitté le salon.") {
   const salon = salonRooms[code];
   if (!salon) return;
+  // Partie en cours : ses scores restent comptés
+  recordSalonGameEnd(salon);
   clearTimeout(salon._cleanupTimer);
+  clearTimeout(salon._hostDcTimer);
   clearInterval(salon.game.interval);
   clearTimeout(salon.game.breakTimer);
   clearTimeout(salon.game.musicReadyTimer);
-  if (io) {
-    io.to(`salon:${code}`).emit("salon_error", {
-      message: "L'hôte a quitté le salon.",
-    });
-  }
+  clearTimeout(salon.game.outageTimer);
+  io?.to(`salon:${code}`).emit("salon_closed", { message });
   delete salonRooms[code];
   dropSnapshot(code);
-  console.log(`Salon "${code}" ferme (hote deconnecte)`);
+  console.log(`Salon "${code}" ferme`);
 }
 
 // Called when the host signals that the music is actually playing.

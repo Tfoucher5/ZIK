@@ -151,9 +151,9 @@ describe("entrées hostiles sur tous les handlers", () => {
       expect({}[k], k).toBeUndefined();
   });
 
-  it("40 handlers enregistrés", () => {
+  it("41 handlers enregistrés", () => {
     const count = Object.values(handlers).reduce((n, l) => n + l.length, 0);
-    expect(count).toBe(40);
+    expect(count).toBe(41);
   });
 
   // Formes exactes envoyées par la TV, la régie, les téléphones et le jeu en ligne
@@ -204,6 +204,7 @@ describe("entrées hostiles sur tous les handlers", () => {
     salon_submit_choice: [{ choiceIndex: 0 }],
     salon_buzz: [undefined],
     salon_buzz_judge: [{ correct: true }, { correct: false }],
+    salon_close: [undefined],
     salon_volume: [{ volume: 55 }],
     salon_kick: [{ username: "Julie" }],
     salon_adjust_score: [

@@ -150,6 +150,13 @@ export function listenPlayer(p, socket, c, u) {
     p.night = night;
   });
 
+  // Soirée fermée : retour au formulaire avec le message, plus de reprise
+  socket.on("salon_closed", ({ message }) => {
+    p.leave();
+    p.restarting = false;
+    p.joinError = message;
+  });
+
   socket.on("salon_error", ({ message }) => {
     p.joining = false;
     p.restarting = false;
