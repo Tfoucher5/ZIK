@@ -77,7 +77,7 @@ export function startTimer(code, io) {
   game.timerValue = duration;
   game.timerMax = duration;
   game.timerActive = true;
-  game.endReason = null;
+  game._endReason = null;
 
   io.to(`salon:${code}`).emit("salon_timer_started", {
     max: duration,
@@ -99,7 +99,7 @@ function runTimer(code, io) {
   game.interval = setInterval(() => {
     game.timerValue = Math.max(0, Math.ceil((game.endsAt - Date.now()) / 1000));
     if (game.timerValue <= 0)
-      endRound(code, game.endReason ?? "Temps écoulé !", io);
+      endRound(code, game._endReason ?? "Temps écoulé !", io);
   }, 1000);
 }
 
@@ -117,6 +117,7 @@ export function pauseGame(code, io) {
   game.musicReadyTimer = null;
   clearTimeout(game.breakTimer);
   game.breakTimer = null;
+  game._starting = false;
   io.to(`salon:${code}`).emit("salon_paused", { paused: true });
 }
 
@@ -197,11 +198,11 @@ export const armStart = (salon, io) =>
 export function endSoon(code, reason, io) {
   const salon = salonRooms[code];
   const game = salon.game;
-  if (game.endReason && game.timerActive) return;
+  if (game._endReason && game.timerActive) return;
   const ms = (salon.settings.revealCountdown ?? REVEAL_COUNTDOWN_S) * 1000;
   if (!ms || !game.timerActive || game.paused || game.endsAt - Date.now() <= ms)
     return endRound(code, reason, io);
-  game.endReason = reason;
+  game._endReason = reason;
   game.endsAt = Date.now() + ms;
   io.to(`salon:${code}`).emit("salon_timer_update", {
     max: game.timerMax,

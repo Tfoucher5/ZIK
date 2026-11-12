@@ -5,7 +5,7 @@ import { forgetSalon } from "../../../client/salonClient.js";
 // Réactions de la régie aux événements du salon (état r : SalonRegie).
 export function listenRegie(r, socket) {
   const chrono = countdown((v) => (r.timerVal = v));
-  listenCountdowns(r, socket);
+  r.stopCountdowns = listenCountdowns(r, socket);
   socket.on("salon_server_restart", () => (r.restarting = true));
   // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
   socket.on("salon_paused", () => (r.restored = null));

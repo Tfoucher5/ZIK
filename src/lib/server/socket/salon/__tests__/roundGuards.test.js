@@ -175,6 +175,28 @@ describe("déroulé d'une manche", () => {
     expect(game.phase).toBe("gameover");
   });
 
+  it("revanche puis « Terminer » pendant son décompte : une nouvelle revanche reste possible", async () => {
+    const h = makeIo();
+    registerSalon(h.io);
+    const regie = makeSocket("regie", h.rooms);
+    h.connecte(regie);
+    regie.handlers.salon_join_control({ code: CODE, key: CLE });
+    const salon = salonRooms[CODE];
+    salon.settings.startCountdown = 5;
+    salon.game.phase = "summary";
+    salon.game.fullPlaylist = [{ id: "a", title: "A", youtube_id: "va" }];
+    const decomptes = () =>
+      h.emissions.filter((e) => e.event === "salon_countdown").length;
+
+    regie.handlers.salon_restart();
+    expect(decomptes()).toBe(1);
+    finishGame(CODE, h.io);
+    expect(salon.game.phase).toBe("gameover");
+    regie.handlers.salon_restart();
+    expect(decomptes()).toBe(2);
+    clearTimeout(salon.game.breakTimer);
+  });
+
   it("base bloquée : la vidéo part avec les réglages par défaut en 2 s", async () => {
     vi.useFakeTimers();
     m.settings.mockReturnValue(new Promise(() => {}));

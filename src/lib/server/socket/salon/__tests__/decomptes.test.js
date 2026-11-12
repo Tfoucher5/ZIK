@@ -164,6 +164,15 @@ describe("décompte de lancement", () => {
     expect(m.manches).toBe(1);
   });
 
+  it("pause pendant le décompte d'une revanche : la régie peut relancer", () => {
+    game().phase = "summary";
+    regie.handlers.salon_restart();
+    pauseGame(CODE, h.io);
+    expect(game()._starting).toBe(false);
+    vi.advanceTimersByTime(10_000);
+    expect(m.manches).toBe(0);
+  });
+
   it("revanche : même décompte, une seule fois", () => {
     game().phase = "gameover";
     regie.handlers.salon_restart();

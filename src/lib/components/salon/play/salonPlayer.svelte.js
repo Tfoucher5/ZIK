@@ -201,6 +201,7 @@ export class SalonPlayer {
 
   destroy() {
     this.socket?.disconnect();
+    this.stopCountdowns?.();
     clearTimeout(this.#feedbackTimer);
     clearTimeout(this.errorTimer);
     clearTimeout(this.revealTimer);

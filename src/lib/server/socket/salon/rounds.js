@@ -57,6 +57,7 @@ export function finishGame(code, io) {
   game.interval = null;
   clearTimeout(game.breakTimer);
   game.breakTimer = null;
+  game._starting = false;
   clearTimeout(game.musicReadyTimer);
   game.musicReadyTimer = null;
   if (game.paused) clearPause(code, io);
