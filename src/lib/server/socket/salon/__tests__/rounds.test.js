@@ -36,7 +36,10 @@ const { mediaMissesSince, resetMediaMisses } =
   await import("../../../services/health/mediaMisses.js");
 
 const CODE = "ROUND1";
-const io = { to: () => ({ emit: () => {} }) };
+const io = {
+  to: () => ({ emit: () => {} }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const t = (title, playlistId = "p1") => ({
   id: title,
   title,

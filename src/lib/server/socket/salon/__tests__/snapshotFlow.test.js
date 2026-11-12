@@ -12,14 +12,21 @@ vi.mock("../../../services/music/deezer.js", () => ({
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
-    rpc: async (fn, a) => {
-      if (fn === "save_salon_snapshot")
-        table.set(a.p_code, JSON.parse(JSON.stringify(a.p_data)));
-      if (fn === "delete_salon_snapshot") table.delete(a.p_code);
-      if (fn === "load_salon_snapshot" && table.has(a.p_code))
-        return { data: [{ code: a.p_code, data: table.get(a.p_code) }] };
-      return { data: null, error: null };
-    },
+    schema: (s) =>
+      s === "salon"
+        ? {
+            rpc: async (fn, a) => {
+              if (fn === "save_salon_snapshot")
+                table.set(a.p_code, JSON.parse(JSON.stringify(a.p_data)));
+              if (fn === "delete_salon_snapshot") table.delete(a.p_code);
+              if (fn === "load_salon_snapshot" && table.has(a.p_code))
+                return {
+                  data: [{ code: a.p_code, data: table.get(a.p_code) }],
+                };
+              return { data: null, error: null };
+            },
+          }
+        : null,
   }),
 }));
 vi.mock("../persist.js", () => ({ recordSalonGameEnd: () => {} }));
@@ -41,7 +48,10 @@ const { cleanupNow } = await import("../timers.js");
 const { restoreSalon } = await import("../snapshot.js");
 
 const CODE = "FLOW01";
-const io = { to: () => ({ emit: () => {} }) };
+const io = {
+  to: () => ({ emit: () => {} }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const phase = () => table.get(CODE)?.game.phase;
 
 describe("instantané au fil d'une soirée", () => {

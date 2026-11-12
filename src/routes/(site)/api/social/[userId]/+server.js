@@ -15,14 +15,7 @@ const EMPTY = {
   pendingCount: 0,
 };
 
-function enrich(ids, order = true) {
-  let q = supabase
-    .from("profiles")
-    .select("id, username, avatar_url, elo, level")
-    .in("id", ids);
-  if (order) q = q.order("elo", { ascending: false });
-  return q.limit(20);
-}
+const PROFIL = "id, username, avatar_url, elo, level";
 
 export async function GET({ params, request }) {
   const userId = params.userId;
@@ -38,11 +31,22 @@ export async function GET({ params, request }) {
     const isOwn = viewerId && viewerId === userId;
 
     const [followingRes, followersRes, friendRes] = await Promise.all([
-      supabase.from("follows").select("following_id").eq("follower_id", userId),
-      supabase.from("follows").select("follower_id").eq("following_id", userId),
       supabase
+        .schema("social")
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", userId),
+      supabase
+        .schema("social")
+        .from("follows")
+        .select("follower_id")
+        .eq("following_id", userId),
+      supabase
+        .schema("social")
         .from("friendships")
-        .select("requester_id, addressee_id, status")
+        .select(
+          `requester_id, addressee_id, status, requester(${PROFIL}), addressee(${PROFIL})`,
+        )
         .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`),
     ]);
 
@@ -58,17 +62,18 @@ export async function GET({ params, request }) {
     );
 
     // Amitiés : l'autre extrémité de chaque ligne impliquant userId
-    const friendIds = [];
-    const pendingRequesterIds = []; // demandes reçues par userId (pending, userId = addressee)
+    const friends = [];
+    const pendingRequests = []; // demandes reçues par userId (pending, userId = addressee)
     let friendStatus = "none";
 
     for (const f of friendRes.data || []) {
-      const other = f.requester_id === userId ? f.addressee_id : f.requester_id;
+      const mine = f.requester_id === userId;
+      const other = mine ? f.addressee_id : f.requester_id;
       if (f.status === "accepted") {
-        friendIds.push(other);
+        friends.push(mine ? f.addressee : f.requester);
         if (viewerId && other === viewerId) friendStatus = "friends";
       } else if (f.status === "pending") {
-        if (f.addressee_id === userId) pendingRequesterIds.push(f.requester_id);
+        if (f.addressee_id === userId) pendingRequests.push(f.requester);
         if (viewerId && friendStatus === "none") {
           // demande impliquant le viewer et userId
           if (f.requester_id === viewerId && f.addressee_id === userId)
@@ -79,24 +84,19 @@ export async function GET({ params, request }) {
       }
     }
 
-    const [friends, pendingRequests] = await Promise.all([
-      friendIds.length ? enrich(friendIds).then((r) => r.data || []) : [],
-      isOwn && pendingRequesterIds.length
-        ? enrich(pendingRequesterIds, false).then((r) => r.data || [])
-        : [],
-    ]);
+    const shown = (list) => list.filter(Boolean).slice(0, 20);
 
     return json({
       followers: followerIds.size,
       following: followingIds.size,
-      friendsCount: friendIds.length,
-      friends,
+      friendsCount: friends.length,
+      friends: shown(friends.toSorted((a, b) => (b?.elo ?? 0) - (a?.elo ?? 0))),
       viewerFollows: viewerId ? followerIds.has(viewerId) && !isOwn : false,
       followsViewer: viewerId ? followingIds.has(viewerId) && !isOwn : false,
       friendStatus,
       isFriend: friendStatus === "friends",
-      pendingRequests,
-      pendingCount: pendingRequesterIds.length,
+      pendingRequests: isOwn ? shown(pendingRequests) : [],
+      pendingCount: pendingRequests.length,
     });
   } catch {
     return json(EMPTY);

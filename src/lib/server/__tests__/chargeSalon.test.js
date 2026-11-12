@@ -55,6 +55,12 @@ describe("test de charge : garde-fous", () => {
     expect(() => lireArgs(["--joueurs", "abc"])).toThrow(/joueurs/);
     expect(() => lireArgs(["--manches", "2"])).toThrow(/manches/);
     expect(() => lireArgs(["--joueurs"])).toThrow(/invalide/);
+    expect(() => lireArgs(["--deflate", "false"])).toThrow(/deflate/);
+  });
+
+  it("garde la compression sauf --deflate non", () => {
+    expect(lireArgs([]).deflate).toBe(true);
+    expect(lireArgs(["--deflate", "non"]).deflate).toBe(false);
   });
 });
 

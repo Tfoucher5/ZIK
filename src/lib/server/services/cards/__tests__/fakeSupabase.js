@@ -23,14 +23,19 @@ export function fakeSupabase(respond = () => ({ data: null, error: null })) {
     );
     return self;
   };
+  const rpc = (schema) => (fn, args) => {
+    const q = { table: null, rpc: fn, schema, args, ops: [] };
+    calls.push(q);
+    return run(q);
+  };
   return {
     calls,
-    from: (table) => builder({ table, ops: [] }),
-    rpc: (fn, args) => {
-      const q = { table: null, rpc: fn, args, ops: [] };
-      calls.push(q);
-      return run(q);
-    },
+    from: (table) => builder({ table, schema: "public", ops: [] }),
+    schema: (schema) => ({
+      from: (table) => builder({ table, schema, ops: [] }),
+      rpc: rpc(schema),
+    }),
+    rpc: rpc("public"),
   };
 }
 

@@ -3,7 +3,7 @@ import { roomGames } from "../../state.js";
 import { seededShuffle } from "../../../shared/utils.js";
 
 export const ROOM_PLAYLISTS_SELECT =
-  "playlist_id, custom_playlists!playlist_id(id, name, track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))";
+  "playlist_id, custom_playlists(id, name, track_count), room_playlists(playlist_id, position, custom_playlists(id, name, emoji, track_count))";
 
 // Joueurs présents dans une room (les déconnectés en sursis ne comptent pas)
 export function onlineCount(code, { verifiedOnly = false } = {}) {
@@ -51,10 +51,12 @@ export function roomPlaylists(r) {
 
 export async function coversByPlaylist(pids, maxPerPlaylist) {
   if (!pids.length) return {};
-  const { data } = await getAdminClient().rpc("get_covers_by_playlists", {
-    pids: [...new Set(pids)],
-    max_per_playlist: maxPerPlaylist,
-  });
+  const { data } = await getAdminClient()
+    .schema("catalog")
+    .rpc("get_covers_by_playlists", {
+      pids: [...new Set(pids)],
+      max_per_playlist: maxPerPlaylist,
+    });
   return data ?? {};
 }
 

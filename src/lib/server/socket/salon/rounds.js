@@ -1,7 +1,7 @@
 import { salonRooms } from "../../state.js";
 import { displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
-import { makeChoices } from "../scoring.js";
+import { makeChoices, workAnswer } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
 import { gamePlayers } from "./departed.js";
 import { saveSnapshot } from "./snapshot.js";
@@ -23,6 +23,7 @@ import {
   resetRoundFlags,
   standings,
 } from "./players.js";
+import { emitGameOver, emitRoundEnd } from "./phoneView.js";
 import { scheduleCleanup, startTimer, clearPause } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
@@ -70,7 +71,7 @@ export function finishGame(code, io) {
       ...(p.left && { left: true }),
     }))
     .sort((a, b) => b.score - a.score);
-  io.to(`salon:${code}`).emit("salon_game_over", {
+  emitGameOver(io, code, {
     scores,
     teams: standings(salon),
     history: game.history,
@@ -138,6 +139,7 @@ export function endRound(code, reason, io) {
     reason,
     firstFinder: game.firstFinder,
     featArtists: (track.featArtists || []).map(displayString),
+    work: workAnswer(track),
     scores,
     teams: standings(salon),
     correctChoiceIndex:
@@ -147,7 +149,7 @@ export function endRound(code, reason, io) {
   };
 
   game.history.push({ answer, cover: track.cover });
-  io.to(`salon:${code}`).emit("salon_round_end", roundSummary);
+  emitRoundEnd(io, code, roundSummary);
   scheduleCleanup(code);
   saveSnapshot(salon);
 

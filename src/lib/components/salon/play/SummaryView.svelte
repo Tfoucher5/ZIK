@@ -2,12 +2,13 @@
   import { teamColor } from '$lib/data/salonOptions.js';
   import { onMount } from 'svelte';
   import { flip } from 'svelte/animate';
+  import { podium } from './salonPlayer.svelte.js';
 
   let {
     phase = 'summary',
     roundEnd = null,
-    finalScores = [],
-    scores = [],
+    finalRanking = null,
+    ranking = null,
     username = '',
     teams = null,
     night = null,
@@ -17,26 +18,27 @@
     onLeave,
   } = $props();
 
-  let rows = $derived(phase === 'gameover' ? finalScores : (roundEnd?.scores || scores));
+  let rows = $derived(podium(phase === 'gameover' ? finalRanking : (roundEnd?.ranking || ranking)));
   // Classement d'avant la manche : on l'affiche d'abord, puis les lignes
   // glissent vers leur nouvelle place et les points montent
-  let before = $derived(
-    [...rows].sort((a, b) => (b.score - (b.delta ?? 0)) - (a.score - (a.delta ?? 0)))
-  );
   let settled = $state(false);
-  let shown = $derived(phase === 'summary' && !settled ? before : rows);
-  let oldRank = $derived(Object.fromEntries(before.map((p, i) => [p.username, i])));
+  let before = $derived(phase === 'summary' && !settled);
+  let shown = $derived(
+    before && rows.every(p => p.prevRank)
+      ? [...rows].sort((a, b) => a.prevRank - b.prevRank)
+      : rows
+  );
   onMount(() => {
     const t = setTimeout(() => (settled = true), 900);
     return () => clearTimeout(t);
   });
-  let myPos = $derived(finalScores.findIndex(p => p.username === username) + 1);
+  let myPos = $derived(finalRanking?.me?.rank ?? 0);
   let teamPos = $derived((teams?.findIndex(t => t.id === myTeam) ?? -1) + 1);
   let soiree = $derived(night?.games > 1 ? night : null);
   let nightPos = $derived(
     soiree?.teams
       ? soiree.teams.findIndex(t => t.id === myTeam) + 1
-      : (soiree?.players.findIndex(n => n.username === username) ?? -1) + 1
+      : (soiree?.ranking.me?.rank ?? 0)
   );
 </script>
 
@@ -45,7 +47,13 @@
     {#if roundEnd.cover}<img src={roundEnd.cover} alt="">{/if}
     <div>
       <p class="sx-kicker">Manche <b>{round}</b> / {total}</p>
-      <div class="sp-answer-txt">{roundEnd.answer}</div>
+      {#if roundEnd.work}
+        <div class="sp-answer-sub">{roundEnd.work.label}</div>
+      {/if}
+      <div class="sp-answer-txt">{roundEnd.work?.value ?? roundEnd.answer}</div>
+      {#if roundEnd.work}
+        <div class="sp-answer-sub">{roundEnd.answer}</div>
+      {/if}
       {#if roundEnd.featArtists?.length}
         <div class="sp-answer-sub">feat. {roundEnd.featArtists.join(', ')}</div>
       {/if}
@@ -60,12 +68,12 @@
     {#if teams}
       <div class="sp-big">{teamPos === 1 ? 'Ton équipe gagne !' : teamPos > 0 ? `Ton équipe finit ${teamPos}e` : 'Fin de partie'}</div>
     {:else}
-      <div class="sp-big">{myPos === 1 ? 'Tu gagnes !' : myPos > 0 ? `${myPos}e sur ${finalScores.length}` : 'Fin de partie'}</div>
+      <div class="sp-big">{myPos === 1 ? 'Tu gagnes !' : myPos > 0 ? `${myPos}e sur ${finalRanking.count}` : 'Fin de partie'}</div>
     {/if}
     {#if nightPos > 0}
       <p class="sp-night">
         Soirée ({soiree.games} parties) : {soiree.teams ? 'ton équipe est' : 'tu es'}
-        à la <b>{nightPos === 1 ? '1re' : `${nightPos}e`} place</b>{#if !soiree.teams}&nbsp;sur {soiree.players.length}{/if}
+        à la <b>{nightPos === 1 ? '1re' : `${nightPos}e`} place</b>{#if !soiree.teams}&nbsp;sur {soiree.ranking.count}{/if}
       </p>
     {/if}
   </div>
@@ -84,17 +92,17 @@
 {/if}
 
 <ol class="sp-list">
-  {#each shown as p, i (p.username)}
-    {@const moved = settled ? oldRank[p.username] - i : 0}
+  {#each shown as p (p.username)}
+    {@const moved = settled && p.prevRank ? p.prevRank - p.rank : 0}
     <li class:me={p.username === username} animate:flip={{ duration: 600 }}>
-      <span class="r">{String(i + 1).padStart(2, '0')}</span>
+      <span class="r">{String(before && p.prevRank ? p.prevRank : p.rank).padStart(2, '0')}</span>
       <span class="n">
         {p.username}
         {#if p.left}<em>a quitté</em>{/if}
         {#if moved > 0}<em class="up">▲{moved}</em>{:else if moved < 0}<em class="down">▼{-moved}</em>{/if}
       </span>
       <span class="p">
-        {phase === 'summary' && !settled ? p.score - (p.delta ?? 0) : p.score}
+        {before ? p.score - (p.delta ?? 0) : p.score}
         {#if phase === 'summary' && settled && p.delta > 0}<small>+{p.delta}</small>{/if}
       </span>
     </li>

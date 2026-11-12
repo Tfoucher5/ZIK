@@ -1,16 +1,11 @@
 <script>
   import { toast } from '$lib/client/toast.svelte.js';
   import { coverThumb } from '$lib/shared/playlist/input.js';
+  import { WORK_ANSWER_TYPES } from '$lib/shared/playlist/work.js';
 
   let { track, store, onClose } = $props();
 
-  const EXTRA_TYPES = [
-    { id: 3, name: 'Film' },
-    { id: 4, name: 'Série' },
-    { id: 5, name: 'Personnage' },
-    { id: 6, name: 'Jeu vidéo' },
-    { id: 7, name: 'Animé' },
-  ];
+  const EXTRA_TYPES = [...WORK_ANSWER_TYPES, { id: 5, name: 'Personnage' }];
   const typeName = (id) => EXTRA_TYPES.find((t) => t.id === id)?.name ?? '?';
 
   let loading = $state(true);
@@ -124,7 +119,7 @@
         </section>
 
         <section class="am-card">
-          <span class="am-label">Réponses bonus <em>(générique de film, série, jeu...)</em></span>
+          <span class="am-label">Film, série, jeu… <em>(si l'œuvre est renseignée, c'est elle qu'on cherche)</em></span>
           {#if extras.length}
             <ul class="am-extras">
               {#each extras as x, i (i)}

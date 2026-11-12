@@ -87,14 +87,15 @@ describe("fiche joueur de l'admin", () => {
   it("journal admin, succès, amitiés et abonnements mis en forme", async () => {
     rows.admin_audit_log = () => ({
       data: [
-        { id: 1, admin_id: "a1", action: "ban_user" },
-        { id: 2, admin_id: "inconnu", action: "x" },
+        {
+          id: 1,
+          admin_id: "a1",
+          action: "ban_user",
+          admin: { username: "theo" },
+        },
+        { id: 2, admin_id: "inconnu", action: "x", admin: null },
       ],
     });
-    rows.profiles = (q) =>
-      q.has("in")
-        ? { data: [{ id: "a1", username: "theo" }] }
-        : { data: { id: ID } };
     rows.user_achievements = () => ({
       data: [
         { id: 1, achievement_id: "win" },

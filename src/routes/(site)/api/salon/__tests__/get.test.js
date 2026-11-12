@@ -5,13 +5,23 @@ const db = vi.hoisted(() => ({ lectures: 0, instantane: null }));
 vi.mock("$lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
-    rpc: async (fn, a) => {
-      if (fn !== "load_salon_snapshot") return { data: null, error: null };
-      db.lectures++;
-      return a.p_code === "REPRIS" && db.instantane
-        ? { data: [{ code: "REPRIS", data: structuredClone(db.instantane) }] }
-        : { data: [], error: null };
-    },
+    schema: (s) =>
+      s === "salon"
+        ? {
+            rpc: async (fn, a) => {
+              if (fn !== "load_salon_snapshot")
+                return { data: null, error: null };
+              db.lectures++;
+              return a.p_code === "REPRIS" && db.instantane
+                ? {
+                    data: [
+                      { code: "REPRIS", data: structuredClone(db.instantane) },
+                    ],
+                  }
+                : { data: [], error: null };
+            },
+          }
+        : null,
   }),
 }));
 

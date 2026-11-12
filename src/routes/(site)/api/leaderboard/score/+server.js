@@ -27,13 +27,15 @@ export async function GET({ url }) {
   const cached = cache.get();
   if (cached) return json(cached);
 
-  const { data, error } = await supabase.rpc("leaderboard_score", {
-    p_mode: mode,
-    p_rooms: rooms,
-    p_period: periode,
-    p_limit: limit,
-    p_offset: offset,
-  });
+  const { data, error } = await supabase
+    .schema("play")
+    .rpc("leaderboard_score", {
+      p_mode: mode,
+      p_rooms: rooms,
+      p_period: periode,
+      p_limit: limit,
+      p_offset: offset,
+    });
 
   if (error) return json({ error: error.message }, { status: 500 });
   cache.set(data);

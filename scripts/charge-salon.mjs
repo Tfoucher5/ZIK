@@ -3,7 +3,7 @@
 // seulement que la musique a démarré.
 //
 // Usage : node scripts/charge-salon.mjs --joueurs 250 [--salons 1] [--manches 5]
-//         [--rythme 50] [--url http://localhost:3000]
+//         [--rythme 50] [--deflate oui|non] [--url http://localhost:3000]
 // Compte Pro de test créé sur le staging avec le .env local. Jamais sur la prod.
 //
 // Un échec peut venir du réseau du poste de test (ETIMEDOUT, ping timeout) comme
@@ -18,10 +18,10 @@ import {
   jetonDeTest,
   lireArgs,
   percentile,
+  PLAYLIST,
   verdict,
 } from "./charge-salon-outils.mjs";
 
-const PLAYLIST = "6e9ccdc8-1257-4977-8ad3-9e4db3691cdd";
 const ATTENTE_MAX_MS = 10 * 60 * 1000;
 const CALME_MAX_MS = 60 * 1000;
 
@@ -56,6 +56,8 @@ function connecter(url, m, role) {
     forceNew: true,
     reconnection: false,
     timeout: 30000,
+    // false : pas de compression négociée, sinon même seuil que le serveur (server.js)
+    perMessageDeflate: m.deflate && { threshold: 1024 },
   });
   socket.on("disconnect", (raison) => {
     if (m.fin) return;
@@ -110,15 +112,19 @@ function joueur(url, salon, numero, m) {
     socket.salonEnvoi = null;
   });
   socket.on("salon_game_over", () => m.finis++);
+  let connecte = 0;
   socket.once("salon_joined", () => {
     m.rejoints.push(Date.now() - debut);
+    m.joinSeul.push(Date.now() - connecte);
   });
-  socket.once("connect", () =>
+  socket.once("connect", () => {
+    connecte = Date.now();
+    m.connexions.push(connecte - debut);
     socket.emit("salon_join_player", {
       code: salon.code,
       username: `s${salon.indice}j${numero}`,
-    }),
-  );
+    });
+  });
 }
 
 async function ouvrirSalon(url, jeton, indice, opts, m) {
@@ -165,10 +171,13 @@ async function principal() {
   const url = assertCibleAutorisee(opts.url, process.env.SUPABASE_URL);
 
   const m = {
+    deflate: opts.deflate,
     sockets: [],
     coupures: [],
     erreurs: [],
     rejoints: [],
+    connexions: [],
+    joinSeul: [],
     diffusion: [],
     reponses: [],
     envoyes: 0,
@@ -232,6 +241,8 @@ async function principal() {
   for (const s of m.sockets) s.disconnect();
 
   console.log(resume("Entrée dans le salon", m.rejoints));
+  console.log(resume("  dont connexion", m.connexions));
+  console.log(resume("  dont salon_join", m.joinSeul));
   console.log(resume("Début de manche reçu", m.diffusion));
   console.log(resume("Réponse à un essai", m.reponses));
   console.log(`Essais chronométrés : ${m.envoyes}`);

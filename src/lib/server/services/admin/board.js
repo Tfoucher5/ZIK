@@ -34,18 +34,36 @@ export async function getTodo() {
   const [pastDue, issues, reports, replies, limit, maintenance] =
     await Promise.all([
       count(
-        sb.from("pro_subscriptions").select("*", head).eq("status", "past_due"),
+        sb
+          .schema("salon")
+          .from("pro_subscriptions")
+          .select("*", head)
+          .eq("status", "past_due"),
       ),
-      count(sb.from("track_issues").select("*", head).eq("status", "open")),
-      count(sb.from("reports").select("*", head).eq("status", "pending")),
       count(
         sb
+          .schema("catalog")
+          .from("track_issues")
+          .select("*", head)
+          .eq("status", "open"),
+      ),
+      count(
+        sb
+          .schema("ops")
+          .from("reports")
+          .select("*", head)
+          .eq("status", "pending"),
+      ),
+      count(
+        sb
+          .schema("ops")
           .from("prospect_replies")
           .select("*", head)
           .eq("handled", false)
           .in("category", ["interested", "question"]),
       ),
       sb
+        .schema("play")
         .from("games")
         .select("limit_hits")
         .eq("source", "salon")
@@ -151,10 +169,12 @@ export async function getJournal(days = 2, limit = 60) {
       .order("created_at", { ascending: false })
       .limit(limit),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id, plan, status, created_at, updated_at")
       .gte("updated_at", since),
     sb
+      .schema("play")
       .from("games")
       .select("id, room_id, host_id, player_count, limit_hits, ended_at")
       .eq("source", "salon")
@@ -162,16 +182,19 @@ export async function getJournal(days = 2, limit = 60) {
       .order("ended_at", { ascending: false })
       .limit(limit),
     sb
+      .schema("ops")
       .from("reports")
       .select("id, type, subject, reporter_name, created_at")
       .gte("created_at", since)
       .limit(limit),
     sb
+      .schema("catalog")
       .from("track_issues")
       .select("id, kind, source, created_at, track:track_id(artist, title)")
       .gte("created_at", since)
       .limit(limit),
     sb
+      .schema("ops")
       .from("prospect_replies")
       .select("id, from_email, category, summary, received_at")
       .gte("received_at", since)

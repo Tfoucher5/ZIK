@@ -30,6 +30,7 @@ async function buildIndex() {
   const [tracks, fans] = await Promise.all([
     fetchAll(() =>
       supabase
+        .schema("catalog")
         .from("tracks")
         .select("artist")
         .not("preview_url", "is", null)
@@ -37,6 +38,7 @@ async function buildIndex() {
     ),
     fetchAll(() =>
       supabase
+        .schema("cards")
         .from("card_artists")
         .select("name, nb_fan")
         .gte("nb_fan", MIN_FANS)
@@ -80,6 +82,7 @@ export async function findArtist(slug) {
 
 async function artistTracks(name) {
   const { data, error } = await supabase
+    .schema("catalog")
     .from("tracks")
     .select(
       "id, artist, title, cover_url, preview_url, preview_expires_at, external_id",
@@ -95,6 +98,7 @@ async function artistTracks(name) {
 // Titre, artiste, feats et œuvre corrigés dans une playlist officielle
 async function officialEdits(trackIds) {
   const { data } = await supabase
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select(
       "track_id, custom_artist, custom_title, custom_feats, track_answers(value, answer_types(name)), custom_playlists!inner(is_official)",
@@ -114,6 +118,7 @@ async function officialEdits(trackIds) {
 // Artistes qui reviennent le plus dans les mêmes playlists publiques.
 async function relatedArtists(artist, trackIds) {
   const { data: links } = await supabase
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("playlist_id")
     .in("track_id", trackIds.slice(0, 150))
@@ -122,6 +127,7 @@ async function relatedArtists(artist, trackIds) {
   if (!playlistIds.length) return [];
 
   const { data: rows } = await supabase
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("tracks(artist)")
     .in("playlist_id", playlistIds.slice(0, 30))

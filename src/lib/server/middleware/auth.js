@@ -92,6 +92,7 @@ export async function logAdminAction(
   // target_id est un uuid : un code de salon ou une date va dans le payload
   const uuidTarget = isUuid(targetId);
   const { error: err } = await getAdminClient()
+    .schema("ops")
     .from("admin_audit_log")
     .insert({
       admin_id: adminId,

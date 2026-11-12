@@ -2,8 +2,10 @@ import { supabase, getAdminClient } from "../../config.js";
 import { displayString } from "../../services/music/trackText.js";
 import {
   buildTrackFromRow,
+  dedup,
   TRACK_ROW_SELECT,
 } from "../../services/music/playlist.js";
+import { fetchAllRows } from "../../services/admin/paginate.js";
 import {
   DEFAULT_VIDEO_SETTINGS,
   getVideoSettings,
@@ -14,14 +16,16 @@ const SETTINGS_WAIT_MS = 2000;
 
 async function loadTracksForPlaylist(playlistId, client = supabase) {
   try {
-    const { data: rows } = await client
-      .from("custom_playlist_tracks")
-      .select(TRACK_ROW_SELECT)
-      .eq("playlist_id", playlistId)
-      .order("position");
-    if (rows?.length) {
-      return rows.map(buildTrackFromRow);
-    }
+    const rows = await fetchAllRows(() =>
+      client
+        .schema("catalog")
+        .from("custom_playlist_tracks")
+        .select(TRACK_ROW_SELECT)
+        .eq("playlist_id", playlistId)
+        .order("position")
+        .order("id"),
+    );
+    return rows.map(buildTrackFromRow);
   } catch {
     // ignore
   }
@@ -31,18 +35,12 @@ async function loadTracksForPlaylist(playlistId, client = supabase) {
 // Accepts a single ID or an array of IDs — returns combined, deduplicated, shuffled tracks
 export async function loadSalonTracks(playlistIds, client = supabase) {
   const ids = Array.isArray(playlistIds) ? playlistIds : [playlistIds];
-  const seen = new Set();
-  const all = [];
+  const loaded = [];
   for (const id of ids) {
     const tracks = await loadTracksForPlaylist(id, client);
-    for (const t of tracks) {
-      const key = `${t.artist}|${t.title}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        all.push({ ...t, playlistId: id });
-      }
-    }
+    for (const t of tracks) loaded.push({ ...t, playlistId: id });
   }
+  const all = dedup(loaded);
   await loadVideoCache(all);
   return shuffle(all);
 }
@@ -53,6 +51,7 @@ async function loadVideoCache(tracks) {
   const cache = new Map();
   for (let i = 0; i < ids.length; i += 300) {
     const { data } = await getAdminClient()
+      .schema("catalog")
       .from("tracks")
       .select("id, video_cache_id, video_cache_duration")
       .in("id", ids.slice(i, i + 300))
@@ -75,6 +74,7 @@ export function forgetVideo(track) {
   const refused = track.cachedVideo.id;
   track.cachedVideo = null;
   getAdminClient()
+    .schema("catalog")
     .from("tracks")
     .update({
       video_cache_id: null,

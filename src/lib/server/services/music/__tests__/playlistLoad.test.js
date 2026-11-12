@@ -192,6 +192,79 @@ describe("loadPlaylist", () => {
     expect(q.args("in")).toEqual(["playlist_id", ["p1", "p2"]]);
   });
 
+  // Room « tout » : la chanson Disney est aussi dans une playlist sans réponse
+  it("doublon : la copie avec la réponse Film l'emporte, à sa place", async () => {
+    dbRooms[ROOM] = { id: 9 };
+    h.tables.room_playlists = {
+      data: [{ playlist_id: "p1" }, { playlist_id: "p2" }],
+    };
+    const film = {
+      ...row(1),
+      track_answers: [{ value: "Vaiana", answer_types: { name: "Film" } }],
+    };
+    h.tables.custom_playlist_tracks = { data: [row(1), row(2), film, row(3)] };
+    const tracks = await loadPlaylist(ROOM);
+    expect(tracks.map((t) => t.id)).toEqual(["t1", "t2", "t3"]);
+    expect(tracks[0].extraAnswers).toEqual([
+      { label: "Film", value: "Vaiana", clean: "vaiana", work: true },
+    ]);
+  });
+
+  // Room « tout » : 4 138 lignes, l'API n'en rend que 1000 par réponse
+  it("plus de 1000 lignes : tout est lu, page par page", async () => {
+    dbRooms[ROOM] = { id: 9 };
+    h.tables.room_playlists = { data: [{ playlist_id: "p1" }] };
+    const all = Array.from({ length: 1002 }, (_, i) => row(i));
+    h.tables.custom_playlist_tracks = (q) => {
+      const [from, to] = q.args("range");
+      return { data: all.slice(from, to + 1) };
+    };
+    expect(await loadPlaylist(ROOM)).toHaveLength(1002);
+    expect(h.admin.of("custom_playlist_tracks")).toHaveLength(2);
+  });
+
+  it("ancienne room à playlist_id : plus de 1000 lignes lues aussi", async () => {
+    dbRooms[ROOM] = { id: 9, playlist_id: "legacy" };
+    h.tables.room_playlists = { data: [] };
+    const all = Array.from({ length: 1001 }, (_, i) => row(i));
+    h.tables.custom_playlist_tracks = (q) => {
+      const [from, to] = q.args("range");
+      return { data: all.slice(from, to + 1) };
+    };
+    expect(await loadPlaylist(ROOM)).toHaveLength(1001);
+  });
+
+  it("base en erreur au lancement : dernière version en cache", async () => {
+    dbRooms[ROOM] = { id: 9, playlist_id: "legacy" };
+    playlistCache[ROOM] = [{ title: "cache" }];
+    h.tables.room_playlists = { data: [] };
+    h.tables.custom_playlist_tracks = { data: null, error: new Error("down") };
+    expect(await loadPlaylist(ROOM, { fresh: true })).toEqual([
+      { title: "cache" },
+    ]);
+  });
+
+  it("doublon : une œuvre l'emporte sur une autre réponse", async () => {
+    dbRooms[ROOM] = { id: 9 };
+    h.tables.room_playlists = {
+      data: [{ playlist_id: "p1" }, { playlist_id: "p2" }],
+    };
+    const avec = (name, value) => ({
+      ...row(1),
+      track_answers: [{ value, answer_types: { name } }],
+    });
+    h.tables.custom_playlist_tracks = {
+      data: [
+        avec("Personnage", "Maui"),
+        row(2),
+        avec("Film", "Vaiana"),
+        row(3),
+      ],
+    };
+    const [t1] = await loadPlaylist(ROOM);
+    expect(t1.extraAnswers.map((e) => e.value)).toEqual(["Vaiana"]);
+  });
+
   it("moins de 3 titres via room_playlists : repli sur playlist_id", async () => {
     dbRooms[ROOM] = { id: 9, playlist_id: "legacy" };
     h.tables.room_playlists = { data: [{ playlist_id: "p1" }] };

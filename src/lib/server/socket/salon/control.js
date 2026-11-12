@@ -23,6 +23,7 @@ import { cleanTeamName } from "./teams.js";
 import { previewUrl } from "./media.js";
 import { forgetVideo } from "./tracks.js";
 import { closeEvening } from "./evening.js";
+import { emitSplit } from "./phoneView.js";
 import { clearOutage } from "./outage.js";
 import { clearPause, pauseGame, resumeGame, startTimer } from "./timers.js";
 import { int, key, num, object, optional, safe, str } from "../safe.js";
@@ -269,9 +270,13 @@ export function registerControl(socket, io) {
     closeEvening(salon, io);
     clearOutage(salon, io);
     salon.game.skipStreak = 0;
-    io.to(`salon:${code}`).emit("salon_restarted", {
-      players: getPlayerList(salon),
-    });
+    emitSplit(
+      io,
+      code,
+      "salon_restarted",
+      { players: getPlayerList(salon) },
+      () => ({}),
+    );
     recordSalonGameStart(salon);
     startNextRound(code, io);
   });

@@ -9,6 +9,7 @@ async function findRoom(code) {
   if (mem)
     return { name: mem.name || code, gameMode: mem.game_mode || "classic" };
   const { data } = await getAdminClient()
+    .schema("play")
     .from("rooms")
     .select("name, game_mode")
     .eq("code", code)
@@ -26,6 +27,7 @@ export async function POST({ request, getClientAddress }) {
     return json({ error: "Requête invalide" }, { status: 400 });
 
   const { data: friendship } = await supabase
+    .schema("social")
     .from("friendships")
     .select("id")
     .eq("status", "accepted")

@@ -13,6 +13,7 @@ export async function notifySetsNearlyDone(userId, cardIds) {
   if (!cardIds.length) return;
   const sb = getAdminClient();
   const { data: links } = await sb
+    .schema("cards")
     .from("card_set_items")
     .select("set_id, card_sets!inner(id, kind, name, card_count, cover_url)")
     .in("card_id", cardIds)
@@ -44,11 +45,13 @@ export async function notifySetsNearlyDone(userId, cardIds) {
 
 async function missingCards(sb, userId, setId) {
   const { data: items } = await sb
+    .schema("cards")
     .from("card_set_items")
     .select("card_id")
     .eq("set_id", setId);
   const ids = (items ?? []).map((i) => i.card_id);
   const { data: owned } = await sb
+    .schema("cards")
     .from("user_cards")
     .select("card_id")
     .eq("user_id", userId)
@@ -60,11 +63,13 @@ async function missingCards(sb, userId, setId) {
 // Room publique la plus active dont une playlist contient le titre de la carte
 async function roomWithCard(sb, cardId) {
   const { data: tracks } = await sb
+    .schema("catalog")
     .from("tracks")
     .select("id")
     .eq("card_id", cardId);
   if (!tracks?.length) return null;
   const { data: rows } = await sb
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("playlist_id")
     .in(
@@ -79,6 +84,7 @@ async function roomWithCard(sb, cardId) {
   if (!pids.length) return null;
 
   const { data: linked } = await sb
+    .schema("play")
     .from("room_playlists")
     .select("room_id")
     .in("playlist_id", pids);
@@ -90,6 +96,7 @@ async function roomWithCard(sb, cardId) {
     ? `playlist_id.in.(${pids.join(",")}),id.in.(${roomIds.join(",")})`
     : `playlist_id.in.(${pids.join(",")})`;
   const { data: rooms } = await sb
+    .schema("play")
     .from("rooms")
     .select("code, name, game_mode")
     .eq("is_public", true)

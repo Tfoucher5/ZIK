@@ -21,6 +21,7 @@ export async function GET({ url }) {
   const counts = await Promise.all(
     STATUSES.map((s) =>
       sb
+        .schema("ops")
         .from("prospects")
         .select("*", { count: "exact", head: true })
         .eq("status", s),
@@ -36,11 +37,13 @@ export async function GET({ url }) {
   const [{ data: recent }, { data: replies }, { data: pro }] =
     await Promise.all([
       sb
+        .schema("ops")
         .from("prospects")
         .select("kind, first_sent_at, followup_sent_at")
         .or(`first_sent_at.gte.${since},followup_sent_at.gte.${since}`)
         .limit(5000),
       sb
+        .schema("ops")
         .from("prospect_replies")
         .select(
           "id, received_at, from_email, subject, excerpt, category, summary, suggested_reply, handled, prospects(name, kind, city, email)",
@@ -48,7 +51,10 @@ export async function GET({ url }) {
         .or("category.is.null,category.neq.bounce")
         .order("received_at", { ascending: false })
         .limit(100),
-      sb.from("pro_subscriptions").select("user_id, plan, created_at"),
+      sb
+        .schema("salon")
+        .from("pro_subscriptions")
+        .select("user_id, plan, created_at"),
     ]);
 
   const perDay = {};
@@ -71,6 +77,7 @@ export async function GET({ url }) {
     const email = data?.user?.email?.toLowerCase();
     if (!email) continue;
     const { data: hit } = await sb
+      .schema("ops")
       .from("prospects")
       .select("name, kind, city, first_sent_at")
       .eq("email", email)
@@ -96,6 +103,7 @@ export async function PATCH({ request }) {
   const { token, id, handled } = await request.json();
   await requireAdminToken(token);
   const { error } = await getAdminClient()
+    .schema("ops")
     .from("prospect_replies")
     .update({ handled: !!handled })
     .eq("id", id);

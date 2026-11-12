@@ -88,7 +88,7 @@
         {/if}
       {:else if p.phase === 'summary' || p.phase === 'gameover'}
         <SummaryView
-          phase={p.phase} roundEnd={p.roundEnd} finalScores={p.finalScores} scores={p.scores}
+          phase={p.phase} roundEnd={p.roundEnd} finalRanking={p.finalRanking} ranking={p.ranking}
           username={p.username} teams={p.teams} night={p.night} myTeam={p.myTeam}
           round={p.round} total={p.total}
           onLeave={p.leave}
@@ -103,7 +103,7 @@
   </main>
 
   {#if p.intermission || p.finale}
-    <PlayEvening intermission={p.intermission} finale={p.finale} username={p.username} myTeam={p.myTeam} />
+    <PlayEvening intermission={p.intermission} finale={p.finale} myTeam={p.myTeam} />
   {/if}
 
   {#if p.paused && !p.buzzer}

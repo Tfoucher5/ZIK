@@ -57,6 +57,7 @@ for (const [kind, body] of Object.entries(QUERIES)) {
     .filter((r) => r && !seen.has(r.email) && seen.add(r.email));
   for (let i = 0; i < rows.length; i += 500) {
     const { error } = await sb
+      .schema("ops")
       .from("prospects")
       .upsert(rows.slice(i, i + 500), {
         onConflict: "email",
@@ -67,6 +68,7 @@ for (const [kind, body] of Object.entries(QUERIES)) {
   console.log(`${kind} : ${rows.length} lieux avec e-mail`);
 }
 const { count } = await sb
+  .schema("ops")
   .from("prospects")
   .select("*", { count: "exact", head: true });
 console.log(`Total en base : ${count}`);

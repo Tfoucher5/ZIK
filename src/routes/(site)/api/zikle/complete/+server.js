@@ -26,6 +26,7 @@ export async function POST({ request }) {
 
   const sb = getAdminClient();
   const { data: songRow, error: songErr } = await sb
+    .schema("play")
     .from("daily_songs")
     .select("tracks(artist, title, cover_url)")
     .eq("date", date)
@@ -38,7 +39,7 @@ export async function POST({ request }) {
 
   let saved = null;
   if (user) {
-    const { data, error } = await sb.rpc("zikle_complete", {
+    const { data, error } = await sb.schema("play").rpc("zikle_complete", {
       p_user_id: user.id,
       p_date: date,
       p_attempts: attempts,

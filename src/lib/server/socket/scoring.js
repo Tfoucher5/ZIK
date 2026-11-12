@@ -74,6 +74,12 @@ export function gradeGuess(input, track, found) {
   return { hits, close };
 }
 
+// Œuvre affichée en grand à la révélation (musique de film, série…), ou null
+export function workAnswer(track) {
+  const w = track.extraAnswers?.find((e) => e.work);
+  return w ? { label: w.label, value: w.value } : null;
+}
+
 export function markFound(player, part) {
   if (part.kind === "artist") player.foundArtist = true;
   if (part.kind === "title") player.foundTitle = true;

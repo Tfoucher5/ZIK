@@ -43,9 +43,11 @@ export async function GET({ url }) {
     }
 
     if (mode === "cartes") {
-      const { data } = await getAdminClient().rpc("cards_leaderboard_my_rank", {
-        p_user_id: userId,
-      });
+      const { data } = await getAdminClient()
+        .schema("cards")
+        .rpc("cards_leaderboard_my_rank", {
+          p_user_id: userId,
+        });
       const me = data?.[0];
       if (!me) return json(null);
       return json({
@@ -58,12 +60,14 @@ export async function GET({ url }) {
       });
     }
 
-    const { data, error } = await supabase.rpc("leaderboard_score_my_rank", {
-      p_user_id: userId,
-      p_mode: mode,
-      p_rooms: rooms,
-      p_period: periode,
-    });
+    const { data, error } = await supabase
+      .schema("play")
+      .rpc("leaderboard_score_my_rank", {
+        p_user_id: userId,
+        p_mode: mode,
+        p_rooms: rooms,
+        p_period: periode,
+      });
 
     if (error || !data?.length) return json(null);
 

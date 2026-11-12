@@ -23,13 +23,15 @@ async function chargerPage({ params }) {
 
   const [playlistRes, tracksRes, types] = await Promise.all([
     sb
+      .schema("catalog")
       .from("custom_playlists")
       .select(
-        "id, name, emoji, owner_id, is_public, is_official, linked_room_id, track_count, created_at, updated_at, profiles!owner_id(username)",
+        "id, name, emoji, owner_id, is_public, is_official, linked_room_id, track_count, created_at, updated_at, profiles:owner(username)",
       )
       .eq("id", params.id)
       .single(),
     sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .select(
         "id, position, custom_artist, custom_title, custom_feats, track_answers(id, answer_type_id, value), tracks(id, artist, title, preview_url, cover_url, source, youtube_id, youtube_start)",
@@ -47,9 +49,14 @@ async function chargerPage({ params }) {
   // Peu de signalements ouverts : un .in() sur des centaines d'ids dépasse
   // la taille d'URL acceptée par l'API
   const [issuesRes, playsRes] = await Promise.all([
-    sb.from("track_issues").select("track_id").eq("status", "open"),
+    sb
+      .schema("catalog")
+      .from("track_issues")
+      .select("track_id")
+      .eq("status", "open"),
     playlist.linked_room_id
       ? sb
+          .schema("play")
           .from("games")
           .select("id", { count: "exact", head: true })
           .eq("room_id", playlist.linked_room_id)
@@ -79,6 +86,7 @@ export const actions = adminActions({
     const sb = getAdminClient();
 
     const { data: last } = await sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .select("position")
       .eq("playlist_id", params.id)
@@ -87,16 +95,20 @@ export const actions = adminActions({
       .maybeSingle();
 
     const { data: track } = await sb
+      .schema("catalog")
       .from("tracks")
       .select("artist, title")
       .eq("id", trackId)
       .single();
 
-    const { error: err } = await sb.from("custom_playlist_tracks").insert({
-      playlist_id: params.id,
-      track_id: trackId,
-      position: (last?.position ?? -1) + 1,
-    });
+    const { error: err } = await sb
+      .schema("catalog")
+      .from("custom_playlist_tracks")
+      .insert({
+        playlist_id: params.id,
+        track_id: trackId,
+        position: (last?.position ?? -1) + 1,
+      });
     if (err) return { success: false, error: err.message };
     await forgetPlaylists([params.id]);
     await logAdminAction(locals.adminId, "add_track", params.id, "playlist", {
@@ -113,11 +125,13 @@ export const actions = adminActions({
     const entryId = fd.get("track_id");
     const sb = getAdminClient();
     const { data: row } = await sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .select("tracks(artist, title)")
       .eq("id", entryId)
       .single();
     const { error: err } = await sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .delete()
       .eq("id", entryId);
@@ -146,6 +160,7 @@ export const actions = adminActions({
       throw error(400, "Direction invalide");
     const sb = getAdminClient();
     const { data: rows } = await sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .select("id, position")
       .eq("playlist_id", params.id)
@@ -160,10 +175,12 @@ export const actions = adminActions({
     const a = rows[idx];
     const b = rows[swapIdx];
     await sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .update({ position: b.position })
       .eq("id", a.id);
     await sb
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .update({ position: a.position })
       .eq("id", b.id);
@@ -198,6 +215,7 @@ export const actions = adminActions({
       : null;
 
     const { error: err } = await getAdminClient()
+      .schema("catalog")
       .from("custom_playlist_tracks")
       .update({ custom_artist, custom_title, custom_feats })
       .eq("id", entryId);
@@ -217,12 +235,14 @@ export const actions = adminActions({
     assertUuid(params.id);
     const sb = getAdminClient();
     const { data: playlist } = await sb
+      .schema("catalog")
       .from("custom_playlists")
       .select("name, track_count")
       .eq("id", params.id)
       .single();
     await forgetPlaylists([params.id]);
     const { error: err } = await sb
+      .schema("catalog")
       .from("custom_playlists")
       .delete()
       .eq("id", params.id);

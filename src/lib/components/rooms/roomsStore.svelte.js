@@ -98,11 +98,13 @@ export class RoomsStore {
     if (!user) return;
     const [{ data: mine }, { data: shared }] = await Promise.all([
       this.#sb
+        .schema("catalog")
         .from("custom_playlists")
         .select("id, name, emoji, track_count")
         .eq("owner_id", user.id)
         .order("name"),
       this.#sb
+        .schema("catalog")
         .from("custom_playlists")
         .select("id, name, emoji, track_count, is_official")
         .or("is_public.eq.true,is_official.eq.true")

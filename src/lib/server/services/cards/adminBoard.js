@@ -27,6 +27,7 @@ async function searchCards(sb, q, rarity) {
   const parsed = parseCardSearch(q);
   if (!parsed && !rarity) return null;
   let query = sb
+    .schema("cards")
     .from("cards")
     .select(CARD_COLUMNS)
     .order("number", { ascending: !!parsed })
@@ -43,6 +44,7 @@ async function searchCards(sb, q, rarity) {
 
 async function cardDetail(sb, number) {
   const { data: card } = await sb
+    .schema("cards")
     .from("cards")
     .select(
       `${CARD_COLUMNS}, isrc, first_owner_id, first_owned_at, card_albums(title, year, cover_md_url, cover_url)`,
@@ -53,26 +55,31 @@ async function cardDetail(sb, number) {
 
   const [owners, ownersCount, tracks, sets, grants] = await Promise.all([
     sb
+      .schema("cards")
       .from("user_cards")
       .select("user_id, copies, first_obtained_at")
       .eq("card_id", card.id)
       .order("first_obtained_at", { ascending: true })
       .limit(20),
     sb
+      .schema("cards")
       .from("user_cards")
       .select("*", { count: "exact", head: true })
       .eq("card_id", card.id),
     sb
+      .schema("catalog")
       .from("tracks")
       .select("*", { count: "exact", head: true })
       .eq("card_id", card.id),
     sb
+      .schema("cards")
       .from("card_set_items")
       .select("card_sets(id, kind, name, card_count)")
       .eq("card_id", card.id),
     Promise.all(
       STATUSES.map((s) =>
         sb
+          .schema("cards")
           .from("card_grants")
           .select("*", { count: "exact", head: true })
           .eq("card_id", card.id)
@@ -123,9 +130,13 @@ export async function cardsAdminBoard({
   }
 
   const head = (table, columns = "*") =>
-    sb.from(table).select(columns, { count: "exact", head: true });
+    sb
+      .schema("cards")
+      .from(table)
+      .select(columns, { count: "exact", head: true });
 
   let grantsQuery = sb
+    .schema("cards")
     .from("card_grants")
     .select(
       "id, user_id, card_id, room_id, round, mode, answer_ms, active_accounts, delayed, status, created_at, cards(number, title, artist, rarity)",
@@ -163,6 +174,7 @@ export async function cardsAdminBoard({
     head("cards").is("rarity_locked_at", null),
     head("card_sets"),
     sb
+      .schema("cards")
       .from("card_signals")
       .select(
         "id, user_id, grant_id, reason, details, created_at, card_grants(card_id, status, room_id, cards(number, title, artist, rarity))",
@@ -173,6 +185,7 @@ export async function cardsAdminBoard({
       .limit(100),
     grantsQuery,
     sb
+      .schema("ops")
       .from("reports")
       .select("id, message, metadata, created_at", { count: "exact" })
       .eq("subject", "card")
@@ -190,6 +203,7 @@ export async function cardsAdminBoard({
   const numbers = reports.map((r) => r.metadata?.card).filter(Boolean);
   const { data: reported } = numbers.length
     ? await sb
+        .schema("cards")
         .from("cards")
         .select("id, number, title, artist, rarity, deezer_track_id")
         .in("number", numbers)

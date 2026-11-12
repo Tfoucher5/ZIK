@@ -14,7 +14,7 @@ vi.mock("../../../config.js", () => ({
       }),
     }),
   },
-  getAdminClient: () => ({ rpc: async () => ({ data: null, error: null }) }),
+  getAdminClient: () => ({ schema: () => ({ rpc: async () => ({}) }) }),
 }));
 vi.mock("../../../services/music/trackIssues.js", () => ({
   reportTrackIssue: m.report,

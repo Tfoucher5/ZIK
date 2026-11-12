@@ -6,11 +6,12 @@ import { getStripe, WEBHOOK_EVENTS } from "../../stripe.js";
 import { grade } from "./levels.js";
 import { mediaMissesSince } from "./mediaMisses.js";
 import { countSince } from "./opsEvents.js";
+import { TIMEOUT_MS, httpProbe, signal, timed } from "./httpProbe.js";
+import { WIKIDATA_UA, wikidataSearchUrl } from "../music/wikidata.js";
 
 // Chaque sonde rend { result: "ok" | "warn" | "fail", value, detail }.
 // Aucune ne lève : une sonde qui plante compte comme un échec.
 
-const TIMEOUT_MS = 5000;
 const FIVE_MIN = 5 * 60 * 1000;
 const QUARTER = 15 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
@@ -25,6 +26,7 @@ export const LABELS = {
   deezer: "Deezer (extraits audio)",
   youtube: "YouTube",
   spotify: "Spotify (import de playlists)",
+  wikidata: "Wikidata (titres de films en français)",
   stripe: "Paiements (Stripe et webhook)",
   mail: "Envoi des mails (Resend)",
   push: "Notifications sur téléphone",
@@ -35,37 +37,6 @@ export const LABELS = {
   snapshots: "Sauvegarde des soirées",
   load: "Salons ouverts",
 };
-
-async function timed(fn) {
-  const t = Date.now();
-  try {
-    const value = await fn();
-    return { ms: Date.now() - t, value };
-  } catch (e) {
-    return { ms: Date.now() - t, error: e?.message ?? String(e) };
-  }
-}
-
-const signal = () => AbortSignal.timeout(TIMEOUT_MS);
-
-// Réponse lente (> 2 s) = seuil approché ; erreur ou délai dépassé = échec
-async function httpProbe(
-  url,
-  fetchFn,
-  { check, headers, accept = (res) => res.ok } = {},
-) {
-  const r = await timed(async () => {
-    const res = await fetchFn(url, { signal: signal(), headers });
-    if (!accept(res)) throw new Error(`HTTP ${res.status}`);
-    if (check) return check(await res.json());
-    // Corps non lu : on libère la connexion sans attendre le ramasse-miettes
-    await res.body?.cancel();
-  });
-  if (r.error) return { result: "fail", value: r.ms, detail: r.error };
-  // check rend un texte : service là mais freiné, seuil approché
-  if (r.value) return { result: "warn", value: r.ms, detail: r.value };
-  return { result: grade(r.ms, 2000, Infinity), value: r.ms };
-}
 
 export function makeProbes({
   fetchFn = fetch,
@@ -121,7 +92,7 @@ export function makeProbes({
     // Plan Pro de Supabase : 8 Go de disque inclus
     async database() {
       const r = await timed(async () => {
-        const { data, error } = await db().rpc("db_stats");
+        const { data, error } = await db().schema("ops").rpc("db_stats");
         if (error) throw new Error(error.message);
         return data?.[0];
       });
@@ -183,6 +154,12 @@ export function makeProbes({
     spotify: () =>
       httpProbe("https://api.spotify.com/v1/", fetchFn, {
         accept: (res) => res.status < 500,
+      }),
+    // Propositions de films de l'éditeur de playlist : sans Wikidata, le titre
+    // reste en anglais, rien ne casse
+    wikidata: () =>
+      httpProbe(wikidataSearchUrl("Frozen", 1), fetchFn, {
+        headers: { "User-Agent": WIKIDATA_UA },
       }),
     // Stripe sait ce qu'il n'a pas réussi à nous livrer : rien à garder en mémoire,
     // et un redémarrage ne fausse rien. Une réponse est gardée 15 min pour ménager

@@ -119,8 +119,11 @@
     <div class="sh-reveal">
       {#if roundEnd.cover}<img src={roundEnd.cover} alt="">{/if}
       <div class="sh-reveal-txt">
-        <p class="sx-kicker">{roundEnd.reason}</p>
-        <div class="sh-reveal-answer">{roundEnd.answer}</div>
+        <p class="sx-kicker">{roundEnd.reason}{#if roundEnd.work} · {roundEnd.work.label}{/if}</p>
+        <div class="sh-reveal-answer">{roundEnd.work?.value ?? roundEnd.answer}</div>
+        {#if roundEnd.work}
+          <div class="sh-reveal-feat">{roundEnd.answer}</div>
+        {/if}
         {#if roundEnd.featArtists?.length}
           <div class="sh-reveal-feat">feat. {roundEnd.featArtists.join(', ')}</div>
         {/if}

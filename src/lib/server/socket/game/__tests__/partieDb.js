@@ -61,6 +61,9 @@ export function fauxConfig(db) {
       },
     },
     from: (table) => query(table, false),
+    schema() {
+      return this;
+    },
     rpc: async (fn, args) => {
       db.rpc.push({ fn, args });
       return { data: null, error: null };

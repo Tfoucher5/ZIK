@@ -48,12 +48,14 @@ async function chargerPage({ url }) {
     sb.from("profiles").select("id", head),
     sb.from("profiles").select("id", head).gte("created_at", weekAgo),
     sb
+      .schema("play")
       .from("game_players")
       .select("user_id, games!inner(started_at)")
       .not("user_id", "is", null)
       .gte("games.started_at", weekAgo)
       .limit(10000),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id")
       .eq("status", "active")

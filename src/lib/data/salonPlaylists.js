@@ -10,6 +10,7 @@ export const DEFAULT_SALON_PLAYLIST = "09a2742e-121d-4b99-8e94-290b7f4b5eb4";
  */
 export async function loadSalonPlaylists(sb, userId) {
   let sharedQuery = sb
+    .schema("catalog")
     .from("custom_playlists")
     .select("id, name, emoji, track_count, is_official")
     .or("is_public.eq.true,is_official.eq.true");
@@ -19,6 +20,7 @@ export async function loadSalonPlaylists(sb, userId) {
   const [{ data: mine }, { data: shared }] = await Promise.all([
     userId
       ? sb
+          .schema("catalog")
           .from("custom_playlists")
           .select("id, name, emoji, track_count, is_official")
           .eq("owner_id", userId)

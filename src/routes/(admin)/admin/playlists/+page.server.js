@@ -32,10 +32,12 @@ async function playCounts(sb, linked) {
     linked.map(async (p) => {
       const [all, month] = await Promise.all([
         sb
+          .schema("play")
           .from("games")
           .select("id", { count: "exact", head: true })
           .eq("room_id", p.linked_room_id),
         sb
+          .schema("play")
           .from("games")
           .select("id", { count: "exact", head: true })
           .eq("room_id", p.linked_room_id)
@@ -61,9 +63,10 @@ async function chargerPage({ url }) {
 
   let query = filtered(
     sb
+      .schema("catalog")
       .from("custom_playlists")
       .select(
-        "id, name, emoji, owner_id, is_public, is_official, linked_room_id, track_count, created_at, updated_at, profiles!owner_id(username)",
+        "id, name, emoji, owner_id, is_public, is_official, linked_room_id, track_count, created_at, updated_at, profiles:owner(username)",
         { count: "exact" },
       ),
     filter,
@@ -74,7 +77,10 @@ async function chargerPage({ url }) {
 
   const head = (fn) =>
     fn(
-      sb.from("custom_playlists").select("id", { count: "exact", head: true }),
+      sb
+        .schema("catalog")
+        .from("custom_playlists")
+        .select("id", { count: "exact", head: true }),
     ).then((r) => r.count ?? 0);
 
   const [list, total, official, pub, empty, entries, linkedRes] =
@@ -85,9 +91,11 @@ async function chargerPage({ url }) {
       head((x) => x.eq("is_public", true)),
       head((x) => x.eq("track_count", 0)),
       sb
+        .schema("catalog")
         .from("custom_playlist_tracks")
         .select("id", { count: "exact", head: true }),
       sb
+        .schema("catalog")
         .from("custom_playlists")
         .select("id, name, emoji, linked_room_id")
         .not("linked_room_id", "is", null),
@@ -128,6 +136,7 @@ export const actions = adminActions({
     const value = fd.get("value") === "true";
     if (!ALLOWED_FLAGS.includes(field)) throw error(400, "Champ invalide");
     const { error: err } = await getAdminClient()
+      .schema("catalog")
       .from("custom_playlists")
       .update({ [field]: value })
       .eq("id", id);
@@ -155,6 +164,7 @@ export const actions = adminActions({
     if (!name) return { success: false, error: "Donne un nom à la playlist." };
     await forgetPlaylists([id]);
     const { error: err } = await getAdminClient()
+      .schema("catalog")
       .from("custom_playlists")
       .update({ name, emoji, linked_room_id })
       .eq("id", id);
@@ -173,12 +183,14 @@ export const actions = adminActions({
     const id = fd.get("id");
     const sb = getAdminClient();
     const { data: playlist } = await sb
+      .schema("catalog")
       .from("custom_playlists")
       .select("name, track_count")
       .eq("id", id)
       .single();
     await forgetPlaylists([id]);
     const { error: err } = await sb
+      .schema("catalog")
       .from("custom_playlists")
       .delete()
       .eq("id", id);

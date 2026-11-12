@@ -38,23 +38,30 @@ async function chargerPage() {
     { data: playlists },
   ] = await Promise.all([
     sb
+      .schema("play")
       .from("games")
       .select("host_id, player_count, limit_hits, started_at")
       .eq("source", "salon")
       .gte("started_at", since)
       .not("ended_at", "is", null),
     sb
+      .schema("catalog")
       .from("track_issues")
       .select("*", { count: "exact", head: true })
       .eq("status", "open")
       .eq("kind", "video"),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("user_id")
       .eq("status", "active")
       .gt("current_period_end", new Date().toISOString()),
     playlistIds.length
-      ? sb.from("custom_playlists").select("id, name").in("id", playlistIds)
+      ? sb
+          .schema("catalog")
+          .from("custom_playlists")
+          .select("id, name")
+          .in("id", playlistIds)
       : { data: [] },
   ]);
   const playlistName = Object.fromEntries(

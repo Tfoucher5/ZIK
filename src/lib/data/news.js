@@ -5,6 +5,23 @@
 
 export const NEWS = [
   {
+    date: "2026-11-12",
+    version: "3.27.0",
+    tag: "Nouveauté",
+    title: "Le film ou la série d'abord",
+    summary:
+      "Quand une chanson vient d'un film ou d'une série, c'est lui qu'on devine en premier, en ligne comme en soirée.",
+    items: [
+      "Quand une chanson vient d'un film ou d'une série, sa case passe en premier pendant la manche, et il s'affiche en titre à la révélation, avec l'artiste et le titre dessous.",
+      "Dans l'éditeur de playlist, ZIK propose le film ou la série des titres qui n'en ont pas, en français quand c'est possible. Tu valides avant tout enregistrement.",
+      "Les rooms aux très grandes playlists jouent bien tous leurs titres, et un titre présent dans plusieurs playlists garde sa réponse film ou série.",
+    ],
+    proItems: [
+      "En soirée, les téléphones ne reçoivent plus la liste complète des joueurs : le podium, leur place et l'effectif suffisent. La TV et la régie gardent tout.",
+      "Capacité testée portée à 2 000 joueurs simulés dans un salon.",
+    ],
+  },
+  {
     date: "2026-11-10",
     version: "3.26.0",
     tag: "Nouveauté",

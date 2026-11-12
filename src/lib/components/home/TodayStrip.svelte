@@ -26,6 +26,7 @@
     let rows;
     if (user && ctx.sb) {
       const { data } = await ctx.sb
+        .schema('play')
         .from('daily_results')
         .select('date, won, attempts')
         .eq('user_id', user.id)

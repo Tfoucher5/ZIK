@@ -41,6 +41,7 @@ if (SEND && (day === 0 || day === 6)) {
 const sb = db();
 
 const { data: firstRow } = await sb
+  .schema("ops")
   .from("prospects")
   .select("first_sent_at")
   .not("first_sent_at", "is", null)
@@ -50,6 +51,7 @@ const { data: firstRow } = await sb
 const quota = dailyQuota(firstRow?.first_sent_at);
 
 const { data: dueFollowUps } = await sb
+  .schema("ops")
   .from("prospects")
   .select("*")
   .eq("status", "sent")
@@ -61,6 +63,7 @@ const { data: dueFollowUps } = await sb
   .limit(quota);
 
 const { data: fresh } = await sb
+  .schema("ops")
   .from("prospects")
   .select("*")
   .eq("status", "new")
@@ -124,13 +127,18 @@ for (const { p, followup } of jobs) {
       `Échec prospect ${p.id} : ${err.responseCode ?? err.code ?? "erreur"}`,
     );
     if (err.responseCode >= 500)
-      await sb.from("prospects").update({ status: "bounced" }).eq("id", p.id);
+      await sb
+        .schema("ops")
+        .from("prospects")
+        .update({ status: "bounced" })
+        .eq("id", p.id);
     continue;
   }
   await box.append(sentFolder, raw, ["\\Seen"]);
 
   const now = new Date().toISOString();
   await sb
+    .schema("ops")
     .from("prospects")
     .update(
       followup

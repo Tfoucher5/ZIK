@@ -83,6 +83,7 @@ export async function patchSalonPlaylists(sb, code, playlistIds) {
 export async function fetchPro(sb, userId) {
   if (!userId) return null;
   const { data } = await sb
+    .schema("salon")
     .from("pro_subscriptions")
     .select(
       "plan, status, current_period_end, stripe_customer_id, stripe_last_session",

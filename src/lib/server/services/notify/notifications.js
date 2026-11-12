@@ -11,7 +11,7 @@ import { CATEGORY_OF_TYPE, pushMessageFor } from "./pushMessages.js";
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 export const NOTIF_SELECT =
-  "id, type, actor_id, payload, read, created_at, actor:actor_id(id, username, avatar_url)";
+  "id, type, actor_id, payload, read, created_at, actor:actor(id, username, avatar_url)";
 
 // Insert (service role — pas de policy INSERT) + push temps réel. Joueur sans
 // onglet ouvert : notification sur ses appareils à la place.
@@ -24,6 +24,7 @@ export async function createNotification({
 }) {
   try {
     const { data } = await getAdminClient()
+      .schema("social")
       .from("notifications")
       .insert({ user_id: userId, type, actor_id: actorId, payload })
       .select(NOTIF_SELECT)
@@ -42,7 +43,7 @@ export async function createNotification({
 // Supprime les notifications devenues obsolètes (ex. demande d'ami annulée/traitée).
 export async function deleteNotifications(filters) {
   try {
-    let q = getAdminClient().from("notifications").delete();
+    let q = getAdminClient().schema("social").from("notifications").delete();
     for (const [col, val] of Object.entries(filters)) q = q.eq(col, val);
     await q;
   } catch {
@@ -56,10 +57,9 @@ export function purgeCutoff() {
 
 // Une notification pour chaque profil (annonce de l'admin ou nouveauté).
 export async function broadcastNotification(type, payload) {
-  const { data, error } = await getAdminClient().rpc(
-    "admin_broadcast_notification",
-    { p_type: type, p_payload: payload },
-  );
+  const { data, error } = await getAdminClient()
+    .schema("social")
+    .rpc("admin_broadcast_notification", { p_type: type, p_payload: payload });
   if (error) throw new Error(error.message);
   refreshAllNotifications();
   return data;
@@ -73,20 +73,24 @@ export async function announceLatestNews() {
   if (!latest) return;
   const sb = getAdminClient();
   const { data, error } = await sb
+    .schema("ops")
     .from("site_settings")
     .select("value")
     .eq("key", "news_notified")
     .maybeSingle();
   if (error || data?.value?.version === latest.version) return;
 
-  const { error: setErr } = await sb.from("site_settings").upsert(
-    {
-      key: "news_notified",
-      value: { version: latest.version },
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "key" },
-  );
+  const { error: setErr } = await sb
+    .schema("ops")
+    .from("site_settings")
+    .upsert(
+      {
+        key: "news_notified",
+        value: { version: latest.version },
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key" },
+    );
   if (setErr || !data) return;
 
   const n = await broadcastNotification("news", {

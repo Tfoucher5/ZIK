@@ -16,9 +16,10 @@ import {
 
 export async function GET() {
   const { data, error } = await getAdminClient()
+    .schema("play")
     .from("rooms")
     .select(
-      `id, code, name, emoji, description, is_public, is_official, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, owner_id, profiles!owner_id(username, avatar_url), ${ROOM_PLAYLISTS_SELECT}`,
+      `id, code, name, emoji, description, is_public, is_official, auto_start, game_mode, max_rounds, round_duration, break_duration, last_active_at, owner_id, profiles:owner(username, avatar_url), ${ROOM_PLAYLISTS_SELECT}`,
     )
     .eq("is_public", true)
     .order("last_active_at", { ascending: false })
@@ -85,6 +86,7 @@ export async function POST({ request }) {
     return json({ error: "Au moins une playlist requise" }, { status: 400 });
 
   const { data, error } = await userClient(token)
+    .schema("play")
     .from("rooms")
     .insert({
       name: String(name).trim().slice(0, 60),
@@ -113,7 +115,7 @@ export async function POST({ request }) {
     playlist_id: pid,
     position: i,
   }));
-  await userClient(token).from("room_playlists").insert(links);
+  await userClient(token).schema("play").from("room_playlists").insert(links);
 
   return json(data);
 }

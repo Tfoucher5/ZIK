@@ -30,6 +30,7 @@ export function mapDeezerChartTracks(json) {
 export async function refreshZiklePool(sb, force = false) {
   if (!force) {
     const { data: latest } = await sb
+      .schema("play")
       .from("zikle_pool")
       .select("added_at")
       .order("added_at", { ascending: false })
@@ -48,9 +49,11 @@ export async function refreshZiklePool(sb, force = false) {
   const candidates = mapDeezerChartTracks(json);
   if (!candidates.length) return { refreshed: false, added: 0 };
 
-  const { data: ids, error } = await sb.rpc("resolve_tracks", {
-    p_tracks: candidates,
-  });
+  const { data: ids, error } = await sb
+    .schema("catalog")
+    .rpc("resolve_tracks", {
+      p_tracks: candidates,
+    });
   if (error) throw error;
   enqueueCardEnrichment(ids);
 
@@ -58,6 +61,7 @@ export async function refreshZiklePool(sb, force = false) {
   if (!rows.length) return { refreshed: false, added: 0 };
 
   const { error: insErr } = await sb
+    .schema("play")
     .from("zikle_pool")
     .upsert(rows, { onConflict: "track_id", ignoreDuplicates: true });
   if (insErr) throw insErr;
@@ -66,7 +70,7 @@ export async function refreshZiklePool(sb, force = false) {
 }
 
 export async function getOrCreateDailySong(sb) {
-  const { data, error } = await sb.rpc("pick_daily_song");
+  const { data, error } = await sb.schema("play").rpc("pick_daily_song");
   if (error) throw error;
   const row = data?.[0];
   if (!row?.track_id) return null;
@@ -75,6 +79,7 @@ export async function getOrCreateDailySong(sb) {
 
 export async function getDayNumber(sb, date) {
   const { count, error } = await sb
+    .schema("play")
     .from("daily_songs")
     .select("id", { count: "exact", head: true })
     .lte("date", date);

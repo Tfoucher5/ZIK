@@ -154,6 +154,7 @@ async function read(fn, args) {
     const out = [];
     for (;;) {
       const { data, error } = await getAdminClient()
+        .schema("ops")
         .rpc(fn, args)
         .range(out.length, out.length + PAGE - 1);
       if (error) throw error;

@@ -11,6 +11,7 @@ export async function DELETE({ params, request }) {
   const uSupa = userClient(token);
 
   const { data: pl, error: plErr } = await uSupa
+    .schema("catalog")
     .from("custom_playlists")
     .select("owner_id")
     .eq("id", plId)
@@ -20,8 +21,13 @@ export async function DELETE({ params, request }) {
   if (pl.owner_id !== user.id)
     return json({ error: "Non autoris\u00e9" }, { status: 403 });
 
-  await uSupa.from("custom_playlist_tracks").delete().eq("playlist_id", plId);
+  await uSupa
+    .schema("catalog")
+    .from("custom_playlist_tracks")
+    .delete()
+    .eq("playlist_id", plId);
   const { error } = await uSupa
+    .schema("catalog")
     .from("custom_playlists")
     .delete()
     .eq("id", plId);

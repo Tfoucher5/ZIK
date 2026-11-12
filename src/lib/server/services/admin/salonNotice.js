@@ -19,6 +19,7 @@ function apply(message) {
 export async function loadSalonNotice() {
   try {
     const { data, error } = await getAdminClient()
+      .schema("ops")
       .from("site_settings")
       .select("value")
       .eq("key", KEY)
@@ -37,6 +38,7 @@ export async function publishSalonNotice(message) {
     .trim()
     .slice(0, NOTICE_MAX);
   const { error } = await getAdminClient()
+    .schema("ops")
     .from("site_settings")
     .upsert(
       {

@@ -6,17 +6,20 @@ let panne = false;
 let lectures = 0;
 vi.mock("../../../config.js", () => ({
   getAdminClient: () => ({
-    rpc: (fn) => ({
-      range: async (from, to) => {
-        lectures++;
-        const data = fn === "health_transitions" ? transitions : rows;
-        return panne
-          ? { error: { message: "base injoignable" } }
-          : { data: data.slice(from, to + 1), error: null };
-      },
-    }),
+    schema: (s) => (s === "ops" ? client : {}),
   }),
 }));
+const client = {
+  rpc: (fn) => ({
+    range: async (from, to) => {
+      lectures++;
+      const data = fn === "health_transitions" ? transitions : rows;
+      return panne
+        ? { error: { message: "base injoignable" } }
+        : { data: data.slice(from, to + 1), error: null };
+    },
+  }),
+};
 vi.mock("../../admin/alerts.js", () => ({ alertAdminsSafe: () => {} }));
 vi.mock("../../../mail/send.js", () => ({
   ADMIN_EMAIL: "",

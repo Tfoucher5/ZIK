@@ -18,6 +18,7 @@ export async function load({ setHeaders }) {
     catalogTotals(sb),
     ...RARITY_ORDER.map((r) =>
       sb
+        .schema("cards")
         .from("cards")
         .select(CARD_SELECT)
         .eq("rarity", r)

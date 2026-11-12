@@ -5,11 +5,18 @@ let reponse = { data: null, error: null };
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
-    rpc: async (fn, args) => {
-      calls.push([fn, args]);
-      if (reponse === "panne") throw new Error("fetch failed");
-      return typeof reponse === "function" ? reponse(fn, args) : reponse;
-    },
+    schema: (s) =>
+      s === "salon"
+        ? {
+            rpc: async (fn, args) => {
+              calls.push([fn, args]);
+              if (reponse === "panne") throw new Error("fetch failed");
+              return typeof reponse === "function"
+                ? reponse(fn, args)
+                : reponse;
+            },
+          }
+        : null,
   }),
 }));
 
@@ -18,7 +25,10 @@ const { serializeSalon, reviveSalon, saveSnapshot, restoreSalon } =
   await import("../snapshot.js");
 const { timerClock } = await import("../timers.js");
 
-const io = { to: () => ({ emit: () => {} }) };
+const io = {
+  to: () => ({ emit: () => {} }),
+  sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+};
 const { salonEnManche, nettoie, viaBase, titresDe, revive } =
   await import("./snapshotHarness.js");
 

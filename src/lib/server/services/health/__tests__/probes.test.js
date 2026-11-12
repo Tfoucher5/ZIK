@@ -19,6 +19,8 @@ const sondes = (extra) =>
     },
     ...extra,
   });
+// db_stats est rangée dans ops : un appel hors de ce schéma ne trouve rien
+const ops = (rpc) => () => ({ schema: (s) => (s === "ops" ? { rpc } : {}) });
 const reponse = (status, body = {}) => ({
   status,
   ok: status < 400,
@@ -72,7 +74,7 @@ describe("site et comptes", () => {
     [{ size_bytes: 5e7, connections: 55, max_connections: 60 }, "fail"],
   ])("capacité de la base %#", async (row, attendu) => {
     const p = sondes({
-      db: () => ({ rpc: async () => ({ data: [row], error: null }) }),
+      db: ops(async () => ({ data: [row], error: null })),
     });
     expect((await p.database()).result).toBe(attendu);
   });
@@ -106,13 +108,13 @@ describe("site et comptes", () => {
 
   it("capacité de la base : fonction absente ou réponse vide = échec", async () => {
     const absente = sondes({
-      db: () => ({ rpc: async () => ({ error: { message: "introuvable" } }) }),
+      db: ops(async () => ({ error: { message: "introuvable" } })),
     });
     expect(await absente.database()).toMatchObject({
       result: "fail",
       detail: "introuvable",
     });
-    const vide = sondes({ db: () => ({ rpc: async () => ({ data: [] }) }) });
+    const vide = sondes({ db: ops(async () => ({ data: [] })) });
     expect((await vide.database()).result).toBe("fail");
   });
 });
@@ -150,6 +152,22 @@ describe("Deezer", () => {
   ])("%s", async (_, body, attendu) => {
     const p = sondes({ fetchFn: async () => reponse(200, body) });
     expect((await p.deezer()).result).toBe(attendu);
+  });
+});
+
+describe("Wikidata", () => {
+  it("répond : ok, en se présentant ; en erreur : échec", async () => {
+    const appels = [];
+    const ok = sondes({
+      fetchFn: async (url, opts) => {
+        appels.push(opts.headers);
+        return reponse(200);
+      },
+    });
+    expect((await ok.wikidata()).result).toBe("ok");
+    expect(appels[0]["User-Agent"]).toMatch(/ZIK/);
+    const ko = sondes({ fetchFn: async () => reponse(503) });
+    expect((await ko.wikidata()).result).toBe("fail");
   });
 });
 

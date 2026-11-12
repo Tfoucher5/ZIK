@@ -6,8 +6,13 @@ export async function forgetPlaylists(playlistIds) {
   if (!playlistIds.length) return;
   const sb = getAdminClient();
   const [{ data: links }, { data: linked }] = await Promise.all([
-    sb.from("room_playlists").select("room_id").in("playlist_id", playlistIds),
     sb
+      .schema("play")
+      .from("room_playlists")
+      .select("room_id")
+      .in("playlist_id", playlistIds),
+    sb
+      .schema("catalog")
       .from("custom_playlists")
       .select("linked_room_id")
       .in("id", playlistIds)
@@ -23,6 +28,7 @@ export async function forgetPlaylists(playlistIds) {
 
 export async function loadAnswerTypes() {
   const { data } = await getAdminClient()
+    .schema("catalog")
     .from("answer_types")
     .select("id, name")
     .order("id");
@@ -37,6 +43,7 @@ export async function addAnswers(entryIds, typeId, value) {
     return "Choisis un type et écris la réponse.";
   const sb = getAdminClient();
   const { data: existing } = await sb
+    .schema("catalog")
     .from("track_answers")
     .select("track_id, value")
     .in("track_id", entryIds)
@@ -50,9 +57,13 @@ export async function addAnswers(entryIds, typeId, value) {
     .filter((id) => !taken.has(id))
     .map((id) => ({ track_id: id, answer_type_id: type, value: v }));
   if (!rows.length) return "Cette réponse est déjà acceptée.";
-  const { error } = await sb.from("track_answers").insert(rows);
+  const { error } = await sb
+    .schema("catalog")
+    .from("track_answers")
+    .insert(rows);
   if (error) return error.message;
   const { data: entries } = await sb
+    .schema("catalog")
     .from("custom_playlist_tracks")
     .select("playlist_id")
     .in("id", entryIds);
@@ -64,6 +75,7 @@ export async function addAnswers(entryIds, typeId, value) {
 
 export async function removeAnswers(answerIds) {
   const { data, error } = await getAdminClient()
+    .schema("catalog")
     .from("track_answers")
     .delete()
     .in("id", answerIds)

@@ -5,6 +5,7 @@ export async function load() {
   const sb = getAdminClient();
   const today = todayParis();
   const { data, error } = await sb
+    .schema("play")
     .from("daily_songs")
     .select("date")
     .lt("date", today)
@@ -13,6 +14,7 @@ export async function load() {
   if (error) return { days: [] };
 
   const { count } = await sb
+    .schema("play")
     .from("daily_songs")
     .select("id", { count: "exact", head: true })
     .lt("date", today);

@@ -9,6 +9,8 @@ import { salonRooms } from "$lib/server/state.js";
 import { isPrioritySalon } from "$lib/shared/admin/reports.js";
 
 const STATUSES = ["pending", "resolved", "dismissed"];
+const LIENS =
+  "*, reporter(id, username, avatar_url), reported(id, username, avatar_url)";
 
 async function sendReplyMail(report, reply) {
   const res = await fetch(
@@ -38,14 +40,16 @@ async function chargerPage() {
   const sb = getAdminClient();
   const [pendingRes, doneRes] = await Promise.all([
     sb
+      .schema("ops")
       .from("reports")
-      .select("*")
+      .select(LIENS)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(500),
     sb
+      .schema("ops")
       .from("reports")
-      .select("*")
+      .select(LIENS)
       .neq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(200),
@@ -58,29 +62,29 @@ async function chargerPage() {
   );
 
   const uniq = (xs) => [...new Set(xs.filter(Boolean))];
-  const userIds = uniq(
-    rows.flatMap((r) => [r.reporter_id, r.reported_user_id]),
-  );
   const roomCodes = uniq(rows.map((r) => r.room_id));
   const trackIds = uniq(
     rows.flatMap((r) => (r.metadata?.tracks ?? []).map((t) => t.trackId)),
   );
 
-  const [profilesRes, roomsRes, tracksRes, issuesRes] = await Promise.all([
-    userIds.length
-      ? sb.from("profiles").select("id, username, avatar_url").in("id", userIds)
-      : { data: [] },
+  const [roomsRes, tracksRes, issuesRes] = await Promise.all([
     roomCodes.length
-      ? sb.from("rooms").select("code, name, emoji").in("code", roomCodes)
+      ? sb
+          .schema("play")
+          .from("rooms")
+          .select("code, name, emoji")
+          .in("code", roomCodes)
       : { data: [] },
     trackIds.length
       ? sb
+          .schema("catalog")
           .from("tracks")
           .select("id, artist, title, cover_url")
           .in("id", trackIds)
       : { data: [] },
     trackIds.length
       ? sb
+          .schema("catalog")
           .from("track_issues")
           .select("track_id")
           .eq("status", "open")
@@ -90,7 +94,6 @@ async function chargerPage() {
 
   const byId = (list, key = "id") =>
     Object.fromEntries((list ?? []).map((x) => [x[key], x]));
-  const profiles = byId(profilesRes.data);
   const rooms = byId(roomsRes.data, "code");
   const tracks = byId(tracksRes.data);
   const openIssues = new Set((issuesRes.data ?? []).map((i) => i.track_id));
@@ -100,8 +103,6 @@ async function chargerPage() {
       const { tracks: reported, context, ...extra } = r.metadata ?? {};
       return {
         ...r,
-        reporter: profiles[r.reporter_id] ?? null,
-        reported: profiles[r.reported_user_id] ?? null,
         priority: isPrioritySalon(r),
         salonLive: r.subject === "salon" && !!salonRooms[r.room_id],
         room: rooms[r.room_id] ?? null,
@@ -131,6 +132,7 @@ export const actions = adminActions({
 
     const sb = getAdminClient();
     const { data: report } = await sb
+      .schema("ops")
       .from("reports")
       .select("reporter_email, reporter_name, type, subject, admin_reply")
       .eq("id", id)
@@ -138,6 +140,7 @@ export const actions = adminActions({
     if (!report) return fail(404, { error: "Message introuvable" });
 
     const { error: err } = await sb
+      .schema("ops")
       .from("reports")
       .update({
         status,
@@ -171,6 +174,7 @@ export const actions = adminActions({
 
     const sb = getAdminClient();
     const { data: report } = await sb
+      .schema("ops")
       .from("reports")
       .select("reporter_email, reporter_name, type, subject")
       .eq("id", id)
@@ -178,7 +182,11 @@ export const actions = adminActions({
     if (!report?.reporter_email)
       return fail(400, { error: "Pas d'email pour répondre." });
 
-    await sb.from("reports").update({ admin_reply: reply }).eq("id", id);
+    await sb
+      .schema("ops")
+      .from("reports")
+      .update({ admin_reply: reply })
+      .eq("id", id);
     if (!(await sendReplyMail(report, reply)))
       return fail(502, {
         error: "Réponse enregistrée, mais l'email n'est pas parti.",
@@ -191,6 +199,7 @@ export const actions = adminActions({
     const id = fd.get("id");
     if (!id) return fail(400, { error: "id requis" });
     const { error: err } = await getAdminClient()
+      .schema("ops")
       .from("reports")
       .delete()
       .eq("id", id);

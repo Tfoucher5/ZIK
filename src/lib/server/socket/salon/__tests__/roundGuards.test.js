@@ -74,7 +74,10 @@ afterEach(() => {
 });
 
 describe("déroulé d'une manche", () => {
-  const io = { to: () => ({ emit: () => {} }) };
+  const io = {
+    to: () => ({ emit: () => {} }),
+    sockets: { adapter: { rooms: new Map() }, sockets: new Map() },
+  };
 
   it("second « suivant » pendant la recherche : un seul titre consommé", async () => {
     const game = salonRooms[CODE].game;

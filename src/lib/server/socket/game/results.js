@@ -139,13 +139,17 @@ export async function saveGameResults(roomId, finalScores, io, departed = {}) {
   try {
     const admin = getAdminClient();
     await admin
+      .schema("play")
       .from("games")
       .update({ ended_at: new Date().toISOString() })
       .eq("id", dbGameId);
 
     if (players.length) {
       // Supabase ne lève pas : sans ce contrôle, un score perdu passerait inaperçu
-      const { error } = await admin.from("game_players").insert(players);
+      const { error } = await admin
+        .schema("play")
+        .from("game_players")
+        .insert(players);
       if (error) console.error("[rooms] joueurs de la partie :", error.message);
     }
     finalScores.forEach((p) => {
@@ -225,14 +229,17 @@ export async function saveMidGamePlayer(
 ) {
   try {
     const admin = getAdminClient();
-    const { error } = await admin.from("game_players").insert({
-      game_id: dbGameId,
-      user_id: player.userId || null,
-      username: player.name,
-      score: player.score,
-      rank: null,
-      is_guest: player.isGuest || !player.userId,
-    });
+    const { error } = await admin
+      .schema("play")
+      .from("game_players")
+      .insert({
+        game_id: dbGameId,
+        user_id: player.userId || null,
+        username: player.name,
+        score: player.score,
+        rank: null,
+        is_guest: player.isGuest || !player.userId,
+      });
     if (error) throw error;
     if (player.userId && !player.isGuest && gameMode !== "qcm") {
       await admin.rpc("update_player_stats", {

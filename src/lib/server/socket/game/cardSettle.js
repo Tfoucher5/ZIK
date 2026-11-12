@@ -19,7 +19,7 @@ export async function settleCards({ game, name, userId, keep, io, socketId }) {
   if (!ids?.length || !userId) return;
   delete game.pendingGrants[name];
 
-  const { data, error } = await db().rpc("card_settle", {
+  const { data, error } = await db().schema("cards").rpc("card_settle", {
     p_user_id: userId,
     p_grant_ids: ids,
     p_keep: keep,
@@ -46,12 +46,14 @@ export async function settleCards({ game, name, userId, keep, io, socketId }) {
 async function notifyMythics(userId, cardIds) {
   if (!cardIds.length) return;
   const { data: mythics } = await db()
+    .schema("cards")
     .from("cards")
     .select("number, title, artist")
     .in("id", cardIds)
     .eq("rarity", "mythic");
   if (!mythics?.length) return;
   const { data: links } = await db()
+    .schema("social")
     .from("friendships")
     .select("requester_id, addressee_id")
     .eq("status", "accepted")

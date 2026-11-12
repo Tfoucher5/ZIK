@@ -22,6 +22,7 @@ export async function getAdminUserDetail(id, adminId) {
     sb.from("profiles").select("*").eq("id", id).single(),
     sb.auth.admin.getUserById(id),
     sb
+      .schema("play")
       .from("game_players")
       .select(
         "id, score, rank, games(id, room_id, started_at, rounds, mode, player_count)",
@@ -29,6 +30,7 @@ export async function getAdminUserDetail(id, adminId) {
       .eq("user_id", id)
       .limit(2000),
     sb
+      .schema("ops")
       .from("reports")
       .select(
         "id, type, subject, status, message, created_at, reporter_id, reported_user_id, room_id",
@@ -37,44 +39,47 @@ export async function getAdminUserDetail(id, adminId) {
       .order("created_at", { ascending: false })
       .limit(20),
     sb
+      .schema("social")
       .from("follows")
-      .select(
-        "id, created_at, user:profiles!follows_following_id_fkey(id, username, avatar_url)",
-      )
+      .select("id, created_at, user:following(id, username, avatar_url)")
       .eq("follower_id", id)
       .order("created_at", { ascending: false }),
     sb
+      .schema("social")
       .from("follows")
-      .select(
-        "id, created_at, user:profiles!follows_follower_id_fkey(id, username, avatar_url)",
-      )
+      .select("id, created_at, user:follower(id, username, avatar_url)")
       .eq("following_id", id)
       .order("created_at", { ascending: false }),
     sb
+      .schema("social")
       .from("friendships")
       .select(
-        "id, status, created_at, accepted_at, requester_id, requester:profiles!friendships_requester_id_fkey(id, username, avatar_url), addressee:profiles!friendships_addressee_id_fkey(id, username, avatar_url)",
+        "id, status, created_at, accepted_at, requester_id, requester(id, username, avatar_url), addressee(id, username, avatar_url)",
       )
       .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
       .order("created_at", { ascending: false }),
     sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("plan, status, current_period_end, stripe_subscription_id")
       .eq("user_id", id)
       .maybeSingle(),
     sb
+      .schema("play")
       .from("user_achievements")
       .select("id, achievement_id, tier, unlocked_at")
       .eq("user_id", id)
       .order("unlocked_at", { ascending: false }),
-    sb.from("achievements").select("id, name, icon"),
+    sb.schema("play").from("achievements").select("id, name, icon"),
     sb
+      .schema("ops")
       .from("admin_audit_log")
-      .select("id, admin_id, action, payload, created_at")
+      .select("id, admin_id, action, payload, created_at, admin(username)")
       .eq("target_id", id)
       .order("created_at", { ascending: false })
       .limit(30),
     sb
+      .schema("play")
       .from("games")
       .select(
         "id, room_id, started_at, ended_at, rounds, player_count, limit_hits",
@@ -84,6 +89,7 @@ export async function getAdminUserDetail(id, adminId) {
       .order("started_at", { ascending: false })
       .limit(500),
     sb
+      .schema("salon")
       .from("salon_players")
       .select(
         "id, score, rank, team, games(id, room_id, started_at, player_count)",
@@ -113,20 +119,15 @@ export async function getAdminUserDetail(id, adminId) {
   const roomCodes = [...new Set(recent.map((g) => g.games.room_id))].filter(
     Boolean,
   );
-  const adminIds = [...new Set(audit.map((a) => a.admin_id))].filter(Boolean);
-  const [roomsRes, adminsRes] = await Promise.all([
-    roomCodes.length
-      ? sb.from("rooms").select("code, name, emoji").in("code", roomCodes)
-      : { data: [] },
-    adminIds.length
-      ? sb.from("profiles").select("id, username").in("id", adminIds)
-      : { data: [] },
-  ]);
+  const roomsRes = roomCodes.length
+    ? await sb
+        .schema("play")
+        .from("rooms")
+        .select("code, name, emoji")
+        .in("code", roomCodes)
+    : { data: [] };
   const rooms = Object.fromEntries(
     (roomsRes.data ?? []).map((r) => [r.code, r]),
-  );
-  const admins = Object.fromEntries(
-    (adminsRes.data ?? []).map((a) => [a.id, a.username]),
   );
   const catalog = Object.fromEntries(
     (catalogRes.data ?? []).map((a) => [a.id, a]),
@@ -170,7 +171,7 @@ export async function getAdminUserDetail(id, adminId) {
       icon: catalog[u.achievement_id]?.icon ?? "🏅",
     })),
     reports: reportsRes.data ?? [],
-    audit: audit.map((a) => ({ ...a, admin: admins[a.admin_id] ?? null })),
+    audit: audit.map((a) => ({ ...a, admin: a.admin?.username ?? null })),
     following: (followingRes.data ?? []).map((f) => ({
       id: f.id,
       at: f.created_at,

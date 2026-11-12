@@ -15,7 +15,7 @@ export async function GET({ request, url }) {
   const user = token ? await verifyToken(token) : null;
 
   const sb = getAdminClient();
-  const { data, error } = await sb.rpc("zikle_leaderboard", {
+  const { data, error } = await sb.schema("play").rpc("zikle_leaderboard", {
     p_date: date,
     p_user_id: user?.id ?? null,
   });

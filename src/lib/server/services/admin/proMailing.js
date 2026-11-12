@@ -24,7 +24,10 @@ const key = (c, userId) => `mail:${c.id}:${userId}`;
 
 async function recipients(c, scope) {
   const sb = getAdminClient();
-  let q = sb.from("pro_subscriptions").select("user_id, current_period_end");
+  let q = sb
+    .schema("salon")
+    .from("pro_subscriptions")
+    .select("user_id, current_period_end");
   if (scope === "active")
     q = q
       .eq("status", "active")
@@ -33,6 +36,7 @@ async function recipients(c, scope) {
   const ids = [...new Set((data ?? []).map((s) => s.user_id))];
   const { data: sent } = ids.length
     ? await sb
+        .schema("social")
         .from("notification_once")
         .select("key")
         .in(

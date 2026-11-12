@@ -52,6 +52,7 @@ export function registerJoin(socket, io) {
     // Client service : une room privée est invisible pour la clé anonyme
     if (!customRooms[roomId] && !dbRooms[roomId]) {
       const { data: freshRoom, error } = await getAdminClient()
+        .schema("play")
         .from("rooms")
         .select(
           "id, code, name, emoji, max_rounds, round_duration, break_duration, playlist_id, auto_start, owner_id, is_public, is_official, game_mode",

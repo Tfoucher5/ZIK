@@ -23,6 +23,7 @@ export async function refreshProvisional(now = new Date()) {
   const cards = [];
   for (let from = 0; ; from += 1000) {
     const { data } = await sb
+      .schema("cards")
       .from("cards")
       .select(
         "id, number, title, deezer_track_id, deezer_rank, rarity, created_at",
@@ -50,6 +51,7 @@ export async function refreshProvisional(now = new Date()) {
         : Math.max(card.deezer_rank, t.rank || 0);
     const rarity = rarityFromRank(rank);
     await sb
+      .schema("cards")
       .from("cards")
       .update({
         deezer_rank: rank,
@@ -61,6 +63,7 @@ export async function refreshProvisional(now = new Date()) {
     if (RARITY_RANK[rarity] <= RARITY_RANK[card.rarity]) continue;
     raised++;
     const { data: owners } = await sb
+      .schema("cards")
       .from("user_cards")
       .select("user_id")
       .eq("card_id", card.id);
@@ -111,6 +114,7 @@ async function drain() {
       const ids = [...queue].slice(0, 50);
       ids.forEach((id) => queue.delete(id));
       const { data: tracks } = await sb
+        .schema("catalog")
         .from("tracks")
         .select(TRACK_FIELDS)
         .in("id", ids)

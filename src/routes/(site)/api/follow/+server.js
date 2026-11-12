@@ -28,6 +28,7 @@ export async function POST({ request }) {
 
   // Toggle : suit déjà → on retire, sinon on ajoute
   const { data: existing } = await client
+    .schema("social")
     .from("follows")
     .select("id")
     .eq("follower_id", user.id)
@@ -36,6 +37,7 @@ export async function POST({ request }) {
 
   if (existing) {
     const { error } = await client
+      .schema("social")
       .from("follows")
       .delete()
       .eq("id", existing.id);
@@ -44,6 +46,7 @@ export async function POST({ request }) {
   }
 
   const { error } = await client
+    .schema("social")
     .from("follows")
     .insert({ follower_id: user.id, following_id: targetId });
   if (error) return json({ error: error.message }, { status: 400 });

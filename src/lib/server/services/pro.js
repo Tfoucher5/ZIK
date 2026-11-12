@@ -5,6 +5,7 @@ const NIGHT_MS = 24 * 3600_000;
 
 export async function getProRow(userId) {
   const { data } = await getAdminClient()
+    .schema("salon")
     .from("pro_subscriptions")
     .select("*")
     .eq("user_id", userId)
@@ -29,6 +30,7 @@ export async function activateNight(userId, customerId, sessionId) {
       ? new Date(row.current_period_end).getTime()
       : Date.now();
   await getAdminClient()
+    .schema("salon")
     .from("pro_subscriptions")
     .upsert({
       user_id: userId,
@@ -75,6 +77,6 @@ export async function syncSubscription(sub, sessionId) {
     updated_at: new Date().toISOString(),
     ...(sessionId ? { stripe_last_session: sessionId } : {}),
   };
-  await getAdminClient().from("pro_subscriptions").upsert(row);
+  await getAdminClient().schema("salon").from("pro_subscriptions").upsert(row);
   return row;
 }

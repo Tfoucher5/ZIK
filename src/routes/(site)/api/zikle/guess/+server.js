@@ -37,11 +37,17 @@ export async function POST({ request }) {
   // feat.), et proposer la mauvaise ne doit pas coûter un essai.
   const [song, guess] = await Promise.all([
     sb
+      .schema("play")
       .from("daily_songs")
       .select("tracks(artist, title)")
       .eq("date", date)
       .single(),
-    sb.from("tracks").select("artist, title").eq("id", trackId).maybeSingle(),
+    sb
+      .schema("catalog")
+      .from("tracks")
+      .select("artist, title")
+      .eq("id", trackId)
+      .maybeSingle(),
   ]);
   if (song.error || !song.data?.tracks)
     return json({ error: "Aucune chanson pour cette date" }, { status: 404 });

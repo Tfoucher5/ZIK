@@ -7,21 +7,22 @@ export async function getCardByNumber(number) {
   if (!/^\d{1,7}$/.test(String(number))) return null;
   const sb = getAdminClient();
   const { data: row } = await sb
+    .schema("cards")
     .from("cards")
-    .select(
-      `${CARD_SELECT}, first_owned_at, first_owner:profiles!cards_first_owner_id_fkey(username)`,
-    )
+    .select(`${CARD_SELECT}, first_owned_at, first_owner(username)`)
     .eq("number", Number(number))
     .maybeSingle();
   if (!row) return null;
 
   const [{ count: owners }, { data: stats }] = await Promise.all([
     sb
+      .schema("cards")
       .from("user_cards")
       .select("user_id", { count: "exact", head: true })
       .eq("card_id", row.id)
       .lte("visible_at", new Date().toISOString()),
     sb
+      .schema("catalog")
       .from("tracks")
       .select("track_stats(players_exposed, found_full)")
       .eq("card_id", row.id),

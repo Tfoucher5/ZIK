@@ -155,9 +155,11 @@ describe("envoi à tous", () => {
       [1000, 1999],
     ]);
     expect(reads[0].args("eq")).toEqual([
-      "profiles.notif_prefs->>zikle",
+      "profile.notif_prefs->>zikle",
       "true",
     ]);
+    // Sans ordre fixe, les pages peuvent sauter ou doubler un abonnement
+    expect(reads.every((q) => q.has("order", "id"))).toBe(true);
   });
 
   it("erreur de lecture : remontée, rien envoyé", async () => {

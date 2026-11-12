@@ -19,9 +19,10 @@ const normKey = (artist, title) =>
 const rows = [];
 for (let from = 0; ; from += 1000) {
   const { data, error } = await sb
+    .schema("catalog")
     .from("tracks")
     .select(
-      "id, artist, title, norm_key, external_id, source, cover_url, cards(title, artist, deezer_track_id, card_albums(cover_url))",
+      "id, artist, title, norm_key, external_id, source, cover_url, cards(title, artist, deezer_track_id, card_albums)",
     )
     .not("card_id", "is", null)
     .order("id")
@@ -34,6 +35,7 @@ for (let from = 0; ; from += 1000) {
 const existingKeys = new Set();
 for (let from = 0; ; from += 1000) {
   const { data } = await sb
+    .schema("catalog")
     .from("tracks")
     .select("norm_key")
     .range(from, from + 999);
@@ -100,6 +102,7 @@ if (!apply) {
 let done = 0;
 for (const c of changes) {
   const { error } = await sb
+    .schema("catalog")
     .from("tracks")
     .update(c.patch)
     .eq("id", c.track.id);

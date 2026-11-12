@@ -16,6 +16,7 @@ export async function load() {
 
   const [{ data: track }, dayNumber] = await Promise.all([
     sb
+      .schema("catalog")
       .from("tracks")
       .select("id, preview_url, preview_expires_at, external_id, artist, title")
       .eq("id", daily.trackId)

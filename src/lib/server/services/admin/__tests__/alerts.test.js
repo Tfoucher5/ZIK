@@ -34,8 +34,8 @@ describe("alertes aux admins", () => {
     ).toBe(1);
     const [q] = m.db.of("push_subscriptions");
     expect(q.ops.filter(([n]) => n === "eq").map(([, a]) => a)).toEqual([
-      ["profiles.role", "super_admin"],
-      ["profiles.notif_prefs->>admin_money", "true"],
+      ["profile.role", "super_admin"],
+      ["profile.notif_prefs->>admin_money", "true"],
     ]);
     expect(m.deliver).toHaveBeenCalledWith(SUBS, {
       title: "Paiement",

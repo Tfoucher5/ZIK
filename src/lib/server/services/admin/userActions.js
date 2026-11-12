@@ -80,12 +80,14 @@ export async function grantPro(adminId, userId, days) {
   const sb = getAdminClient();
   if (days === 0) {
     const { error: err } = await sb
+      .schema("salon")
       .from("pro_subscriptions")
       .delete()
       .eq("user_id", userId);
     if (err) return failed(err);
   } else {
     const { data: cur, error: lu } = await sb
+      .schema("salon")
       .from("pro_subscriptions")
       .select("status, current_period_end")
       .eq("user_id", userId)
@@ -95,13 +97,16 @@ export async function grantPro(adminId, userId, days) {
     const curEnd =
       cur?.status === "active" ? new Date(cur.current_period_end).getTime() : 0;
     const from = Math.max(Date.now(), curEnd);
-    const { error: err } = await sb.from("pro_subscriptions").upsert({
-      user_id: userId,
-      plan: "manual",
-      status: "active",
-      current_period_end: new Date(from + days * 86400000).toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    const { error: err } = await sb
+      .schema("salon")
+      .from("pro_subscriptions")
+      .upsert({
+        user_id: userId,
+        plan: "manual",
+        status: "active",
+        current_period_end: new Date(from + days * 86400000).toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     if (err) return failed(err);
   }
   await logAdminAction(adminId, "set_pro", userId, "user", { days });
@@ -137,7 +142,11 @@ export async function deleteUserAccount(adminId, userId, confirmUsername) {
 
 export function deleteFollow(adminId, userId, followId) {
   return run(
-    getAdminClient().from("follows").delete().eq("id", followId),
+    getAdminClient()
+      .schema("social")
+      .from("follows")
+      .delete()
+      .eq("id", followId),
     adminId,
     "delete_follow",
     userId,
@@ -147,7 +156,11 @@ export function deleteFollow(adminId, userId, followId) {
 
 export function deleteFriendship(adminId, userId, friendshipId) {
   return run(
-    getAdminClient().from("friendships").delete().eq("id", friendshipId),
+    getAdminClient()
+      .schema("social")
+      .from("friendships")
+      .delete()
+      .eq("id", friendshipId),
     adminId,
     "delete_friendship",
     userId,

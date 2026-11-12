@@ -12,6 +12,9 @@ on:
       debit:
         description: "Tous les téléphones sur un seul accès, descendant : 20mbit. Vide : sans bridage"
         default: ""
+      deflate:
+        description: "Compression des messages : oui, ou non pour comparer"
+        default: "oui"
   push:
     branches: ["chore/charge-*"]
 
@@ -69,6 +72,7 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
           PALIERS: ${{ inputs.paliers || '250 500 1000 2000 2000x10' }}
+          DEFLATE: ${{ inputs.deflate || 'oui' }}
         run: |
           if [[ -z "${PALIERS// /}" ]]; then
             echo "Aucun palier"
@@ -91,7 +95,7 @@ jobs:
             salons=1
             [[ "$palier" == *x* ]] && salons="${palier#*x}"
             echo "=== $joueurs joueurs, $salons salon(s)"
-            $LANCEUR node scripts/charge-salon.mjs --joueurs "$joueurs" --salons "$salons" || echec=1
+            $LANCEUR node scripts/charge-salon.mjs --joueurs "$joueurs" --salons "$salons" --deflate "$DEFLATE" || echec=1
             sleep 60
           done
           exit $echec

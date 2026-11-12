@@ -12,6 +12,7 @@ export function reportTrackIssue(
   if (!trackId) return;
   try {
     getAdminClient()
+      .schema("catalog")
       .rpc("report_track_issue", {
         p_track: trackId,
         p_kind: kind,
@@ -42,6 +43,7 @@ export async function getVideoSettings() {
   let value = DEFAULT_VIDEO_SETTINGS;
   try {
     const { data } = await getAdminClient()
+      .schema("ops")
       .from("site_settings")
       .select("value")
       .eq("key", "video_search")

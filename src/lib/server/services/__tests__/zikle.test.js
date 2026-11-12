@@ -52,6 +52,9 @@ describe("mapDeezerChartTracks", () => {
 describe("getDayNumber", () => {
   it("renvoie le count exact", async () => {
     const sb = {
+      schema() {
+        return this;
+      },
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           lte: vi.fn().mockResolvedValue({ count: 47, error: null }),
@@ -64,11 +67,19 @@ describe("getDayNumber", () => {
 
 describe("getOrCreateDailySong", () => {
   it("renvoie null si le pool est épuisé (RPC ne renvoie aucune ligne)", async () => {
-    const sb = { rpc: vi.fn().mockResolvedValue({ data: [], error: null }) };
+    const sb = {
+      schema() {
+        return this;
+      },
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+    };
     expect(await getOrCreateDailySong(sb)).toBeNull();
   });
   it("renvoie date/trackId depuis la RPC", async () => {
     const sb = {
+      schema() {
+        return this;
+      },
       rpc: vi.fn().mockResolvedValue({
         data: [{ date: "2026-08-04", track_id: "abc-123", is_new: true }],
         error: null,
@@ -81,12 +92,18 @@ describe("getOrCreateDailySong", () => {
   });
   it("erreur de la RPC : levée", async () => {
     const sb = {
+      schema() {
+        return this;
+      },
       rpc: vi.fn().mockResolvedValue({ data: null, error: new Error("x") }),
     };
     await expect(getOrCreateDailySong(sb)).rejects.toThrow("x");
   });
   it("ligne sans track_id : null", async () => {
     const sb = {
+      schema() {
+        return this;
+      },
       rpc: vi.fn().mockResolvedValue({
         data: [{ date: "2026-11-09" }],
         error: null,
@@ -99,6 +116,9 @@ describe("getOrCreateDailySong", () => {
 describe("getDayNumber : erreur", () => {
   it("levée", async () => {
     const sb = {
+      schema() {
+        return this;
+      },
       from: () => ({
         select: () => ({
           lte: async () => ({ count: null, error: new Error("y") }),
@@ -160,7 +180,12 @@ describe("refreshZiklePool", () => {
         return { error: insert.error };
       }),
     };
-    return { from: () => q, rpc: vi.fn(async () => resolved) };
+    const sb = {
+      from: () => q,
+      rpc: vi.fn(async () => resolved),
+    };
+    sb.schema = () => sb;
+    return sb;
   };
 
   beforeEach(() => {

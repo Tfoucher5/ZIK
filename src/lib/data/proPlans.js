@@ -4,7 +4,7 @@
 export const FREE_MAX_PLAYERS = 12;
 export const FREE_MAX_TEAMS = 2;
 // Plus gros salon tenu à chaque passage du test de charge (scripts/charge-salon.mjs)
-export const TESTED_PLAYERS = "1\u00a0000";
+export const TESTED_PLAYERS = "2\u00a0000";
 // Toujours « simulés » : aucune vraie salle de cette taille n'a été mesurée (/docs#capacite)
 export const TESTED_LABEL = `testé à ${TESTED_PLAYERS} joueurs simulés`;
 

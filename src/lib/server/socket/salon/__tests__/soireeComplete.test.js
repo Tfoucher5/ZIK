@@ -47,6 +47,7 @@ vi.mock("../../../config.js", () => {
     from: query,
     rpc: async () => ({ data: null, error: null }),
   };
+  client.schema = () => client;
   return { supabase: client, getAdminClient: () => client };
 });
 vi.mock("../../../services/music/deezer.js", () => ({
@@ -199,9 +200,19 @@ describe("une soirée complète", () => {
       choiceIndex: (juste + 1) % manche.choices.length,
     });
 
-    const podium = await alice.attend("salon_game_over");
+    const podium = await tv.attend("salon_game_over");
     const score = (nom) => podium.scores.find((s) => s.username === nom).score;
     expect(score("alice")).toBeGreaterThan(score("bob"));
+    const vue = await alice.attend("salon_game_over");
+    expect(vue.ranking.me).toMatchObject({ username: "alice", rank: 1 });
+    // Le téléphone ne reçoit jamais la liste complète des joueurs
+    for (const ev of ["salon_roster", "salon_round_end", "salon_game_over"])
+      for (const d of alice.de(ev)) {
+        expect(d).not.toHaveProperty("players");
+        expect(d).not.toHaveProperty("scores");
+      }
+    expect(alice.de("salon_round_end")[0].ranking.count).toBe(2);
+    expect(alice.moi).not.toHaveProperty("players");
 
     regie.socket.emit("salon_restart");
     await alice.attend("salon_round_start", 2);
@@ -268,6 +279,6 @@ describe("une soirée complète", () => {
 
     await repondreJuste(alice);
     const podium = await alice.attend("salon_game_over");
-    expect(podium.scores[0].score).toBeGreaterThan(0);
+    expect(podium.ranking.top[0].score).toBeGreaterThan(0);
   }, 20000);
 });

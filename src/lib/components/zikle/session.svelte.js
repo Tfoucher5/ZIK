@@ -57,6 +57,7 @@ export class ZikleSession {
   async computeAndSetStreak() {
     if (this.ctx.user) {
       const { data: rows } = await this.ctx.sb
+        .schema("play")
         .from("daily_results")
         .select("date, won")
         .order("date", { ascending: false })
@@ -122,6 +123,7 @@ export class ZikleSession {
         await this.#restore(todays.attempts, todays.won, todays.labels);
     } else {
       const { data: existing } = await this.ctx.sb
+        .schema("play")
         .from("daily_results")
         .select("attempts, won, guesses")
         .eq("date", this.date)
