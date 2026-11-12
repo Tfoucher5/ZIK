@@ -105,11 +105,14 @@ describe("« Fermer la soirée »", () => {
 
   it("une simple déconnexion de l'hôte garde le salon le temps du délai", () => {
     vi.useFakeTimers();
+    salonRooms[CODE].game.dbGameId = "g7";
     regie.deconnecte();
     vi.advanceTimersByTime(60 * 60_000);
     expect(salonRooms[CODE]).toBeDefined();
     vi.advanceTimersByTime(61 * 60_000);
     expect(salonRooms[CODE]).toBeUndefined();
     expect(fermetures(h)[0].payload.message).toBe("L'hôte a quitté le salon.");
+    // La partie laissée en plan est close avec ses scores
+    expect(db.updates).toMatchObject([{ table: "games", id: "g7" }]);
   });
 });

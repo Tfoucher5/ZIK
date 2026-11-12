@@ -40,6 +40,7 @@ export function cleanupNow(code, io, message = "L'hôte a quitté le salon.") {
   clearInterval(salon.game.interval);
   clearTimeout(salon.game.breakTimer);
   clearTimeout(salon.game.musicReadyTimer);
+  clearTimeout(salon.game.outageTimer);
   io?.to(`salon:${code}`).emit("salon_closed", { message });
   delete salonRooms[code];
   dropSnapshot(code);

@@ -14,7 +14,7 @@ export const NEWS = [
     items: [
       "Dans la régie, onglet Réglages, « Fermer la soirée » ferme le salon tout de suite. Les téléphones reviennent à l'écran d'accueil avec un message, plus besoin d'attendre.",
       "Sur la TV, « Nouveau salon » ferme aussi l'ancien pour tout le monde.",
-      "Un PC en veille ou un onglet fermé ne ferme toujours rien : la soirée attend votre retour, et /salon propose de la reprendre.",
+      "Un PC en veille ou un onglet fermé ne ferme toujours rien : la soirée attend votre retour, et la page ZIK Soirée propose de la reprendre.",
       "Une partie interrompue par la fermeture garde ses scores.",
     ],
   },

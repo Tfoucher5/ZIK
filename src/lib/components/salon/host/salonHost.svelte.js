@@ -114,8 +114,8 @@ export class SalonHost {
   restartGame = () => {
     this.socket?.emit("salon_restart");
   };
-  // La réponse « salon_closed » ramène sur /salon ; TV sans clé de régie :
-  // le serveur refuse, on part quand même
+  // La réponse « salon_closed » ramène sur /salon ; connexion coupée : pas de
+  // réponse, on part quand même
   closeSalon = () => {
     this.socket?.emit("salon_close");
     setTimeout(() => (window.location.href = "/salon"), 2000);

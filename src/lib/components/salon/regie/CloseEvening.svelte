@@ -6,7 +6,7 @@
 
 <div class="ce">
   {#if confirme}
-    <p role="alert">Les joueurs verront « soirée terminée » et devront saisir un nouveau code pour rejouer. La partie en cours compte.</p>
+    <p role="alert">Les téléphones afficheront « L'hôte a fermé la soirée. » et les joueurs devront saisir un nouveau code pour rejouer. La partie en cours compte.</p>
     <div class="ce-actions">
       <button class="sx-btn" onclick={() => (confirme = false)}>Annuler</button>
       <button class="sx-btn ce-fermer" onclick={onClose}>Confirmer : fermer la soirée</button>
