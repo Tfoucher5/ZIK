@@ -9,7 +9,7 @@
   import PlayBoard from '$lib/components/salon/play/PlayBoard.svelte';
   import PlayEvening from '$lib/components/salon/play/PlayEvening.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
-  import StartCountdown from '$lib/components/salon/StartCountdown.svelte';
+  import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
   import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -113,5 +113,5 @@
   {/if}
 
   <FeedbackOverlay feedback={p.feedback} />
-  <StartCountdown sec={p.startSec} />
+  <BigCountdown sec={p.startSec} label="La partie commence" />
 {/if}

@@ -154,7 +154,8 @@ function settingsPatch(fd) {
   ])
     if (fd.has(k)) patch[k] = Number(fd.get(k));
   if (fd.has("answerMode")) patch.answerMode = fd.get("answerMode");
-  if (fd.has("manualNext")) patch.manualNext = fd.get("manualNext") === "1";
+  for (const k of ["manualNext", "countStart", "countNext"])
+    if (fd.has(k)) patch[k] = fd.get(k) === "1";
   return patch;
 }
 

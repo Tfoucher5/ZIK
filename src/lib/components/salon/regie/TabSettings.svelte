@@ -95,6 +95,24 @@
 </div>
 
 <div class="ts-field">
+  <span>Décompte avant la partie</span>
+  <div class="ts-seg">
+    <button class:on={settings.countStart !== false} onclick={() => onSound({ countStart: true })}>Oui</button>
+    <button class:on={settings.countStart === false} onclick={() => onSound({ countStart: false })}>Non</button>
+  </div>
+</div>
+
+{#if !settings.manualNext}
+  <div class="ts-field">
+    <span>Décompte avant le titre suivant</span>
+    <div class="ts-seg">
+      <button class:on={settings.countNext !== false} onclick={() => onSound({ countNext: true })}>Oui</button>
+      <button class:on={settings.countNext === false} onclick={() => onSound({ countNext: false })}>Non</button>
+    </div>
+  </div>
+{/if}
+
+<div class="ts-field">
   <span>Manches spéciales <small>au hasard</small><SpecialsInfo /></span>
   <div class="ts-seg">
     <button class:on={!settings.specials} onclick={() => onSet({ specials: false })}>Non</button>

@@ -1,17 +1,21 @@
 <script>
-  /** Décompte plein écran avant la première manche (TV et téléphones). */
-  let { sec = 0 } = $props();
+  /**
+   * Gros chiffre au milieu de l'écran : lancement de la partie (avec libellé,
+   * fond opaque) ou 3, 2, 1 avant le titre suivant (sans libellé, la réponse
+   * reste visible derrière).
+   */
+  let { sec = 0, label = '' } = $props();
 </script>
 
 {#if sec > 0}
-  <div class="start-cd" role="status" aria-live="assertive">
-    <p class="sx-kicker">La partie commence</p>
+  <div class="big-cd" class:voile={!label} role="timer" aria-live="assertive">
+    {#if label}<p class="sx-kicker">{label}</p>{/if}
     {#key sec}<b>{sec}</b>{/key}
   </div>
 {/if}
 
 <style>
-  .start-cd {
+  .big-cd {
     position: fixed;
     inset: 0;
     z-index: 50;
@@ -22,8 +26,12 @@
     gap: 8px;
     background: rgb(0 0 0 / 0.95);
     text-align: center;
+    pointer-events: none;
   }
-  .start-cd p {
+  .big-cd.voile {
+    background: rgb(0 0 0 / 0.55);
+  }
+  .big-cd p {
     font-size: clamp(1.2rem, 3vw, 2.4rem);
   }
   b {
@@ -32,6 +40,7 @@
     font-size: clamp(8rem, 30vw, 22rem);
     line-height: 1;
     color: var(--accent);
+    text-shadow: 0 0 40px rgb(0 0 0 / 0.6);
     animation: pop 0.4s ease-out;
   }
   @keyframes pop {

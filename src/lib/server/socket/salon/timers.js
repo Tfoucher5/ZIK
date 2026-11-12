@@ -161,7 +161,7 @@ export function nextRound(code, io) {
 // Titre suivant (ou première manche) dans s secondes : l'heure de reprise
 // part à tous les écrans, qui affichent le décompte
 export function armNext(code, io, s, kind = "next") {
-  const game = salonRooms[code].game;
+  const { game, settings } = salonRooms[code];
   clearTimeout(game.breakTimer);
   game.breakTimer = null;
   game._starting = false;
@@ -172,6 +172,8 @@ export function armNext(code, io, s, kind = "next") {
     game._starting = false;
     startNextRound(code, io);
   }, s * 1000);
+  // Décompte du titre suivant coupé par l'hôte : la suite arrive quand même
+  if (kind === "next" && settings.countNext === false) return;
   const now = Date.now();
   io.to(`salon:${code}`).emit("salon_countdown", {
     kind,
@@ -184,6 +186,6 @@ export const armStart = (salon, io) =>
   armNext(
     salon.code,
     io,
-    salon.settings.startCountdown ?? START_COUNTDOWN_S,
+    salon.settings.countStart === false ? 0 : START_COUNTDOWN_S,
     "start",
   );

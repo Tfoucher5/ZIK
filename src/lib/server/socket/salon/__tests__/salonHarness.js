@@ -74,7 +74,7 @@ export function salonDeTest() {
       maxRounds: 10,
       roundDuration: 30,
       playlistIds: [],
-      startCountdown: 0,
+      countStart: false,
     },
     players: {},
     banned: new Set(),

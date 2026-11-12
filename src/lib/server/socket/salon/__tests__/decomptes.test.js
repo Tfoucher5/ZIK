@@ -47,7 +47,7 @@ beforeEach(() => {
   m.manches = 0;
   salonDeTest();
   Object.assign(salonRooms[CODE].settings, {
-    startCountdown: 5,
+    countStart: true,
     showAnswerDuration: 7,
   });
   h = makeIo();
@@ -70,6 +70,14 @@ describe("décompte avant le titre suivant", () => {
     vi.advanceTimersByTime(6_999);
     expect(m.manches).toBe(0);
     vi.advanceTimersByTime(1);
+    expect(m.manches).toBe(1);
+  });
+
+  it("décompte coupé par l'hôte : rien d'annoncé, la manche part à l'heure", () => {
+    salonRooms[CODE].settings.countNext = false;
+    armNext(CODE, h.io, 7);
+    expect(decomptes()).toEqual([]);
+    vi.advanceTimersByTime(7_000);
     expect(m.manches).toBe(1);
   });
 
@@ -134,6 +142,28 @@ describe("décompte de lancement", () => {
     expect(decomptes().map((d) => d.kind)).toEqual(["start"]);
     vi.advanceTimersByTime(5_000);
     expect(m.manches).toBe(1);
+  });
+
+  it("décompte de lancement coupé : la première manche part tout de suite", () => {
+    salonRooms[CODE].settings.countStart = false;
+    regie.handlers.salon_start();
+    expect(m.manches).toBe(1);
+    expect(decomptes()).toEqual([]);
+  });
+
+  it("chaque décompte se coupe à part, en pleine partie et sans Pro", () => {
+    game().phase = "round";
+    regie.handlers.salon_update_settings({ countNext: false });
+    expect(salonRooms[CODE].settings).toMatchObject({
+      countStart: true,
+      countNext: false,
+    });
+    regie.handlers.salon_update_settings({ countStart: false });
+    regie.handlers.salon_update_settings({ countNext: "oui" });
+    expect(salonRooms[CODE].settings).toMatchObject({
+      countStart: false,
+      countNext: true,
+    });
   });
 
   it("aucune donnée de partie dans le décompte", () => {
