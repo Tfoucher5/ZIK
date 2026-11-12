@@ -41,6 +41,8 @@ export class SalonRegie {
   intermission = $state(null);
   finale = $state(null);
   timerVal = $state(0);
+  startSec = $state(0);
+  nextSec = $state(0);
   timerMax = $state(30);
   timerOn = $state(false);
   track = $state(null);

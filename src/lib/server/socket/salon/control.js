@@ -11,13 +11,7 @@ import {
   resetStats,
 } from "./players.js";
 import { applySettings } from "./rooms.js";
-import {
-  finishGame,
-  nextRound,
-  revealRound,
-  skipTrack,
-  startNextRound,
-} from "./rounds.js";
+import { finishGame, skipTrack } from "./rounds.js";
 import { prepareSession } from "./session.js";
 import { cleanTeamName } from "./teams.js";
 import { previewUrl } from "./media.js";
@@ -26,10 +20,13 @@ import { closeEvening } from "./evening.js";
 import { emitSplit } from "./phoneView.js";
 import { clearOutage } from "./outage.js";
 import {
+  armStart,
   cleanupNow,
   clearPause,
+  nextRound,
   pauseGame,
   resumeGame,
+  revealRound,
   startTimer,
 } from "./timers.js";
 import { int, key, num, object, optional, safe, str } from "../safe.js";
@@ -148,7 +145,7 @@ export function registerControl(socket, io) {
   // ── Host starts the game ──────────────────────────────────────────────────
   safe(socket, "salon_start", {}, () => {
     const salon = adminSalon(socket);
-    if (!salon || salon.game.phase !== "lobby") return;
+    if (!salon || salon.game.phase !== "lobby" || salon.game._starting) return;
     const code = salon.code;
 
     if (!salon.game.sessionPlaylist.length) prepareSession(code, io);
@@ -161,7 +158,7 @@ export function registerControl(socket, io) {
     clearOutage(salon, io);
     io.to(`salon:${code}`).emit("salon_game_starting");
     recordSalonGameStart(salon);
-    startNextRound(code, io);
+    armStart(salon, io);
   });
 
   // ── Host signals music has started playing ────────────────────────────────
@@ -251,7 +248,10 @@ export function registerControl(socket, io) {
     const salon = adminSalon(socket);
     if (!salon) return;
     const code = salon.code;
-    if (salon.game.phase !== "gameover" && salon.game.phase !== "summary")
+    if (
+      (salon.game.phase !== "gameover" && salon.game.phase !== "summary") ||
+      salon.game._starting
+    )
       return;
     clearPause(code, io);
     // Une recherche en cours appartient à la partie d'avant
@@ -291,6 +291,6 @@ export function registerControl(socket, io) {
       () => ({}),
     );
     recordSalonGameStart(salon);
-    startNextRound(code, io);
+    armStart(salon, io);
   });
 }

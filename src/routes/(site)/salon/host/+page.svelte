@@ -7,6 +7,7 @@
   import PlaylistModal from '$lib/components/salon/playlists/PlaylistModal.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
+  import StartCountdown from '$lib/components/salon/StartCountdown.svelte';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -61,6 +62,8 @@
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
   </div>
+
+  <StartCountdown sec={h.startSec} />
 
   {#if h.phase === 'lobby'}
     <footer class="sh-foot">

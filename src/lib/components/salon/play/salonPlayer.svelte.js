@@ -31,6 +31,8 @@ export class SalonPlayer {
   // Classement vu du téléphone : { top, me, count }, jamais la liste complète
   ranking = $state(null);
   timerVal = $state(0);
+  startSec = $state(0);
+  nextSec = $state(0);
   timerMax = $state(30);
   choices = $state(null);
 

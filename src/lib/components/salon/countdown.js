@@ -30,3 +30,28 @@ export function countdown(onTick, clock = () => Date.now()) {
     stop,
   };
 }
+
+// Décomptes annoncés par le serveur (salon_countdown) : lancement de la partie
+// (s.startSec) et titre suivant (s.nextSec). Coupés dès que la suite arrive.
+// shortcut: un écran qui (re)joint pendant un décompte ne l'affiche pas,
+// envoyer l'heure de reprise dans le join si ça gêne en soirée.
+export function listenCountdowns(s, socket) {
+  const c = {
+    start: countdown((v) => (s.startSec = v)),
+    next: countdown((v) => (s.nextSec = v)),
+  };
+  const stop = () => {
+    c.start.stop();
+    c.next.stop();
+    s.startSec = 0;
+    s.nextSec = 0;
+  };
+  socket.on("salon_countdown", ({ kind, endsAt, now }) => {
+    stop();
+    c[kind]?.start(endsAt, now);
+  });
+  for (const e of ["salon_round_start", "salon_game_over", "salon_closed"])
+    socket.on(e, stop);
+  socket.on("salon_paused", ({ paused }) => paused && stop());
+  return stop;
+}

@@ -31,7 +31,7 @@
 
 <div class="rg">
   <RegieHeader
-    code={r.code} phase={r.phase} phaseLabel={PHASES[r.phase]} paused={r.paused} round={r.round} maxRounds={r.settings.maxRounds ?? 0}
+    code={r.code} phase={r.phase} phaseLabel={r.startSec ? `Lancement dans ${r.startSec} s` : PHASES[r.phase] + (r.nextSec ? ` · suite dans ${r.nextSec} s` : '')} paused={r.paused} round={r.round} maxRounds={r.settings.maxRounds ?? 0}
     timerVal={r.timerVal} timerMax={r.timerMax} timerOn={r.timerOn} screens={r.screens}
     joueurs={r.players.length} repondu={r.answered}
     pro={r.pro} maxGratuit={FREE_MAX_PLAYERS} tvUrl={r.tvUrl} regieUrl={r.regieUrl}
