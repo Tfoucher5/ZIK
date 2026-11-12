@@ -8,8 +8,8 @@ const sql = readdirSync(DIR)
   .join("\n")
   .replace(/--.*$/gm, "");
 
-// Fonction sans schéma, arguments sans schéma : un déplacement garde la clé.
-const cle = (f) => f.replace(/\b\w+\./g, "").replace(/\s+/g, "");
+// Arguments sans schéma : une table déplacée garde la clé de sa fonction.
+const cle = (f) => f.replace(/\(\w+\./, "(").replace(/\s+/g, "");
 
 const roles = {};
 for (const m of sql.matchAll(
@@ -27,7 +27,7 @@ for (const m of sql.matchAll(
 
 describe("droits des fonctions", () => {
   it("le lien titre → carte est lisible par un compte connecté", () => {
-    expect([...roles["cards(tracks)"]]).toContain("authenticated");
+    expect([...roles["catalog.cards(tracks)"]]).toContain("authenticated");
   });
 
   it("une fonction ouverte à anon l'est aussi aux comptes connectés", () => {
