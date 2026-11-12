@@ -4,7 +4,7 @@
 </script>
 
 <div class="ar">
-  {#if cover}<div class="ar-fond" style="background-image:url({cover})"></div>{/if}
+  {#if cover}<div class="ar-fond" style:background-image={`url("${cover}")`}></div>{/if}
   <div class="ar-centre">
     {#if cover}<img src={cover} alt="" width="360" height="360">{/if}
     <div class="ar-eq" aria-hidden="true">
