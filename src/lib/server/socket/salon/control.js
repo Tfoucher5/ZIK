@@ -15,7 +15,7 @@ import { finishGame, skipTrack } from "./rounds.js";
 import { prepareSession } from "./session.js";
 import { cleanTeamName } from "./teams.js";
 import { previewUrl } from "./media.js";
-import { forgetVideo } from "./tracks.js";
+import { forgetVideo, mediaOf } from "./tracks.js";
 import { closeEvening } from "./evening.js";
 import { emitSplit } from "./phoneView.js";
 import { clearOutage } from "./outage.js";
@@ -151,6 +151,7 @@ export function registerControl(socket, io) {
     if (!salon.game.sessionPlaylist.length) prepareSession(code, io);
     salon.game.currentRound = 0;
     salon.game.history = [];
+    salon.game.historyMedia = [];
     resetStats(salon);
     broadcastRoster(code, io);
 
@@ -219,26 +220,27 @@ export function registerControl(socket, io) {
     nextRound(salon.code, io);
   });
 
-  // La régie signale une vidéo fausse ou mal calée : elle part dans la file
-  // « Réparer » de l'admin avec la vidéo exacte qui passait.
+  // La régie signale une vidéo fausse ou mal calée (titre en cours, ou manche
+  // déjà jouée : round) : file « Réparer » de l'admin, avec la vidéo exacte
   safe(
     socket,
     "salon_report_video",
-    { reason: optional(str()) },
-    ({ reason }) => {
+    { reason: optional(str()), round: optional(int(1, 1000)) },
+    ({ reason, round }) => {
       const salon = adminSalon(socket);
-      const track = salon?.game.currentTrack;
-      if (!track || !["round", "summary"].includes(salon.game.phase)) return;
+      const g = salon?.game;
+      const media = round
+        ? g?.historyMedia?.[round - 1]
+        : ["round", "summary"].includes(g?.phase) &&
+          g.currentTrack &&
+          mediaOf(g.currentTrack, g.currentVideo);
+      if (!media) return;
       reportTrackIssue(
-        track.id,
+        media.trackId,
         "video",
         "host",
         String(reason ?? "").slice(0, 200) || null,
-        {
-          salon: salon.code,
-          videoId: salon.game.currentVideo?.id ?? null,
-          start: salon.game.currentVideo?.start ?? null,
-        },
+        { salon: salon.code, videoId: media.videoId, start: media.start },
       );
     },
   );
@@ -277,6 +279,7 @@ export function registerControl(socket, io) {
     if (salon.game.phase === "summary") prepareSession(code, io);
     salon.game.currentRound = 0;
     salon.game.history = [];
+    salon.game.historyMedia = [];
     salon.game.firstFinder = null;
     salon.game.currentTrack = null;
 

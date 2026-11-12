@@ -24,6 +24,7 @@ import {
   standings,
 } from "./players.js";
 import { emitGameOver, emitRoundEnd } from "./phoneView.js";
+import { mediaOf } from "./tracks.js";
 import { armNext, clearPause, scheduleCleanup, startTimer } from "./timers.js";
 
 export function checkEveryoneDone(code, io) {
@@ -136,6 +137,13 @@ export function endRound(code, reason, io) {
   };
 
   game.history.push({ answer, cover: track.cover });
+  // Pour signaler un titre déjà joué depuis la régie ; ne part jamais aux téléphones
+  // Même case que history : un salon repris d'un instantané plus ancien a un
+  // history sans historyMedia, ses premières cases restent vides
+  (game.historyMedia ??= [])[game.history.length - 1] = mediaOf(
+    track,
+    game.currentVideo,
+  );
   emitRoundEnd(io, code, roundSummary);
   scheduleCleanup(code);
   saveSnapshot(salon);

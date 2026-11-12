@@ -150,12 +150,14 @@ describe("instantané d'un salon", () => {
       const salon = salonEnManche();
       salon.game.phase = phase;
       salon.game.history.push({ answer: "x" });
+      salon.game.historyMedia = [{ trackId: "t0", videoId: "v0", start: 20 }];
       const revu = revive(salon);
       nettoie(salon);
       expect(revu.game).toMatchObject({
         phase,
         paused: false,
         currentRound: 2,
+        historyMedia: [{ trackId: "t0", videoId: "v0", start: 20 }],
       });
       expect(revu.players.Ana.score).toBe(450);
     }

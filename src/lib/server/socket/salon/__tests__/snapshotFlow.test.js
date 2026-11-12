@@ -34,6 +34,7 @@ vi.mock("../../../services/music/trackIssues.js", () => ({
   reportTrackIssue: () => {},
 }));
 vi.mock("../tracks.js", () => ({
+  mediaOf: (t) => ({ trackId: t.id }),
   buildSessionPlaylist: () => [],
   currentTrackInfo: () => null,
   knownVideo: async (t) => ({

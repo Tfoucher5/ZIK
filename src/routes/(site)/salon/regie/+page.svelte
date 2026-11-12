@@ -74,7 +74,7 @@
             phase={r.phase} code={r.code} track={r.track} answerMode={r.settings.answerMode}
             volume={r.volume} pro={r.pro} history={r.history}
             onVolume={r.setVolume}
-            onReport={(reason) => r.send('salon_report_video', { reason })}
+            onReport={(reason, round) => r.send('salon_report_video', { reason, round })}
           />
         {:else if r.onglet === 'joueurs'}
           <NightBoard night={r.night} pro={r.pro} onReset={() => r.send('salon_reset_night')} onUpsell={() => (r.upsell = 'night')} />

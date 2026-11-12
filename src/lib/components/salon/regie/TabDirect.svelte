@@ -10,13 +10,16 @@
    *   phase: string, code: string, track: any, answerMode: string,
    *   volume: number, pro: boolean, history: any[],
    *   onVolume: (v: number) => void,
-   *   onReport: (reason: string) => void,
+   *   onReport: (reason: string, round?: number) => void,
    * }}
    */
   let { phase, code, track, answerMode, volume, pro, history, onVolume, onReport } = $props();
 
   const RAISONS = ['Mauvaise version', 'Pas le bon titre', 'Démarre sur un blanc', 'Pas de son'];
   let signale = $state(null);
+  // Titres joués : on peut signaler après coup, quand on n'a pas eu le temps
+  let ouvert = $state(null);
+  let signales = $state({});
 
   // Un signalement par titre : on repart de zéro à la manche suivante
   $effect(() => {
@@ -27,6 +30,20 @@
   function signaler(raison) {
     signale = raison;
     onReport(raison);
+  }
+
+  // Nouvelle partie : l'historique repart de zéro, les signalements aussi
+  $effect(() => {
+    if (!history.length) {
+      signales = {};
+      ouvert = null;
+    }
+  });
+
+  function signalerManche(manche, raison) {
+    signales = { ...signales, [manche]: raison };
+    ouvert = null;
+    onReport(raison, manche);
   }
 </script>
 
@@ -74,7 +91,26 @@
     <h3 class="sx-kicker">Titres joués</h3>
     <ol class="td-history">
       {#each [...history].reverse() as h, i (history.length - i)}
-        <li><span>{String(history.length - i).padStart(2, '0')}</span>{h.answer}</li>
+        {@const manche = history.length - i}
+        <li>
+          <div class="td-ligne">
+            <span>{String(manche).padStart(2, '0')}</span>
+            <p>{h.answer}</p>
+            {#if signales[manche]}
+              <em>Signalé</em>
+            {:else}
+              <button type="button" class="td-signaler" aria-expanded={ouvert === manche}
+                onclick={() => (ouvert = ouvert === manche ? null : manche)}>Signaler</button>
+            {/if}
+          </div>
+          {#if ouvert === manche}
+            <div class="td-report-btns">
+              {#each RAISONS as r (r)}
+                <button type="button" onclick={() => signalerManche(manche, r)}>{r}</button>
+              {/each}
+            </div>
+          {/if}
+        </li>
       {/each}
     </ol>
   </section>
@@ -93,6 +129,7 @@
   .td-report p { color: var(--mid); }
   .td-report-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .td-report-btns button {
+    min-height: 44px;
     padding: 6px 10px; border: 1px solid var(--border); border-radius: 3px;
     background: var(--surface); color: var(--text); font: inherit; font-size: 0.78rem; cursor: pointer;
   }
@@ -116,10 +153,17 @@
 
   .td-history { margin: 12px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
   .td-history li {
-    display: flex; gap: 12px; align-items: baseline;
     padding: 9px 0; border-bottom: 1px solid var(--border);
     font-size: 0.88rem;
   }
+  .td-ligne { display: flex; gap: 12px; align-items: center; }
+  .td-ligne p { flex: 1; min-width: 0; margin: 0; }
+  .td-ligne em { font-style: normal; font-size: 0.78rem; color: var(--dim); }
+  .td-signaler {
+    min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 3px;
+    background: none; color: var(--mid); font: inherit; font-size: 0.78rem; cursor: pointer;
+  }
+  .td-signaler:hover, .td-signaler[aria-expanded="true"] { border-color: var(--accent); color: var(--text); }
   .td-history li:last-child { border-bottom: none; }
   .td-history span { font-family: var(--s-mono); font-size: 0.72rem; color: var(--dim); flex-shrink: 0; }
 </style>

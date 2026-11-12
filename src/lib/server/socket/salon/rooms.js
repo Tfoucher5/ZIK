@@ -93,6 +93,7 @@ export async function createSalonRoom({
       startTime: 0,
       firstFinder: null,
       history: [],
+      historyMedia: [],
       played: [],
       paused: false,
     },
