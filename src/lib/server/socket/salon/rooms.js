@@ -4,7 +4,6 @@ import { userClient } from "../../middleware/auth.js";
 import { salonRooms, getIO } from "../../state.js";
 import { isPro } from "../../services/pro.js";
 import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
-import { START_COUNTDOWN_S } from "../../../data/salonOptions.js";
 import { makeTeams } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";
@@ -54,7 +53,8 @@ export async function createSalonRoom({
     specials: pro && settings.specials === true,
     buzzSound: true,
     finaleSound: true,
-    startCountdown: START_COUNTDOWN_S,
+    countStart: true,
+    countNext: true,
     showAnswerDuration: Math.min(
       Math.max(settings.showAnswerDuration || 7, 3),
       15,
@@ -180,11 +180,16 @@ export function applySettings(code, patch, io, allow) {
   const s = salon.settings;
   const game = salon.game;
   const idle = game.phase === "lobby" || game.phase === "gameover";
-  // Sons de la TV : pour tous, à tout moment, sans passer par l'offre Pro
-  const sons = ["buzzSound", "finaleSound"].filter((k) => k in patch);
+  // Sons de la TV et décomptes : pour tous, à tout moment, sans passer par
+  // l'offre Pro
+  const sons = ["buzzSound", "finaleSound", "countStart", "countNext"].filter(
+    (k) => k in patch,
+  );
   for (const k of sons) s[k] = patch[k] !== false;
-  if (sons.length && sons.length === Object.keys(patch).length)
+  if (sons.length && sons.length === Object.keys(patch).length) {
+    saveSnapshot(salon);
     return io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+  }
   if (!idle && !allow("liveSettings")) return;
   const clamp = (v, lo, hi, d) =>
     Math.min(Math.max(Math.round(Number(v)) || d, lo), hi);

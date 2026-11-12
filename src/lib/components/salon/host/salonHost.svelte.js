@@ -57,6 +57,7 @@ export class SalonHost {
   error = $state("");
   startSec = $state(0);
   nextSec = $state(0);
+  nextShown = $state(true);
   volume = $state(100);
   helpOpen = $state(false);
   userId = $state(null);

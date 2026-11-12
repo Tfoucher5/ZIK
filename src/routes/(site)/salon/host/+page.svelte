@@ -7,7 +7,7 @@
   import PlaylistModal from '$lib/components/salon/playlists/PlaylistModal.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
-  import StartCountdown from '$lib/components/salon/StartCountdown.svelte';
+  import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -57,13 +57,14 @@
       onNewSalon={h.closeSalon}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
-      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} mediaCheck={h.mediaCheck} nextSec={h.nextSec}
+      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} mediaCheck={h.mediaCheck}
       onJudge={(correct) => h.socket?.emit('salon_buzz_judge', { correct })}
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
   </div>
 
-  <StartCountdown sec={h.startSec} />
+  <BigCountdown sec={h.startSec} label="La partie commence" />
+  <BigCountdown sec={h.nextShown && h.nextSec <= 3 && !h.paused ? h.nextSec : 0} />
 
   {#if h.phase === 'lobby'}
     <footer class="sh-foot">

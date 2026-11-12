@@ -145,6 +145,24 @@ describe.each(ECRANS)("chrono : $nom", ({ rejoint, ecoute, etat, extra }) => {
     recoit("salon_countdown", { kind: "start", endsAt: 16_000, now: 11_000 });
     expect(e).toMatchObject({ startSec: 5, nextSec: 0 });
   });
+
+  it("décompte coupé par l'hôte : le temps court toujours, l'affichage est masqué", () => {
+    recoit("salon_countdown", {
+      kind: "next",
+      endsAt: 7_000,
+      now: 0,
+      show: false,
+    });
+    vi.advanceTimersByTime(1000);
+    expect(e).toMatchObject({ nextSec: 6, nextShown: false });
+    recoit("salon_countdown", {
+      kind: "next",
+      endsAt: 20_000,
+      now: 13_000,
+      show: true,
+    });
+    expect(e.nextShown).toBe(true);
+  });
 });
 
 describe("TV qui se reconnecte en pleine manche", () => {

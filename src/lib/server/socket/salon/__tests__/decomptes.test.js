@@ -47,7 +47,7 @@ beforeEach(() => {
   m.manches = 0;
   salonDeTest();
   Object.assign(salonRooms[CODE].settings, {
-    startCountdown: 5,
+    countStart: true,
     showAnswerDuration: 7,
   });
   h = makeIo();
@@ -64,12 +64,22 @@ describe("décompte avant le titre suivant", () => {
   it("annonce l'heure de reprise à tout le salon puis lance la manche", () => {
     armNext(CODE, h.io, 7);
     expect(decomptes()).toEqual([
-      { kind: "next", endsAt: 1_007_000, now: 1_000_000 },
+      { kind: "next", endsAt: 1_007_000, now: 1_000_000, show: true },
     ]);
     expect(h.emissions.at(-1).cibles).toEqual([`salon:${CODE}`]);
     vi.advanceTimersByTime(6_999);
     expect(m.manches).toBe(0);
     vi.advanceTimersByTime(1);
+    expect(m.manches).toBe(1);
+  });
+
+  it("décompte coupé par l'hôte : l'heure de reprise part quand même, sans affichage", () => {
+    salonRooms[CODE].settings.countNext = false;
+    armNext(CODE, h.io, 7);
+    expect(decomptes()).toEqual([
+      { kind: "next", endsAt: 1_007_000, now: 1_000_000, show: false },
+    ]);
+    vi.advanceTimersByTime(7_000);
     expect(m.manches).toBe(1);
   });
 
@@ -134,6 +144,28 @@ describe("décompte de lancement", () => {
     expect(decomptes().map((d) => d.kind)).toEqual(["start"]);
     vi.advanceTimersByTime(5_000);
     expect(m.manches).toBe(1);
+  });
+
+  it("décompte de lancement coupé : la première manche part tout de suite", () => {
+    salonRooms[CODE].settings.countStart = false;
+    regie.handlers.salon_start();
+    expect(m.manches).toBe(1);
+    expect(decomptes()).toEqual([]);
+  });
+
+  it("chaque décompte se coupe à part, en pleine partie et sans Pro", () => {
+    game().phase = "round";
+    regie.handlers.salon_update_settings({ countNext: false });
+    expect(salonRooms[CODE].settings).toMatchObject({
+      countStart: true,
+      countNext: false,
+    });
+    regie.handlers.salon_update_settings({ countStart: false });
+    regie.handlers.salon_update_settings({ countNext: "oui" });
+    expect(salonRooms[CODE].settings).toMatchObject({
+      countStart: false,
+      countNext: true,
+    });
   });
 
   it("aucune donnée de partie dans le décompte", () => {

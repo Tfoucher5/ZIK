@@ -57,6 +57,8 @@ export function salonLiveState(code) {
       roundDuration: s.roundDuration,
       showAnswerDuration: s.showAnswerDuration,
       manualNext: !!s.manualNext,
+      countStart: s.countStart !== false,
+      countNext: s.countNext !== false,
       teams: s.teams?.map((x) => x.name) ?? [],
     },
     playlistIds: [].concat(s.playlistIds ?? []),

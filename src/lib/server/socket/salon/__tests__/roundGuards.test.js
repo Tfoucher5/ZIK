@@ -182,7 +182,7 @@ describe("déroulé d'une manche", () => {
     h.connecte(regie);
     regie.handlers.salon_join_control({ code: CODE, key: CLE });
     const salon = salonRooms[CODE];
-    salon.settings.startCountdown = 5;
+    salon.settings.countStart = true;
     salon.game.phase = "summary";
     salon.game.fullPlaylist = [{ id: "a", title: "A", youtube_id: "va" }];
     const decomptes = () =>
