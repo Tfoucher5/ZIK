@@ -138,7 +138,12 @@ export function endRound(code, reason, io) {
 
   game.history.push({ answer, cover: track.cover });
   // Pour signaler un titre déjà joué depuis la régie ; ne part jamais aux téléphones
-  (game.historyMedia ??= []).push(mediaOf(track, game.currentVideo));
+  // Même case que history : un salon repris d'un instantané plus ancien a un
+  // history sans historyMedia, ses premières cases restent vides
+  (game.historyMedia ??= [])[game.history.length - 1] = mediaOf(
+    track,
+    game.currentVideo,
+  );
   emitRoundEnd(io, code, roundSummary);
   scheduleCleanup(code);
   saveSnapshot(salon);

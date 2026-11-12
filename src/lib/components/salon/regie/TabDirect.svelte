@@ -129,6 +129,7 @@
   .td-report p { color: var(--mid); }
   .td-report-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .td-report-btns button {
+    min-height: 44px;
     padding: 6px 10px; border: 1px solid var(--border); border-radius: 3px;
     background: var(--surface); color: var(--text); font: inherit; font-size: 0.78rem; cursor: pointer;
   }

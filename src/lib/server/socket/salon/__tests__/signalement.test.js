@@ -21,16 +21,17 @@ vi.mock("../../../services/music/trackIssues.js", () => ({
 
 const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
+const { endRound } = await import("../rounds.js");
 const { CODE, CLE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
 
-let regie;
+let regie, h;
 const game = () => salonRooms[CODE].game;
 
 beforeEach(() => {
   m.signalements = [];
   salonDeTest();
-  const h = makeIo();
+  h = makeIo();
   registerSalon(h.io);
   regie = makeSocket("regie", h.rooms);
   h.connecte(regie);
@@ -75,6 +76,22 @@ describe("signaler un titre depuis la régie", () => {
     game().phase = "gameover";
     regie.handlers.salon_report_video({ reason: "Pas de son", round: 2 });
     expect(m.signalements[0][0]).toBe("t2");
+  });
+
+  it("salon repris d'un instantané sans historyMedia : pas de décalage", () => {
+    salonRooms[CODE].settings.manualNext = true;
+    delete game().historyMedia;
+    Object.assign(game().currentTrack, { title: "T", artist: "A" });
+    endRound(CODE, "Temps écoulé !", h.io);
+    expect(game().historyMedia[2]).toEqual({
+      trackId: "t3",
+      videoId: "v3",
+      start: 30,
+    });
+    regie.handlers.salon_report_video({ reason: "x", round: 1 });
+    expect(m.signalements).toEqual([]);
+    regie.handlers.salon_report_video({ reason: "x", round: 3 });
+    expect(m.signalements[0][0]).toBe("t3");
   });
 
   it("manche inconnue ou titre en cours hors manche : rien n'est signalé", () => {
