@@ -83,6 +83,22 @@ Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (te
 
 Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod), `idees` (lecture seule, web autorisé).
 
+### L'entreprise d'agents
+
+Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par la conversation principale, qui lance leur équipe (agents) en parallèle. Chaque chef a aussi une fiche `chef-*` pour siéger au board. Théo reste fondateur : argent, nouvelle page ou nouveau mode de jeu, données de prod, validation finale.
+
+| Chef                     | Skill         | Équipe (agents)                                            |
+| ------------------------ | ------------- | ---------------------------------------------------------- |
+| CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi, `/etat`    |
+| Argent (CFO)             | `/argent`     | `analyste`, `offres`                                       |
+| Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support` ; `suite` chaque jour  |
+| Produit & design (CPO)   | `/produit`    | `idees`, `ux`, `ui`, `redaction`                           |
+| Technique (CTO)          | `/tech`       | `architecte`, `dev`, `test-writer`, `reviewer`, `incident` |
+| Marketing & ventes (CMO) | `/marketing`  | `seo`, `contenu`, `prospection`                            |
+| Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                           |
+
+Circuit d'une tâche : `/produit` cadre, `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `node scripts/qg/serveur.mjs` (voir `scripts/qg/README.md`).
+
 Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
 
 ## Base de données (Supabase)

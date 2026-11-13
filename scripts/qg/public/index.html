@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QG ZIK</title>
+    <link rel="stylesheet" href="/qg.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="scene"></div>
+    <header class="barre">
+      <h1>QG <span>ZIK</span></h1>
+      <span id="liaison" class="liaison">connexion…</span>
+    </header>
+    <section class="compteurs">
+      <div>
+        <small>Coût aujourd'hui</small><strong id="c-cout">–</strong
+        ><em>équivalent API</em>
+      </div>
+      <div>
+        <small>Tokens aujourd'hui</small><strong id="c-tokens">–</strong>
+      </div>
+      <div>
+        <small>Agents au travail</small><strong id="c-agents">–</strong>
+      </div>
+      <div>
+        <small>Sessions actives</small><strong id="c-sessions">–</strong>
+      </div>
+    </section>
+    <aside class="panneau flux">
+      <h2>En direct</h2>
+      <ol id="flux"></ol>
+    </aside>
+    <aside class="panneau sessions">
+      <h2>Sessions</h2>
+      <ul id="sessions"></ul>
+    </aside>
+    <div id="board" class="board" hidden>Board en séance</div>
+    <div id="fiche" class="fiche" hidden></div>
+    <script type="module" src="/qg.js"></script>
+  </body>
+</html>

@@ -1,0 +1,222 @@
+:root {
+  --fond: #05070d;
+  --verre: rgba(14, 19, 32, 0.72);
+  --bord: rgba(120, 150, 220, 0.18);
+  --texte: #e8ecf6;
+  --doux: #8f9bb5;
+  --vif: #5ef0c0;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font:
+    14px/1.4 system-ui,
+    "Segoe UI",
+    sans-serif;
+  overflow: hidden;
+}
+#scene {
+  position: fixed;
+  inset: 0;
+}
+.barre {
+  position: fixed;
+  top: 16px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.barre h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.2em;
+}
+.barre h1 span {
+  color: var(--vif);
+}
+.liaison {
+  font-size: 12px;
+  color: var(--doux);
+}
+.liaison.ok::before {
+  content: "● ";
+  color: var(--vif);
+}
+.compteurs {
+  position: fixed;
+  top: 60px;
+  left: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 10px;
+}
+.compteurs div,
+.panneau,
+.fiche,
+.board {
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+.compteurs div {
+  padding: 10px 14px;
+  min-width: 130px;
+}
+.compteurs small,
+.compteurs em {
+  display: block;
+  color: var(--doux);
+  font-size: 11px;
+  font-style: normal;
+}
+.compteurs strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.panneau {
+  position: fixed;
+  padding: 12px 14px;
+  width: 340px;
+}
+.panneau h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--doux);
+}
+.flux {
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  overflow: hidden;
+}
+.flux ol,
+.sessions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.flux li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--bord);
+  font-size: 12px;
+  animation: entree 0.4s ease-out;
+}
+.flux time {
+  color: var(--doux);
+  margin-right: 6px;
+}
+.flux b {
+  color: var(--vif);
+  margin-right: 4px;
+}
+.sessions {
+  left: 20px;
+  bottom: 16px;
+  max-height: 34vh;
+  overflow: auto;
+}
+.sessions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--doux);
+}
+.sessions li.actif {
+  color: var(--texte);
+}
+.sessions li.actif::before {
+  content: "●";
+  color: var(--vif);
+}
+.board {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  color: #ff8a8a;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  animation: pouls 1.6s infinite;
+}
+.fiche {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(460px, 90vw);
+  padding: 14px 16px;
+}
+.fiche h3 {
+  margin: 0 0 6px;
+}
+.fiche dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.fiche dt {
+  color: var(--doux);
+}
+.fiche ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--doux);
+}
+.etiquette {
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 0 6px #000;
+}
+.etiquette .nom {
+  font-size: 12px;
+  font-weight: 600;
+}
+.etiquette .act {
+  font-size: 11px;
+  color: var(--vif);
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.etiquette.repos {
+  opacity: 0.55;
+}
+@keyframes entree {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+@keyframes pouls {
+  50% {
+    opacity: 0.6;
+  }
+}
+@media (max-width: 900px) {
+  .compteurs {
+    grid-template-columns: repeat(2, auto);
+  }
+  .flux {
+    top: auto;
+    height: 30vh;
+    width: calc(100vw - 32px);
+  }
+  .sessions {
+    display: none;
+  }
+}
