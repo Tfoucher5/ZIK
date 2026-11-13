@@ -188,7 +188,7 @@ body {
 .etiquette .act {
   font-size: 11px;
   color: var(--vif);
-  max-width: 220px;
+  max-width: 150px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -207,6 +207,18 @@ body {
     opacity: 0.6;
   }
 }
+.zone {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0a0d14;
+  background: var(--c);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--c) 60%, transparent);
+  pointer-events: none;
+}
 @media (max-width: 900px) {
   .compteurs {
     grid-template-columns: repeat(2, auto);
@@ -216,7 +228,12 @@ body {
     height: 30vh;
     width: calc(100vw - 32px);
   }
-  .sessions {
+  .sessions,
+  .etiquette .act {
     display: none;
+  }
+  .etiquette .nom,
+  .zone {
+    font-size: 10px;
   }
 }

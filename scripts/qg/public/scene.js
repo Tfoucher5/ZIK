@@ -1,39 +1,31 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import {
-  CSS2DRenderer,
-  CSS2DObject,
-} from "three/addons/renderers/CSS2DRenderer.js";
+import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+import { COULEURS, decor, service } from "./bureau.js";
+import { Perso } from "./perso.js";
 
-const COULEURS = {
-  theo: "#ffffff",
-  ceo: "#f5c542",
-  argent: "#ffd166",
-  operations: "#ff9f43",
-  produit: "#b388ff",
-  tech: "#4dabf7",
-  marketing: "#ff6b9d",
-  board: "#ff5252",
-  renforts: "#8892a6",
-};
+const RENFORTS_MAX = 4;
+const PORTE = new THREE.Vector3(0, 0, 24);
 
 export class Scene3D {
   constructor(conteneur, surClic) {
-    this.noeuds = new Map();
-    this.liens = [];
-    this.particules = [];
+    this.persos = new Map();
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x05070d, 0.018);
+    this.scene.background = new THREE.Color("#0a0d14");
+    this.scene.fog = new THREE.Fog("#0a0d14", 60, 120);
     this.camera = new THREE.PerspectiveCamera(
-      50,
+      45,
       innerWidth / innerHeight,
       0.1,
-      400,
+      300,
     );
-    this.camera.position.set(0, 14, 34);
+    const loin = innerWidth < 700 ? 2 : 1;
+    this.camera.position.set(5, 40 * loin, 44 * loin);
     this.rendu = new THREE.WebGLRenderer({ antialias: true });
     this.rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.rendu.setSize(innerWidth, innerHeight);
+    this.rendu.shadowMap.enabled = true;
+    this.rendu.shadowMap.type = THREE.PCFSoftShadowMap;
     conteneur.appendChild(this.rendu.domElement);
     this.etiquettes = new CSS2DRenderer();
     this.etiquettes.setSize(innerWidth, innerHeight);
@@ -44,18 +36,23 @@ export class Scene3D {
     });
     conteneur.appendChild(this.etiquettes.domElement);
     this.controles = new OrbitControls(this.camera, this.rendu.domElement);
-    this.controles.target.set(0, 2, 0);
+    this.controles.target.set(innerWidth < 700 ? 0 : 5, 0, 0);
     this.controles.enableDamping = true;
-    this.controles.autoRotate = true;
-    this.controles.autoRotateSpeed = 0.35;
-    this.scene.add(new THREE.AmbientLight(0x8090b0, 0.6));
-    const soleil = new THREE.DirectionalLight(0xffffff, 1.2);
-    soleil.position.set(10, 20, 10);
+    this.controles.maxPolarAngle = Math.PI / 2.2;
+    this.controles.minDistance = 8;
+    this.controles.maxDistance = 120;
+    this.scene.add(new THREE.HemisphereLight("#cfe0ff", "#1a1f2b", 1.1));
+    const soleil = new THREE.DirectionalLight("#fff4e0", 1.6);
+    soleil.position.set(18, 30, 14);
+    soleil.castShadow = true;
+    soleil.shadow.mapSize.set(2048, 2048);
+    Object.assign(soleil.shadow.camera, {
+      left: -36,
+      right: 36,
+      top: 30,
+      bottom: -30,
+    });
     this.scene.add(soleil);
-    const grille = new THREE.GridHelper(80, 40, 0x1c2a4a, 0x111a2e);
-    grille.position.y = -6;
-    this.scene.add(grille);
-    this.etoiles();
     const rayon = new THREE.Raycaster();
     this.rendu.domElement.addEventListener("click", (e) => {
       const p = new THREE.Vector2(
@@ -63,10 +60,9 @@ export class Scene3D {
         -(e.clientY / innerHeight) * 2 + 1,
       );
       rayon.setFromCamera(p, this.camera);
-      const touche = rayon.intersectObjects(
-        [...this.noeuds.values()].map((n) => n.mesh),
-      )[0];
-      surClic(touche?.object.userData.id ?? null);
+      const objets = [...this.persos.values()].flatMap((x) => x.cliquables);
+      const id = rayon.intersectObjects(objets)[0]?.object.userData.id;
+      surClic(id ? id.split("#")[0] : null);
     });
     addEventListener("resize", () => {
       this.camera.aspect = innerWidth / innerHeight;
@@ -78,177 +74,133 @@ export class Scene3D {
     this.rendu.setAnimationLoop(() => this.image());
   }
 
-  etoiles() {
-    const pos = new Float32Array(1500 * 3).map(
-      () => (Math.random() - 0.5) * 300,
-    );
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    this.scene.add(
-      new THREE.Points(
-        g,
-        new THREE.PointsMaterial({ color: 0x6f7fa8, size: 0.25 }),
-      ),
-    );
-  }
-
-  noeud(id, nom, position, couleur, taille, parent) {
-    const c = new THREE.Color(couleur);
-    const mat = new THREE.MeshStandardMaterial({
-      color: c,
-      emissive: c,
-      emissiveIntensity: 0.12,
-      roughness: 0.35,
-      metalness: 0.5,
-    });
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(taille, 2), mat);
-    mesh.position.copy(position);
-    mesh.userData.id = id;
-    const halo = new THREE.Mesh(
-      new THREE.TorusGeometry(taille * 1.6, 0.04, 8, 64),
-      new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0 }),
-    );
-    halo.position.copy(position);
-    halo.rotation.x = Math.PI / 2;
-    const div = document.createElement("div");
-    div.className = "etiquette repos";
-    div.innerHTML = `<div class="nom"></div><div class="act"></div>`;
-    div.querySelector(".nom").textContent = nom;
-    const etiquette = new CSS2DObject(div);
-    etiquette.position.set(0, taille + 0.7, 0);
-    mesh.add(etiquette);
-    this.scene.add(mesh, halo);
-    const n = {
-      id,
-      mesh,
-      halo,
-      div,
-      taille,
-      actif: false,
-      phase: Math.random() * 6,
-    };
-    this.noeuds.set(id, n);
-    if (parent) {
-      const g = new THREE.BufferGeometry().setFromPoints([
-        parent.mesh.position,
-        position,
-      ]);
-      const ligne = new THREE.Line(
-        g,
-        new THREE.LineBasicMaterial({
-          color: c,
-          transparent: true,
-          opacity: 0.18,
-        }),
-      );
-      this.scene.add(ligne);
-      this.liens.push({ de: parent, vers: n, ligne, couleur: c });
-    }
-    return n;
+  perso(id, nom, couleur, siege) {
+    const p = new Perso(this.scene, id, nom, couleur, siege);
+    this.persos.set(id, p);
+    return p;
   }
 
   construire(org) {
-    const theo = this.noeud(
-      "theo",
-      "Théo · fondateur",
-      new THREE.Vector3(0, 12, 0),
-      COULEURS.theo,
-      1.1,
-    );
-    const ceo = this.noeud(
-      "ceo",
-      "CEO",
-      new THREE.Vector3(0, 7.5, 0),
-      COULEURS.ceo,
-      1,
-      theo,
-    );
-    const chefs = org.chefs.filter((c) => c.id !== "ceo");
-    chefs.forEach((chef, i) => {
-      const a = (i / chefs.length) * Math.PI * 2;
-      const pos = new THREE.Vector3(Math.cos(a) * 12, 2, Math.sin(a) * 12);
-      const couleur = COULEURS[chef.id] ?? COULEURS.renforts;
-      const n = this.noeud(chef.id, chef.nom, pos, couleur, 0.8, ceo);
-      chef.equipe.forEach((membre, j) => {
-        const b = a + (j - (chef.equipe.length - 1) / 2) * 0.42;
-        const p = new THREE.Vector3(
-          Math.cos(b) * 17.5,
-          -2.5 - (j % 2) * 1.2,
-          Math.sin(b) * 17.5,
+    const d = decor(this.scene);
+    this.d = d;
+    this.ecrans = new Map();
+    this.perso("theo", "Théo", "#ffffff", d.theo);
+    this.perso("ceo", "CEO", COULEURS.ceo, d.ceo);
+    this.ecrans.set("theo", d.theo.ecran).set("ceo", d.ceo.ecran);
+    this.libres = new Map();
+    for (const c of org.chefs.filter((x) => x.id !== "ceo")) {
+      const s = service(
+        this.scene,
+        c.id,
+        c.nom.replace(/ \(.*\)/, ""),
+        c.equipe,
+      );
+      this.perso(c.id, `chef ${c.skill}`, COULEURS[c.id], s.chef);
+      this.ecrans.set(c.id, s.chef.ecran);
+      c.equipe.forEach((m, i) => {
+        this.perso(m, m, COULEURS[c.id], s.postes[i]);
+        this.ecrans.set(m, s.postes[i].ecran);
+      });
+      this.libres.set(c.id, s.postes.slice(c.equipe.length));
+    }
+    const r = service(this.scene, "renforts", "Renforts", [], RENFORTS_MAX - 1);
+    this.libres.set("renforts", [r.chef, ...r.postes]);
+    for (const b of org.board.filter(
+      (x) => !x.includes("*") && !this.persos.has(x),
+    )) {
+      const siege = b === "avocat" ? d.avocat : d.invite;
+      this.perso(b, b, COULEURS.board, siege);
+      if (siege.ecran) this.ecrans.set(b, siege.ecran);
+    }
+    this.org = org;
+  }
+
+  chefDe(id) {
+    return this.org.chefs.find((c) => c.equipe.includes(id))?.id;
+  }
+
+  // Copies d'un agent lancé plusieurs fois, sur les postes libres de son service.
+  clones(id, n) {
+    const service = id === "renforts" ? "renforts" : this.chefDe(id);
+    const libres = this.libres.get(service) ?? [];
+    const voulus = id === "renforts" ? n : n - 1;
+    for (let i = 0; i < libres.length; i++) {
+      const cle = `${id}#${i + 2}`;
+      let p = this.persos.get(cle);
+      if (i < voulus && !p) {
+        p = this.perso(
+          cle,
+          id === "renforts" ? "renfort" : id,
+          COULEURS[service],
+          libres[i],
         );
-        this.noeud(membre, membre, p, couleur, 0.42, n);
-      });
-    });
-    org.board
-      .filter((m) => !m.startsWith("chef-"))
-      .forEach((m, i) => {
-        const p = new THREE.Vector3(i ? 5 : -5, 9, 3);
-        this.noeud(m, m, p, COULEURS.board, 0.55, ceo);
-      });
-    this.noeud(
-      "renforts",
-      "Renforts",
-      new THREE.Vector3(0, -2, 0),
-      COULEURS.renforts,
-      0.6,
-      ceo,
-    );
-  }
-
-  maj(activite) {
-    for (const n of this.noeuds.values()) {
-      const a = activite.get(n.id);
-      n.actif = Boolean(a);
-      n.div.classList.toggle("repos", !n.actif);
-      n.div.querySelector(".act").textContent = a ?? "";
-    }
-    for (const l of this.liens) {
-      l.ligne.material.opacity = l.vers.actif ? 0.85 : 0.18;
-      const voulu = l.vers.actif ? 3 : 0;
-      const presents = this.particules.filter((p) => p.lien === l);
-      for (let i = presents.length; i < voulu; i++)
-        this.particule(l, i / voulu);
-      if (!voulu) for (const p of presents) this.retirer(p);
+        p.g.position.copy(PORTE);
+        p.assis = false;
+        p.but = { place: PORTE };
+        p.temporaire = true;
+        p.ecran = libres[i].ecran;
+      }
+      if (!p) continue;
+      p.voulu = i < voulus;
+      if (p.voulu) {
+        p.depart = false;
+        p.aller(libres[i]);
+      } else if (!p.depart) {
+        p.depart = true;
+        p.aller({ place: PORTE.clone(), angle: 0, debout: true });
+      }
     }
   }
 
-  particule(lien, depart) {
-    const m = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12, 8, 8),
-      new THREE.MeshBasicMaterial({ color: lien.couleur }),
+  maj(activite, nb, seance) {
+    const board = new Set(seance);
+    const multiples = new Set(
+      [...nb.keys()].filter((id) => id !== "theo" && id !== "ceo"),
     );
-    this.scene.add(m);
-    this.particules.push({ lien, m, t: depart });
-  }
-
-  retirer(p) {
-    this.scene.remove(p.m);
-    this.particules.splice(this.particules.indexOf(p), 1);
+    for (const [id, p] of this.persos)
+      if (p.temporaire) multiples.add(id.split("#")[0]);
+    for (const id of multiples) this.clones(id, nb.get(id) ?? 0);
+    const sieges = this.d.sieges;
+    let place = 0;
+    for (const [id, p] of this.persos) {
+      const base = id.split("#")[0];
+      const texte = activite.get(base);
+      const actif = p.temporaire ? p.voulu : texte != null;
+      p.etat(actif, texte ?? "");
+      if (p.temporaire) {
+        p.ecran.material.emissiveIntensity = p.voulu ? 0.9 : 0.08;
+        continue;
+      }
+      if (board.has(id) && actif && place < sieges.length)
+        p.aller(sieges[place++]);
+      else if (actif && texte.startsWith("pilote ")) {
+        const cible = this.persos.get(texte.slice(7).split(" ")[0]);
+        if (cible)
+          p.aller({
+            place: cible.siege.place
+              .clone()
+              .add(new THREE.Vector3(0.9, 0, 0.6)),
+            angle: cible.siege.angle + 0.8,
+            debout: true,
+          });
+      } else if (actif) p.aller(p.siege);
+      const ecran = this.ecrans.get(id) ?? p.ecran;
+      if (ecran) ecran.material.emissiveIntensity = actif ? 0.9 : 0.08;
+    }
+    this.d.ecranBoard.material.emissiveIntensity = place ? 0.9 : 0.1;
   }
 
   image() {
-    const dt = this.horloge.getDelta();
+    const dt = Math.min(this.horloge.getDelta(), 0.1);
     const t = this.horloge.elapsedTime;
-    for (const n of this.noeuds.values()) {
-      const pouls = n.actif ? 1 + Math.sin(t * 4 + n.phase) * 0.12 : 1;
-      n.mesh.scale.setScalar(pouls);
-      n.mesh.material.emissiveIntensity +=
-        ((n.actif ? 1.1 : 0.12) - n.mesh.material.emissiveIntensity) * 0.08;
-      n.mesh.rotation.y += dt * (n.actif ? 1.2 : 0.15);
-      n.halo.material.opacity +=
-        ((n.actif ? 0.8 : 0) - n.halo.material.opacity) * 0.08;
-      n.halo.rotation.z += dt * 0.8;
-      n.halo.scale.setScalar(
-        1 + (n.actif ? Math.sin(t * 2 + n.phase) * 0.15 : 0),
-      );
-    }
-    for (const p of this.particules) {
-      p.t = (p.t + dt * 0.45) % 1;
-      p.m.position.lerpVectors(
-        p.lien.de.mesh.position,
-        p.lien.vers.mesh.position,
-        p.t,
-      );
+    for (const [id, p] of this.persos) {
+      if (!p.actif && !p.temporaire) p.flaner(dt, this.d.pauses);
+      p.animer(dt, t);
+      if (p.depart && !p.chemin.length) {
+        this.scene.remove(p.g);
+        p.lab.element.remove();
+        this.persos.delete(id);
+      }
     }
     this.controles.update();
     this.rendu.render(this.scene, this.camera);
