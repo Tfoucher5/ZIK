@@ -14,7 +14,7 @@ Tu tiens le plan de ZIK. Tu ne codes pas : tu dis quoi faire ensuite, dans quel 
 - `docs/strategie/decisions.md` (décisions du board et de Théo) et `docs/idees/` (idées retenues).
 - `git log --oneline origin/develop -30`, `git log --oneline origin/master..origin/develop` (ce qui attend une release), `git branch -r`.
 - Les PR ouvertes si `gh` ou le MCP GitHub est disponible.
-- Le gel des mises en prod et les règles du `CLAUDE.md`.
+- Les règles du `CLAUDE.md` (porte de mise en prod, ce qui revient à Théo).
 
 ## Rendu
 

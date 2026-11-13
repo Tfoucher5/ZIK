@@ -1,6 +1,7 @@
 ---
 name: prospection
 description: Commercial de ZIK (équipe Marketing et ventes). Suit la prospection des bars, campings, DJ et entreprises : réponses reçues, lieux intéressés, relances à rédiger, objections à traiter. N'envoie jamais rien. Lecture seule. Use quand on parle de prospection, de clients Pro à signer ou de réponses reçues.
+tools: Read, Grep, Glob, Bash, mcp__claude_ai_Supabase__execute_sql, mcp__claude_ai_Supabase__list_tables, mcp__Supabase__execute_sql, mcp__Supabase__list_tables
 disallowedTools: Write, Edit, NotebookEdit
 color: yellow
 ---

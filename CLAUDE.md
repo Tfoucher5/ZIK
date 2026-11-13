@@ -89,7 +89,7 @@ Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par l
 
 | Chef                     | Skill         | Équipe (agents)                                            |
 | ------------------------ | ------------- | ---------------------------------------------------------- |
-| CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi             |
+| CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi, `/etat`    |
 | Argent (CFO)             | `/argent`     | `analyste`, `offres`                                       |
 | Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support` ; `suite` chaque jour  |
 | Produit & design (CPO)   | `/produit`    | `idees`, `ux`, `ui`, `redaction`                           |

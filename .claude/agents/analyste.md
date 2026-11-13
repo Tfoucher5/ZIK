@@ -1,6 +1,7 @@
 ---
 name: analyste
 description: Analyste chiffres de ZIK (équipe Argent). Sort les indicateurs de la semaine (visites par source, inscriptions, parties à plusieurs, salons, abonnés Pro, prospection) et les compare à la semaine d'avant. Lecture seule. Use pour /etat, avant un /board, ou quand Théo demande « ça donne quoi les chiffres ».
+tools: Read, Grep, Glob, Bash, mcp__claude_ai_Supabase__execute_sql, mcp__claude_ai_Supabase__list_tables, mcp__Supabase__execute_sql, mcp__Supabase__list_tables
 disallowedTools: Write, Edit, NotebookEdit
 color: cyan
 ---

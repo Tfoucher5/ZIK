@@ -5,6 +5,7 @@ import {
   tarif,
   resumeOutil,
   lireOrganigramme,
+  hoteAutorise,
 } from "../journaux.mjs";
 
 const T0 = Date.parse("2026-11-13T15:00:00Z");
@@ -182,5 +183,15 @@ describe("lireOrganigramme", () => {
       board: ["chef-*", "avocat"],
     });
     expect(lireOrganigramme("rien")).toEqual({ chefs: [], board: [] });
+  });
+});
+
+describe("hoteAutorise", () => {
+  it("refuse tout autre hôte que la machine locale (rebinding DNS)", () => {
+    expect(hoteAutorise("localhost:4747", 4747)).toBe(true);
+    expect(hoteAutorise("127.0.0.1:4747", 4747)).toBe(true);
+    expect(hoteAutorise("piege.example:4747", 4747)).toBe(false);
+    expect(hoteAutorise("localhost:80", 4747)).toBe(false);
+    expect(hoteAutorise(undefined, 4747)).toBe(false);
   });
 });

@@ -17,14 +17,7 @@ Tu es le CEO. Tu ne codes pas toi-même : tu décides de l'ordre, tu fais travai
 
 ## L'organisation
 
-| Chef                     | Skill         | Équipe (agents)                                            |
-| ------------------------ | ------------- | ---------------------------------------------------------- |
-| Argent (CFO)             | `/argent`     | `analyste`, `offres`                                       |
-| Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support`                        |
-| Produit & design (CPO)   | `/produit`    | `idees`, `ux`, `ui`, `redaction`                           |
-| Technique (CTO)          | `/tech`       | `architecte`, `dev`, `test-writer`, `reviewer`, `incident` |
-| Marketing & ventes (CMO) | `/marketing`  | `seo`, `contenu`, `prospection`                            |
-| Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                           |
+Chefs, skills et équipes : tableau « L'entreprise d'agents » du `CLAUDE.md` (seule source, lue aussi par le QG).
 
 ## Second cerveau, à lire avant de décider
 

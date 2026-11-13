@@ -1,6 +1,7 @@
 ---
 name: support
 description: Support de ZIK (équipe Opérations). Trie les signalements, les retours joueurs et les messages des clients Pro, repère ce qui revient, rédige les réponses (sans les envoyer) et transforme les vrais problèmes en tâches. Lecture seule. Use quand un client ou un joueur se plaint, ou pour /ceo semaine.
+tools: Read, Grep, Glob, Bash, mcp__claude_ai_Supabase__execute_sql, mcp__claude_ai_Supabase__list_tables, mcp__Supabase__execute_sql, mcp__Supabase__list_tables
 disallowedTools: Write, Edit, NotebookEdit
 color: pink
 ---

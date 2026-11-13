@@ -13,7 +13,7 @@ import {
 import { homedir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Suivi, lireOrganigramme } from "./journaux.mjs";
+import { Suivi, lireOrganigramme, hoteAutorise } from "./journaux.mjs";
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -44,10 +44,14 @@ function lireNouveau(fichier, agentId) {
   const p = positions.get(fichier) ?? { octets: 0, reste: "" };
   if (taille < p.octets) p.octets = 0;
   if (taille === p.octets) return;
-  const fd = openSync(fichier, "r");
   const tampon = Buffer.alloc(taille - p.octets);
-  readSync(fd, tampon, 0, tampon.length, p.octets);
-  closeSync(fd);
+  try {
+    const fd = openSync(fichier, "r");
+    readSync(fd, tampon, 0, tampon.length, p.octets);
+    closeSync(fd);
+  } catch {
+    return;
+  }
   p.octets = taille;
   const lignes = (p.reste + tampon.toString("utf8")).split("\n");
   p.reste = lignes.pop();
@@ -124,6 +128,7 @@ const FICHIERS = {
 const clients = new Set();
 
 createServer((req, res) => {
+  if (!hoteAutorise(req.headers.host, PORT)) return res.writeHead(403).end();
   const url = req.url.split("?")[0];
   if (FICHIERS[url]) {
     const [nom, type] = FICHIERS[url];

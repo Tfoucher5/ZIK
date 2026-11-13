@@ -1,5 +1,6 @@
 // Lit les journaux de Claude Code (~/.claude/projects) et en tire l'état de l'équipe d'agents.
 
+// Tarifs publics de l'API Anthropic en $ par million de tokens (entrée, sortie, lecture de cache), relevés le 13/11/2026.
 const TARIFS = [
   ["fable-5-2", 8, 40, 0.2],
   ["fable-5", 10, 50, 1],
@@ -16,7 +17,9 @@ const TARIFS = [
 ];
 
 export function tarif(modele = "") {
-  const t = TARIFS.find(([cle]) => modele.includes(cle)) ?? TARIFS[4];
+  const t =
+    TARIFS.find(([cle]) => modele.includes(cle)) ??
+    TARIFS.find(([cle]) => cle === "opus-5-5");
   return { entree: t[1], sortie: t[2], lecture: t[3] };
 }
 
@@ -41,6 +44,10 @@ function tokens(u) {
     (u.cache_read_input_tokens ?? 0) +
     (u.cache_creation_input_tokens ?? 0)
   );
+}
+
+export function hoteAutorise(hote, port) {
+  return hote === `localhost:${port}` || hote === `127.0.0.1:${port}`;
 }
 
 export function jour(date) {
