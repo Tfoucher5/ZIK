@@ -22,4 +22,4 @@ Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque ent
 
 **Critère d'arrêt** : on ne rouvre l'abonnement « Maison » que si le pass dépasse 10 ventes par mois pendant 2 mois (à partir du 14/01/2027), sans qu'aucun mensuel ne résilie. La playlist des invités attend la phase 3 de fiabilité et un plan de l'architecte sans appel YouTube pendant la partie.
 
-**Décision de Théo** : en attente.
+**Décision de Théo** (13/11) : rien pour l'instant. On suit le plan en cours, qui a déjà sa liste de tâches. La question revient dans 2 mois.

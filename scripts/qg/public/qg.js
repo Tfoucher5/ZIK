@@ -1,4 +1,4 @@
-import { Scene3D } from "/scene.js";
+import { Scene3D } from "./scene.js";
 
 const $ = (id) => document.getElementById(id);
 const nombre = (n) =>
@@ -63,7 +63,7 @@ function activite() {
   for (const [id, n] of nb)
     if (n > 1 && id !== "renforts") a.set(id, `×${n} · ${a.get(id)}`);
   if (a.size) a.set("theo", "supervise");
-  return a;
+  return { a, nb };
 }
 
 function compteurs(actifs) {
@@ -81,6 +81,7 @@ function compteurs(actifs) {
       ),
   );
   $("board").hidden = enSeance.length < 3;
+  return enSeance.length >= 3 ? enSeance : [];
 }
 
 function listes() {
@@ -141,9 +142,8 @@ function fiche() {
 }
 
 function rafraichir() {
-  const actifs = activite();
-  scene.maj(actifs);
-  compteurs(actifs);
+  const { a, nb } = activite();
+  scene.maj(a, nb, compteurs(a));
   listes();
   fiche();
 }
