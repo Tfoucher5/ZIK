@@ -1,4 +1,6 @@
 <script>
+  import QrScanner from './QrScanner.svelte';
+
   let {
     codeInput = $bindable(''),
     usernameInput = $bindable(''),
@@ -43,6 +45,7 @@
       onkeydown={e => { if (e.key === 'Enter') { if (usernameInput.trim()) onJoin(); else document.getElementById('sp-username')?.focus(); } }}
     >
   </label>
+  <QrScanner onCode={(code) => { codeInput = code; document.getElementById('sp-username')?.focus(); }} />
   <label class="sp-field">
     <span class="sx-kicker">Ton pseudo</span>
     <input
