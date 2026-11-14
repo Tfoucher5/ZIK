@@ -6,6 +6,18 @@
 export const NEWS = [
   {
     date: "2026-11-14",
+    version: "3.31.0",
+    tag: "Amélioration",
+    title: "Scanner le QR de la TV sans quitter la page",
+    summary:
+      "En soirée, rejoins la partie en scannant le QR code de la TV directement depuis la page, sans ouvrir l'appareil photo.",
+    items: [
+      "Sur la page pour rejoindre une soirée, « Scanner le QR code de la TV » ouvre la caméra dans la page et remplit le code tout seul (Chrome sur Android). Sur iPhone, l'appareil photo lit toujours le QR.",
+      "L'écran TV ouvert sur un téléphone ou une petite tablette tient dans l'écran : les boutons passent à la ligne au lieu de déborder.",
+    ],
+  },
+  {
+    date: "2026-11-14",
     version: "3.30.0",
     tag: "Amélioration",
     title: "Une TV plus légère pendant les manches",
