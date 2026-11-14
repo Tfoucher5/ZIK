@@ -17,17 +17,20 @@ export async function loadSalonPlaylists(sb, userId) {
   if (userId) sharedQuery = sharedQuery.neq("owner_id", userId);
   sharedQuery = sharedQuery.order("name");
 
-  const [{ data: mine }, { data: shared }] = await Promise.all([
-    userId
-      ? sb
-          .schema("catalog")
-          .from("custom_playlists")
-          .select("id, name, emoji, track_count, is_official")
-          .eq("owner_id", userId)
-          .order("created_at", { ascending: false })
-      : { data: [] },
-    sharedQuery,
-  ]);
+  const [{ data: mine, error: errMine }, { data: shared, error }] =
+    await Promise.all([
+      userId
+        ? sb
+            .schema("catalog")
+            .from("custom_playlists")
+            .select("id, name, emoji, track_count, is_official")
+            .eq("owner_id", userId)
+            .order("created_at", { ascending: false })
+        : { data: [] },
+      sharedQuery,
+    ]);
+  // Sans ce throw, une panne réseau donnait une liste vide sans explication
+  if (error || errMine) throw error ?? errMine;
 
   const toItem = (p, group) => ({
     id: p.id,

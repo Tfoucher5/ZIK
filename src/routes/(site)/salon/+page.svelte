@@ -44,6 +44,7 @@
   let autoPicked   = $state(false);
   let creating     = $state(false);
   let error        = $state('');
+  let playlistsState = $state('loading');
 
   let totalTrackCount = $derived(
     allPlaylists
@@ -70,9 +71,11 @@
 
   async function loadPlaylists() {
     fetchPro(sb, user?.id).then((r) => (proRow = r)).catch(() => {});
+    if (playlistsState === 'error') playlistsState = 'loading';
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
       allPlaylists = flat;
+      playlistsState = 'ok';
       // ?playlist=id1,id2 : lien depuis une page /blind-test/<thème>
       const wanted = (new URLSearchParams(window.location.search).get('playlist') ?? '')
         .split(',')
@@ -83,13 +86,13 @@
         autoPicked = true;
       }
     } catch {
-      error = 'Impossible de charger les playlists.';
+      playlistsState = 'error';
     }
   }
 
   async function createSalon() {
     error = '';
-    if (selectedIds.length === 0) { error = 'Choisis au moins une playlist.'; return; }
+    if (selectedIds.length === 0) { error = 'Choisissez au moins une playlist.'; return; }
     creating = true;
     try {
       const { data: { session } } = await sb.auth.getSession();
@@ -104,12 +107,13 @@
           settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials },
         }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'Erreur création salon');
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "La soirée n'a pas pu être créée. Réessayez dans un instant.");
       saveSalonKey(d.code, d.key);
       window.location.href = `/salon/host?code=${d.code}`;
     } catch (e) {
-      error = e.message;
+      // fetch rejette en TypeError quand le réseau coupe : jamais de message brut du navigateur
+      error = e instanceof TypeError ? 'La connexion a coupé. Réessayez.' : e.message;
       creating = false;
     }
   }
@@ -157,6 +161,9 @@
     <p class="st-loading">Chargement…</p>
   {:else}
     <SetupBlock letter="A" title="La musique">
+      {#if playlistsState === 'error'}
+        <p class="st-load-err" role="alert">Les playlists n'ont pas pu être chargées. <button onclick={loadPlaylists}>Réessayer</button></p>
+      {/if}
       <div><PlaylistPicker playlists={allPlaylists} bind:selectedIds bind:autoPicked onLogin={user ? null : () => openAuth('register')} /></div>
     </SetupBlock>
 
@@ -176,6 +183,7 @@
 {#if authReady}
   <SetupBar
     selectedCount={selectedIds.length} {totalTrackCount} {maxRounds} {error} {creating}
+    loading={playlistsState === 'loading'}
     onCreate={createSalon}
   />
 {/if}
@@ -192,6 +200,17 @@
   }
 
   .st-loading { padding: 40px 0; color: var(--mid); }
+  .st-load-err { margin: 0 0 12px; color: var(--danger); }
+  .st-load-err button {
+    min-height: 44px;
+    margin-left: 8px;
+    padding: 0 14px;
+    border: 1px solid currentColor;
+    background: none;
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
 
   @media (max-width: 760px) {
     .st { padding: 16px 16px 150px; }
