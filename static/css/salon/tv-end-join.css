@@ -58,3 +58,17 @@
     font-size: 1.75rem;
   }
 }
+
+/* TV ouverte sur un téléphone ou une petite tablette : tout passe en une colonne */
+@media (max-width: 1000px) {
+  .sh-over-mid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sh-over-join {
+    flex-wrap: wrap;
+  }
+  .sh-over-join .sh-code b {
+    width: 34px;
+    font-size: 1.4rem;
+  }
+}
