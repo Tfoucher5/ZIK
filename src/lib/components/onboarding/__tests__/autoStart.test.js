@@ -8,6 +8,8 @@ describe("démarrage du tutoriel du jeu", () => {
     vi.stubGlobal("localStorage", { getItem: () => null });
     expect(shouldAutoStart("/")).toBe(false);
     expect(shouldAutoStart("/soiree")).toBe(false);
+    expect(shouldAutoStart("/pro")).toBe(false);
+    expect(shouldAutoStart("/vs/kahoot")).toBe(false);
     expect(shouldAutoStart("/jouer")).toBe(true);
   });
 });
