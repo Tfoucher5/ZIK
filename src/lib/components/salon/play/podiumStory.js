@@ -81,7 +81,7 @@ export async function drawStory(canvas, { podium, mine }) {
   if (mine) {
     ctx.fillStyle = "#fafafa";
     fit(ctx, mine, X1 - X0, 76, 900, COND);
-    ctx.fillText(mine, X0, 480);
+    ctx.fillText(mine, X0, 480, X1 - X0);
   }
 
   // Marches : 2e à gauche, 1re au centre, 3e à droite
@@ -106,7 +106,7 @@ export async function drawStory(canvas, { podium, mine }) {
     ctx.fillText(String(s.rank), s.x + w / 2, base - s.h + 170);
     ctx.fillStyle = color;
     fit(ctx, e.name, w - 16, 64, 900, COND);
-    ctx.fillText(e.name, s.x + w / 2, base - s.h - 70);
+    ctx.fillText(e.name, s.x + w / 2, base - s.h - 70, w - 16);
     ctx.fillStyle = "#fafafa";
     ctx.font = `600 36px ${MONO}`;
     ctx.fillText(`${e.score} pts`, s.x + w / 2, base - s.h - 24);

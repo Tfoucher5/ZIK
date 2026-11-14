@@ -42,7 +42,7 @@
     storyFile = null;
     if (!d?.podium.length) return;
     let off = false;
-    prepareStory(d).then((f) => { if (!off) storyFile = f; }).catch(() => { if (!off) shareState = 'error'; });
+    prepareStory(d).then((f) => { if (!off) storyFile = f; }).catch(() => { if (!off) shareState = 'unavailable'; });
     return () => (off = true);
   });
   async function partager() {
@@ -126,7 +126,8 @@
 </ol>
 
 {#if phase === 'gameover'}
-  {#if story?.podium.length}
+  <!-- Image impossible à préparer sur ce téléphone : pas de bouton qui ne mène à rien -->
+  {#if story?.podium.length && shareState !== 'unavailable'}
     <button class="sx-btn sp-share" onclick={partager} disabled={!storyFile}>
       {shareState === 'downloaded' ? 'Image enregistrée' : shareState === 'error' ? "Le partage n'a pas marché, réessaie" : storyFile ? 'Partager le podium en story' : "Préparation de l'image…"}
     </button>

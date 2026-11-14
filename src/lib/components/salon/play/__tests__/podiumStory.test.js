@@ -48,3 +48,15 @@ describe("story du podium", () => {
     });
   });
 });
+
+describe("couleurs d'équipe de la story", () => {
+  it("les mêmes que celles de la TV (--q0 à --q15)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { teamHex } = await import("../../../../data/salonOptions.js");
+    const css = readFileSync("static/css/salon/shared.css", "utf8");
+    for (let i = 0; i < 16; i++) {
+      const m = css.match(new RegExp(`--q${i}: *(#[0-9a-f]{6})`, "i"));
+      expect(teamHex(i).toLowerCase(), `--q${i}`).toBe(m[1].toLowerCase());
+    }
+  });
+});
