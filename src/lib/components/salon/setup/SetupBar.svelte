@@ -1,17 +1,19 @@
 <script>
-  let { selectedCount, totalTrackCount, maxRounds, error, creating, onCreate } = $props();
+  let { selectedCount, totalTrackCount, maxRounds, error, creating, loading = false, onCreate } = $props();
 </script>
 
 <div class="st-bar">
   <div class="st-bar-in">
     <p class="st-recap">
+      {#if loading}Chargement des playlists…{:else}
       <b>{selectedCount}</b> playlist{selectedCount > 1 ? 's' : ''}
       <i>·</i><b>{totalTrackCount}</b> titres
       <i>·</i><b>{maxRounds}</b> manches
+      {/if}
     </p>
-    {#if error}<p class="st-error">{error}</p>{/if}
+    {#if error}<p class="st-error" role="alert">{error}</p>{/if}
     <button class="st-go" onclick={onCreate} disabled={creating || selectedCount === 0}>
-      {creating ? 'Ouverture…' : 'Ouvrir le salon'}
+      {creating ? 'Ouverture…' : "Ouvrir l'écran TV"}
     </button>
   </div>
 </div>
