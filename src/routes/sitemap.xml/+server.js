@@ -12,6 +12,7 @@ const SITE = "https://www.zik-music.fr";
    une de ces pages. */
 const STATIC_PAGES = [
   { loc: "/", changefreq: "daily", priority: "1.0" },
+  { loc: "/jouer", changefreq: "daily", priority: "0.9" },
   { loc: "/rooms", changefreq: "hourly", priority: "0.9" },
   { loc: "/zikle", changefreq: "daily", priority: "0.9" },
   { loc: "/zikle/archives", changefreq: "daily", priority: "0.6" },

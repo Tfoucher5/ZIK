@@ -22,6 +22,7 @@ export const FAQ = [
   },
   {
     q: "Comment fonctionne le Mode Salon ?",
+    soiree: true,
     a: "En Mode Salon, un hôte lance une session depuis son ordinateur ou sa TV. Les invités rejoignent depuis leur smartphone en entrant un code ou en scannant un QR code. La musique est diffusée uniquement depuis l'écran de l'hôte.",
   },
   {
@@ -31,7 +32,7 @@ export const FAQ = [
   },
   {
     q: "ZIK fonctionne-t-il sur mobile ?",
-    a: "Oui. ZIK est conçu mobile-first. Le Mode Salon est particulièrement adapté aux smartphones pour les joueurs invités.",
+    a: "Oui. ZIK est conçu mobile-first : on joue depuis le navigateur du téléphone, sans appli.",
   },
   {
     q: "C'est quoi Zikle ?",
@@ -46,3 +47,6 @@ export const FAQ = [
     a: "ZIK propose des succès à débloquer (séries de victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur.",
   },
 ];
+
+// FAQ de /jouer : sans les questions de soirée
+export const GAME_FAQ = FAQ.filter((f) => !f.soiree);
