@@ -33,7 +33,7 @@
       <h2 id="door-soiree-t" class="door-kicker">Animer une soirée</h2>
       <p class="door-txt">La TV diffuse la musique. Chaque téléphone sert de buzzer. Au bar, au camping ou à la maison.</p>
       <a class="door-link" href="/salon">Créer une soirée <span aria-hidden="true">→</span></a>
-      <a class="door-alt" href="/soiree">Comment ça marche ?</a>
+      <a class="door-alt" href="/soiree">Comment marche le blind test en soirée ?</a>
     </div>
     <span class="door-word" aria-hidden="true">Animer</span>
   </section>

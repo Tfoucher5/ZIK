@@ -16,7 +16,7 @@ Autres frictions : le tutoriel du jeu s'ouvre sur `/pro` et `/vs/*` ; sur `/salo
 
 ## Décisions
 
-- **Porte soirée de `/`** : toute la carte et le bouton « Créer une soirée » mènent à `/salon`. Lien secondaire « Comment ça marche ? » vers `/soiree`. Texte : « La TV diffuse la musique. Chaque téléphone sert de buzzer. Au bar, au camping ou à la maison. »
+- **Porte soirée de `/`** : toute la carte et le bouton « Créer une soirée » mènent à `/salon`. Lien secondaire « Comment marche le blind test en soirée ? » vers `/soiree` (texte de lien descriptif pour le SEO de la vitrine). Texte : « La TV diffuse la musique. Chaque téléphone sert de buzzer. Au bar, au camping ou à la maison. »
 - **Bandeau de reprise** : « Reprendre l'écran TV de votre soirée XXXXXX » vers `/salon/host?code=`. Remplace le choix « régie » de la fiche deux univers.
 - **`/salon`** :
   - surtitre « Créer une soirée », retour « ← Comment ça marche » ;
