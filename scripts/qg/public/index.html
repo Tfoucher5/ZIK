@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QG ZIK</title>
+    <link rel="stylesheet" href="/qg.css" />
+    <link rel="stylesheet" href="/reglages.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="scene"></div>
+    <header class="barre">
+      <h1>QG <span>ZIK</span></h1>
+      <span id="liaison" class="liaison">connexion…</span>
+      <details class="reglages">
+        <summary>⚙ Réglages</summary>
+        <div class="menu">
+          <label
+            ><input type="checkbox" data-bascule="sans-pieces" checked /> Noms
+            des salles et espaces</label
+          >
+          <label
+            ><input type="checkbox" data-bascule="sans-agents" checked /> Noms
+            des agents</label
+          >
+          <label
+            ><input type="checkbox" data-bascule="sans-activite" checked /> Ce
+            que font les agents</label
+          >
+          <label
+            ><input type="checkbox" data-bascule="sans-panneaux" checked />
+            Panneaux d'infos</label
+          >
+        </div>
+      </details>
+    </header>
+    <section class="compteurs panneau-ui">
+      <div>
+        <small>Coût aujourd'hui</small><strong id="c-cout">–</strong
+        ><em>équivalent API</em>
+      </div>
+      <div>
+        <small>Tokens aujourd'hui</small><strong id="c-tokens">–</strong>
+      </div>
+      <div>
+        <small>Agents au travail</small><strong id="c-agents">–</strong>
+      </div>
+      <div>
+        <small>Sessions actives</small><strong id="c-sessions">–</strong>
+      </div>
+    </section>
+    <aside class="panneau panneau-ui flux">
+      <h2>
+        <button type="button" class="plier" aria-expanded="true">
+          En direct
+        </button>
+      </h2>
+      <ol id="flux"></ol>
+    </aside>
+    <aside class="panneau panneau-ui sessions">
+      <h2>
+        <button type="button" class="plier" aria-expanded="true">
+          Sessions
+        </button>
+      </h2>
+      <ul id="sessions"></ul>
+    </aside>
+    <div id="board" class="board" hidden>Board en séance</div>
+    <div id="fiche" class="fiche" hidden></div>
+    <script type="module" src="/qg.js"></script>
+  </body>
+</html>

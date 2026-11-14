@@ -1,0 +1,61 @@
+/* Menu Réglages de l'affichage et sous-titres des pièces. */
+.reglages {
+  position: relative;
+  margin-left: 8px;
+  font-size: 12px;
+}
+.reglages summary,
+.plier {
+  font: inherit;
+  color: var(--texte);
+  cursor: pointer;
+}
+.reglages summary {
+  list-style: none;
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.reglages summary::-webkit-details-marker {
+  display: none;
+}
+.reglages .menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  padding: 6px 12px;
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+}
+.reglages label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.reglages input {
+  accent-color: #ff00ff;
+}
+.zone small {
+  display: block;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+  text-align: center;
+}
+@media (max-width: 900px) {
+  .reglages {
+    margin-left: 0;
+  }
+  .reglages .menu {
+    left: auto;
+    right: 0;
+  }
+}

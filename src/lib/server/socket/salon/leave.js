@@ -14,6 +14,7 @@ const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 const HOST_IDLE_GRACE = 2 * 60 * 60 * 1000; // 2 h
 // Un téléphone verrouillé le temps d'un passage au comptoir garde sa place
 const PLAYER_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
+export const CONTROL_LEAVE_DELAY = 5000;
 
 // Joueur hors ligne : sa place l'attend le temps du délai de grâce
 export function scheduleDeparture(salon, username, io) {
@@ -40,6 +41,14 @@ export function registerLeave(socket, io) {
     if (socket.salonRole === "screen" || socket.salonRole === "control") {
       // Un écran de moins : la régie doit le voir tout de suite.
       if (socket.salonRole === "screen") broadcastScreens(code, io);
+      // Régie rechargée : le badge de la TV ne clignote pas
+      else {
+        clearTimeout(salon._ctrlLeaveTimer);
+        salon._ctrlLeaveTimer = setTimeout(
+          () => broadcastScreens(code, io),
+          CONTROL_LEAVE_DELAY,
+        );
+      }
       // Le salon ferme quand plus aucun écran ni régie n'est connecté
       const rooms = io.sockets.adapter.rooms;
       const left =

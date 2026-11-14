@@ -12,6 +12,7 @@
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
   let { data } = $props();
+  let calm = $state(false);
   const h = new SalonHost(createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey));
 
   onMount(() => h.mount());
@@ -19,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>ZIK Salon - Hôte {h.code}</title>
+  <title>ZIK Soirée - Hôte {h.code}</title>
   <meta name="robots" content="noindex, nofollow">
 </svelte:head>
 
@@ -31,9 +32,9 @@
     <a class="sx-btn sx-btn-primary" href="/salon/play?code={h.code}">Rejoindre comme joueur</a>
   </main>
 {:else}
-<div class="sh">
+<div class="sh" class:sh-calm={calm}>
   <div>
-    <HostTopBar {h} />
+    <HostTopBar {h} bind:calm />
     <NoticeBanner message={h.adminNotice} tv />
   </div>
 
@@ -57,7 +58,7 @@
       onNewSalon={h.closeSalon}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
-      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} mediaCheck={h.mediaCheck}
+      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} mediaCheck={h.mediaCheck} mediaSolo={!h.controls}
       onJudge={(correct) => h.socket?.emit('salon_buzz_judge', { correct })}
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />

@@ -12,7 +12,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/__tests__/**/*.test.js"],
+    include: [
+      "src/**/__tests__/**/*.test.js",
+      "scripts/**/__tests__/**/*.test.js",
+    ],
     // Seuils 1 point sous le mesuré du 10/11 : on les monte, on ne les baisse jamais
     coverage: {
       include: ["src/lib/server/socket/**", "src/lib/server/services/**"],
