@@ -237,3 +237,7 @@ body {
     font-size: 10px;
   }
 }
+.zone.piece {
+  padding: 2px 7px;
+  font-size: 10px;
+}

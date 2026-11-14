@@ -1,6 +1,6 @@
 # QG : l'équipe d'agents en direct
 
-Tableau de bord 3D local : les bureaux de ZIK (direction, salle du board, un open space par service, café), avec Théo, le CEO, les chefs, leurs équipes et le board en personnages qui vivent au rythme du vrai travail. Tokens et coût du jour.
+Tableau de bord 3D local : un plateau de bureaux à l'américaine (baies vitrées, bureaux fermés du CEO, de Théo et de l'avocat, salle du board, un open space en cubicles et une salle de réunion par service, cuisine, accueil, salon, ascenseurs). Théo, le CEO, les chefs, leurs équipes et le board y vivent au rythme du vrai travail. Tokens et coût du jour.
 
 ## Lancer
 
@@ -20,8 +20,10 @@ L'organigramme vient du tableau « L'entreprise d'agents » du `CLAUDE.md` : un 
 
 ## Lire l'écran
 
-- Un agent au travail est assis à son poste, tape, son écran s'allume ; sa bulle dit ce qu'il fait. Un agent au repos se promène : café, canapé, couloir.
-- Un chef qui pilote un agent va se tenir à côté de lui. Un agent lancé plusieurs fois arrive en copies sur les postes libres de son service ; les agents hors organigramme arrivent aux « Renforts » et repartent à la fin.
-- « Board en séance » (au moins 3 membres au travail ensemble) : ils rejoignent la salle du board et l'écran s'allume.
+- Un agent au travail est assis à son poste, tape, son écran s'allume ; sa bulle dit ce qu'il fait. Au repos, il va à la cuisine, au salon ou à une fenêtre. Les trajets contournent murs et meubles et passent par les portes.
+- Un chef qui pilote un agent va se tenir à côté de lui. Un agent lancé plusieurs fois arrive en copies sur les postes libres de son service ; les agents hors organigramme sortent de l'ascenseur, s'installent aux « Renforts » et repartent à la fin.
+- Brainstorm : dès que deux agents de réflexion d'un même service travaillent (pas dev, test-writer, reviewer, recette, incident), ils se retrouvent dans la salle de réunion du service, le chef au tableau.
+- « Board en séance » (au moins 3 membres au travail ensemble) : ils rejoignent la salle du board, le CEO préside debout et l'écran s'allume.
+- La lumière suit l'heure du PC : jour ou nuit.
 - Glisser pour tourner, molette pour zoomer, cliquer sur un personnage : ses missions, tokens et coût.
 - Le coût est un **équivalent API** (tarifs publics par modèle, cache compris) : avec un abonnement Claude, ce n'est pas ce que tu paies, mais ça mesure ce que chaque équipe consomme.
