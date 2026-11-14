@@ -3,6 +3,9 @@
   import ResumeBand from '$lib/components/accueil/ResumeBand.svelte';
   import CodeStub from '$lib/components/accueil/CodeStub.svelte';
   import Doors from '$lib/components/accueil/Doors.svelte';
+  import AccueilGuide from '$lib/components/accueil/AccueilGuide.svelte';
+  import SoireeFaq from '$lib/components/soiree/SoireeFaq.svelte';
+  import { FAQ } from '$lib/components/accueil/guide.js';
 </script>
 
 <HomeSeo />
@@ -14,6 +17,8 @@
     <div class="ag-code"><CodeStub /></div>
   </header>
   <Doors />
+  <AccueilGuide />
+  <SoireeFaq items={FAQ} />
 </main>
 
 <style>

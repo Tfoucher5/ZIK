@@ -1,11 +1,13 @@
 <script>
   import { FAQ } from './soireeContent.js';
+
+  let { items = FAQ } = $props();
 </script>
 
 <section class="sf" id="faq">
   <h2>Questions fréquentes</h2>
   <div>
-    {#each FAQ as f (f.q)}
+    {#each items as f (f.q)}
       <details>
         <summary>{f.q}</summary>
         <p>{f.a}</p>

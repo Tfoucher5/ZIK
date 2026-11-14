@@ -22,7 +22,7 @@
       <h2 id="door-jeu-t" class="door-kicker">Jouer en ligne</h2>
       <p class="door-txt">Affronte d'autres joueurs dans les rooms ou avec tes playlists Deezer. Le Zikle du jour, les classements et tes succès t'attendent.</p>
       {#if online > 0}<p class="door-live">{online} {online > 1 ? 'joueurs' : 'joueur'} en ligne</p>{/if}
-      <a class="door-link" href="/jouer">Entrer dans le jeu <span aria-hidden="true">→</span></a>
+      <a class="door-link" href="/jouer">Jouer au blind test en ligne <span aria-hidden="true">→</span></a>
     </div>
     <span class="door-word" aria-hidden="true">Jouer</span>
   </section>
@@ -33,7 +33,7 @@
       <h2 id="door-soiree-t" class="door-kicker">Animer une soirée</h2>
       <p class="door-txt">La TV diffuse la musique, chaque téléphone sert de manette. Pour un lieu qui reçoit du public, ou une soirée chez soi.</p>
       <p class="door-live">Bar, camping, entreprise, association</p>
-      <a class="door-link" href="/soiree">Découvrir ZIK Soirée <span aria-hidden="true">→</span></a>
+      <a class="door-link" href="/soiree">Blind test en soirée sur la TV <span aria-hidden="true">→</span></a>
       <a class="door-alt" href="/salon">Déjà organisateur ? Créer une soirée</a>
     </div>
     <span class="door-word" aria-hidden="true">Animer</span>
