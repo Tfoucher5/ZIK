@@ -28,7 +28,7 @@
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--mid);
     margin-bottom: 20px;
   }
   .pq-list { list-style: none; padding: 0; margin: 0; }

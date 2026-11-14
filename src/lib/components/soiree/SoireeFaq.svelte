@@ -48,7 +48,7 @@
   summary::after {
     content: '+';
     font-family: 'JetBrains Mono', monospace;
-    color: var(--accent);
+    color: var(--mid);
   }
   details[open] summary::after { content: '−'; }
   details p { padding: 0 0 18px; color: var(--mid); line-height: 1.6; max-width: 60ch; }

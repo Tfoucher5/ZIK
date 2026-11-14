@@ -17,7 +17,7 @@ export const DEROULE = [
   {
     time: "20:00",
     title: "Vos invités rejoignent",
-    text: "Ils scannent le QR code ou tapent le code, puis choisissent un pseudo et leur équipe. Rien à télécharger, aucun compte demandé.",
+    text: "Ils scannent le QR code ou tapent le code, puis choisissent un pseudo, et leur équipe si la partie se joue en équipes. Rien à télécharger, aucun compte demandé.",
   },
   {
     time: "20:10",
@@ -54,7 +54,7 @@ export const POUR_QUI = [
   ],
 ];
 
-export const PRIX_SOIREE = PLANS[0].price;
+export const PRIX_SOIREE = PLANS.find((p) => p.id === "night").price;
 
 export const FAQ = [
   {

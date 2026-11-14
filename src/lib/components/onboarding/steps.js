@@ -26,7 +26,7 @@ export const STEPS = [
   {
     path: "/",
     mode: "look",
-    target: [".hero-salon .hs-screen", ".hero-salon"],
+    target: [".hero-salon .mtv", ".hero-salon"],
     kicker: "Mode Salon · 1 / 4",
     title: "Ta TV devient un plateau de jeu",
     text: "Lance un salon sur l'ordi branché à la TV : un QR code et un code s'affichent. Tes invités scannent, tapent un pseudo, et ils sont dans la partie. Aucune appli, aucun compte pour eux.",

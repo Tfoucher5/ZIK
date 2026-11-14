@@ -26,12 +26,12 @@
   <div class="sh-scene" aria-hidden="true">
     <div class="tv">
       <div class="tv-screen">
-        <p class="tv-kicker">Rejoignez la partie</p>
+        <p class="tv-kicker">Sortez vos téléphones.</p>
         <div class="tv-row">
           <div class="tv-code">
             <small>zik-music.fr/salon/play</small>
             <div class="tv-cases">{#each CODE.split('') as c, i (i)}<b>{c}</b>{/each}</div>
-            <small class="tv-count">14 joueurs connectés</small>
+            <small class="tv-count">7 joueurs connectés</small>
           </div>
           <div class="tv-qr">{#each QR as on, i (i)}<i class:on></i>{/each}</div>
         </div>
@@ -65,7 +65,7 @@
     font-size: 0.72rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--mid);
     margin-bottom: 18px;
   }
   h1 {
@@ -154,7 +154,7 @@
     font-size: clamp(0.8rem, 1.4vw, 1.2rem);
     font-weight: 700;
   }
-  .tv-count { color: #ff4fff !important; }
+  .tv-code .tv-count { color: #fff; }
   .tv-qr {
     flex-shrink: 0;
     display: grid;
@@ -163,7 +163,7 @@
     aspect-ratio: 1;
     padding: 6px;
     background: #fff;
-    box-shadow: 5px 5px 0 #ff00ff;
+    box-shadow: 5px 5px 0 rgb(255 255 255 / 0.3);
   }
   .tv-qr .on { background: #000; }
   .tv-foot { height: 6px; }
@@ -204,7 +204,7 @@
     height: 0.9em;
     margin-left: 2px;
     vertical-align: -1px;
-    background: var(--accent);
+    background: var(--text);
     animation: caret 1s steps(1) infinite;
   }
   @keyframes caret { 50% { opacity: 0; } }
@@ -212,8 +212,8 @@
     margin-top: 10px;
     padding: 8px;
     text-align: center;
-    background: var(--accent);
-    color: #fff;
+    background: var(--text);
+    color: var(--bg);
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 800;
     letter-spacing: 0.08em;

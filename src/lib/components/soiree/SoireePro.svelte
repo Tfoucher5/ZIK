@@ -47,7 +47,7 @@
     line-height: 0.95;
     text-transform: uppercase;
   }
-  .sp-big b { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent); }
+  .sp-big b { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
   .sp-small { color: var(--mid); }
   .sp-pro h2 {
     font-family: 'Barlow Condensed', sans-serif;
@@ -78,7 +78,7 @@
     top: 15px;
     width: 10px;
     height: 2px;
-    background: var(--accent);
+    background: var(--mid);
   }
   .sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 24px; }
   .sp-price { font-family: 'JetBrains Mono', monospace; color: var(--mid); font-size: 0.85rem; }

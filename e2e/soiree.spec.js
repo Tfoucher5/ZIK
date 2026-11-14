@@ -5,11 +5,11 @@ for (const width of [1440, 390]) {
   test(`/soiree tient en ${width} px et mène à la création d'un salon`, async ({
     page,
   }) => {
-    await page.addInitScript(() =>
-      localStorage.setItem("zik_onboarding_done", "1"),
-    );
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/soiree");
+    // Premier passage : le tutoriel du jeu ne s'ouvre pas sur la vitrine
+    await page.waitForTimeout(1500);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "La TV diffuse",
     );

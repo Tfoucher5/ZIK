@@ -8,13 +8,13 @@
     ['Julie', 0], ['Max', 1], ['Inès', 0], ['Tom', 1], ['Léa', 0], ['Sam', 1], ['Nora', 0],
   ];
   const PODIUM = [
-    ['Les Rouges', 2840, 2],
-    ['Les Bleus', 3120, 1],
-    ['Les Verts', 2410, 3],
+    ['Max', 2840, 2],
+    ['Julie', 3120, 1],
+    ['Inès', 2410, 3],
   ];
 </script>
 
-<section class="dr" id="comment">
+<section class="dr">
   <h2 class="dr-title">Une soirée,<br />heure par heure</h2>
 
   <ol class="dr-list">
@@ -28,7 +28,7 @@
         <div class="dr-visual" aria-hidden="true">
           {#if i === 0}
             <div class="v-bar">
-              <b>ZIK.</b>
+              <b>ZIK Soirée</b>
               <span class="v-code">7F3K2Q</span>
               <span class="v-sep"></span>
               <span>Manche 1/10</span>
@@ -136,7 +136,7 @@
   .v-join li.t1 { border-left-color: #5bc0eb; }
 
   /* 20:10 : la manche */
-  .v-round { max-width: 380px; border: 2px solid var(--text); box-shadow: 8px 8px 0 var(--accent); }
+  .v-round { max-width: 380px; border: 2px solid var(--text); box-shadow: 8px 8px 0 var(--text); }
 
   /* 22:30 : le podium */
   .v-podium { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 6px; max-width: 420px; }
