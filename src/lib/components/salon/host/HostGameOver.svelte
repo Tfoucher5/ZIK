@@ -115,7 +115,7 @@
     <aside class="sh-over-join" aria-label="Rejoindre la prochaine partie">
       <div class="sh-qr"><img src={salonQrUrl(code, 320)} alt="QR code pour rejoindre" width="320" height="320"></div>
       <div>
-        <p class="sx-kicker">Pour la prochaine partie</p>
+        <p class="sx-kicker">Pas encore dans la partie ?</p>
         <p class="sh-over-join-title">Scannez pour jouer</p>
         <div class="sh-code" aria-label="Code {code}">
           {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
