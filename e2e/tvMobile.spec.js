@@ -26,7 +26,7 @@ test("TV en 390 px sans débordement", async ({ browser, request }) => {
   expect(depassent).toEqual([]);
   await expect(tv.getByRole("link", { name: "Régie" })).toBeInViewport();
   await expect(tv.locator(".sh-lobby .sx-kicker")).toBeInViewport();
-  await tv.locator(".sh-qr").scrollIntoViewIfNeeded();
-  await expect(tv.locator(".sh-qr")).toBeInViewport({ ratio: 1 });
+  await tv.locator(".sh-lobby .sh-qr").scrollIntoViewIfNeeded();
+  await expect(tv.locator(".sh-lobby .sh-qr")).toBeInViewport({ ratio: 1 });
   await ctx.close();
 });
