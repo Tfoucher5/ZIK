@@ -87,7 +87,7 @@ export const jsonLdFaq = JSON.stringify({
       name: "Qu'est-ce que ZIK Soirée ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "ZIK Soirée est un blind test sur grand écran conçu pour les soirées, événements et salles de classe. L'hôte projette un écran de contrôle sur TV, et chaque joueur participe sur son smartphone via un QR code ou un code court. Disponible en mode texte libre ou QCM avec 4 boutons colorés.",
+        text: "ZIK Soirée est un blind test sur grand écran conçu pour les soirées, événements et salles de classe. L'hôte projette un écran de contrôle sur TV, et chaque joueur participe sur son smartphone via un QR code ou un code de 6 caractères. Disponible en mode texte libre ou QCM avec 4 boutons colorés.",
       },
     },
     {

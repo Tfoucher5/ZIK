@@ -31,7 +31,7 @@
 
   <h3>Scoring QCM</h3>
   <p>
-    En mode QCM, le scoring est <strong>Kahoot-style</strong> : plus vous répondez vite, plus vous gagnez de points. La manche se termine automatiquement dès que tous les joueurs ont répondu.
+    En mode QCM, <strong>la vitesse compte</strong> : plus vous répondez vite, plus vous gagnez de points. La manche se termine automatiquement dès que tous les joueurs ont répondu.
   </p>
   <DocTable {...qcmKahoot} />
 

@@ -32,7 +32,7 @@ export const basePoints = {
     [
       "QCM ZIK Soirée (artiste + titre)",
       "200 – 1 000 pts",
-      "Selon la vitesse de réponse (Kahoot-style)",
+      "Selon la vitesse de réponse",
     ],
   ],
 };

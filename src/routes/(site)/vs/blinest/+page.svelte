@@ -18,7 +18,7 @@
       { p: 'ZIK est un blind test musical multijoueur en temps réel. Il se distingue par :' },
       { ul: [
         "L'import de playlists personnalisées depuis Deezer",
-        'Trois modes de jeu : Classique (ELO), QCM (casual), Salon (soirée TV + smartphones)',
+        'Trois modes de jeu : Classique (ELO), QCM (casual), ZIK Soirée (TV + smartphones)',
         'Un classement ELO compétitif persistant pour les joueurs inscrits',
         'La création de rooms publiques et privées avec code partageable',
         "Plusieurs joueurs dans la même partie, en temps réel",
