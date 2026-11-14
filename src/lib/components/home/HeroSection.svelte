@@ -33,6 +33,8 @@
     covers = pool.slice(0, CELLS);
   }
 
+  const SUB_COMMUN = "Le blind test gratuit, sans appli : en soirée sur la TV, ou en ligne contre d'autres joueurs.";
+  const SUB_JEU = 'Rejoins une room, crée la tienne avec tes playlists Deezer, joue au Zikle du jour et grimpe au classement. Gratuit, avec ou sans compte.';
   const toRooms = () => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' });
 
   function fmt(n) {
@@ -88,7 +90,7 @@
       <span class="l3">PROUVE-LE.</span>
     </h1>
     <p class="hero-sub">
-      {#if soiree}Le blind test gratuit, sans appli : en soirée sur la TV, ou en ligne contre d'autres joueurs.{:else}Rejoins une room, crée la tienne avec tes playlists Deezer, joue au Zikle du jour et grimpe au classement. Gratuit, avec ou sans compte.{/if}
+      {soiree ? SUB_COMMUN : SUB_JEU}
       {#if userCount > 0}<br><span class="hero-proof">{fmt(userCount)} joueurs inscrits · {fmt(gamesMonth)} parties ce mois</span>{/if}
     </p>
 

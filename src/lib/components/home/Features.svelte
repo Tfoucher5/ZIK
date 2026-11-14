@@ -1,16 +1,20 @@
 <script>
   import { reveal } from './reveal.js';
+
+  let { soiree = true } = $props();
 </script>
 
 <section class="features" use:reveal>
   <h2 class="feat-title">Tout <em>ZIK</em>, en un coup d'œil</h2>
   <div class="feat-grid">
-    <a href="/salon" class="feat-item">
-      <span class="feat-tag">Grand écran + téléphones</span>
-      <div class="feat-name">Mode Salon</div>
-      <p class="feat-desc">La musique passe sur la TV, chaque invité répond depuis son téléphone. Sans appli, sans compte pour les joueurs.</p>
-      <span class="feat-go">Organiser une soirée →</span>
-    </a>
+    {#if soiree}
+      <a href="/salon" class="feat-item">
+        <span class="feat-tag">Grand écran + téléphones</span>
+        <div class="feat-name">Mode Salon</div>
+        <p class="feat-desc">La musique passe sur la TV, chaque invité répond depuis son téléphone. Sans appli, sans compte pour les joueurs.</p>
+        <span class="feat-go">Organiser une soirée →</span>
+      </a>
+    {/if}
     <a href="/zikle" class="feat-item">
       <span class="feat-tag">Chaque jour · Sans compte</span>
       <div class="feat-name">Zikle</div>

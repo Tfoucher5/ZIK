@@ -24,8 +24,8 @@
 <HeroSection {soiree} online={home.totalOnline} gamesMonth={home.globalStats.gamesMonth} userCount={home.globalStats.users} />
 <TodayStrip challenge={weeklyChallenge} onResume={(room) => home.joinRoom(room.id, room.gameMode)} />
 <RoomsWall {home} />
-<TicketSection {home} />
-{#if soiree}<Features />{/if}
+<TicketSection {home} {soiree} />
+<Features {soiree} />
 <TopPlayers players={data.eloLb ?? []} />
 <NewsTeaser />
 {#if soiree}<Faq />{:else}<Faq items={GAME_FAQ} />{/if}

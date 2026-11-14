@@ -13,6 +13,8 @@
   <meta property="og:title" content="Blind test en ligne gratuit et multijoueur | ZIK" />
   <meta property="og:description" content="Rooms par thème, playlists Deezer, Zikle du jour et classements. Gratuit, sans appli." />
   <meta property="og:url" content="https://www.zik-music.fr/jouer" />
+  <meta name="twitter:title" content="Blind test en ligne gratuit et multijoueur | ZIK" />
+  <meta name="twitter:description" content="Rooms par thème, playlists Deezer, Zikle du jour et classements. Gratuit, sans appli." />
   <JsonLd json={gameJsonLd} />
   <JsonLd json={gameFaqJsonLd} />
 </svelte:head>
