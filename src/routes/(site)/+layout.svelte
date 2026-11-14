@@ -134,7 +134,7 @@
   <meta data-default property="og:type" content="website">
   <meta data-default property="og:locale" content="fr_FR">
   <meta data-default property="og:title" content="ZIK - Blind Test Multijoueur en Ligne Gratuit">
-  <meta data-default property="og:description" content="Blind test multijoueur gratuit en ligne. Import Deezer, classement ELO, Mode Salon. Joue maintenant sans inscription.">
+  <meta data-default property="og:description" content="Blind test multijoueur gratuit en ligne. Import Deezer, classement ELO, ZIK Soirée sur la TV. Joue maintenant sans inscription.">
   <meta data-default property="og:url" content="https://www.zik-music.fr/">
   <meta data-default property="og:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
   <meta data-default property="og:image:width" content="1200">
@@ -147,7 +147,7 @@
   <meta data-default name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta data-default name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
-  {#each ["nav", "nav-menus", "bottom-nav", "controls", "footer", "auth-modal"] as f (f)}<link rel="stylesheet" href="/css/base/{f}.css?v=3.19.0">{/each}
+  {#each ["nav", "nav-menus", "bottom-nav", "controls", "footer", "auth-modal"] as f (f)}<link rel="stylesheet" href="/css/base/{f}.css?v=3.32.0">{/each}
   <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
   <link rel="stylesheet" href="/css/cards.css?v=1">
 </svelte:head>
@@ -187,14 +187,13 @@
 
   <div class="footer-columns">
     <div class="footer-col">
-      <span class="footer-col-head">Jouer</span>
+      <span class="footer-col-head">Jouer en ligne</span>
       <div class="footer-col-links">
         <a href="/rooms">Rooms</a>
         <a href="/playlists">Playlists</a>
         <a href="/classements">Classements</a>
         <a href="/zikle">Zikle</a>
         <a href="/cartes">Cartes musicales</a>
-        <a href="/salon">Mode Salon</a>
         <a href="/docs">Aide et règles du jeu</a>
         <a href="/nouveautes">Nouveautés</a>
       </div>
@@ -221,9 +220,10 @@
     </div>
 
     <div class="footer-col">
-      <span class="footer-col-head">Blind test en soirée</span>
+      <span class="footer-col-head">ZIK Soirée</span>
       <div class="footer-col-links">
-        <a href="/salon">Organiser une soirée</a>
+        <a href="/soiree">Découvrir ZIK Soirée</a>
+        <a href="/salon">Créer une soirée</a>
         <a href="/blind-test/soiree">Soirée entre amis</a>
         <a href="/blind-test/bar">Bar et restaurant</a>
         <a href="/blind-test/camping">Camping</a>

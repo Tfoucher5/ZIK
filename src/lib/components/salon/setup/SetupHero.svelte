@@ -4,7 +4,7 @@
 </header>
 
 <section class="st-hero">
-  <p class="st-kicker">Mode salon</p>
+  <p class="st-kicker">ZIK Soirée</p>
   <h1>Ce soir,<br>c'est <em>blind test.</em></h1>
   <ol class="st-how">
     <li><b>La TV</b> diffuse la musique</li>

@@ -114,49 +114,22 @@ img {
   user-select: none;
 }
 
-/* Mode Salon — tag rectangulaire */
-.nav-salon-btn {
-  display: flex;
+/* Lien discret vers l'autre univers */
+.nav-switch {
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 12px;
-  background: rgb(var(--accent-rgb) / 0.06);
-  border: 1px solid rgb(var(--accent-rgb) / 0.45);
-  border-radius: 0;
+  min-height: 44px;
+  padding: 0 6px;
   font-family: "Barlow Condensed", sans-serif;
-  font-weight: 900;
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
-  transition:
-    background 0.15s,
-    border-color 0.15s;
+  color: var(--mid);
+  transition: color 0.15s;
 }
-.nav-salon-btn:hover {
-  background: rgb(var(--accent-rgb) / 0.12);
-  border-color: var(--accent);
-}
-.nav-salon-btn.active {
-  background: rgb(var(--accent-rgb) / 0.1);
-}
-.nav-salon-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
-  flex-shrink: 0;
-  animation: salon-pulse 2s ease-in-out infinite;
-}
-@keyframes salon-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+.nav-switch:hover {
+  color: var(--text);
 }
 
 /* Dropdown extras */
@@ -261,8 +234,13 @@ img {
   .nav-links {
     display: none;
   }
-  .nav-salon-btn {
+  .nav-create,
+  .ns-long {
     display: none;
+  }
+  .nav-switch {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
   }
   .nav-dd-mobile-only {
     display: block;
