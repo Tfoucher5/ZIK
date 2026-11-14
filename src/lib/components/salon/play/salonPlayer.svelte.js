@@ -122,8 +122,9 @@ export class SalonPlayer {
   checkResume = (urlCode) => {
     try {
       const r = readResume(localStorage, urlCode);
-      this.codeInput = r.code;
-      this.usernameInput = r.username;
+      // Ce que le joueur a déjà tapé pendant le chargement de la page reste
+      this.codeInput = r.code || this.codeInput;
+      this.usernameInput = this.usernameInput || r.username;
       this.resume = r.resume;
     } catch {
       /* stockage indisponible : formulaire classique */
