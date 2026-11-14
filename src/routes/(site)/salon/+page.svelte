@@ -6,7 +6,7 @@
   import PlaylistPicker from '$lib/components/salon/playlists/PlaylistPicker.svelte';
   import { loadSalonPlaylists, DEFAULT_SALON_PLAYLIST } from '$lib/data/salonPlaylists.js';
   import { rememberSignupRef, tagNewUser } from '$lib/client/signupRef.js';
-  import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/client/salonClient.js';
+  import { saveSalonKey, fetchPro, proActive, goToStripe, saveSetup, readSetup, setupFor } from '$lib/client/salonClient.js';
   import ProUpsell from '$lib/components/salon/setup/ProUpsell.svelte';
   import SetupHero from '$lib/components/salon/setup/SetupHero.svelte';
   import ResumeSalon from '$lib/components/salon/setup/ResumeSalon.svelte';
@@ -46,6 +46,34 @@
   let error        = $state('');
   let playlistsState = $state('loading');
 
+  const currentSettings = () => ({ maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials });
+  const DEFAULTS = currentSettings();
+  // Dernière préparation lue une fois au montage ; la part réservée à Pro attend fetchPro
+  let saved = null;
+  let freeSetup = null;
+
+  function applySettings(s) {
+    ({ maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials } = s);
+  }
+
+  function restoreSettings() {
+    saved = readSetup(DEFAULTS);
+    if (!saved) return;
+    freeSetup = setupFor(saved.settings, false, DEFAULTS);
+    applySettings(freeSetup);
+  }
+
+  // Une seule fois, et seulement sur les réglages que l'hôte n'a pas touchés entre-temps
+  function restorePro() {
+    if (!freeSetup) return;
+    const full = setupFor(saved.settings, true, DEFAULTS);
+    const now = currentSettings();
+    for (const k of ['answerMode', 'specials', 'teamCount'])
+      if (now[k] === freeSetup[k]) now[k] = full[k];
+    applySettings(now);
+    freeSetup = null;
+  }
+
   let totalTrackCount = $derived(
     allPlaylists
       .filter(p => selectedIds.includes(p.id))
@@ -73,7 +101,10 @@
   let loadSeq = 0;
   async function loadPlaylists() {
     const seq = ++loadSeq;
-    fetchPro(sb, user?.id).then((r) => (proRow = r)).catch(() => {});
+    fetchPro(sb, user?.id).then((r) => {
+      proRow = r;
+      if (seq === loadSeq && proActive(r)) restorePro();
+    }).catch(() => {});
     if (playlistsState === 'error') playlistsState = 'loading';
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
@@ -84,7 +115,9 @@
       const wanted = (new URLSearchParams(window.location.search).get('playlist') ?? '')
         .split(',')
         .filter((id) => flat.some((p) => p.id === id));
+      const remembered = (saved?.playlistIds ?? []).filter((id) => flat.some((p) => p.id === id));
       if (wanted.length) selectedIds = wanted;
+      else if (selectedIds.length === 0 && remembered.length) selectedIds = remembered;
       else if (selectedIds.length === 0 && flat.length > 0) {
         selectedIds = [flat.find(p => p.id === DEFAULT_SALON_PLAYLIST)?.id ?? flat[0].id];
         autoPicked = true;
@@ -108,12 +141,13 @@
         body: JSON.stringify({
           origin: new URLSearchParams(window.location.search).get('ref'),
           playlistIds: selectedIds,
-          settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials },
+          settings: currentSettings(),
         }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || "La soirée n'a pas pu être créée. Réessayez dans un instant.");
       saveSalonKey(d.code, d.key);
+      saveSetup(selectedIds, currentSettings());
       window.location.href = `/salon/host?code=${d.code}`;
     } catch (e) {
       // fetch rejette en TypeError quand le réseau coupe : jamais de message brut du navigateur
@@ -126,6 +160,7 @@
     if (!sb) return;
     const { data: { session } } = await sb.auth.getSession();
     user = session?.user ?? null;
+    restoreSettings();
     authReady = true;
     loadPlaylists();
 
