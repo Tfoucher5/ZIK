@@ -271,7 +271,7 @@
 @media (max-width: 768px) {
   /* Le pied de page est toujours le dernier élément du layout : dégager ici
      suffit pour toutes les pages, y compris celles sans <main>. */
-  .site-footer {
+  :root:has(#bottom-nav) .site-footer {
     padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 16px);
   }
 }

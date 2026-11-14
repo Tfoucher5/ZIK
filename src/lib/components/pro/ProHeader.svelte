@@ -6,7 +6,7 @@
 </script>
 
 <header class="pro-header">
-  <span class="pro-tag">Mode Salon</span>
+  <span class="pro-tag">ZIK Soirée</span>
   <h1>Organisez votre blind test sans animateur</h1>
   <p class="pro-intro">
     Un écran, du son, et les téléphones que vos invités ont déjà dans la
