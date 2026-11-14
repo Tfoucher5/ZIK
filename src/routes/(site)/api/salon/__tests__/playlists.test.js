@@ -33,6 +33,16 @@ describe("/api/salon : réponses d'erreur", () => {
     expect((await res.json()).error).toBe("50 playlists maximum par soirée");
   });
 
+  it("corps illisible : message en français pour l'organisateur", async () => {
+    const res = await POST({
+      request: new Request("http://x/api/salon", { method: "POST", body: "{" }),
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe(
+      "Demande invalide. Rechargez la page.",
+    );
+  });
+
   it("corps JSON null : erreur propre", async () => {
     expect((await POST(requete("POST", null))).status).toBe(400);
     expect((await PATCH(requete("PATCH", null))).status).toBe(401);

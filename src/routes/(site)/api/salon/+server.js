@@ -27,14 +27,21 @@ export async function POST({ request }) {
   let user = null;
   if (token) {
     user = await verifyToken(token);
-    if (!user) return json({ error: "Session invalide" }, { status: 401 });
+    if (!user)
+      return json(
+        { error: "Votre session a expiré. Reconnectez-vous." },
+        { status: 401 },
+      );
   } else {
     const guestSalons = Object.values(salonRooms).filter(
       (s) => !s.hostUserId,
     ).length;
     if (guestSalons >= MAX_GUEST_SALONS)
       return json(
-        { error: "Trop de salons ouverts, connecte-toi pour en créer un." },
+        {
+          error:
+            "Beaucoup de soirées sont ouvertes sans compte en ce moment. Connectez-vous pour créer la vôtre.",
+        },
         { status: 429 },
       );
   }
@@ -43,7 +50,10 @@ export async function POST({ request }) {
   try {
     body = await request.json();
   } catch {
-    return json({ error: "Corps invalide" }, { status: 400 });
+    return json(
+      { error: "Demande invalide. Rechargez la page." },
+      { status: 400 },
+    );
   }
 
   const { playlistIds, settings, origin } = body ?? {};
@@ -93,17 +103,27 @@ export async function PATCH({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
   const user = token ? await verifyToken(token) : null;
   if (token && !user)
-    return json({ error: "Session invalide" }, { status: 401 });
+    return json(
+      { error: "Votre session a expiré. Reconnectez-vous." },
+      { status: 401 },
+    );
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return json({ error: "Corps invalide" }, { status: 400 });
+    return json(
+      { error: "Demande invalide. Rechargez la page." },
+      { status: 400 },
+    );
   }
 
   const { code, playlistIds, key } = body ?? {};
-  if (!user && !key) return json({ error: "Non authentifié" }, { status: 401 });
+  if (!user && !key)
+    return json(
+      { error: "Rouvrez la régie depuis l'écran TV de la soirée." },
+      { status: 401 },
+    );
   if (!code) return json({ error: "Code requis" }, { status: 400 });
   const playlistsErr = playlistsError(playlistIds);
   if (playlistsErr) return json({ error: playlistsErr }, { status: 400 });

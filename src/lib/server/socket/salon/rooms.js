@@ -34,7 +34,7 @@ export async function createSalonRoom({
   const tracks = await loadSalonTracks(playlistIds, client);
   if (tracks.length < 3) {
     throw new Error(
-      "Playlists introuvables ou trop courtes (min. 3 titres au total).",
+      "Ces playlists sont introuvables ou trop courtes : il faut au moins 3 titres au total.",
     );
   }
 
@@ -125,20 +125,22 @@ export async function changeSalonPlaylists({
   key,
 }) {
   const salon = salonRooms[code];
-  if (!salon) throw new Error("Salon introuvable.");
+  if (!salon) throw new Error("Cette soirée n'existe plus.");
   const isHost =
     (key && key === salon.adminKey) ||
     (salon.hostUserId && salon.hostUserId === userId);
   if (!isHost)
-    throw new Error("Seul l'hote du salon peut changer les playlists.");
+    throw new Error("Seul l'hôte de la soirée peut changer les playlists.");
   if (!PLAYLIST_SWAP_PHASES.includes(salon.game.phase))
-    throw new Error("Impossible de changer les playlists maintenant.");
+    throw new Error(
+      "Les playlists se changent entre deux parties, pas pendant une manche.",
+    );
 
   const client = token ? userClient(token) : supabase;
   const tracks = await loadSalonTracks(playlistIds, client);
   if (tracks.length < 3)
     throw new Error(
-      "Playlists introuvables ou trop courtes (min. 3 titres au total).",
+      "Ces playlists sont introuvables ou trop courtes : il faut au moins 3 titres au total.",
     );
 
   salon.game.fullPlaylist = tracks;
