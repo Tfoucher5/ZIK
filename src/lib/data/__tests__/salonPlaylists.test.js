@@ -27,6 +27,16 @@ describe("playlists de la création de soirée", () => {
     ).rejects.toEqual({ message: "réseau" });
   });
 
+  it("pour un compte connecté, l'échec de « mes playlists » remonte aussi", async () => {
+    const sb = fakeSb({ data: [], error: null });
+    const mine = fakeSb({ data: null, error: { message: "mine" } });
+    let n = 0;
+    const both = { schema: () => (n++ === 0 ? sb : mine).schema() };
+    await expect(loadSalonPlaylists(both, "u1")).rejects.toEqual({
+      message: "mine",
+    });
+  });
+
   it("sans erreur, la playlist par défaut passe en tête des officielles", async () => {
     const data = [
       { id: "x", name: "X", track_count: 500, is_official: true },

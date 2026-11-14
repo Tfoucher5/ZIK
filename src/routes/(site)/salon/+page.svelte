@@ -69,11 +69,15 @@
     else teamCount = n;
   }
 
+  // onMount et onAuthStateChange chargent en même temps : seul le dernier appel compte
+  let loadSeq = 0;
   async function loadPlaylists() {
+    const seq = ++loadSeq;
     fetchPro(sb, user?.id).then((r) => (proRow = r)).catch(() => {});
     if (playlistsState === 'error') playlistsState = 'loading';
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
+      if (seq !== loadSeq) return;
       allPlaylists = flat;
       playlistsState = 'ok';
       // ?playlist=id1,id2 : lien depuis une page /blind-test/<thème>
@@ -86,7 +90,7 @@
         autoPicked = true;
       }
     } catch {
-      playlistsState = 'error';
+      if (seq === loadSeq) playlistsState = 'error';
     }
   }
 
