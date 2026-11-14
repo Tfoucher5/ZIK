@@ -68,7 +68,7 @@
     <a href="/zikle" class="today-card" class:done={zikle.status === 'won' || zikle.status === 'lost'}>
       <span class="today-kicker">Zikle · la chanson du jour</span>
       {#if zikle.status === 'won'}
-        <strong class="today-main">Trouvée en {zikle.attempts} essai{zikle.attempts > 1 ? 's' : ''} ✓</strong>
+        <strong class="today-main">Trouvée en {zikle.attempts} essai{zikle.attempts > 1 ? 's' : ''}</strong>
         <span class="today-sub">Nouvelle chanson demain. Va voir ton rang du jour.</span>
       {:else if zikle.status === 'lost'}
         <strong class="today-main">Pas trouvée cette fois</strong>
@@ -80,7 +80,7 @@
         <span class="today-sub">Gratuit, sans compte, 2 minutes.</span>
       {/if}
       {#if zikle.streak > 0 && zikle.status !== 'todo'}
-        <span class="today-badge">🔥 Série de {zikle.streak} jour{zikle.streak > 1 ? 's' : ''}</span>
+        <span class="today-badge">Série de {zikle.streak} jour{zikle.streak > 1 ? 's' : ''}</span>
       {/if}
       <span class="today-cta">{zikle.status === 'todo' || zikle.status === 'loading' ? 'Jouer au Zikle →' : 'Voir le résultat →'}</span>
     </a>

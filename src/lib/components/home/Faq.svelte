@@ -1,12 +1,14 @@
 <script>
   import { FAQ } from './faq.js';
   import { reveal } from './reveal.js';
+
+  let { items = FAQ } = $props();
 </script>
 
 <section class="faq-section" id="faq" use:reveal>
   <h2 class="faq-title">Questions fréquentes</h2>
   <div class="faq-list">
-    {#each FAQ as f (f.q)}
+    {#each items as f (f.q)}
       <details class="faq-item">
         <summary class="faq-q">{f.q}</summary>
         <p class="faq-a">{f.a}</p>
