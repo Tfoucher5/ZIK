@@ -8,7 +8,7 @@ export const FAQ_GROUPS = [
     title: "Pour jouer",
     items: [
       {
-        q: "Comment fonctionne le Mode Salon ?",
+        q: "Comment fonctionne ZIK Soirée ?",
         a: "L'hôte ouvre le salon sur l'ordinateur branché à la TV. Les joueurs scannent le QR code affiché à l'écran avec leur téléphone et choisissent un pseudo. La TV diffuse les extraits, le chrono et le classement, les téléphones servent de buzzers.",
       },
       {
@@ -47,7 +47,7 @@ export const FAQ_GROUPS = [
       },
       {
         q: "Combien ça coûte ?",
-        a: `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € la soirée, 19 € par mois ou 190 € par an.`,
+        a: `ZIK Soirée est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs. Pour les bars, campings et événements, ZIK Pro coûte 7,90 € la soirée, 19 € par mois ou 190 € par an.`,
       },
     ],
   },
@@ -83,7 +83,7 @@ export const salonJsonLd = JSON.stringify({
   "@graph": [
     {
       "@type": "WebApplication",
-      name: "ZIK Mode Salon",
+      name: "ZIK Soirée",
       url: `${SITE}/salon`,
       description:
         "Blind test de soirée : la TV diffuse la musique et le classement, les joueurs répondent depuis leur téléphone, en solo ou en équipes.",

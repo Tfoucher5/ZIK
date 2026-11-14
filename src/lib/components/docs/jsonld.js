@@ -4,7 +4,7 @@ export const jsonLdPage = JSON.stringify({
   name: "Guide complet — Blind Test ZIK",
   url: "https://www.zik-music.fr/docs",
   description:
-    "Guide complet du blind test ZIK : comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ.",
+    "Guide complet du blind test ZIK : comment jouer, système de points, ZIK Soirée sur la TV, import Deezer, classement ELO, FAQ.",
   inLanguage: "fr-FR",
   isPartOf: {
     "@type": "WebSite",
@@ -79,15 +79,15 @@ export const jsonLdFaq = JSON.stringify({
       name: "Comment fonctionne le système de points au blind test ZIK ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "En mode texte libre : Artiste trouvé = 1 pt + bonus vitesse, Titre trouvé = 1 pt + bonus vitesse. Le bonus vitesse va de +3 pts en moins de 3 secondes à 0 pt après 18 secondes. En Mode Salon QCM : entre 1 000 pts (réponse immédiate) et 200 pts (dernière seconde), selon la rapidité.",
+        text: "En mode texte libre : Artiste trouvé = 1 pt + bonus vitesse, Titre trouvé = 1 pt + bonus vitesse. Le bonus vitesse va de +3 pts en moins de 3 secondes à 0 pt après 18 secondes. Avec ZIK Soirée en QCM : entre 1 000 pts (réponse immédiate) et 200 pts (dernière seconde), selon la rapidité.",
       },
     },
     {
       "@type": "Question",
-      name: "Qu'est-ce que le Mode Salon de ZIK ?",
+      name: "Qu'est-ce que ZIK Soirée ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Le Mode Salon est un blind test à la Kahoot conçu pour les soirées, événements et salles de classe. L'hôte projette un écran de contrôle sur TV, et chaque joueur participe sur son smartphone via un QR code ou un code court. Disponible en mode texte libre ou QCM avec 4 boutons colorés.",
+        text: "ZIK Soirée est un blind test sur grand écran conçu pour les soirées, événements et salles de classe. L'hôte projette un écran de contrôle sur TV, et chaque joueur participe sur son smartphone via un QR code ou un code de 6 caractères. Disponible en mode texte libre ou QCM avec 4 boutons colorés.",
       },
     },
     {

@@ -24,8 +24,8 @@
     Votre pseudo est demandé à la première connexion et stocké localement dans votre navigateur. Vos scores de session s'affichent en temps réel mais ne sont pas sauvegardés. Créez un compte gratuit pour ne rien perdre.
   </DocTip>
 
-  <h3>Rejoindre le Mode Salon</h3>
+  <h3>Rejoindre ZIK Soirée</h3>
   <p>
-    Pour rejoindre un salon, scannez le QR code affiché sur l'écran hôte (TV ou vidéoprojecteur) ou saisissez le code à 4 chiffres manuellement sur la page <a href="/salon/play">/salon/play</a>. Aucun compte n'est nécessaire pour jouer en tant que participant.
+    Pour rejoindre un salon, scannez le QR code affiché sur l'écran hôte (TV ou vidéoprojecteur) ou saisissez le code de 6 caractères manuellement sur la page <a href="/salon/play">/salon/play</a>. Aucun compte n'est nécessaire pour jouer en tant que participant.
   </p>
 </section>

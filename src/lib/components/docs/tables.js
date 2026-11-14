@@ -18,8 +18,8 @@ export const guestVsAccount = {
     ["Profil public", "❌", "✅"],
     ["Créer une playlist", "❌", "✅"],
     ["Créer une room custom", "❌", "✅"],
-    ["Mode Salon (hôte)", "❌", "✅"],
-    ["Mode Salon (joueur)", "✅", "✅"],
+    ["ZIK Soirée (hôte)", "❌", "✅"],
+    ["ZIK Soirée (joueur)", "✅", "✅"],
   ],
 };
 
@@ -30,9 +30,9 @@ export const basePoints = {
     ["Titre de la chanson", "1 pt", "+ bonus (voir ci-dessous)"],
     ["Artiste en featuring (par feat)", "1 pt", "+ bonus (voir ci-dessous)"],
     [
-      "QCM Mode Salon (artiste + titre)",
+      "QCM ZIK Soirée (artiste + titre)",
       "200 – 1 000 pts",
-      "Selon la vitesse de réponse (Kahoot-style)",
+      "Selon la vitesse de réponse",
     ],
   ],
 };

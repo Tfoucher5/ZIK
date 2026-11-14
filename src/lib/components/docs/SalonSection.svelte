@@ -6,14 +6,14 @@
 </script>
 
 <section>
-  <h2 id="salon">Mode Salon</h2>
+  <h2 id="salon">ZIK Soirée</h2>
 
-  <h3>Qu'est-ce que le Mode Salon ?</h3>
+  <h3>Qu'est-ce que ZIK Soirée ?</h3>
   <p>
-    Le Mode Salon est une expérience <strong>Kahoot-like</strong> conçue pour les soirées, les fêtes, les événements d'entreprise ou les salles de classe. L'hôte projette l'écran de contrôle sur une TV ou un vidéoprojecteur, et chaque participant joue sur son <strong>smartphone</strong> via un QR code ou un code à 4 chiffres.
+    ZIK Soirée est un blind test sur <strong>grand écran</strong> conçu pour les soirées, les fêtes, les événements d'entreprise ou les salles de classe. L'hôte projette l'écran de contrôle sur une TV ou un vidéoprojecteur, et chaque participant joue sur son <strong>smartphone</strong> via un QR code ou un code de 6 caractères.
   </p>
   <p>
-    Contrairement aux rooms classiques, le Mode Salon est entièrement <strong>orchestré par l'hôte</strong> : c'est lui qui choisit la playlist, configure les paramètres, lance les manches et décide du rythme de la partie.
+    Contrairement aux rooms classiques, ZIK Soirée est entièrement <strong>orchestré par l'hôte</strong> : c'est lui qui choisit la playlist, configure les paramètres, lance les manches et décide du rythme de la partie.
   </p>
 
   <h3>Créer un salon</h3>
@@ -30,7 +30,7 @@
   <h3>L'écran hôte (TV / ordi)</h3>
   <p>L'écran hôte (<a href="/salon/host">/salon/host</a>) est optimisé pour être affiché en grand :</p>
   <ul class="doc-list">
-    <li><strong>Lobby :</strong> QR code géant + code à 4 chiffres pour rejoindre, liste des joueurs connectés qui se met à jour en temps réel</li>
+    <li><strong>Lobby :</strong> QR code géant + code de 6 caractères pour rejoindre, liste des joueurs connectés qui se met à jour en temps réel</li>
     <li><strong>Pendant la manche :</strong> Visualizer audio animé, timer géant décomptant en temps réel, titre de la manche (masqué), nombre de joueurs ayant répondu</li>
     <li><strong>Classement joueurs :</strong> Affiché avec des icônes selon le score — 🎤 (top 1), 🎸 (top 2-3), 🎵 (autres) — et mis à jour en direct</li>
     <li><strong>Révélation :</strong> La réponse s'affiche avec animation après la fin de chaque manche</li>
@@ -41,7 +41,7 @@
   <h3>L'interface joueur (téléphone)</h3>
   <p>Les joueurs accèdent à <a href="/salon/play">/salon/play</a> sur leur smartphone :</p>
   <ul class="doc-list">
-    <li><strong>Rejoindre :</strong> Scanner le QR code affiché sur l'écran hôte, ou saisir manuellement le code à 4 chiffres</li>
+    <li><strong>Rejoindre :</strong> Scanner le QR code affiché sur l'écran hôte, ou saisir manuellement le code de 6 caractères</li>
     <li><strong>Timer SVG :</strong> Un cercle SVG décompte le temps restant visuellement, avec changement de couleur progressif (vert → orange → rouge)</li>
     <li><strong>Mode texte libre :</strong> Champ de saisie classique, même moteur de détection que les rooms normales</li>
     <li><strong>Mode QCM :</strong> 4 boutons avec les formes emblématiques — ▲ Triangle, ◆ Losange, ● Cercle, ■ Carré — chacun avec une couleur distincte. Un seul appui suffit pour valider.</li>
