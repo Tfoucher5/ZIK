@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { flip } from 'svelte/animate';
   import { podium } from './salonPlayer.svelte.js';
+  import { storyData, prepareStory, shareStory } from './podiumStory.js';
 
   let {
     phase = 'summary',
@@ -33,6 +34,21 @@
     return () => clearTimeout(t);
   });
   let myPos = $derived(finalRanking?.me?.rank ?? 0);
+  let story = $derived(phase === 'gameover' ? storyData({ finalRanking, teams, username, myTeam }) : null);
+  let storyFile = $state(null);
+  let shareState = $state('');
+  $effect(() => {
+    const d = story;
+    storyFile = null;
+    if (!d?.podium.length) return;
+    let off = false;
+    prepareStory(d).then((f) => { if (!off) storyFile = f; }).catch(() => { if (!off) shareState = 'unavailable'; });
+    return () => (off = true);
+  });
+  async function partager() {
+    const r = await shareStory(storyFile).catch(() => 'error');
+    shareState = r === 'downloaded' || r === 'error' ? r : '';
+  }
   let teamPos = $derived((teams?.findIndex(t => t.id === myTeam) ?? -1) + 1);
   let soiree = $derived(night?.games > 1 ? night : null);
   let nightPos = $derived(
@@ -110,6 +126,12 @@
 </ol>
 
 {#if phase === 'gameover'}
+  <!-- Image impossible à préparer sur ce téléphone : pas de bouton qui ne mène à rien -->
+  {#if story?.podium.length && shareState !== 'unavailable'}
+    <button class="sx-btn sp-share" onclick={partager} disabled={!storyFile}>
+      {shareState === 'downloaded' ? 'Image enregistrée' : shareState === 'error' ? "Le partage n'a pas marché, réessaie" : storyFile ? 'Partager le podium en story' : "Préparation de l'image…"}
+    </button>
+  {/if}
   <div class="salon-host-cta">
     <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>
     <a href="/?auth=register&ref=salon-invite" class="sx-btn sx-btn-primary">Créer mon compte</a>
@@ -132,6 +154,12 @@
   .sp-list small { animation: sum-in 0.4s ease; }
   @keyframes sum-in {
     from { opacity: 0; transform: translateY(4px); }
+  }
+  .sp-share {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    margin-top: 18px;
   }
   .sp-night {
     margin-top: 8px;
