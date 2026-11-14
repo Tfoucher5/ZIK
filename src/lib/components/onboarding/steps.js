@@ -155,7 +155,10 @@ export const STEPS = [
   {
     mode: "nav",
     to: "/classements",
-    target: ['#navbar .nav-link[href="/classements"]'],
+    target: [
+      '#navbar .nav-link[href="/classements"]',
+      '#bottom-nav a[href="/classements"]',
+    ],
     kicker: "Compétition",
     title: "Et maintenant, le classement",
     text: "Chaque partie compte.",
