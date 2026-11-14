@@ -60,7 +60,7 @@
       {#if pro}
         <label class="re-son">
           <input type="checkbox" checked={finaleSound} onchange={(e) => onSend('salon_update_settings', { finaleSound: e.currentTarget.checked })}>
-          Roulement de tambour sur la TV
+          Roulement de tambour au podium final
         </label>
       {/if}
     </div>

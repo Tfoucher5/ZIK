@@ -85,10 +85,10 @@
   </div>
   {#if settings.answerMode === 'buzzer'}
     <div class="ts-son">
-      <b>Son du buzz sur la TV</b>
+      <b>Son du buzz</b>
       <div class="ts-seg">
         <button class:on={settings.buzzSound !== false} onclick={() => onSound({ buzzSound: true })}>Oui</button>
-        <button class:on={settings.buzzSound === false} onclick={() => onSound({ buzzSound: false })}>Coupé</button>
+        <button class:on={settings.buzzSound === false} onclick={() => onSound({ buzzSound: false })}>Non</button>
       </div>
     </div>
   {/if}

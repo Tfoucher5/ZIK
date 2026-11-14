@@ -1,13 +1,12 @@
 <script>
   /** Réglage des sons de la TV, pour l'hôte qui n'a pas la régie sous la main. */
-  let { settings, onSet } = $props();
+  let { settings, onSet, open = $bindable(false) } = $props();
 
-  let open = $state(false);
   let box = $state(null);
   // Le son du buzz n'a de sens qu'en mode buzzer
   let sons = $derived([
     ...(settings.answerMode === 'buzzer' ? [['buzzSound', 'Son du buzz']] : []),
-    ['finaleSound', 'Roulement de tambour du podium final'],
+    ['finaleSound', 'Roulement de tambour au podium final'],
   ]);
 </script>
 

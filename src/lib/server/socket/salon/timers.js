@@ -38,6 +38,7 @@ export function cleanupNow(code, io, message = "L'hôte a quitté le salon.") {
   recordSalonGameEnd(salon);
   clearTimeout(salon._cleanupTimer);
   clearTimeout(salon._hostDcTimer);
+  clearTimeout(salon._ctrlLeaveTimer);
   clearInterval(salon.game.interval);
   clearTimeout(salon.game.breakTimer);
   clearTimeout(salon.game.musicReadyTimer);

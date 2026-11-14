@@ -59,6 +59,9 @@ export class SalonHost {
   nextSec = $state(0);
   nextShown = $state(true);
   volume = $state(100);
+  #beforeMute = 100;
+  // Régies branchées (badge) ; null tant que le serveur n'a rien dit
+  controls = $state(null);
   helpOpen = $state(false);
   userId = $state(null);
   chat = new SupportChat();
@@ -84,10 +87,19 @@ export class SalonHost {
     this.#sb = sb;
   }
 
-  applyVolume = (v) => {
+  // `share` : changé sur la TV, la régie doit le voir ; venu de la régie, déjà connu
+  applyVolume = (v, share = true) => {
     this.volume = v;
     localStorage.setItem("zik_salon_vol", String(v));
     this.hostCenter?.setVolume(v);
+    if (share) this.socket?.emit("salon_tv_volume", { volume: v });
+  };
+
+  toggleMute = () => {
+    if (this.volume > 0) {
+      this.#beforeMute = this.volume;
+      this.applyVolume(0);
+    } else this.applyVolume(this.#beforeMute);
   };
 
   /** Branché par listenCountdowns */
