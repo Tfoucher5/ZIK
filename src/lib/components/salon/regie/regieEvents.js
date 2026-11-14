@@ -27,6 +27,7 @@ export function listenRegie(r, socket) {
     r.finale = d.evening?.finale ?? null;
     r.buzzer = d.buzzer;
     r.mediaCheck = d.mediaCheck;
+    if (d.tvVolume != null) r.volume = d.tvVolume;
     r.phase = d.phase;
     if (d.phase === "gameover") r.onglet = "reglages";
     r.paused = d.paused;
@@ -153,6 +154,8 @@ export function listenRegie(r, socket) {
   socket.on("salon_screens", ({ count }) => {
     r.screens = count;
   });
+  // Volume réel de la TV, réglé là-bas ou par une autre régie
+  socket.on("salon_volume", ({ volume }) => (r.volume = volume));
   socket.on("salon_pro_required", ({ feature }) => {
     r.upsell = feature;
   });

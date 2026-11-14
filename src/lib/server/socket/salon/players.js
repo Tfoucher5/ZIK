@@ -154,17 +154,17 @@ export function staff(code, io) {
 }
 
 /**
- * Annonce à la régie combien d'écrans TV sont connectés.
- *
- * L'information existait déjà côté serveur — elle sert à décider quand
- * fermer le salon — mais n'était jamais transmise : l'exploitant ne pouvait
- * pas voir qu'aucune TV n'était branchée, ni que deux l'étaient et que le
- * son allait jouer en double.
+ * La régie voit combien de TV sont branchées (aucune, ou deux : son en
+ * double), la TV voit combien de régies (badge « Régie connectée »).
  */
 export function broadcastScreens(code, io) {
-  const count =
-    io.sockets.adapter.rooms.get(`salon:screens:${code}`)?.size ?? 0;
-  io.to(`salon:ctrl:${code}`).emit("salon_screens", { count });
+  const rooms = io.sockets.adapter.rooms;
+  io.to(`salon:ctrl:${code}`).emit("salon_screens", {
+    count: rooms.get(`salon:screens:${code}`)?.size ?? 0,
+  });
+  io.to(`salon:screens:${code}`).emit("salon_controls", {
+    count: rooms.get(`salon:ctrl:${code}`)?.size ?? 0,
+  });
 }
 
 // À 200 joueurs, chaque envoi de liste part vers 200 téléphones : au plus un

@@ -5,6 +5,23 @@
 
 export const NEWS = [
   {
+    date: "2026-11-14",
+    version: "3.30.0",
+    tag: "Amélioration",
+    title: "Une TV plus légère pendant les manches",
+    summary:
+      "En soirée, la TV ne montre plus que ce que les joueurs doivent voir : les réglages se cachent pendant les manches et reviennent d'un geste.",
+    items: [
+      "Pendant les manches, les réglages de la TV (pause, volume, sons, playlist) se cachent après 5 secondes, avec le curseur. Bougez la souris, touchez l'écran ou appuyez sur une touche pour les retrouver.",
+      "Le QR code, le code du salon, le numéro de manche, l'aide et le lien Régie restent toujours visibles.",
+      "La TV indique « Régie connectée » quand une régie la pilote.",
+      "La régie affiche le vrai volume de la TV, même quand il est réglé sur la TV.",
+      "Remettre le son revient au volume d'avant, plus à 100 %.",
+      "Le bilan de la musique (« Musique prête ») passe dans la régie ; la TV ne garde que la vérification en cours et l'alerte, sauf sans régie.",
+    ],
+    proItems: ["Depuis la régie, régler le volume de la TV à distance."],
+  },
+  {
     date: "2026-11-12",
     version: "3.29.0",
     tag: "Amélioration",

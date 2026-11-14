@@ -100,6 +100,7 @@ export function registerJoin(socket, io) {
     if (salon._hostDcTimer) note(salon, "Hôte revenu (régie)");
     clearTimeout(salon._hostDcTimer);
     salon._hostDcTimer = null;
+    clearTimeout(salon._ctrlLeaveTimer);
     socket.join(`salon:${code}`);
     socket.join(`salon:ctrl:${code}`);
     socket.salonCode = code;
@@ -129,6 +130,7 @@ export function registerJoin(socket, io) {
           : null,
       history: game.history,
       trackCount: game.fullPlaylist.length,
+      tvVolume: salon._tvVolume ?? null,
       support: supportView(salon),
     });
     sendNotice(socket);

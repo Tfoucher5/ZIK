@@ -6,6 +6,7 @@ import { registerControl } from "./control.js";
 import { registerAnswers } from "./answers.js";
 import { registerBuzzer } from "./buzzer.js";
 import { registerEvening } from "./evening.js";
+import { registerVolume } from "./volume.js";
 
 export { createSalonRoom, changeSalonPlaylists } from "./rooms.js";
 
@@ -19,5 +20,6 @@ export function registerSalon(io) {
     registerAnswers(socket, io);
     registerBuzzer(socket, io);
     registerEvening(socket, io);
+    registerVolume(socket, io);
   });
 }

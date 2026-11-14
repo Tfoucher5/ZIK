@@ -30,6 +30,7 @@ export function listenHost(h, socket) {
     h.finale = data.evening?.finale ?? null;
     h.buzzer = data.buzzer;
     h.mediaCheck = data.mediaCheck;
+    socket.emit("salon_tv_volume", { volume: h.volume });
     h.paused = data.paused;
     if (data.endsAt) {
       h.timerMax = data.timerMax;
@@ -82,7 +83,8 @@ export function listenHost(h, socket) {
     h.settings = settings;
     h.total = settings.maxRounds;
   });
-  socket.on("salon_volume", ({ volume }) => h.applyVolume(volume));
+  socket.on("salon_volume", ({ volume }) => h.applyVolume(volume, false));
+  socket.on("salon_controls", ({ count }) => (h.controls = count));
   socket.on("salon_paused", ({ paused }) => {
     h.paused = paused;
     if (paused) chrono.stop();

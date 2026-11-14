@@ -82,7 +82,7 @@
 <section class="td-bloc">
   <label class="td-volume">
     <span>Volume de la TV <b>{volume} %</b>{#if !pro}<i class="td-pro">Pro</i>{/if}</span>
-    <input type="range" min="0" max="100" step="5" value={volume} oninput={(e) => onVolume(+e.target.value)}>
+    <input type="range" min="0" max="100" step="5" value={volume} oninput={(e) => { onVolume(+e.target.value); if (!pro) e.target.value = volume; }}>
   </label>
 </section>
 

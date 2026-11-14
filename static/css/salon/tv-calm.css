@@ -1,0 +1,59 @@
+/* TV allégée : pendant les manches, les réglages de l'hôte se cachent sans
+   bouger la mise en page (la place reste réservée, seul le fondu change). */
+.sh-fade {
+  transition: opacity 0.2s ease-out;
+}
+.sh-top.calm:not(:hover, :has(:focus-visible)) .sh-fade {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-in;
+}
+.sh.sh-calm:not(:has(.sh-top:hover)),
+.sh.sh-calm:not(:has(.sh-top:hover)) * {
+  cursor: none;
+}
+/* Le lecteur YouTube avale la souris : sans ça, la barre ne revient pas et
+   le curseur reste visible au-dessus de la vidéo. Seulement barre cachée : la
+   vidéo reste cliquable pour relancer une lecture bloquée par le navigateur */
+.sh.sh-calm .salon-yt-slot.on {
+  pointer-events: none;
+}
+
+.sh-regie-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--success);
+}
+.sh-regie-ok::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.sh-hint {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 55;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 18px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--mid);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  .sh-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

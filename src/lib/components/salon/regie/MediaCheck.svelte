@@ -3,16 +3,19 @@
    * État de la musique de la prochaine partie, vérifiée dès le lobby :
    * vidéos trouvées, titres joués en extrait audio, titres introuvables.
    *
-   * @type {{ check: { total: number, video: number, audio: number, missing: number } | null }}
+   * Sur la TV (`tv`), le bilan ne sert qu'à l'hôte : seulement la vérification en
+   * cours et l'alerte, sauf sans régie (`solo`) où personne d'autre ne le verrait.
+   *
+   * @type {{ check: { total: number, video: number, audio: number, missing: number } | null, tv?: boolean, solo?: boolean }}
    */
-  let { check } = $props();
+  let { check, tv = false, solo = true } = $props();
 
   let done = $derived(check ? check.video + check.audio + check.missing : 0);
   let fini = $derived(check && done >= check.total);
   let alerte = $derived(fini && check.video < check.total / 2);
 </script>
 
-{#if check?.total}
+{#if check?.total && (!tv || solo || !fini || alerte)}
   <div class="mc" class:ok={fini && !check.audio && !check.missing} class:alerte role="status">
     {#if !fini}
       <span class="sx-dots"><i></i><i></i><i></i></span> Vérification de la musique : {done} / {check.total}
@@ -24,7 +27,9 @@
         {#if check.audio} · {check.audio} en extrait audio (vidéo indisponible){/if}
         {#if check.missing} · {check.missing} remplacé{check.missing > 1 ? 's' : ''} automatiquement{/if}
       </span>
-      {#if alerte}<small>Peu de vidéos sont prêtes pour ces titres : la partie marche quand même, avec plus d'extraits audio.</small>{/if}
+      {#if alerte}<small>{tv
+        ? 'Peu de clips disponibles : la partie se jouera surtout en extraits audio.'
+        : 'Moins de la moitié des titres ont leur clip : la partie se jouera surtout en extraits audio. Tu peux changer de playlist dans Réglages.'}</small>{/if}
     {/if}
   </div>
 {/if}

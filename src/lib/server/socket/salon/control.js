@@ -71,13 +71,6 @@ export function registerControl(socket, io) {
     if (salon) cleanupNow(salon.code, io, "L'hôte a fermé la soirée.");
   });
 
-  safe(socket, "salon_volume", { volume: num(0, 100) }, ({ volume }) => {
-    const salon = adminSalon(socket);
-    if (!salon || !requirePro(socket, salon, "volume")) return;
-    const v = Math.min(Math.max(Math.round(Number(volume) || 0), 0), 100);
-    io.to(`salon:screens:${salon.code}`).emit("salon_volume", { volume: v });
-  });
-
   safe(socket, "salon_kick", { username: key(20) }, ({ username }) => {
     const salon = adminSalon(socket);
     if (salon) kickPlayer(salon, username, io);

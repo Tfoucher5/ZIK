@@ -19,7 +19,7 @@
     paused = false, pro = false, settings = {},
     onSetting,
     onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
-    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, mediaCheck = null, onJudge,
+    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, mediaCheck = null, mediaSolo = true, onJudge,
   } = $props();
 
   let membersOf = (id) => players.filter(p => p.team === id);
@@ -77,7 +77,7 @@
           {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
         </div>
         <p class="sh-lobby-url">Scannez le QR code ou allez sur <b>zik-music.fr/salon/play</b></p>
-        <MediaCheck check={mediaCheck} />
+        <MediaCheck check={mediaCheck} tv solo={mediaSolo} />
       </div>
       <div class="sh-qr"><img src={salonQrUrl(code, 320)} alt="QR code pour rejoindre" width="320" height="320"></div>
     </div>
