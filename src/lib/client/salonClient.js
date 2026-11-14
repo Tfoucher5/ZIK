@@ -133,7 +133,8 @@ export async function patchSalonPlaylists(sb, code, playlistIds) {
     body: JSON.stringify({ code, playlistIds, key: salonKey(code) }),
   });
   const d = await res.json();
-  if (!res.ok) throw new Error(d.error || "Changement impossible");
+  if (!res.ok)
+    throw new Error(d.error || "Le changement n'a pas pu se faire. Réessayez.");
   return d;
 }
 
