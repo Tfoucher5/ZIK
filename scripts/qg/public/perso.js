@@ -160,15 +160,14 @@ export class Perso {
     this.act.textContent = actif ? texte : "";
   }
 
-  // Au repos : alterne entre son poste et une pause (cuisine, salon, fenêtre).
+  // Au repos : alterne entre son poste et une pause libre (cuisine, salon, cabine, toilettes…).
   flaner(dt, pauses) {
     this.pause -= dt;
     if (this.pause > 0 || this.chemin.length) return;
     this.pause = 10 + Math.random() * 20;
-    if (this.but === this.siege && Math.random() < 0.5) {
-      const p = hasard(pauses);
-      this.aller(p);
-    } else this.aller(this.siege);
+    if (this.but === this.siege && pauses.length && Math.random() < 0.5)
+      this.aller(hasard(pauses));
+    else this.aller(this.siege);
   }
 
   animer(dt, t) {

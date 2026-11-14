@@ -27,6 +27,7 @@ body {
   position: fixed;
   top: 16px;
   left: 20px;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -245,26 +246,6 @@ body {
   font-weight: 400;
   opacity: 0.7;
 }
-.outils {
-  display: flex;
-  gap: 6px;
-  margin-left: 8px;
-}
-.outils button,
-.plier {
-  font: inherit;
-  color: var(--texte);
-  background: var(--verre);
-  border: 1px solid var(--bord);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 12px;
-  cursor: pointer;
-}
-.outils button[aria-pressed="false"] {
-  color: var(--doux);
-  text-decoration: line-through;
-}
 .plier {
   all: unset;
   cursor: pointer;
@@ -290,19 +271,12 @@ body {
   display: none !important;
 }
 @media (max-width: 900px) {
-  .outils button {
-    padding: 4px 8px;
-  }
-}
-@media (max-width: 900px) {
   .barre {
     right: 16px;
     flex-wrap: wrap;
     row-gap: 8px;
   }
-  .outils {
-    margin-left: 0;
-  }
+
   .compteurs {
     top: 96px;
   }

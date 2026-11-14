@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+import { porte } from "./portes.js";
 
 export function toile(l, h, dessin) {
   const c = document.createElement("canvas");
@@ -61,6 +62,7 @@ export const MAT = {
   chene: std("#c49a6c", { roughness: 0.55 }),
   noir: std("#23252c", { roughness: 0.35, metalness: 0.5 }),
   alu: std("#c3c8cf", { roughness: 0.3, metalness: 0.8 }),
+  or: std("#e0b02a", { roughness: 0.25, metalness: 0.9 }),
   tissu: std("#5d6472", { roughness: 1 }),
   velours: std("#7a1f86", { roughness: 1 }),
   cuir: std("#3b2a22", { roughness: 0.55 }),
@@ -102,6 +104,18 @@ export function etiquette(texte, couleur, classe = "zone") {
   return new CSS2DObject(div);
 }
 
+// Nom d'une pièce, avec sa fonction en petit dessous.
+export function titre(scene, texte, couleur, x, z, sous = "", y = 2.9) {
+  const e = etiquette(texte, couleur, sous == null ? "zone" : "zone piece");
+  if (sous) {
+    const s = document.createElement("small");
+    s.textContent = sous;
+    e.element.append(s);
+  }
+  e.position.set(x, y, z);
+  scene.add(e);
+}
+
 export const sol = (scene, x0, x1, z0, z1, mat, y = 0.01) =>
   solForme(
     scene,
@@ -117,6 +131,7 @@ export const sol = (scene, x0, x1, z0, z1, mat, y = 0.01) =>
 
 // Cloison de (x0, z0) à (x1, z1), droite ou en biais, avec des portes [début, fin] le long du mur.
 // type : "plein" (mur blanc), "verre" (vitrage à cadre noir), "fenetre" (allège blanche et baie vitrée).
+// Un mur plein bas (h < 2) est un mur coupé, comme sur une maquette, pour voir l'intérieur.
 export function mur(
   scene,
   grille,
@@ -124,7 +139,7 @@ export function mur(
   z0,
   x1,
   z1,
-  { type = "verre", portes = [], h = 2.6 } = {},
+  { type = "verre", portes = [], h = 2.6, sens = -1 } = {},
 ) {
   const long = Math.hypot(x1 - x0, z1 - z0);
   const [dx, dz] = [(x1 - x0) / long, (z1 - z0) / long];
@@ -142,6 +157,7 @@ export function mur(
     grille.segment(x0 + dx * a, z0 + dz * a, x0 + dx * b, z0 + dz * b, 0.25);
     if (type === "plein") {
       piece(b - a, h, MAT.platre, c, h / 2, 0.14);
+      if (h < 2) piece(b - a, 0.02, MAT.sombre, c, h + 0.01, 0.15);
       continue;
     }
     const allege = type === "fenetre" ? 0.8 : 0;
@@ -161,13 +177,8 @@ export function mur(
     for (let s = a + pas; s < b - 0.2; s += pas)
       piece(0.05, h - allege, MAT.noir, s, allege + (h - allege) / 2, 0.06);
   }
-  for (const [a, b] of portes) {
-    const g = new THREE.Group();
-    g.position.set(x0 + dx * a, 0, z0 + dz * a);
-    g.rotation.y = angle - 1.1;
-    boite(g, b - a - 0.05, 2.1, 0.04, MAT.porte, (b - a) / 2, 1.05, 0);
-    scene.add(g);
-  }
+  for (const [a, b] of portes)
+    porte(scene, x0 + dx * a, z0 + dz * a, angle, b - a, MAT.porte, sens);
 }
 
 // Sol d'un polygone [[x, z], ...].
@@ -270,7 +281,13 @@ export function poste(scene, grille, x, z, angle, couleur, separateur = true) {
   chaise(g, couleur, 0, 0.7, 0);
   const c = Math.abs(Math.cos(angle));
   const s = Math.abs(Math.sin(angle));
-  grille.bloquer(x, z, 1.6 * c + 0.8 * s, 1.6 * s + 0.8 * c, 0.15);
+  grille.bloquer(
+    x + 0.28 * Math.sin(angle),
+    z + 0.28 * Math.cos(angle),
+    1.6 * c + 1.35 * s,
+    1.6 * s + 1.35 * c,
+    0.12,
+  );
   const place = new THREE.Vector3(
     x + 0.7 * Math.sin(angle),
     0,

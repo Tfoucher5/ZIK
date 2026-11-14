@@ -42,10 +42,22 @@ describe("Grille.trajet", () => {
     expect(c.at(-1)).toEqual({ x: 0, z: 0.6 });
   });
 
-  it("rend le point d'arrivée seul si aucun chemin n'existe", () => {
+  it("reste sur place si aucun chemin n'existe", () => {
     const g = new Grille(-10, 10, -10, 10);
     g.bloquer(0, 0, 0.5, 20, 0.2);
-    expect(g.trajet({ x: -5, z: 0 }, { x: 5, z: 0 })).toEqual([{ x: 5, z: 0 }]);
+    expect(g.trajet({ x: -5, z: 0 }, { x: 5, z: 0 })).toEqual([]);
+  });
+
+  it("rejoint une place collée à un mur par le bon côté", () => {
+    const g = new Grille(-10, 10, -10, 10);
+    g.segment(0, -10, 0, 3);
+    g.bloquer(0.9, 0, 0.8, 1.6, 0.15);
+    const depart = { x: -5, z: 0 };
+    const c = g.trajet(depart, { x: 0.35, z: 0 });
+    expect(c.at(-1)).toEqual({ x: 0.35, z: 0 });
+    expect(c.some((p) => p.z > 3)).toBe(true);
+    expect(croise(g, c.slice(0, -1), depart)).toBe(false);
+    expect(c.at(-2).x).toBeGreaterThan(0);
   });
 });
 
