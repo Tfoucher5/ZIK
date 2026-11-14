@@ -6,7 +6,9 @@ import {
   openLastSalon,
   saveSetup,
   readSetup,
+  setupFor,
 } from "../salonClient.js";
+import { FREE_MAX_TEAMS } from "../../data/proPlans.js";
 import { listenHost } from "../../components/salon/host/hostEvents.js";
 
 let store;
@@ -100,5 +102,41 @@ describe("dernière préparation de soirée", () => {
       playlistIds: [],
       settings: {},
     });
+  });
+});
+
+describe("réglages repris selon l'offre de l'hôte", () => {
+  const defaults = {
+    maxRounds: 10,
+    roundDuration: 30,
+    answerMode: "multiple",
+    manualNext: false,
+    showAnswerDuration: 7,
+    teamCount: 0,
+    specials: false,
+  };
+  const saved = {
+    answerMode: "buzzer",
+    specials: true,
+    teamCount: 6,
+    maxRounds: 15,
+  };
+
+  it("sans Pro : ni buzzer, ni manches spéciales, équipes plafonnées", () => {
+    expect(setupFor(saved, false, defaults)).toMatchObject({
+      answerMode: "multiple",
+      specials: false,
+      teamCount: FREE_MAX_TEAMS,
+      maxRounds: 15,
+    });
+  });
+
+  it("avec Pro : tout est repris", () => {
+    expect(setupFor(saved, true, defaults)).toMatchObject(saved);
+  });
+
+  it("une valeur hors des choix proposés retombe sur le défaut", () => {
+    const s = setupFor({ maxRounds: 999, roundDuration: 7 }, true, defaults);
+    expect(s).toMatchObject({ maxRounds: 10, roundDuration: 30 });
   });
 });

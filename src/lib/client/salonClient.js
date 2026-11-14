@@ -1,3 +1,10 @@
+import { FREE_MAX_TEAMS } from "../data/proPlans.js";
+import {
+  SALON_ROUNDS,
+  SALON_DURATIONS,
+  SALON_REVEALS,
+} from "../data/salonOptions.js";
+
 // Clé de régie d'un salon, gardée par le navigateur qui l'a créé : l'écran TV
 // et la régie ouverts sur ce navigateur n'ont pas besoin de la redemander.
 const k = (code) => `zik_salon_key_${code}`;
@@ -45,13 +52,15 @@ export function saveSetup(playlistIds, settings) {
   }
 }
 
-// Ne garde que les playlists encore proposées et les réglages connus, du bon type
-export function readSetup(defaults, availableIds) {
+// Réglages connus et du bon type ; playlists filtrées si on connaît celles proposées
+export function readSetup(defaults, availableIds = null) {
   try {
     const saved = JSON.parse(localStorage.getItem(SETUP) ?? "null");
     if (!saved || typeof saved !== "object") return null;
     const playlistIds = Array.isArray(saved.playlistIds)
-      ? saved.playlistIds.filter((id) => availableIds.includes(id))
+      ? saved.playlistIds.filter(
+          (id) => !availableIds || availableIds.includes(id),
+        )
       : [];
     const settings = {};
     for (const [key, value] of Object.entries(defaults))
@@ -61,6 +70,27 @@ export function readSetup(defaults, availableIds) {
   } catch {
     return null;
   }
+}
+
+const ALLOWED = {
+  maxRounds: SALON_ROUNDS,
+  roundDuration: SALON_DURATIONS,
+  showAnswerDuration: SALON_REVEALS,
+};
+
+// Réglages repris pour cet hôte : une valeur hors des choix proposés, ou que l'offre
+// gratuite n'ouvre pas (buzzer, manches spéciales, équipes en plus), retombe sur le défaut.
+// Le serveur ferait la même chose sans prévenir : l'hôte verrait un mode qu'il n'aura pas.
+export function setupFor(saved, pro, defaults) {
+  const s = { ...defaults, ...saved };
+  for (const [key, values] of Object.entries(ALLOWED))
+    if (!values.includes(s[key])) s[key] = defaults[key];
+  if (!pro) {
+    if (s.answerMode === "buzzer") s.answerMode = defaults.answerMode;
+    s.specials = defaults.specials;
+    s.teamCount = Math.min(s.teamCount, FREE_MAX_TEAMS);
+  }
+  return s;
 }
 
 export function forgetSalon(code) {
