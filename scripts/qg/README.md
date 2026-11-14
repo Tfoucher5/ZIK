@@ -1,6 +1,6 @@
 # QG : l'équipe d'agents en direct
 
-Tableau de bord 3D local : un plateau de bureaux à l'américaine (baies vitrées, bureaux fermés du CEO, de Théo et de l'avocat, salle du board, un open space en cubicles et une salle de réunion par service, cuisine, accueil, salon, ascenseurs). Théo, le CEO, les chefs, leurs équipes et le board y vivent au rythme du vrai travail. Tokens et coût du jour.
+Tableau de bord 3D local : l'étage des bureaux de ZIK, à taille réelle (34 × 22 m) et aux couleurs de la marque : néon ZIK à l'accueil, open space par service, bureaux de Claire (CEO), de Théo et de Victor (avocat), salle du board, salles de réunion, cuisine, salon avec juke-box et mur de vinyles. Chaque agent est un personnage avec son prénom (Karim le CTO, Léa à l'UX, Mehdi au dev…, liste dans `public/noms.js`). Tokens et coût du jour.
 
 ## Lancer
 

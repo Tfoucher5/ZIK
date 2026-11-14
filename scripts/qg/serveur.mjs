@@ -126,6 +126,8 @@ const FICHIERS = {
   "/plan.js": ["plan.js", "text/javascript"],
   "/meubles.js": ["meubles.js", "text/javascript"],
   "/chemins.js": ["chemins.js", "text/javascript"],
+  "/deco.js": ["deco.js", "text/javascript"],
+  "/noms.js": ["noms.js", "text/javascript"],
   "/perso.js": ["perso.js", "text/javascript"],
   "/qg.css": ["qg.css", "text/css"],
 };

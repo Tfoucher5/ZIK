@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { Grille } from "./chemins.js";
 import { COULEURS, LIMITES, plan } from "./plan.js";
+import { fiche } from "./noms.js";
 import { Perso } from "./perso.js";
 
 // Ces métiers restent à leur poste ; les autres se réunissent en salle dès qu'ils sont deux du même service.
@@ -19,7 +20,11 @@ export class Scene3D {
       500,
     );
     const loin = innerWidth < 700 ? 1.9 : 1;
-    this.camera.position.set(innerWidth < 700 ? 0 : 9, 86 * loin, 72 * loin);
+    this.camera.position.set(
+      innerWidth < 700 ? 0 : -5.5,
+      31 * loin,
+      -32 * loin,
+    );
     this.rendu = new THREE.WebGLRenderer({ antialias: true });
     this.rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.rendu.setSize(innerWidth, innerHeight);
@@ -35,23 +40,23 @@ export class Scene3D {
     });
     conteneur.appendChild(this.etiquettes.domElement);
     this.controles = new OrbitControls(this.camera, this.rendu.domElement);
-    this.controles.target.set(innerWidth < 700 ? 0 : 9, 0, 4);
+    this.controles.target.set(innerWidth < 700 ? 0 : -5.5, 0, 0);
     this.controles.enableDamping = true;
     this.controles.maxPolarAngle = Math.PI / 2.3;
-    this.controles.minDistance = 6;
-    this.controles.maxDistance = 150;
+    this.controles.minDistance = 4;
+    this.controles.maxDistance = 70;
     this.ciel = new THREE.HemisphereLight("#dbe8ff", "#3a3328", 1);
     this.soleil = new THREE.DirectionalLight("#fff1dc", 2);
-    this.soleil.position.set(30, 45, 20);
+    this.soleil.position.set(-12, 26, -14);
     this.soleil.castShadow = true;
     this.soleil.shadow.mapSize.set(2048, 2048);
     this.soleil.shadow.bias = -0.0005;
     Object.assign(this.soleil.shadow.camera, {
-      left: -45,
-      right: 45,
-      top: 35,
-      bottom: -35,
-      far: 150,
+      left: -22,
+      right: 22,
+      top: 16,
+      bottom: -16,
+      far: 90,
     });
     this.scene.add(this.ciel, this.soleil);
     this.ambiance();
@@ -84,15 +89,21 @@ export class Scene3D {
   ambiance() {
     const h = new Date().getHours() + new Date().getMinutes() / 60;
     const jour = h > 7.5 && h < 18.5;
-    this.scene.background = new THREE.Color(jour ? "#9ec9ef" : "#0b1224");
-    this.scene.fog = new THREE.Fog(this.scene.background, 120, 260);
+    this.scene.background = new THREE.Color(jour ? "#1b1724" : "#0b0b10");
     this.ciel.intensity = jour ? 1.1 : 0.55;
     this.soleil.intensity = jour ? 2.2 : 0.5;
     this.soleil.color.set(jour ? "#fff1dc" : "#9fb4ff");
   }
 
-  perso(id, nom, couleur, siege) {
-    const p = new Perso(this.scene, this.grille, id, nom, couleur, siege);
+  perso(id, role, couleur, siege) {
+    const p = new Perso(
+      this.scene,
+      this.grille,
+      id,
+      fiche(id, role),
+      couleur,
+      siege,
+    );
     this.persos.set(id, p);
     return p;
   }
@@ -101,14 +112,14 @@ export class Scene3D {
     this.org = org;
     this.grille = new Grille(...LIMITES);
     this.d = plan(this.scene, this.grille, org);
-    this.perso("theo", "Théo", "#f4f4f4", this.d.theo);
+    this.perso("theo", "fondateur", "#ffffff", this.d.theo);
     this.perso("ceo", "CEO", COULEURS.ceo, this.d.ceo);
     this.libres = new Map([["renforts", this.d.renforts]]);
     for (const [id, s] of Object.entries(this.d.services)) {
       const c = org.chefs.find((x) => x.id === id);
       this.perso(id, `chef ${c.skill}`, COULEURS[id], s.chef);
       c.equipe.forEach((m, i) => this.perso(m, m, COULEURS[id], s.postes[i]));
-      this.libres.set(id, s.postes.slice(c.equipe.length));
+      this.libres.set(id, s.extra);
     }
     for (const b of org.board.filter(
       (x) => !x.includes("*") && !this.persos.has(x),
@@ -138,7 +149,7 @@ export class Scene3D {
       if (i < voulus && !p) {
         p = this.perso(
           cle,
-          id === "renforts" ? "renfort" : id,
+          id === "renforts" ? "renfort" : fiche(id).role,
           COULEURS[this.service(id)],
           asc,
         );
