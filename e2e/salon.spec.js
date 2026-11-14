@@ -64,6 +64,20 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
     const champ = alice.locator("#salon-guess-input");
     await expect(champ).toBeVisible({ timeout: MANCHE_MAX_MS });
 
+    if (m === 1) {
+      // TV allégée : réglages cachés sans geste, revenus en bougeant la souris
+      // au-dessus de la vidéo ; la régie ouverte est annoncée
+      await expect(tv.locator(".sh-regie-ok")).toHaveText("Régie connectée");
+      await expect(tv.locator(".sh-top.calm")).toBeAttached({
+        timeout: 10_000,
+      });
+      await tv.screenshot({ path: "test-results/tv-calme.png" });
+      await tv.mouse.move(700, 500);
+      await tv.mouse.move(720, 520);
+      await expect(tv.locator(".sh-top.calm")).toHaveCount(0);
+      await tv.screenshot({ path: "test-results/tv-reglages.png" });
+    }
+
     if (m === 2) await telephones[1].setOffline(true);
 
     await regie.getByRole("button", { name: "Afficher la réponse" }).click();
