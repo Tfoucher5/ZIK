@@ -245,3 +245,69 @@ body {
   font-weight: 400;
   opacity: 0.7;
 }
+.outils {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+.outils button,
+.plier {
+  font: inherit;
+  color: var(--texte);
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.outils button[aria-pressed="false"] {
+  color: var(--doux);
+  text-decoration: line-through;
+}
+.plier {
+  all: unset;
+  cursor: pointer;
+  width: 100%;
+}
+.plier::after {
+  content: " ▾";
+  color: var(--doux);
+}
+.replie .plier::after {
+  content: " ▸";
+}
+.replie > :not(h2) {
+  display: none;
+}
+.replie {
+  height: auto !important;
+}
+.sans-pieces .zone,
+.sans-agents .etiquette,
+.sans-activite .etiquette .act,
+.sans-panneaux .panneau-ui {
+  display: none !important;
+}
+@media (max-width: 900px) {
+  .outils button {
+    padding: 4px 8px;
+  }
+}
+@media (max-width: 900px) {
+  .barre {
+    right: 16px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .outils {
+    margin-left: 0;
+  }
+  .compteurs {
+    top: 96px;
+  }
+  .board {
+    top: auto;
+    bottom: calc(30vh + 28px);
+  }
+}
