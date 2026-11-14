@@ -16,10 +16,10 @@ const MAX_PLAYLISTS = 50;
 
 function playlistsError(ids) {
   if (!Array.isArray(ids) || ids.length === 0)
-    return "Au moins une playlist requise";
+    return "Choisissez au moins une playlist.";
   if (ids.length > MAX_PLAYLISTS)
     return `${MAX_PLAYLISTS} playlists maximum par soirée`;
-  return ids.every(isUuid) ? null : "Playlist invalide";
+  return ids.every(isUuid) ? null : "Une des playlists choisies n'existe pas.";
 }
 
 export async function POST({ request }) {
@@ -82,15 +82,19 @@ const httpLookups = {};
 export async function GET({ url }) {
   const code = url.searchParams.get("code")?.toUpperCase();
   if (!/^[A-Z0-9]{4,12}$/.test(code ?? ""))
-    return json({ error: "Code requis" }, { status: 400 });
+    return json(
+      { error: "Le code de la soirée fait 6 caractères." },
+      { status: 400 },
+    );
   // Juste après un redémarrage, le salon n'est encore que dans son instantané
   if (
     !salonRooms[code] &&
     (await restoreSalon(code, getIO(), httpLookups)) === "throttled"
   )
-    return json({ error: "Réessayez dans un instant" }, { status: 503 });
+    return json({ error: "Réessayez dans un instant." }, { status: 503 });
   const salon = salonRooms[code];
-  if (!salon) return json({ error: "Salon introuvable" }, { status: 404 });
+  if (!salon)
+    return json({ error: "Cette soirée n'existe plus." }, { status: 404 });
   return json({
     exists: true,
     phase: salon.game.phase,
@@ -124,7 +128,8 @@ export async function PATCH({ request }) {
       { error: "Rouvrez la régie depuis l'écran TV de la soirée." },
       { status: 401 },
     );
-  if (!code) return json({ error: "Code requis" }, { status: 400 });
+  if (!code)
+    return json({ error: "Le code de la soirée manque." }, { status: 400 });
   const playlistsErr = playlistsError(playlistIds);
   if (playlistsErr) return json({ error: playlistsErr }, { status: 400 });
 

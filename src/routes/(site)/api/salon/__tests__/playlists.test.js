@@ -43,6 +43,19 @@ describe("/api/salon : réponses d'erreur", () => {
     );
   });
 
+  it("textes pour l'organisateur : liste vide, régie sans clé", async () => {
+    expect((await (await creer([])).json()).error).toBe(
+      "Choisissez au moins une playlist.",
+    );
+    const res = await PATCH(
+      requete("PATCH", { code: "ABC", playlistIds: ids(1) }),
+    );
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toBe(
+      "Rouvrez la régie depuis l'écran TV de la soirée.",
+    );
+  });
+
   it("corps JSON null : erreur propre", async () => {
     expect((await POST(requete("POST", null))).status).toBe(400);
     expect((await PATCH(requete("PATCH", null))).status).toBe(401);
