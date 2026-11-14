@@ -241,3 +241,7 @@ body {
   padding: 2px 7px;
   font-size: 10px;
 }
+.etiquette .nom span {
+  font-weight: 400;
+  opacity: 0.7;
+}
