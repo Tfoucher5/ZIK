@@ -1,7 +1,7 @@
 <script>
   import { ago } from '$lib/shared/admin/stats-utils.js';
 
-  /** Dernières parties en ligne et parties du mode salon (animées ou jouées). */
+  /** Dernières parties en ligne et parties de ZIK Soirée (animées ou jouées). */
   let { data } = $props();
 
   const salonHosted = $derived.by(() => {
@@ -46,7 +46,7 @@
 </section>
 
 <section class="a-section">
-  <div class="a-section-head"><h3>Mode salon</h3><span class="a-muted">{data.salon.hosted.length} animé{data.salon.hosted.length > 1 ? 's' : ''} · {data.salon.played.length} joué{data.salon.played.length > 1 ? 's' : ''}</span></div>
+  <div class="a-section-head"><h3>ZIK Soirée</h3><span class="a-muted">{data.salon.hosted.length} animé{data.salon.hosted.length > 1 ? 's' : ''} · {data.salon.played.length} joué{data.salon.played.length > 1 ? 's' : ''}</span></div>
   {#if data.salon.hosted.length}
     <div class="a-kpis">
       <div class="a-kpi"><span class="a-kpi-label">Parties animées</span><span class="a-kpi-value">{data.salon.hosted.length}</span><span class="a-kpi-sub">{salonHosted.month} sur 30 jours</span></div>

@@ -6,11 +6,11 @@
   slug="blinest"
   name="Blinest"
   title="ZIK vs Blinest - Comparaison des blind tests musicaux en ligne"
-  description="ZIK ou Blinest pour votre prochain blind test musical ? Comparaison factuelle : playlists Deezer personnalisées sur ZIK, classement ELO compétitif, Mode Salon pour les soirées."
+  description="ZIK ou Blinest pour votre prochain blind test musical ? Comparaison factuelle : playlists Deezer personnalisées sur ZIK, classement ELO compétitif, ZIK Soirée pour jouer sur la TV."
   ogTitle="ZIK vs Blinest - Comparaison blind test musical"
-  ogDescription="ZIK et Blinest sont deux blind tests musicaux en ligne. ZIK permet d'importer ses propres playlists Deezer et propose un Mode Salon pour les soirées."
+  ogDescription="ZIK et Blinest sont deux blind tests musicaux en ligne. ZIK permet d'importer ses propres playlists Deezer et propose ZIK Soirée, le blind test sur la TV."
   ldName="ZIK vs Blinest — Comparaison des blind tests musicaux en ligne"
-  ldDescription="ZIK et Blinest sont deux blind tests musicaux en ligne. Comparaison factuelle : playlists personnalisées, modes de jeu, classement ELO, Mode Salon."
+  ldDescription="ZIK et Blinest sont deux blind tests musicaux en ligne. Comparaison factuelle : playlists personnalisées, modes de jeu, classement ELO, ZIK Soirée."
   h1="ZIK vs Blinest : deux blind tests musicaux, des approches différentes"
   intro="ZIK et Blinest sont deux blind tests musicaux en ligne gratuits, tous deux francophones. Cette comparaison présente leurs différences de façon factuelle, pour vous aider à choisir selon votre usage."
   sections={[
@@ -21,7 +21,7 @@
         'Trois modes de jeu : Classique (ELO), QCM (casual), Salon (soirée TV + smartphones)',
         'Un classement ELO compétitif persistant pour les joueurs inscrits',
         'La création de rooms publiques et privées avec code partageable',
-        "Jusqu'à 20 joueurs simultanément, en temps réel via Socket.io",
+        "Plusieurs joueurs dans la même partie, en temps réel",
       ] },
     ] },
     { title: 'Ce que fait Blinest', blocks: [
@@ -32,7 +32,7 @@
       ['Import playlists Deezer', true, false],
       ['Multijoueur en temps réel', true, false],
       ['Classement ELO compétitif', true, false],
-      ['Mode Salon (TV + smartphones)', true, false],
+      ['ZIK Soirée (TV + smartphones)', true, false],
       ['Mode QCM', true, true],
       ['Blind test solo / défis par genre', 'Partiel', true],
       ['Rooms privées avec code', true, false],
@@ -43,7 +43,7 @@
       { ul: [
         'Vous voulez jouer avec vos propres playlists Deezer',
         'Vous cherchez un blind test multijoueur en temps réel avec des amis',
-        'Vous organisez une soirée et voulez un Mode Salon TV + smartphones',
+        'Vous organisez une soirée et voulez un blind test sur la TV avec les téléphones',
         'Vous voulez un classement ELO compétitif et persistant',
       ] },
     ] },
