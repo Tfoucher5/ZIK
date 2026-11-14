@@ -1,4 +1,5 @@
-import { teamColor } from "../../../data/salonOptions.js";
+import { teamHex } from "../../../data/salonOptions.js";
+import { shareFile, downloadBlob } from "../../../client/shareFile.js";
 
 // Story Instagram / TikTok : 9:16
 export const STORY_W = 1080;
@@ -8,6 +9,10 @@ const place = (n) => (n === 1 ? "1re" : `${n}e`);
 
 // Podium (équipes ou joueurs) et la ligne du joueur, à partir de ce que le téléphone a reçu
 export function storyData({ finalRanking, teams, username, myTeam }) {
+  const me = finalRanking?.me;
+  const playerLine = me
+    ? `${username}, à la ${place(me.rank)} place sur ${finalRanking.count}`
+    : null;
   if (teams?.length) {
     const i = teams.findIndex((t) => t.id === myTeam);
     return {
@@ -15,12 +20,12 @@ export function storyData({ finalRanking, teams, username, myTeam }) {
         rank: k + 1,
         name: t.name,
         score: t.score,
-        color: teamColor(t.id),
+        color: teamHex(t.id),
       })),
-      mine: i >= 0 ? `Mon équipe, à la ${place(i + 1)} place` : null,
+      // Sans équipe choisie, la place du joueur
+      mine: i >= 0 ? `Mon équipe, à la ${place(i + 1)} place` : playerLine,
     };
   }
-  const me = finalRanking?.me;
   return {
     podium: (finalRanking?.top ?? []).slice(0, 3).map((p) => ({
       rank: p.rank,
@@ -28,9 +33,7 @@ export function storyData({ finalRanking, teams, username, myTeam }) {
       score: p.score,
       color: null,
     })),
-    mine: me
-      ? `${username}, à la ${place(me.rank)} place sur ${finalRanking.count}`
-      : null,
+    mine: playerLine,
   };
 }
 
@@ -43,8 +46,11 @@ const X1 = 930;
 
 function fit(ctx, text, max, size, weight, family) {
   let s = size;
-  do ctx.font = `${weight} ${s}px ${family}`;
-  while (ctx.measureText(text).width > max && (s -= 4) > 24);
+  ctx.font = `${weight} ${s}px ${family}`;
+  while (ctx.measureText(text).width > max && s > 24) {
+    s -= 4;
+    ctx.font = `${weight} ${s}px ${family}`;
+  }
 }
 
 export async function drawStory(canvas, { podium, mine }) {
@@ -88,7 +94,8 @@ export async function drawStory(canvas, { podium, mine }) {
   const base = 1330;
   for (const s of slots) {
     const e = podium.find((p) => p.rank === s.rank);
-    const color = e?.color ?? MEDAL[s.rank];
+    if (!e) continue;
+    const color = e.color ?? MEDAL[s.rank];
     ctx.fillStyle = s.rank === 1 ? "#fafafa" : "#161616";
     ctx.fillRect(s.x, base - s.h, w, s.h);
     ctx.fillStyle = color;
@@ -97,14 +104,12 @@ export async function drawStory(canvas, { podium, mine }) {
     ctx.font = `900 150px ${COND}`;
     ctx.textAlign = "center";
     ctx.fillText(String(s.rank), s.x + w / 2, base - s.h + 170);
-    if (e) {
-      ctx.fillStyle = color;
-      fit(ctx, e.name, w - 16, 64, 900, COND);
-      ctx.fillText(e.name, s.x + w / 2, base - s.h - 70);
-      ctx.fillStyle = "#fafafa";
-      ctx.font = `600 36px ${MONO}`;
-      ctx.fillText(`${e.score} pts`, s.x + w / 2, base - s.h - 24);
-    }
+    ctx.fillStyle = color;
+    fit(ctx, e.name, w - 16, 64, 900, COND);
+    ctx.fillText(e.name, s.x + w / 2, base - s.h - 70);
+    ctx.fillStyle = "#fafafa";
+    ctx.font = `600 36px ${MONO}`;
+    ctx.fillText(`${e.score} pts`, s.x + w / 2, base - s.h - 24);
     ctx.textAlign = "left";
   }
 
@@ -114,33 +119,18 @@ export async function drawStory(canvas, { podium, mine }) {
   return canvas;
 }
 
-const SITE_URL = "https://www.zik-music.fr";
-
-/**
- * Partage la story du podium : menu de partage du téléphone avec l'image,
- * sinon téléchargement. Retourne "shared", "downloaded" ou "cancelled".
- */
-export async function shareStory(data) {
+// Image prête avant le clic : sur iPhone, le partage doit partir pendant le geste
+export async function prepareStory(data) {
   const canvas = await drawStory(document.createElement("canvas"), data);
   const blob = await new Promise((ok) => canvas.toBlob(ok, "image/png"));
-  const file = new File([blob], "zik-podium.png", { type: "image/png" });
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({
-        files: [file],
-        text: "Le podium de notre blind test ZIK Soirée",
-        url: SITE_URL,
-      });
-      return "shared";
-    } catch (e) {
-      if (e.name === "AbortError") return "cancelled";
-    }
-  }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = file.name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  if (!blob) throw new Error("image");
+  return new File([blob], "zik-podium.png", { type: "image/png" });
+}
+
+/** Menu de partage du téléphone, sinon téléchargement : "shared", "cancelled" ou "downloaded". */
+export async function shareStory(file) {
+  const r = await shareFile(file, "Le podium de notre blind test ZIK Soirée");
+  if (r) return r;
+  downloadBlob(file, file.name);
   return "downloaded";
 }

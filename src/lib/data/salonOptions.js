@@ -20,3 +20,23 @@ export const SPECIALS = {
 // Au-delà de 16 équipes, les couleurs reviennent dans le même ordre
 const TEAM_COLORS = 16;
 export const teamColor = (id) => `var(--q${id % TEAM_COLORS})`;
+// Mêmes couleurs que --q0…--q15 (static/css/salon/shared.css), pour un canvas qui ne lit pas le CSS
+const TEAM_HEX = [
+  "#ff4f9a",
+  "#5bc0eb",
+  "#f4e04d",
+  "#3ddc84",
+  "#8c7bff",
+  "#ff8c42",
+  "#2ec4b6",
+  "#f2ede3",
+  "#b8e986",
+  "#3a6df0",
+  "#ff6f61",
+  "#c9a7ff",
+  "#d4a017",
+  "#9ef0d0",
+  "#ffb3d1",
+  "#9aa0a6",
+];
+export const teamHex = (id) => TEAM_HEX[id % TEAM_COLORS];

@@ -33,8 +33,12 @@ describe("story du podium", () => {
     ];
     const d = storyData({ finalRanking, teams, myTeam: 0 });
     expect(d.podium.map((p) => p.name)).toEqual(["Les Bleus", "Les Roses"]);
-    expect(d.podium[0].color).toBeTruthy();
+    expect(d.podium[0].color).toMatch(/^#[0-9a-f]{6}$/i);
     expect(d.mine).toBe("Mon équipe, à la 2e place");
+    // Pas d'équipe choisie : la place du joueur
+    expect(storyData({ finalRanking, teams, username: "Dan" }).mine).toBe(
+      "Dan, à la 5e place sur 8",
+    );
   });
 
   it("sans classement reçu : rien à dessiner, rien ne casse", () => {

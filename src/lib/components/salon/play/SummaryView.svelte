@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { flip } from 'svelte/animate';
   import { podium } from './salonPlayer.svelte.js';
-  import { storyData, shareStory } from './podiumStory.js';
+  import { storyData, prepareStory, shareStory } from './podiumStory.js';
 
   let {
     phase = 'summary',
@@ -35,10 +35,18 @@
   });
   let myPos = $derived(finalRanking?.me?.rank ?? 0);
   let story = $derived(phase === 'gameover' ? storyData({ finalRanking, teams, username, myTeam }) : null);
+  let storyFile = $state(null);
   let shareState = $state('');
+  $effect(() => {
+    const d = story;
+    storyFile = null;
+    if (!d?.podium.length) return;
+    let off = false;
+    prepareStory(d).then((f) => { if (!off) storyFile = f; }).catch(() => { if (!off) shareState = 'error'; });
+    return () => (off = true);
+  });
   async function partager() {
-    shareState = 'busy';
-    const r = await shareStory(story).catch(() => 'error');
+    const r = await shareStory(storyFile).catch(() => 'error');
     shareState = r === 'downloaded' || r === 'error' ? r : '';
   }
   let teamPos = $derived((teams?.findIndex(t => t.id === myTeam) ?? -1) + 1);
@@ -119,8 +127,8 @@
 
 {#if phase === 'gameover'}
   {#if story?.podium.length}
-    <button class="sx-btn sp-share" onclick={partager} disabled={shareState === 'busy'}>
-      {shareState === 'downloaded' ? 'Image enregistrée' : shareState === 'error' ? "Le partage n'a pas marché, réessaie" : 'Partager le podium en story'}
+    <button class="sx-btn sp-share" onclick={partager} disabled={!storyFile}>
+      {shareState === 'downloaded' ? 'Image enregistrée' : shareState === 'error' ? "Le partage n'a pas marché, réessaie" : storyFile ? 'Partager le podium en story' : "Préparation de l'image…"}
     </button>
   {/if}
   <div class="salon-host-cta">
