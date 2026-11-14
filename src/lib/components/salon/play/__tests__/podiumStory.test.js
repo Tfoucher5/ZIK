@@ -1,0 +1,46 @@
+import { describe, it, expect } from "vitest";
+import { storyData } from "../podiumStory.js";
+
+const finalRanking = {
+  top: [
+    { rank: 1, username: "Alice", score: 120 },
+    { rank: 2, username: "Bob", score: 90 },
+    { rank: 3, username: "Chloé", score: 40 },
+  ],
+  me: { rank: 5, username: "Dan", score: 10 },
+  count: 8,
+};
+
+describe("story du podium", () => {
+  it("en solo : les trois premiers et ma place, sans genre", () => {
+    const d = storyData({ finalRanking, username: "Dan" });
+    expect(d.podium.map((p) => p.name)).toEqual(["Alice", "Bob", "Chloé"]);
+    expect(d.mine).toBe("Dan, à la 5e place sur 8");
+  });
+
+  it("à la 1re place", () => {
+    const d = storyData({
+      finalRanking: { ...finalRanking, me: { rank: 1 } },
+      username: "Alice",
+    });
+    expect(d.mine).toBe("Alice, à la 1re place sur 8");
+  });
+
+  it("en équipes : le podium des équipes avec leur couleur", () => {
+    const teams = [
+      { id: 2, name: "Les Bleus", score: 80 },
+      { id: 0, name: "Les Roses", score: 60 },
+    ];
+    const d = storyData({ finalRanking, teams, myTeam: 0 });
+    expect(d.podium.map((p) => p.name)).toEqual(["Les Bleus", "Les Roses"]);
+    expect(d.podium[0].color).toBeTruthy();
+    expect(d.mine).toBe("Mon équipe, à la 2e place");
+  });
+
+  it("sans classement reçu : rien à dessiner, rien ne casse", () => {
+    expect(storyData({ finalRanking: null, username: "X" })).toEqual({
+      podium: [],
+      mine: null,
+    });
+  });
+});

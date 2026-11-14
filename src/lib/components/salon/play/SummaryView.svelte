@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { flip } from 'svelte/animate';
   import { podium } from './salonPlayer.svelte.js';
+  import { storyData, shareStory } from './podiumStory.js';
 
   let {
     phase = 'summary',
@@ -33,6 +34,13 @@
     return () => clearTimeout(t);
   });
   let myPos = $derived(finalRanking?.me?.rank ?? 0);
+  let story = $derived(phase === 'gameover' ? storyData({ finalRanking, teams, username, myTeam }) : null);
+  let shareState = $state('');
+  async function partager() {
+    shareState = 'busy';
+    const r = await shareStory(story).catch(() => 'error');
+    shareState = r === 'downloaded' || r === 'error' ? r : '';
+  }
   let teamPos = $derived((teams?.findIndex(t => t.id === myTeam) ?? -1) + 1);
   let soiree = $derived(night?.games > 1 ? night : null);
   let nightPos = $derived(
@@ -110,6 +118,11 @@
 </ol>
 
 {#if phase === 'gameover'}
+  {#if story?.podium.length}
+    <button class="sx-btn sp-share" onclick={partager} disabled={shareState === 'busy'}>
+      {shareState === 'downloaded' ? 'Image enregistrée' : shareState === 'error' ? "Le partage n'a pas marché, réessaie" : 'Partager le podium en story'}
+    </button>
+  {/if}
   <div class="salon-host-cta">
     <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>
     <a href="/?auth=register&ref=salon-invite" class="sx-btn sx-btn-primary">Créer mon compte</a>
@@ -132,6 +145,12 @@
   .sp-list small { animation: sum-in 0.4s ease; }
   @keyframes sum-in {
     from { opacity: 0; transform: translateY(4px); }
+  }
+  .sp-share {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    margin-top: 18px;
   }
   .sp-night {
     margin-top: 8px;
