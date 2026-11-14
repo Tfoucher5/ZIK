@@ -17,6 +17,7 @@ export const NEWS = [
       "La TV indique « Régie connectée » quand une régie la pilote.",
       "La régie affiche le vrai volume de la TV, même quand il est réglé sur la TV.",
       "Remettre le son revient au volume d'avant, plus à 100 %.",
+      "Après un changement de playlist, la régie affiche tout de suite la nouvelle, sans recharger.",
       "Le bilan de la musique (« Musique prête ») passe dans la régie ; la TV ne garde que la vérification en cours et l'alerte, sauf sans régie.",
     ],
     proItems: ["Depuis la régie, régler le volume de la TV à distance."],
