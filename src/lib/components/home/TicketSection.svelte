@@ -1,7 +1,7 @@
 <script>
   import { reveal } from './reveal.js';
 
-  let { home, soiree = true } = $props();
+  let { home } = $props();
 
   let roomCodeVal = $state("");
   let roomCodeErr = $state("");
@@ -36,7 +36,6 @@
       <a href="/rooms" class="ql">Rooms</a>
       <a href="/classements" class="ql">Classements</a>
       <a href="/playlists" class="ql">Playlists</a>
-      {#if soiree}<a href="/salon" class="ql">Mode Salon</a>{/if}
       <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="ql ql-discord">Discord</a>
     </div>
   </div>

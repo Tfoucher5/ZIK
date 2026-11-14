@@ -46,5 +46,5 @@
       ] },
     ] },
   ]}
-  cta={{ text: 'ZIK est conçu pour le blind test musical multijoueur. Essayez-le gratuitement.', label: 'Jouer sur ZIK →' }}
+  cta={{ text: 'ZIK est conçu pour le blind test musical multijoueur. Essayez-le gratuitement.', label: 'Jouer sur ZIK →', href: '/jouer' }}
 />

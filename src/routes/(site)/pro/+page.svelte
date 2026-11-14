@@ -42,8 +42,6 @@
 </svelte:head>
 
 <main class="pro-page">
-  <div class="pro-back"><a href="/">← Retour à ZIK</a></div>
-
   <article class="pro-article">
     <ProHeader {checkout} />
     <ProSteps />
@@ -60,15 +58,5 @@
     max-width: 860px;
     margin: 0 auto;
     padding: calc(var(--nav-h) + 24px) 20px 80px;
-  }
-  .pro-back {
-    margin-bottom: 24px;
-  }
-  .pro-back a {
-    font-size: 0.82rem;
-    color: var(--mid);
-  }
-  .pro-back a:hover {
-    color: var(--accent);
   }
 </style>

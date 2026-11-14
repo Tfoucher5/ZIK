@@ -1,10 +1,10 @@
-import { FAQ, GAME_FAQ } from "./faq.js";
+import { FAQ } from "./faq.js";
 
-const app = {
+const game = {
   "@context": "https://schema.org",
   "@type": ["WebApplication", "VideoGame"],
   name: "ZIK — Blind Test Musical",
-  url: "https://www.zik-music.fr/",
+  url: "https://www.zik-music.fr/jouer",
   description:
     "Jeu de blind test musical multijoueur en ligne. Identifiez les chansons avant tout le monde, importez vos playlists Deezer, et grimpez au classement ELO. Gratuit, sans installation.",
   applicationCategory: "GameApplication",
@@ -17,7 +17,6 @@ const app = {
   featureList: [
     "Blind test musical multijoueur en temps réel",
     "Import de playlists Deezer",
-    "Mode Salon Kahoot-like (QCM sur smartphone)",
     "Classement ELO et statistiques joueur",
     "Rooms privées avec code partageable",
     "Mode invité sans inscription",
@@ -32,14 +31,13 @@ const app = {
   },
 };
 
-export const jsonLd = JSON.stringify([
-  app,
+export const siteJsonLd = JSON.stringify([
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "ZIK",
     url: "https://www.zik-music.fr/",
-    description: "Le blind test musical multijoueur gratuit en ligne.",
+    description: "Le blind test, en ligne ou en soirée, gratuit et sans appli.",
     inLanguage: "fr-FR",
     potentialAction: {
       "@type": "SearchAction",
@@ -60,22 +58,14 @@ export const jsonLd = JSON.stringify([
   },
 ]);
 
-export const gameJsonLd = JSON.stringify({
-  ...app,
-  url: "https://www.zik-music.fr/jouer",
-  featureList: app.featureList.filter((f) => !f.startsWith("Mode Salon")),
+export const gameJsonLd = JSON.stringify(game);
+
+export const gameFaqJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.ld ?? f.a },
+  })),
 });
-
-const faqLd = (items) =>
-  JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: items.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.ld ?? f.a },
-    })),
-  });
-
-export const faqJsonLd = faqLd(FAQ);
-export const gameFaqJsonLd = faqLd(GAME_FAQ);

@@ -208,3 +208,7 @@ Les PR 1 et 2 peuvent partir seules. Les PR 3 et 4 partent dans la même release
 
 - **`/soiree` suit le thème** (pas « toujours de nuit ») : la barre du site suit déjà le thème, une page forcée en nuit sous une barre claire faisait deux univers mal recollés. Les répliques d'écrans (TV, manche) restent noires, comme une vraie TV.
 - **`/salon` garde son bloc SEO pour l'instant** : la FAQ de `/soiree` est différente (pas de contenu dupliqué) ; le déplacement de `SalonSeo` et le titre d'outil de `/salon` attendent que `/soiree` soit indexée, comme `/pro` réduit aux tarifs.
+- **Champ code en haut, à droite du titre** (pas à cheval sur la couture) : visible sans défilement en desktop comme en mobile, et toujours avant les portes.
+- **Ombre de la mini-TV neutre** sur `/` : le bouton « Rejoindre » reste le seul magenta.
+- **Code tapé** : on interroge `/api/rooms/{code}` (rooms éphémères et enregistrées), pas seulement `/custom`.
+- **Comparatifs `/vs/*`** : le bouton final mène à `/soiree`, sauf `/vs/blindtest-io` (jeu en ligne) qui mène à `/jouer`.

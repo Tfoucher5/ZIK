@@ -19,4 +19,4 @@
   <JsonLd json={gameFaqJsonLd} />
 </svelte:head>
 
-<OnlineHome {data} soiree={false} />
+<OnlineHome {data} />

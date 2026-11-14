@@ -6,6 +6,20 @@
 export const NEWS = [
   {
     date: "2026-11-14",
+    version: "3.32.0",
+    tag: "Nouveauté",
+    title: "Un accueil, deux univers : jouer en ligne ou animer une soirée",
+    summary:
+      "L'accueil te demande ce que tu viens faire : jouer en ligne, ou animer une soirée sur la TV. Un code ? Un seul champ suffit.",
+    items: [
+      "L'accueil a deux portes : « Jouer en ligne » mène aux rooms, au Zikle et aux classements (sur /jouer), « Animer une soirée » présente ZIK Soirée.",
+      "Un seul champ « J'ai un code » : code d'une room en ligne ou code affiché sur la TV, ZIK t'emmène au bon endroit.",
+      "Une soirée ouverte depuis moins de 12 h ? L'accueil propose de la reprendre en un clic.",
+      "« Quitter » une partie en ligne ramène aux rooms.",
+    ],
+  },
+  {
+    date: "2026-11-14",
     version: "3.31.0",
     tag: "Amélioration",
     title: "Scanner le QR de la TV sans quitter la page",

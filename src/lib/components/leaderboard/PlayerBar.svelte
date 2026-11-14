@@ -12,7 +12,7 @@
   {#if !lb.myUserId}
     <div class="guest">
       <span class="guest-txt">🎧 Connecte-toi pour suivre ta position en temps réel.</span>
-      <a href="/" class="cta">Se connecter</a>
+      <a href="/jouer?auth=login" class="cta">Se connecter</a>
     </div>
   {:else if !lb.myRankLoaded}
     <div class="guest"><span class="guest-txt">Ta position…</span></div>

@@ -21,11 +21,6 @@ export const FAQ = [
     a: "En Mode Classique, les joueurs saisissent librement le titre et l'artiste — c'est le mode compétitif avec classement ELO. En Mode QCM, quatre propositions sont affichées et il faut choisir la bonne — plus accessible, sans ELO.",
   },
   {
-    q: "Comment fonctionne le Mode Salon ?",
-    soiree: true,
-    a: "En Mode Salon, un hôte lance une session depuis son ordinateur ou sa TV. Les invités rejoignent depuis leur smartphone en entrant un code ou en scannant un QR code. La musique est diffusée uniquement depuis l'écran de l'hôte.",
-  },
-  {
     q: "Puis-je importer mes playlists Deezer ?",
     a: "Oui. ZIK permet l'import direct de playlists publiques Deezer en quelques clics. Il est aussi possible de créer des playlists manuellement sur le site.",
     ld: "Oui. ZIK permet l'import direct de playlists publiques Deezer en quelques clics.",
@@ -47,6 +42,3 @@ export const FAQ = [
     a: "ZIK propose des succès à débloquer (séries de victoires, score cumulé, défis communautaires) avec des paliers bronze/argent/or selon les cas, visibles sur le profil de chaque joueur.",
   },
 ];
-
-// FAQ de /jouer : sans les questions de soirée
-export const GAME_FAQ = FAQ.filter((f) => !f.soiree);

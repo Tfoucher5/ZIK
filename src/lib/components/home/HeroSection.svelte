@@ -1,10 +1,8 @@
 <script>
   import { onMount } from 'svelte';
-  import HeroSalon from './HeroSalon.svelte';
   import { HERO_COVERS } from './covers.js';
 
-  // soiree : accueil commun avec le panneau ZIK Soirée ; sinon entrée du jeu en ligne
-  let { online = 0, gamesMonth = 0, userCount = 0, soiree = true } = $props();
+  let { online = 0, gamesMonth = 0, userCount = 0 } = $props();
 
   let displayOnline = $state(0);
 
@@ -33,8 +31,7 @@
     covers = pool.slice(0, CELLS);
   }
 
-  const SUB_COMMUN = "Le blind test gratuit, sans appli : en soirée sur la TV, ou en ligne contre d'autres joueurs.";
-  const SUB_JEU = 'Rejoins une room, crée la tienne avec tes playlists Deezer, joue au Zikle du jour et grimpe au classement. Gratuit, avec ou sans compte.';
+  const SUB = 'Rejoins une room, crée la tienne avec tes playlists Deezer, joue au Zikle du jour et grimpe au classement. Gratuit, avec ou sans compte.';
   const toRooms = () => document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' });
 
   function fmt(n) {
@@ -90,22 +87,16 @@
       <span class="l3">PROUVE-LE.</span>
     </h1>
     <p class="hero-sub">
-      {soiree ? SUB_COMMUN : SUB_JEU}
+      {SUB}
       {#if userCount > 0}<br><span class="hero-proof">{fmt(userCount)} joueurs inscrits · {fmt(gamesMonth)} parties ce mois</span>{/if}
     </p>
 
     <div class="hero-actions">
-      {#if soiree}
-        <a href="/salon" class="btn-accent hero-cta">🎉 Organiser une soirée</a>
-        <button class="btn-ghost hero-cta hero-online" onclick={toRooms}>Jouer en ligne</button>
-      {:else}
         <button class="btn-accent hero-cta" onclick={toRooms}>Jouer maintenant</button>
         <a href="/zikle" class="btn-ghost hero-cta hero-online">Zikle du jour</a>
-      {/if}
     </div>
   </div>
 
-  {#if soiree}<HeroSalon />{/if}
 </section>
 
 <style>
