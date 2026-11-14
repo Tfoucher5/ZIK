@@ -9,12 +9,17 @@ export const NEWS = [
     version: "3.32.0",
     tag: "Nouveauté",
     title: "Un accueil, deux univers : jouer en ligne ou animer une soirée",
+    proItems: [
+      "Ouvrir une soirée prend deux clics depuis l'accueil, avec vos réglages Pro (buzzer, équipes, manches spéciales) repris automatiquement.",
+    ],
     summary:
       "L'accueil te demande ce que tu viens faire : jouer en ligne, ou animer une soirée sur la TV. Un code ? Un seul champ suffit.",
     items: [
-      "L'accueil a deux portes : « Jouer en ligne » mène aux rooms, au Zikle et aux classements (sur /jouer), « Animer une soirée » présente ZIK Soirée.",
+      "L'accueil a deux portes : « Jouer en ligne » mène aux rooms, au Zikle et aux classements (sur /jouer), « Animer une soirée » crée directement votre soirée.",
+      "Chaque univers a sa barre de navigation : le jeu en ligne d'un côté, ZIK Soirée (découvrir, tarifs, créer) de l'autre. Le logo ramène toujours à l'accueil.",
       "Un seul champ « J'ai un code » : code d'une room en ligne ou code affiché sur la TV, ZIK t'emmène au bon endroit.",
-      "Une soirée ouverte depuis moins de 12 h ? L'accueil propose de la reprendre en un clic.",
+      "Une soirée ouverte depuis moins de 12 h ? L'accueil rouvre son écran TV en un clic.",
+      "La création d'une soirée retient vos dernières playlists et réglages : une soirée habituelle se relance en deux clics.",
       "« Quitter » une partie en ligne ramène aux rooms.",
     ],
   },
