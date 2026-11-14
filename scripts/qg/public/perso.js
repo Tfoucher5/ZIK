@@ -171,8 +171,8 @@ export class Perso {
   }
 
   animer(dt, t) {
-    const jambe = (a) =>
-      this.jambes.forEach((j, i) => (j.rotation.x = i ? -a : a));
+    const jambe = (a, b = -a) =>
+      this.jambes.forEach((j, i) => (j.rotation.x = i ? b : a));
     const bras = (a, b = a) =>
       this.bras.forEach((p, i) => (p.rotation.x = i ? b : a));
     const pas = this.chemin[0];
@@ -201,7 +201,7 @@ export class Perso {
     }
     if (this.assis) {
       this.g.position.y = -0.24;
-      jambe(-Math.PI / 2);
+      jambe(-Math.PI / 2, -Math.PI / 2);
       const frappe = this.actif ? Math.sin(t * 16 + this.phase) * 0.1 : 0;
       bras(-1.15 + frappe, -1.15 - frappe);
     } else {

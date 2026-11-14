@@ -65,8 +65,8 @@ function detente(scene, grille) {
   murVinyles(scene, -1.92, 8.3, Math.PI / 2);
   const salon = [
     canape(scene, grille, 2.2, 9.3, 0),
-    fauteuil(scene, grille, 0, 8.3, Math.PI / 2, "#c026d3"),
-    fauteuil(scene, grille, 4.4, 8.3, -Math.PI / 2, "#8C7BFF"),
+    fauteuil(scene, grille, 0, 8.3, -Math.PI / 2, "#c026d3"),
+    fauteuil(scene, grille, 4.4, 8.3, Math.PI / 2, "#8C7BFF"),
   ];
   boite(scene, 1.2, 0.35, 0.7, MAT.chene, 2.2, 0.18, 8.2);
   grille.bloquer(2.2, 8.2, 1.2, 0.7, 0.1);
