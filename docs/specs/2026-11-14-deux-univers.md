@@ -203,3 +203,8 @@ Les PR 1 et 2 peuvent partir seules. Les PR 3 et 4 partent dans la même release
 - `docs/SalonSection.svelte` et `RejoindreSection.svelte` annoncent un « code à 4 chiffres » : c'est 6 caractères.
 - `SalonSection` dit encore « Kahoot-like » et « Mode Salon ».
 - La meta de `/rooms` annonce « jusqu'à 20 joueurs », même souci que `/vs/blinest`.
+
+## Écarts décidés pendant le code
+
+- **`/soiree` suit le thème** (pas « toujours de nuit ») : la barre du site suit déjà le thème, une page forcée en nuit sous une barre claire faisait deux univers mal recollés. Les répliques d'écrans (TV, manche) restent noires, comme une vraie TV.
+- **`/salon` garde son bloc SEO pour l'instant** : la FAQ de `/soiree` est différente (pas de contenu dupliqué) ; le déplacement de `SalonSeo` et le titre d'outil de `/salon` attendent que `/soiree` soit indexée, comme `/pro` réduit aux tarifs.

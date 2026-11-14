@@ -1,10 +1,10 @@
 <!-- Le Mode Salon, cœur de ZIK : visible dès l'arrivée, sur tous les écrans -->
+<script>
+  import MiniTv from '$lib/components/soiree/MiniTv.svelte';
+</script>
+
 <aside class="hero-salon" aria-labelledby="hero-salon-title">
-  <div class="hs-screen" aria-hidden="true">
-    <div class="hs-screen-top"><b>ZIK Salon</b><span>7F3K2Q</span></div>
-    <div class="hs-timer">12</div>
-    <div class="hs-choices"><i></i><i></i><i></i><i></i></div>
-  </div>
+  <MiniTv />
   <p class="hs-kicker">Mode Salon · Blind test de soirée</p>
   <h2 id="hero-salon-title">La TV diffuse.<br>Les téléphones répondent.</h2>
   <ul class="hs-points">
@@ -33,39 +33,6 @@
     border: 2px solid var(--text);
     box-shadow: 8px 8px 0 var(--accent);
   }
-  .hs-screen {
-    padding: 12px;
-    background: #000;
-    border: 1px solid rgb(255 255 255 / 0.25);
-  }
-  .hs-screen-top {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: rgb(255 255 255 / 0.6);
-  }
-  .hs-screen-top b { color: #ff4fff; font-weight: 600; }
-  .hs-timer {
-    color: #fff;
-    margin: 4px 0 8px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 3.4rem;
-    line-height: 1;
-    text-align: center;
-  }
-  .hs-choices {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-  }
-  .hs-choices i { height: 14px; border-radius: 2px; }
-  .hs-choices i:nth-child(1) { background: #ff4f9a; }
-  .hs-choices i:nth-child(2) { background: #5bc0eb; }
-  .hs-choices i:nth-child(3) { background: #f4e04d; }
-  .hs-choices i:nth-child(4) { background: #3ddc84; }
   .hs-kicker {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.66rem;
