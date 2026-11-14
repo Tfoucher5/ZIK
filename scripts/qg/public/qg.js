@@ -148,6 +148,49 @@ function rafraichir() {
   fiche();
 }
 
+// Affichage : pièces, agents, activité, panneaux ; chaque panneau se replie. Réglages gardés dans le navigateur.
+const memoire = {
+  lire: () => {
+    try {
+      return JSON.parse(localStorage.getItem("qg-affichage")) ?? {};
+    } catch {
+      return {};
+    }
+  },
+  ecrire: (v) => {
+    try {
+      localStorage.setItem("qg-affichage", JSON.stringify(v));
+    } catch {
+      /* navigation privée */
+    }
+  },
+};
+const reglages = memoire.lire();
+function appliquer() {
+  for (const b of document.querySelectorAll("[data-bascule]")) {
+    const off = !!reglages[b.dataset.bascule];
+    document.body.classList.toggle(b.dataset.bascule, off);
+    b.setAttribute("aria-pressed", String(!off));
+  }
+  for (const p of document.querySelectorAll(".panneau")) {
+    const replie = !!reglages[`replie-${p.classList[2]}`];
+    p.classList.toggle("replie", replie);
+    p.querySelector(".plier").setAttribute("aria-expanded", String(!replie));
+  }
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-bascule]");
+  const p = e.target.closest(".plier")?.closest(".panneau");
+  if (b) reglages[b.dataset.bascule] = !reglages[b.dataset.bascule];
+  else if (p)
+    reglages[`replie-${p.classList[2]}`] =
+      !reglages[`replie-${p.classList[2]}`];
+  else return;
+  memoire.ecrire(reglages);
+  appliquer();
+});
+appliquer();
+
 org = await (await fetch("/organigramme")).json();
 scene.construire(org);
 const flux = new EventSource("/flux");

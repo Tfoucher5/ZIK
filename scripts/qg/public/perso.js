@@ -167,13 +167,7 @@ export class Perso {
     this.pause = 10 + Math.random() * 20;
     if (this.but === this.siege && Math.random() < 0.5) {
       const p = hasard(pauses);
-      this.aller({
-        place: p
-          .clone()
-          .add(new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5)),
-        angle: Math.random() * 6,
-        debout: true,
-      });
+      this.aller(p);
     } else this.aller(this.siege);
   }
 

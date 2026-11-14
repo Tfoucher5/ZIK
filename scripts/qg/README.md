@@ -1,6 +1,6 @@
 # QG : l'équipe d'agents en direct
 
-Tableau de bord 3D local : l'étage des bureaux de ZIK, à taille réelle (34 × 22 m) et aux couleurs de la marque : néon ZIK à l'accueil, open space par service, bureaux de Claire (CEO), de Théo et de Victor (avocat), salle du board, salles de réunion, cuisine, salon avec juke-box et mur de vinyles. Chaque agent est un personnage avec son prénom (Karim le CTO, Léa à l'UX, Mehdi au dev…, liste dans `public/noms.js`). Tokens et coût du jour.
+Tableau de bord 3D local : l'étage des bureaux de ZIK, pensé comme un vrai plateau (façades en biais, décrochés, noyau avec ascenseurs, escalier et sanitaires). Accueil avec le néon ZIK, open space par service, bureaux de Claire (CEO), Théo et Victor (avocat), salles de réunion nommées (L'Olympia pour le board, Abbey Road, Motown, Woodstock, Montreux, La Cigale), cabines, Bibliothèque, Backstage (juke-box, vinyles, casque géant), Comptoir, coworking. Chaque agent est un personnage avec son prénom (liste dans `public/noms.js`). Tokens et coût du jour.
 
 ## Lancer
 
@@ -25,5 +25,6 @@ L'organigramme vient du tableau « L'entreprise d'agents » du `CLAUDE.md` : un 
 - Brainstorm : dès que deux agents de réflexion d'un même service travaillent (pas dev, test-writer, reviewer, recette, incident), ils se retrouvent dans la salle de réunion du service, le chef au tableau.
 - « Board en séance » (au moins 3 membres au travail ensemble) : ils rejoignent la salle du board, le CEO préside debout et l'écran s'allume.
 - La lumière suit l'heure du PC : jour ou nuit.
+- Boutons du haut : afficher ou masquer les noms des pièces, des agents, leur activité et les panneaux ; chaque panneau se replie en cliquant sur son titre. Les réglages restent d'une ouverture à l'autre.
 - Glisser pour tourner, molette pour zoomer, cliquer sur un personnage : ses missions, tokens et coût.
 - Le coût est un **équivalent API** (tarifs publics par modèle, cache compris) : avec un abonnement Claude, ce n'est pas ce que tu paies, mais ça mesure ce que chaque équipe consomme.

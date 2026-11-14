@@ -19,12 +19,8 @@ export class Scene3D {
       0.1,
       500,
     );
-    const loin = innerWidth < 700 ? 1.9 : 1;
-    this.camera.position.set(
-      innerWidth < 700 ? 0 : -5.5,
-      31 * loin,
-      -32 * loin,
-    );
+    const loin = innerWidth < 700 ? 1.7 : 1;
+    this.camera.position.set(9 * loin, 31 * loin, 31 * loin);
     this.rendu = new THREE.WebGLRenderer({ antialias: true });
     this.rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.rendu.setSize(innerWidth, innerHeight);
@@ -40,22 +36,22 @@ export class Scene3D {
     });
     conteneur.appendChild(this.etiquettes.domElement);
     this.controles = new OrbitControls(this.camera, this.rendu.domElement);
-    this.controles.target.set(innerWidth < 700 ? 0 : -5.5, 0, 0);
+    this.controles.target.set(innerWidth < 700 ? 0 : 4.5, 0, 0.5);
     this.controles.enableDamping = true;
     this.controles.maxPolarAngle = Math.PI / 2.3;
     this.controles.minDistance = 4;
     this.controles.maxDistance = 70;
     this.ciel = new THREE.HemisphereLight("#dbe8ff", "#3a3328", 1);
     this.soleil = new THREE.DirectionalLight("#fff1dc", 2);
-    this.soleil.position.set(-12, 26, -14);
+    this.soleil.position.set(10, 26, 14);
     this.soleil.castShadow = true;
     this.soleil.shadow.mapSize.set(2048, 2048);
     this.soleil.shadow.bias = -0.0005;
     Object.assign(this.soleil.shadow.camera, {
-      left: -22,
-      right: 22,
-      top: 16,
-      bottom: -16,
+      left: -26,
+      right: 26,
+      top: 18,
+      bottom: -18,
       far: 90,
     });
     this.scene.add(this.ciel, this.soleil);
@@ -142,7 +138,7 @@ export class Scene3D {
   clones(id, n) {
     const libres = this.libres.get(this.service(id)) ?? [];
     const voulus = id === "renforts" ? n : n - 1;
-    const asc = { place: this.d.ascenseur, angle: 0, debout: true };
+    const asc = this.d.ascenseur;
     for (let i = 0; i < libres.length; i++) {
       const cle = `${id}#${i + 2}`;
       let p = this.persos.get(cle);

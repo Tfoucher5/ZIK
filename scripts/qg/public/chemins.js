@@ -36,6 +36,39 @@ export class Grille {
         this.bloc[j * this.l + i] = 1;
   }
 
+  // Bloque tout ce qui est hors du contour du bâtiment (polygone [[x, z], ...]).
+  masque(contour) {
+    for (let j = 0; j < this.h; j++)
+      for (let i = 0; i < this.l; i++) {
+        const { x, z } = this.centre(i, j);
+        if (!dedans(contour, x, z)) this.bloc[j * this.l + i] = 1;
+      }
+  }
+
+  // Bloque un segment quelconque (mur en biais) avec une marge de chaque côté.
+  segment(x0, z0, x1, z1, marge = 0.25) {
+    const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / (this.pas / 2));
+    const r = Math.ceil(marge / this.pas);
+    for (let k = 0; k <= n; k++) {
+      const [i, j] = this.case(
+        x0 + ((x1 - x0) * k) / n,
+        z0 + ((z1 - z0) * k) / n,
+      );
+      for (let dj = -r; dj <= r; dj++)
+        for (let di = -r; di <= r; di++) {
+          const [a, b] = [i + di, j + dj];
+          if (
+            a >= 0 &&
+            b >= 0 &&
+            a < this.l &&
+            b < this.h &&
+            Math.hypot(di, dj) * this.pas <= marge + this.pas / 2
+          )
+            this.bloc[b * this.l + a] = 1;
+        }
+    }
+  }
+
   liberer(x, z, r = 0.4) {
     const [i0, j0] = this.case(x - r, z - r);
     const [i1, j1] = this.case(x + r, z + r);
@@ -58,12 +91,22 @@ export class Grille {
     return [i, j];
   }
 
+  // Ligne droite praticable entre deux cases, en gardant une petite marge autour du corps.
   vue(a, b) {
-    const n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) * 2);
+    const p = this.centre(...a);
+    const q = this.centre(...b);
+    const n = Math.ceil((Math.hypot(q.x - p.x, q.z - p.z) / this.pas) * 4);
+    const e = this.pas * 0.3;
     for (let k = 1; k < n; k++) {
-      const i = Math.round(a[0] + ((b[0] - a[0]) * k) / n);
-      const j = Math.round(a[1] + ((b[1] - a[1]) * k) / n);
-      if (!this.libre(i, j)) return false;
+      const x = p.x + ((q.x - p.x) * k) / n;
+      const z = p.z + ((q.z - p.z) * k) / n;
+      for (const [dx, dz] of [
+        [-e, -e],
+        [e, -e],
+        [-e, e],
+        [e, e],
+      ])
+        if (!this.libre(...this.case(x + dx, z + dz))) return false;
     }
     return true;
   }
@@ -76,14 +119,12 @@ export class Grille {
     const h = (i, j) => Math.hypot(i - arr[0], j - arr[1]);
     const g = new Map([[cle(...dep), 0]]);
     const venu = new Map();
-    const ouverts = [[h(...dep), ...dep]];
+    const ouverts = new Tas();
+    ouverts.mettre([h(...dep), ...dep]);
     const fermes = new Set();
     let trouve = false;
-    while (ouverts.length) {
-      let m = 0;
-      for (let k = 1; k < ouverts.length; k++)
-        if (ouverts[k][0] < ouverts[m][0]) m = k;
-      const [, i, j] = ouverts.splice(m, 1)[0];
+    while (ouverts.taille) {
+      const [, i, j] = ouverts.prendre();
       const c = cle(i, j);
       if (fermes.has(c)) continue;
       fermes.add(c);
@@ -101,7 +142,7 @@ export class Grille {
           if (cout < (g.get(n) ?? Infinity)) {
             g.set(n, cout);
             venu.set(n, c);
-            ouverts.push([cout + h(i + di, j + dj), i + di, j + dj]);
+            ouverts.mettre([cout + h(i + di, j + dj), i + di, j + dj]);
           }
         }
     }
@@ -120,5 +161,52 @@ export class Grille {
       ...lisse.slice(1).map(([i, j]) => this.centre(i, j)),
       { x: b.x, z: b.z },
     ];
+  }
+}
+
+export function dedans(contour, x, z) {
+  let oui = false;
+  for (let k = 0, m = contour.length - 1; k < contour.length; m = k++) {
+    const [xa, za] = contour[k];
+    const [xb, zb] = contour[m];
+    if (za > z !== zb > z && x < ((xb - xa) * (z - za)) / (zb - za) + xa)
+      oui = !oui;
+  }
+  return oui;
+}
+
+// File de priorité (tas binaire) sur le premier élément.
+class Tas {
+  t = [];
+  get taille() {
+    return this.t.length;
+  }
+  mettre(v) {
+    const t = this.t;
+    t.push(v);
+    for (let k = t.length - 1; k > 0;) {
+      const p = (k - 1) >> 1;
+      if (t[p][0] <= t[k][0]) break;
+      [t[p], t[k]] = [t[k], t[p]];
+      k = p;
+    }
+  }
+  prendre() {
+    const t = this.t;
+    const haut = t[0];
+    const bas = t.pop();
+    if (t.length) {
+      t[0] = bas;
+      for (let k = 0; ;) {
+        const [a, b] = [2 * k + 1, 2 * k + 2];
+        let m = k;
+        if (a < t.length && t[a][0] < t[m][0]) m = a;
+        if (b < t.length && t[b][0] < t[m][0]) m = b;
+        if (m === k) break;
+        [t[m], t[k]] = [t[k], t[m]];
+        k = m;
+      }
+    }
+    return haut;
   }
 }

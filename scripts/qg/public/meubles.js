@@ -64,6 +64,7 @@ export const MAT = {
   tissu: std("#5d6472", { roughness: 1 }),
   velours: std("#7a1f86", { roughness: 1 }),
   cuir: std("#3b2a22", { roughness: 0.55 }),
+  porte: std("#b08a64", { roughness: 0.5 }),
   verre: new THREE.MeshPhysicalMaterial({
     color: "#d6ecff",
     transparent: true,
@@ -101,24 +102,21 @@ export function etiquette(texte, couleur, classe = "zone") {
   return new CSS2DObject(div);
 }
 
-export function sol(scene, x0, x1, z0, z1, mat, y = 0.01) {
-  const m = new THREE.Mesh(
-    new THREE.PlaneGeometry(x1 - x0, z1 - z0),
-    mat.clone(),
+export const sol = (scene, x0, x1, z0, z1, mat, y = 0.01) =>
+  solForme(
+    scene,
+    [
+      [x0, z0],
+      [x1, z0],
+      [x1, z1],
+      [x0, z1],
+    ],
+    mat,
+    y,
   );
-  if (mat.map) {
-    m.material.map = mat.map.clone();
-    m.material.map.repeat.set((x1 - x0) / 3, (z1 - z0) / 3);
-    m.material.map.needsUpdate = true;
-  }
-  m.rotation.x = -Math.PI / 2;
-  m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2);
-  m.receiveShadow = true;
-  scene.add(m);
-  return m;
-}
 
-// Cloison alignée sur un axe, de (x0, z0) à (x1, z1), avec des ouvertures [début, fin] le long du mur.
+// Cloison de (x0, z0) à (x1, z1), droite ou en biais, avec des portes [début, fin] le long du mur.
+// type : "plein" (mur blanc), "verre" (vitrage à cadre noir), "fenetre" (allège blanche et baie vitrée).
 export function mur(
   scene,
   grille,
@@ -126,45 +124,69 @@ export function mur(
   z0,
   x1,
   z1,
-  { type = "verre", portes = [], h = 2.8 } = {},
+  { type = "verre", portes = [], h = 2.6 } = {},
 ) {
   const long = Math.hypot(x1 - x0, z1 - z0);
-  const dx = (x1 - x0) / long;
-  const dz = (z1 - z0) / long;
+  const [dx, dz] = [(x1 - x0) / long, (z1 - z0) / long];
+  const angle = Math.atan2(-dz, dx);
   const bornes = [0, ...portes.flat(), long];
+  const piece = (l, hauteur, mat, a, y, ep = 0.12) => {
+    const m = boite(scene, l, hauteur, ep, mat, x0 + dx * a, y, z0 + dz * a);
+    m.rotation.y = angle;
+    return m;
+  };
   for (let k = 0; k < bornes.length; k += 2) {
     const [a, b] = [bornes[k], bornes[k + 1]];
     if (b - a < 0.05) continue;
-    const cx = x0 + (dx * (a + b)) / 2;
-    const cz = z0 + (dz * (a + b)) / 2;
-    const lx = Math.abs(dx) * (b - a) || 0.1;
-    const lz = Math.abs(dz) * (b - a) || 0.1;
-    grille.bloquer(cx, cz, lx, lz, 0.2);
+    const c = (a + b) / 2;
+    grille.segment(x0 + dx * a, z0 + dz * a, x0 + dx * b, z0 + dz * b, 0.25);
     if (type === "plein") {
-      boite(scene, lx, h, lz, MAT.platre, cx, h / 2, cz);
+      piece(b - a, h, MAT.platre, c, h / 2, 0.14);
       continue;
     }
-    const fenetre = type === "fenetre";
-    const v = new THREE.Mesh(new THREE.BoxGeometry(lx, h, lz), MAT.verre);
-    v.position.set(cx, h / 2, cz);
-    scene.add(v);
-    boite(scene, lx + 0.02, 0.06, lz + 0.02, MAT.noir, cx, h, cz);
-    boite(
-      scene,
-      lx + 0.02,
-      fenetre ? 0.5 : 0.05,
-      lz + 0.02,
-      fenetre ? MAT.platre : MAT.noir,
-      cx,
-      fenetre ? 0.25 : 0.025,
-      cz,
+    const allege = type === "fenetre" ? 0.8 : 0;
+    if (allege) piece(b - a, allege, MAT.platre, c, allege / 2, 0.2);
+    const v = piece(
+      b - a,
+      h - allege,
+      MAT.verre,
+      c,
+      allege + (h - allege) / 2,
+      0.04,
     );
-    if (!fenetre)
-      boite(scene, lx + 0.01, 0.12, lz + 0.01, MAT.depoli, cx, 1.4, cz);
-    const pas = fenetre ? 1.5 : 1.2;
-    for (let s = a + pas; s < b - 0.15; s += pas)
-      boite(scene, 0.05, h, 0.05, MAT.noir, x0 + dx * s, h / 2, z0 + dz * s);
+    v.castShadow = false;
+    piece(b - a, 0.07, MAT.noir, c, h, 0.08);
+    if (!allege) piece(b - a, 0.05, MAT.noir, c, 0.025, 0.08);
+    const pas = allege ? 1.6 : 1.2;
+    for (let s = a + pas; s < b - 0.2; s += pas)
+      piece(0.05, h - allege, MAT.noir, s, allege + (h - allege) / 2, 0.06);
   }
+  for (const [a, b] of portes) {
+    const g = new THREE.Group();
+    g.position.set(x0 + dx * a, 0, z0 + dz * a);
+    g.rotation.y = angle - 1.1;
+    boite(g, b - a - 0.05, 2.1, 0.04, MAT.porte, (b - a) / 2, 1.05, 0);
+    scene.add(g);
+  }
+}
+
+// Sol d'un polygone [[x, z], ...].
+export function solForme(scene, contour, mat, y = 0.01, repetition = 3) {
+  const forme = new THREE.Shape(
+    contour.map(([x, z]) => new THREE.Vector2(x, -z)),
+  );
+  const geo = new THREE.ShapeGeometry(forme);
+  const m = new THREE.Mesh(geo, mat.clone());
+  if (mat.map) {
+    m.material.map = mat.map.clone();
+    m.material.map.repeat.set(1 / repetition, 1 / repetition);
+    m.material.map.needsUpdate = true;
+  }
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = y;
+  m.receiveShadow = true;
+  scene.add(m);
+  return m;
 }
 
 export function plante(scene, grille, x, z, t = 1, grande = false) {
@@ -255,38 +277,4 @@ export function poste(scene, grille, x, z, angle, couleur, separateur = true) {
     z + 0.7 * Math.cos(angle),
   );
   return { place, angle: angle + Math.PI, ecran: e };
-}
-
-// Table de réunion, sièges des deux côtés, écran au mur. Renvoie sièges, écran et la place de l'animateur.
-export function tableReunion(scene, grille, x, z, l, n, couleur, mural) {
-  boite(scene, l, 0.06, 1.2, MAT.chene, x, 0.74, z);
-  for (const dx of [-l / 2 + 0.3, l / 2 - 0.3])
-    boite(scene, 0.08, 0.72, 0.9, MAT.noir, x + dx, 0.36, z);
-  grille.bloquer(x, z, l, 1.2, 0.15);
-  const sieges = [];
-  const par = Math.ceil(n / 2);
-  for (let k = 0; k < n; k++) {
-    const cote = k < par ? -1 : 1;
-    const sx = x - l / 2 + (l / par) * ((k % par) + 0.5);
-    const sz = z + cote * 0.95;
-    chaise(scene, couleur, sx, sz, cote < 0 ? Math.PI : 0);
-    sieges.push({
-      place: new THREE.Vector3(sx, 0, sz),
-      angle: cote < 0 ? 0 : Math.PI,
-    });
-  }
-  const e = ecran(couleur, 1.6, 0.9);
-  e.position.set(mural.x, 1.45, mural.z);
-  e.rotation.y = mural.angle;
-  scene.add(e);
-  const n2 = new THREE.Vector3(Math.sin(mural.angle), 0, Math.cos(mural.angle));
-  return {
-    sieges,
-    ecran: e,
-    debout: {
-      place: e.position.clone().setY(0).addScaledVector(n2, 0.7),
-      angle: mural.angle,
-      debout: true,
-    },
-  };
 }

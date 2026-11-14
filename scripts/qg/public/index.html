@@ -19,8 +19,22 @@
     <header class="barre">
       <h1>QG <span>ZIK</span></h1>
       <span id="liaison" class="liaison">connexion…</span>
+      <nav class="outils" aria-label="Affichage">
+        <button type="button" data-bascule="sans-pieces" aria-pressed="true">
+          Pièces
+        </button>
+        <button type="button" data-bascule="sans-agents" aria-pressed="true">
+          Agents
+        </button>
+        <button type="button" data-bascule="sans-activite" aria-pressed="true">
+          Activité
+        </button>
+        <button type="button" data-bascule="sans-panneaux" aria-pressed="true">
+          Panneaux
+        </button>
+      </nav>
     </header>
-    <section class="compteurs">
+    <section class="compteurs panneau-ui">
       <div>
         <small>Coût aujourd'hui</small><strong id="c-cout">–</strong
         ><em>équivalent API</em>
@@ -35,12 +49,20 @@
         <small>Sessions actives</small><strong id="c-sessions">–</strong>
       </div>
     </section>
-    <aside class="panneau flux">
-      <h2>En direct</h2>
+    <aside class="panneau panneau-ui flux">
+      <h2>
+        <button type="button" class="plier" aria-expanded="true">
+          En direct
+        </button>
+      </h2>
       <ol id="flux"></ol>
     </aside>
-    <aside class="panneau sessions">
-      <h2>Sessions</h2>
+    <aside class="panneau panneau-ui sessions">
+      <h2>
+        <button type="button" class="plier" aria-expanded="true">
+          Sessions
+        </button>
+      </h2>
       <ul id="sessions"></ul>
     </aside>
     <div id="board" class="board" hidden>Board en séance</div>
