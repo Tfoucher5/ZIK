@@ -55,3 +55,36 @@ describe("« Rejoindre une autre soirée » puis rechargement", () => {
     expect(store.salon_user).toBe("Ana");
   });
 });
+
+describe("chargement de la page sur un téléphone lent", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("garde le code et le pseudo tapés avant la fin du chargement", () => {
+    vi.stubGlobal("localStorage", { getItem: () => null });
+    const p = new SalonPlayer(null);
+    p.codeInput = "EEEEEE";
+    p.usernameInput = "Julie";
+    p.checkResume("");
+    expect(p.codeInput).toBe("EEEEEE");
+    expect(p.usernameInput).toBe("Julie");
+  });
+
+  it("le code de l'URL et le pseudo mémorisé passent avant le formulaire vide", () => {
+    const store = { salon_user: "Ana" };
+    vi.stubGlobal("localStorage", { getItem: (k) => store[k] ?? null });
+    const p = new SalonPlayer(null);
+    p.checkResume("FFFFFF");
+    expect(p.codeInput).toBe("FFFFFF");
+    expect(p.usernameInput).toBe("Ana");
+  });
+
+  it("le pseudo tapé passe avant le pseudo mémorisé", () => {
+    vi.stubGlobal("localStorage", {
+      getItem: (k) => (k === "salon_user" ? "Ana" : null),
+    });
+    const p = new SalonPlayer(null);
+    p.usernameInput = "Julie";
+    p.checkResume("");
+    expect(p.usernameInput).toBe("Julie");
+  });
+});
