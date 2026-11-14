@@ -31,10 +31,9 @@
     <div class="door-tv"><MiniTv code="" /></div>
     <div class="door-body">
       <h2 id="door-soiree-t" class="door-kicker">Animer une soirée</h2>
-      <p class="door-txt">La TV diffuse la musique, chaque téléphone sert de manette. Pour un lieu qui reçoit du public, ou une soirée chez soi.</p>
-      <p class="door-live">Bar, camping, entreprise, association</p>
-      <a class="door-link" href="/soiree">Blind test en soirée sur la TV <span aria-hidden="true">→</span></a>
-      <a class="door-alt" href="/salon">Déjà organisateur ? Créer une soirée</a>
+      <p class="door-txt">La TV diffuse la musique. Chaque téléphone sert de buzzer. Au bar, au camping ou à la maison.</p>
+      <a class="door-link" href="/salon">Créer une soirée <span aria-hidden="true">→</span></a>
+      <a class="door-alt" href="/soiree">Comment ça marche ?</a>
     </div>
     <span class="door-word" aria-hidden="true">Animer</span>
   </section>

@@ -1,4 +1,5 @@
-<!-- Hôte revenu sur l'accueil : sa soirée de moins de 12 h est encore ouverte -->
+<!-- Hôte revenu sur l'accueil : sa soirée de moins de 12 h est encore ouverte. La clé est
+     sur ce navigateur, celui de la TV : on rouvre l'écran TV -->
 <script>
   import { onMount } from 'svelte';
   import { openLastSalon } from '$lib/client/salonClient.js';
@@ -8,8 +9,8 @@
 </script>
 
 {#if code}
-  <a class="rb" href="/salon/regie?code={code}">
-    Reprendre votre soirée <b>{code}</b> <span aria-hidden="true">→</span>
+  <a class="rb" href="/salon/host?code={code}">
+    Reprendre l'écran TV de votre soirée <b>{code}</b> <span aria-hidden="true">→</span>
   </a>
 {/if}
 
