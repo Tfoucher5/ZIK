@@ -21,6 +21,7 @@ export const NEWS = [
       "Une soirée ouverte depuis moins de 12 h ? L'accueil rouvre son écran TV en un clic.",
       "La création d'une soirée retient vos dernières playlists et réglages : une soirée habituelle se relance en deux clics.",
       "Entre deux parties, la TV affiche le QR code et le code en grand : ceux qui arrivent ou qui étaient partis rejoignent la partie suivante.",
+      "En fin de partie, chaque joueur peut partager le podium en story (Instagram, TikTok…) depuis son téléphone.",
       "« Quitter » une partie en ligne ramène aux rooms.",
     ],
   },
