@@ -6,7 +6,7 @@
   import PlaylistPicker from '$lib/components/salon/playlists/PlaylistPicker.svelte';
   import { loadSalonPlaylists, DEFAULT_SALON_PLAYLIST } from '$lib/data/salonPlaylists.js';
   import { rememberSignupRef, tagNewUser } from '$lib/client/signupRef.js';
-  import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/client/salonClient.js';
+  import { saveSalonKey, fetchPro, proActive, goToStripe, saveSetup, readSetup } from '$lib/client/salonClient.js';
   import ProUpsell from '$lib/components/salon/setup/ProUpsell.svelte';
   import SetupHero from '$lib/components/salon/setup/SetupHero.svelte';
   import ResumeSalon from '$lib/components/salon/setup/ResumeSalon.svelte';
@@ -46,6 +46,23 @@
   let error        = $state('');
   let playlistsState = $state('loading');
 
+  const currentSettings = () => ({ maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials });
+  let savedTeams = 0;
+
+  // Réglages de la dernière soirée ; les équipes au-delà de l'offre gratuite attendent de savoir si l'hôte est Pro
+  function restoreSettings() {
+    const s = readSetup(currentSettings(), [])?.settings;
+    if (!s) return;
+    maxRounds = s.maxRounds ?? maxRounds;
+    roundDuration = s.roundDuration ?? roundDuration;
+    answerMode = s.answerMode ?? answerMode;
+    manualNext = s.manualNext ?? manualNext;
+    showAnswerDuration = s.showAnswerDuration ?? showAnswerDuration;
+    specials = s.specials ?? specials;
+    savedTeams = s.teamCount ?? 0;
+    teamCount = Math.min(savedTeams, FREE_MAX_TEAMS);
+  }
+
   let totalTrackCount = $derived(
     allPlaylists
       .filter(p => selectedIds.includes(p.id))
@@ -73,7 +90,10 @@
   let loadSeq = 0;
   async function loadPlaylists() {
     const seq = ++loadSeq;
-    fetchPro(sb, user?.id).then((r) => (proRow = r)).catch(() => {});
+    fetchPro(sb, user?.id).then((r) => {
+      proRow = r;
+      if (proActive(r) && savedTeams > teamCount) teamCount = savedTeams;
+    }).catch(() => {});
     if (playlistsState === 'error') playlistsState = 'loading';
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
@@ -84,7 +104,9 @@
       const wanted = (new URLSearchParams(window.location.search).get('playlist') ?? '')
         .split(',')
         .filter((id) => flat.some((p) => p.id === id));
+      const remembered = readSetup({}, flat.map((p) => p.id))?.playlistIds ?? [];
       if (wanted.length) selectedIds = wanted;
+      else if (selectedIds.length === 0 && remembered.length) selectedIds = remembered;
       else if (selectedIds.length === 0 && flat.length > 0) {
         selectedIds = [flat.find(p => p.id === DEFAULT_SALON_PLAYLIST)?.id ?? flat[0].id];
         autoPicked = true;
@@ -108,12 +130,13 @@
         body: JSON.stringify({
           origin: new URLSearchParams(window.location.search).get('ref'),
           playlistIds: selectedIds,
-          settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials },
+          settings: currentSettings(),
         }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || "La soirée n'a pas pu être créée. Réessayez dans un instant.");
       saveSalonKey(d.code, d.key);
+      saveSetup(selectedIds, currentSettings());
       window.location.href = `/salon/host?code=${d.code}`;
     } catch (e) {
       // fetch rejette en TypeError quand le réseau coupe : jamais de message brut du navigateur
@@ -126,6 +149,7 @@
     if (!sb) return;
     const { data: { session } } = await sb.auth.getSession();
     user = session?.user ?? null;
+    restoreSettings();
     authReady = true;
     loadPlaylists();
 

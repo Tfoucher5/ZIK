@@ -4,6 +4,8 @@ import {
   lastSalon,
   forgetSalon,
   openLastSalon,
+  saveSetup,
+  readSetup,
 } from "../salonClient.js";
 import { listenHost } from "../../components/salon/host/hostEvents.js";
 
@@ -72,5 +74,31 @@ describe("carte « votre soirée est encore ouverte »", () => {
     };
     expect(await openLastSalon(panne)).toBeNull();
     expect(lastSalon()).toBe("ABC123");
+  });
+});
+
+describe("dernière préparation de soirée", () => {
+  const defaults = { maxRounds: 10, specials: false, teamCount: 0 };
+
+  it("reprend playlists et réglages encore valables", () => {
+    saveSetup(["a", "gone"], { maxRounds: 15, specials: true, teamCount: 2 });
+    expect(readSetup(defaults, ["a", "b"])).toEqual({
+      playlistIds: ["a"],
+      settings: { maxRounds: 15, specials: true, teamCount: 2 },
+    });
+  });
+
+  it("ignore une sauvegarde absente, corrompue ou de mauvais type", () => {
+    expect(readSetup(defaults, ["a"])).toBeNull();
+    store.zik_salon_setup = "{pas du json";
+    expect(readSetup(defaults, ["a"])).toBeNull();
+    store.zik_salon_setup = JSON.stringify({
+      playlistIds: "a",
+      settings: { maxRounds: "999", inconnu: 1 },
+    });
+    expect(readSetup(defaults, ["a"])).toEqual({
+      playlistIds: [],
+      settings: {},
+    });
   });
 });

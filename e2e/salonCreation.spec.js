@@ -30,3 +30,19 @@ test("réseau coupé à l'ouverture : message en français, bouton réactivé", 
   );
   await expect(go).toBeEnabled();
 });
+
+test("la création retient la dernière préparation", async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "zik_salon_setup",
+      JSON.stringify({
+        playlistIds: ["inconnue"],
+        settings: { maxRounds: 15 },
+      }),
+    ),
+  );
+  await page.goto("/salon");
+  // Playlist disparue : la playlist par défaut est cochée ; manches reprises
+  await expect(page.locator(".st-recap")).toContainText("1 playlist");
+  await expect(page.locator(".st-recap")).toContainText("15 manches");
+});

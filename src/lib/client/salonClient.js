@@ -34,6 +34,35 @@ export async function openLastSalon(fetchFn = fetch) {
   return res?.ok ? code : null;
 }
 
+// Dernière préparation de soirée (playlists et réglages) : un habitué relance en un clic
+const SETUP = "zik_salon_setup";
+
+export function saveSetup(playlistIds, settings) {
+  try {
+    localStorage.setItem(SETUP, JSON.stringify({ playlistIds, settings }));
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
+// Ne garde que les playlists encore proposées et les réglages connus, du bon type
+export function readSetup(defaults, availableIds) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETUP) ?? "null");
+    if (!saved || typeof saved !== "object") return null;
+    const playlistIds = Array.isArray(saved.playlistIds)
+      ? saved.playlistIds.filter((id) => availableIds.includes(id))
+      : [];
+    const settings = {};
+    for (const [key, value] of Object.entries(defaults))
+      if (typeof saved.settings?.[key] === typeof value)
+        settings[key] = saved.settings[key];
+    return { playlistIds, settings };
+  } catch {
+    return null;
+  }
+}
+
 export function forgetSalon(code) {
   try {
     if (lastSalon() === code) localStorage.removeItem(LAST);
