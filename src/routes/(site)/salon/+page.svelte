@@ -103,7 +103,7 @@
     const seq = ++loadSeq;
     fetchPro(sb, user?.id).then((r) => {
       proRow = r;
-      if (proActive(r)) restorePro();
+      if (seq === loadSeq && proActive(r)) restorePro();
     }).catch(() => {});
     if (playlistsState === 'error') playlistsState = 'loading';
     try {

@@ -84,21 +84,21 @@ describe("dernière préparation de soirée", () => {
 
   it("reprend playlists et réglages encore valables", () => {
     saveSetup(["a", "gone"], { maxRounds: 15, specials: true, teamCount: 2 });
-    expect(readSetup(defaults, ["a", "b"])).toEqual({
-      playlistIds: ["a"],
+    expect(readSetup(defaults)).toEqual({
+      playlistIds: ["a", "gone"],
       settings: { maxRounds: 15, specials: true, teamCount: 2 },
     });
   });
 
   it("ignore une sauvegarde absente, corrompue ou de mauvais type", () => {
-    expect(readSetup(defaults, ["a"])).toBeNull();
+    expect(readSetup(defaults)).toBeNull();
     store.zik_salon_setup = "{pas du json";
-    expect(readSetup(defaults, ["a"])).toBeNull();
+    expect(readSetup(defaults)).toBeNull();
     store.zik_salon_setup = JSON.stringify({
       playlistIds: "a",
       settings: { maxRounds: "999", inconnu: 1 },
     });
-    expect(readSetup(defaults, ["a"])).toEqual({
+    expect(readSetup(defaults)).toEqual({
       playlistIds: [],
       settings: {},
     });
@@ -136,7 +136,15 @@ describe("réglages repris selon l'offre de l'hôte", () => {
   });
 
   it("une valeur hors des choix proposés retombe sur le défaut", () => {
-    const s = setupFor({ maxRounds: 999, roundDuration: 7 }, true, defaults);
-    expect(s).toMatchObject({ maxRounds: 10, roundDuration: 30 });
+    const s = setupFor(
+      { maxRounds: 999, roundDuration: 7, answerMode: "foo" },
+      true,
+      defaults,
+    );
+    expect(s).toMatchObject({
+      maxRounds: 10,
+      roundDuration: 30,
+      answerMode: "multiple",
+    });
   });
 });

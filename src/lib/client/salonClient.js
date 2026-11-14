@@ -52,15 +52,13 @@ export function saveSetup(playlistIds, settings) {
   }
 }
 
-// Réglages connus et du bon type ; playlists filtrées si on connaît celles proposées
-export function readSetup(defaults, availableIds = null) {
+// Réglages connus et du bon type ; la page filtre les playlists encore proposées
+export function readSetup(defaults) {
   try {
     const saved = JSON.parse(localStorage.getItem(SETUP) ?? "null");
     if (!saved || typeof saved !== "object") return null;
     const playlistIds = Array.isArray(saved.playlistIds)
-      ? saved.playlistIds.filter(
-          (id) => !availableIds || availableIds.includes(id),
-        )
+      ? saved.playlistIds
       : [];
     const settings = {};
     for (const [key, value] of Object.entries(defaults))
@@ -76,6 +74,7 @@ const ALLOWED = {
   maxRounds: SALON_ROUNDS,
   roundDuration: SALON_DURATIONS,
   showAnswerDuration: SALON_REVEALS,
+  answerMode: ["free", "multiple", "buzzer"],
 };
 
 // Réglages repris pour cet hôte : une valeur hors des choix proposés, ou que l'offre
