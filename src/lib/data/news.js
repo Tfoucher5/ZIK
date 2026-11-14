@@ -20,6 +20,7 @@ export const NEWS = [
       "Un seul champ « J'ai un code » : code d'une room en ligne ou code affiché sur la TV, ZIK t'emmène au bon endroit.",
       "Une soirée ouverte depuis moins de 12 h ? L'accueil rouvre son écran TV en un clic.",
       "La création d'une soirée retient vos dernières playlists et réglages : une soirée habituelle se relance en deux clics.",
+      "Entre deux parties, la TV affiche le QR code et le code en grand : ceux qui arrivent ou qui étaient partis rejoignent la partie suivante.",
       "« Quitter » une partie en ligne ramène aux rooms.",
     ],
   },
