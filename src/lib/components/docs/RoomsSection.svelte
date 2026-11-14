@@ -29,6 +29,6 @@
   </ol>
 
   <DocTip label="Room vs Salon :">
-    Les rooms sont idéales pour jouer en continu avec des amis en ligne. Le Mode Salon est préférable pour les événements en présentiel avec une TV ou un vidéoprojecteur.
+    Les rooms sont idéales pour jouer en continu avec des amis en ligne. ZIK Soirée est préférable pour les événements en présentiel avec une TV ou un vidéoprojecteur.
   </DocTip>
 </section>

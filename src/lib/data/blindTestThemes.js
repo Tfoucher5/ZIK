@@ -63,7 +63,7 @@ export const BLIND_TEST_THEMES = [
       "La playlist officielle « Années 2000 » compte près de 700 titres. Les extraits démarrent à un endroit aléatoire du morceau : le refrain que vous attendez n'arrive pas forcément.",
     ],
     tips: [
-      "Idéal pour un anniversaire de trentenaire : lancez le Mode Salon sur la TV et laissez les invités répondre depuis leur téléphone.",
+      "Idéal pour un anniversaire de trentenaire : lancez ZIK Soirée sur la TV et laissez les invités répondre depuis leur téléphone.",
       "Mélangez « Années 2000 » et « Années 1980-1990 » dans le même salon pour une partie intergénérationnelle.",
       "Activez l'avancement manuel pour commenter chaque réponse entre deux manches.",
     ],
@@ -74,7 +74,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Combien de joueurs peuvent participer ?",
-        a: `En Mode Salon, jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, plus avec ZIK Pro. En ligne, une room accueille aussi plusieurs joueurs en même temps.`,
+        a: `Avec ZIK Soirée, jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, plus avec ZIK Pro. En ligne, une room accueille aussi plusieurs joueurs en même temps.`,
       },
     ],
     playlists: [PL.annees2000],
@@ -190,7 +190,7 @@ export const BLIND_TEST_THEMES = [
       },
       {
         q: "Peut-on jouer depuis un téléphone ?",
-        a: "Oui, ZIK fonctionne dans le navigateur du téléphone, en ligne comme en Mode Salon.",
+        a: "Oui, ZIK fonctionne dans le navigateur du téléphone, en ligne comme avec ZIK Soirée.",
       },
     ],
     playlists: [PL.rock],
@@ -205,7 +205,7 @@ export const BLIND_TEST_THEMES = [
       "Blind test chanson française : près de 300 classiques de la variété, de Brel à aujourd'hui. Gratuit, idéal en famille sur la TV avec les téléphones.",
     intro: [
       "Les grands noms de la chanson et de la variété française ont une place à part dans les soirées : tout le monde connaît au moins le refrain. C'est le blind test qui réunit le plus facilement toutes les générations autour de la table.",
-      "La playlist officielle « Chanson Française » contient près de 300 titres. En Mode Salon, la musique passe sur la TV et chacun répond sur son téléphone, sans compte.",
+      "La playlist officielle « Chanson Française » contient près de 300 titres. Avec ZIK Soirée, la musique passe sur la TV et chacun répond sur son téléphone, sans compte.",
     ],
     tips: [
       "Parfait pour un repas de famille ou un anniversaire : lancez le mode choix multiples.",
@@ -263,7 +263,7 @@ export const BLIND_TEST_THEMES = [
       "Blind test musiques de films : plus de 160 bandes originales et chansons de films à reconnaître. Gratuit, parfait pour une soirée cinéma entre amis.",
     intro: [
       "Quelques notes d'une bande originale suffisent souvent à faire revenir une scène entière. Le blind test musiques de films plaît aussi bien aux cinéphiles qu'à ceux qui ne connaissent aucun titre de chanson : on devine le film, pas forcément l'artiste.",
-      "La playlist officielle « Musiques de Films » rassemble plus de 160 bandes originales, signées Hans Zimmer, John Williams, Ennio Morricone ou Howard Shore. En Mode Salon, projetez-la sur grand écran pour une vraie ambiance cinéma.",
+      "La playlist officielle « Musiques de Films » rassemble plus de 160 bandes originales, signées Hans Zimmer, John Williams, Ennio Morricone ou Howard Shore. Avec ZIK Soirée, projetez-la sur grand écran pour une vraie ambiance cinéma.",
     ],
     tips: [
       "Précisez la règle avant de commencer : on cherche le compositeur, l'interprète ou le film ?",
@@ -292,7 +292,7 @@ export const BLIND_TEST_THEMES = [
       "Blind test Disney : plus de 100 chansons de dessins animés et films Disney à deviner en famille. Gratuit, sur la TV avec les téléphones, sans compte pour les joueurs.",
     intro: [
       "Du Roi Lion à La Reine des neiges, les chansons Disney traversent les générations. C'est le blind test préféré des familles et des anniversaires d'enfants, mais les adultes sont souvent les plus acharnés.",
-      "La playlist officielle « Disney » compte plus de 100 chansons. En Mode Salon, les enfants répondent depuis un téléphone ou une tablette, sans créer de compte.",
+      "La playlist officielle « Disney » compte plus de 100 chansons. Avec ZIK Soirée, les enfants répondent depuis un téléphone ou une tablette, sans créer de compte.",
     ],
     tips: [
       "Avec des enfants, mode choix multiples et manches de 30 secondes.",
@@ -320,7 +320,7 @@ export const BLIND_TEST_THEMES = [
     description:
       "Organisez un blind test d'anniversaire en 2 minutes : la TV diffuse, les invités répondent sur leur téléphone. Gratuit, sans application ni compte pour les invités.",
     intro: [
-      "Un blind test est l'animation d'anniversaire la plus simple à organiser : pas de matériel, pas de préparation, et tous les âges peuvent jouer. Avec le Mode Salon de ZIK, l'écran principal (TV, ordinateur ou vidéoprojecteur) diffuse la musique et le classement, et chaque invité répond depuis son téléphone.",
+      "Un blind test est l'animation d'anniversaire la plus simple à organiser : pas de matériel, pas de préparation, et tous les âges peuvent jouer. Avec ZIK Soirée, l'écran principal (TV, ordinateur ou vidéoprojecteur) diffuse la musique et le classement, et chaque invité répond depuis son téléphone.",
       "Choisissez les playlists selon l'âge de la personne fêtée : « Années 2000 » pour des trentenaires, « Années 1980-1990 » pour des quadras, « Disney » pour les enfants. Vous pouvez aussi importer sa playlist Deezer préférée.",
     ],
     tips: [
@@ -350,7 +350,7 @@ export const BLIND_TEST_THEMES = [
     description:
       "Animez un mariage avec un blind test : la musique passe sur l'écran de la salle, les invités jouent depuis leur téléphone. Gratuit, sans inscription pour les invités.",
     intro: [
-      "Entre le dîner et l'ouverture du bal, un blind test fait participer toute la salle : les tables s'affrontent, les générations se mélangent, et le classement s'affiche en direct sur l'écran. Avec le Mode Salon de ZIK, il suffit d'un vidéoprojecteur ou d'une TV reliée à la sono.",
+      "Entre le dîner et l'ouverture du bal, un blind test fait participer toute la salle : les tables s'affrontent, les générations se mélangent, et le classement s'affiche en direct sur l'écran. Avec ZIK Soirée, il suffit d'un vidéoprojecteur ou d'une TV reliée à la sono.",
       "Préparez une playlist aux couleurs des mariés : les chansons de leur rencontre, leurs tubes de soirée, leurs années lycée. Importez-la depuis Deezer et lancez-la en salon le jour J.",
     ],
     tips: [
@@ -380,7 +380,7 @@ export const BLIND_TEST_THEMES = [
     description:
       "Organisez un blind test en soirée : la musique et le classement sur la TV, chacun répond sur son téléphone. Gratuit, sans application, prêt en deux minutes.",
     intro: [
-      "Le blind test est le jeu de soirée qui met tout le monde d'accord : pas de règles à expliquer, pas de matériel, et même ceux qui disent « je n'y connais rien » finissent par hurler le nom d'un chanteur. Avec le Mode Salon de ZIK, la TV du salon devient l'écran de jeu : elle diffuse les extraits, le chrono et le classement, et chaque ami répond depuis son téléphone.",
+      "Le blind test est le jeu de soirée qui met tout le monde d'accord : pas de règles à expliquer, pas de matériel, et même ceux qui disent « je n'y connais rien » finissent par hurler le nom d'un chanteur. Avec ZIK Soirée, la TV du salon devient l'écran de jeu : elle diffuse les extraits, le chrono et le classement, et chaque ami répond depuis son téléphone.",
       "Pas besoin de désigner un animateur qui ne joue pas : ZIK s'occupe des extraits, vérifie les réponses et compte les points. Vous choisissez une ambiance (années 2000, rap français, chanson française…) ou vous importez la playlist de la soirée depuis Deezer.",
     ],
     tips: [
@@ -411,7 +411,7 @@ export const BLIND_TEST_THEMES = [
       "Animez votre bar avec une soirée blind test sans animateur : la partie tourne sur la TV, les clients jouent en équipes sur leur téléphone. Essai gratuit, ZIK Pro dès 7,90 € la soirée.",
     intro: [
       "Le blind test est l'une des animations qui remplit le mieux un bar en semaine : les clients viennent en groupe, restent jusqu'au podium et reviennent la semaine suivante pour prendre leur revanche. Avec ZIK, pas besoin d'animateur ni de matériel : la TV du bar affiche le jeu, et chaque table joue depuis ses téléphones.",
-      "Le Mode Salon gère tout : les extraits, le chrono, la vérification des réponses et le classement en direct. Depuis la régie, sur l'ordinateur ou la tablette du comptoir, vous mettez en pause, passez un titre, corrigez un point ou excluez un joueur qui dérange, sans que la salle ne voie rien.",
+      "ZIK Soirée gère tout : les extraits, le chrono, la vérification des réponses et le classement en direct. Depuis la régie, sur l'ordinateur ou la tablette du comptoir, vous mettez en pause, passez un titre, corrigez un point ou excluez un joueur qui dérange, sans que la salle ne voie rien.",
     ],
     tips: [
       "Faites jouer par table : chaque table est une équipe, le classement des équipes lance la compétition.",

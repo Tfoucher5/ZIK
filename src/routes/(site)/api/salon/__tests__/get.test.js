@@ -67,8 +67,10 @@ describe("GET /api/salon : la soirée est-elle encore ouverte ?", () => {
     expect(salonRooms.REPRIS).toBeDefined();
   });
 
-  it("salon fermé : 404", async () => {
+  it("salon fermé : 404 et message clair", async () => {
     expect(await demande("FERME1")).toBe(404);
+    const res = await GET({ url: new URL("http://x/api/salon?code=FERME2") });
+    expect((await res.json()).error).toBe("Cette soirée n'existe plus.");
   });
 
   it("trop de recherches ratées : « réessayez », jamais un faux « fermé »", async () => {

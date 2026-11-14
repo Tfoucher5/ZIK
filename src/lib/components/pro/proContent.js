@@ -165,7 +165,7 @@ export const FAQ_JSON_LD = JSON.stringify({
     ),
     question(
       "Est-ce que c'est payant ?",
-      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque plus de joueurs et d'équipes, le classement de la soirée et la régie complète, dès 7,90 € la soirée.`,
+      `ZIK Soirée est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque plus de joueurs et d'équipes, le classement de la soirée et la régie complète, dès 7,90 € la soirée.`,
     ),
     question(
       "Quel matériel faut-il prévoir ?",

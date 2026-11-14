@@ -9,7 +9,7 @@
     { id: 'jouer', label: 'Comment jouer' },
     { id: 'points', label: 'Système de points' },
     { id: 'zikle', label: 'Zikle — chanson du jour' },
-    { id: 'salon', label: 'Mode Salon' },
+    { id: 'salon', label: 'ZIK Soirée' },
     { id: 'qcm', label: 'Mode QCM multijoueur' },
     { id: 'playlists', label: 'Playlists' },
     { id: 'rooms', label: 'Rooms' },

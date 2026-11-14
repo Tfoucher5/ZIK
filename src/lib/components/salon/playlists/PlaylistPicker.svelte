@@ -65,8 +65,8 @@
   <div class="pp-list">{#each mine as pl (pl.id)}{@render row(pl)}{/each}</div>
 {:else if onLogin && !q}
   <p class="pp-login">
-    Ta playlist Deezer ?
-    <button type="button" onclick={onLogin}>Connecte-toi pour l'importer</button>
+    Votre playlist Deezer ?
+    <button type="button" onclick={onLogin}>Connectez-vous pour l'importer</button>
   </p>
 {/if}
 

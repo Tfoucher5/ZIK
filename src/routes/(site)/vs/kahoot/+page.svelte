@@ -6,7 +6,7 @@
   slug="kahoot"
   name="Kahoot"
   title="ZIK vs Kahoot - Quel est le meilleur blind test multijoueur ?"
-  description="ZIK ou Kahoot pour votre prochain blind test musical ? Comparaison factuelle : spécialisation musicale, import Deezer, classement ELO, Mode Salon. ZIK est conçu exclusivement pour le blind test."
+  description="ZIK ou Kahoot pour votre prochain blind test musical ? Comparaison factuelle : spécialisation musicale, import Deezer, classement ELO, ZIK Soirée. ZIK est conçu exclusivement pour le blind test."
   ogTitle="ZIK vs Kahoot - Comparaison blind test multijoueur"
   ogDescription="ZIK est spécialisé dans le blind test musical avec import Deezer et classement ELO. Kahoot est une plateforme de quiz généraliste. Comparaison factuelle."
   ldName="ZIK vs Kahoot — Comparaison des blind tests en ligne"
@@ -19,7 +19,7 @@
       { ul: [
         ['Mode Classique', ' — saisie libre, classement ELO compétitif'],
         ['Mode QCM', ' — 4 propositions à choix multiple, accessible à tous'],
-        ['Mode Salon', ' — hôte sur grand écran, joueurs sur smartphone'],
+        ['ZIK Soirée', ' — hôte sur grand écran, joueurs sur smartphone'],
       ] },
       { p: "ZIK permet l'import direct de playlists depuis Deezer. Il est gratuit, sans abonnement, et ne nécessite pas de compte pour jouer." },
     ] },
@@ -31,7 +31,7 @@
       ['Spécialisé blind test musical', true, false],
       ['Import Deezer', true, false],
       ['Classement ELO compétitif', true, false],
-      ['Mode Salon (TV + smartphones)', true, 'Partiel'],
+      ['ZIK Soirée (TV + smartphones)', true, 'Partiel'],
       ['Mode QCM multijoueur', true, true],
       ['Sans inscription obligatoire', true, false],
       ['Version gratuite', true, true],

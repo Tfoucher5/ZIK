@@ -39,7 +39,7 @@
 
   <h3>Temps de réponse</h3>
   <p>
-    Chaque manche a une durée fixée (30 secondes par défaut dans les rooms officielles, configurable en Mode Salon). Le timer s'affiche visuellement. Quand le temps est écoulé, la réponse correcte est révélée et la manche suivante démarre.
+    Chaque manche a une durée fixée (30 secondes par défaut dans les rooms officielles, configurable avec ZIK Soirée). Le timer s'affiche visuellement. Quand le temps est écoulé, la réponse correcte est révélée et la manche suivante démarre.
   </p>
 
   <DocTip warn label="Attention :">

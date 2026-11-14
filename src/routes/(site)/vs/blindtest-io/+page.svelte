@@ -6,11 +6,11 @@
   slug="blindtest-io"
   name="Blindtest.io"
   title="ZIK vs Blindtest.io - Comparaison des blind tests musicaux en ligne"
-  description="ZIK ou Blindtest.io ? Comparaison factuelle : ZIK propose l'import Deezer, un classement ELO compétitif et un Mode Salon pour les soirées. Gratuit, sans inscription."
+  description="ZIK ou Blindtest.io ? Comparaison factuelle : ZIK propose l'import Deezer, un classement ELO compétitif et ZIK Soirée, le blind test sur la TV. Gratuit, sans inscription."
   ogTitle="ZIK vs Blindtest.io - Comparaison blind test en ligne"
-  ogDescription="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. ZIK permet l'import de playlists Deezer et propose un Mode Salon pour les soirées."
+  ogDescription="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. ZIK permet l'import de playlists Deezer et propose ZIK Soirée, le blind test sur la TV."
   ldName="ZIK vs Blindtest.io — Comparaison des blind tests en ligne"
-  ldDescription="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. Comparaison factuelle : playlists personnalisées, modes de jeu, classement ELO, Mode Salon."
+  ldDescription="ZIK et Blindtest.io sont deux blind tests musicaux en ligne. Comparaison factuelle : playlists personnalisées, modes de jeu, classement ELO, ZIK Soirée."
   h1="ZIK vs Blindtest.io : quel blind test en ligne choisir ?"
   intro="ZIK et Blindtest.io sont deux plateformes de blind test musical en ligne. Cette comparaison présente leurs différences de façon factuelle pour vous aider à choisir selon votre usage."
   sections={[
@@ -19,7 +19,7 @@
       { ul: [
         ['Mode Classique', " — saisie libre du titre et de l'artiste, classement ELO compétitif"],
         ['Mode QCM', ' — 4 propositions à choix multiple, sans pression'],
-        ['Mode Salon', ' — hôte sur grand écran, joueurs sur smartphone (QR code / code)'],
+        ['ZIK Soirée', ' — hôte sur grand écran, joueurs sur smartphone (QR code / code)'],
       ] },
       { p: "ZIK permet d'importer des playlists depuis Deezer, ou de créer des playlists manuellement. Rooms publiques, privées et rooms officielles thématiques disponibles." },
     ] },
@@ -31,7 +31,7 @@
       ['Import playlists Deezer', true, false],
       ['Multijoueur en temps réel', true, true],
       ['Classement ELO compétitif', true, false],
-      ['Mode Salon (TV + smartphones)', true, false],
+      ['ZIK Soirée (TV + smartphones)', true, false],
       ['Mode QCM', true, true],
       ['Rooms privées avec code', true, true],
       ['Sans inscription obligatoire', true, 'Variable'],
@@ -41,7 +41,7 @@
       { ul: [
         'Vous voulez utiliser vos propres playlists Deezer',
         'Vous cherchez un classement ELO compétitif persistant',
-        'Vous organisez une soirée et voulez un Mode Salon (TV + smartphones)',
+        'Vous organisez une soirée et voulez un blind test sur la TV avec les téléphones',
         'Vous voulez une expérience multijoueur en temps réel, gratuite et sans inscription',
       ] },
     ] },

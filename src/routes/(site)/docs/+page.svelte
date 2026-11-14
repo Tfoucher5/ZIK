@@ -22,14 +22,14 @@
 
 <svelte:head>
   <title>ZIK - Documentation | Blind Test Multijoueur</title>
-  <meta name="description" content="Guide complet du blind test ZIK : comment jouer, système de points et bonus vitesse, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ. Gratuit en ligne." />
+  <meta name="description" content="Guide complet du blind test ZIK : comment jouer, système de points et bonus vitesse, ZIK Soirée sur la TV, import Deezer, classement ELO, FAQ. Gratuit en ligne." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/docs" />
-  <meta property="og:title" content="Guide complet - Blind Test ZIK | Règles, Points, Mode Salon" />
-  <meta property="og:description" content="Guide complet du blind test ZIK : comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ." />
+  <meta property="og:title" content="Guide complet - Blind Test ZIK | Règles, Points, ZIK Soirée" />
+  <meta property="og:description" content="Guide complet du blind test ZIK : comment jouer, système de points, ZIK Soirée sur la TV, import Deezer, classement ELO, FAQ." />
   <meta property="og:url" content="https://www.zik-music.fr/docs" />
-  <meta name="twitter:title" content="Guide complet - Blind Test ZIK | Règles, Points, Mode Salon" />
-  <meta name="twitter:description" content="Comment jouer, système de points, Mode Salon Kahoot-like, import Deezer, classement ELO, FAQ. Guide complet du blind test ZIK." />
+  <meta name="twitter:title" content="Guide complet - Blind Test ZIK | Règles, Points, ZIK Soirée" />
+  <meta name="twitter:description" content="Comment jouer, système de points, ZIK Soirée sur la TV, import Deezer, classement ELO, FAQ. Guide complet du blind test ZIK." />
 
   <JsonLd json={jsonLdPage} />
   <JsonLd json={jsonLdFaq} />
