@@ -137,7 +137,7 @@
     </div>
   {/if}
 
-  <HostGameOver {phase} {gameOver} {total} {settings} {pro} {onSetting} {onRestart} {onChangePlaylists} {onNewSalon} />
+  <HostGameOver {phase} {gameOver} {total} {settings} {pro} {code} {onSetting} {onRestart} {onChangePlaylists} {onNewSalon} />
 
   {#if intermission}<HostIntermission {intermission} {code} />{/if}
 

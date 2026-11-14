@@ -103,6 +103,12 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
   await expect(tv.getByText(`Vainqueur · ${MANCHES} manches`)).toBeVisible({
     timeout: MANCHE_MAX_MS,
   });
+  // Entre deux parties, grand QR et code pour ceux qui arrivent ou reviennent
+  await expect(tv.locator(".sh-over-join .sh-qr img")).toBeVisible();
+  await expect(tv.locator(".sh-over-join .sh-code")).toHaveAttribute(
+    "aria-label",
+    `Code ${code}`,
+  );
   for (const nom of NOMS)
     await expect(
       tv.locator(".sh-po-name").filter({ hasText: nom }),
