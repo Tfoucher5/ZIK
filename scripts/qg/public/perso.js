@@ -1,86 +1,58 @@
 import * as THREE from "three";
-import { etiquette } from "./bureau.js";
+import { etiquette } from "./meubles.js";
 
 const PEAUX = ["#f1c7a5", "#d9a37e", "#a86f4c", "#6e4a33", "#f5d6bd"];
-const VITESSE = 3;
-
-// Chemin depuis le couloir central (z = 0) jusqu'à un point du bureau.
-function entree(p) {
-  if (p.z < -12.5) {
-    const v = [new THREE.Vector3(8, 0, 0), new THREE.Vector3(8, 0, -13.5)];
-    if (Math.abs(p.x) < 6)
-      v.push(
-        new THREE.Vector3(0, 0, -13.5),
-        new THREE.Vector3(0, 0, -17),
-        new THREE.Vector3(p.x, 0, -17),
-      );
-    else v.push(new THREE.Vector3(p.x, 0, -13.5));
-    return v;
-  }
-  if (Math.abs(p.x) < 6.5 && p.z < -4) {
-    const cote = p.x < 0 ? -5.6 : 5.6;
-    return [
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, -4.8),
-      new THREE.Vector3(cote, 0, -4.8),
-      new THREE.Vector3(cote, 0, p.z),
-    ];
-  }
-  const allee = p.x + 1.7;
-  return [new THREE.Vector3(allee, 0, 0), new THREE.Vector3(allee, 0, p.z)];
-}
+const CHEVEUX = [
+  "#2b1d14",
+  "#5a3a22",
+  "#c9a063",
+  "#111111",
+  "#8a8a8a",
+  "#a0522d",
+];
+const PANTALONS = ["#232a3a", "#3b3f46", "#2f3b52", "#4a3b2f", "#1d1f24"];
+const VITESSE = 2.6;
+const hasard = (t) => t[Math.floor(Math.random() * t.length)];
 
 export class Perso {
-  constructor(scene, id, nom, couleur, siege) {
-    this.id = id;
-    this.siege = siege;
-    this.but = siege;
-    this.chemin = [];
-    this.assis = false;
-    this.actif = false;
-    this.pause = 2 + Math.random() * 8;
+  constructor(scene, grille, id, nom, couleur, siege) {
+    Object.assign(this, {
+      id,
+      grille,
+      siege,
+      but: siege,
+      chemin: [],
+      assis: false,
+      actif: false,
+    });
+    this.pause = 3 + Math.random() * 10;
     this.phase = Math.random() * 6;
     this.g = new THREE.Group();
-    this.g.position.copy(siege.place);
-    this.g.rotation.y = siege.angle;
     scene.add(this.g);
     const m = (c) =>
-      new THREE.MeshStandardMaterial({ color: c, roughness: 0.55 });
+      new THREE.MeshStandardMaterial({ color: c, roughness: 0.65 });
+    const haut = m(couleur);
+    const peau = m(hasard(PEAUX));
     const corps = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.27, 0.5, 4, 12),
-      m(couleur),
+      new THREE.CapsuleGeometry(0.25, 0.48, 4, 12),
+      haut,
     );
     corps.position.y = 1.08;
-    const tete = new THREE.Mesh(
-      new THREE.SphereGeometry(0.21, 16, 12),
-      m(PEAUX[Math.floor(Math.random() * PEAUX.length)]),
+    corps.scale.z = 0.75;
+    const tete = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 12), peau);
+    tete.position.y = 1.66;
+    const cheveux = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      m(hasard(CHEVEUX)),
     );
-    tete.position.y = 1.7;
-    this.jambes = [-0.12, 0.12].map((x) => {
-      const pivot = new THREE.Group();
-      pivot.position.set(x, 0.72, 0);
-      const j = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, 0.7, 0.17),
-        m("#232a3a"),
-      );
-      j.position.y = -0.35;
-      pivot.add(j);
-      this.g.add(pivot);
-      return pivot;
-    });
-    this.bras = [-0.34, 0.34].map((x) => {
-      const pivot = new THREE.Group();
-      pivot.position.set(x, 1.35, 0);
-      const b = new THREE.Mesh(
-        new THREE.BoxGeometry(0.11, 0.55, 0.12),
-        m(couleur),
-      );
-      b.position.y = -0.27;
-      pivot.add(b);
-      this.g.add(pivot);
-      return pivot;
-    });
-    for (const o of [corps, tete]) {
+    cheveux.position.set(0, 1.69, -0.02);
+    this.jambes = [-0.11, 0.11].map((x) =>
+      this.membre(x, 0.72, 0.14, 0.72, m(hasard(PANTALONS)), 0.16),
+    );
+    this.bras = [-0.31, 0.31].map((x) =>
+      this.membre(x, 1.36, 0.1, 0.56, haut, 0.11, peau),
+    );
+    for (const o of [corps, tete, cheveux]) {
       o.castShadow = true;
       o.userData.id = id;
       this.g.add(o);
@@ -90,23 +62,44 @@ export class Perso {
     this.lab.element.innerHTML = `<div class="nom"></div><div class="act"></div>`;
     this.lab.element.querySelector(".nom").textContent = nom;
     this.act = this.lab.element.querySelector(".act");
-    this.lab.position.y = 2.3;
+    this.lab.position.y = 2.2;
     this.g.add(this.lab);
-    this.asseoir();
+    this.poser();
   }
 
-  asseoir() {
-    this.assis = true;
+  membre(x, y, l, h, mat, p, main) {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, y, 0);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(l, h, p), mat);
+    b.position.y = -h / 2;
+    b.castShadow = true;
+    pivot.add(b);
+    if (main) {
+      const mn = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), main);
+      mn.position.y = -h - 0.03;
+      pivot.add(mn);
+    }
+    this.g.add(pivot);
+    return pivot;
+  }
+
+  poser() {
+    this.assis = !this.but.debout;
     this.g.position.copy(this.but.place);
     this.g.rotation.y = this.but.angle;
   }
 
   aller(but) {
-    if (this.but === but && (this.assis || this.chemin.length)) return;
-    const sortie = entree(this.g.position.clone().setY(0)).reverse();
+    if (
+      this.but === but &&
+      (this.chemin.length || this.g.position.distanceTo(but.place) < 0.3)
+    )
+      return;
     this.but = but;
     this.assis = false;
-    this.chemin = [...sortie, ...entree(but.place), but.place.clone()];
+    this.chemin = this.grille
+      .trajet(this.g.position, but.place)
+      .map((p) => new THREE.Vector3(p.x, 0, p.z));
   }
 
   etat(actif, texte) {
@@ -115,13 +108,13 @@ export class Perso {
     this.act.textContent = actif ? texte : "";
   }
 
-  // Inactif : alterne entre son poste et une pause (café, salon, couloir).
+  // Au repos : alterne entre son poste et une pause (cuisine, salon, fenêtre).
   flaner(dt, pauses) {
     this.pause -= dt;
     if (this.pause > 0 || this.chemin.length) return;
-    this.pause = 7 + Math.random() * 14;
-    if (this.but === this.siege && Math.random() < 0.45) {
-      const p = pauses[Math.floor(Math.random() * pauses.length)];
+    this.pause = 10 + Math.random() * 20;
+    if (this.but === this.siege && Math.random() < 0.5) {
+      const p = hasard(pauses);
       this.aller({
         place: p
           .clone()
@@ -133,43 +126,44 @@ export class Perso {
   }
 
   animer(dt, t) {
-    const pas = this.chemin[0];
     const jambe = (a) =>
       this.jambes.forEach((j, i) => (j.rotation.x = i ? -a : a));
     const bras = (a, b = a) =>
       this.bras.forEach((p, i) => (p.rotation.x = i ? b : a));
+    const pas = this.chemin[0];
     if (pas) {
-      const d = pas.clone().sub(this.g.position);
+      const d = pas.clone().sub(this.g.position.clone().setY(0));
       const l = d.length();
       if (l < 0.05) {
         this.chemin.shift();
-        if (!this.chemin.length) {
-          if (this.but.debout) this.g.rotation.y = this.but.angle;
-          else this.asseoir();
-        }
+        if (!this.chemin.length) this.poser();
       } else {
-        this.g.position.addScaledVector(
-          d.normalize(),
-          Math.min(l, VITESSE * dt),
+        this.g.position
+          .setY(0)
+          .addScaledVector(d.normalize(), Math.min(l, VITESSE * dt));
+        const cible = Math.atan2(d.x, d.z);
+        const ecart = Math.atan2(
+          Math.sin(cible - this.g.rotation.y),
+          Math.cos(cible - this.g.rotation.y),
         );
-        this.g.rotation.y = Math.atan2(d.x, d.z);
-        const s = Math.sin(t * 10 + this.phase) * 0.6;
-        jambe(s);
-        bras(-s * 0.7, s * 0.7);
-        this.g.position.y = Math.abs(Math.sin(t * 10 + this.phase)) * 0.05;
+        this.g.rotation.y += ecart * Math.min(1, dt * 10);
+        const s = Math.sin(t * 9 + this.phase);
+        jambe(s * 0.55);
+        bras(-s * 0.5, s * 0.5);
+        this.g.position.y = Math.abs(s) * 0.04;
         return;
       }
     }
     if (this.assis) {
-      this.g.position.y = -0.22;
+      this.g.position.y = -0.24;
       jambe(-Math.PI / 2);
-      const frappe = this.actif ? Math.sin(t * 18 + this.phase) * 0.12 : 0;
-      bras(-1.1 + frappe, -1.1 - frappe);
+      const frappe = this.actif ? Math.sin(t * 16 + this.phase) * 0.1 : 0;
+      bras(-1.15 + frappe, -1.15 - frappe);
     } else {
       this.g.position.y = 0;
       jambe(0);
-      const geste = this.actif ? Math.sin(t * 3 + this.phase) * 0.4 : 0;
-      bras(-0.2 - geste, -0.1);
+      const geste = this.actif ? Math.sin(t * 2.5 + this.phase) * 0.5 : 0;
+      bras(-0.15 - Math.max(geste, 0) * 1.6, -0.1 + Math.min(geste, 0) * 0.4);
     }
   }
 }

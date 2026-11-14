@@ -123,7 +123,9 @@ const FICHIERS = {
   "/": ["index.html", "text/html"],
   "/qg.js": ["qg.js", "text/javascript"],
   "/scene.js": ["scene.js", "text/javascript"],
-  "/bureau.js": ["bureau.js", "text/javascript"],
+  "/plan.js": ["plan.js", "text/javascript"],
+  "/meubles.js": ["meubles.js", "text/javascript"],
+  "/chemins.js": ["chemins.js", "text/javascript"],
   "/perso.js": ["perso.js", "text/javascript"],
   "/qg.css": ["qg.css", "text/css"],
 };
