@@ -25,6 +25,7 @@
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
     p.checkResume(params.get('code')?.toUpperCase() || '');
+    if (params.get('code')) document.getElementById('sp-username')?.focus();
   });
 
   onDestroy(() => p.destroy());

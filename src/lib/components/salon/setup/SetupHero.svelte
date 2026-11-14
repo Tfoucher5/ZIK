@@ -1,5 +1,5 @@
 <header class="st-top">
-  <a class="st-top-link" href="/">← ZIK</a>
+  <a class="st-top-link" href="/soiree">← ZIK Soirée</a>
   <a class="st-top-link st-top-join" href="/salon/play">Invité ? <b>Entrer le code</b></a>
 </header>
 

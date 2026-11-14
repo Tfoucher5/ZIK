@@ -1,18 +1,20 @@
 <script>
   import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import { jsonLd, faqJsonLd } from './seo.js';
+  import { siteJsonLd } from './seo.js';
+
+  const TITLE = 'ZIK - Blind test en ligne ou en soirée, gratuit et sans appli';
+  const DESC = 'Joue au blind test en ligne contre d\'autres joueurs, ou anime une soirée : la TV diffuse la musique, chacun répond sur son téléphone. Gratuit, sans appli.';
 </script>
 
 <svelte:head>
-  <title>ZIK - Blind test en soirée sur la TV et multijoueur en ligne</title>
-  <meta name="description" content="Le blind test de soirée : la TV diffuse la musique, chacun répond sur son téléphone, en solo ou en équipes. Aussi en ligne, avec tes playlists Deezer. Gratuit, sans appli." />
+  <title>{TITLE}</title>
+  <meta name="description" content={DESC} />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/" />
-  <meta property="og:title" content="ZIK - Le blind test de soirée sur la TV" />
-  <meta property="og:description" content="La TV diffuse, les téléphones répondent. Équipes, classement en direct, podium, vos playlists Deezer. Aussi en ligne. Gratuit, sans appli." />
+  <meta property="og:title" content={TITLE} />
+  <meta property="og:description" content={DESC} />
   <meta property="og:url" content="https://www.zik-music.fr/" />
-  <meta name="twitter:title" content="ZIK - Le blind test de soirée sur la TV" />
-  <meta name="twitter:description" content="La TV diffuse, les téléphones répondent. En équipes, avec vos playlists. Aussi en ligne. Gratuit, sans appli." />
-  <JsonLd json={jsonLd} />
-  <JsonLd json={faqJsonLd} />
+  <meta name="twitter:title" content={TITLE} />
+  <meta name="twitter:description" content={DESC} />
+  <JsonLd json={siteJsonLd} />
 </svelte:head>

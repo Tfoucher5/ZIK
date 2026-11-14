@@ -157,7 +157,7 @@
 <QuitModal
   open={g.quitAsked} quitCase={g.quitCase()} cardsInPlay={g.cardsInPlay} roundTotal={g.roundTotal}
   onStay={() => (g.quitAsked = false)}
-  onQuit={() => { g.quitAsked = false; goto('/'); }}
+  onQuit={() => { g.quitAsked = false; goto('/rooms'); }}
 />
 
 {#if g.canInviteFriends}

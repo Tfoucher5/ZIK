@@ -9,7 +9,7 @@
 </script>
 
 <header class="g-header">
-  <a href="/" class="g-back" onclick={onBack}>&#x2190; Rooms</a>
+  <a href="/rooms" class="g-back" onclick={onBack}>&#x2190; Rooms</a>
   <div class="g-header-room">
     <span class="g-live"></span>
     <span class="g-room-name">{roomLabel}</span>
