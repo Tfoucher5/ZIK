@@ -5,7 +5,7 @@
   let { json } = $props();
 
   let tag = $derived(
-    `<script type="application/ld+json">${json.replace(/</g, "\u003c")}</` + "script>",
+    `<script type="application/ld+json">${json.replace(/</g, "\\u003c")}</` + "script>",
   );
 </script>
 
