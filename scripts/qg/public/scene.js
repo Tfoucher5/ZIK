@@ -5,6 +5,7 @@ import { Grille } from "./chemins.js";
 import { COULEURS, LIMITES, plan } from "./plan.js";
 import { fiche } from "./noms.js";
 import { Perso } from "./perso.js";
+import { animerPortes } from "./portes.js";
 
 // Ces métiers restent à leur poste ; les autres se réunissent en salle dès qu'ils sont deux du même service.
 const AU_POSTE = ["dev", "test-writer", "reviewer", "recette", "incident"];
@@ -109,6 +110,7 @@ export class Scene3D {
     this.grille = new Grille(...LIMITES);
     this.d = plan(this.scene, this.grille, org);
     this.perso("theo", "fondateur", "#ffffff", this.d.theo);
+    this.perso("accueil", "accueil", "#ff00ff", this.d.accueil).fixe = true;
     this.perso("ceo", "CEO", COULEURS.ceo, this.d.ceo);
     this.libres = new Map([["renforts", this.d.renforts]]);
     for (const [id, s] of Object.entries(this.d.services)) {
@@ -173,8 +175,13 @@ export class Scene3D {
       const membres = c.equipe.filter(
         (m) => activite.has(m) && !AU_POSTE.includes(m) && !enSeance.has(m),
       );
-      if (membres.length >= 2) reunions.set(id, { salle: s.salle, membres });
-      s.salle.ecran.material.emissiveIntensity = membres.length >= 2 ? 1 : 0.05;
+      if (membres.length >= 2) {
+        reunions.set(id, { salle: s.salle, membres });
+        s.salle.tele.allumer(
+          `Réunion ${c.nom.replace(/ \(.*\)/, "")}`,
+          membres.map((m) => `${fiche(m).nom} · ${activite.get(m)}`),
+        );
+      } else s.salle.tele.eteindre();
     }
     const salleDe = (m) =>
       [...reunions.values()].find((r) => r.membres.includes(m));
@@ -213,14 +220,22 @@ export class Scene3D {
         ecran.material.emissiveIntensity =
           actif && but === p.siege ? 0.9 : 0.05;
     }
-    this.d.board.ecran.material.emissiveIntensity = siege ? 1 : 0.05;
+    if (siege)
+      this.d.board.tele.allumer(
+        "Board en séance",
+        seance.map((m) => `${fiche(m).nom} · ${fiche(m).role ?? m}`),
+      );
+    else this.d.board.tele.eteindre();
   }
 
   image() {
+    if (!this.d) return;
     const dt = Math.min(this.horloge.getDelta(), 0.25);
     const t = this.horloge.elapsedTime;
+    const prises = new Set([...this.persos.values()].map((p) => p.but));
+    const libres = this.d.pauses.filter((p) => !prises.has(p));
     for (const [id, p] of this.persos) {
-      if (!p.actif && !p.temporaire) p.flaner(dt, this.d.pauses);
+      if (!p.actif && !p.temporaire && !p.fixe) p.flaner(dt, libres);
       p.animer(dt, t);
       if (p.depart && !p.chemin.length) {
         this.scene.remove(p.g);
@@ -228,6 +243,12 @@ export class Scene3D {
         this.persos.delete(id);
       }
     }
+    animerPortes(
+      dt,
+      [...this.persos.values()].map((p) => p.g.position),
+    );
+    for (const s of Object.values(this.d.services)) s.salle.tele.animer(dt);
+    this.d.board.tele.animer(dt);
     this.controles.update();
     this.rendu.render(this.scene, this.camera);
     this.etiquettes.render(this.scene, this.camera);

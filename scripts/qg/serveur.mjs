@@ -119,29 +119,23 @@ function organigramme() {
     : { chefs: [], board: [] };
 }
 
-const FICHIERS = {
-  "/": ["index.html", "text/html"],
-  "/qg.js": ["qg.js", "text/javascript"],
-  "/scene.js": ["scene.js", "text/javascript"],
-  "/plan.js": ["plan.js", "text/javascript"],
-  "/meubles.js": ["meubles.js", "text/javascript"],
-  "/chemins.js": ["chemins.js", "text/javascript"],
-  "/deco.js": ["deco.js", "text/javascript"],
-  "/pieces.js": ["pieces.js", "text/javascript"],
-  "/espaces.js": ["espaces.js", "text/javascript"],
-  "/noms.js": ["noms.js", "text/javascript"],
-  "/perso.js": ["perso.js", "text/javascript"],
-  "/qg.css": ["qg.css", "text/css"],
+const TYPES = { html: "text/html", js: "text/javascript", css: "text/css" };
+const fichier = (url) => {
+  const nom = url === "/" ? "index.html" : url.slice(1);
+  return /^[a-z0-9-]+\.(html|js|css)$/.test(nom) &&
+    existsSync(join(ici, "public", nom))
+    ? nom
+    : null;
 };
 const clients = new Set();
 
 createServer((req, res) => {
   if (!hoteAutorise(req.headers.host, PORT)) return res.writeHead(403).end();
   const url = req.url.split("?")[0];
-  if (FICHIERS[url]) {
-    const [nom, type] = FICHIERS[url];
+  const nom = fichier(url);
+  if (nom) {
     res.writeHead(200, {
-      "content-type": `${type}; charset=utf-8`,
+      "content-type": `${TYPES[nom.split(".").pop()]}; charset=utf-8`,
       "cache-control": "no-store",
     });
     res.end(readFileSync(join(ici, "public", nom)));

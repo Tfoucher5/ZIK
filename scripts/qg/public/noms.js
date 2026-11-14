@@ -26,6 +26,7 @@ export const EQUIPE = {
   prospection: { nom: "Zoé", role: "commerciale", f: 1 },
   avocat: { nom: "Victor", role: "avocat", l: 1, haut: "#1f2937" },
   "client-pro": { nom: "Gérard", role: "patron de bar", haut: "#78350f" },
+  accueil: { nom: "Nora", role: "accueil", f: 1, haut: "#c026d3" },
 };
 
 const RENFORTS = [

@@ -1,10 +1,15 @@
 // Grille de passage du plateau et calcul de trajet (A*), sans dépendance à three.js.
 export class Grille {
-  constructor(xmin, xmax, zmin, zmax, pas = 0.5) {
+  constructor(xmin, xmax, zmin, zmax, pas = 0.25) {
     Object.assign(this, { xmin, zmin, pas });
     this.l = Math.ceil((xmax - xmin) / pas);
     this.h = Math.ceil((zmax - zmin) / pas);
     this.bloc = new Uint8Array(this.l * this.h);
+    this.mur = new Uint8Array(this.l * this.h);
+  }
+
+  dans(i, j) {
+    return i >= 0 && j >= 0 && i < this.l && j < this.h;
   }
 
   case(x, z) {
@@ -22,9 +27,7 @@ export class Grille {
   }
 
   libre(i, j) {
-    return (
-      i >= 0 && j >= 0 && i < this.l && j < this.h && !this.bloc[j * this.l + i]
-    );
+    return this.dans(i, j) && !this.bloc[j * this.l + i];
   }
 
   // Bloque un rectangle (centre, largeur, profondeur), avec une marge pour le corps des personnages.
@@ -46,14 +49,24 @@ export class Grille {
   }
 
   // Bloque un segment quelconque (mur en biais) avec une marge de chaque côté.
+  // Le trait lui-même est gardé à part, d'un seul tenant : rien ne le traverse pour rejoindre une place.
   segment(x0, z0, x1, z1, marge = 0.25) {
     const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / (this.pas / 2));
     const r = Math.ceil(marge / this.pas);
+    let avant = null;
     for (let k = 0; k <= n; k++) {
       const [i, j] = this.case(
         x0 + ((x1 - x0) * k) / n,
         z0 + ((z1 - z0) * k) / n,
       );
+      for (const [a, b] of avant && avant[0] !== i && avant[1] !== j
+        ? [
+            [i, j],
+            [i, avant[1]],
+          ]
+        : [[i, j]])
+        if (this.dans(a, b)) this.mur[b * this.l + a] = 1;
+      avant = [i, j];
       for (let dj = -r; dj <= r; dj++)
         for (let di = -r; di <= r; di++) {
           const [a, b] = [i + di, j + dj];
@@ -69,25 +82,25 @@ export class Grille {
     }
   }
 
-  liberer(x, z, r = 0.4) {
-    const [i0, j0] = this.case(x - r, z - r);
-    const [i1, j1] = this.case(x + r, z + r);
-    for (let j = j0; j <= j1; j++)
-      for (let i = i0; i <= i1; i++)
-        if (i >= 0 && j >= 0 && i < this.l && j < this.h)
-          this.bloc[j * this.l + i] = 0;
-  }
-
-  // Case libre la plus proche (un siège peut être collé à un meuble).
+  // Case libre la plus proche d'une place collée à un meuble, sans passer à travers un mur.
   proche(i, j) {
-    for (let r = 0; r < 12; r++)
-      for (let dj = -r; dj <= r; dj++)
-        for (let di = -r; di <= r; di++)
-          if (
-            Math.max(Math.abs(di), Math.abs(dj)) === r &&
-            this.libre(i + di, j + dj)
-          )
-            return [i + di, j + dj];
+    const vus = new Set([j * this.l + i]);
+    const file = [[i, j]];
+    for (let k = 0; k < file.length && k < 4000; k++) {
+      const [a, b] = file[k];
+      if (this.libre(a, b)) return [a, b];
+      for (const [c, d] of [
+        [a + 1, b],
+        [a - 1, b],
+        [a, b + 1],
+        [a, b - 1],
+      ]) {
+        const n = d * this.l + c;
+        if (!this.dans(c, d) || vus.has(n) || this.mur[n]) continue;
+        vus.add(n);
+        file.push([c, d]);
+      }
+    }
     return [i, j];
   }
 
@@ -111,7 +124,7 @@ export class Grille {
     return true;
   }
 
-  // Trajet lissé de a à b ({x, z}) ; le point d'arrivée exact est ajouté à la fin.
+  // Trajet lissé de a à b ({x, z}) ; le point d'arrivée exact est ajouté à la fin. Vide si b est inaccessible.
   trajet(a, b) {
     const dep = this.proche(...this.case(a.x, a.z));
     const arr = this.proche(...this.case(b.x, b.z));
@@ -146,7 +159,7 @@ export class Grille {
           }
         }
     }
-    if (!trouve) return [{ x: b.x, z: b.z }];
+    if (!trouve) return [];
     const cases = [];
     for (let c = cle(...arr); c !== undefined; c = venu.get(c))
       cases.unshift([c % this.l, Math.floor(c / this.l)]);
@@ -157,8 +170,10 @@ export class Grille {
         !this.vue(lisse[lisse.length - 1], cases[k + 1])
       )
         lisse.push(cases[k]);
+    const [i, j] = this.case(a.x, a.z);
+    const sorti = i === dep[0] && j === dep[1];
     return [
-      ...lisse.slice(1).map(([i, j]) => this.centre(i, j)),
+      ...lisse.slice(sorti ? 1 : 0).map(([i, j]) => this.centre(i, j)),
       { x: b.x, z: b.z },
     ];
   }

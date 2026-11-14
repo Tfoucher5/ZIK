@@ -170,7 +170,7 @@ function appliquer() {
   for (const b of document.querySelectorAll("[data-bascule]")) {
     const off = !!reglages[b.dataset.bascule];
     document.body.classList.toggle(b.dataset.bascule, off);
-    b.setAttribute("aria-pressed", String(!off));
+    b.checked = !off;
   }
   for (const p of document.querySelectorAll(".panneau")) {
     const replie = !!reglages[`replie-${p.classList[2]}`];
@@ -178,16 +178,21 @@ function appliquer() {
     p.querySelector(".plier").setAttribute("aria-expanded", String(!replie));
   }
 }
-document.addEventListener("click", (e) => {
-  const b = e.target.closest("[data-bascule]");
-  const p = e.target.closest(".plier")?.closest(".panneau");
-  if (b) reglages[b.dataset.bascule] = !reglages[b.dataset.bascule];
-  else if (p)
-    reglages[`replie-${p.classList[2]}`] =
-      !reglages[`replie-${p.classList[2]}`];
-  else return;
+const garder = () => {
   memoire.ecrire(reglages);
   appliquer();
+};
+document.addEventListener("change", (e) => {
+  const b = e.target.closest("[data-bascule]");
+  if (!b) return;
+  reglages[b.dataset.bascule] = !b.checked;
+  garder();
+});
+document.addEventListener("click", (e) => {
+  const p = e.target.closest(".plier")?.closest(".panneau");
+  if (!p) return;
+  reglages[`replie-${p.classList[2]}`] = !reglages[`replie-${p.classList[2]}`];
+  garder();
 });
 appliquer();
 

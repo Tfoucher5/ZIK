@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { MAT, boite, chaise, cylindre, ecran } from "./meubles.js";
+import { MAT, boite, chaise, cylindre } from "./meubles.js";
+import { Tele } from "./tele.js";
 
 const mat = (c, o = {}) =>
   new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, ...o });
@@ -18,115 +19,51 @@ function emprise(grille, x, z, l, p, angle, marge = 0.12) {
   grille.bloquer(x, z, l * c + p * s, l * s + p * c, marge);
 }
 
-// Table de réunion, sièges des deux côtés, écran au mur. Renvoie sièges, écran et la place de l'animateur.
-export function tableReunion(scene, grille, x, z, l, n, couleur, mural) {
+// Table de réunion, sièges des deux côtés, télé au mur. Renvoie sièges, télé et la place de l'animateur.
+export function tableReunion(scene, grille, x, z, l, n, couleur, mural, nom) {
   boite(scene, l, 0.06, 1.2, MAT.chene, x, 0.74, z);
   for (const dx of [-l / 2 + 0.3, l / 2 - 0.3])
     boite(scene, 0.08, 0.72, 0.9, MAT.noir, x + dx, 0.36, z);
-  grille.bloquer(x, z, l, 1.2, 0.15);
+  grille.bloquer(x, z, l, 1.2, 0.1);
+  grille.bloquer(x, z, l, 2.18, 0);
   const sieges = [];
   const par = Math.ceil(n / 2);
   for (let k = 0; k < n; k++) {
     const cote = k < par ? -1 : 1;
     const sx = x - l / 2 + (l / par) * ((k % par) + 0.5);
-    const sz = z + cote * 0.95;
+    const sz = z + cote * 0.85;
     chaise(scene, couleur, sx, sz, cote < 0 ? Math.PI : 0);
     sieges.push({
       place: new THREE.Vector3(sx, 0, sz),
       angle: cote < 0 ? 0 : Math.PI,
     });
   }
-  const e = ecran(couleur, 1.6, 0.9);
-  e.position.set(mural.x, 1.45, mural.z);
-  e.rotation.y = mural.angle;
-  scene.add(e);
+  const tele = new Tele(couleur, nom);
+  tele.mesh.position.set(mural.x, 1.45, mural.z);
+  tele.mesh.rotation.y = mural.angle;
+  scene.add(tele.mesh);
+  const cadre = boite(
+    scene,
+    1.68,
+    0.98,
+    0.04,
+    MAT.noir,
+    mural.x,
+    1.45,
+    mural.z,
+  );
+  cadre.rotation.y = mural.angle;
+  cadre.translateZ(-0.03);
   const n2 = new THREE.Vector3(Math.sin(mural.angle), 0, Math.cos(mural.angle));
   return {
     sieges,
-    ecran: e,
+    tele,
     debout: {
-      place: e.position.clone().setY(0).addScaledVector(n2, 0.7),
+      place: tele.mesh.position.clone().setY(0).addScaledVector(n2, 0.7),
       angle: mural.angle,
       debout: true,
     },
   };
-}
-
-// Escalier en deux volées avec palier, vu d'en haut.
-export function escalier(scene, x, z, l, p) {
-  const g = groupe(scene, x, z);
-  const marches = 12;
-  for (let k = 0; k < marches; k++) {
-    const pz = -p / 2 + 0.4 + (k * (p - 1.4)) / marches;
-    boite(
-      g,
-      l / 2 - 0.15,
-      0.15 + k * 0.17,
-      (p - 1.4) / marches,
-      MAT.beton,
-      -l / 4,
-      (0.15 + k * 0.17) / 2,
-      pz,
-    );
-    boite(
-      g,
-      l / 2 - 0.15,
-      2.2 - k * 0.17,
-      (p - 1.4) / marches,
-      MAT.beton,
-      l / 4,
-      (2.2 - k * 0.17) / 2,
-      pz,
-    );
-  }
-  boite(g, l - 0.1, 2.2, 1, MAT.beton, 0, 1.1, p / 2 - 0.6);
-  boite(g, 0.08, 2.4, p - 1.2, MAT.alu, 0, 1.2, -0.2);
-}
-
-// Sanitaires : cabines alignées et vasques.
-export function sanitaires(scene, x, z, l) {
-  const g = groupe(scene, x, z);
-  for (let k = 0; k < 3; k++) {
-    const cx = -l / 2 + 0.55 + k * 1.05;
-    boite(g, 0.04, 1.9, 1.3, mat("#9ca3af"), cx + 0.5, 0.95, -0.5);
-    boite(g, 0.4, 0.4, 0.55, MAT.blanc, cx, 0.2, -0.85);
-  }
-  boite(g, l - 0.3, 0.12, 0.45, MAT.blanc, 0, 0.85, 0.65);
-  for (let k = 0; k < 2; k++)
-    cylindre(g, 0.15, 0.06, MAT.alu, -0.5 + k, 0.93, 0.65);
-}
-
-// Bloc ascenseurs : deux portes inox sur la face qui donne sur l'accueil.
-export function ascenseurs(scene, x, z, l, p) {
-  const g = groupe(scene, x, z);
-  boite(g, l, 2.6, p, mat("#d4d4d8"), 0, 1.3, 0);
-  for (const dx of [-l / 4, l / 4]) {
-    boite(g, 1.1, 2.15, 0.04, MAT.alu, dx, 1.08, p / 2 + 0.02);
-    boite(g, 0.02, 2.15, 0.05, MAT.noir, dx, 1.08, p / 2 + 0.03);
-    boite(
-      g,
-      0.08,
-      0.16,
-      0.03,
-      mat("#111", { emissive: "#ff00ff", emissiveIntensity: 0.6 }),
-      dx + 0.75,
-      1.2,
-      p / 2 + 0.02,
-    );
-  }
-}
-
-// Cabine téléphonique acoustique pour une personne.
-export function cabine(scene, grille, x, z, angle, couleur) {
-  const g = groupe(scene, x, z, angle);
-  const c = mat(couleur, { roughness: 1 });
-  boite(g, 1.1, 2.2, 0.08, c, 0, 1.1, -0.5);
-  boite(g, 0.08, 2.2, 1, c, -0.55, 1.1, 0);
-  boite(g, 0.08, 2.2, 1, c, 0.55, 1.1, 0);
-  boite(g, 1.1, 0.08, 1.1, c, 0, 2.2, 0);
-  boite(g, 0.7, 0.05, 0.35, MAT.chene, 0, 0.95, -0.3);
-  boite(g, 0.5, 0.45, 0.4, MAT.velours, 0, 0.23, 0.2);
-  emprise(grille, x, z, 1.2, 1.1, angle);
 }
 
 export function bibliotheque(scene, grille, x, z, angle, l = 3) {
