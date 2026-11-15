@@ -2,8 +2,8 @@
 import { chromium } from "playwright-core";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 
-export const W = 430;
-export const H = 932;
+export const W = +process.env.PHONE_W || 430;
+export const H = +process.env.PHONE_H || 932;
 const DPR = 2.5;
 
 export async function phone({ theme } = {}) {
