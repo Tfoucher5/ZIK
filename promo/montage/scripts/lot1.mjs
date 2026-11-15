@@ -93,7 +93,7 @@ const carrousel = [
   [
     "#1d1d1d",
     `<span class="b" style="font-size:64px">lequel t'a fait<br>le plus mal ? 👇</span>
-     <span class="t" style="font-size:38px;font-weight:700;max-width:800px">nous on en fait des blind tests sur zik-music.fr</span>`,
+     <span class="t" style="font-size:38px;font-weight:700;max-width:800px">nous on en fait des blind tests sur <span style="white-space:nowrap">zik-music.fr</span></span>`,
   ],
 ];
 
