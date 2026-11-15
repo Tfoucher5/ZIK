@@ -24,15 +24,17 @@ export const PRO_PERKS = [
 export const PLANS = [
   {
     id: "night",
-    name: "Soirée",
+    name: "Soirée 24 h",
     price: "7,90 €",
-    period: "une fois, valable 24 h",
-    pitch: "Une date, un événement : camping, anniversaire, séminaire.",
+    period: "une fois, ZIK Pro pendant 24 h",
+    pitch: "Camping, anniversaire, séminaire : une date, un événement.",
     perks: [
       "Paiement unique, aucun abonnement",
       "24 h de ZIK Pro dès le paiement",
-      "Plusieurs parties dans la soirée",
+      "Autant de parties que vous voulez",
     ],
+    badge: "Une date",
+    cta: "Prendre la Soirée 24 h",
   },
   {
     id: "monthly",
@@ -43,23 +45,25 @@ export const PLANS = [
     perks: [
       "Toutes les soirées du mois",
       "Résiliable en un clic, à tout moment",
-      "Les futures options Pro incluses",
+      "Une facture chaque mois",
     ],
     featured: true,
-    badge: "Le plus choisi",
+    badge: "Pour les bars",
+    cta: "S'abonner au mois",
   },
   {
     id: "yearly",
     name: "Annuel",
     price: "190 €",
-    period: "par an, 2 mois offerts",
+    period: "par an, soit 15,83 € par mois",
     pitch: "Pour les lieux réguliers et les associations.",
     perks: [
-      "Soit 15,83 € par mois",
+      "Toutes les soirées de l'année",
       "Une seule facture pour l'année",
-      "Les futures options Pro incluses",
+      "Résiliable, actif jusqu'au bout de l'année payée",
     ],
     badge: "2 mois offerts",
+    cta: "S'abonner à l'année",
   },
 ];
 
@@ -84,3 +88,5 @@ export const PRO_FEATURES = {
   buzzer: "Le mode buzzer, avec l'animateur qui valide les réponses",
   specials: "Les manches spéciales tirées au hasard",
 };
+
+export const PRIX_SOIREE = PLANS.find((p) => p.id === "night").price;

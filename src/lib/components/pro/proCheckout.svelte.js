@@ -26,7 +26,7 @@ export class ProCheckout {
   nightActive = $derived(this.activePro && this.pro.plan === "night");
   endLabel = $derived(this.pro ? fmtDate(this.pro.current_period_end) : "");
   confirmed = $derived(PLANS.find((p) => p.id === this.confirmPlan));
-  // Un passe Soirée s'ajoute à la suite de celui en cours
+  // Une Soirée 24 h s'ajoute à la suite de celle en cours
   nightEnd = $derived(
     fmtDate(
       (this.nightActive
