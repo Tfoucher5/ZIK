@@ -33,7 +33,7 @@
     document.addEventListener('visibilitychange', cache);
     return () => {
       document.removeEventListener('visibilitychange', cache);
-      son.stop();
+      son.close();
       band.son = null;
     };
   });

@@ -1,8 +1,7 @@
 <!-- Une scène de l'immeuble : film calé sur le scroll, légendes, flash et son -->
 <script>
   import ScrubVideo from '$lib/components/ui/ScrubVideo.svelte';
-  import { clamp } from '$lib/components/ui/scrub.js';
-  import { media, flashAt } from '$lib/components/accueil/scenes.js';
+  import { media, flashAt, ambiance, createDing } from '$lib/components/accueil/scenes.js';
 
   /**
    * @type {{
@@ -19,25 +18,17 @@
 
   let el;
   let p = $state(0);
-  let dinged = false;
+  const ding = createDing();
 
   function frame(sp) {
     p = sp;
-    if (sp < cfg.ding - 0.03) dinged = false;
-    if (!son?.on) return;
-    const r = el.getBoundingClientRect();
-    const H = innerHeight;
-    const dedans = r.top < H * 0.5 && (dernier || r.bottom > H * 0.5);
-    if (!dedans) return;
-    son.ouvre(cfg.open(sp), clamp((r.bottom - H * 0.2) / (H * 0.8)));
-    if (sp >= cfg.ding && !dinged) {
-      dinged = true;
-      son.ding();
-    }
+    const a = son?.on ? ambiance(sp, el.getBoundingClientRect(), innerHeight, cfg, dernier) : null;
+    if (a) son.ouvre(a.open, a.vol);
+    if (ding(sp, cfg.ding, !!a)) son.ding();
   }
 </script>
 
-<section class="sc" class:cap={!hero || p >= 0.05} aria-labelledby={labelledby} bind:this={el}>
+<section class="sc acc-film" class:cap={!hero || p >= 0.05} aria-labelledby={labelledby} bind:this={el}>
   <ScrubVideo
     sources={{ portrait: media(cfg.film, 'portrait', 'mp4'), paysage: media(cfg.film, 'paysage', 'mp4') }}
     poster={{ portrait: media(cfg.film, 'portrait', 'webp'), paysage: media(cfg.film, 'paysage', 'webp') }}
@@ -56,7 +47,7 @@
         <h2 id={c.id}>{c.h}</h2>
         <p>{c.p}</p>
         {#if c.cta}<a class="btn-main" href={c.cta[0]}>{c.cta[1]}</a>{/if}
-        {#if c.note}<span class="note" class:ok={c.ok}>{c.note}</span>{/if}
+        {#if c.note}<span class="note" class:ok={c.ok} aria-hidden={c.scene}>{c.note}</span>{/if}
       </div>
     {/each}
     <div class="bar" aria-hidden="true"><i style:transform="scaleX({p})"></i></div>
@@ -204,42 +195,6 @@
     will-change: transform;
   }
 
-  /* Sans mouvement : l'affiche en image, toutes les étapes lisibles à la suite */
-  :global(html.rm) .sc :global(.sticky) {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    padding: calc(var(--top) + 30px) var(--gut) 40px;
-  }
-  :global(html.rm) .sc :global(.sticky::after),
-  :global(html.rm) .scrim,
-  :global(html.rm) .flash,
-  :global(html.rm) .bar {
-    display: none;
-  }
-  :global(html.rm) .sc :global(picture) {
-    order: 1;
-  }
-  :global(html.rm) .sc :global(picture img) {
-    max-height: 78svh;
-    object-fit: cover;
-    border-radius: 18px;
-  }
-  :global(html.rm) :where(.sc) :global(.ov) {
-    position: relative;
-    inset: auto;
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
-    translate: none;
-    width: auto;
-    padding: 0;
-    order: 2;
-  }
-  :global(html.rm) :where(.sc) :global(.ov :is(a, button)) {
-    visibility: visible;
-  }
-
   @media (min-width: 900px) {
     .scrim,
     .cap .scrim {
@@ -252,7 +207,7 @@
       bottom: auto;
       translate: 0 -50%;
       right: auto;
-      width: min(480px, 40vw);
+      width: calc(var(--gut) + min(360px, 30vw));
       padding-right: 0;
     }
     .cap-ov h2 {
@@ -263,6 +218,22 @@
     }
     .cap-ov p {
       font-size: 1.15rem;
+    }
+  }
+  /* Téléphone en paysage : la légende tient sous le bandeau */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .scrim,
+    .cap .scrim {
+      background: linear-gradient(90deg, rgba(6, 4, 9, 0.95) 0%, rgba(6, 4, 9, 0.8) 40%, transparent 70%);
+    }
+    .cap-ov h2 {
+      font-size: 13svh;
+    }
+    .big h2 {
+      font-size: 26svh;
+    }
+    .cap-ov p {
+      font-size: 0.95rem;
     }
   }
 </style>

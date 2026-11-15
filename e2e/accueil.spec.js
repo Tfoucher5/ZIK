@@ -4,8 +4,10 @@ import { test, expect } from "@playwright/test";
 const LIENS = ["/salon", "/jouer", "/soiree", "/pro", "/zikle", "/rooms"];
 
 for (const [width, height] of [
+  [1920, 1080],
   [1440, 900],
   [390, 844],
+  [844, 390],
 ]) {
   test(`/ en ${width} px : un h1, liens clés, sans tutoriel ni débordement`, async ({
     page,
@@ -18,6 +20,22 @@ for (const [width, height] of [
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "Le blind test",
     );
+    // Le h1 tient en 3 lignes sous le bandeau, les deux entrées visibles sans défiler
+    const h1 = await page.evaluate(() => {
+      const e = document.querySelector("h1");
+      const r = e.getBoundingClientRect();
+      const top = document.querySelector("header.top").getBoundingClientRect();
+      return {
+        top: r.top - top.bottom,
+        lignes: r.height / (parseFloat(getComputedStyle(e).fontSize) * 0.89),
+      };
+    });
+    expect(h1.top).toBeGreaterThanOrEqual(0);
+    expect(Math.round(h1.lignes)).toBeLessThanOrEqual(3);
+    for (const href of ["/salon", "/jouer"])
+      await expect(page.locator(`.hero a[href="${href}"]`)).toBeInViewport({
+        ratio: 1,
+      });
     for (const href of LIENS)
       expect(
         await page.locator(`main a[href="${href}"]`).count(),

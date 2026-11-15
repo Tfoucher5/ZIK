@@ -129,6 +129,114 @@
   }
 }
 
+/* Sans mouvement : l'affiche en image, le hero puis toutes les légendes à la suite.
+   Écrit deux fois : html.rm (posée après hydratation, ou réglage du joueur) et la
+   requête média (dès le premier rendu, sans saut à l'hydratation). */
+html.rm .acc-film .sticky {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: calc(var(--top) + 30px) var(--gut) 40px;
+}
+html.rm .acc-film .sticky::after,
+html.rm .acc-film :is(.scrim, .flash, .bar, .pouls, .cue) {
+  display: none;
+}
+html.rm .acc-film picture {
+  order: 1;
+}
+html.rm .acc-film picture img {
+  max-height: 78svh;
+  object-fit: cover;
+  border-radius: 18px;
+}
+html.rm .acc-film .ov {
+  position: relative;
+  inset: auto;
+  width: auto;
+  padding: 0;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  translate: none;
+  order: 2;
+}
+html.rm .acc-film .ov :is(a, button) {
+  visibility: visible;
+}
+html.rm .acc-film .ov.hero {
+  order: 0;
+  display: grid;
+  grid-template-rows: none;
+  justify-content: stretch;
+  gap: 14px;
+  justify-items: center;
+}
+html.rm .acc-film .ov.hero > * {
+  grid-row: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html .acc-film *,
+  html .acc-suite * {
+    animation: none !important;
+    transition: none !important;
+  }
+  html .acc-film .sticky {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: calc(var(--top) + 30px) var(--gut) 40px;
+  }
+  html .acc-film .sticky::after,
+  html .acc-film :is(.scrim, .flash, .bar, .pouls, .cue) {
+    display: none;
+  }
+  html .acc-film picture {
+    order: 1;
+  }
+  html .acc-film picture img {
+    max-height: 78svh;
+    object-fit: cover;
+    border-radius: 18px;
+  }
+  html .acc-film .ov {
+    position: relative;
+    inset: auto;
+    width: auto;
+    padding: 0;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    translate: none;
+    order: 2;
+  }
+  html .acc-film .ov :is(a, button) {
+    visibility: visible;
+  }
+  html .acc-film .ov.hero {
+    order: 0;
+    display: grid;
+    grid-template-rows: none;
+    justify-content: stretch;
+    gap: 14px;
+    justify-items: center;
+  }
+  html .acc-film .ov.hero > * {
+    grid-row: auto;
+  }
+}
+@media (min-width: 900px) {
+  html.rm .acc-film .ov.hero {
+    justify-items: start;
+  }
+}
+@media (min-width: 900px) and (prefers-reduced-motion: reduce) {
+  html .acc-film .ov.hero {
+    justify-items: start;
+  }
+}
+
 @media (min-width: 900px) {
   .acc-suite {
     margin-top: -40px;

@@ -184,18 +184,6 @@
       opacity: 0;
     }
   }
-  :global(html.rm) .hero {
-    order: 0;
-    display: grid;
-    gap: 14px;
-    grid-template-rows: none;
-  }
-  :global(html.rm) .hero > :global(*) {
-    grid-row: auto;
-  }
-  :global(html.rm) .cue {
-    display: none;
-  }
 
   @media (min-width: 900px) {
     .hero {
@@ -204,7 +192,7 @@
       justify-content: center;
       align-items: flex-start;
       text-align: left;
-      width: min(760px, 54vw);
+      width: calc(var(--gut) + min(620px, 46vw));
       right: auto;
       padding-right: 0;
     }
@@ -237,8 +225,44 @@
       padding: 0 28px;
       font-size: 18px;
     }
-    :global(html.rm) .hero {
+  }
+  /* Téléphone en paysage : tout tient sous le bandeau, les deux boutons visibles */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      text-align: left;
+      width: calc(var(--gut) + min(620px, 60vw));
+      right: auto;
+      padding: calc(var(--top) + 8px) 0 12px var(--gut);
+    }
+    .hero :global(.resume) {
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 14svh;
+    }
+    .sous {
+      margin-top: 8px;
+    }
+    .bas {
       justify-items: start;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .lead,
+    .cue {
+      display: none;
+    }
+    .ctas {
+      justify-content: flex-start;
+      width: auto;
+    }
+    .ctas a {
+      flex: none;
+      padding: 0 20px;
     }
   }
 </style>

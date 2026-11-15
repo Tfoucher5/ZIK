@@ -62,7 +62,4 @@
       transform: scale(0.96);
     }
   }
-  :global(html.rm) .pouls {
-    display: none;
-  }
 </style>

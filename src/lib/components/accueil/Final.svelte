@@ -22,7 +22,7 @@
 </section>
 
 <style>
-  @property --g {
+  @property --final-g {
     syntax: '<percentage>';
     inherits: false;
     initial-value: 100%;
@@ -40,7 +40,7 @@
     margin-top: 26px;
   }
   .fill {
-    background: linear-gradient(90deg, #fff var(--g), rgba(255, 255, 255, 0.18) 0);
+    background: linear-gradient(90deg, #fff var(--final-g), rgba(255, 255, 255, 0.18) 0);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -56,10 +56,10 @@
   }
   @keyframes fill {
     from {
-      --g: 0%;
+      --final-g: 0%;
     }
     to {
-      --g: 100%;
+      --final-g: 100%;
     }
   }
 </style>

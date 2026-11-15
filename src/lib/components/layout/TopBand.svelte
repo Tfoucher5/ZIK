@@ -14,6 +14,9 @@
   ];
 
   let rub;
+
+  // band vit au-delà du bandeau : sans ça, le digicode se rouvrait au retour sur la page
+  $effect(() => () => (band.code = false));
   const courant = (href) => (page.url.pathname === href ? 'page' : undefined);
 </script>
 

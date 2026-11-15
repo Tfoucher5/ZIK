@@ -101,7 +101,14 @@ export function createSon() {
       timer = null;
       if (!ctx) return;
       master.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
-      setTimeout(() => !timer && ctx.suspend(), 400);
+      setTimeout(() => !timer && ctx?.suspend(), 400);
+    },
+    // En quittant la page : le navigateur limite le nombre de contextes audio
+    close() {
+      clearInterval(timer);
+      timer = null;
+      ctx?.close();
+      ctx = null;
     },
     /** x : ouverture du filtre (0 dehors, 1 dedans) ; v : volume. */
     ouvre(x, v) {

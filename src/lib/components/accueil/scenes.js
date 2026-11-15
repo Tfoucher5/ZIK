@@ -4,7 +4,9 @@ import { clamp } from "../ui/scrub.js";
 const GRATUIT = `Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs`;
 
 // Deux films de la salle 3D de /soiree, calés sur le scroll. Une légende est
-// affichée quand la progression p est dans [from, to[.
+// affichée quand la progression p est dans [from, to[. Une note `scene` recopie
+// ce que montre le film (pseudo, room de démo) : décor de la scène, pas un chiffre
+// réel du site, donc masquée aux lecteurs d'écran.
 export const PORTE = {
   film: "porte",
   len: 6,
@@ -76,6 +78,7 @@ export const ETAGES = {
       h: "Une room, un thème, des joueurs de partout",
       p: "Années 80, rap français, rock… Tu entres dans une room, la manche part aussitôt.",
       note: "Room Années 80 · 12 joueurs",
+      scene: true,
     },
     {
       from: 0.42,
@@ -91,6 +94,7 @@ export const ETAGES = {
       h: "Trouvé !",
       p: "Ta fenêtre passe au vert, ton nom grimpe au classement.",
       note: "Jade a trouvé · 2,1 s",
+      scene: true,
       ok: true,
     },
     {
@@ -123,3 +127,24 @@ export function glassSpot(W, H, portrait) {
 
 export const flashAt = (p, { flash, flashW, flashMax }) =>
   clamp(1 - Math.abs(p - flash) / flashW) * flashMax;
+
+/**
+ * Le son d'une scène quand elle passe sous le milieu de l'écran : ouverture du
+ * filtre et volume, qui baisse quand le bas de la scène remonte. null hors scène.
+ * La dernière scène garde la main jusqu'à sa fin : aucune autre ne prend le relais.
+ */
+export function ambiance(p, { top, bottom }, H, cfg, dernier = false) {
+  if (!(top < H * 0.5 && (dernier || bottom > H * 0.5))) return null;
+  return { open: cfg.open(p), vol: clamp((bottom - H * 0.2) / (H * 0.8)) };
+}
+
+/** Le « ding » du « Trouvé ! » : une fois au passage, réarmé si on remonte avant. */
+export function createDing() {
+  let done = false;
+  return (p, at, dedans) => {
+    if (p < at - 0.03) done = false;
+    if (done || !dedans || p < at) return false;
+    done = true;
+    return true;
+  };
+}
