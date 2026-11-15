@@ -2,6 +2,43 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 15/11/2026 — Que faire de la v3.32 refusée ?
+
+**Question** : faut-il sortir la v3.32 après des retouches ciblées, ou la retravailler plus en profondeur avant toute mise en prod ?
+
+**Recommandation du board** : option B, porte réduite.
+
+- **Tout de suite** : B1 (téléphone bloqué une manche après une coupure, déjà en prod) en hotfix sur `master`.
+- **Dans la porte de la v3.32** :
+  - B2 et B3 (reconnexion), avec e2e ;
+  - version de `phone.css` ;
+  - plafond de `reclaim` et sauvegarde du jeton ;
+  - `httpLookups` ;
+  - TV de fin de partie sans les réglages de l'hôte ;
+  - « JOUEREN LIGNE » ;
+  - texte de `/soiree` aligné sur la reprise de place.
+- **Recette** à plus de 12 téléphones, dont un vrai iPhone.
+- **Lot « expérience »** (fun, textes, UI, gérant sur téléphone, story, vente) : v3.33, cadrée par `/produit`, qui commence par la colonne `regie_seen`.
+
+Détail : `docs/reunions/2026-11-15-revue-v3.32/synthese.md`.
+
+**Votes** : B 7/7 aux deux tours. Le CFO, le CPO, le CMO et le client Pro ont réduit leur porte au tour 2, au vu des chiffres de prod : 18 refus à 12 joueurs, sans achat, et 0,8 % des visites Google sur `/salon`.
+
+**Arguments décisifs** :
+
+- Avocat : B1 était déjà en prod.
+- Analyste : 62 % des arrivées Google se font sur `/`.
+- CTO : moins de code d'un coup dans `join.js` et `playerEvents.js`.
+
+**Désaccords restants** :
+
+- Message au 13ᵉ joueur dans la porte : oui pour le CTO et le COO, non pour les cinq autres.
+- Le lot « expérience » ne répond qu'en v3.33 à la demande de Théo.
+
+**Critère d'arrêt** : si les arrivées Google sur `/` baissent de plus de 20 % dans les 7 jours après la release, on remet l'ancien accueil sur `/`.
+
+**Décision de Théo** : en attente. À trancher : le rythme (B ou C), le nom du pass, charte ou code (clair et sans ombres, ou sombre avec ombres), les options marketing de la v3.33.
+
 ## 13/11/2026 — Offre payante pour les particuliers ?
 
 **Question** : faut-il lancer une offre payante pour les particuliers qui jouent à la maison, distincte de ZIK Pro ?
