@@ -18,6 +18,8 @@ Les journaux que Claude Code écrit déjà sur le PC (`~/.claude/projects/`, ou 
 
 L'organigramme vient du tableau « L'entreprise d'agents » du `CLAUDE.md` : un agent ou un chef ajouté là apparaît tout seul. Un agent hors organigramme (Explore, general-purpose…) s'affiche dans « Renforts ».
 
+Le panneau « À trancher » (en haut à gauche, toujours affiché) lit `docs/strategie/a-trancher.md`, relu toutes les 5 secondes : le badge donne le nombre de décisions qui attendent Théo, chaque ligne se déplie (chantier, depuis, question, options, recommandation, lien). Une décision tranchée est retirée du fichier et notée dans `docs/strategie/decisions.md`.
+
 ## Lire l'écran
 
 - Un agent au travail est assis à son poste, tape, son écran s'allume ; sa bulle dit ce qu'il fait. Au repos, il va à la cuisine, au salon, dans une cabine d'appel, aux toilettes ou à une fenêtre, sur une place libre. Les trajets contournent murs, meubles et chaises et passent par les portes, qui s'ouvrent à son approche.
