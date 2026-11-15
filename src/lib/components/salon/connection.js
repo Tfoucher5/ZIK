@@ -25,14 +25,23 @@ export function watchConnection(
   });
   socket.on("connect", back);
   const offline = () => lost();
-  // Réseau revenu : le socket se reconnecte seul, « connect » efface l'alerte.
-  // Si la connexion n'avait jamais lâché, on l'efface tout de suite.
-  const online = () => socket.connected && back();
+  // Réseau revenu ou écran rallumé : on n'attend pas la prochaine tentative de
+  // Socket.io (jusqu'à 5 s). connect() seul ne fait rien pendant cette attente,
+  // d'où disconnect() avant. `active` est faux après un départ voulu.
+  // Si la connexion n'avait jamais lâché, l'alerte s'efface tout de suite.
+  const reconnect = () => {
+    if (!socket.connected && socket.active) socket.disconnect().connect();
+  };
+  const online = () => (socket.connected ? back() : reconnect());
+  const visible = () =>
+    win.document.visibilityState === "visible" && reconnect();
   win?.addEventListener("offline", offline);
   win?.addEventListener("online", online);
+  win?.document?.addEventListener("visibilitychange", visible);
   return () => {
     clearTimeout(timer);
     win?.removeEventListener("offline", offline);
     win?.removeEventListener("online", online);
+    win?.document?.removeEventListener("visibilitychange", visible);
   };
 }

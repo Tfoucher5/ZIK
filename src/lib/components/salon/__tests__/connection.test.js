@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { io as ioClient } from "socket.io-client";
 import { watchConnection } from "../connection.js";
 
 function fauxSocket() {
@@ -64,5 +67,69 @@ describe("réseau coupé annoncé par le navigateur", () => {
     expect(etats).toEqual([true, false]);
     stop();
     expect(ecoute).toEqual({});
+  });
+});
+
+// Vrai serveur et vrai client : connect() seul ne fait rien pendant l'attente
+// de la prochaine tentative de reconnexion
+describe("reconnexion immédiate au retour du réseau ou de l'écran", () => {
+  let http, server, client;
+  const ecoute = {};
+  const doc = {
+    visibilityState: "visible",
+    addEventListener: (e, f) => (ecoute[e] = f),
+    removeEventListener: (e) => delete ecoute[e],
+  };
+  const win = { ...doc, document: doc };
+  const attend = (cond) =>
+    vi.waitFor(() => expect(cond()).toBe(true), { timeout: 1500 });
+
+  beforeEach(async () => {
+    http = createServer();
+    server = new Server(http);
+    await new Promise((r) => http.listen(0, r));
+    // Attente de reconnexion longue : seule notre relance peut la raccourcir
+    client = ioClient(`http://localhost:${http.address().port}`, {
+      transports: ["websocket"],
+      reconnectionDelay: 60_000,
+      reconnectionDelayMax: 60_000,
+      randomizationFactor: 0,
+    });
+    await attend(() => client.connected);
+    watchConnection(client, () => {}, 3000, win);
+  });
+  afterEach(async () => {
+    client.disconnect();
+    await new Promise((r) => server.close(r));
+  });
+
+  const coupe = async () => {
+    for (const s of server.sockets.sockets.values()) s.conn.close();
+    await attend(() => !client.connected);
+  };
+
+  it("réseau revenu : reconnecté sans attendre", async () => {
+    await coupe();
+    ecoute.online();
+    await attend(() => client.connected);
+  });
+
+  it("écran rallumé : reconnecté sans attendre", async () => {
+    await coupe();
+    doc.visibilityState = "hidden";
+    ecoute.visibilitychange();
+    expect(client.connected).toBe(false);
+    doc.visibilityState = "visible";
+    ecoute.visibilitychange();
+    await attend(() => client.connected);
+  });
+
+  it("après un départ voulu, jamais de reconnexion", async () => {
+    await coupe();
+    client.disconnect();
+    ecoute.online();
+    ecoute.visibilitychange();
+    await new Promise((r) => setTimeout(r, 300));
+    expect(client.connected).toBe(false);
   });
 });
