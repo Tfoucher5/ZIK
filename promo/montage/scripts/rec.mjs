@@ -30,7 +30,10 @@ export async function phone({ theme } = {}) {
 }
 
 // marks : instants nommés (ex. « tap1 ») enregistrés dans index.json pour caler le montage
-export async function record(page, name) {
+// nth : une image sur n (écran TV en 1920×1080, sinon trop lourd)
+export async function record(page, name, { nth = 1 } = {}) {
+  const { width, height } = page.viewportSize();
+  const dpr = await page.evaluate(() => devicePixelRatio);
   const dir = `public/rec/${name}`;
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
@@ -38,6 +41,11 @@ export async function record(page, name) {
   const marks = {};
   const cdp = await page.context().newCDPSession(page);
   cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
+    // 30 images/s suffisent au montage (Remotion recopie public/ à chaque rendu)
+    if (frames.length && metadata.timestamp - frames.at(-1)[1] < 1 / 30) {
+      cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {});
+      return;
+    }
     const f = `${String(frames.length).padStart(5, "0")}.jpg`;
     writeFileSync(`${dir}/${f}`, Buffer.from(data, "base64"));
     frames.push([f, metadata.timestamp]);
@@ -46,8 +54,9 @@ export async function record(page, name) {
   await cdp.send("Page.startScreencast", {
     format: "jpeg",
     quality: 92,
-    maxWidth: W * DPR,
-    maxHeight: H * DPR,
+    maxWidth: width * dpr,
+    maxHeight: height * dpr,
+    everyNthFrame: nth,
   });
   return {
     mark: (label) => (marks[label] = Date.now() / 1000),
@@ -59,8 +68,8 @@ export async function record(page, name) {
       writeFileSync(
         `${dir}/index.json`,
         JSON.stringify({
-          w: W * DPR,
-          h: H * DPR,
+          w: width * dpr,
+          h: height * dpr,
           frames: frames.map(([f, t]) => [f, rel(t)]),
           marks: Object.fromEntries(
             Object.entries(marks).map(([k, t]) => [k, rel(t)]),

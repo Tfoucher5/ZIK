@@ -7,9 +7,14 @@ import { Cta, Kicker, Title } from "./Title";
 
 // Outro-couverture reprise de l'accueil du site : logo, surtitre, « T'AS / L'OREILLE ? / PROUVE-LE. », bouton.
 // La dernière image sert de couverture TikTok. `beat` = durée d'un temps en frames ; `kicker` adapte l'accroche.
-export const Cover: React.FC<{ beat: number; kicker?: string }> = ({
+export const Cover: React.FC<{
+  beat: number;
+  kicker?: string;
+  cta?: string;
+}> = ({
   beat,
   kicker = "Blind test gratuit · sans appli",
+  cta = "zik-music.fr",
 }) => {
   const f = useCurrentFrame();
   const b = (i: number) => Math.round(i * beat);
@@ -59,7 +64,7 @@ export const Cover: React.FC<{ beat: number; kicker?: string }> = ({
         ]}
       />
       <div style={{ position: "absolute", left: 80, top: 1130 }}>
-        <Cta text="zik-music.fr" at={b(3)} />
+        <Cta text={cta} at={b(3)} />
       </div>
       <Kicker
         text="En soirée sur la TV · ou en ligne"

@@ -1,4 +1,5 @@
 import { Composition } from "remotion";
+import { BarPov, BAR_POV_LEN } from "./videos/BarPov";
 import { Chiffres, CHIFFRES_LEN } from "./videos/Chiffres";
 import { Chrono, CHRONO_LEN } from "./videos/Chrono";
 import { Classement, CLASSEMENT_LEN } from "./videos/Classement";
@@ -7,6 +8,7 @@ import { NouveauSite, NOUVEAU_SITE_LEN } from "./videos/NouveauSite";
 import { Pochettes, POCHETTES_LEN } from "./videos/Pochettes";
 import { Presentation, PRESENTATION_LEN } from "./videos/Presentation";
 import { Quiz2000, QUIZ_2000_LEN } from "./videos/Quiz2000";
+import { TutoTv, TUTO_TV_LEN } from "./videos/TutoTv";
 import { TierList, TIER_LIST_LEN } from "./videos/TierList";
 import { Zikle, ZIKLE_LEN } from "./videos/Zikle";
 import { FPS, H, W } from "./zik/theme";
@@ -23,6 +25,8 @@ const VIDEOS: [string, React.FC, number][] = [
   ["zikle", Zikle, ZIKLE_LEN],
   ["chiffres", Chiffres, CHIFFRES_LEN],
   ["classement", Classement, CLASSEMENT_LEN],
+  ["bar-pov", BarPov, BAR_POV_LEN],
+  ["tuto-tv", TutoTv, TUTO_TV_LEN],
 ];
 
 export const RemotionRoot: React.FC = () => (
