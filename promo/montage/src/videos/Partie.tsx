@@ -11,7 +11,7 @@ const { fontFamily: EMO } = loadEmoji();
 
 // [début, fin] en secondes de capture, bulle, score affiché (trouvés, ratés)
 const SEGS: [number, number, string, string][] = [
-  [4.3, 8.6, "7/10 sur les années 80\nvous faites mieux ?", "✅ 0  ❌ 0"],
+  [4.7, 8.6, "7/10 sur les années 80\nvous faites mieux ?", "✅ 0  ❌ 0"],
   [46.2, 50.4, "", "✅ 1  ❌ 0"],
   [63.6, 69.8, "je connais ce son par cœur pourtant", "✅ 2  ❌ 0"],
   [86.6, 88.4, "", "✅ 2  ❌ 0"],
