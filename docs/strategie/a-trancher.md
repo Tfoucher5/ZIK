@@ -56,3 +56,11 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Question** : (toujours à faire de ton côté : la connexion se valide dans ton navigateur) Connecter Stripe pour que les agents Argent lisent paiements et offres : taper `/mcp`, choisir « claude.ai Stripe » et autoriser ?
 - **Options** : connecter ; ne pas connecter
 - **Recommandation** : connecter, pour la lecture seule des agents Argent, aucune écriture en mode live
+
+## Promo : 2 posts LinkedIn à relire
+
+- **Chantier** : Marketing
+- **Depuis** : 15/11
+- **Question** : Louis a écrit 2 posts pour ton compte (1 : cap des inscrits et ce que ZIK est devenu ; 2 : comment un dev seul fait tourner ZIK avec une équipe d'agents). Il manque le vrai nombre total d'inscrits (visible dans /admin) pour le post 1. Textes dans le scratchpad promo/linkedin.md, Claude te les colle sur demande.
+- **Options** : publier tels quels ; retoucher ; donner le nombre d'inscrits
+- **Recommandation** : donner le nombre d'inscrits, publier le post 1 d'abord, le 2 une semaine après
