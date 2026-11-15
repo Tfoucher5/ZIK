@@ -33,7 +33,7 @@
 </svelte:head>
 
 <main class="pro">
-  <ProHero />
+  <ProHero {checkout} />
   <ProOffers {checkout} />
   <ProCompare />
   <ProDemos />

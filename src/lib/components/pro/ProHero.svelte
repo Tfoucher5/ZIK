@@ -1,6 +1,8 @@
 <script>
   import HeroDevices from './HeroDevices.svelte';
-  import { DESCRIPTION } from './proContent.js';
+  import { LEAD } from './proContent.js';
+
+  let { checkout } = $props();
 </script>
 
 <section class="hero" aria-labelledby="pro-h1">
@@ -8,10 +10,10 @@
     <div>
       <span class="label"><i></i>ZIK Pro · organisateurs</span>
       <h1 class="grad" id="pro-h1">Le blind test qui fait la soirée, chez vous</h1>
-      <p class="lead">{DESCRIPTION}</p>
+      <p class="lead">{LEAD}</p>
       <div class="ctas">
-        <a class="btn-main" href="#tarifs">Voir les offres</a>
-        <a class="btn-line" href="/salon">Créer une soirée gratuite</a>
+        <a class="btn-main" href="#tarifs">{checkout.activePro ? 'Mon accès ZIK Pro' : 'Voir les offres'}</a>
+        <a class="btn-line" href="/salon">{checkout.activePro ? 'Créer une soirée' : 'Créer une soirée gratuite'}</a>
       </div>
     </div>
     <HeroDevices />

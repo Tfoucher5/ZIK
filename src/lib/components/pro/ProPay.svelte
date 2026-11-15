@@ -1,5 +1,5 @@
 <script>
-  import { PRIX_SOIREE } from './proContent.js';
+  import { PRIX_SOIREE } from '$lib/data/proPlans.js';
 
   const ITEMS = [
     {
@@ -19,7 +19,7 @@
       icon: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
     },
     {
-      titre: 'La Soirée ne se renouvelle pas',
+      titre: 'La Soirée 24 h ne se renouvelle pas',
       texte: `${PRIX_SOIREE} une fois, 24 h de ZIK Pro, et c'est tout.`,
       icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     },

@@ -1,23 +1,24 @@
 <script>
+  import { SPECIALS } from '$lib/data/salonOptions.js';
   import { specialsAt, clock, SPECIALS_CYCLE } from './demos.js';
 
   const CARDS = [
-    { c: '#2fb8ff', g: '5 s', titre: 'Intro éclair', texte: "La musique s'arrête au bout de 5 secondes" },
-    { c: '#f4e04d', g: '½', titre: 'Sprint', texte: 'Deux fois moins de temps pour répondre' },
-    { c: '#ff00ff', g: '×2', titre: 'Points doubles', texte: 'Chaque bonne réponse vaut double' },
+    { ...SPECIALS.flash, c: '#2fb8ff', g: '5 s' },
+    { ...SPECIALS.sprint, c: '#f4e04d', g: '½' },
+    { ...SPECIALS.double, c: '#ff00ff', g: '×2' },
   ];
   let t = $state(0);
   const s = $derived(specialsAt(t));
 </script>
 
 <div class="spe" {@attach clock(SPECIALS_CYCLE, 0, (v) => (t = v))}>
-  {#each CARDS as c, i (c.titre)}
+  {#each CARDS as c, i (c.label)}
     <article class="ct" class:on={s.i === i} style="--c:{c.c}">
       <span class="ct-n">{s.i === i ? s.n : 4}</span>
       <p class="kk">Attention · Manche spéciale</p>
       <div class="ct-g">{c.g}</div>
-      <h4>{c.titre}</h4>
-      <p class="tx">{c.texte}</p>
+      <h4>{c.label}</h4>
+      <p class="tx">{c.hint}</p>
     </article>
   {/each}
 </div>

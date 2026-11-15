@@ -1,28 +1,16 @@
 <script>
   import { getContext } from 'svelte';
   import { fetchPro, proActive } from '$lib/client/salonClient.js';
-  import { PLANS } from '$lib/data/proPlans.js';
+  import { thanksPhase, STATUS, planLabel, endTitle } from './thanks.js';
 
   const zik = getContext('zik');
   let pro = $state(null);
   const active = $derived(proActive(pro));
-  const PLAN_NAMES = { night: 'Soirée 24 h', monthly: 'Abonnement mensuel', yearly: 'Abonnement annuel', manual: 'Accès offert' };
-  const planLabel = $derived.by(() => {
-    if (!pro) return '';
-    const price = PLANS.find((p) => p.id === pro.plan)?.price;
-    return [PLAN_NAMES[pro.plan] ?? 'ZIK Pro', price].filter(Boolean).join(' · ');
-  });
   const endLabel = $derived(
     pro ? new Date(pro.current_period_end).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '',
   );
   let waitedTooLong = $state(false);
-  const phase = $derived(active ? 'on' : waitedTooLong ? 'late' : zik.authReady && !zik.user ? 'out' : 'wait');
-  const STATUS = {
-    wait: 'Paiement en cours de confirmation',
-    on: 'ZIK Pro actif',
-    late: 'Activation plus longue que prévu',
-    out: 'Connexion nécessaire',
-  };
+  const phase = $derived(thanksPhase({ active, waitedTooLong, authReady: zik.authReady, user: zik.user }));
   const pending = $derived(phase === 'late' ? 'Pas encore reçue' : 'En attente de Stripe…');
 
   // Stripe prévient ZIK par webhook : on attend l'activation quelques secondes
@@ -45,12 +33,11 @@
   });
 </script>
 
-
 <main class="merci">
   <article class="card s-{phase}" aria-labelledby="merci-t">
     <svg class="check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /><path d="M15 27l7 7 15-16" /></svg>
     <span class="st" role="status"><i></i>{STATUS[phase]}</span>
-    <h1 class="grad" id="merci-t">Merci, paiement reçu !</h1>
+    <h1 class="grad" id="merci-t">{phase === 'on' ? 'Merci, paiement reçu !' : 'Merci !'}</h1>
 
     {#if phase === 'on'}
       <p class="msg">ZIK Pro est actif. Créez votre soirée en restant connecté avec ce compte : pas de limite de joueurs, buzzer, manches spéciales et classement de la soirée sont débloqués.</p>
@@ -64,11 +51,8 @@
 
     {#if zik.user}
       <dl>
-        <div><dt>Formule</dt><dd class:wait={!active}>{active ? planLabel : pending}</dd></div>
-        <div>
-          <dt>{pro?.plan === 'night' ? 'Actif jusqu’au' : 'Prochaine échéance'}</dt>
-          <dd class:wait={!active}>{active ? endLabel : pending}</dd>
-        </div>
+        <div><dt>Formule</dt><dd class:wait={!active}>{active ? planLabel(pro.plan) : pending}</dd></div>
+        {#if active}<div><dt>{endTitle(pro.plan)}</dt><dd>{endLabel}</dd></div>{/if}
         <div><dt>Compte</dt><dd>{zik.user.email}</dd></div>
       </dl>
     {/if}
@@ -77,7 +61,7 @@
       {#if phase === 'out'}
         <button type="button" class="btn-main" onclick={() => zik.openAuthModal('login')}>Me connecter</button>
       {:else}
-        <a class="btn-main" href="/salon">Créer ma soirée Pro</a>
+        <a class="btn-main" href="/salon">{phase === 'on' ? 'Créer ma soirée Pro' : 'Créer une soirée'}</a>
       {/if}
       <a class="link" href="/pro#tarifs">Voir mon accès ZIK Pro</a>
     </div>

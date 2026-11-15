@@ -26,7 +26,7 @@
           dès le paiement.
         </p>
       {/if}
-      <p class="pro-confirm-small">Vous allez être redirigé vers Stripe pour payer. Le reçu et la facture arrivent par e-mail.</p>
+      <p class="pro-confirm-small">Vous allez être redirigé vers Stripe pour payer. Le reçu et la facture arrivent par e-mail. En payant, vous acceptez les <a href="/cgv" target="_blank" rel="noopener">CGV</a>.</p>
       <div class="pro-confirm-btns">
         <button type="button" class="btn-line" onclick={checkout.cancel} disabled={checkout.busy !== null}>Annuler</button>
         <button type="button" class="btn-main" onclick={checkout.pay} disabled={checkout.busy !== null}>
@@ -99,6 +99,9 @@
     font-size: 0.8rem;
     color: var(--mid);
     margin-bottom: 18px;
+  }
+  .pro-confirm-small a {
+    color: var(--text);
   }
   .pro-confirm-btns {
     display: flex;

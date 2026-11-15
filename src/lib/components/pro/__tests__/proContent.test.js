@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render } from "svelte/server";
 import ProFaq from "../ProFaq.svelte";
 import ProOffers from "../ProOffers.svelte";
+import ProHero from "../ProHero.svelte";
 import { FAQ, FAQ_JSON_LD, COMPARE } from "../proContent.js";
 import { PLANS, PRO_PERKS } from "../../../data/proPlans.js";
 
@@ -60,5 +61,21 @@ describe("cartes des offres", () => {
       props: { checkout: { ...checkout, subscribed: true } },
     });
     expect(body.match(/Déjà abonné/g)).toHaveLength(3);
+  });
+
+  it("rappelle la TVA et les CGV sous les offres", () => {
+    const { body } = render(ProOffers, { props: { checkout } });
+    expect(body).toContain("TVA non applicable");
+    expect(body).toContain('href="/cgv"');
+  });
+
+  it("le hero mène à l'accès ZIK Pro quand il est actif", () => {
+    const off = render(ProHero, { props: { checkout } }).body;
+    expect(off).toContain("Voir les offres");
+    const on = render(ProHero, {
+      props: { checkout: { ...checkout, activePro: true } },
+    }).body;
+    expect(on).toContain("Mon accès ZIK Pro");
+    expect(on).not.toContain("Créer une soirée gratuite");
   });
 });

@@ -88,3 +88,5 @@ export const PRO_FEATURES = {
   buzzer: "Le mode buzzer, avec l'animateur qui valide les réponses",
   specials: "Les manches spéciales tirées au hasard",
 };
+
+export const PRIX_SOIREE = PLANS.find((p) => p.id === "night").price;

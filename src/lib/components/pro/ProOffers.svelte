@@ -69,6 +69,7 @@
     {#if checkout.payError}<p class="err" role="alert">{checkout.payError}</p>{/if}
 
     <p class="note">Pas de limite de joueurs, {TESTED_LABEL} · <a href="#comparatif">Gratuit ou ZIK Pro ?</a></p>
+    <p class="note">Prix en euros, TVA non applicable. En payant, vous acceptez les <a href="/cgv">conditions générales de vente</a>.</p>
   </div>
   <ProConfirm {checkout} />
 </section>
@@ -199,6 +200,9 @@
     font-family: var(--mono);
     font-size: 13px;
     color: var(--muted);
+  }
+  .note + .note {
+    margin-top: 6px;
   }
   .note a {
     color: var(--text);

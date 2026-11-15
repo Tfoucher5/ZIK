@@ -42,7 +42,7 @@
     <div class="head rv">
       <span class="label"><i></i>En soirée</span>
       <h2 class="grad" id="pro-demos">Ce que ZIK Pro change dans votre soirée</h2>
-      <p>Les vrais écrans de ZIK, tels que vos clients les verront.</p>
+      <p>Ce que vos clients verront, en version animée.</p>
     </div>
     <div class="demos">
       {#each DEMOS as d (d.id)}

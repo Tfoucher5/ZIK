@@ -2,10 +2,8 @@ import {
   FREE_MAX_PLAYERS,
   FREE_MAX_TEAMS,
   TESTED_LABEL,
-  PLANS,
+  PRIX_SOIREE,
 } from "../../data/proPlans.js";
-
-export const PRIX_SOIREE = PLANS.find((p) => p.id === "night").price;
 
 // free : null = la fonction n'existe pas en gratuit ; ok : coche verte devant
 export const COMPARE = [
@@ -57,6 +55,10 @@ export const COMPARE = [
 
 export const FAQ = [
   {
+    q: "Combien de joueurs en même temps ?",
+    a: `Jusqu'à ${FREE_MAX_PLAYERS} en gratuit. Avec ZIK Pro, pas de limite de joueurs, ${TESTED_LABEL} dans un salon. Chacun joue sur son téléphone, sans rien installer.`,
+  },
+  {
     q: "Faut-il un compte pour payer ?",
     a: "Oui : ZIK Pro s'active sur votre compte ZIK. Vos clients, eux, n'ont jamais besoin de compte : un code et un pseudo suffisent.",
   },
@@ -70,11 +72,11 @@ export const FAQ = [
   },
   {
     q: "Où retrouver mes factures ?",
-    a: "Dans vos e-mails, et sur cette page avec le bouton « Mes factures » ou « Gérer mon abonnement ».",
+    a: "Dans vos e-mails, et sur cette page tant que ZIK Pro est actif : bouton « Mes factures » ou « Gérer mon abonnement ».",
   },
   {
-    q: "J'ai déjà une Soirée en cours, j'en reprends une ?",
-    a: "La nouvelle Soirée s'ajoute à la suite : 24 h de plus après la fin de celle en cours. Utile seulement si votre événement dure plus longtemps.",
+    q: "J'ai déjà une Soirée 24 h en cours, j'en reprends une ?",
+    a: "La nouvelle Soirée 24 h s'ajoute à la suite : 24 h de plus après la fin de celle en cours. Utile seulement si votre événement dure plus longtemps.",
   },
   {
     q: "Le paiement est passé mais ZIK Pro n'est pas actif",
@@ -82,7 +84,9 @@ export const FAQ = [
   },
 ];
 
-export const DESCRIPTION = `La musique et le classement sur la TV, les réponses sur les téléphones de vos clients. Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro dès ${PRIX_SOIREE} la soirée.`;
+export const LEAD = `La musique et le classement sur la TV, les réponses sur les téléphones de vos clients. Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro dès ${PRIX_SOIREE} la soirée.`;
+
+export const DESCRIPTION = `Blind test pour bar, camping, association ou entreprise : la musique et le classement sur la TV, les réponses sur les téléphones. Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro dès ${PRIX_SOIREE} la soirée.`;
 
 export const PAGE_JSON_LD = JSON.stringify({
   "@context": "https://schema.org",

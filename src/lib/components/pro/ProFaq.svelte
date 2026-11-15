@@ -6,8 +6,8 @@
 <section id="faq" class="calm flat" aria-labelledby="pro-faq">
   <div class="wrap in">
     <div class="head rv">
-      <span class="label"><i></i>Facturation</span>
-      <h2 class="grad" id="pro-faq">Vos questions sur le paiement</h2>
+      <span class="label"><i></i>Questions</span>
+      <h2 class="grad" id="pro-faq">Vos questions avant de payer</h2>
     </div>
     <Faq items={FAQ} />
   </div>
