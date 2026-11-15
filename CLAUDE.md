@@ -85,21 +85,23 @@ Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (te
 
 Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod), `idees` (lecture seule, web autorisé).
 
-Modèle de chaque agent dans son en-tête (`model:`) : **fable** (effort élevé) pour ce qui protège la prod et demande le plus d'expertise (`architecte`, `reviewer`, `incident`) ; **opus** pour le code, le design, le texte et le board (`dev`, `ui`, `ux`, `animation`, `redaction`, `idees`, `chef-*` hors projet, `avocat`) ; **sonnet** pour les tâches cadrées (`test-writer`, `analyste`, `chef-projet`, `recette`, `support`, `seo`, `contenu`, `prospection`, `offres`, `client-pro`). Les skills suivent le modèle de la conversation.
+Modèle de chaque agent dans son en-tête (`model:`) : **fable** (effort élevé) pour ce qui protège la prod et demande le plus d'expertise (`architecte`, `reviewer`, `incident`, `da`) ; **opus** pour le code, le design, le texte et le board (`dev`, `ui`, `ux`, `animation`, `motion`, `community`, `redaction`, `idees`, `chef-*` hors projet, `avocat`) ; **sonnet** pour les tâches cadrées (`test-writer`, `analyste`, `chef-projet`, `recette`, `support`, `seo`, `contenu`, `prospection`, `offres`, `client-pro`). Les skills suivent le modèle de la conversation.
+
+**Mode entreprise** (demande de Théo, 15/11) : ZIK avance comme une vraie boîte, toutes les équipes en même temps. À chaque demande ou reprise, la conversation principale (le CEO) découpe le travail en **chantiers parallèles** indépendants et lance une équipe par chantier en arrière-plan : produit (fiche et maquette), une ou plusieurs équipes de dev (agents `dev` en worktrees séparés, une branche et une PR par chantier, jamais deux équipes sur les mêmes fichiers), opérations (recette, release), marketing (la promo avance chaque semaine, même pendant un chantier produit), argent. Le CEO n'attend pas une équipe pour en lancer une autre, relit chaque rendu, renvoie ce qui ne va pas et rend compte à Théo par chantier. Il recrute un agent (fichier dans `.claude/agents/`, nom dans `scripts/qg/public/noms.js`) dès qu'un savoir-faire manque.
 
 ### L'entreprise d'agents
 
 Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par la conversation principale, qui lance leur équipe (agents) en parallèle. Chaque chef a aussi une fiche `chef-*` pour siéger au board. Théo reste fondateur : argent, nouvelle page ou nouveau mode de jeu, données de prod, validation finale.
 
-| Chef                     | Skill         | Équipe (agents)                                            |
-| ------------------------ | ------------- | ---------------------------------------------------------- |
-| CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi, `/etat`    |
-| Argent (CFO)             | `/argent`     | `analyste`, `offres`                                       |
-| Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support` ; `suite` chaque jour  |
-| Produit & design (CPO)   | `/produit`    | `idees`, `ux`, `ui`, `redaction`, `animation`              |
-| Technique (CTO)          | `/tech`       | `architecte`, `dev`, `test-writer`, `reviewer`, `incident` |
-| Marketing & ventes (CMO) | `/marketing`  | `seo`, `contenu`, `prospection`                            |
-| Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                           |
+| Chef                     | Skill         | Équipe (agents)                                               |
+| ------------------------ | ------------- | ------------------------------------------------------------- |
+| CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi, `/etat`       |
+| Argent (CFO)             | `/argent`     | `analyste`, `offres`                                          |
+| Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support` ; `suite` chaque jour     |
+| Produit & design (CPO)   | `/produit`    | `da`, `motion`, `idees`, `ux`, `ui`, `redaction`, `animation` |
+| Technique (CTO)          | `/tech`       | `architecte`, `dev`, `test-writer`, `reviewer`, `incident`    |
+| Marketing & ventes (CMO) | `/marketing`  | `community`, `seo`, `contenu`, `prospection`                  |
+| Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                              |
 
 Circuit d'une tâche : `/produit` cadre (fiche et maquette, puis Théo valide si ça se voit), `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `node scripts/qg/serveur.mjs` (voir `scripts/qg/README.md`).
 
