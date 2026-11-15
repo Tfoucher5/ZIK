@@ -1,4 +1,5 @@
 <script>
+  import { version } from '$app/environment';
   import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import { breadcrumb } from '$lib/shared/seo.js';
 
@@ -24,7 +25,7 @@
   <meta property="og:url" content={url} />
   <meta property="og:type" content="website" />
   <JsonLd json={breadcrumbJsonLd} />
-  <link rel="stylesheet" href="/css/blind-test.css?v=3.19.0" />
+  <link rel="stylesheet" href="/css/blind-test.css?v={version}" />
 </svelte:head>
 
 <main class="bt-page">

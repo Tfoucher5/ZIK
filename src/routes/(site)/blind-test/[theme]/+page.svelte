@@ -1,4 +1,5 @@
 <script>
+  import { version } from '$app/environment';
   import JsonLd from '$lib/components/ui/JsonLd.svelte';
   let { data } = $props();
 
@@ -47,7 +48,7 @@
   <meta property="og:type" content="website" />
   <JsonLd json={jsonLd} />
   <JsonLd json={faqJsonLd} />
-  <link rel="stylesheet" href="/css/blind-test.css?v=3.19.0" />
+  <link rel="stylesheet" href="/css/blind-test.css?v={version}" />
 </svelte:head>
 
 <main class="bt-page">

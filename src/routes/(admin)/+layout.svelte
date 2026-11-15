@@ -1,4 +1,5 @@
 <script>
+  import { version } from '$app/environment';
   import { onMount, setContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -88,7 +89,7 @@
   <meta name="theme-color" content="#0b0a10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  {#each ["blocks", "layout"] as f (f)}<link rel="stylesheet" href="/css/admin/{f}.css?v=3.19.0">{/each}
+  {#each ["blocks", "layout"] as f (f)}<link rel="stylesheet" href="/css/admin/{f}.css?v={version}">{/each}
 </svelte:head>
 
 {#if !ready}

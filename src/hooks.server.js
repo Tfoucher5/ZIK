@@ -7,6 +7,7 @@ import {
 import { getAdminClient } from "$lib/server/config.js";
 import { isTrackableVisit, buildVisitRow } from "$lib/server/visitSource.js";
 import { dropOverriddenMeta } from "$lib/server/defaultMeta.js";
+import { version } from "$app/environment";
 
 const ADMIN_LOGIN = "/admin/connexion";
 const ADMIN_LOGIN_ROUTE = `/(admin)${ADMIN_LOGIN}`;
@@ -129,7 +130,8 @@ export async function handle({ event, resolve }) {
   recordVisitSource(event);
 
   const response = await resolve(event, {
-    transformPageChunk: ({ html }) => dropOverriddenMeta(html),
+    transformPageChunk: ({ html }) =>
+      dropOverriddenMeta(html).replaceAll("%zik.version%", version),
   });
   // Empêche les iframes (YouTube) d'accéder à l'API Media Session
   // → le titre de la chanson ne peut plus apparaître dans les contrôles système iOS/Android
