@@ -5,6 +5,8 @@
    *
    * @type {{ track: any, phase: string, answerMode: string }}
    */
+  import { texteReponse } from '$lib/components/salon/regie/reponse.js';
+
   let { track, phase, answerMode } = $props();
 
   const GLYPHES = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&@';
@@ -14,12 +16,11 @@
   let texte = $state('');
   let timer = null;
 
-  let reponse = $derived(`${track.artist} - ${track.title}`);
+  let reponse = $derived(texteReponse(track));
   // À la réponse, le titre est déjà affiché sur la TV : plus rien à cacher
   let montre = $derived(visible || phase !== 'round');
 
   $effect(() => {
-    void track.title;
     clearInterval(timer);
     visible = false;
     texte = brouille(reponse);
