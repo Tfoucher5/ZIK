@@ -77,24 +77,24 @@ html:has(.v2) {
   color: var(--text);
   overflow-x: clip;
 }
-.v2 :is(h1, h2, h3, h4) {
+/* :where : spécificité nulle, les styles scoped des pages gagnent toujours */
+:where(.v2 :is(h1, h2, h3, h4)) {
   font-family: var(--titre);
   text-transform: uppercase;
   margin: 0;
   line-height: 0.92;
   text-wrap: balance;
 }
-.v2 p {
+:where(.v2 p) {
   margin: 0;
   text-wrap: pretty;
 }
-.v2 section[id] {
+:where(.v2 section[id]) {
   scroll-margin-top: 84px;
 }
 html:has(.v2) :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 .label {
@@ -129,7 +129,7 @@ html:has(.v2) :focus-visible {
   color: var(--accent-tint);
   font-family: var(--mono);
   font-weight: 700;
-  font-size: 10.5px;
+  font-size: 13px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   vertical-align: middle;

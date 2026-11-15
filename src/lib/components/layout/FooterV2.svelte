@@ -1,4 +1,6 @@
 <script>
+  import StatusPill from '$lib/components/layout/StatusPill.svelte';
+
   let { onContact } = $props();
 
   const cols = [
@@ -27,14 +29,28 @@
       ],
     },
     {
+      titre: 'Blind test par thème',
+      liens: [
+        ['/blind-test/annees-80', 'Années 80'],
+        ['/blind-test/annees-2000', 'Années 2000'],
+        ['/blind-test/rap-fr', 'Rap français'],
+        ['/blind-test/disney', 'Disney'],
+        ['/blind-test/anniversaire', 'Anniversaire'],
+        ['/blind-test/artistes', 'Par artiste'],
+        ['/blind-test', 'Tous les thèmes'],
+      ],
+    },
+    {
       titre: 'ZIK',
       liens: [
-        ['/blind-test', 'Blind test par thème'],
-        ['/blind-test/artistes', 'Blind test par artiste'],
         ['/docs', 'Aide et règles du jeu'],
         ['/nouveautes', 'Nouveautés'],
         ['/soutenir', 'Soutenir ZIK'],
         ['/statut', 'État du service'],
+        ['/vs/kahoot', 'ZIK vs Kahoot'],
+        ['/vs/blinest', 'ZIK vs Blinest'],
+        ['/vs/blindtest-io', 'ZIK vs Blindtest.io'],
+        ['https://discord.gg/Xkr9aUEKYf', 'Discord'],
       ],
     },
     {
@@ -55,14 +71,17 @@
       {#each cols as c (c.titre)}
         <div>
           <h2>{c.titre}</h2>
-          {#each c.liens as [href, txt] (href)}<a {href}>{txt}</a>{/each}
+          {#each c.liens as [href, txt] (href)}
+            {#if href.startsWith('http')}<a {href} target="_blank" rel="noopener">{txt}</a>{:else}<a {href}>{txt}</a>{/if}
+          {/each}
           {#if c.titre === 'Légal'}<button type="button" onclick={onContact}>Contact</button>{/if}
         </div>
       {/each}
     </div>
+    <StatusPill />
     <div class="bas">
       <a class="logo" href="/" aria-label="ZIK, accueil">ZIK<i aria-hidden="true"></i></a>
-      <span>Le blind test qui fait la soirée · zik-music.fr</span>
+      <span>Le blind test qui fait la soirée · zik-music.fr · v3.31.2</span>
     </div>
   </div>
 </footer>
@@ -101,7 +120,7 @@
   button {
     display: flex;
     align-items: center;
-    min-height: 36px;
+    min-height: 44px;
     padding: 0;
     border: 0;
     background: none;
@@ -143,7 +162,7 @@
   }
   @media (min-width: 900px) {
     .cols {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
     }
     .in {
       padding-inline: 20px;

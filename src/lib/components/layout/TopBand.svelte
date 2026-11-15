@@ -19,7 +19,7 @@
 </script>
 
 <header class="top">
-  <div class="in">
+  <div class="in" class:avec-son={band.son}>
     <a class="logo" href="/" aria-label="ZIK, accueil">ZIK<i aria-hidden="true"></i></a>
     <nav class="liens" aria-label="Navigation principale">
       {#each LIENS as [href, txt] (href)}<a {href} aria-current={courant(href)}>{txt}</a>{/each}
@@ -65,8 +65,10 @@
     padding-inline: max(14px, env(safe-area-inset-left, 0px));
   }
   .logo {
+    flex: none;
     display: inline-flex;
     align-items: baseline;
+    padding-block: 7px;
     margin-right: auto;
     font-family: var(--titre);
     font-weight: 900;
@@ -133,8 +135,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 40px;
-    min-width: 40px;
+    height: 44px;
+    min-width: 44px;
     padding: 0 8px;
     border-radius: 10px;
     border: 1px solid var(--line-2);
@@ -145,6 +147,7 @@
     letter-spacing: 0.14em;
     text-transform: uppercase;
     cursor: pointer;
+    flex: none;
     transition:
       border-color 0.25s,
       background 0.25s;
@@ -244,6 +247,12 @@
   @keyframes prog {
     to {
       transform: scaleX(1);
+    }
+  }
+  /* Sous 400 px, avec le bouton son, les cases cèdent : « CODE » reste lisible */
+  @media (max-width: 399px) {
+    .avec-son .slot i {
+      display: none;
     }
   }
   @media (min-width: 900px) {

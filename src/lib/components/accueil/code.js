@@ -15,3 +15,16 @@ export async function codeTarget(code, fetchFn = fetch) {
   if (await ok(fetchFn, `/api/salon?code=${code}`)) return "salon";
   return (await ok(fetchFn, `/api/rooms/${code}`)) ? "room" : "salon";
 }
+
+export const CODE_AIDE =
+  "Le code de 6 caractères affiché sur la TV de la soirée, ou celui qu'on t'a envoyé pour une partie en ligne.";
+export const CODE_INCOMPLET =
+  "Le code fait 6 caractères. Recopie-le depuis la TV ou le message reçu.";
+
+// Renvoie le message d'erreur à afficher, ou "" une fois parti vers la soirée ou la room
+export async function joinCode(code, { joinRoom, goto, fetchFn = fetch }) {
+  if (code.length !== 6) return CODE_INCOMPLET;
+  if ((await codeTarget(code, fetchFn)) === "room") joinRoom(code);
+  else goto(`/salon/play?code=${code}`);
+  return "";
+}

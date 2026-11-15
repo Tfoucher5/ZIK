@@ -113,7 +113,7 @@ Dans le code : les jetons vivent dans `static/css/theme.css`. À la refonte, ren
 
 ## Composants récurrents
 
-**Nav pilule** (vitrines) : fixe, `top: calc(10px + env(safe-area-inset-top))`, hauteur 54px, `max-width: 1160px`, rayon pill, fond `rgba(15,15,23,.6)` + `backdrop-filter: blur(16px) saturate(1.6)`, bordure `line-2`. Logo « ZIK » 900 + suffixe magenta (`SOIRÉE`, 15px, .1em). Liens visibles dès 900px, lien actif = `text`, autres = `muted`. Un seul bouton `main` à droite (42px). Barre de progression de lecture de 2px au-dessus (`animation-timeline: scroll(root)`). Sur les écrans de jeu, la nav du site reste celle de l'univers (barre basse sur téléphone).
+**Bandeau TV** (en-tête unique des pages refaites, décision de Théo du 15/11, `layout/TopBand.svelte`) : reprend le bandeau de la TV ZIK. Fixe en haut, pleine largeur, hauteur 56px + barre de lecture 2px `violet → accent` (`animation-timeline: scroll(root)`), fond `rgba(5,5,7,.94 → .7)` + `backdrop-filter: blur(14px) saturate(1.4)`. Logo « ZIK » 900 + point magenta 7px. Rubriques mono 12px .14em majuscules séparées par des filets `line`, soulignement blanc 2px au survol et sur la page courante (`aria-current`), visibles dès 900px, sinon menu des rubriques. Case « CODE ▢▢▢▢▢▢ » qui ouvre le digicode (`<dialog>`), bouton son en égaliseur si la page en a un, « Connexion » ou avatar et son menu (le compte reste facultatif). Boutons 44px, rayon 10px. **Jamais de barre arrondie** (la pilule flottante est abandonnée, trop basique). La page réserve sa hauteur avec `var(--top)`. Sur les écrans de jeu, la nav du site reste celle de l'univers (barre basse sur téléphone).
 
 **Label à point** : `mono 12px .14em muted` + pastille 8px `accent` (`box-shadow: 0 0 10px accent`, le seul glow toléré hors CTA). Au-dessus d'un titre de section, une fois par section.
 
@@ -130,7 +130,7 @@ Dans le code : les jetons vivent dans `static/css/theme.css`. À la refonte, ren
 
 **Carte d'offre mise en avant** : une seule par page, bordure `conic-gradient` animée par `@property --ang` (6s linéaire) + ombre magenta. Son badge dit un fait (« Pour les bars »), jamais un classement inventé.
 
-**Étiquette ZIK Pro** (`.pro`) : mono 700 10.5px .06em majuscules, padding 4px 8px, pill, fond `accent-soft`, bordure `rgba(255,0,255,.45)`, texte `accent-tint`. Collée au titre ou au label (`margin-left: 6px`). Une fonction Pro verrouillée reste visible avec l'étiquette et une phrase qui dit ce qu'elle apporte.
+**Étiquette ZIK Pro** (`.pro-tag`) : mono 700 13px .06em majuscules, padding 4px 8px, pill, fond `accent-soft`, bordure `rgba(255,0,255,.45)`, texte `accent-tint`. Collée au titre ou au label (`margin-left: 6px`). Une fonction Pro verrouillée reste visible avec l'étiquette et une phrase qui dit ce qu'elle apporte.
 
 **FAQ** : `<details>/<summary>` natifs, ligne de séparation `line`, summary 64px min, Barlow Condensed 700 21px majuscules, bouton « + » rond 34px qui tourne de 45deg et passe en blanc à l'ouverture. Ouverture animée sans JS : `interpolate-size: allow-keywords` sur `:root` + `::details-content { block-size: 0 → auto; transition .45s ease-out, content-visibility allow-discrete }`.
 

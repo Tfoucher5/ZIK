@@ -3,11 +3,10 @@
   import { goto } from '$app/navigation';
   import GuestModal from '$lib/components/auth/GuestModal.svelte';
   import { HomeState } from '$lib/components/home/home.svelte.js';
-  import { cleanCode, codeTarget } from '$lib/components/accueil/code.js';
+  import { cleanCode, joinCode, CODE_AIDE } from '$lib/components/accueil/code.js';
 
   let { open = $bindable(false) } = $props();
 
-  const AIDE = "Le code de 6 caractères affiché sur la TV de la soirée, ou celui qu'on t'a envoyé pour une partie en ligne.";
   const home = new HomeState({});
   let dlg;
   let input;
@@ -24,17 +23,14 @@
 
   async function submit(e) {
     e.preventDefault();
-    if (code.length !== 6) {
-      err = 'Le code fait 6 caractères. Recopie-le depuis la TV ou le message reçu.';
-      input.focus();
-      return;
-    }
+    const leave = (fn) => (arg) => {
+      open = false;
+      fn(arg);
+    };
     busy = true;
-    const target = await codeTarget(code);
+    err = await joinCode(code, { joinRoom: leave(home.joinRoom), goto: leave(goto) });
     busy = false;
-    open = false;
-    if (target === 'room') home.joinRoom(code);
-    else goto(`/salon/play?code=${code}`);
+    if (err) input.focus();
   }
 </script>
 
@@ -68,7 +64,7 @@
       />
     </div>
     <p class="etat" aria-hidden="true"><i></i>{code.length === 6 ? 'Code complet' : `${code.length} / 6`}</p>
-    <p id="dg-aide" class="aide" class:err aria-live="polite">{err || AIDE}</p>
+    <p id="dg-aide" class="aide" class:err aria-live="polite">{err || CODE_AIDE}</p>
     <button class="go" type="submit" disabled={busy}>{busy ? '…' : 'Rejoindre'}</button>
   </form>
 </dialog>
@@ -80,7 +76,7 @@
     width: 100%;
     max-width: 100%;
     margin: auto 0 0;
-    padding: 22px var(--gut) calc(22px + env(safe-area-inset-bottom, 0px));
+    padding: 0;
     border: 0;
     border-top: 1px solid var(--line-2);
     border-radius: 22px 22px 0 0;
@@ -107,6 +103,10 @@
   }
   dialog::backdrop {
     background: rgba(0, 0, 0, 0.66);
+  }
+  /* Marge sur le form : un clic dans le dialog hors du form serait pris pour le fond */
+  form {
+    padding: 22px var(--gut) calc(22px + env(safe-area-inset-bottom, 0px));
   }
   .head {
     display: flex;
@@ -227,9 +227,11 @@
     dialog {
       max-width: 480px;
       margin: auto;
-      padding: 28px;
       border: 1px solid var(--line-2);
       border-radius: 22px;
+    }
+    form {
+      padding: 28px;
     }
   }
 </style>

@@ -14,7 +14,7 @@
 {#if !ctx.authReady}
   <span class="ph" aria-hidden="true"></span>
 {:else if user}
-  <NotificationsMenu />
+  <span class="bell"><NotificationsMenu /></span>
   <button class="av" type="button" popovertarget="tb-compte" aria-label="Mon compte">
     <img src={avatar} alt="" width="32" height="32" />
   </button>
@@ -32,12 +32,21 @@
 {/if}
 
 <style>
+  .bell {
+    display: contents;
+  }
+  .bell :global(button.notif-bell) {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border-color: var(--line-2);
+  }
   .ph {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
   .login {
-    height: 40px;
+    height: 44px;
     padding: 0 10px;
     border-radius: 10px;
     border: 1px solid var(--line-2);
@@ -56,8 +65,8 @@
   .av {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     padding: 0;
     border-radius: 10px;
     border: 1px solid var(--line-2);

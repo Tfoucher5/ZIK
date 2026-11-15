@@ -15,8 +15,8 @@
     align-items: center;
     justify-content: center;
     gap: 9px;
-    height: 40px;
-    min-width: 40px;
+    height: 44px;
+    min-width: 44px;
     padding: 0 8px;
     border-radius: 10px;
     border: 1px solid var(--line-2);
