@@ -3,7 +3,8 @@
 // téléphones (décodage). Un téléphone n'affiche que le podium, sa place,
 // l'effectif et les dernières arrivées.
 
-import { staff } from "./players.js";
+import { phoneLists, staff } from "./players.js";
+import { timerClock } from "./timers.js";
 
 const RECENT = 30;
 
@@ -90,4 +91,46 @@ export function emitRoundEnd(io, code, summary) {
     ...phone,
     ranking: rank(u),
   }));
+}
+
+// Reprise après une coupure : de quoi rétablir l'écran du téléphone
+export function reconnectView(salon, player) {
+  const data = {
+    username: player.username,
+    token: player.token,
+    reconnecting: true,
+    settings: {
+      answerMode: salon.settings.answerMode,
+      maxRounds: salon.settings.maxRounds,
+    },
+    phase: salon.game.phase,
+    paused: salon.game.paused,
+    round: salon.game.currentRound,
+    team: player.team,
+    ...phoneLists(salon, player.username),
+    score: player.score,
+    foundArtist: player.foundArtist,
+    foundTitle: player.foundTitle,
+    foundFeatCount: player.foundFeats.filter(Boolean).length,
+    foundExtrasCount: player.foundExtras.filter(Boolean).length,
+    allFound: player._fullFoundCounted,
+    timerVal: salon.game.timerValue,
+    timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
+    timerActive: salon.game.timerActive,
+    ...timerClock(salon.game),
+    special: salon.game.special ?? null,
+    buzzer: salon.game.buzzer?.username ?? null,
+    buzzLocked: !!player._buzzLocked,
+  };
+  if (salon.game.phase === "round") {
+    data.extras = (salon.game.currentTrack?.extraAnswers || []).map((e) => ({
+      label: e.label,
+    }));
+    if (salon.settings.answerMode === "multiple") {
+      data.choices = salon.game.choices;
+      data.chosenIndex = player._choiceIndex ?? null;
+      data.featCount = salon.game.currentTrack?.featArtists?.length || 0;
+    }
+  }
+  return data;
 }

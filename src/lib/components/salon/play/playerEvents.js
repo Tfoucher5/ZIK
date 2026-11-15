@@ -6,6 +6,8 @@ export function listenPlayer(p, socket, c, u) {
   const chrono = countdown((v) => (p.timerVal = v));
   p.stopCountdowns = listenCountdowns(p, socket);
   socket.on("salon_joined", (data) => {
+    // Décompte annulé pendant la coupure : le serveur renvoie celui en cours
+    p.stopCountdowns();
     onJoined(p, data, c, u);
     if (data.endsAt) chrono.start(data.endsAt, data.now);
     else chrono.stop();
@@ -225,6 +227,11 @@ function onJoined(p, data, c, u) {
       p.guess = "";
     }
     p.round = data.round ?? p.round;
+    // Manche spéciale déjà annoncée : pas de nouvelle intro au retour
+    p.special = data.special ?? null;
+    p.specialIntro = false;
+    p.buzzer = data.buzzer ?? null;
+    p.buzzLocked = !!data.buzzLocked;
     // Le serveur fait foi : une réponse tapée hors ligne n'est jamais partie
     if ("chosenIndex" in data) p.chosenIndex = data.chosenIndex;
     p.total = data.settings?.maxRounds ?? p.total;

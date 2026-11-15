@@ -10,10 +10,10 @@ import {
   getPlayerList,
   nightView,
   phoneLists,
-  reconnectView,
   standings,
 } from "./players.js";
 import { nameTaken } from "./departed.js";
+import { reconnectView } from "./phoneView.js";
 import { restoreSalon, resumeAfterRestart } from "./snapshot.js";
 import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
@@ -21,7 +21,7 @@ import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
 import { dropReclaim, pendingReclaims } from "./reclaim.js";
-import { scheduleCleanup, timerClock } from "./timers.js";
+import { scheduleCleanup, sendBreak, timerClock } from "./timers.js";
 import { key, optional, safe, str } from "../safe.js";
 
 // key absente (TV ouverte avec le seul code) : le handler répond « réservé à l'hôte »
@@ -79,6 +79,7 @@ export function registerJoin(socket, io) {
       support: supportView(salon),
     });
     sendNotice(socket);
+    sendBreak(socket, salon.game);
     if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
       prepareSession(code, io);
     else announceNextVideo(salon, io);
@@ -136,6 +137,7 @@ export function registerJoin(socket, io) {
       support: supportView(salon),
     });
     sendNotice(socket);
+    sendBreak(socket, salon.game);
     scheduleCleanup(code);
     broadcastScreens(code, io);
   });
@@ -238,6 +240,7 @@ export function registerJoin(socket, io) {
 
         socket.emit("salon_joined", reconnectView(salon, existing));
         sendNotice(socket);
+        sendBreak(socket, salon.game);
         broadcastRoster(code, io);
         scheduleCleanup(code);
         return;
@@ -263,6 +266,7 @@ export function registerJoin(socket, io) {
         ...phoneLists(salon, username),
       });
       sendNotice(socket);
+      sendBreak(socket, salon.game);
       broadcastRoster(code, io);
       scheduleCleanup(code);
     },
