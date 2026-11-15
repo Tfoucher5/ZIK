@@ -117,9 +117,10 @@ export function espaces(scene, grille) {
   titre(scene, "La Discothèque", "#c49a6c", -7, 3.6, "bibliothèque");
   tapis(scene, -7, 4, 6, 3, "#2e7a43", 0.5);
   bibliotheque(scene, grille, -7.5, 5.35, Math.PI, 4);
+  // Les fauteuils regardent l'intérieur du coin lecture, dos à l'open space.
   pauses.push(
-    fauteuil(scene, grille, -9.2, 3.2, Math.PI / 4, "#FF8C42"),
-    fauteuil(scene, grille, -5.2, 3.2, -Math.PI / 4, "#5BC0EB"),
+    fauteuil(scene, grille, -9.2, 3.2, (-3 * Math.PI) / 4, "#FF8C42"),
+    fauteuil(scene, grille, -5.2, 3.2, (3 * Math.PI) / 4, "#5BC0EB"),
   );
 
   titre(scene, "Les Choristes", "#94A3B8", 15, -2.6, "postes des renforts");
@@ -132,10 +133,10 @@ export function espaces(scene, grille) {
 
   // Cabines d'appel réparties dans l'open space, près des équipes.
   pauses.push(
-    cabine(scene, grille, -19.35, 2.7, Math.PI / 2, "#5BC0EB"),
+    cabine(scene, grille, -19.35, 2.85, Math.PI / 2, "#5BC0EB"),
     cabine(scene, grille, -11.2, 5.2, Math.PI, "#F4E04D"),
-    cabine(scene, grille, 12.9, 5, Math.PI, "#3DDC84"),
-    cabine(scene, grille, 14.2, 5, Math.PI, "#FF4F9A"),
+    cabine(scene, grille, 14.3, 5, Math.PI, "#3DDC84"),
+    cabine(scene, grille, 15.5, 5, Math.PI, "#FF4F9A"),
   );
 
   boite(scene, 0.7, 1, 0.6, MAT.blanc, 5.6, 0.5, 1.5);
@@ -146,11 +147,7 @@ export function espaces(scene, grille) {
     debout(-18.5, 5.4, 0),
     debout(18.2, 7.4, 0.675),
   );
-  for (const [x, z] of [
-    [-19.3, 5.3],
-    [11.8, 2],
-  ])
-    plante(scene, grille, x, z, 1.2, true);
+  plante(scene, grille, -19.3, 5.3, 1.2, true);
 
   return { invite, accueil: hotesse, renforts, pauses };
 }
