@@ -34,14 +34,6 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Recommandation** : attendre la maquette, puis la juger avec la grille de la vision
 - **Lien** : https://github.com/Tfoucher5/ZIK/blob/develop/docs/strategie/decisions.md
 
-## Promo : 7 sons des vidéos
-
-- **Chantier** : Marketing, plan promo de 2 semaines (scratchpad `promo/plan-2-semaines.md`)
-- **Depuis** : 15/11
-- **Question** : Valider les 7 sons : La Traine « Tu danses pas tu bois pas », Soso Maness « Mistral », disiz « melodrama », Claude François « Le mal aimé », Sexion d'Assaut « Casquette à l'envers », Ronisia « Solide », et le son du post pro ?
-- **Options** : tout valider ; remplacer certains sons
-- **Recommandation** : valider, une musique différente par vidéo, ajoutée dans TikTok
-
 ## Promo : poster la vidéo du bar 3D (V1)
 
 - **Chantier** : Marketing, plan promo de 2 semaines
@@ -49,49 +41,18 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Question** : Poster la V1 (bar 3D) ou attendre une autre version ?
 - **Options** : poster ; retravailler ; ne pas poster
 
-## Promo : post pro sur LinkedIn
+## Promo : chaîne YouTube Shorts
 
-- **Chantier** : Marketing, plan promo de 2 semaines
+- **Chantier** : Marketing
 - **Depuis** : 15/11
-- **Question** : Depuis quel compte LinkedIn publier le post pro, et peut-on afficher en public « plus de 200 soirées par semaine » ?
-- **Options** : compte de Théo ; page ZIK ; chiffre affiché ou retiré
-- **Recommandation** : n'afficher le chiffre que s'il est vérifié dans `etat.md` (aucun chiffre inventé)
-
-## Promo : comptes Instagram et YouTube Shorts
-
-- **Chantier** : Marketing, plan promo de 2 semaines
-- **Depuis** : 15/11
-- **Question** : Ouvrir (ou utiliser) des comptes Instagram et YouTube Shorts pour reposter les vidéos TikTok ?
-- **Options** : les deux ; Instagram seul ; TikTok seul pour l'instant
-
-## Promo : script de prise de vue d'un salon
-
-- **Chantier** : Marketing, plan promo de 2 semaines
-- **Depuis** : 15/11
-- **Question** : Valider le script qui filme une partie de salon sur le staging pour les vidéos ?
-- **Options** : valider ; retoucher
-- **Recommandation** : valider, prises sur le staging uniquement, jamais sur la prod
+- **Question** : Instagram a refusé la création du compte (theo@zik-music.fr), on réessaie plus tard. On crée une chaîne YouTube pour les Shorts ? La création du compte et le mot de passe restent à toi ; ensuite Claude peut préparer chaque publication dans Chrome, que tu valides une par une.
+- **Options** : créer la chaîne YouTube maintenant · plus tard
+- **Recommandation** : créer la chaîne maintenant (mêmes vidéos que TikTok, zéro effort en plus)
 
 ## Connecter Stripe : `/mcp` puis claude.ai Stripe
 
 - **Chantier** : Argent (agents `offres` et `analyste`)
 - **Depuis** : 15/11
-- **Question** : Connecter Stripe pour que les agents Argent lisent paiements et offres : taper `/mcp`, choisir « claude.ai Stripe » et autoriser ?
+- **Question** : (toujours à faire de ton côté : la connexion se valide dans ton navigateur) Connecter Stripe pour que les agents Argent lisent paiements et offres : taper `/mcp`, choisir « claude.ai Stripe » et autoriser ?
 - **Options** : connecter ; ne pas connecter
 - **Recommandation** : connecter, pour la lecture seule des agents Argent, aucune écriture en mode live
-
-## Routine quotidienne `/operations suite` dans le cloud
-
-- **Chantier** : Opérations
-- **Depuis** : 15/11
-- **Question** : Lancer `/operations suite` chaque jour automatiquement dans le cloud ?
-- **Options** : oui ; non, à la main
-
-## Règle de conflit entre les trois chiffres
-
-- **Chantier** : Direction (vision)
-- **Depuis** : 15/11
-- **Question** : Confirmer « en cas de conflit entre les chiffres, la soirée réussie d'abord » ?
-- **Options** : confirmer ; changer l'ordre
-- **Recommandation** : confirmer
-- **Lien** : https://github.com/Tfoucher5/ZIK/blob/develop/docs/strategie/vision.md
