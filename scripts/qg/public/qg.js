@@ -1,27 +1,21 @@
-import { Scene3D } from "./scene.js";
+import { majTableau, heure } from "./tableau.js";
 
 const $ = (id) => document.getElementById(id);
-const nombre = (n) =>
-  n >= 1e6
-    ? `${(n / 1e6).toFixed(1)} M`
-    : n >= 1e3
-      ? `${(n / 1e3).toFixed(0)} k`
-      : String(Math.round(n));
-const dollars = (n) => `${n.toFixed(2)} $`;
-const heure = (t) =>
-  new Date(t).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
 
 let org = { chefs: [], board: [] };
 let etat = null;
 let selection = null;
-const scene = new Scene3D($("scene"), (id) => {
-  selection = id;
-  fiche();
-});
+// La 3D est chargée à part : si elle échoue (CDN, WebGL), le tableau de bord reste utilisable.
+let scene = null;
+try {
+  const { Scene3D } = await import("./scene.js");
+  scene = new Scene3D($("scene"), (id) => {
+    selection = id;
+    fiche();
+  });
+} catch (e) {
+  console.error("3D indisponible", e);
+}
 
 function noeudDe(type) {
   if (type.startsWith("chef-")) return type.slice(5);
@@ -66,11 +60,7 @@ function activite() {
   return { a, nb };
 }
 
-function compteurs(actifs) {
-  $("c-cout").textContent = dollars(etat.aujourdhui.cout);
-  $("c-tokens").textContent = nombre(etat.aujourdhui.tokens);
-  $("c-agents").textContent = etat.agents.filter((x) => x.actif).length;
-  $("c-sessions").textContent = etat.sessions.filter((s) => s.actif).length;
+function seance(actifs) {
   const enSeance = [...actifs.keys()].filter(
     (id) =>
       org.board.includes(id) ||
@@ -82,29 +72,6 @@ function compteurs(actifs) {
   );
   $("board").hidden = enSeance.length < 3;
   return enSeance.length >= 3 ? enSeance : [];
-}
-
-function listes() {
-  $("flux").replaceChildren(
-    ...etat.flux.map((e) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<time></time><b></b><span></span>`;
-      li.children[0].textContent = heure(e.t);
-      li.children[1].textContent = e.qui;
-      li.children[2].textContent = e.quoi;
-      return li;
-    }),
-  );
-  $("sessions").replaceChildren(
-    ...etat.sessions.map((s) => {
-      const li = document.createElement("li");
-      li.className = s.actif ? "actif" : "";
-      li.innerHTML = `<span></span><span></span>`;
-      li.children[0].textContent = `${s.projet} · ${s.branche}${s.skill ? ` · /${s.skill}` : ""}`;
-      li.children[1].textContent = dollars(s.cout);
-      return li;
-    }),
-  );
 }
 
 function fiche() {
@@ -120,18 +87,13 @@ function fiche() {
   const runs = etat.agents.filter((a) =>
     types ? types.includes(a.type) : noeudDe(a.type) === selection,
   );
-  const sessions = selection === "ceo" ? etat.sessions : [];
-  const somme = (cle) => [...runs, ...sessions].reduce((t, x) => t + x[cle], 0);
   f.hidden = false;
-  f.innerHTML = `<h3></h3><dl><dt>Missions</dt><dd></dd><dt>Tokens</dt><dd></dd><dt>Coût</dt><dd></dd></dl><ul></ul>`;
+  f.innerHTML = `<h3></h3><p></p><ul></ul>`;
   f.querySelector("h3").textContent = chef?.nom ?? selection;
-  const dd = f.querySelectorAll("dd");
-  dd[0].textContent =
+  f.querySelector("p").textContent =
     selection === "ceo"
-      ? `${sessions.length} sessions`
-      : `${runs.length} (${runs.filter((r) => r.actif).length} en cours)`;
-  dd[1].textContent = nombre(somme("tokens"));
-  dd[2].textContent = dollars(somme("cout"));
+      ? `${etat.sessions.length} sessions`
+      : `${runs.length} missions (${runs.filter((r) => r.actif).length} en cours)`;
   f.querySelector("ul").replaceChildren(
     ...runs.slice(0, 6).map((r) => {
       const li = document.createElement("li");
@@ -141,14 +103,24 @@ function fiche() {
   );
 }
 
+// Une erreur de la 3D ne doit pas figer le tableau de bord.
+function en3D(fn) {
+  try {
+    if (scene) fn(scene);
+  } catch (e) {
+    console.error("3D", e);
+  }
+}
+
 function rafraichir() {
   const { a, nb } = activite();
-  scene.maj(a, nb, compteurs(a));
-  listes();
+  const enSeance = seance(a);
+  majTableau(etat, org);
+  en3D((s) => s.maj(a, nb, enSeance));
   fiche();
 }
 
-// Affichage : pièces, agents, activité, panneaux ; chaque panneau se replie. Réglages gardés dans le navigateur.
+// Réglages d'affichage gardés dans le navigateur ; « Masquer » cache tout le tableau de bord.
 const memoire = {
   lire: () => {
     try {
@@ -172,11 +144,12 @@ function appliquer() {
     document.body.classList.toggle(b.dataset.bascule, off);
     b.checked = !off;
   }
-  for (const p of document.querySelectorAll(".panneau")) {
-    const replie = !!reglages[`replie-${p.classList[2]}`];
-    p.classList.toggle("replie", replie);
-    p.querySelector(".plier").setAttribute("aria-expanded", String(!replie));
-  }
+  const masque = !!reglages["sans-panneaux"];
+  document.body.classList.toggle("sans-panneaux", masque);
+  $("masquer").setAttribute("aria-pressed", String(masque));
+  $("masquer").textContent = masque
+    ? "Afficher le tableau de bord"
+    : "Masquer le tableau de bord";
 }
 const garder = () => {
   memoire.ecrire(reglages);
@@ -188,16 +161,14 @@ document.addEventListener("change", (e) => {
   reglages[b.dataset.bascule] = !b.checked;
   garder();
 });
-document.addEventListener("click", (e) => {
-  const p = e.target.closest(".plier")?.closest(".panneau");
-  if (!p) return;
-  reglages[`replie-${p.classList[2]}`] = !reglages[`replie-${p.classList[2]}`];
+$("masquer").addEventListener("click", () => {
+  reglages["sans-panneaux"] = !reglages["sans-panneaux"];
   garder();
 });
 appliquer();
 
 org = await (await fetch("/organigramme")).json();
-scene.construire(org);
+en3D((s) => s.construire(org));
 const flux = new EventSource("/flux");
 flux.onopen = () => {
   $("liaison").textContent = "en direct";

@@ -174,14 +174,22 @@ export function armNext(code, io, s, kind = "next") {
     startNextRound(code, io);
   }, s * 1000);
   const now = Date.now();
-  io.to(`salon:${code}`).emit("salon_countdown", {
+  // Gardé pour un écran qui rejoint pendant le décompte (join.js)
+  game._break = {
     kind,
     endsAt: now + s * 1000,
-    now,
     // Décompte coupé par l'hôte : l'heure de reprise part quand même (bouton
     // « Maintenant » de la TV, régie), seul le 3, 2, 1 est masqué
     ...(kind === "next" && { show: settings.countNext !== false }),
-  });
+  };
+  io.to(`salon:${code}`).emit("salon_countdown", { ...game._break, now });
+}
+
+// Décompte en cours pour un écran qui (re)joint : rien s'il est annulé ou passé
+export function sendBreak(socket, game) {
+  const now = Date.now();
+  if (game.breakTimer && game._break?.endsAt > now)
+    socket.emit("salon_countdown", { ...game._break, now });
 }
 
 export const armStart = (salon, io) =>

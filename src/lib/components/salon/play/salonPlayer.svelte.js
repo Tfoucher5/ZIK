@@ -116,11 +116,33 @@ export class SalonPlayer {
     this.guess = "";
   };
 
+  #notReceived = () =>
+    this.showFeedback({
+      type: "miss",
+      correct: false,
+      msg: "Pas reçu, retape",
+    });
+
+  // Verrouillé seulement quand le serveur a reçu la réponse : hors ligne le tap
+  // n'est pas envoyé, et sans accusé la case est rendue
   submitChoice = (index) => {
-    if (this.allFound) return;
+    if (this.allFound || this.chosenIndex !== null) return;
+    if (!this.socket?.connected) return this.#notReceived();
+    const round = this.round;
     this.chosenIndex = index;
-    this.allFound = true;
-    this.socket.emit("salon_submit_choice", { choiceIndex: index });
+    this.socket
+      .timeout(3000)
+      .emit("salon_submit_choice", { choiceIndex: index }, (err, kept) => {
+        // Manche finie ou état renvoyé à la reconnexion : le serveur a parlé
+        if (this.round !== round || this.allFound) return;
+        if (!err && Number.isInteger(kept)) {
+          this.chosenIndex = kept;
+          this.allFound = true;
+        } else if (this.chosenIndex === index) {
+          this.chosenIndex = null;
+          this.#notReceived();
+        }
+      });
   };
 
   buzz = () => {

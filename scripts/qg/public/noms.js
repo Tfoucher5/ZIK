@@ -18,7 +18,7 @@ export const EQUIPE = {
   redaction: { nom: "Manon", role: "rédaction", f: 1, l: 1 },
   animation: { nom: "Malik", role: "game design" },
   da: { nom: "Nina", role: "direction artistique" },
-  motion: { nom: "Yanis", role: "motion design" },
+  motion: { nom: "Sami", role: "motion design" },
   community: { nom: "Clara", role: "réseaux sociaux" },
   architecte: { nom: "Antoine", role: "architecte", l: 1 },
   dev: { nom: "Mehdi", role: "dev" },

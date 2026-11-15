@@ -14,9 +14,13 @@ import { homedir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Suivi, lireOrganigramme, hoteAutorise } from "./journaux.mjs";
-import { lireATrancher } from "./trancher.mjs";
+import { lireATrancher, lireChantiers } from "./trancher.mjs";
+import { lireAgents } from "./agents.mjs";
+import { ajouterReponses, lireReponses, lireLimites } from "./boite.mjs";
 
 const ici = dirname(fileURLToPath(import.meta.url));
+const DEPOT = join(ici, "..", "..");
+const BOITE = join(ici, "boite");
 const args = process.argv.slice(2);
 const option = (nom, defaut) => {
   const i = args.indexOf(nom);
@@ -114,11 +118,23 @@ function balayer() {
 }
 
 function organigramme() {
-  const claudeMd = join(ici, "..", "..", "CLAUDE.md");
+  const claudeMd = join(DEPOT, "CLAUDE.md");
   return existsSync(claudeMd)
     ? lireOrganigramme(readFileSync(claudeMd, "utf8"))
     : { chefs: [], board: [] };
 }
+
+const doc = (nom) => {
+  const chemin = join(DEPOT, "docs", "strategie", nom);
+  return existsSync(chemin) ? readFileSync(chemin, "utf8") : "";
+};
+const json = (res, donnees) => {
+  res.writeHead(200, {
+    "content-type": "application/json",
+    "cache-control": "no-store",
+  });
+  res.end(JSON.stringify(donnees));
+};
 
 const TYPES = { html: "text/html", js: "text/javascript", css: "text/css" };
 const fichier = (url) => {
@@ -141,19 +157,40 @@ createServer((req, res) => {
     });
     res.end(readFileSync(join(ici, "public", nom)));
   } else if (url === "/organigramme") {
-    res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify(organigramme()));
-  } else if (url === "/a-trancher") {
-    const md = join(ici, "..", "..", "docs", "strategie", "a-trancher.md");
-    res.writeHead(200, {
-      "content-type": "application/json",
-      "cache-control": "no-store",
-    });
-    res.end(
-      JSON.stringify(
-        existsSync(md) ? lireATrancher(readFileSync(md, "utf8")) : [],
-      ),
+    json(res, organigramme());
+  } else if (url === "/agents") {
+    lireAgents(DEPOT, organigramme()).then(
+      (a) => json(res, a),
+      () => res.writeHead(500).end(),
     );
+  } else if (url === "/a-trancher") {
+    const envoyees = lireReponses(BOITE);
+    json(
+      res,
+      lireATrancher(doc("a-trancher.md")).map((d) => {
+        const r = envoyees.get(d.titre);
+        return r ? { ...d, envoye: r.date, reponse: r.reponse } : d;
+      }),
+    );
+  } else if (url === "/chantiers") {
+    json(res, lireChantiers(doc("chantiers.md")));
+  } else if (url === "/limites") {
+    json(res, lireLimites(BOITE));
+  } else if (url === "/reponses" && req.method === "POST") {
+    if (!hoteAutorise(req.headers.origin?.replace(/^http:\/\//, ""), PORT))
+      return res.writeHead(403).end();
+    let corps = "";
+    req.on("data", (c) => {
+      corps += c;
+      if (corps.length > 300e3) req.destroy();
+    });
+    req.on("end", () => {
+      try {
+        json(res, { n: ajouterReponses(BOITE, JSON.parse(corps)) });
+      } catch {
+        res.writeHead(400).end();
+      }
+    });
   } else if (url === "/flux") {
     res.writeHead(200, {
       "content-type": "text/event-stream",

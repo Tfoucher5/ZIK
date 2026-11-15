@@ -42,6 +42,7 @@ describe("instantané d'un salon", () => {
   it("tout l'état passe en JSON, sans timers, sockets ni caches", () => {
     const salon = salonEnManche();
     salon.game._resolving = { gen: 1 };
+    salon.game._break = { kind: "next", endsAt: 1, show: true };
     salon._journal = [{ at: 1, text: "Hôte déconnecté" }];
     salon._tvVolume = 40;
     salon._reclaims = { Ana: "socket-1" };
@@ -63,6 +64,8 @@ describe("instantané d'un salon", () => {
     expect(data.game.interval).toBeUndefined();
     expect(data.game.videos).toBeUndefined();
     expect(data.game._resolving).toBeUndefined();
+    // Décompte en cours : son timer ne survit pas au redémarrage
+    expect(data.game._break).toBeUndefined();
     expect(data.players.Ana._dcTimer).toBeUndefined();
     expect(data.banned).toEqual(["troll", "jeton-banni"]);
     expect(Object.values(data.departed)[0]).toMatchObject({

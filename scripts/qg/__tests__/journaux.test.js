@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
   Suivi,
-  cout,
-  tarif,
-  resumeOutil,
   lireOrganigramme,
   hoteAutorise,
+  limiteAtteinte,
+  fenetreEstimee,
 } from "../journaux.mjs";
 
 const T0 = Date.parse("2026-11-13T15:00:00Z");
+const H = 3600e3;
 const ligne = (o) => ({
   sessionId: "s1",
   timestamp: new Date(T0).toISOString(),
@@ -16,68 +16,10 @@ const ligne = (o) => ({
   gitBranch: "develop",
   ...o,
 });
-const usage = {
-  input_tokens: 10,
-  output_tokens: 100,
-  cache_read_input_tokens: 1000,
-  cache_creation_input_tokens: 0,
-};
-
-describe("cout", () => {
-  it("applique le tarif du modèle, cache compris", () => {
-    expect(tarif("claude-sonnet-5-5")).toEqual({
-      entree: 2,
-      sortie: 10,
-      lecture: 0.1,
-    });
-    expect(cout("claude-opus-5-5", usage)).toBeCloseTo(
-      (10 * 4 + 100 * 20 + 1000 * 0.2) / 1e6,
-    );
-  });
-
-  it("compte l'écriture de cache 1 h au double du prix d'entrée", () => {
-    const u = {
-      cache_creation_input_tokens: 1000,
-      cache_creation: { ephemeral_1h_input_tokens: 1000 },
-    };
-    expect(cout("claude-opus-5-5", u)).toBeCloseTo((1000 * 8) / 1e6);
-  });
-
-  it("retombe sur le tarif Opus 5.5 pour un modèle inconnu", () => {
-    expect(tarif("modele-inconnu").entree).toBe(4);
-  });
-});
-
-describe("resumeOutil", () => {
-  it("garde la fin du chemin et coupe les commandes longues", () => {
-    expect(resumeOutil("Edit", { file_path: "C:\\ZIK\\src\\lib\\a.js" })).toBe(
-      "Edit · lib/a.js",
-    );
-    expect(resumeOutil("Bash", { command: "x".repeat(200) })).toHaveLength(77);
-    expect(resumeOutil("TodoWrite")).toBe("TodoWrite");
-  });
-});
+const usage = { input_tokens: 10, output_tokens: 100 };
 
 describe("Suivi", () => {
-  it("ne compte qu'une fois un message écrit en plusieurs lignes", () => {
-    const s = new Suivi();
-    const m = (out) =>
-      ligne({
-        type: "assistant",
-        message: {
-          id: "m1",
-          model: "claude-opus-5-5",
-          usage: { ...usage, output_tokens: out },
-          content: [],
-        },
-      });
-    s.ligne(m(50));
-    s.ligne(m(100));
-    expect(s.sessions.get("s1").tokens).toBe(1110);
-    expect(s.instantane(T0).aujourdhui.tokens).toBe(1110);
-  });
-
-  it("suit un agent du lancement à la fin", () => {
+  it("suit un agent du lancement à la fin, en phrases simples", () => {
     const s = new Suivi();
     s.ligne(
       ligne({
@@ -104,6 +46,11 @@ describe("Suivi", () => {
     expect(s.instantane(T0).enAttente).toEqual([
       { type: "dev", description: "Page lieu", t: T0 },
     ]);
+    expect(s.flux[0]).toMatchObject({
+      qui: "/tech",
+      quoi: "Page lieu",
+      cible: "dev",
+    });
     s.meta("a1", "s1", {
       agentType: "dev",
       description: "Page lieu",
@@ -134,9 +81,11 @@ describe("Suivi", () => {
     expect(etat.agents[0]).toMatchObject({
       type: "dev",
       actif: true,
-      activite: "Read · a/b.js",
+      activite: "Lit b.js",
     });
+    expect(etat.flux[0]).toMatchObject({ qui: "dev", quoi: "Lit b.js" });
     expect(etat.enAttente).toEqual([]);
+    expect(etat).not.toHaveProperty("aujourdhui");
     s.ligne(
       ligne({
         type: "user",
@@ -146,7 +95,18 @@ describe("Suivi", () => {
     );
     etat = s.instantane(T0 + 2000);
     expect(etat.agents[0].actif).toBe(false);
-    expect(etat.flux[0]).toMatchObject({ qui: "dev", quoi: "a terminé" });
+    expect(etat.flux[0]).toMatchObject({ qui: "dev", quoi: "A terminé" });
+  });
+
+  it("range le flux par heure, même si les fichiers arrivent dans le désordre", () => {
+    const s = new Suivi();
+    for (let i = 0; i < 200; i++)
+      s.evenement(T0 + (i % 2 ? i : -i) * 1000, "dev", `e${i}`);
+    const { flux } = s.instantane(T0);
+    expect(flux[0].quoi).toBe("e199");
+    expect(flux.map((e) => e.t)).toEqual(
+      [...flux.map((e) => e.t)].sort((a, b) => b - a),
+    );
   });
 
   it("ignore les lignes sans session ou sans message", () => {
@@ -155,6 +115,78 @@ describe("Suivi", () => {
     s.ligne({ type: "summary" });
     s.ligne(ligne({ type: "attachment" }));
     expect(s.instantane(T0).agents).toEqual([]);
+  });
+
+  it("repère la limite atteinte, même dans une notification d'agent", () => {
+    const s = new Suivi();
+    s.ligne(
+      ligne({
+        type: "queue-operation",
+        content:
+          "<summary>failed: You've hit your 5-hour limit · resets 9:50pm (Europe/Paris) (error type rate_limit)</summary>",
+      }),
+    );
+    const { limite } = s.instantane(T0 + 60e3);
+    expect(limite.atteinte).toBe("cinq");
+    expect(new Date(limite.fin).getHours()).toBe(21);
+    expect(limite.fin - limite.debut).toBe(5 * H);
+  });
+
+  it("estime la fenêtre de 5 h d'après les messages", () => {
+    const s = new Suivi();
+    for (const t of [T0, T0 + H]) {
+      s.ligne({
+        ...ligne({
+          type: "assistant",
+          message: { id: String(t), model: "claude-opus-5-5", usage },
+        }),
+        timestamp: new Date(t).toISOString(),
+      });
+    }
+    expect(s.instantane(T0 + 2 * H).limite).toEqual({
+      debut: T0,
+      fin: T0 + 5 * H,
+      atteinte: null,
+    });
+  });
+});
+
+describe("limiteAtteinte", () => {
+  it("lit l'heure de reprise, le lendemain si elle est passée", () => {
+    const t = new Date(2026, 10, 15, 22, 0).getTime();
+    const a = limiteAtteinte("You've hit your 5-hour limit · resets 6pm", t);
+    expect(a.fenetre).toBe("cinq");
+    expect(new Date(a.resetsAt)).toEqual(new Date(2026, 10, 16, 18, 0));
+    expect(
+      limiteAtteinte("hit your weekly limit · resets 9:05am", t),
+    ).toMatchObject({ fenetre: "semaine" });
+    expect(limiteAtteinte("rien à voir", t)).toBeNull();
+    expect(
+      limiteAtteinte("hit your weekly limit · resets Nov 20", t).resetsAt,
+    ).toBeNull();
+  });
+});
+
+describe("fenetreEstimee", () => {
+  it("ouvre une nouvelle fenêtre au premier message après la fin de la précédente", () => {
+    const h = [T0, T0 + 4 * H, T0 + 6 * H, T0 + 7 * H];
+    expect(fenetreEstimee(h, null, T0 + 8 * H)).toEqual({
+      debut: T0 + 6 * H,
+      fin: T0 + 11 * H,
+      atteinte: null,
+    });
+    expect(fenetreEstimee(h, null, T0 + 12 * H).debut).toBeNull();
+    expect(fenetreEstimee([], null, T0).debut).toBeNull();
+  });
+
+  it("préfère l'heure de reprise d'une limite atteinte, ignore une limite passée", () => {
+    const atteinte = { fenetre: "cinq", t: T0, resetsAt: T0 + 2 * H };
+    expect(fenetreEstimee([T0], atteinte, T0 + H)).toEqual({
+      debut: T0 - 3 * H,
+      fin: T0 + 2 * H,
+      atteinte: "cinq",
+    });
+    expect(fenetreEstimee([T0], atteinte, T0 + 3 * H).atteinte).toBeNull();
   });
 });
 

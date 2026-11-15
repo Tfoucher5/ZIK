@@ -1,0 +1,182 @@
+/* Tableau de bord : deux colonnes de part et d'autre des bureaux, la 3D reste au centre. */
+.colonne {
+  position: fixed;
+  top: 64px;
+  bottom: 16px;
+  z-index: 2;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.colonne.gauche {
+  left: 16px;
+}
+.colonne.droite {
+  right: 16px;
+}
+.bloc {
+  padding: 14px 16px;
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  min-height: 0;
+}
+.bloc h2 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--doux);
+}
+.bloc p {
+  margin: 4px 0;
+}
+.bloc .note,
+.bloc .vide {
+  color: var(--doux);
+  font-size: 12px;
+}
+.bloc .alerte {
+  color: var(--rouge);
+  font-weight: 600;
+}
+.chantiers,
+.flux {
+  flex: 1;
+  overflow: auto;
+}
+.jauge + .jauge {
+  margin-top: 12px;
+}
+.jauge .tete {
+  display: flex;
+  justify-content: space-between;
+}
+.jauge strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.piste {
+  height: 8px;
+  margin: 4px 0;
+  border-radius: 999px;
+  background: var(--bord);
+  overflow: hidden;
+}
+.piste i {
+  display: block;
+  height: 100%;
+  background: var(--vif);
+}
+.jauge[data-niveau="orange"] .piste i {
+  background: var(--alerte);
+}
+.jauge[data-niveau="rouge"] .piste i {
+  background: var(--rouge);
+}
+.jauge small {
+  color: var(--doux);
+}
+.equipe,
+.chantiers ul,
+.flux ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.equipe {
+  max-height: 34vh;
+  overflow: auto;
+}
+.equipe li {
+  padding: 8px 0;
+  border-top: 1px solid var(--bord);
+}
+.equipe li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.equipe .tete {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.equipe b {
+  color: var(--vif);
+}
+.equipe b span {
+  color: var(--doux);
+  font-weight: 400;
+}
+.equipe time,
+.equipe small {
+  color: var(--doux);
+  font-size: 12px;
+}
+.equipe small {
+  display: block;
+}
+.groupe + .groupe {
+  margin-top: 10px;
+}
+.groupe h3,
+.groupe summary {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--doux);
+  cursor: default;
+}
+.groupe summary {
+  cursor: pointer;
+}
+.chantiers li {
+  padding: 6px 0 6px 12px;
+  border-left: 3px solid var(--bord);
+  margin-bottom: 4px;
+}
+.chantiers li[data-etat="en-cours"] {
+  border-left-color: var(--vif);
+}
+.chantiers li[data-etat="fait"] {
+  opacity: 0.6;
+}
+.chantiers li small {
+  display: block;
+  color: var(--doux);
+  font-size: 12px;
+}
+.flux li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--bord);
+  font-size: 13px;
+  animation: entree 0.4s ease-out;
+}
+.flux time {
+  color: var(--doux);
+  font-variant-numeric: tabular-nums;
+}
+.flux b {
+  color: var(--vif);
+}
+@media (max-width: 1100px) {
+  .colonne {
+    width: 300px;
+  }
+}
+@media (max-width: 900px) {
+  .colonne.gauche {
+    display: none;
+  }
+  .colonne.droite {
+    top: auto;
+    height: 30vh;
+    left: 16px;
+    width: auto;
+  }
+}

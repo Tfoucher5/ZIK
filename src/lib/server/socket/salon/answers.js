@@ -104,7 +104,8 @@ export function registerAnswers(socket, io) {
     socket,
     "salon_submit_choice",
     { choiceIndex: int(0, 9) },
-    ({ choiceIndex }) => {
+    // Accusé : la case retenue par le serveur, null si la réponse est refusée
+    ({ choiceIndex }, ack) => {
       const code = socket.salonCode;
       const username = socket.salonUsername;
       const salon = salonRooms[code];
@@ -113,12 +114,15 @@ export function registerAnswers(socket, io) {
         !salon ||
         salon.game.phase !== "round" ||
         salon.game.paused ||
-        !salon.game.timerActive
+        !salon.game.timerActive ||
+        choiceIndex >= (salon.game.choices?.length ?? 0)
       )
-        return;
+        return ack(null);
 
       const player = salon.players[username];
-      if (!player || player._fullFoundCounted) return;
+      if (!player) return ack(null);
+      // Renvoi après un accusé perdu : la première réponse reste
+      if (player._fullFoundCounted) return ack(player._choiceIndex ?? null);
 
       const game = salon.game;
       const timeTaken = (Date.now() - game.startTime) / 1000;
@@ -136,6 +140,7 @@ export function registerAnswers(socket, io) {
         totalFeatCount: game.currentTrack?.cleanFeatArtists?.length || 0,
       });
 
+      ack(choiceIndex);
       // Scores are NOT updated here — deferred to endRound
       checkEveryoneDone(code, io);
     },
