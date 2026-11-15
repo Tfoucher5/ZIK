@@ -7,6 +7,7 @@ import { registerAnswers } from "./answers.js";
 import { registerBuzzer } from "./buzzer.js";
 import { registerEvening } from "./evening.js";
 import { registerVolume } from "./volume.js";
+import { registerReclaim } from "./reclaim.js";
 
 export { createSalonRoom, changeSalonPlaylists } from "./rooms.js";
 
@@ -21,5 +22,6 @@ export function registerSalon(io) {
     registerBuzzer(socket, io);
     registerEvening(socket, io);
     registerVolume(socket, io);
+    registerReclaim(socket, io);
   });
 }

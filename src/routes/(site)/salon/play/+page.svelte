@@ -46,11 +46,18 @@
     joinError={p.joinError}
     joining={p.joining}
     resume={p.resume}
+    nameTaken={p.nameTaken}
+    reclaimPending={p.reclaimPending}
     onForget={p.forgetResume}
     onJoin={p.connectAndJoin}
+    onReclaim={p.requestReclaim}
+    onChangeName={p.changeName}
   />
 {:else}
   <main class="sp">
+    {#if p.connLost && !p.restarting}
+      <p class="sp-conn" role="status">Connexion perdue : on te reconnecte. Ta place et tes points sont gardés.</p>
+    {/if}
     <header class="sp-head">
       <span class="sp-av" style="--h:{hue(p.username)}">{p.username[0]?.toUpperCase() ?? '?'}</span>
       <div>

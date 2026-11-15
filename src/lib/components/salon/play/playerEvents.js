@@ -11,6 +11,18 @@ export function listenPlayer(p, socket, c, u) {
     else chrono.stop();
   });
   socket.on("salon_server_restart", () => (p.restarting = true));
+  // Aussi après une coupure pendant une demande : on la refait d'un clic
+  socket.on("salon_name_taken", ({ username }) => {
+    p.joining = false;
+    p.reclaimPending = false;
+    p.nameTaken = username;
+  });
+  socket.on("salon_reclaim_ok", ({ token }) => {
+    p.token = token;
+    p.nameTaken = null;
+    p.reclaimPending = false;
+    p.sendJoin?.();
+  });
   // Pause ou fin de partie pendant l'annonce : plus de reprise à annoncer
   socket.on("salon_paused", () => (p.restored = null));
   socket.on("salon_game_over", () => (p.restored = null));
@@ -164,6 +176,8 @@ export function listenPlayer(p, socket, c, u) {
     if (!p.joined) {
       // Salon fermé ou pseudo refusé : retour au formulaire, pseudo gardé
       p.resume = null;
+      p.nameTaken = null;
+      p.reclaimPending = false;
       p.joinError = message;
       socket.disconnect();
       return;
@@ -186,10 +200,15 @@ function onJoined(p, data, c, u) {
   p.total = data.settings?.maxRounds || 10;
   p.joining = false;
   p.error = "";
-  localStorage.setItem("salon_code", c);
-  localStorage.setItem("salon_user", u);
-  localStorage.setItem("zik_salon_player_" + c, data.token);
-  localStorage.setItem("salon_at", String(Date.now()));
+  p.token = data.token;
+  try {
+    localStorage.setItem("salon_code", c);
+    localStorage.setItem("salon_user", u);
+    localStorage.setItem("zik_salon_player_" + c, data.token);
+    localStorage.setItem("salon_at", String(Date.now()));
+  } catch {
+    /* stockage bloqué (navigation privée) : le jeton reste en mémoire */
+  }
   p.roster = data.roster;
   p.teams = data.teams;
   p.night = data.night ?? null;

@@ -58,6 +58,18 @@
   color: var(--danger);
   font-size: 0.9rem;
 }
+/* Perte de réseau du téléphone : collée en haut, visible pendant toute la coupure */
+.sp-conn {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: 0 -16px;
+  padding: 12px 16px;
+  background: var(--warn);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
 .sp-next {
   text-align: center;
   color: var(--mid);
