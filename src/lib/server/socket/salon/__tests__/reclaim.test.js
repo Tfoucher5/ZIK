@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Mêmes neutralisations que screens.test.js : aucun appel réseau ni base
+const base = vi.hoisted(() => ({ instantanes: [] }));
 vi.mock("../../../config.js", () => ({
   supabase: {
     from: () => ({
@@ -17,6 +18,12 @@ vi.mock("../../../config.js", () => ({
     rpc: async () => ({ data: null, error: null }),
   },
   getAdminClient: () => ({
+    schema: () => ({
+      rpc: async (fn, a) => {
+        if (fn === "save_salon_snapshot") base.instantanes.push(a);
+        return { data: null, error: null };
+      },
+    }),
     rpc: async () => ({ data: null, error: null }),
     from: () => ({ insert: () => ({ then: (r) => r({ error: null }) }) }),
   }),
@@ -33,6 +40,7 @@ vi.mock("../../../middleware/auth.js", () => ({
 
 const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
+const { reviveSalon } = await import("../snapshot.js");
 const { CODE, CLE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
 
@@ -55,6 +63,7 @@ describe("reprendre sa place sans son jeton", () => {
     return s;
   }
   const dernier = (s) => s.recu.at(-1);
+  const pendingCount = () => Object.keys(salonRooms[CODE]._reclaims).length;
 
   async function telephone(id, username, token, authJwt) {
     const s = branche(id);
@@ -179,6 +188,71 @@ describe("reprendre sa place sans son jeton", () => {
     expect(vieux.recu.at(-1).event).toBe("salon_closed");
     expect(neuf.recu.some((e) => e.event === "salon_joined")).toBe(true);
     expect(salonRooms[CODE].players.Ana.socketId).toBe("t2");
+  });
+
+  it("un téléphone qui demande deux pseudos : une seule ligne en régie", async () => {
+    await telephone("t1", "Ana");
+    await telephone("t2", "Bob");
+    regie();
+    const neuf = await telephone("t3", "Ana");
+    neuf.handlers.salon_reclaim_request({ code: CODE, username: "Ana" });
+    neuf.handlers.salon_reclaim_request({ code: CODE, username: "Bob" });
+    expect(salonRooms[CODE]._reclaims).toEqual({ Bob: "t3" });
+    expect(
+      h.emissions.filter((e) => e.event === "salon_reclaims").at(-1).payload,
+    ).toEqual({ usernames: ["Bob"] });
+  });
+
+  it("au-delà de 5 demandes en attente : la 6e est refusée calmement", async () => {
+    const noms = ["Ana", "Bob", "Cid", "Dan", "Eve", "Fox"];
+    for (const [i, n] of noms.entries()) await telephone(`p${i}`, n);
+    regie();
+    const demandeurs = [];
+    for (const [i, n] of noms.entries()) {
+      const s = await telephone(`d${i}`, n);
+      s.handlers.salon_reclaim_request({ code: CODE, username: n });
+      demandeurs.push(s);
+    }
+    expect(pendingCount()).toBe(5);
+    expect(dernier(demandeurs[5])).toEqual({
+      event: "salon_error",
+      payload: {
+        message:
+          "L'hôte a déjà plusieurs demandes à confirmer. Réessaie dans un instant.",
+      },
+    });
+  });
+
+  it("place rendue puis redémarrage : l'instantané garde le nouveau jeton, l'ancien est refusé", async () => {
+    const ana = await telephone("t1", "Ana");
+    const ancien = ana.recu.find((e) => e.event === "salon_joined").payload
+      .token;
+    const r = regie();
+    const neuf = await telephone("t2", "Ana");
+    neuf.handlers.salon_reclaim_request({ code: CODE, username: "Ana" });
+    base.instantanes.length = 0;
+    r.handlers.salon_reclaim_answer({ username: "Ana", accept: true });
+    const nouveau = dernier(neuf).payload.token;
+    const etat = base.instantanes.findLast((a) => a.p_code === CODE).p_data;
+    expect(etat.players.Ana.token).toBe(nouveau);
+
+    salonRooms[CODE] = reviveSalon(structuredClone(etat));
+    const vieux = await telephone("t3", "Ana", ancien);
+    expect(dernier(vieux).event).toBe("salon_name_taken");
+    const revenu = await telephone("t4", "Ana", nouveau);
+    expect(revenu.recu.some((e) => e.event === "salon_joined")).toBe(true);
+  });
+
+  it("rafale de demandes d'un même téléphone : une seule ligne, rien ne casse", async () => {
+    await telephone("t1", "Ana");
+    await telephone("t2", "Bob");
+    const s = branche("x");
+    for (let i = 0; i < 50; i++)
+      s.handlers.salon_reclaim_request({
+        code: CODE,
+        username: i % 2 ? "Ana" : "Bob",
+      });
+    expect(pendingCount()).toBe(1);
   });
 
   it("entrées hostiles : rien ne casse, rien n'est donné", async () => {

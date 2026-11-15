@@ -8,7 +8,11 @@ import { salonRooms } from "../../state.js";
 import { nameTaken } from "./departed.js";
 import { adminSalon, cleanUsername } from "./players.js";
 import { note } from "./journal.js";
+import { saveSnapshot } from "./snapshot.js";
 import { bool, key, safe, str } from "../safe.js";
+
+// Au-delà, la régie déborde de lignes à confirmer
+const MAX_PENDING = 5;
 
 // Demandes en attente : salon._reclaims[pseudo] = id du socket qui la fait
 export function pendingReclaims(salon) {
@@ -45,6 +49,8 @@ export function registerReclaim(socket, io) {
     "salon_reclaim_request",
     { code: key(64), username: str(100) },
     ({ code, username }) => {
+      // Un téléphone = une seule demande : la précédente est retirée
+      dropReclaimOf(socket, io);
       username = cleanUsername(username);
       if (!username || username in Object.prototype) return;
       const salon = salonRooms[code];
@@ -61,6 +67,11 @@ export function registerReclaim(socket, io) {
         return socket.emit("salon_error", {
           message:
             "Quelqu'un attend déjà de reprendre ce pseudo. Choisis-en un autre ou va voir l'hôte.",
+        });
+      if (pendingReclaims(salon).length >= MAX_PENDING)
+        return socket.emit("salon_error", {
+          message:
+            "L'hôte a déjà plusieurs demandes à confirmer. Réessaie dans un instant.",
         });
       (salon._reclaims ??= {})[username] = socket.id;
       socket.reclaimFor = { code, username };
@@ -89,6 +100,8 @@ export function registerReclaim(socket, io) {
         });
       note(salon, `Place de ${username} rendue par l'hôte`);
       target.emit("salon_reclaim_ok", { token: renewToken(salon, owner) });
+      // Sinon, après une reprise depuis l'instantané, l'ancien jeton revit
+      saveSnapshot(salon);
     },
   );
 }
