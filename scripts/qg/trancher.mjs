@@ -1,4 +1,7 @@
-// Décisions qui attendent Théo, lues dans docs/strategie/a-trancher.md.
+// Fichiers « une section par sujet » de docs/strategie : a-trancher.md (décisions qui attendent Théo) et chantiers.md.
+const sansAccent = (s) =>
+  s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
 export function lireATrancher(md) {
   const decisions = [];
   let code = false;
@@ -11,13 +14,21 @@ export function lireATrancher(md) {
       continue;
     }
     const champ = ligne.match(/^- \*\*(.+?)\*\* *: *(.+)/);
-    if (champ && decisions.length) {
-      const cle = champ[1]
-        .normalize("NFD")
-        .replace(/\p{M}/gu, "")
-        .toLowerCase();
-      decisions.at(-1)[cle] = champ[2].replaceAll("`", "").trim();
-    }
+    if (champ && decisions.length)
+      decisions.at(-1)[sansAccent(champ[1])] = champ[2]
+        .replaceAll("`", "")
+        .trim();
   }
   return decisions;
+}
+
+const ETATS = ["en cours", "a faire", "fait"];
+
+// etat : « en-cours », « a-faire » ou « fait » ; un statut inconnu compte comme « à faire ».
+export function lireChantiers(md) {
+  return lireATrancher(md).map((c) => {
+    const s = sansAccent(c.statut ?? "");
+    const etat = ETATS.find((e) => s.startsWith(e)) ?? "a faire";
+    return { ...c, etat: etat.replace(" ", "-") };
+  });
 }

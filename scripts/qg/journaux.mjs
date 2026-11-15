@@ -1,90 +1,73 @@
 // Lit les journaux de Claude Code (~/.claude/projects) et en tire l'état de l'équipe d'agents.
+import { phrase } from "./actions.mjs";
 
-// Tarifs publics de l'API Anthropic en $ par million de tokens (entrée, sortie, lecture de cache), relevés le 13/11/2026.
-const TARIFS = [
-  ["fable-5-2", 8, 40, 0.2],
-  ["fable-5", 10, 50, 1],
-  ["mythos-5-2", 8, 40, 0.2],
-  ["mythos-5", 10, 50, 1],
-  ["opus-5-5", 4, 20, 0.2],
-  ["opus-5", 5, 25, 0.5],
-  ["opus-4", 5, 25, 0.5],
-  ["sonnet-5-5", 2, 10, 0.1],
-  ["sonnet-5", 2, 10, 0.2],
-  ["sonnet-4", 3, 15, 0.3],
-  ["haiku-5-5", 0.1, 0.5, 0.01],
-  ["haiku-4", 1, 5, 0.1],
-];
-
-export function tarif(modele = "") {
-  const t =
-    TARIFS.find(([cle]) => modele.includes(cle)) ??
-    TARIFS.find(([cle]) => cle === "opus-5-5");
-  return { entree: t[1], sortie: t[2], lecture: t[3] };
-}
-
-export function cout(modele, u) {
-  const t = tarif(modele);
-  const ecriture1h = u.cache_creation?.ephemeral_1h_input_tokens ?? 0;
-  const ecriture5m = (u.cache_creation_input_tokens ?? 0) - ecriture1h;
-  return (
-    ((u.input_tokens ?? 0) * t.entree +
-      (u.output_tokens ?? 0) * t.sortie +
-      (u.cache_read_input_tokens ?? 0) * t.lecture +
-      ecriture5m * t.entree * 1.25 +
-      ecriture1h * t.entree * 2) /
-    1e6
-  );
-}
-
-function tokens(u) {
-  return (
-    (u.input_tokens ?? 0) +
-    (u.output_tokens ?? 0) +
-    (u.cache_read_input_tokens ?? 0) +
-    (u.cache_creation_input_tokens ?? 0)
-  );
-}
+const CINQ_H = 5 * 3600e3;
 
 export function hoteAutorise(hote, port) {
   return hote === `localhost:${port}` || hote === `127.0.0.1:${port}`;
 }
 
-export function jour(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// « You've hit your 5-hour limit · resets 9:50pm (Europe/Paris) » : heure locale du PC, prochaine occurrence après t.
+const LIMITE = /hit your ([\w-]+) limit · resets ([^\n(<"]+)/;
+export function limiteAtteinte(texte, t) {
+  const m = String(texte).match(LIMITE);
+  if (!m) return null;
+  const fenetre = m[1] === "5-hour" ? "cinq" : "semaine";
+  const h = m[2].trim().match(/^(\d{1,2})(?::(\d{2}))?\s*([ap]m)$/i);
+  if (!h) return { fenetre, t, texte: m[2].trim(), resetsAt: null };
+  const d = new Date(t);
+  d.setHours(
+    (Number(h[1]) % 12) + (/pm/i.test(h[3]) ? 12 : 0),
+    Number(h[2] ?? 0),
+    0,
+    0,
+  );
+  if (d.getTime() <= t) d.setDate(d.getDate() + 1);
+  return { fenetre, t, texte: m[2].trim(), resetsAt: d.getTime() };
 }
 
-export function resumeOutil(nom, entree = {}) {
-  const chemin = entree.file_path ?? entree.path;
-  const cible = chemin
-    ? String(chemin).split(/[\\/]/).slice(-2).join("/")
-    : (entree.command ??
-      entree.pattern ??
-      entree.skill ??
-      entree.description ??
-      entree.url ??
-      entree.query ??
-      "");
-  const court = String(cible).replace(/\s+/g, " ").trim().slice(0, 70);
-  return court ? `${nom} · ${court}` : nom;
+// Fenêtre de 5 h : ouverte par le premier message après la fin de la précédente. Estimation : seules les sessions suivies comptent.
+export function fenetreEstimee(horaires, atteinte, maintenant) {
+  if (atteinte?.resetsAt > maintenant) {
+    const debut =
+      atteinte.fenetre === "cinq" ? atteinte.resetsAt - CINQ_H : null;
+    return { debut, fin: atteinte.resetsAt, atteinte: atteinte.fenetre };
+  }
+  let debut = null;
+  for (const t of [...horaires].sort((a, b) => a - b))
+    if (t <= maintenant && (debut === null || t >= debut + CINQ_H)) debut = t;
+  if (debut === null || debut + CINQ_H <= maintenant)
+    return { debut: null, fin: null, atteinte: null };
+  return { debut, fin: debut + CINQ_H, atteinte: null };
 }
 
 const COMMANDE = /<command-name>\/?([\w:-]+)<\/command-name>/;
+
+const textes = (o) => {
+  const c = o.message?.content ?? o.content;
+  if (typeof c === "string") return [c];
+  return Array.isArray(c)
+    ? c.filter((b) => b?.type === "text").map((b) => b.text)
+    : [];
+};
 
 export class Suivi {
   constructor() {
     this.sessions = new Map();
     this.agents = new Map();
     this.lances = new Map();
-    this.messages = new Map();
-    this.jours = new Map();
+    this.horaires = [];
+    this.atteinte = null;
     this.flux = [];
   }
 
-  evenement(t, qui, quoi) {
-    this.flux.unshift({ t, qui, quoi });
-    if (this.flux.length > 80) this.flux.length = 80;
+  evenement(t, qui, quoi, cible) {
+    this.flux.unshift(cible ? { t, qui, quoi, cible } : { t, qui, quoi });
+    // Les fichiers sont lus l'un après l'autre : on retrie par heure avant de couper.
+    if (this.flux.length > 160) {
+      this.flux.sort((a, b) => b.t - a.t);
+      this.flux.length = 80;
+    }
   }
 
   session(id, o) {
@@ -97,9 +80,6 @@ export class Suivi {
         skill: null,
         derniere: 0,
         activite: "",
-        tokens: 0,
-        cout: 0,
-        modele: "",
       };
       this.sessions.set(id, s);
     }
@@ -121,9 +101,6 @@ export class Suivi {
         derniere: 0,
         fini: false,
         activite: "",
-        tokens: 0,
-        cout: 0,
-        modele: "",
       };
       this.agents.set(agentId, a);
     }
@@ -132,41 +109,18 @@ export class Suivi {
 
   meta(agentId, sessionId, m) {
     const a = this.agent(agentId, sessionId);
-    const nouveau = a.type === "?";
     a.type = m.agentType ?? a.type;
     a.description = m.description ?? a.description;
     a.fini = Boolean(m.finished);
-    if (nouveau && !a.fini)
-      this.evenement(
-        a.debut || Date.now(),
-        a.type,
-        `démarre : ${a.description}`,
-      );
-  }
-
-  usage(cle, porteur, modele, u, t) {
-    const avant = this.messages.get(cle);
-    const c = cout(modele, u);
-    const n = tokens(u);
-    const j = jour(t);
-    const total = this.jours.get(j) ?? { tokens: 0, cout: 0 };
-    if (avant) {
-      porteur.tokens -= avant.n;
-      porteur.cout -= avant.c;
-      total.tokens -= avant.n;
-      total.cout -= avant.c;
-    }
-    porteur.tokens += n;
-    porteur.cout += c;
-    total.tokens += n;
-    total.cout += c;
-    this.jours.set(j, total);
-    this.messages.set(cle, { n, c });
   }
 
   ligne(o, agentId = null) {
     if (!o?.sessionId || !o.timestamp) return;
     const t = Date.parse(o.timestamp);
+    for (const texte of textes(o)) {
+      const a = limiteAtteinte(texte, t);
+      if (a && !(this.atteinte?.t > t)) this.atteinte = a;
+    }
     const s = this.session(o.sessionId, o);
     const porteur = agentId ? this.agent(agentId, o.sessionId) : s;
     if (agentId && !porteur.debut) porteur.debut = t;
@@ -175,15 +129,10 @@ export class Suivi {
     const m = o.message;
     if (!m || typeof m !== "object") return;
 
-    if (o.type === "assistant" && m.usage) {
-      porteur.modele = m.model ?? porteur.modele;
-      this.usage(
-        `${o.sessionId}:${m.id ?? o.uuid}`,
-        porteur,
-        m.model,
-        m.usage,
-        t,
-      );
+    if (o.type === "assistant" && m.usage && m.model !== "<synthetic>") {
+      this.horaires.push(t);
+      if (this.horaires.length > 50000)
+        this.horaires = this.horaires.filter((h) => h > t - 36 * 3600e3);
     }
     if (typeof m.content === "string" && !agentId) {
       const cmd = m.content.match(COMMANDE);
@@ -192,26 +141,26 @@ export class Suivi {
     if (!Array.isArray(m.content)) return;
     for (const b of m.content) {
       if (b.type === "tool_use") {
-        porteur.activite = resumeOutil(b.name, b.input);
-        if (b.name === "Skill" && !agentId) {
-          s.skill = b.input?.skill ?? s.skill;
-          this.evenement(t, "CEO", `active /${s.skill}`);
-        } else if ((b.name === "Agent" || b.name === "Task") && !agentId) {
+        porteur.activite = phrase(b.name, b.input);
+        const qui = agentId
+          ? porteur.type
+          : s.skill
+            ? `/${s.skill.split(":").pop()}`
+            : "ceo";
+        if (b.name === "Skill" && !agentId) s.skill = b.input?.skill ?? s.skill;
+        if ((b.name === "Agent" || b.name === "Task") && !agentId) {
           const type = b.input?.subagent_type ?? "general-purpose";
+          const description = b.input?.description ?? "";
           this.lances.set(b.id, {
             type,
-            description: b.input?.description ?? "",
+            description,
             session: o.sessionId,
             t,
             fini: false,
           });
-          this.evenement(
-            t,
-            s.skill ? `/${s.skill}` : "CEO",
-            `lance ${type} : ${b.input?.description ?? ""}`,
-          );
+          this.evenement(t, qui, description, type);
         } else {
-          this.evenement(t, agentId ? porteur.type : "CEO", porteur.activite);
+          this.evenement(t, qui, porteur.activite);
         }
       } else if (b.type === "tool_result" && this.lances.has(b.tool_use_id)) {
         const l = this.lances.get(b.tool_use_id);
@@ -222,7 +171,7 @@ export class Suivi {
           a.description ||= l.description;
           if (r.status === "completed") {
             a.fini = true;
-            this.evenement(t, a.type, "a terminé");
+            this.evenement(t, a.type, "A terminé");
           }
         }
         l.fini = r?.status !== "async_launched";
@@ -245,13 +194,9 @@ export class Suivi {
     const sessions = [...this.sessions.values()]
       .map((s) => ({ ...s, actif: actifSi(s.derniere, 45e3) }))
       .sort((a, b) => b.derniere - a.derniere);
-    const aujourdhui = this.jours.get(jour(maintenant)) ?? {
-      tokens: 0,
-      cout: 0,
-    };
     return {
       maintenant,
-      aujourdhui,
+      limite: fenetreEstimee(this.horaires, this.atteinte, maintenant),
       sessions: sessions.slice(0, 12),
       agents: agents.sort((a, b) => b.derniere - a.derniere).slice(0, 200),
       enAttente: lancesEnAttente.map(({ type, description, t }) => ({
@@ -259,7 +204,7 @@ export class Suivi {
         description,
         t,
       })),
-      flux: this.flux.slice(0, 50),
+      flux: [...this.flux].sort((a, b) => b.t - a.t).slice(0, 50),
     };
   }
 }

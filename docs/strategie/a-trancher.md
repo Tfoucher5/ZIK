@@ -1,6 +1,6 @@
 # À trancher
 
-Les questions qui attendent Théo, affichées dans le QG (`node scripts/qg/serveur.mjs`, panneau « À trancher »). Une section par décision :
+Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À trancher », où Théo répond). Une section par décision :
 
 ```
 ## Titre

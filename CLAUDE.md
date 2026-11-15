@@ -80,6 +80,7 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 | `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Claude dès qu'un bug prod est établi, ou Théo        |
 | `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |
 | `/idees [axe]`             | agent `idees` : brainstorm produit classé par impact et effort, rangé dans `docs/idees/`  | Théo, ou Claude quand le plan est presque terminé    |
+| `/qg`                      | lance le QG s'il ne tourne pas, ouvre le navigateur, surveille les réponses de Théo       | Théo                                                 |
 
 Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (temps réel, salon, partie), `zik-supabase` (base, migrations, services), `zik-ui` (`.svelte`, CSS).
 
@@ -103,7 +104,7 @@ Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par l
 | Marketing & ventes (CMO) | `/marketing`  | `community`, `seo`, `contenu`, `prospection`                  |
 | Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                              |
 
-Circuit d'une tâche : `/produit` cadre (fiche et maquette, puis Théo valide si ça se voit), `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `node scripts/qg/serveur.mjs` (voir `scripts/qg/README.md`). Toute question qui attend Théo est ajoutée dans `docs/strategie/a-trancher.md` (visible dans le QG, panneau « À trancher ») et retirée dès qu'il a tranché (la décision va dans `decisions.md`).
+Circuit d'une tâche : `/produit` cadre (fiche et maquette, puis Théo valide si ça se voit), `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `/qg` (voir `scripts/qg/README.md`). Toute question qui attend Théo est ajoutée dans `docs/strategie/a-trancher.md` (visible dans le QG, bouton « À trancher », où il répond) et retirée dès qu'il a tranché (la décision va dans `decisions.md`). `docs/strategie/chantiers.md` (en cours, reste à faire, affiché dans le QG) est tenu à jour par la session CEO à chaque lancement, rendu ou fusion d'un chantier.
 
 Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
 
