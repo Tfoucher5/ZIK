@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 15/11/2026 — Intégration des pages refaites
+
+**Décision de Théo** : en-tête unique « bandeau TV » sur les pages refaites (plus de barre arrondie, trop classique : ZIK doit être plus original), avec Connexion et avatar (compte facultatif, profil par partie à venir). Il laisse à Claude les choix techniques : vidéos dans le dépôt après compression ; fond animé WebGL et page du bar 3D à une release suivante si pas assez testés, sans casser la cohérence entre pages. Stripe connecté dans Claude Code.
+
 ## 15/11/2026 — Maquettes validées
 
 **Décision de Théo** : maquettes validées pour le code : accueil v2 « Un immeuble, deux façons de jouer » (https://claude.ai/artifact/X83DboZRQimzda7M5cRiBy, retouche demandée : mettre en forme le bloc « Le blind test musical, gratuit et sans appli »), /pro et /pro/merci (https://claude.ai/artifact/WZhgyaL7hgzjBX7fMPpmvu, sans promesses de fonctions futures), /soiree (https://claude.ai/artifact/BuH2PVJ6Qe3Eni5H81AXZu).
