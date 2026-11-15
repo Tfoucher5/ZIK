@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 15/11/2026 — Vidéos promo : on arrête les montages animés
+
+**Décision de Théo** : la DA des vidéos montées (Remotion, captures animées, bar 3D) ne fonctionne pas : toutes pareilles, pas assez humaines, « ça se voit qu'on les a faites avec Claude ». V1 et V2 non postées. Nouvelle stratégie (Clara) : formats humains et variés filmés au téléphone (vraie soirée, chante-la faux, coulisses du dev solo, bar client, duel de générations, réponses aux commentaires), Claude écrit idées, accroches, scripts, sous-titres et monte léger. Questions de tournage dans À trancher.
+
 ## 15/11/2026 — Posts LinkedIn
 
 **Décision de Théo** : seul le post « cap des 1 000 inscrits » (ton naturel) est retenu, publié par Théo sur son compte. Pas de posts techniques pour l'instant.

@@ -33,20 +33,42 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : créer la chaîne YouTube maintenant · plus tard
 - **Recommandation** : créer la chaîne maintenant (mêmes vidéos que TikTok, zéro effort en plus)
 
-## Promo : V1 bar 3D à regarder
+## Promo : face caméra ?
 
-- **Chantier** : Marketing
+- **Chantier** : Marketing, nouvelle stratégie vidéo (Clara)
 - **Depuis** : 15/11
-- **Question** : Aperçu avec la musique (jamais à poster). Le fichier à poster est sans son, la musique « Tu danses pas tu bois pas » (La Traine) s'ajoute dans TikTok. La TV du bar 3D est une maquette dessinée (la pastille « Karim a trouvé · 3,6 s » n'existe pas telle quelle dans ZIK). On la poste ?
-- **Options** : poster · retoucher · ne pas poster
-- **Recommandation** : la poster après la V2, pour tester le format
-- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/zik-bar-pov-apercu.mp4
+- **Question** : Pour faire « humain », le format le plus fort est toi qui parles 20-30 s (coulisses du dev solo, réponses aux commentaires). Tu acceptes d'être face caméra ?
+- **Options** : oui · voix off seulement · tes mains et l'écran seulement
+- **Recommandation** : oui, même 1 vidéo sur 3
 
-## Promo : V2 tuto TV à regarder
+## Promo : potes et famille filmés ?
 
-- **Chantier** : Marketing
+- **Chantier** : Marketing, nouvelle stratégie vidéo (Clara)
 - **Depuis** : 15/11
-- **Question** : « Un blind test sur ta TV en 2 minutes », filmé sur une vraie soirée du staging. Aperçu avec la musique (jamais à poster) ; à poster sans son avec « Mistral » (Soso Maness) dans TikTok. On la poste ?
-- **Options** : poster · retoucher · ne pas poster
-- **Recommandation** : la poster en premier (vraie interface)
-- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/zik-tuto-tv-apercu.mp4
+- **Question** : Les formats « vraie soirée », « chante-la faux, ils devinent » et « duel de générations » ont besoin de vrais joueurs filmés (avec leur accord). Des potes ou ta famille partants ?
+- **Options** : oui · seulement de dos / sans visage · non
+- **Recommandation** : oui, avec un petit accord écrit
+
+## Promo : soirée de tournage n° 1
+
+- **Chantier** : Marketing, nouvelle stratégie vidéo (Clara)
+- **Depuis** : 15/11
+- **Question** : Le plus efficace : tu filmes 2 vraies soirées au téléphone (une chez toi ou des potes, une dans un bar client), ça donne 8 à 10 vidéos. Quelle date pour la première ?
+- **Options** : donne une date
+- **Recommandation** : avant le 29/11
+
+## Promo : un bar client partant ?
+
+- **Chantier** : Marketing, nouvelle stratégie vidéo (Clara)
+- **Depuis** : 15/11
+- **Question** : Une soirée filmée dans un vrai bar client (avant / pendant) est la meilleure preuve pour ZIK Pro. Un bar partant ?
+- **Options** : oui, lequel · pas pour l'instant
+- **Recommandation** : demander à un client mensuel
+
+## Promo : rythme et compte
+
+- **Chantier** : Marketing, nouvelle stratégie vidéo (Clara)
+- **Depuis** : 15/11
+- **Question** : Rythme tenable et compte : 2 vidéos par semaine, reprises telles quelles en Shorts ? Compte TikTok perso ou ZIK ? Lien en bio avec ?src=tiktok pour mesurer ?
+- **Options** : 2 par semaine · 1 par semaine ; compte ZIK · perso
+- **Recommandation** : 2 par semaine sur le compte ZIK, avec le lien mesuré
