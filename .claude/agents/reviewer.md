@@ -1,5 +1,7 @@
 ---
 name: reviewer
+model: fable
+effort: high
 description: Relecteur de ZIK. Relit le diff d'une branche contre le CLAUDE.md et rend un verdict « fusionnable » ou « bloqué ». Use proactively avant toute PR, tout merge ou toute release, et dès qu'on demande une relecture.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit

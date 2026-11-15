@@ -1,5 +1,6 @@
 ---
 name: redaction
+model: opus
 description: Rédacteur de ZIK (équipe Produit). Écrit et corrige les textes du site (boutons, messages d'erreur, pages, offres, nouveautés) en français clair et vivant. Lecture seule. Use quand un texte est flou, pour une nouvelle page, une entrée /nouveautes, ou dans /produit.
 tools: Read, Grep, Glob
 disallowedTools: Write, Edit, NotebookEdit

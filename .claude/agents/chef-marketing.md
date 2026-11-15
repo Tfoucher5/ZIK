@@ -1,5 +1,6 @@
 ---
 name: chef-marketing
+model: opus
 description: "Directeur marketing et ventes (CMO) de ZIK, au board. Pense acquisition : SEO, backlinks, réseaux, bouche-à-oreille, prospection des lieux. Lecture seule. Use dans /board ou pour un avis marketing sur une décision."
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
