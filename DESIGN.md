@@ -166,7 +166,19 @@ Tous en `container-type: inline-size`, tailles internes en `cqw` / `em` : le moc
 
 **Boucles dans les mockups** (frappe d'un pseudo, appui du doigt, chips qui se remplissent) : démarrent quand l'objet est visible (`IntersectionObserver`, seuil .35), s'arrêtent hors écran et quand l'onglet est caché.
 
-**Vidéo scrubbée** : H.264 MP4 (WebM VP9 en plus si dispo), GOP court (une image clé toutes les 5-10 images) sinon le seek saccade ; 16:9 et 9:16 selon l'orientation ; poster ; `muted playsinline` ; lissage `1 - exp(-dt*8)` et pas de nouveau seek tant que `seeked` n'est pas reçu ; si les métadonnées ne viennent pas en 4s, lecture en boucle.
+**Vidéo scrubbée** : H.264 MP4 (WebM VP9 en plus si dispo), GOP court (une image clé toutes les 5-10 images) sinon le seek saccade ; 16:9 et 9:16 selon l'orientation ; poster ; `muted playsinline` ; lissage `1 - exp(-dt*8)` et pas de nouveau seek tant que `seeked` n'est pas reçu ; si les métadonnées ne viennent pas en 4s, lecture en boucle. Composant `ui/ScrubVideo.svelte` (logique dans `ui/scrub.js`).
+
+Fichiers dans le dépôt sous `static/media/<page>/`, version dans le nom (`porte-portrait-v1.mp4`) : `server.js` les sert en cache immuable, un changement = un nouveau nom. Viser 3 Mo au plus en portrait mobile. Encodage (ffmpeg du PC : `ZIK-memes/promo/montage/node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe`) :
+
+```sh
+# vidéo : H.264, image clé toutes les 6 images, sans B-frames, sans son, faststart
+ffmpeg -i source.mov -an -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p \
+  -g 6 -keyint_min 6 -sc_threshold 0 -bf 0 -vf "scale=720:-2" -movflags +faststart porte-portrait-v1.mp4
+# poster : première image en WebP
+ffmpeg -i porte-portrait-v1.mp4 -frames:v 1 -c:v libwebp -quality 80 porte-portrait-v1.webp
+```
+
+Monter `-crf` (28, 30) si le fichier dépasse 3 Mo ; paysage en `scale=1280:-2`.
 
 **3D** : réservée aux pages vitrine (visite du bar). Vrai site : Threlte (Svelte) + modèles glTF compressés (Draco ou Meshopt, textures KTX2), chargés à la demande, jamais sur TV/régie/téléphone. Une image fixe remplace la 3D si WebGL manque.
 
