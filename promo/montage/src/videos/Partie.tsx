@@ -55,6 +55,20 @@ const total = (segs: Seg[]) => segs.reduce((n, s) => n + LEN(s), 0);
 export const PARTIE_LEN = total(SEGS);
 export const PARTIE_SON_LEN = total(SEGS_SON);
 
+// Version équilibrée : 3 manches lisibles (trouvée vite, raté, trouvée), seuls les temps morts coupés,
+// le son de l'extrait continue sous les écrans de réponse (muets dans le jeu)
+const SEGS_EQ: Seg[] = [
+  [3.3, 7.0, "manche 1 : facile 😌", ""],
+  [11.0, 13.0, "", "", 7.0],
+  [57.8, 63.4, "celle-là…", ""],
+  [85.0, 85.9, "", "", 63.4],
+  [87.2, 89.2, "Silver Pozzoli ?? qui ça", "", 64.3],
+  [267.0, 273.2, "la dernière, je la tiens", ""],
+  [273.6, 275.4, "", "", 281.0],
+  [275.4, 278.4, "score final : 7/10\nvous ? 👇", "", 282.8],
+];
+export const PARTIE_EQ_LEN = total(SEGS_EQ);
+
 const K = 0.7; // capture 975×2110 → 683×1477 : la barre de saisie reste au-dessus de la légende TikTok
 const bubble: React.CSSProperties = {
   background: "#fff",
@@ -120,21 +134,28 @@ const Shot: React.FC<{
       >
         {rec}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          top: 190,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-        }}
-      >
-        <span
-          style={{ ...bubble, fontSize: 40, background: "#000", color: "#fff" }}
+      {score && (
+        <div
+          style={{
+            position: "absolute",
+            top: 190,
+            left: 0,
+            right: 0,
+            textAlign: "center",
+          }}
         >
-          {score}
-        </span>
-      </div>
+          <span
+            style={{
+              ...bubble,
+              fontSize: 40,
+              background: "#000",
+              color: "#fff",
+            }}
+          >
+            {score}
+          </span>
+        </div>
+      )}
       {text && (
         <div
           style={{
@@ -179,6 +200,12 @@ export const Partie = montage(
 );
 export const PartieSon = montage(
   SEGS_SON,
+  "lot1-partie-son",
+  indexSon as unknown as RecIndex,
+  true,
+);
+export const PartieEq = montage(
+  SEGS_EQ,
   "lot1-partie-son",
   indexSon as unknown as RecIndex,
   true,

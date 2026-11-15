@@ -11,7 +11,14 @@ import { Quiz2000, QUIZ_2000_LEN } from "./videos/Quiz2000";
 import { TutoTv, TUTO_TV_LEN } from "./videos/TutoTv";
 import { TierList, TIER_LIST_LEN } from "./videos/TierList";
 import { Zikle, ZIKLE_LEN } from "./videos/Zikle";
-import { Partie, PARTIE_LEN, PartieSon, PARTIE_SON_LEN } from "./videos/Partie";
+import {
+  Partie,
+  PARTIE_LEN,
+  PartieEq,
+  PARTIE_EQ_LEN,
+  PartieSon,
+  PARTIE_SON_LEN,
+} from "./videos/Partie";
 import { FPS, H, W } from "./zik/theme";
 
 // Vidéos sans son (à poster) ; l'aperçu privé avec l'extrait se fait après coup avec scripts/apercu.mjs
@@ -30,6 +37,7 @@ const VIDEOS: [string, React.FC, number][] = [
   ["tuto-tv", TutoTv, TUTO_TV_LEN],
   ["lot1-partie", Partie, PARTIE_LEN],
   ["lot1-partie-son", PartieSon, PARTIE_SON_LEN],
+  ["lot1-partie-equilibre", PartieEq, PARTIE_EQ_LEN],
 ];
 
 export const RemotionRoot: React.FC = () => (
