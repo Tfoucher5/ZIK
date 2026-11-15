@@ -2,6 +2,14 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Retours sur le lot 1 promo
+
+**Décision de Théo** : quiz emojis abandonné (format jugé nul). Vidéo de vraie partie : trop lente, il faut le vrai son de la partie, 15-25 s sans moment plat. Carrousel « ces sons ont 30 ans » : bonne idée, à restyler avec plus de pâte ZIK. Une DA réseaux propre à ZIK est en cours (Nina).
+
+## 15/11/2026 — Promo sans visage
+
+**Décision de Théo** : pas de face caméra, pas de proches ni de clients filmés, pas d'outil payant. Compte ZIK sur TikTok. Moins de vidéos (avant : une tous les 2 jours) mais vraiment qualitatives et originales, qui changent d'une fois à l'autre. Vidéos d'écran seulement (ni mains ni voix). Lien en bio impossible (compte non entreprise). Les posts sont planifiés directement dans TikTok par Claude avec Claude in Chrome, chaque post validé par Théo avant (vidéo, légende, date).
+
 ## 15/11/2026 — Vidéos promo : on arrête les montages animés
 
 **Décision de Théo** : la DA des vidéos montées (Remotion, captures animées, bar 3D) ne fonctionne pas : toutes pareilles, pas assez humaines, « ça se voit qu'on les a faites avec Claude ». V1 et V2 non postées. Nouvelle stratégie (Clara) : formats humains et variés filmés au téléphone (vraie soirée, chante-la faux, coulisses du dev solo, bar client, duel de générations, réponses aux commentaires), Claude écrit idées, accroches, scripts, sous-titres et monte léger. Questions de tournage dans À trancher.
