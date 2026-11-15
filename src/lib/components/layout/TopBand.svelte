@@ -13,8 +13,10 @@
     ['/pro', 'ZIK Pro'],
   ];
 
-  let codeOpen = $state(false);
   let rub;
+
+  // band vit au-delà du bandeau : sans ça, le digicode se rouvrait au retour sur la page
+  $effect(() => () => (band.code = false));
   const courant = (href) => (page.url.pathname === href ? 'page' : undefined);
 </script>
 
@@ -24,7 +26,7 @@
     <nav class="liens" aria-label="Navigation principale">
       {#each LIENS as [href, txt] (href)}<a {href} aria-current={courant(href)}>{txt}</a>{/each}
     </nav>
-    <button class="slot" type="button" aria-label="J'ai un code : saisir les 6 caractères" onclick={() => (codeOpen = true)}>
+    <button class="slot" type="button" aria-label="J'ai un code : saisir les 6 caractères" onclick={() => (band.code = true)}>
       <span aria-hidden="true">Code</span>{#each [0, 1, 2, 3, 4, 5] as i (i)}<i></i>{/each}
     </button>
     {#if band.son}<SoundButton son={band.son} />{/if}
@@ -41,7 +43,7 @@
   {#each LIENS as [href, txt] (href)}<a {href} aria-current={courant(href)}>{txt}</a>{/each}
 </nav>
 
-<CodeDialog bind:open={codeOpen} />
+<CodeDialog bind:open={band.code} />
 
 <style>
   .top {

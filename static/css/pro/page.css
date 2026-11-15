@@ -50,8 +50,8 @@
     html:not(.rm) .pro .head h2 {
       mask-image: linear-gradient(
         180deg,
-        #000 var(--m),
-        transparent calc(var(--m) + 25%)
+        #000 var(--pro-m),
+        transparent calc(var(--pro-m) + 25%)
       );
       animation: pro-wipe linear both;
       animation-timeline: view();
@@ -59,17 +59,17 @@
     }
   }
 }
-@property --m {
+@property --pro-m {
   syntax: "<percentage>";
   inherits: false;
   initial-value: 100%;
 }
 @keyframes pro-wipe {
   from {
-    --m: -25%;
+    --pro-m: -25%;
   }
   to {
-    --m: 100%;
+    --pro-m: 100%;
   }
 }
 

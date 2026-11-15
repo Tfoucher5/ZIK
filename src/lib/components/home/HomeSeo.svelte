@@ -3,7 +3,7 @@
   import { siteJsonLd } from './seo.js';
   import { faqJsonLd } from '$lib/components/accueil/guide.js';
 
-  const TITLE = 'ZIK - Blind test en ligne ou en soirée, gratuit et sans appli';
+  const TITLE = 'ZIK : blind test en ligne ou en soirée, gratuit, sans appli';
   const DESC = 'Joue au blind test en ligne contre d\'autres joueurs, ou anime une soirée : la TV diffuse la musique, chacun répond sur son téléphone. Gratuit, sans appli.';
 </script>
 

@@ -127,7 +127,7 @@
   .plan.top {
     background:
       linear-gradient(180deg, #1e0b24, var(--surface) 55%) padding-box,
-      conic-gradient(from var(--ang), #ff00ff, #7b5cff, #2fb8ff, #ff00ff) border-box;
+      conic-gradient(from var(--pro-ang), #ff00ff, #7b5cff, #2fb8ff, #ff00ff) border-box;
     animation: ang 6s linear infinite;
     box-shadow: 0 30px 90px -40px rgba(255, 0, 255, 0.7);
   }
@@ -211,14 +211,14 @@
     animation-duration: 0.5s;
     animation-timing-function: var(--out);
   }
-  @property --ang {
+  @property --pro-ang {
     syntax: '<angle>';
     inherits: false;
     initial-value: 0deg;
   }
   @keyframes ang {
     to {
-      --ang: 360deg;
+      --pro-ang: 360deg;
     }
   }
   @media (min-width: 900px) {

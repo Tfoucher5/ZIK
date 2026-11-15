@@ -86,6 +86,25 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
       "aria-label",
       "Réponse masquée",
     );
+    if (m === 1) {
+      // La reconnexion renvoie le même titre : la réponse dévoilée le reste
+      await regie.context().setOffline(true);
+      await expect(regie.getByText("Connexion perdue.")).toBeVisible();
+      const ws = regie.waitForEvent("websocket", { timeout: 30_000 });
+      await regie.context().setOffline(false);
+      await (
+        await ws
+      ).waitForEvent("framereceived", {
+        predicate: (f) => String(f.payload).includes("salon_control_joined"),
+        timeout: 30_000,
+      });
+      // La trame est vue par Playwright avant que la page la traite
+      await regie.waitForTimeout(1000);
+      await expect(titreRegie).not.toHaveAttribute(
+        "aria-label",
+        "Réponse masquée",
+      );
+    }
     const reponse = await titreRegie.getAttribute("aria-label");
     const titre = reponse.slice(reponse.indexOf(" - ") + 3);
     await champ.fill(titre);

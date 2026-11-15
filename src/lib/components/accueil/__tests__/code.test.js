@@ -4,7 +4,7 @@ import { cleanCode, codeTarget, joinCode, CODE_INCOMPLET } from "../code.js";
 const api = (known) => (url) =>
   Promise.resolve({ ok: known.some((k) => url.startsWith(k)) });
 
-describe("champ « J'ai un code » de l'aiguillage", () => {
+describe("digicode « J'ai un code » du bandeau", () => {
   it("garde 6 caractères en majuscules, sans espace ni symbole", () => {
     expect(cleanCode(" ab-c 12 3z9")).toBe("ABC123");
   });

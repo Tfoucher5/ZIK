@@ -7,11 +7,12 @@
    *   poster: { portrait?: string, paysage: string },
    *   alt?: string,
    *   len?: number,
+   *   priority?: boolean,
    *   onprogress?: (p: number) => void,
    *   children?: import('svelte').Snippet,
    * }}
    */
-  let { sources, poster, alt = '', len = 6, onprogress, children } = $props();
+  let { sources, poster, alt = '', len = 6, priority = false, onprogress, children } = $props();
 
   let host;
   let video;
@@ -30,7 +31,13 @@
   <div class="sticky">
     <picture>
       {#if poster.portrait}<source media="(orientation: portrait)" srcset={poster.portrait} />{/if}
-      <img src={poster.paysage} {alt} decoding="async" />
+      <img
+        src={poster.paysage}
+        {alt}
+        decoding="async"
+        fetchpriority={priority ? 'high' : undefined}
+        loading={priority ? undefined : 'lazy'}
+      />
     </picture>
     <video bind:this={video} class:pret muted playsinline preload="none" aria-hidden="true" onloadeddata={() => (pret = true)}></video>
     {@render children?.()}
