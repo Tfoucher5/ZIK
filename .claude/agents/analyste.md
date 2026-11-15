@@ -23,6 +23,9 @@ Pas de nom, d'e-mail ni de donnée personnelle dans ton rendu : des comptes et d
 Semaine du JJ/MM au JJ/MM (heure de Paris)
 
 | Indicateur | Cette semaine | Semaine d'avant | Écart |
+| **Soirées réussies** (définition : `docs/strategie/vision.md`) | … |
+| **Organisateurs fidèles** (relancent sous 30 jours) | … |
+| **Clients payants** (Pass 24 h vendus, abonnements Pro actifs) | … |
 | Parties terminées à 2 joueurs ou plus | … |
 | Salons joués / joueurs moyens | … |
 | Visites (direct / Google / autres) | … |

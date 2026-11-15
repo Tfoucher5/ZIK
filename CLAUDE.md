@@ -7,6 +7,8 @@ Stack : **SvelteKit 5** (Svelte 5 runes), Vite, Socket.io, Supabase, Node.js, h�
 
 Le cœur du produit est **ZIK Soirée** (ex « mode salon »), utilisé en public par des clients **ZIK Pro** (bars, campings, entreprises, associations). Une panne en pleine soirée abîme l'image de nos clients devant leur public : chaque changement est traité avec ce niveau d'exigence, même si ça ralentit le développement.
 
+**Vision** (`docs/strategie/vision.md`, à lire avant toute proposition) : ZIK, c'est le blind test qui fait la soirée. Jusqu'en mai 2027, ZIK Soirée pour tous (groupes et pros) est le produit ; le jeu en ligne est maintenu sans nouveau chantier. Trois chiffres guident tout : soirées réussies, organisateurs fidèles, clients payants (en cas de conflit, la soirée réussie d'abord). Promesse : fiable, facile, fun côté joueurs, pro côté organisateur, jugée avec la grille de la vision. **Porte concept** : ce qui se voit passe par une fiche et une maquette validées par Théo avant le code.
+
 Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/2026-11-02-a-valider.md` (tâches par phase, à cocher au fil de l'eau).
 
 ## Règles générales
@@ -92,12 +94,12 @@ Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par l
 | CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi, `/etat`    |
 | Argent (CFO)             | `/argent`     | `analyste`, `offres`                                       |
 | Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support` ; `suite` chaque jour  |
-| Produit & design (CPO)   | `/produit`    | `idees`, `ux`, `ui`, `redaction`                           |
+| Produit & design (CPO)   | `/produit`    | `idees`, `ux`, `ui`, `redaction`, `animation`              |
 | Technique (CTO)          | `/tech`       | `architecte`, `dev`, `test-writer`, `reviewer`, `incident` |
 | Marketing & ventes (CMO) | `/marketing`  | `seo`, `contenu`, `prospection`                            |
 | Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                           |
 
-Circuit d'une tâche : `/produit` cadre, `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `node scripts/qg/serveur.mjs` (voir `scripts/qg/README.md`).
+Circuit d'une tâche : `/produit` cadre (fiche et maquette, puis Théo valide si ça se voit), `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `node scripts/qg/serveur.mjs` (voir `scripts/qg/README.md`).
 
 Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
 
