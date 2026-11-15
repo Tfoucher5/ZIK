@@ -38,7 +38,7 @@ export const FONTS =
 // Filtres SVG : bords d'encre irréguliers (toner, Posca)
 export const DEFS = `<svg width="0" height="0" style="position:absolute"><defs>
 <filter id="toner" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
-<filter id="posca" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="9" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="3" result="d"/><feTurbulence type="fractalNoise" baseFrequency=".5 .05" numOctaves="2" seed="5" result="g"/><feColorMatrix in="g" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="m"/><feComposite in="d" in2="m" operator="in"/></filter>
+<filter id="posca" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="9" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="3" result="d"/><feTurbulence type="fractalNoise" baseFrequency=".5 .05" numOctaves="2" seed="5" result="g"/><feColorMatrix in="g" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.1 1.55" result="m"/><feComposite in="d" in2="m" operator="in"/></filter>
 </defs></svg>`;
 
 export const CSS = `
@@ -59,7 +59,7 @@ body{background:${NOIR};position:relative;overflow:hidden;font-family:'JetBrains
 /* titre imprimé : Barlow Condensed comme sur le site, passé à la photocopieuse */
 .titre{font-family:'Barlow Condensed';font-weight:900;text-transform:uppercase;line-height:.84;letter-spacing:-.01em;color:#111;white-space:nowrap;filter:url(#toner)}
 .mono{font-family:'JetBrains Mono';font-weight:700;text-transform:uppercase;letter-spacing:.14em;white-space:nowrap}
-.posca{font-family:'Covered By Your Grace';color:#fff;line-height:.98;-webkit-text-stroke:.028em #fff;filter:url(#posca)}
+.posca{font-family:'Covered By Your Grace';color:#fff;line-height:.98;-webkit-text-stroke:.022em #fff;paint-order:stroke fill;filter:url(#posca)}
 .point{display:inline-block;border-radius:50%;background:${ROSE};box-shadow:1px 2px 2px rgba(0,0,0,.6)}
 .case{display:inline-grid;place-items:center;border:4px solid ${BLANC};border-radius:7px;font-family:'JetBrains Mono';font-weight:700;color:${BLANC};filter:url(#toner)}
 .filet{position:absolute;background:${BLANC};opacity:.32;filter:url(#toner)}
@@ -73,7 +73,11 @@ export const colle = (o, inner) =>
 // Bande de titre : une ligne de Barlow Condensed sur papier blanc ou magenta
 export const bande = (o, texte, taille) =>
   colle(
-    { a: 2.2, ...o, style: `padding:${taille * 0.1}px ${taille * 0.16}px ${taille * 0.07}px` },
+    {
+      a: 2.2,
+      ...o,
+      style: `padding:${taille * 0.1}px ${taille * 0.16}px ${taille * 0.07}px`,
+    },
     `<div class="titre" style="font-size:${taille}px">${texte}</div>`,
   );
 
@@ -82,7 +86,7 @@ export const scotch = (x, y, w, rot) =>
 
 // Gommette magenta = le point du logo, en grand
 export const pastille = (o, l1, l2) =>
-  `<div class="colle" ${o.id ? `id="${o.id}"` : ""} style="left:${o.x}px;top:${o.y}px;width:${o.d}px;height:${o.d}px;transform:rotate(${o.rot || 0}deg);z-index:6"><div class="p mag" style="border-radius:50%;display:grid;place-content:center;text-align:center"><div class="titre" style="font-size:${o.d * 0.5}px">${l1}</div><div class="mono" style="font-size:${o.d * 0.13}px;margin-top:${o.d * 0.03}px">${l2}</div></div></div>`;
+  `<div class="colle" ${o.id ? `id="${o.id}"` : ""} style="left:${o.x}px;top:${o.y}px;width:${o.d}px;height:${o.d}px;transform:rotate(${o.rot || 0}deg);z-index:6"><div class="p mag" style="border-radius:50%;display:grid;place-content:center;text-align:center"><div class="titre" style="font-size:${o.d * 0.5}px">${l1}</div><div class="mono" style="font-size:${o.d * 0.1}px;margin-top:${o.d * 0.03}px">${l2}</div></div></div>`;
 
 // Cases de code, comme le « CODE ▢▢▢▢ » du bandeau TV
 export const cases = (txt, t) =>
