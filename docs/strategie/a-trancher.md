@@ -33,3 +33,30 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : planifier · retoucher · abandonner le format
 - **Recommandation** : la regarder une fois ; si elle ne te donne pas envie, on abandonne ce format
 - **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1/partie-equilibre.mp4
+
+## Pro en pleine soirée : Soirée 24 h en un clic depuis la régie ?
+
+- **Chantier** : Passage Pro en pleine soirée (fiche de l'architecte)
+- **Depuis** : 16/11
+- **Question** : Quand un salon gratuit est plein (13e joueur), la régie propose seulement la Soirée 24 h en un clic, les abonnements restant sur /pro. Le salon en cours passe Pro tout seul après paiement, sans recréer ni rescanner.
+- **Options** : oui · proposer aussi les abonnements
+- **Recommandation** : oui
+- **Lien** : docs/specs/2026-11-16-pro-en-pleine-soiree.md
+
+## Pro en pleine soirée : compte obligatoire pour payer ?
+
+- **Chantier** : Passage Pro en pleine soirée (fiche de l'architecte)
+- **Depuis** : 16/11
+- **Question** : On garde le compte obligatoire pour payer (il sert à rattacher le salon et à retrouver l'abonnement), ou on autorise le paiement sans compte ?
+- **Options** : compte obligatoire · paiement sans compte
+- **Recommandation** : compte obligatoire
+- **Lien** : docs/specs/2026-11-16-pro-en-pleine-soiree.md
+
+## Pro en pleine soirée : file d'attente des refusés ?
+
+- **Chantier** : Passage Pro en pleine soirée (fiche de l'architecte)
+- **Depuis** : 16/11
+- **Question** : Les joueurs refusés au-delà de 12 restent en attente sur leur téléphone et entrent tout seuls dès que ZIK Pro est actif ?
+- **Options** : oui · non, ils rescannent
+- **Recommandation** : oui
+- **Lien** : docs/specs/2026-11-16-pro-en-pleine-soiree.md
