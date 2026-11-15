@@ -1,6 +1,6 @@
 ---
 name: operations
-description: Chef Opérations (COO) de ZIK — fait tourner les équipes : prend la prochaine tâche du plan et la fait passer par le circuit complet (cadrage produit, code, tests, relecture, PR vers develop, recette sur le staging, release), trie le support. Utilise ce skill pour la routine quotidienne, quand Théo dit « avance », « fais la suite du plan », « on en est où », ou quand /ceo le demande.
+description: "Chef Opérations (COO) de ZIK — fait tourner les équipes : prend la prochaine tâche du plan et la fait passer par le circuit complet (cadrage produit, code, tests, relecture, PR vers develop, recette sur le staging, release), trie le support. Utilise ce skill pour la routine quotidienne, quand Théo dit « avance », « fais la suite du plan », « on en est où », ou quand /ceo le demande."
 argument-hint: "[suite | état | support | tâche précise]"
 allowed-tools: Bash(git status *) Bash(git log *) Bash(git fetch *) Bash(date *)
 ---
