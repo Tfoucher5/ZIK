@@ -14,6 +14,7 @@ import { homedir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Suivi, lireOrganigramme, hoteAutorise } from "./journaux.mjs";
+import { lireATrancher } from "./trancher.mjs";
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -142,6 +143,17 @@ createServer((req, res) => {
   } else if (url === "/organigramme") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify(organigramme()));
+  } else if (url === "/a-trancher") {
+    const md = join(ici, "..", "..", "docs", "strategie", "a-trancher.md");
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "cache-control": "no-store",
+    });
+    res.end(
+      JSON.stringify(
+        existsSync(md) ? lireATrancher(readFileSync(md, "utf8")) : [],
+      ),
+    );
   } else if (url === "/flux") {
     res.writeHead(200, {
       "content-type": "text/event-stream",

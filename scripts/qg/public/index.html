@@ -6,6 +6,7 @@
     <title>QG ZIK</title>
     <link rel="stylesheet" href="/qg.css" />
     <link rel="stylesheet" href="/reglages.css" />
+    <link rel="stylesheet" href="/trancher.css" />
     <script type="importmap">
       {
         "imports": {
@@ -73,8 +74,13 @@
       </h2>
       <ul id="sessions"></ul>
     </aside>
+    <details id="trancher" class="trancher" open>
+      <summary>À trancher <span class="badge">–</span></summary>
+      <div class="liste"></div>
+    </details>
     <div id="board" class="board" hidden>Board en séance</div>
     <div id="fiche" class="fiche" hidden></div>
     <script type="module" src="/qg.js"></script>
+    <script type="module" src="/trancher.js"></script>
   </body>
 </html>

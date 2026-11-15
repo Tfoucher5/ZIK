@@ -1,0 +1,98 @@
+/* Panneau « À trancher » : toujours visible, même panneaux masqués. */
+.trancher {
+  --alerte: #ffb347;
+  position: fixed;
+  top: 140px;
+  left: 20px;
+  z-index: 3;
+  width: 420px;
+  max-height: calc(100vh - 140px - 34vh - 32px);
+  overflow: auto;
+  padding: 12px 14px;
+  background: var(--verre);
+  border: 1px solid var(--alerte);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  font-size: 14px;
+}
+.trancher.vide {
+  border-color: var(--bord);
+}
+.trancher > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--alerte);
+}
+.trancher.vide > summary {
+  color: var(--doux);
+}
+.trancher .badge {
+  display: inline-block;
+  min-width: 24px;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--alerte);
+  color: #0a0d14;
+  text-align: center;
+  letter-spacing: 0;
+}
+.trancher.vide .badge {
+  background: var(--bord);
+  color: var(--texte);
+}
+.trancher .liste {
+  margin-top: 8px;
+}
+.trancher .liste p {
+  margin: 4px 0;
+  color: var(--doux);
+}
+.trancher .liste details {
+  padding: 8px 0;
+  border-top: 1px solid var(--bord);
+}
+.trancher .liste summary {
+  cursor: pointer;
+}
+.trancher .liste summary small {
+  display: block;
+  color: var(--doux);
+  font-size: 12px;
+}
+.trancher .statut {
+  margin-left: 8px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid var(--doux);
+  color: var(--doux);
+  font-size: 11px;
+}
+.trancher dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+.trancher dt {
+  color: var(--doux);
+}
+.trancher dd {
+  margin: 0;
+}
+.trancher a {
+  color: var(--vif);
+  word-break: break-all;
+}
+@media (max-width: 900px) {
+  .trancher {
+    top: 180px;
+    right: 16px;
+    width: auto;
+    max-height: 30vh;
+  }
+}
