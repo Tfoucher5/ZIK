@@ -44,6 +44,7 @@ describe("instantané d'un salon", () => {
     salon.game._resolving = { gen: 1 };
     salon._journal = [{ at: 1, text: "Hôte déconnecté" }];
     salon._tvVolume = 40;
+    salon._reclaims = { Ana: "socket-1" };
     salon._ctrlLeaveTimer = setTimeout(() => {}, 0);
     const data = serializeSalon(salon);
     clearTimeout(salon._ctrlLeaveTimer);
@@ -56,6 +57,8 @@ describe("instantané d'un salon", () => {
     expect(data._coalesce).toBeUndefined();
     // Volume de la TV et départ de régie en attente : recalculés à l'arrivée
     expect(data._tvVolume).toBeUndefined();
+    // Ids de socket : sans valeur après un redémarrage
+    expect(data._reclaims).toBeUndefined();
     expect(data._ctrlLeaveTimer).toBeUndefined();
     expect(data.game.interval).toBeUndefined();
     expect(data.game.videos).toBeUndefined();

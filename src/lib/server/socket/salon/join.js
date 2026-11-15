@@ -20,7 +20,7 @@ import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
-import { pendingReclaims } from "./reclaim.js";
+import { dropReclaim, pendingReclaims } from "./reclaim.js";
 import { scheduleCleanup, timerClock } from "./timers.js";
 import { key, optional, safe, str } from "../safe.js";
 
@@ -221,6 +221,8 @@ export function registerJoin(socket, io) {
             message: "Ta place a été reprise sur un autre appareil.",
           });
         }
+        // Revenu avec son jeton : sa demande à l'hôte n'a plus lieu d'être
+        dropReclaim(salon, username, io);
         // Cancel pending removal timer
         clearTimeout(existing._dcTimer);
         existing._dcTimer = null;

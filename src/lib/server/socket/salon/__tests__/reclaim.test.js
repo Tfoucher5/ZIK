@@ -97,21 +97,60 @@ describe("reprendre sa place sans son jeton", () => {
     ).toEqual({ usernames: ["Ana"] });
 
     r.handlers.salon_reclaim_answer({ username: "Ana", accept: true });
-    expect(dernier(neuf)).toEqual({
-      event: "salon_reclaim_ok",
-      payload: { token },
-    });
+    expect(dernier(neuf).event).toBe("salon_reclaim_ok");
+    const nouveau = dernier(neuf).payload.token;
+    // Nouveau jeton : l'ancien appareil ne peut plus reprendre la place
+    expect(nouveau).not.toBe(token);
+    expect(salonRooms[CODE]._reclaims).toEqual({});
 
     await neuf.handlers.salon_join_player({
       code: CODE,
       username: "Ana",
-      token,
+      token: nouveau,
     });
     expect(salonRooms[CODE].players.Ana).toMatchObject({
       socketId: "t2",
       score: 300,
     });
     expect(ana.recu.at(-1).event).toBe("salon_closed");
+    const ancien = await telephone("t3", "Ana", token);
+    expect(dernier(ancien).event).toBe("salon_name_taken");
+  });
+
+  it("deux demandes pour le même pseudo : la seconde est refusée, le jeton va à la première", async () => {
+    await telephone("t1", "Ana");
+    const r = regie();
+    const a = await telephone("t2", "Ana");
+    const b = await telephone("t3", "Ana");
+    a.handlers.salon_reclaim_request({ code: CODE, username: "Ana" });
+    b.handlers.salon_reclaim_request({ code: CODE, username: "Ana" });
+    expect(dernier(b).event).toBe("salon_error");
+    r.handlers.salon_reclaim_answer({ username: "Ana", accept: true });
+    expect(dernier(a).event).toBe("salon_reclaim_ok");
+    expect(b.recu.some((e) => e.event === "salon_reclaim_ok")).toBe(false);
+  });
+
+  it("téléphone parti pendant sa demande : la régie n'affiche plus la ligne", async () => {
+    await telephone("t1", "Ana");
+    regie();
+    const neuf = await telephone("t2", "Ana");
+    neuf.handlers.salon_reclaim_request({ code: CODE, username: "Ana" });
+    neuf.deconnecte();
+    expect(salonRooms[CODE]._reclaims).toEqual({});
+    expect(
+      h.emissions.filter((e) => e.event === "salon_reclaims").at(-1).payload,
+    ).toEqual({ usernames: [] });
+  });
+
+  it("joueur revenu de lui-même avec son jeton : sa demande disparaît", async () => {
+    const ana = await telephone("t1", "Ana");
+    const token = ana.recu.find((e) => e.event === "salon_joined").payload
+      .token;
+    regie();
+    const neuf = await telephone("t2", "Ana");
+    neuf.handlers.salon_reclaim_request({ code: CODE, username: "Ana" });
+    await telephone("t3", "Ana", token);
+    expect(salonRooms[CODE]._reclaims).toEqual({});
   });
 
   it("l'hôte refuse : message clair, pas de jeton", async () => {
@@ -135,7 +174,9 @@ describe("reprendre sa place sans son jeton", () => {
   it("même compte ZIK : la place est reprise sans demander à l'hôte", async () => {
     auth.user = { id: "u1" };
     await telephone("t1", "Ana", null, "jwt");
+    const vieux = await telephone("t1b", "Ana", null, "jwt");
     const neuf = await telephone("t2", "Ana", null, "jwt");
+    expect(vieux.recu.at(-1).event).toBe("salon_closed");
     expect(neuf.recu.some((e) => e.event === "salon_joined")).toBe(true);
     expect(salonRooms[CODE].players.Ana.socketId).toBe("t2");
   });

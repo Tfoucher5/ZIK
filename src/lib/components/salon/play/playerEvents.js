@@ -11,8 +11,10 @@ export function listenPlayer(p, socket, c, u) {
     else chrono.stop();
   });
   socket.on("salon_server_restart", () => (p.restarting = true));
+  // Aussi après une coupure pendant une demande : on la refait d'un clic
   socket.on("salon_name_taken", ({ username }) => {
     p.joining = false;
+    p.reclaimPending = false;
     p.nameTaken = username;
   });
   socket.on("salon_reclaim_ok", ({ token }) => {

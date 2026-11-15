@@ -24,6 +24,8 @@ export class SalonPlayer {
   reclaimPending = $state(false);
   // Jeton du joueur, gardé en mémoire : le stockage peut être bloqué (navigation privée)
   token = null;
+  // Code de la soirée visée par la dernière tentative de jonction
+  joinCode = "";
 
   // Partie
   joined = $state(false);
@@ -187,6 +189,7 @@ export class SalonPlayer {
     this.reclaimPending = false;
     // Jeton d'une autre soirée ou d'un autre pseudo : il ne vaut rien ici
     if (c !== this.code || u !== this.username) this.token = null;
+    this.joinCode = c;
     this.socket?.disconnect();
     const socket = io({
       transports: ["websocket", "polling"],
@@ -221,7 +224,7 @@ export class SalonPlayer {
   requestReclaim = () => {
     this.reclaimPending = true;
     this.socket?.emit("salon_reclaim_request", {
-      code: this.codeInput.trim().toUpperCase(),
+      code: this.joinCode,
       username: this.nameTaken,
     });
   };
