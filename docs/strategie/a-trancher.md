@@ -86,3 +86,12 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : planifier (avec le son du jeu) · retoucher · abandonner
 - **Recommandation** : la regarder, puis ajouter le son du jeu si elle te plaît
 - **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match.mp4
+
+## Maquette création et avant-partie à valider
+
+- **Chantier** : Création + avant-partie (Nina, DA)
+- **Depuis** : 16/11
+- **Question** : Concept « la balance » (comme avant un concert : on règle le son, puis on ouvre les portes). Création en 4 lignes + « Plus de réglages », écran privé « Prépare la TV » (QR de la régie, plein écran et son, test du son), lobby TV lisible de loin avec arrivées et décompte « Montez le son. », téléphone en un champ puis « Choisis ton équipe » plein écran, régie avec checklist et un seul gros bouton. Un onglet « À valider » liste les textes changés. Valides-tu la maquette ?
+- **Options** : valider · retoucher · refuser
+- **Recommandation** : la regarder écran par écran ; points ouverts : créer une soirée depuis un téléphone (l'onglet devient la TV), bloc SEO de /salon à replacer, « Prépare la TV » au tutoiement, « tapez le code sur zik-music.fr » au lieu de l'adresse /salon/play
+- **Lien** : https://claude.ai/artifact/8kDW3iEd9fTamoxy6A4Fn2
