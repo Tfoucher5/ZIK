@@ -5,8 +5,6 @@ import {
   FRISE,
   OFFRES,
   OFFRES_NOTE,
-  PASS,
-  PRIX_SOIREE,
   soireeJsonLd,
 } from "../soireeContent.js";
 import { CARTONS, PINS } from "../soireeBeats.js";
@@ -14,6 +12,7 @@ import {
   FREE_MAX_PLAYERS,
   FREE_MAX_TEAMS,
   PLANS,
+  PRIX_SOIREE,
   TESTED_LABEL,
 } from "../../../data/proPlans.js";
 import {
@@ -38,11 +37,17 @@ describe("vitrine /soiree : textes", () => {
     );
   });
 
-  it("offres : nom, prix et période viennent de proPlans, badges sans classement inventé", () => {
+  it("offres : nom, prix, période, badge et bouton viennent de proPlans", () => {
     for (const o of OFFRES.filter((x) => x.id !== "free")) {
       const p = PLANS.find((x) => x.id === o.id);
-      expect([o.price, o.period]).toEqual([p.price, p.period]);
-      expect(o.name).toBe(o.id === "night" ? PASS : p.name);
+      expect([o.name, o.price, o.period, o.badge, o.cta, o.top]).toEqual([
+        p.name,
+        p.price,
+        p.period,
+        p.badge,
+        p.cta,
+        !!p.featured,
+      ]);
       expect(o.href).toBe("/pro#tarifs");
     }
     expect(OFFRES.map((o) => o.badge)).not.toContain("Le plus choisi");
@@ -53,17 +58,20 @@ describe("vitrine /soiree : textes", () => {
     expect(gratuit.href).toBe("/salon");
     expect(OFFRES_NOTE).toContain(TESTED_LABEL);
     expect(FAQ.at(-1).a).toContain(`${PRIX_SOIREE} avec la Soirée 24 h`);
-    expect(PASS).toBe("Soirée 24 h");
+    expect(OFFRES.find((o) => o.id === "yearly").period).toBe(
+      PLANS.find((p) => p.id === "yearly").period,
+    );
   });
 
   it("les chiffres suivent les réglages réels du salon", () => {
     const span = (a) => `${a[0]} à ${a.at(-1)}`;
+    // 0 = pas d'entracte : on annonce la plage des vrais entractes
+    const pauses = SALON_INTERMISSIONS.filter((m) => m > 0);
+    expect(span(pauses)).toBe("5 à 30");
     expect(FRISE[2].p).toContain(`${span(SALON_ROUNDS)} manches`);
-    expect(FRISE[5].b).toBe(`${span(SALON_INTERMISSIONS)} min`);
+    expect(FRISE[5].b).toBe(`${span(pauses)} min`);
     expect(textes("manche")).toContain(span(SALON_DURATIONS));
-    expect(textes("enchainer")).toContain(
-      `${span(SALON_INTERMISSIONS)} minutes`,
-    );
+    expect(textes("enchainer")).toContain(`${span(pauses)} minutes`);
     expect(textes("rejoindre")).toContain(`jusqu'à ${SALON_TEAMS.at(-1)}`);
     expect(PINS.speciales.lede).toContain(
       `${SPECIAL_INTRO_MS / 1000} secondes`,
@@ -84,9 +92,20 @@ describe("vitrine /soiree : textes", () => {
     expect(pro("reponses", "Buzzer")).toBe(true);
     expect(pro("enchainer", "classement de soirée")).toBe(true);
     expect(pro("regie", "Volume")).toBe(true);
+    // Pause et manche suivante sont gratuites ; révéler et terminer sont Pro (control.js)
+    const regie = PINS.regie.beats.find((b) => b.t.includes("Pause"));
+    expect(regie.t).toMatch(/Révéler ou terminer à tout moment avec$/);
+    expect(regie.pro).toBe(true);
+    const legende = CAPTIONS.find((c) => c.label === "La régie");
+    expect(legende.text).toMatch(/Révéler et terminer à tout moment avec$/);
+    expect(legende.pro).toBe(true);
+    expect(CAPTIONS.filter((c) => c.pro)).toEqual([legende]);
     expect(PINS.podium.pro).toBe(true);
     expect(PINS.speciales.pro).toBe(true);
     expect(FRISE.find((f) => f.t === "Podium final").pro).toBe(true);
+    // La story se partage en fin de partie (gratuit), pas au podium de soirée
+    expect(textes("enchainer")).toContain("podium en story");
+    expect(textes("podium")).not.toContain("story");
   });
 
   it("les légendes de la vidéo se suivent sans se chevaucher", () => {

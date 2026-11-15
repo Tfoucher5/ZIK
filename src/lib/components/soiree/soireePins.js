@@ -74,9 +74,22 @@ export async function mountPins(reg) {
       }
     },
   );
+  // Les espaces d'épinglage allongent la page : positions recalculées tout de suite
+  ScrollTrigger.refresh();
   reg.live = true;
   return () => {
     reg.live = false;
     mm.revert();
   };
+}
+
+/**
+ * Remet la page à sa place une fois les espaces d'épinglage créés : la position
+ * d'un retour arrière (y), sinon l'ancre de l'adresse. Sans eux, la page plus
+ * courte a ramené le scroll en haut.
+ */
+export function replacer(y, hash) {
+  if (y != null) return scrollTo({ top: y, behavior: "instant" });
+  const id = hash ? decodeURIComponent(hash.slice(1)) : "";
+  document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
 }

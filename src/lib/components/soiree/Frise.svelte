@@ -76,6 +76,10 @@
   .fz-rail i { position: absolute; inset: 0; background: linear-gradient(var(--violet), var(--accent)); transform-origin: top; }
   :global(html.rm) .fz li { opacity: 1; }
   :global(html.rm) .fz-rail i { transform: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .fz li { opacity: 1; }
+    .fz-rail i { transform: none !important; }
+  }
   @media (min-width: 900px) {
     .fz-in { min-height: 100svh; display: grid; align-content: center; padding-block: 110px 60px; }
     .fz { padding: 34px 0 0; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 18px; }

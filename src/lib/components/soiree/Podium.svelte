@@ -22,13 +22,13 @@
   import { getContext } from 'svelte';
   import Pin from '$lib/components/soiree/Pin.svelte';
   import { PINS } from '$lib/components/soiree/soireeBeats.js';
-  import { confetti } from '$lib/components/soiree/confetti.js';
+  import { launchConfetti } from '$lib/components/game/confetti.js';
 
   const RESTE = [['Hugo', 66], ['Inès', 58], ['Sarah', 51], ['Malik', 47], ['Tom', 40], ['Nina', 33], ['Yanis', 29]];
   const pins = getContext('soiree-pins');
 
   let p = $state(1);
-  let canvas;
+  let box;
   const s = $derived(render(p));
 
   const gagnant = $derived(s.gagnant);
@@ -36,12 +36,12 @@
   $effect(() => {
     const boom = gagnant && !avant && pins?.live;
     avant = gagnant;
-    if (boom) return confetti(canvas);
+    if (boom) launchConfetti(110, box);
   });
 </script>
 
 <Pin id="podium" len={1.7} {...PINS.podium} beat={s.beat} onprogress={(v) => (p = v)}>
-  <div class="dev duo" aria-hidden="true">
+  <div class="dev duo" aria-hidden="true" bind:this={box}>
     <div class="tv2">
       <div class="scr one fin">
         <div>
@@ -63,29 +63,15 @@
         </ol>
       </div>
     </div>
+    <!-- Téléphone au podium de soirée (PlayEvening) : regarder la TV, et sa place -->
     <div class="ph">
-      <div class="phs">
-        <div class="phl">
-          <div class="lay" class:on={!s.gagnant}>
-            <p class="k">Fin de la soirée · 3 parties</p>
-            <div class="big">Regarde<br />la TV</div>
-            <p class="hint">Le podium de la soirée s'affiche.</p>
-            <div class="story attente"><span class="k">ZIK Soirée</span><span class="dots3"><i></i><i></i><i></i></span><div class="sb"><i></i><i></i><i></i></div></div>
-          </div>
-          <div class="lay" class:on={s.gagnant}>
-            <p class="k">Fin de la soirée</p>
-            <div class="big">Tu gagnes !</div>
-            <div class="story">
-              <span class="k">ZIK Soirée</span>
-              <div><div class="sn">Léa</div><span class="k blanc">à la 1re place</span><span class="k">93 pts</span></div>
-              <div class="sb"><i></i><i></i><i></i></div>
-            </div>
-            <div class="pbtn">Partager</div>
-          </div>
-        </div>
+      <div class="phs fin-ph">
+        <p class="k">Fin de la soirée · 3 parties</p>
+        <div class="big">Regarde la TV&nbsp;!</div>
+        <div class="place">1<sup>re</sup></div>
+        <p class="hint">Tu termines à la 1re place de la soirée.</p>
       </div>
     </div>
-    <canvas class="conf" bind:this={canvas}></canvas>
   </div>
 </Pin>
 
@@ -116,15 +102,8 @@
   .fin-r { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em 0.6em; font-size: 0.78em; color: var(--muted); opacity: 0; transition: opacity 0.4s; }
   .fin-r.on { opacity: 1; }
   .fin-r b { color: var(--text); font-weight: 600; }
-  .conf { position: absolute; inset: -10% -6%; width: 112%; height: 120%; pointer-events: none; z-index: 4; }
-  .story { align-self: center; width: 74%; aspect-ratio: 9 / 16; border-radius: 0.5em; padding: 8% 6%; display: grid; align-content: space-between; justify-items: center; text-align: center; background: linear-gradient(160deg, #3a0d45, #0b0711 70%); border: 1px solid rgba(255, 255, 255, 0.18); font-size: 0.82em; }
-  .attente { opacity: 0.35; }
-  .story > div { display: grid; justify-items: center; }
-  .blanc { color: #fff; }
-  .sn { font-family: var(--titre); font-weight: 900; font-size: 2.2em; text-transform: uppercase; line-height: 0.9; color: var(--gold); }
-  .sb { display: flex; gap: 6%; align-items: end; width: 80%; height: 3.6em; }
-  .sb i { flex: 1; border-radius: 0.15em 0.15em 0 0; }
-  .sb i:nth-child(1) { height: 70%; background: #c9c9d6; }
-  .sb i:nth-child(2) { height: 100%; background: var(--gold); }
-  .sb i:nth-child(3) { height: 52%; background: var(--bronze); }
+  .phs.fin-ph { justify-content: center; text-align: center; background: radial-gradient(ellipse 90% 50% at 50% 100%, rgb(var(--accent-rgb) / 0.2), transparent 70%), #050506; }
+  .place { font-family: var(--titre); font-weight: 900; font-size: 4.4em; line-height: 1; color: var(--gold); text-shadow: 0 0 0.4em color-mix(in srgb, var(--gold) 50%, transparent); }
+  .place sup { font-size: 0.35em; }
+  .fin-ph .big { font-size: 1.6em; }
 </style>

@@ -5,6 +5,7 @@ import {
   FREE_MAX_PLAYERS,
   FREE_MAX_TEAMS,
   PLANS,
+  PRIX_SOIREE,
   TESTED_LABEL,
 } from "../../data/proPlans.js";
 import { SALON_INTERMISSIONS, SALON_ROUNDS } from "../../data/salonOptions.js";
@@ -12,11 +13,12 @@ import { SALON_INTERMISSIONS, SALON_ROUNDS } from "../../data/salonOptions.js";
 const SITE = "https://www.zik-music.fr";
 const first = (a) => a[0];
 const last = (a) => a[a.length - 1];
-const plan = (id) => PLANS.find((p) => p.id === id);
+// 0 = pas d'entracte : la plage proposée commence au premier choix non nul
+export const PAUSES = SALON_INTERMISSIONS.filter(Boolean);
 
-export const PRIX_SOIREE = plan("night").price;
 export const CREER = "/salon";
-export const PASS = "Soirée 24 h";
+// Nom du pass une date (« Soirée 24 h »), lu dans les offres
+const NUIT = PLANS.find((p) => p.id === "night").name;
 
 export const HERO = {
   lead: "La musique et le classement sur la TV, les réponses sur les téléphones. Vous lancez la partie en deux minutes, ZIK compte les points.",
@@ -46,9 +48,9 @@ export const CAPTIONS = [
     from: 0.6,
     to: 0.79,
     label: "La régie",
-    pro: true,
     title: "Pour l'animateur",
-    text: "Sur votre téléphone ou une tablette : révéler, pause, manche suivante, qui a répondu, qui a décroché.",
+    text: "Sur votre téléphone ou une tablette : pause, manche suivante, qui a répondu, qui a décroché. Révéler et terminer à tout moment avec",
+    pro: true,
   },
   {
     from: 0.82,
@@ -61,7 +63,7 @@ export const CAPTIONS = [
 
 export const FRISE = [
   {
-    b: "2 min",
+    b: "En 2 minutes",
     t: "Lancer",
     p: "Choisissez la musique et le déroulé, puis «\u00a0Créer\u00a0». Sans compte.",
   },
@@ -86,7 +88,7 @@ export const FRISE = [
     p: "Le vainqueur et ses trophées en grand sur la TV.",
   },
   {
-    b: `${first(SALON_INTERMISSIONS)} à ${last(SALON_INTERMISSIONS)} min`,
+    b: `${first(PAUSES)} à ${last(PAUSES)} min`,
     t: "On enchaîne",
     p: "Partie suivante, mêmes joueurs, avec un entracte si vous voulez.",
   },
@@ -127,7 +129,16 @@ export const KIT = [
   },
 ];
 
-// Nom, prix et période viennent des offres ; les badges disent un fait
+// Formules payantes : nom, prix, période, badge et bouton viennent de proPlans
+const PERKS = {
+  night: [
+    "Joueurs illimités",
+    "Buzzer et manches spéciales",
+    "Classement et podium de soirée",
+  ],
+  monthly: ["ZIK Pro tout le mois", "Joueurs illimités", "Sans engagement"],
+  yearly: ["ZIK Pro toute l'année", "Joueurs illimités", "Une seule facture"],
+};
 export const OFFRES = [
   {
     id: "free",
@@ -144,39 +155,19 @@ export const OFFRES = [
     cta: "Créer une soirée",
     href: CREER,
   },
-  {
-    id: "night",
-    k: "once",
-    badge: "Une date",
-    name: PASS,
-    perks: [
-      "Joueurs illimités",
-      "Buzzer et manches spéciales",
-      "Classement et podium de soirée",
-    ],
-    cta: `Prendre la ${PASS}`,
-  },
-  {
-    id: "monthly",
-    k: "often",
-    badge: "Pour les bars",
-    top: true,
-    perks: ["ZIK Pro tout le mois", "Joueurs illimités", "Sans engagement"],
-    cta: "Choisir",
-  },
-  {
-    id: "yearly",
-    k: "often",
-    badge: "2 mois offerts",
-    perks: ["ZIK Pro toute l'année", "Joueurs illimités", "Une seule facture"],
-    cta: "Choisir",
-  },
-].map((o) => {
-  if (o.id === "free") return o;
-  const { name, price, period } = plan(o.id);
-  // Le pass garde son nom de vitrine (PASS) ; prix et période viennent de proPlans
-  return { name, ...o, price, period, href: "/pro#tarifs" };
-});
+  ...PLANS.map(({ id, name, price, period, badge, cta, featured }) => ({
+    id,
+    k: id === "night" ? "once" : "often",
+    name,
+    price,
+    period,
+    badge,
+    cta,
+    top: !!featured,
+    perks: PERKS[id],
+    href: "/pro#tarifs",
+  })),
+];
 
 export const OFFRES_NOTE = `ZIK Pro : joueurs illimités, ${TESTED_LABEL}.`;
 
@@ -207,7 +198,7 @@ export const FAQ = [
   },
   {
     q: "C'est payant ?",
-    a: `Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque le reste, dès ${PRIX_SOIREE} avec la ${PASS}.`,
+    a: `Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque le reste, dès ${PRIX_SOIREE} avec la ${NUIT}.`,
   },
 ];
 

@@ -204,24 +204,6 @@
   gap: 14px;
 }
 
-/* Mouvements réduits : sections dépliées, toutes les phrases lisibles */
-html.rm .sv .pin-in {
-  height: auto;
-  padding-block: 72px;
-}
-html.rm .sv .beats {
-  gap: 8px;
-}
-html.rm .sv .beat {
-  grid-area: auto;
-  opacity: 1;
-  transform: none;
-}
-html.rm .sv .duo,
-html.rm .sv .solo {
-  width: min(100%, 560px);
-}
-
 @media (min-width: 900px) {
   .sv section {
     padding-block: 130px;

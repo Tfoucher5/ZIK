@@ -3,11 +3,11 @@
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../data/proPlans.js";
 import {
   SALON_DURATIONS,
-  SALON_INTERMISSIONS,
   SALON_TEAMS,
   SPECIALS,
   SPECIAL_INTRO_MS,
 } from "../../data/salonOptions.js";
+import { PAUSES } from "./soireeContent.js";
 
 const first = (a) => a[0];
 const last = (a) => a[a.length - 1];
@@ -91,7 +91,8 @@ export const PINS = {
         t: "Sur votre téléphone ou une tablette : qui a répondu, qui attend, qui a décroché.",
       },
       {
-        t: "Pause sur la régie, pause sur la TV. Manche suivante, terminer : un appui.",
+        t: "Pause sur la régie, pause sur la TV. Manche suivante : un appui. Révéler ou terminer à tout moment avec",
+        pro: true,
       },
       {
         t: "La réponse reste masquée, visible sur la régie seulement. Un titre ne passe pas ? Signalez-le.",
@@ -107,10 +108,10 @@ export const PINS = {
     title: "On enchaîne les parties",
     beats: [
       {
-        t: "Le vainqueur, le plus rapide, le plus régulier : chaque partie finit en grand, avec le QR code pour la suivante.",
+        t: "Le vainqueur, le plus rapide, le plus régulier : chaque partie finit en grand, avec le QR code pour la suivante. Chaque joueur peut partager le podium en story.",
       },
       {
-        t: `Un entracte si vous voulez, de ${first(SALON_INTERMISSIONS)} à ${last(SALON_INTERMISSIONS)} minutes. Les joueurs restent dans le salon.`,
+        t: `Un entracte si vous voulez, de ${first(PAUSES)} à ${last(PAUSES)} minutes. Les joueurs restent dans le salon.`,
       },
       {
         t: "Partie après partie, le classement de soirée cumule les points.",
@@ -126,7 +127,7 @@ export const PINS = {
       { t: "La 3e place, puis la 2e. Toute la salle regarde la TV." },
       { t: "« Et le grand gagnant est… » Roulement de tambour." },
       {
-        t: "Le vainqueur, les places 4 à 10, et chaque joueur reçoit le podium en story à partager. Le buzz et le tambour se coupent si besoin.",
+        t: "Le vainqueur, les places 4 à 10, et chaque joueur voit sa place de la soirée sur son téléphone. Le buzz et le tambour se coupent si besoin.",
       },
     ],
   },

@@ -51,10 +51,10 @@
   .badge { justify-self: start; font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.07); color: var(--soft); }
   h3 { font-weight: 800; font-size: 1.7rem; }
   .price { font-family: var(--titre); font-weight: 900; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
-  .price small { display: block; font-family: var(--corps); font-weight: 500; font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .price small { text-wrap: balance; display: block; font-family: var(--corps); font-weight: 500; font-size: 14px; color: var(--muted); margin-top: 6px; }
   ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; font-size: 15px; color: #c9cad8; }
   li::before { content: '✓ '; color: var(--ok); }
-  .plan a { width: 100%; padding-inline: 14px; white-space: normal; text-align: center; }
+  .plan a { width: 100%; padding: 8px 14px; line-height: 1.1; white-space: normal; text-align: center; }
   .note { margin-top: 18px; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--muted); }
   @media (min-width: 900px) {
     .offres { margin-top: 0; border-radius: 40px 40px 0 0; }

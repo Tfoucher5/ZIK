@@ -17,10 +17,20 @@
   import Offres from '$lib/components/soiree/Offres.svelte';
   import SoireeFin from '$lib/components/soiree/SoireeFin.svelte';
   import { DESC, soireeJsonLd } from '$lib/components/soiree/soireeContent.js';
-  import { mountPins, pinRegistry } from '$lib/components/soiree/soireePins.js';
+  import { mountPins, pinRegistry, replacer } from '$lib/components/soiree/soireePins.js';
 
   const pins = pinRegistry();
   setContext('soiree-pins', pins);
+
+  // Retour arrière : scroll noté au départ, reposé après l'épinglage (replacer)
+  let retour = null;
+  export const snapshot = {
+    capture: () => scrollY,
+    restore: (y) => {
+      retour = y;
+      if (pins.live) replacer(y);
+    },
+  };
 
   // GSAP seulement ici, chargé après l'affichage ; sans lui (mouvements réduits,
   // échec du chargement) les sections restent dépliées et lisibles (.rm)
@@ -31,7 +41,11 @@
     let stop;
     let fini = false;
     mountPins(pins).then(
-      (s) => (fini ? s() : (stop = s)),
+      (s) => {
+        if (fini) return s();
+        stop = s;
+        replacer(retour, location.hash);
+      },
       () => html.classList.add('rm'),
     );
     return () => {
@@ -42,7 +56,7 @@
 </script>
 
 <svelte:head>
-  <title>Blind test en soirée sur la TV, sans animateur - ZIK Soirée</title>
+  <title>Blind test en soirée sur la TV - ZIK Soirée</title>
   <meta name="description" content={DESC} />
   <link rel="canonical" href="https://www.zik-music.fr/soiree" />
   <meta property="og:title" content="ZIK Soirée : le blind test qui fait la soirée" />
@@ -52,7 +66,7 @@
   <meta name="twitter:description" content={DESC} />
   <link rel="preload" as="image" href="/media/soiree/bar-portrait-v1.webp" media="(orientation: portrait)" />
   <link rel="preload" as="image" href="/media/soiree/bar-paysage-v1.webp" media="(orientation: landscape)" />
-  {#each ['page', 'tv', 'phone'] as f (f)}<link rel="stylesheet" href="/css/soiree/{f}.css?v={version}" />{/each}
+  {#each ['page', 'tv', 'phone', 'calme'] as f (f)}<link rel="stylesheet" href="/css/soiree/{f}.css?v={version}" />{/each}
   <JsonLd json={soireeJsonLd} />
 </svelte:head>
 

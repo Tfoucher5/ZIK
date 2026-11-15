@@ -30,6 +30,45 @@ for (const width of [1440, 390]) {
   });
 }
 
+// L'épinglage allonge la page après le premier rendu : l'ancre et le retour
+// arrière doivent quand même retomber au bon endroit
+for (const ancre of ["faq", "offres"]) {
+  test(`/soiree#${ancre} en première visite arrive sur la section`, async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await ctx.newPage();
+    await page.goto(`/soiree#${ancre}`);
+    await expect(page.locator(".pin-spacer").first()).toBeAttached();
+    await expect(page.locator(`#${ancre} h2`)).toBeInViewport();
+    await ctx.close();
+  });
+}
+
+test("/soiree : retour arrière depuis une autre page, même position", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/soiree");
+  await expect(page.locator(".pin-spacer").first()).toBeAttached();
+  await page.locator("#offres h2").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(500);
+  const y = await page.evaluate(() => scrollY);
+  expect(y).toBeGreaterThan(1000);
+  await page.locator('header.top a[href="/jouer"]').click();
+  await page.waitForURL("**/jouer");
+  await page.goBack();
+  await page.waitForURL("**/soiree");
+  await expect(page.locator(".pin-spacer").first()).toBeAttached();
+  await expect
+    .poll(() => page.evaluate(() => scrollY), { timeout: 10_000 })
+    .toBeGreaterThan(y - 50);
+  expect(Math.abs((await page.evaluate(() => scrollY)) - y)).toBeLessThan(50);
+  await expect(page.locator("#offres h2")).toBeInViewport();
+});
+
 test("/soiree en mouvements réduits : sections dépliées, phrases lisibles", async ({
   page,
 }) => {

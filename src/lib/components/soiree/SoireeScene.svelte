@@ -29,9 +29,9 @@
     </div>
     {#each CAPTIONS as c (c.title)}
       <div class="ov legende" class:on={p >= c.from && p < c.to}>
-        <span class="label"><i></i>{c.label}{#if c.pro}<span class="pro-tag">ZIK Pro</span>{/if}</span>
+        <span class="label"><i></i>{c.label}</span>
         <h2 class="grad">{c.title}</h2>
-        <p>{c.text}</p>
+        <p>{c.text}{#if c.pro}<span class="pro-tag">ZIK Pro</span>{/if}</p>
       </div>
     {/each}
     <div class="barre" aria-hidden="true"><i style:transform="scaleX({p})"></i></div>
@@ -42,8 +42,9 @@
   .scene { position: relative; padding: 0; background: #060409; }
   .scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6, 4, 9, 0.9) 0%, rgba(6, 4, 9, 0.6) 42%, transparent 52%, rgba(6, 4, 9, 0.94) 76%, rgba(6, 4, 9, 0.96) 100%); }
   .cap .scrim { background: linear-gradient(180deg, rgba(6, 4, 9, 0.5) 0%, transparent 14%, transparent 52%, rgba(6, 4, 9, 0.94) 76%); }
-  .ov { position: absolute; left: 0; right: 0; z-index: 2; opacity: 0; transform: translateY(18px); transition: opacity 0.45s, transform 0.45s var(--out); pointer-events: none; padding-inline: var(--gut); }
-  .ov.on { opacity: 1; transform: none; pointer-events: auto; }
+  /* Hors .on : invisible aussi pour le clavier et les lecteurs d'écran (visibility après le fondu) */
+  .ov { position: absolute; left: 0; right: 0; z-index: 2; opacity: 0; visibility: hidden; transform: translateY(18px); transition: opacity 0.45s, transform 0.45s var(--out), visibility 0s 0.45s; pointer-events: none; padding-inline: var(--gut); }
+  .ov.on { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition-delay: 0s; }
   .hero { top: calc(var(--top) + 28px); display: grid; justify-items: center; text-align: center; }
   h1 { margin-top: 16px; font-weight: 900; font-size: clamp(3rem, 14vw, 8.6rem); line-height: 0.84; letter-spacing: -0.015em; }
   .ln { display: block; overflow: hidden; padding-bottom: 0.05em; }
@@ -67,19 +68,16 @@
   .barre { position: absolute; left: var(--gut); right: var(--gut); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); height: 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); z-index: 3; }
   .barre i { position: absolute; inset: 0; background: linear-gradient(90deg, var(--violet), var(--accent)); transform-origin: left; }
 
-  /* Mouvements réduits : poster dans le flux, puis toutes les légendes */
+  /* Mouvements réduits : poster dans le flux, puis toutes les légendes (.rm et media, sans attendre le JS) */
   :global(html.rm) .scene { background: none; }
   :global(html.rm) .scene :global(.sticky) { display: flex; flex-direction: column; padding: calc(var(--top) + 40px) var(--gut) 60px; gap: 40px; }
   :global(html.rm) .scene :global(picture) { order: 1; }
   :global(html.rm) .scene :global(img) { border-radius: 18px; max-height: 80svh; object-fit: cover; }
-  :global(html.rm) .ov { position: relative; inset: auto; opacity: 1; transform: none; translate: none; width: auto; padding: 0; pointer-events: auto; }
+  :global(html.rm) .ov { position: relative; inset: auto; opacity: 1; visibility: visible; transform: none; translate: none; width: auto; padding: 0; pointer-events: auto; }
   :global(html.rm) .legende { order: 2; }
   :global(html.rm) .scrim,
   :global(html.rm) .barre,
   :global(html.rm) .cue { display: none; }
-  @media (prefers-reduced-motion: reduce) {
-    .ln > span { animation: none; }
-  }
 
   @media (min-width: 900px) {
     .scrim, .cap .scrim { background: linear-gradient(90deg, rgba(6, 4, 9, 0.94) 0%, rgba(6, 4, 9, 0.8) 30%, rgba(6, 4, 9, 0.4) 46%, transparent 60%), linear-gradient(180deg, transparent 75%, rgba(6, 4, 9, 0.7)); }
@@ -93,5 +91,15 @@
     .legende { top: 50%; bottom: auto; translate: 0 -50%; left: var(--gut); right: auto; width: min(460px, 40vw); padding: 0; }
     .legende h2 { font-size: clamp(3rem, 5vw, 4.8rem); }
     .legende p { font-size: 1.15rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scene { background: none; }
+    .scene :global(.sticky) { display: flex; flex-direction: column; padding: calc(var(--top) + 40px) var(--gut) 60px; gap: 40px; }
+    .scene :global(picture) { order: 1; }
+    .scene :global(img) { border-radius: 18px; max-height: 80svh; object-fit: cover; }
+    .scene .ov { position: relative; inset: auto; opacity: 1; visibility: visible; transform: none; translate: none; width: auto; padding: 0; pointer-events: auto; }
+    .scene .legende { order: 2; }
+    .scene .scrim, .scene .barre, .scene .cue { display: none; }
+    .ln > span { animation: none; }
   }
 </style>

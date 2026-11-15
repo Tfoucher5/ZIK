@@ -53,6 +53,11 @@
   :global(html.rm) .cartons { gap: 14px; }
   :global(html.rm) .ct { grid-area: auto; min-height: 300px; opacity: 1 !important; transform: none !important; will-change: auto; }
   :global(html.rm) .flash { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .dev.cartons { gap: 14px; }
+    .ct { grid-area: auto; min-height: 300px; opacity: 1 !important; transform: none !important; will-change: auto; }
+    .flash { display: none; }
+  }
   @media (min-width: 900px) {
     .ct > p:not(.kk) { font-size: 1.3rem; }
   }
