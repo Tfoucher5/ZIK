@@ -99,12 +99,13 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     return { p, envoi };
   }
 
-  it("hors ligne : le tap est ignoré, rien n'est verrouillé", () => {
+  it("hors ligne : le tap ne part pas, rien n'est verrouillé, le joueur est prévenu", () => {
     const { p, envoi } = joueur(false);
     p.submitChoice(1);
     expect(p.chosenIndex).toBeNull();
     expect(p.allFound).toBe(false);
     expect(envoi.emit).not.toHaveBeenCalled();
+    expect(p.feedback?.msg).toBe("Pas reçu, retape");
   });
 
   it("accusé reçu : la réponse est verrouillée", () => {
@@ -130,9 +131,11 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
   it("accusé perdu ou refus : la case est rendue", () => {
     const { p, envoi } = joueur();
     p.submitChoice(1);
+    expect(p.feedback).toBeNull();
     envoi.cb(new Error("timeout"));
     expect(p.chosenIndex).toBeNull();
     expect(p.allFound).toBe(false);
+    expect(p.feedback?.msg).toBe("Pas reçu, retape");
     p.submitChoice(2);
     envoi.cb(null, null);
     expect(p.chosenIndex).toBeNull();

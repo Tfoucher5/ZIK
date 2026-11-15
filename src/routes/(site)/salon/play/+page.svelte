@@ -92,7 +92,7 @@
           onBuzz={p.buzz}
         />
 
-        {#if p.board.length > 1 && (p.answerMode === 'multiple' ? p.chosenIndex !== null && p.revealCorrectIndex === null : p.allFound)}
+        {#if p.board.length > 1 && p.allFound && (p.answerMode !== 'multiple' || (p.chosenIndex !== null && p.revealCorrectIndex === null))}
           <PlayBoard {p} />
         {/if}
       {:else if p.phase === 'summary' || p.phase === 'gameover'}

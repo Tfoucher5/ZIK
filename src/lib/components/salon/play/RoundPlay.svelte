@@ -105,13 +105,14 @@
   </div>
 
 {:else if answerMode === 'multiple' && choices}
-  {#if chosenIndex !== null && revealCorrectIndex === null}
-    <!-- Réponse donnée : on la rappelle en petit, le classement prend la place -->
+  {#if allFound && chosenIndex !== null && revealCorrectIndex === null}
+    <!-- Réponse reçue par le serveur : on la rappelle en petit, le classement prend la place -->
     <div class="sp-chosen">
       <div class="sx-choice c{chosenIndex}"><span class="sx-shape"></span>{choices[chosenIndex]}</div>
       <p class="sp-locked"><span class="sx-dots"><i></i><i></i><i></i></span> Réponse verrouillée</p>
     </div>
   {:else}
+    {@const sending = !allFound && chosenIndex !== null}
     <div class="sx-choices sp-drawer">
       {#each choices as choice, i (i)}
         {@const isChosen = chosenIndex === i}
@@ -121,11 +122,12 @@
           class="sx-choice c{i}"
           class:reveal-correct={isCorrect}
           class:reveal-wrong={isRevealing && isChosen && !isCorrect}
-          class:reveal-neutral={isRevealing && !isChosen && !isCorrect}
+          class:reveal-neutral={(isRevealing || sending) && !isChosen && !isCorrect}
           onclick={() => onSubmitChoice(i)}
-          disabled={allFound}
+          disabled={allFound || sending}
         >
           <span class="sx-shape"></span>{choice}
+          {#if sending && isChosen}<small class="sp-sending">Envoi…</small>{/if}
         </button>
       {/each}
     </div>
@@ -133,6 +135,11 @@
 {/if}
 
 <style>
+  .sp-sending {
+    margin-left: auto;
+    font-weight: 600;
+    opacity: 0.8;
+  }
   .sp-special {
     margin: 10px 0 0;
     padding: 8px 12px;

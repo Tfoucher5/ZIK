@@ -91,7 +91,10 @@ test("QCM : tap pendant une coupure jamais verrouillé à tort, réponse compté
   // Hors ligne : le tap ne part pas, ou part sans accusé et la case est rendue
   await ctx.setOffline(true);
   await cases.first().click();
-  await expect(verrou).toBeHidden({ timeout: 5_000 });
+  await expect(tel.getByText("Pas reçu, retape")).toBeVisible({
+    timeout: 5_000,
+  });
+  await expect(verrou).toBeHidden();
   await expect(cases.first()).toBeEnabled();
   await expect(tv.locator(".sh-answered")).toContainText("0 / 1");
 

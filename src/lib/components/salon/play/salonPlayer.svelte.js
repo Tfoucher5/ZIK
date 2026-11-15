@@ -116,11 +116,18 @@ export class SalonPlayer {
     this.guess = "";
   };
 
+  #notReceived = () =>
+    this.showFeedback({
+      type: "miss",
+      correct: false,
+      msg: "Pas reçu, retape",
+    });
+
   // Verrouillé seulement quand le serveur a reçu la réponse : hors ligne le tap
-  // est ignoré, et sans accusé la case est rendue
+  // n'est pas envoyé, et sans accusé la case est rendue
   submitChoice = (index) => {
-    if (this.allFound || this.chosenIndex !== null || !this.socket?.connected)
-      return;
+    if (this.allFound || this.chosenIndex !== null) return;
+    if (!this.socket?.connected) return this.#notReceived();
     const round = this.round;
     this.chosenIndex = index;
     this.socket
@@ -131,7 +138,10 @@ export class SalonPlayer {
         if (!err && Number.isInteger(kept)) {
           this.chosenIndex = kept;
           this.allFound = true;
-        } else if (this.chosenIndex === index) this.chosenIndex = null;
+        } else if (this.chosenIndex === index) {
+          this.chosenIndex = null;
+          this.#notReceived();
+        }
       });
   };
 
