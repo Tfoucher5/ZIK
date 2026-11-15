@@ -220,7 +220,13 @@ function onJoined(p, data, c, u) {
     // Reprise après une coupure : le serveur renvoie l'état de la manche
     p.phase = data.phase || "round";
     p.paused = !!data.paused;
+    if (data.round !== p.round) {
+      p.revealCorrectIndex = null;
+      p.guess = "";
+    }
     p.round = data.round ?? p.round;
+    // Le serveur fait foi : une réponse tapée hors ligne n'est jamais partie
+    if ("chosenIndex" in data) p.chosenIndex = data.chosenIndex;
     p.total = data.settings?.maxRounds ?? p.total;
     p.myScore = data.score ?? p.myScore;
     p.foundArtist = data.foundArtist ?? p.foundArtist;
