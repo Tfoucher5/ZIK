@@ -24,16 +24,6 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Recommandation** : créer la micro-entreprise, faire confirmer la franchise de TVA par l'URSSAF ou un comptable, puis envoyer le SIRET à Claude qui corrige CGV, mentions légales, /pro et factures Stripe. Seuils de franchise services 2026 : 37 500 € / 41 250 € (à vérifier sur service-public.gouv.fr)
 - **Lien** : https://formalites.entreprise.gouv.fr/
 
-## Accueil refait : valider la maquette
-
-- **Chantier** : Produit & design, refonte des pages ZIK Soirée (charte v2)
-- **Depuis** : 15/11
-- **Statut** : bientôt
-- **Question** : La maquette du nouvel accueil (Nina, DA) est-elle validée pour passer au code ?
-- **Options** : valider ; demander des retouches ; refuser (retour à la fiche)
-- **Recommandation** : attendre la maquette, puis la juger avec la grille de la vision
-- **Lien** : https://github.com/Tfoucher5/ZIK/blob/develop/docs/strategie/decisions.md
-
 ## Promo : poster la vidéo du bar 3D (V1)
 
 - **Chantier** : Marketing, plan promo de 2 semaines
@@ -53,7 +43,7 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 
 - **Chantier** : Argent (agents `offres` et `analyste`)
 - **Depuis** : 15/11
-- **Question** : (toujours à faire de ton côté : la connexion se valide dans ton navigateur) Connecter Stripe pour que les agents Argent lisent paiements et offres : taper `/mcp`, choisir « claude.ai Stripe » et autoriser ?
+- **Question** : Connecté sur claude.ai le 15/11 (la routine quotidienne y a accès). Dans la session Claude Code ouverte, il faut encore taper /mcp puis claude.ai Stripe (ou ouvrir une nouvelle session) pour que les agents Argent l'utilisent ici.
 - **Options** : connecter ; ne pas connecter
 - **Recommandation** : connecter, pour la lecture seule des agents Argent, aucune écriture en mode live
 
