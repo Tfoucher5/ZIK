@@ -7,15 +7,31 @@
     joinError = '',
     joining = false,
     resume = null,
+    nameTaken = null,
+    reclaimPending = false,
     onForget,
     onJoin,
+    onReclaim,
+    onChangeName,
   } = $props();
 </script>
 
 <main class="sp sp-join">
-{#if resume}
+{#if nameTaken}
   <div>
-    <p class="sx-kicker"><b>●</b> ZIK Salon {resume.code}</p>
+    <p class="sx-kicker"><b>●</b> ZIK Soirée</p>
+    <h1>{nameTaken},<br><em>c'est toi ?</em></h1>
+  </div>
+  {#if reclaimPending}
+    <p class="sp-resume" role="status">L'hôte doit confirmer sur la régie. Ta place et tes points t'attendent.</p>
+  {:else}
+    <p class="sp-resume">Ce pseudo joue déjà dans la soirée. Si c'est toi sur un autre téléphone ou un autre navigateur, demande à l'hôte de te rendre ta place.</p>
+    <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={onReclaim}>Demander ma place à l'hôte</button>
+  {/if}
+  <button class="salon-join-link" onclick={onChangeName}>Ce n'est pas moi, changer de pseudo</button>
+{:else if resume}
+  <div>
+    <p class="sx-kicker"><b>●</b> ZIK Soirée {resume.code}</p>
     <h1>Re-bonjour<br><em>{resume.username}.</em></h1>
   </div>
   <p class="sp-resume">Reprends ta place dans la partie.</p>
@@ -26,7 +42,7 @@
   <button class="salon-join-link" onclick={onForget}>Ce n'est pas moi</button>
 {:else}
   <div>
-    <p class="sx-kicker"><b>●</b> ZIK Salon</p>
+    <p class="sx-kicker"><b>●</b> ZIK Soirée</p>
     <h1>Entre dans<br><em>la partie.</em></h1>
   </div>
   <label class="sp-field">

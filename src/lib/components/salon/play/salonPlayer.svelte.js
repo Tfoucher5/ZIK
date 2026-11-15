@@ -1,3 +1,4 @@
+import { watchConnection } from "../connection.js";
 import { io } from "socket.io-client";
 import { listenPlayer } from "./playerEvents.js";
 import { forgetResume, leaveResume, readResume } from "./resume.js";
@@ -18,6 +19,11 @@ export class SalonPlayer {
   joining = $state(false);
   // Téléphone qui jouait récemment dans ce salon : on propose de reprendre sa place
   resume = $state(null);
+  // Pseudo déjà dans la soirée sans le jeton de ce téléphone : « C'est toi ? »
+  nameTaken = $state(null);
+  reclaimPending = $state(false);
+  // Jeton du joueur, gardé en mémoire : le stockage peut être bloqué (navigation privée)
+  token = null;
 
   // Partie
   joined = $state(false);
@@ -63,6 +69,8 @@ export class SalonPlayer {
   adminNotice = $state("");
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
+  // Cet écran a perdu le réseau (affiché après quelques secondes)
+  connLost = $state(false);
   // Après un redémarrage : « mise à jour terminée », la manche repart seule
   restored = $state(null);
   specialIntro = $state(false);
@@ -137,6 +145,7 @@ export class SalonPlayer {
     } catch {
       /* stockage indisponible */
     }
+    this.token = null;
     this.resume = null;
     this.usernameInput = "";
   };
@@ -174,6 +183,10 @@ export class SalonPlayer {
       return;
     }
 
+    this.nameTaken = null;
+    this.reclaimPending = false;
+    // Jeton d'une autre soirée ou d'un autre pseudo : il ne vaut rien ici
+    if (c !== this.code || u !== this.username) this.token = null;
     this.socket?.disconnect();
     const socket = io({
       transports: ["websocket", "polling"],
@@ -183,26 +196,46 @@ export class SalonPlayer {
       reconnectionDelayMax: 5000,
     });
     this.socket = socket;
+    this.stopWatch?.();
+    this.stopWatch = watchConnection(socket, (v) => (this.connLost = v));
 
-    socket.on("connect", async () => {
-      // Jeton de ce téléphone : lui seul peut reprendre sa place après une coupure
-      let token = null;
+    // Jeton de ce téléphone : lui seul peut reprendre sa place après une coupure
+    this.sendJoin = async () => {
+      let token = this.token;
       try {
-        token = localStorage.getItem("zik_salon_player_" + c);
+        token ??= localStorage.getItem("zik_salon_player_" + c);
       } catch {
-        /* stockage indisponible */
+        /* stockage indisponible : jeton en mémoire */
       }
       const auth = this.#sb
         ? (await this.#sb.auth.getSession().catch(() => null))?.data.session
             ?.access_token
         : null;
       socket.emit("salon_join_player", { code: c, username: u, token, auth });
-    });
+    };
+    socket.on("connect", this.sendJoin);
     listenPlayer(this, socket, c, u);
+  };
+
+  // « C'est moi » : l'hôte confirme sur la régie, puis le téléphone reçoit le jeton
+  requestReclaim = () => {
+    this.reclaimPending = true;
+    this.socket?.emit("salon_reclaim_request", {
+      code: this.codeInput.trim().toUpperCase(),
+      username: this.nameTaken,
+    });
+  };
+
+  changeName = () => {
+    this.socket?.disconnect();
+    this.nameTaken = null;
+    this.reclaimPending = false;
+    this.usernameInput = "";
   };
 
   destroy() {
     this.socket?.disconnect();
+    this.stopWatch?.();
     this.stopCountdowns?.();
     clearTimeout(this.#feedbackTimer);
     clearTimeout(this.errorTimer);

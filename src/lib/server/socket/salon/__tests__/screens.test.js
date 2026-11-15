@@ -168,8 +168,8 @@ describe("joueur parti puis revenu, par les handlers", () => {
 
       const intrus = await telephone("t2", "Ana", "autre");
       expect(intrus.recu.at(-1)).toMatchObject({
-        event: "salon_error",
-        payload: { message: "Ce pseudo est déjà pris." },
+        event: "salon_name_taken",
+        payload: { username: "Ana" },
       });
 
       await telephone("t3", "Ana", token);
