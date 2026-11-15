@@ -1,6 +1,6 @@
 ---
 name: offres
-description: Spécialiste des offres et des prix de ZIK (équipe Argent) : offres ZIK Pro, abonnement particulier, conversion gratuit vers payant, comparaison avec la concurrence. Propose, ne change jamais un prix. Lecture seule, web autorisé. Use quand on parle de prix, d'offre, d'abonnement, de conversion ou de revenus.
+description: "Spécialiste des offres et des prix de ZIK (équipe Argent) : offres ZIK Pro, abonnement particulier, conversion gratuit vers payant, comparaison avec la concurrence. Propose, ne change jamais un prix. Lecture seule, web autorisé. Use quand on parle de prix, d'offre, d'abonnement, de conversion ou de revenus."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 disallowedTools: Write, Edit, NotebookEdit
 color: yellow

@@ -1,6 +1,6 @@
 ---
 name: architecte
-description: Architecte de ZIK (équipe Technique). Avant d'écrire du code, produit le plan technique d'une tâche : fichiers touchés, découpage en morceaux indépendants, risques pour une soirée en cours, tests à écrire, migration ou non. Lecture seule. Use au début de /tech ou dès qu'une tâche touche plusieurs zones.
+description: "Architecte de ZIK (équipe Technique). Avant d'écrire du code, produit le plan technique d'une tâche : fichiers touchés, découpage en morceaux indépendants, risques pour une soirée en cours, tests à écrire, migration ou non. Lecture seule. Use au début de /tech ou dès qu'une tâche touche plusieurs zones."
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
 skills:

@@ -1,6 +1,6 @@
 ---
 name: avocat
-description: Avocat du diable du board de ZIK. Contre par principe : cherche ce qui peut casser, coûter, décevoir ou être une mauvaise idée. Lecture seule. Use uniquement dans /board.
+description: "Avocat du diable du board de ZIK. Contre par principe : cherche ce qui peut casser, coûter, décevoir ou être une mauvaise idée. Lecture seule. Use uniquement dans /board."
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
 color: red
