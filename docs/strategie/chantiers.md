@@ -20,8 +20,8 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 ## Refonte de l'accueil
 
 - **Statut** : en cours
-- **Équipe** : Produit (Nina, DA) puis Technique
-- **Prochaine étape** : maquette validée par Théo le 15/11 ; retouche du bloc guide, puis code
+- **Équipe** : Technique puis Opérations
+- **Prochaine étape** : fusionnée (#476), recette sur le staging en cours
 
 ## QG v2
 
@@ -32,14 +32,14 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 ## Page /pro
 
 - **Statut** : en cours
-- **Équipe** : Technique
-- **Prochaine étape** : plan de l'architecte (socle commun, puis code en parallèle)
+- **Équipe** : Technique puis Opérations
+- **Prochaine étape** : fusionnée (#471), recette sur le staging, puis achat test Stripe par Théo
 
 ## Page /soiree
 
 - **Statut** : en cours
-- **Équipe** : Technique
-- **Prochaine étape** : plan de l'architecte (socle commun, puis code en parallèle)
+- **Équipe** : Technique puis Opérations
+- **Prochaine étape** : fusionnée (#479), recette sur le staging ; bar 3D et fond animé à la release suivante
 
 ## Création et avant-partie
 
