@@ -28,11 +28,11 @@
   h2 { font-weight: 900; font-size: clamp(3rem, 13vw, 7.4rem); }
   .final p { color: #d8d9e6; margin: 18px auto 0; max-width: 30em; }
   .ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 28px; }
-  @property --g { syntax: '<percentage>'; inherits: false; initial-value: 100%; }
-  .fill { background: linear-gradient(90deg, #fff var(--g), rgba(255, 255, 255, 0.18) 0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  @property --soiree-fill { syntax: '<percentage>'; inherits: false; initial-value: 100%; }
+  .fill { background: linear-gradient(90deg, #fff var(--soiree-fill), rgba(255, 255, 255, 0.18) 0); -webkit-background-clip: text; background-clip: text; color: transparent; }
   @supports (animation-timeline: view()) {
     .fill { animation: fill linear both; animation-timeline: view(); animation-range: entry 30% cover 50%; }
-    @keyframes fill { from { --g: 0%; } to { --g: 100%; } }
+    @keyframes fill { from { --soiree-fill: 0%; } to { --soiree-fill: 100%; } }
   }
   @media (min-width: 900px) {
     .faq .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; }

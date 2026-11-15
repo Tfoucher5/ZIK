@@ -45,9 +45,9 @@
   .plans { display: grid; grid-template-columns: 1fr; gap: 14px; }
   .plan { position: relative; border-radius: 22px; padding: 24px; display: grid; gap: 12px; min-width: 0; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(170deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03)) border-box; border: 1px solid transparent; }
   .plan[hidden] { display: none; }
-  @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-  .plan.top { background: linear-gradient(180deg, #1e0b24, var(--surface) 55%) padding-box, conic-gradient(from var(--ang), #ff00ff, #7b5cff, #2fb8ff, #ff00ff) border-box; animation: ang 6s linear infinite; box-shadow: 0 30px 90px -40px rgba(255, 0, 255, 0.7); }
-  @keyframes ang { to { --ang: 360deg; } }
+  @property --soiree-ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  .plan.top { background: linear-gradient(180deg, #1e0b24, var(--surface) 55%) padding-box, conic-gradient(from var(--soiree-ang), #ff00ff, #7b5cff, #2fb8ff, #ff00ff) border-box; animation: ang 6s linear infinite; box-shadow: 0 30px 90px -40px rgba(255, 0, 255, 0.7); }
+  @keyframes ang { to { --soiree-ang: 360deg; } }
   .badge { justify-self: start; font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.07); color: var(--soft); }
   h3 { font-weight: 800; font-size: 1.7rem; }
   .price { font-family: var(--titre); font-weight: 900; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }

@@ -13,6 +13,7 @@
     poster={{ portrait: `${M}portrait-v1.webp`, paysage: `${M}paysage-v1.webp` }}
     alt="Un bar le soir : la TV ZIK au mur, les joueurs répondent sur leur téléphone"
     len={6}
+    priority
     onprogress={(v) => (p = v)}
   >
     <div class="scrim" aria-hidden="true"></div>
