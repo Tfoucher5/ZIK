@@ -9,7 +9,7 @@
 // et la sortie du serveur dans out/dev.log. Les bots et le joueur lisent la réponse dans ces lignes.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { phone, record } from "./rec.mjs";
+import { phone, record, recordAudio } from "./rec.mjs";
 
 const { io } = createRequire(
   new URL("../../../../ZIK/package.json", import.meta.url),
@@ -82,6 +82,7 @@ const socks = BOTS.map((b) => {
 });
 
 const { browser, page } = await phone({ theme: opt("theme", null) });
+const son = await recordAudio(page, name);
 await page.goto(
   `${APP}/game?roomId=${room}&username=Toi&isGuest=1&gameMode=${qcm ? "qcm" : "classic"}`,
   { waitUntil: "networkidle" },
@@ -148,5 +149,6 @@ for (let r = 1; r <= plan.length; r++) {
 }
 await sleep(7000);
 await rec.stop();
+await son.stop();
 socks.forEach((s) => s.disconnect());
 await browser.close();
