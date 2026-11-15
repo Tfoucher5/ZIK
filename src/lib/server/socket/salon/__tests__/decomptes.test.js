@@ -139,6 +139,20 @@ describe("écran qui rejoint pendant un décompte", () => {
       ]);
   });
 
+  it("nouveau joueur pendant le décompte de lancement : il le reçoit", async () => {
+    game().phase = "lobby";
+    armNext(CODE, h.io, 5, "start");
+    vi.advanceTimersByTime(1_000);
+    const recus = await arrivee("neuf", "salon_join_player", {
+      code: CODE,
+      username: "Nouveau",
+    });
+    expect(salonRooms[CODE].players.Nouveau).toBeDefined();
+    expect(recus).toEqual([
+      { kind: "start", endsAt: 1_005_000, now: 1_001_000 },
+    ]);
+  });
+
   it("décompte annulé par une pause, ou terminé : rien", async () => {
     armNext(CODE, h.io, 7);
     pauseGame(CODE, h.io);
