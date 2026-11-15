@@ -1,0 +1,196 @@
+/* /soiree : mockups de la TV et de son classement, partagés par les sections.
+   Tailles internes en cqw / em : le mockup garde ses proportions à toutes les largeurs. */
+
+/* La TV */
+.sv .tv2 {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: #000;
+  box-shadow:
+    0 0 0 5px #121219,
+    0 0 0 6px rgba(255, 255, 255, 0.13),
+    0 40px 90px -30px #000;
+  overflow: hidden;
+  container-type: inline-size;
+}
+.sv .solo .tv2 {
+  aspect-ratio: 4 / 3;
+}
+.sv .scr {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36%;
+  gap: 2.2cqw;
+  padding: 2.4cqw;
+  font-size: 2.6cqw;
+  line-height: 1.25;
+  background: radial-gradient(90% 80% at 30% 0%, #1b0a20, #060608 70%);
+}
+.sv .solo .scr {
+  font-size: 3cqw;
+}
+.sv .scr.one {
+  grid-template-columns: minmax(0, 1fr);
+}
+.sv .stg {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.sv .stg > .lay {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+}
+.sv .kk {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.74em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv .kk b {
+  color: var(--ok);
+  font-weight: 700;
+}
+.sv .tmr {
+  font-family: var(--titre);
+  font-weight: 900;
+  font-size: 9em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
+}
+.sv .tmr.warn {
+  color: var(--accent);
+}
+
+/* Le classement de la TV : les lignes bougent en translateY, jamais en top */
+.sv .brd {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2cqw;
+  padding: 1.4cqw;
+  border-radius: 0.6em;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--line);
+}
+.sv .brd-h {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 0.72em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv .rows {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+.sv .row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 10.6%;
+  display: grid;
+  grid-template-columns: 1.5em minmax(0, 1fr) auto;
+  gap: 0.4em;
+  align-items: center;
+  padding: 0 0.5em;
+  border-radius: 0.35em;
+  background: rgba(255, 255, 255, 0.045);
+  border-left: 0.25em solid var(--tc, transparent);
+  transform: translateY(calc(var(--y, 0) * 117%));
+  transition:
+    background 0.4s,
+    opacity 0.4s;
+}
+.sv .row.fx {
+  opacity: 0;
+  transform: translateY(calc(var(--y, 0) * 117%)) translateX(-14%);
+  transition:
+    opacity 0.35s,
+    transform 0.45s var(--out);
+}
+.sv .row.fx.in {
+  opacity: 1;
+  transform: translateY(calc(var(--y, 0) * 117%));
+}
+.sv .row.up {
+  background: rgba(61, 220, 132, 0.16);
+}
+.sv .row.off {
+  opacity: 0.4;
+}
+.sv .rk {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 0.8em;
+}
+.sv .nm {
+  font-family: var(--titre);
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sv .pt {
+  font-family: var(--mono);
+  font-weight: 700;
+  position: relative;
+}
+.sv .pt small {
+  position: absolute;
+  right: 100%;
+  margin-right: 0.35em;
+  top: 50%;
+  translate: 0 -50%;
+  font-size: 0.8em;
+  color: var(--ok);
+}
+
+/* Faux QR code */
+.sv .qr {
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 6%;
+  padding: 5%;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+}
+.sv .qr i {
+  background: #000;
+}
+.sv .qr i.w {
+  background: transparent;
+}
+
+@media (min-width: 900px) {
+  .sv .solo .tv2 {
+    aspect-ratio: 16 / 9;
+  }
+  .sv .solo .scr {
+    font-size: 2.1cqw;
+  }
+  .sv .scr {
+    font-size: 2.1cqw;
+    grid-template-columns: minmax(0, 1fr) 30%;
+  }
+}
