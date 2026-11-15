@@ -1,4 +1,5 @@
 <script>
+  import { version } from '$app/environment';
   import { onMount, setContext } from 'svelte';
   import { page } from '$app/state';
   import Nav from '$lib/components/layout/Nav.svelte';
@@ -147,9 +148,9 @@
   <meta data-default name="twitter:description" content="Blind test multijoueur gratuit. Importe tes playlists Deezer, grimpe dans le classement ELO. Sans installation.">
   <meta data-default name="twitter:image" content="https://www.zik-music.fr/og.png?v=3.12.0">
 
-  {#each ["nav", "nav-menus", "bottom-nav", "controls", "footer", "auth-modal"] as f (f)}<link rel="stylesheet" href="/css/base/{f}.css?v=3.32.0">{/each}
-  <link rel="stylesheet" href="/css/animations.css?v=3.0.0">
-  <link rel="stylesheet" href="/css/cards.css?v=1">
+  {#each ["nav", "nav-menus", "bottom-nav", "controls", "footer", "auth-modal"] as f (f)}<link rel="stylesheet" href="/css/base/{f}.css?v={version}">{/each}
+  <link rel="stylesheet" href="/css/animations.css?v={version}">
+  <link rel="stylesheet" href="/css/cards.css?v={version}">
 </svelte:head>
 
 {#if !isGame}

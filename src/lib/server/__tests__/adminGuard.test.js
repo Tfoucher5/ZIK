@@ -18,6 +18,8 @@ vi.mock("../config.js", () => ({
   }),
 }));
 
+vi.mock("$app/environment", () => ({ version: "test" }));
+
 const { handle } = await import("../../../hooks.server.js");
 const { makeAdminToken, readAdminToken, ADMIN_COOKIE } =
   await import("../maintenance.js");
@@ -278,4 +280,13 @@ describe("journal d'accès admin", () => {
     );
     expect(info).toHaveBeenCalledOnce();
   });
+});
+
+it("pose la version du build sur le CSS de app.html", async () => {
+  const { resolve } = await appel("/", "/(site)");
+  const { transformPageChunk } = resolve.mock.calls[0][1];
+  const html = '<link href="/css/theme.css?v=%zik.version%">';
+  expect(transformPageChunk({ html })).toBe(
+    '<link href="/css/theme.css?v=test">',
+  );
 });

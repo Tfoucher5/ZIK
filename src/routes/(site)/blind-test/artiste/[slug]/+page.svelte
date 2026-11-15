@@ -1,4 +1,5 @@
 <script>
+  import { version } from '$app/environment';
   import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import RoomJoinCard from '$lib/components/rooms/RoomJoinCard.svelte';
   import { breadcrumb } from '$lib/shared/seo.js';
@@ -61,7 +62,7 @@
   {#if data.cover}<meta property="og:image" content={data.cover} />{/if}
   <JsonLd json={breadcrumbJsonLd} />
   <JsonLd json={faqJsonLd} />
-  <link rel="stylesheet" href="/css/blind-test.css?v=3.19.0" />
+  <link rel="stylesheet" href="/css/blind-test.css?v={version}" />
 </svelte:head>
 
 <main class="bt-page">
