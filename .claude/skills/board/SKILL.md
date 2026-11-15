@@ -18,7 +18,7 @@ Membres : `chef-argent`, `chef-operations`, `chef-produit`, `chef-tech`, `chef-m
 - **Question** : fermée, une phrase (« Faut-il … ? »).
 - **Options** : 2 à 4, dont « ne rien faire ».
 - **Chiffres** : depuis `docs/strategie/etat.md` (s'il date de plus de 7 jours, lance `/etat` d'abord).
-- **Contraintes** : celles du `CLAUDE.md` qui comptent ici (budget, fiabilité des soirées, dev seul).
+- **Contraintes** : celles du `CLAUDE.md` qui comptent ici (budget, fiabilité des soirées, dev seul), et la vision (`docs/strategie/vision.md`) : quel des trois chiffres chaque option fait bouger.
 - **Déjà décidé** : lignes liées de `docs/strategie/decisions.md`.
 - **Fichiers utiles** : 3 à 5 chemins.
 

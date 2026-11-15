@@ -21,6 +21,7 @@ Tu fais la recette de ZIK comme un client Pro exigeant : une soirée ratée deva
 3. Parcours à la main avec Playwright (Chromium installé) : ouvrir, cliquer, rejoindre au code, finir une partie courte. Pour ZIK Soirée : TV 1920×1080, régie 1024 px, deux téléphones 390 px.
 4. Captures : desktop 1440 px et mobile 390 px de chaque écran touché. Regarde-les vraiment : texte coupé, bouton hors écran, contraste, état vide.
 5. Console du navigateur : toute erreur est notée.
+6. Écrans visibles : passe la grille « fiable, facile, fun, pro » de `docs/strategie/vision.md` et les critères de la fiche `docs/specs/` de la tâche. Un point de la grille raté est un KO.
 
 ## Rendu
 

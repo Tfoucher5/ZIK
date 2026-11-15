@@ -24,10 +24,10 @@ Agent `support`. Bug en prod établi : `/incident` puis `/hotfix`. Le reste devi
 
 1. Agent `chef-projet` : prochaine tâche. Si elle demande Théo (argent, nouvelle page, nouveau mode de jeu, données de prod, réglage sur son PC), **ne la lance pas** : passe à la suivante et note-la dans le compte rendu.
 2. `/demarrer <tâche>` : branche depuis `develop`.
-3. Interface ou parcours touchés : `/produit cadrer <tâche>` d'abord.
+3. Interface ou parcours touchés : il faut une fiche `docs/specs/` validée par Théo. Pas de fiche : `/produit cadrer <tâche>`, puis passe à la tâche suivante tant qu'elle n'est pas validée.
 4. `/tech <tâche>` : plan, code, tests, relecture.
 5. `/terminer` : Définition de terminé, PR vers `develop`, fusion si tout est vert.
-6. Après fusion et déploiement sur `[DEV]` : agent `recette` sur le staging. KO → retour à `/tech` sur une branche `fix/`.
+6. Après fusion et déploiement sur `[DEV]` : agent `recette` sur le staging, avec les critères de la fiche et la grille de `docs/strategie/vision.md`. KO → retour à `/tech` sur une branche `fix/`.
 7. `develop` a de quoi livrer et la porte du `CLAUDE.md` est tenue : `/release`.
 8. Une seule tâche par lancement. Si une étape échoue deux fois, arrête-toi et rends compte au lieu d'insister.
 

@@ -2,6 +2,14 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 15/11/2026 — Vision et direction de ZIK
+
+**Décision de Théo** : ZIK Soirée pour tous (groupes et pros) est le produit jusqu'en mai 2027 ; le jeu en ligne est maintenu sans nouveau chantier. Trois chiffres à égalité : soirées réussies, organisateurs fidèles, clients payants. Ton : pro côté organisateur, festif côté joueurs. Porte concept : tout ce qui se voit est validé sur fiche et maquette avant le code. Détail : `docs/strategie/vision.md`.
+
+**Proposé par Claude, à confirmer** : en cas de conflit entre les chiffres, la soirée réussie d'abord ; tutoiement partout ; nouvel agent `animation` (gardien du fun) dans l'équipe Produit.
+
+**Critère d'arrêt** : revue au `/board` mensuel. Si aucun des trois chiffres n'a progressé au 15/02/2027, on revoit la direction.
+
 ## 15/11/2026 — Que faire de la v3.32 refusée ?
 
 **Question** : faut-il sortir la v3.32 après des retouches ciblées, ou la retravailler plus en profondeur avant toute mise en prod ?
