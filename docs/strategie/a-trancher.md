@@ -40,7 +40,7 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Question** : Aperçu avec la musique (jamais à poster). Le fichier à poster est sans son, la musique « Tu danses pas tu bois pas » (La Traine) s'ajoute dans TikTok. La TV du bar 3D est une maquette dessinée (la pastille « Karim a trouvé · 3,6 s » n'existe pas telle quelle dans ZIK). On la poste ?
 - **Options** : poster · retoucher · ne pas poster
 - **Recommandation** : la poster après la V2, pour tester le format
-- **Lien** : C:UsersTeamrDocumentsGitHubZIK-memespromomontageoutzik-bar-pov-apercu.mp4
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/zik-bar-pov-apercu.mp4
 
 ## Promo : V2 tuto TV à regarder
 
@@ -49,4 +49,4 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Question** : « Un blind test sur ta TV en 2 minutes », filmé sur une vraie soirée du staging. Aperçu avec la musique (jamais à poster) ; à poster sans son avec « Mistral » (Soso Maness) dans TikTok. On la poste ?
 - **Options** : poster · retoucher · ne pas poster
 - **Recommandation** : la poster en premier (vraie interface)
-- **Lien** : C:UsersTeamrDocumentsGitHubZIK-memespromomontageoutzik-tuto-tv-apercu.mp4
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/zik-tuto-tv-apercu.mp4
