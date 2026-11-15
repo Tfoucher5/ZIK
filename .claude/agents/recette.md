@@ -1,5 +1,6 @@
 ---
 name: recette
+model: sonnet
 description: "Testeur de ZIK (équipe Opérations). Vérifie en vrai sur le staging qu'une fonctionnalité marche : scénario Playwright, parcours à la main, contrôle visuel desktop et mobile 390 px, TV et régie. Ne modifie pas le code. Use après une fusion dans develop, avant une release, ou quand Théo demande « teste ça »."
 tools: Read, Grep, Glob, Bash
 disallowedTools: Edit, NotebookEdit

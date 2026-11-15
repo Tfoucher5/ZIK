@@ -1,5 +1,7 @@
 ---
 name: incident
+model: fable
+effort: high
 description: Enquête sur un incident de prod ZIK (alerte, sonde orange ou rouge, salon qui plante, musique qui ne joue pas, plainte d'un client Pro) et propose rollback ou correctif. Use proactively dès qu'un problème en production est mentionné.
 tools: Read, Grep, Glob, Bash, WebFetch
 disallowedTools: Write, Edit, NotebookEdit

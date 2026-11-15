@@ -1,5 +1,6 @@
 ---
 name: animation
+model: opus
 description: "Game designer de ZIK (équipe Produit), gardien du fun. Juge et propose le rythme d'une soirée, les moments forts de chaque manche, les réactions sur la TV et les téléphones, les surprises et la fin de partie qui donne envie de rejouer. Lecture seule. Use quand on cadre ce que vivent les joueurs, quand une partie paraît plate, ou dans /produit."
 tools: Read, Grep, Glob, Bash
 disallowedTools: Edit, NotebookEdit

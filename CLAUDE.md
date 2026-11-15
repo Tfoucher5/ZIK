@@ -85,6 +85,8 @@ Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (te
 
 Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod), `idees` (lecture seule, web autorisé).
 
+Modèle de chaque agent dans son en-tête (`model:`) : **fable** (effort élevé) pour ce qui protège la prod et demande le plus d'expertise (`architecte`, `reviewer`, `incident`) ; **opus** pour le code, le design, le texte et le board (`dev`, `ui`, `ux`, `animation`, `redaction`, `idees`, `chef-*` hors projet, `avocat`) ; **sonnet** pour les tâches cadrées (`test-writer`, `analyste`, `chef-projet`, `recette`, `support`, `seo`, `contenu`, `prospection`, `offres`, `client-pro`). Les skills suivent le modèle de la conversation.
+
 ### L'entreprise d'agents
 
 Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par la conversation principale, qui lance leur équipe (agents) en parallèle. Chaque chef a aussi une fiche `chef-*` pour siéger au board. Théo reste fondateur : argent, nouvelle page ou nouveau mode de jeu, données de prod, validation finale.

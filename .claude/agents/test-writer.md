@@ -1,5 +1,6 @@
 ---
 name: test-writer
+model: sonnet
 description: Écrit les tests Vitest manquants d'une branche ZIK (unitaires, entrées hostiles Socket.io, intégration d'une partie complète, instantané de salon, régressions). Use proactively quand du code a été ajouté ou corrigé sans test, ou avant /terminer.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
