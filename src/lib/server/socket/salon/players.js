@@ -118,6 +118,7 @@ export function reconnectView(salon, player) {
     }));
     if (salon.settings.answerMode === "multiple") {
       data.choices = salon.game.choices;
+      data.chosenIndex = player._choiceIndex ?? null;
       data.featCount = salon.game.currentTrack?.featArtists?.length || 0;
     }
   }
