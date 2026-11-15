@@ -37,7 +37,12 @@ Détail : `docs/reunions/2026-11-15-revue-v3.32/synthese.md`.
 
 **Critère d'arrêt** : si les arrivées Google sur `/` baissent de plus de 20 % dans les 7 jours après la release, on remet l'ancien accueil sur `/`.
 
-**Décision de Théo** : en attente. À trancher : le rythme (B ou C), le nom du pass, charte ou code (clair et sans ombres, ou sombre avec ombres), les options marketing de la v3.33.
+**Décision de Théo** (15/11) :
+
+- Option B : fiabilité d'abord, expérience en v3.33.
+- Le pass à 7,90 € devient « Pass 24 h », prix inchangé (v3.33).
+- Charte : on aligne DESIGN.md sur le code (sombre, ombres). La direction de ZIK, les agents et le QG sont retravaillés le 16/11, avant d'écrire la charte.
+- Encore à décider, pour la v3.33 : ligne ZIK sur la TV gratuite, nom du lieu sur la story, adresse courte, source Stripe.
 
 ## 13/11/2026 — Offre payante pour les particuliers ?
 
