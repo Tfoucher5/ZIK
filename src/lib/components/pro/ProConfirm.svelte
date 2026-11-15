@@ -16,7 +16,7 @@
       </dl>
       {#if c.id === 'night' && checkout.nightActive}
         <p class="pro-confirm-warn">
-          Vous avez déjà un passe Soirée actif jusqu'au {checkout.endLabel}. Ce nouveau
+          Vous avez déjà une Soirée 24 h active jusqu'au {checkout.endLabel}. Ce nouveau
           paiement ajoute 24 h à la suite : il n'est utile que si votre événement
           dure plus longtemps.
         </p>
@@ -28,8 +28,8 @@
       {/if}
       <p class="pro-confirm-small">Vous allez être redirigé vers Stripe pour payer. Le reçu et la facture arrivent par e-mail.</p>
       <div class="pro-confirm-btns">
-        <button class="pro-confirm-cancel" onclick={checkout.cancel} disabled={checkout.busy !== null}>Annuler</button>
-        <button class="pro-confirm-pay" onclick={checkout.pay} disabled={checkout.busy !== null}>
+        <button type="button" class="btn-line" onclick={checkout.cancel} disabled={checkout.busy !== null}>Annuler</button>
+        <button type="button" class="btn-main" onclick={checkout.pay} disabled={checkout.busy !== null}>
           {checkout.busy ? 'Redirection…' : `Payer ${c.price}`}
         </button>
       </div>
@@ -50,16 +50,15 @@
   .pro-confirm {
     width: min(460px, 100%);
     padding: 26px 24px;
-    border: 1px solid rgb(var(--accent-rgb) / 0.45);
-    border-radius: 18px;
-    background: var(--bg2);
+    border: 1px solid var(--line-2);
+    border-radius: 22px;
+    background: var(--surface);
     color: var(--text);
   }
   .pro-confirm h3 {
-    font-family: "Barlow Condensed", sans-serif;
     font-size: 1.6rem;
     font-weight: 800;
-    margin-bottom: 16px;
+    margin: 0 0 16px;
   }
   .pro-confirm dl {
     display: grid;
@@ -106,24 +105,6 @@
     justify-content: flex-end;
     gap: 10px;
     flex-wrap: wrap;
-  }
-  .pro-confirm-cancel,
-  .pro-confirm-pay {
-    padding: 11px 20px;
-    border-radius: 10px;
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .pro-confirm-cancel {
-    border: 1px solid var(--border2);
-    background: none;
-    color: var(--text);
-  }
-  .pro-confirm-pay {
-    border: none;
-    background: var(--accent);
-    color: var(--on-accent, #fff);
   }
   .pro-confirm button:disabled {
     opacity: 0.6;
