@@ -15,31 +15,31 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : #445 et #446 fusionnées ; #447 et chantier 3 en relecture
+- **Prochaine étape** : #445 à #448 et #450 fusionnées, recette staging OK ; reste la recette > 12 téléphones dont un iPhone avant la release
 
 ## Refonte de l'accueil
 
 - **Statut** : en cours
-- **Équipe** : Produit (Nina, DA)
-- **Prochaine étape** : maquette
+- **Équipe** : Produit (Nina, DA) puis Technique
+- **Prochaine étape** : maquette validée par Théo le 15/11 ; retouche du bloc guide, puis code
 
 ## QG v2
 
-- **Statut** : en cours
+- **Statut** : fait
 - **Équipe** : Technique
-- **Prochaine étape** : tableau de bord, « À trancher » plein écran, 3D refaite
+- **Prochaine étape** : Théo branche la statusline pour la vraie limite d'utilisation
 
 ## Page /pro
 
-- **Statut** : à faire
+- **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : coder la maquette validée
+- **Prochaine étape** : plan de l'architecte (socle commun, puis code en parallèle)
 
 ## Page /soiree
 
-- **Statut** : à faire
+- **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : coder la maquette validée
+- **Prochaine étape** : plan de l'architecte (socle commun, puis code en parallèle)
 
 ## Création et avant-partie
 
