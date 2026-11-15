@@ -15,12 +15,12 @@ const FALL = [
   { transform: "translateY(110vh) rotate(720deg)", opacity: 0 },
 ];
 
-// Pluie de confettis plein écran, sans feuille de style : utilisable partout
-export function launchConfetti(count = 130) {
+// Pluie de confettis plein écran, sans feuille de style : utilisable partout.
+// `parent` (positionné) : la pluie reste dans cet élément.
+export function launchConfetti(count = 130, parent = null) {
   const container = document.createElement("div");
-  container.style.cssText =
-    "position:fixed;inset:0;pointer-events:none;z-index:400;overflow:hidden;";
-  document.body.appendChild(container);
+  container.style.cssText = `position:${parent ? "absolute" : "fixed"};inset:0;pointer-events:none;z-index:400;overflow:hidden;`;
+  (parent ?? document.body).appendChild(container);
   for (let i = 0; i < count; i++) {
     const el = document.createElement("div");
     el.style.cssText = `position:absolute;top:-12px;left:${Math.random() * 100}%;background:${COLORS[Math.floor(Math.random() * COLORS.length)]};width:${5 + Math.random() * 7}px;height:${6 + Math.random() * 9}px;border-radius:${Math.random() > 0.5 ? "50%" : "2px"};`;
