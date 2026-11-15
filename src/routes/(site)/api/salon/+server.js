@@ -75,11 +75,33 @@ export async function POST({ request }) {
   }
 }
 
-// Recherches ratées par HTTP, toutes requêtes confondues (même plafond que par
-// socket) : des codes au hasard ne martèlent pas la base
-const httpLookups = {};
+// Recherches ratées par HTTP, par adresse (même plafond que par socket) : des
+// codes au hasard ne martèlent pas la base. L'adresse se falsifie, d'où aussi
+// un plafond global large.
+const lookupsByIp = new Map();
+const allMisses = [];
+const MAX_ALL_MISSES = 200;
+const MISS_WINDOW_MS = 60 * 1000;
 
-export async function GET({ url }) {
+async function lookUp(code, ip) {
+  const now = Date.now();
+  while (allMisses.length && now - allMisses[0] > MISS_WINDOW_MS)
+    allMisses.shift();
+  if (allMisses.length >= MAX_ALL_MISSES) return "throttled";
+  // Au plus MAX_ALL_MISSES adresses ont raté dans la fenêtre : table bornée
+  if (lookupsByIp.size > MAX_ALL_MISSES)
+    for (const [ip, l] of lookupsByIp)
+      if (now - l._restoreMisses.at(-1) > MISS_WINDOW_MS)
+        lookupsByIp.delete(ip);
+  const lookups = lookupsByIp.get(ip) ?? {};
+  const r = await restoreSalon(code, getIO(), lookups);
+  if (r !== "throttled" && !salonRooms[code]) allMisses.push(now);
+  if (lookups._restoreMisses?.length) lookupsByIp.set(ip, lookups);
+  else lookupsByIp.delete(ip);
+  return r;
+}
+
+export async function GET({ request, url }) {
   const code = url.searchParams.get("code")?.toUpperCase();
   if (!/^[A-Z0-9]{4,12}$/.test(code ?? ""))
     return json(
@@ -87,10 +109,8 @@ export async function GET({ url }) {
       { status: 400 },
     );
   // Juste après un redémarrage, le salon n'est encore que dans son instantané
-  if (
-    !salonRooms[code] &&
-    (await restoreSalon(code, getIO(), httpLookups)) === "throttled"
-  )
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  if (!salonRooms[code] && (await lookUp(code, ip)) === "throttled")
     return json({ error: "Réessayez dans un instant." }, { status: 503 });
   const salon = salonRooms[code];
   if (!salon)
