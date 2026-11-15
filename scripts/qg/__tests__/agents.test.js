@@ -64,7 +64,7 @@ describe("agentsDepuis (GET /agents)", () => {
 
   it("lit le vrai dossier .claude/agents : chaque fichier donne un agent nommé", async () => {
     const racine = fileURLToPath(new URL("../../../", import.meta.url));
-    const liste = await lireAgents(racine, org);
+    const liste = await lireAgents(racine, org, async () => noms);
     expect(liste.length).toBeGreaterThan(10);
     expect(liste.find((a) => a.id === "dev")).toMatchObject({
       nom: "Mehdi",

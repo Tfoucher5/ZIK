@@ -42,7 +42,11 @@ export function agentsDepuis(fiches, org, noms) {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export async function lireAgents(racine, org) {
+// Le paramètre de version recharge noms.js dès qu'il change, sans redémarrer.
+const importerNoms = (chemin) =>
+  import(`${pathToFileURL(chemin).href}?v=${statSync(chemin).mtimeMs}`);
+
+export async function lireAgents(racine, org, charger = importerNoms) {
   const dossier = join(racine, ".claude", "agents");
   const fiches = readdirSync(dossier)
     .filter((f) => f.endsWith(".md"))
@@ -51,9 +55,6 @@ export async function lireAgents(racine, org) {
       texte: readFileSync(join(dossier, f), "utf8"),
     }));
   const chemin = join(racine, "scripts", "qg", "public", "noms.js");
-  // Le paramètre de version recharge noms.js dès qu'il change, sans redémarrer.
-  const noms = await import(
-    `${pathToFileURL(chemin).href}?v=${statSync(chemin).mtimeMs}`
-  );
+  const noms = await charger(chemin);
   return agentsDepuis(fiches, org, noms);
 }

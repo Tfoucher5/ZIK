@@ -10,17 +10,26 @@ import {
   closeSync,
   existsSync,
 } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Suivi, lireOrganigramme, hoteAutorise } from "./journaux.mjs";
 import { lireATrancher, lireChantiers } from "./trancher.mjs";
 import { lireAgents } from "./agents.mjs";
 import { ajouterReponses, lireReponses, lireLimites } from "./boite.mjs";
+import { servirVoir } from "./voir.mjs";
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const DEPOT = join(ici, "..", "..");
 const BOITE = join(ici, "boite");
+const VOIR = {
+  base: DEPOT,
+  racines: [
+    DEPOT,
+    join(homedir(), "Documents", "GitHub", "ZIK-memes"),
+    join(tmpdir(), "claude"),
+  ],
+};
 const args = process.argv.slice(2);
 const option = (nom, defaut) => {
   const i = args.indexOf(nom);
@@ -156,6 +165,17 @@ createServer((req, res) => {
       "cache-control": "no-store",
     });
     res.end(readFileSync(join(ici, "public", nom)));
+  } else if (url === "/voir") {
+    if (
+      !/^(127\.0\.0\.1|::1|::ffff:127\.0\.0\.1)$/.test(req.socket.remoteAddress)
+    )
+      return res.writeHead(403).end();
+    servirVoir(
+      req,
+      res,
+      new URL(req.url, "http://l").searchParams.get("f"),
+      VOIR,
+    );
   } else if (url === "/organigramme") {
     json(res, organigramme());
   } else if (url === "/agents") {
