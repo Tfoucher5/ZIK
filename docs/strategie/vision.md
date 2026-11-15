@@ -54,7 +54,7 @@ Ces quatre mots sont jugés avec une grille concrète. La recette et la relectur
 
 - Sobre, clair, rassurant : l'organisateur sait toujours ce que voit son public.
 - La régie se lit dans le bruit et se manipule d'une main.
-- Zéro faute, textes neutres en genre (« à la 1re place »), tutoiement partout.
+- Zéro faute, textes neutres en genre (« à la 1re place »), tu côté joueurs, accueil, création et régie, vous sur /pro et /soiree, vous pluriel sur la TV.
 - Rien ne bouge ni ne clignote sans raison.
 
 ## Le ton

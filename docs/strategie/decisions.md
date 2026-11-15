@@ -2,11 +2,17 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 15/11/2026 — Charte v2 et refonte des pages ZIK Soirée
+
+**Décision de Théo** : la maquette `/soiree` (bar 3D, vidéo au scroll, 10 sections animées) devient la direction de style de tout le site et la future page principale du mode soirée. `DESIGN.md` v2 en découle. Ton mixte : tu pour les joueurs, l'accueil, la création et la régie ; vous sur `/pro` et `/soiree` ; vous pluriel sur la TV. Univers ZIK Soirée toujours sombre. Aucune release (dont la v3.32, #428) avant la refonte, maquette validée d'abord, page par page : accueil, `/pro`, `/soiree`, création et avant-partie (TV, téléphone, régie), passage en ZIK Pro en pleine soirée, fin de partie et « Rejouer », régie.
+
+**Critère d'arrêt** : si une maquette est refusée deux fois, on revient à la fiche avec l'équipe Produit avant d'en refaire une.
+
 ## 15/11/2026 — Vision et direction de ZIK
 
 **Décision de Théo** : ZIK Soirée pour tous (groupes et pros) est le produit jusqu'en mai 2027 ; le jeu en ligne est maintenu sans nouveau chantier. Trois chiffres à égalité : soirées réussies, organisateurs fidèles, clients payants. Ton : pro côté organisateur, festif côté joueurs. Porte concept : tout ce qui se voit est validé sur fiche et maquette avant le code. Détail : `docs/strategie/vision.md`.
 
-**Proposé par Claude, à confirmer** : en cas de conflit entre les chiffres, la soirée réussie d'abord ; tutoiement partout ; nouvel agent `animation` (gardien du fun) dans l'équipe Produit.
+**Proposé par Claude, à confirmer** : en cas de conflit entre les chiffres, la soirée réussie d'abord ; tutoiement partout (remplacé le 15/11 par le ton mixte) ; nouvel agent `animation` (gardien du fun) dans l'équipe Produit.
 
 **Critère d'arrêt** : revue au `/board` mensuel. Si aucun des trois chiffres n'a progressé au 15/02/2027, on revoit la direction.
 
