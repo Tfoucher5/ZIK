@@ -60,3 +60,11 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : oui · non, ils rescannent
 - **Recommandation** : oui
 - **Lien** : docs/specs/2026-11-16-pro-en-pleine-soiree.md
+
+## Régie : prévenir quand un titre est remplacé ?
+
+- **Chantier** : Fiabilité (enquête régie)
+- **Depuis** : 16/11
+- **Question** : Quand la TV n'arrive pas à lire un titre, ZIK le remplace automatiquement par un autre dans la même manche. Aujourd'hui la régie remasque la réponse sans rien dire : l'organisateur a pu lire (voire annoncer) un titre qui ne passera pas. On affiche un court message sur la régie : « Titre remplacé : le précédent ne se lisait pas. » ?
+- **Options** : oui, ce texte · oui, autre texte · non
+- **Recommandation** : oui, ce texte
