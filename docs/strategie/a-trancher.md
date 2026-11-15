@@ -68,3 +68,21 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Question** : Quand la TV n'arrive pas à lire un titre, ZIK le remplace automatiquement par un autre dans la même manche. Aujourd'hui la régie remasque la réponse sans rien dire : l'organisateur a pu lire (voire annoncer) un titre qui ne passera pas. On affiche un court message sur la régie : « Titre remplacé : le précédent ne se lisait pas. » ?
 - **Options** : oui, ce texte · oui, autre texte · non
 - **Recommandation** : oui, ce texte
+
+## Promo : DA réseaux « Colle & magenta » et carrousel refait
+
+- **Chantier** : Marketing (Nina, DA)
+- **Depuis** : 16/11
+- **Question** : La DA de nos réseaux : le site ZIK imprimé, découpé et recollé sur papier noir (bandes de papier Barlow, bandeau TV en papier, gommette magenta, pochettes photocopiées scotchées, voix au feutre blanc). Le carrousel « ces sons ont 30 ans » est refait avec. On valide la DA et on planifie le carrousel ?
+- **Options** : valider et planifier · retoucher
+- **Recommandation** : valider, c'est enfin reconnaissable ZIK et pas « IA »
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/planche-carrousel.png
+
+## Promo : vidéo « Feuille de match » (remplace le quiz emojis)
+
+- **Chantier** : Marketing (Nina, DA)
+- **Depuis** : 16/11
+- **Question** : La vraie partie 7/10 collée comme une photo, une piste de 10 cases qui reçoit gommette verte ou croix au feutre, les ratés en plan serré avec une phrase à la main, dans la DA « Colle & magenta ». Sans son pour l'instant (on peut y mettre le son du jeu). Les pochettes montrent des artistes : OK avec la règle « pas de visage » (c'est la tienne qui compte, pas celle des artistes) ?
+- **Options** : planifier (avec le son du jeu) · retoucher · abandonner
+- **Recommandation** : la regarder, puis ajouter le son du jeu si elle te plaît
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match.mp4
