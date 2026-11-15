@@ -45,4 +45,26 @@ describe("téléphone : retour après une coupure en QCM", () => {
     reprise(p, { round: 2, chosenIndex: 1 });
     expect(p.chosenIndex).toBe(1);
   });
+
+  it("buzzer verrouillé et manche spéciale retrouvés, sans rejouer l'intro", () => {
+    const p = { round: 2, buzzLocked: false, specialIntro: true };
+    reprise(p, {
+      round: 2,
+      special: "double",
+      buzzer: "Ana",
+      buzzLocked: true,
+    });
+    expect(p).toMatchObject({
+      special: "double",
+      specialIntro: false,
+      buzzer: "Ana",
+      buzzLocked: true,
+    });
+  });
+
+  it("serveur sans manche spéciale ni buzz : l'ancien état est effacé", () => {
+    const p = { round: 2, special: "double", buzzer: "Ana", buzzLocked: true };
+    reprise(p, { round: 3 });
+    expect(p).toMatchObject({ special: null, buzzer: null, buzzLocked: false });
+  });
 });

@@ -225,6 +225,11 @@ function onJoined(p, data, c, u) {
       p.guess = "";
     }
     p.round = data.round ?? p.round;
+    // Manche spéciale déjà annoncée : pas de nouvelle intro au retour
+    p.special = data.special ?? null;
+    p.specialIntro = false;
+    p.buzzer = data.buzzer ?? null;
+    p.buzzLocked = !!data.buzzLocked;
     // Le serveur fait foi : une réponse tapée hors ligne n'est jamais partie
     if ("chosenIndex" in data) p.chosenIndex = data.chosenIndex;
     p.total = data.settings?.maxRounds ?? p.total;
