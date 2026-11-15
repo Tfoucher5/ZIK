@@ -113,7 +113,7 @@ Dans le code : les jetons vivent dans `static/css/theme.css`. À la refonte, ren
 
 ## Composants récurrents
 
-**Nav pilule** (vitrines) : fixe, `top: calc(10px + env(safe-area-inset-top))`, hauteur 54px, `max-width: 1160px`, rayon pill, fond `rgba(15,15,23,.6)` + `backdrop-filter: blur(16px) saturate(1.6)`, bordure `line-2`. Logo « ZIK » 900 + suffixe magenta (`SOIRÉE`, 15px, .1em). Liens visibles dès 900px, lien actif = `text`, autres = `muted`. Un seul bouton `main` à droite (42px). Barre de progression de lecture de 2px au-dessus (`animation-timeline: scroll(root)`). Sur les écrans de jeu, la nav du site reste celle de l'univers (barre basse sur téléphone).
+**Bandeau TV** (en-tête unique des pages refaites, décision de Théo du 15/11, `layout/TopBand.svelte`) : reprend le bandeau de la TV ZIK. Fixe en haut, pleine largeur, hauteur 56px + barre de lecture 2px `violet → accent` (`animation-timeline: scroll(root)`), fond `rgba(5,5,7,.94 → .7)` + `backdrop-filter: blur(14px) saturate(1.4)`. Logo « ZIK » 900 + point magenta 7px. Rubriques mono 12px .14em majuscules séparées par des filets `line`, soulignement blanc 2px au survol et sur la page courante (`aria-current`), visibles dès 900px, sinon menu des rubriques. Case « CODE ▢▢▢▢▢▢ » qui ouvre le digicode (`<dialog>`), bouton son en égaliseur si la page en a un, « Connexion » ou avatar et son menu (le compte reste facultatif). Boutons 44px, rayon 10px. **Jamais de barre arrondie** (la pilule flottante est abandonnée, trop basique). La page réserve sa hauteur avec `var(--top)`. Sur les écrans de jeu, la nav du site reste celle de l'univers (barre basse sur téléphone).
 
 **Label à point** : `mono 12px .14em muted` + pastille 8px `accent` (`box-shadow: 0 0 10px accent`, le seul glow toléré hors CTA). Au-dessus d'un titre de section, une fois par section.
 
@@ -130,7 +130,7 @@ Dans le code : les jetons vivent dans `static/css/theme.css`. À la refonte, ren
 
 **Carte d'offre mise en avant** : une seule par page, bordure `conic-gradient` animée par `@property --ang` (6s linéaire) + ombre magenta. Son badge dit un fait (« Pour les bars »), jamais un classement inventé.
 
-**Étiquette ZIK Pro** (`.pro`) : mono 700 10.5px .06em majuscules, padding 4px 8px, pill, fond `accent-soft`, bordure `rgba(255,0,255,.45)`, texte `accent-tint`. Collée au titre ou au label (`margin-left: 6px`). Une fonction Pro verrouillée reste visible avec l'étiquette et une phrase qui dit ce qu'elle apporte.
+**Étiquette ZIK Pro** (`.pro-tag`) : mono 700 13px .06em majuscules, padding 4px 8px, pill, fond `accent-soft`, bordure `rgba(255,0,255,.45)`, texte `accent-tint`. Collée au titre ou au label (`margin-left: 6px`). Une fonction Pro verrouillée reste visible avec l'étiquette et une phrase qui dit ce qu'elle apporte.
 
 **FAQ** : `<details>/<summary>` natifs, ligne de séparation `line`, summary 64px min, Barlow Condensed 700 21px majuscules, bouton « + » rond 34px qui tourne de 45deg et passe en blanc à l'ouverture. Ouverture animée sans JS : `interpolate-size: allow-keywords` sur `:root` + `::details-content { block-size: 0 → auto; transition .45s ease-out, content-visibility allow-discrete }`.
 
@@ -166,7 +166,19 @@ Tous en `container-type: inline-size`, tailles internes en `cqw` / `em` : le moc
 
 **Boucles dans les mockups** (frappe d'un pseudo, appui du doigt, chips qui se remplissent) : démarrent quand l'objet est visible (`IntersectionObserver`, seuil .35), s'arrêtent hors écran et quand l'onglet est caché.
 
-**Vidéo scrubbée** : H.264 MP4 (WebM VP9 en plus si dispo), GOP court (une image clé toutes les 5-10 images) sinon le seek saccade ; 16:9 et 9:16 selon l'orientation ; poster ; `muted playsinline` ; lissage `1 - exp(-dt*8)` et pas de nouveau seek tant que `seeked` n'est pas reçu ; si les métadonnées ne viennent pas en 4s, lecture en boucle.
+**Vidéo scrubbée** : H.264 MP4 (WebM VP9 en plus si dispo), GOP court (une image clé toutes les 5-10 images) sinon le seek saccade ; 16:9 et 9:16 selon l'orientation ; poster ; `muted playsinline` ; lissage `1 - exp(-dt*8)` et pas de nouveau seek tant que `seeked` n'est pas reçu ; si les métadonnées ne viennent pas en 4s, lecture en boucle. Composant `ui/ScrubVideo.svelte` (logique dans `ui/scrub.js`).
+
+Fichiers dans le dépôt sous `static/media/<page>/`, version dans le nom (`porte-portrait-v1.mp4`) : `server.js` les sert en cache immuable, un changement = un nouveau nom. Viser 3 Mo au plus en portrait mobile. Encodage (ffmpeg du PC : `ZIK-memes/promo/montage/node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe`) :
+
+```sh
+# vidéo : H.264, image clé toutes les 6 images, sans B-frames, sans son, faststart
+ffmpeg -i source.mov -an -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p \
+  -g 6 -keyint_min 6 -sc_threshold 0 -bf 0 -vf "scale=720:-2" -movflags +faststart porte-portrait-v1.mp4
+# poster : première image en WebP
+ffmpeg -i porte-portrait-v1.mp4 -frames:v 1 -c:v libwebp -quality 80 porte-portrait-v1.webp
+```
+
+Monter `-crf` (28, 30) si le fichier dépasse 3 Mo ; paysage en `scale=1280:-2`.
 
 **3D** : réservée aux pages vitrine (visite du bar). Vrai site : Threlte (Svelte) + modèles glTF compressés (Draco ou Meshopt, textures KTX2), chargés à la demande, jamais sur TV/régie/téléphone. Une image fixe remplace la 3D si WebGL manque.
 

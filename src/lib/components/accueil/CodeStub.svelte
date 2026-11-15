@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import GuestModal from '$lib/components/auth/GuestModal.svelte';
   import { HomeState } from '$lib/components/home/home.svelte.js';
-  import { cleanCode, codeTarget } from './code.js';
+  import { cleanCode, joinCode, CODE_AIDE } from './code.js';
 
   const home = new HomeState({});
   let code = $state('');
@@ -12,16 +12,9 @@
 
   async function submit(e) {
     e.preventDefault();
-    if (code.length !== 6) {
-      err = 'Le code fait 6 caractères. Recopie-le depuis la TV ou le message reçu.';
-      return;
-    }
-    err = '';
     busy = true;
-    const target = await codeTarget(code);
+    err = await joinCode(code, { joinRoom: home.joinRoom, goto });
     busy = false;
-    if (target === 'room') home.joinRoom(code);
-    else goto(`/salon/play?code=${code}`);
   }
 </script>
 
@@ -48,7 +41,7 @@
       <button class="cs-go" disabled={busy}>{busy ? '…' : 'Rejoindre'}</button>
     </div>
     <p id="cs-aide" class="cs-aide" class:cs-err={err} aria-live="polite">
-      {err || "Le code de 6 caractères affiché sur la TV de la soirée, ou celui qu'on t'a envoyé pour une partie en ligne."}
+      {err || CODE_AIDE}
     </p>
   </div>
 </form>
