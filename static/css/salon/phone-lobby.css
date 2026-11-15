@@ -196,11 +196,11 @@
   color: var(--mid);
 }
 
-/* Retour après une réponse */
+/* Retour après une réponse : posé sur l'en-tête, jamais sur les cases du bas */
 .sp-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(18px + env(safe-area-inset-bottom));
+  top: calc(8px + env(safe-area-inset-top));
   z-index: 30;
   width: min(440px, calc(100% - 32px));
   transform: translateX(-50%);
@@ -233,7 +233,7 @@
 @keyframes sp-toast {
   from {
     opacity: 0;
-    transform: translate(-50%, 12px);
+    transform: translate(-50%, -12px);
   }
 }
 

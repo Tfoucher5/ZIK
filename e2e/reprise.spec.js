@@ -61,7 +61,7 @@ test("QCM : tap pendant une coupure jamais verrouillé à tort, réponse compté
     headers: { authorization: `Bearer ${jeton}` },
     data: {
       playlistIds: [PLAYLIST],
-      settings: { answerMode: "multiple", maxRounds: 2, roundDuration: 60 },
+      settings: { answerMode: "multiple", maxRounds: 5, roundDuration: 60 },
     },
   });
   expect(res.ok(), await res.text()).toBe(true);
@@ -103,7 +103,7 @@ test("QCM : tap pendant une coupure jamais verrouillé à tort, réponse compté
   await expect(tel.getByText("Connexion perdue")).toBeHidden({
     timeout: 2_000,
   });
-  await expect(tel.getByText("Manche 1 / 2")).toBeVisible();
+  await expect(tel.getByText("Manche 1 / 5")).toBeVisible();
   await expect(async () => {
     await cases.nth(1).click({ timeout: 500 });
     await expect(verrou).toBeVisible({ timeout: 500 });
