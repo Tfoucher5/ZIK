@@ -1,4 +1,6 @@
 // « À trancher » : bouton avec badge, fenêtre plein écran pour répondre aux décisions, brouillons dans le navigateur.
+import { lienOuvrable } from "./liens.js";
+
 const $ = (id) => document.getElementById(id);
 const fenetre = $("trancher");
 const bouton = $("ouvrir-trancher");
@@ -69,9 +71,10 @@ function carte(d) {
     if (d[cle]) dl.append(el("dt", nom), el("dd", d[cle]));
   if (d.lien) {
     const dd = el("dd");
-    if (/^https?:\/\//.test(d.lien)) {
+    const href = lienOuvrable(d.lien);
+    if (href) {
       const a = el("a", d.lien);
-      a.href = d.lien;
+      a.href = href;
       a.target = "_blank";
       a.rel = "noopener";
       dd.append(a);
