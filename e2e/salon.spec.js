@@ -144,4 +144,19 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
   for (const tel of [alice, bob, chloe])
     await expect(tel.getByText("Partie terminée")).toBeVisible();
   await expect(alice.getByText("Tu gagnes !")).toBeVisible();
+
+  // Fin de partie : « Une autre ! », QR en grand, puis la partie suivante
+  await bob.getByRole("button", { name: "Une autre !" }).click();
+  await expect(tv.getByText("1 sur 3 en redemandent")).toBeVisible();
+  await tv.screenshot({ path: "test-results/tv-fin.png" });
+  await regie.getByRole("button", { name: "Afficher le QR en grand" }).click();
+  const qrGrand = tv.getByRole("region", { name: "Rejoindre la partie" });
+  await expect(qrGrand).toContainText("Scannez");
+  await expect(qrGrand).toContainText("pour jouer");
+  await regie
+    .getByRole("button", { name: "Lancer la partie suivante" })
+    .click();
+  await expect(qrGrand).toHaveCount(0);
+  for (const tel of [alice, bob, chloe])
+    await expect(tel.getByText("On remet ça.").first()).toBeVisible();
 });
