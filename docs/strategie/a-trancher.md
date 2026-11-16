@@ -104,3 +104,12 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : je fais les deux · Claude fait l'achat test, je fais la soirée · on attend
 - **Recommandation** : Claude fait l'achat test (carte de test Stripe, staging uniquement), tu fais la soirée avec 2-3 téléphones dont ton iPhone
 - **Lien** : https://github.com/Tfoucher5/ZIK/pull/428
+
+## Maquette fin de partie et « Rejouer » à valider
+
+- **Chantier** : Fin de partie + Rejouer (Nina, DA)
+- **Depuis** : 16/11
+- **Question** : Concept « le rappel » (fin de concert, la salle crie « Une autre ! », le groupe revient). TV : vainqueur en très grand, podium révélé, « Gardez vos téléphones. » + QR ; téléphone : « Tu gagnes ! » sur aplat or/argent/bronze ; régie : un seul geste principal « Lancer la partie suivante », entracte, podium de la soirée (Pro), fermer la soirée. 5 choix dans l'onglet « À valider » : 1) bouton « Une autre ! » sur les téléphones (jauge « 5 sur 8 en redemandent », ne lance rien) ; 2) libellé « Lancer la partie suivante » ou « Rejouer » ; 3) TV sans commandes quand une régie est connectée ; 4) « Créer mon compte » réduit à une ligne ; 5) un son à chaque fin de partie ?
+- **Options** : valider tel quel · valider avec mes réponses aux 5 choix · retoucher
+- **Recommandation** : oui à « Une autre ! », garder « Lancer la partie suivante », TV sans commandes avec régie, compte sur une ligne, pas de son (le tambour reste pour le podium de soirée)
+- **Lien** : https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5
