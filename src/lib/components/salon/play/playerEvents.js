@@ -26,7 +26,11 @@ export function listenPlayer(p, socket, c, u) {
     p.teamOpen = false;
     resetScores();
   });
-  socket.on("salon_restarted", resetScores);
+  // Rejouer : la phase reste « gameover » jusqu'à la manche 1, sans résultat à montrer
+  socket.on("salon_restarted", () => {
+    resetScores();
+    p.replaying = true;
+  });
 
   socket.on("salon_roster", ({ roster, teams, team, encore }) => {
     p.roster = roster;
@@ -62,6 +66,7 @@ export function listenPlayer(p, socket, c, u) {
 
   socket.on("salon_game_over", ({ ranking, teams, night }) => {
     p.phase = "gameover";
+    p.replaying = false;
     p.finalRanking = ranking;
     p.teams = teams;
     p.night = night;

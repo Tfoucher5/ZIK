@@ -162,4 +162,13 @@ describe("téléphone : « Une autre ! »", () => {
     expect(p.encore).toBe(false);
     expect(p.finalRanking).toBeNull();
   });
+
+  it("rejouer : attente sans faux résultat jusqu'à la manche 1", () => {
+    const p = { phase: "gameover", finalRanking: {} };
+    const h = ecoute(p);
+    h.salon_restarted();
+    expect(p).toMatchObject({ phase: "gameover", replaying: true });
+    h.salon_round_start({ round: 1, total: 10 });
+    expect(p).toMatchObject({ phase: "round", replaying: false });
+  });
 });

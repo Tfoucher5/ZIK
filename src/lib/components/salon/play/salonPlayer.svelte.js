@@ -86,6 +86,8 @@ export class SalonPlayer {
   paused = $state(false);
   // « Une autre ! » demandé par ce joueur à la fin de la partie
   encore = $state(false);
+  // Partie suivante lancée, manche 1 pas encore arrivée
+  replaying = $state(false);
 
   socket = null;
   revealTimer = null; // délai avant de passer au résumé
@@ -128,7 +130,7 @@ export class SalonPlayer {
     this.showFeedback({
       type: "miss",
       correct: false,
-      msg: "Pas reçu, retape",
+      msg: "Pas reçu, réessaie",
     });
 
   // Verrouillé seulement quand le serveur a reçu la réponse : hors ligne le tap
@@ -155,7 +157,7 @@ export class SalonPlayer {
 
   // Hors ligne ou pendant le décompte, rien ne part : le serveur refuserait
   toggleEncore = () => {
-    if (this.startSec > 0) return;
+    if (this.startSec > 0 || this.replaying) return;
     if (!this.socket?.connected) return this.#notReceived();
     this.encore = !this.encore;
     this.socket.emit("salon_encore", { on: this.encore });

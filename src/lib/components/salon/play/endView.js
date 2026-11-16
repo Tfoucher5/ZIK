@@ -1,7 +1,10 @@
-import { ord, pts } from "./podiumStory.js";
+import { ord } from "./podiumStory.js";
 
 const MEDALS = ["or", "ar", "br"];
-const points = (n) => `${pts(n)} point${n > 1 ? "s" : ""}`;
+// Insécables : « 1 520 pts » ne se coupe jamais en fin de ligne
+const NBSP = String.fromCharCode(160);
+export const nb = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+const points = (n) => `${nb(n)}${NBSP}point${n > 1 ? "s" : ""}`;
 
 // Écart avec le voisin le plus parlant : le 2e pour le vainqueur, celui
 // juste devant pour le podium, la 3e place au-delà
@@ -38,7 +41,7 @@ export function endView({ finalRanking, teams, myTeam, night }) {
     team,
     title,
     medal: MEDALS[rank - 1] ?? null,
-    score: rank ? `${pts(score)} pts` : null,
+    score: rank ? `${nb(score)}${NBSP}pts` : null,
     gap: rank ? gap({ score }, others, rank) : null,
     night: nightPlace(night, myTeam),
   };

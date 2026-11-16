@@ -1,7 +1,7 @@
 <script>
   import { teamColor } from '$lib/data/salonOptions.js';
   import { podium } from './salonPlayer.svelte.js';
-  import { endView } from './endView.js';
+  import { endView, nb } from './endView.js';
   import { storyData } from './podiumStory.js';
   import StoryShare from './StoryShare.svelte';
   import TeamBand from './TeamBand.svelte';
@@ -50,7 +50,7 @@
           <li class="eq" class:me={t.id === p.myTeam} style:--tc={teamColor(t.id)}>
             <span class="r">{String(i + 1).padStart(2, '0')}</span>
             <span class="n">{t.name}{#if t.id === p.myTeam}<small>ton équipe</small>{/if}</span>
-            <span class="p">{t.score}</span>
+            <span class="p">{nb(t.score)}</span>
           </li>
         {/each}
       </ol>
@@ -62,11 +62,11 @@
       <p class="k">{p.teams ? 'Les joueurs' : 'Le classement'}</p>
       <ol class="cl">
         {#each rows as r (r.username)}
-          {#if r === me && me.rank > 4}<li class="trou" aria-hidden="true">···</li>{/if}
+          {#if r.username === me?.username && me.rank > 4}<li class="trou" aria-hidden="true">···</li>{/if}
           <li class:me={r.username === p.username}>
             <span class="r">{String(r.rank).padStart(2, '0')}</span>
             <span class="n">{r.username}{#if r.username === p.username}<small>toi</small>{:else if r.left}<small>a quitté</small>{/if}</span>
-            <span class="p">{r.score}</span>
+            <span class="p">{nb(r.score)}</span>
           </li>
         {/each}
       </ol>

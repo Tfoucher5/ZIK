@@ -24,6 +24,8 @@ export function listenJoin(p, socket, chrono, c, u) {
 
 function onJoined(p, data, c, u) {
   p.restarting = false;
+  // Le serveur renvoie la phase : une relance en cours se lit au décompte renvoyé
+  p.replaying = false;
   p.joined = true;
   p.username = data.username;
   p.code = c;

@@ -105,7 +105,7 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     expect(p.chosenIndex).toBeNull();
     expect(p.allFound).toBe(false);
     expect(envoi.emit).not.toHaveBeenCalled();
-    expect(p.feedback?.msg).toBe("Pas reçu, retape");
+    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
   });
 
   it("accusé reçu : la réponse est verrouillée", () => {
@@ -135,7 +135,7 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     envoi.cb(new Error("timeout"));
     expect(p.chosenIndex).toBeNull();
     expect(p.allFound).toBe(false);
-    expect(p.feedback?.msg).toBe("Pas reçu, retape");
+    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
     p.submitChoice(2);
     envoi.cb(null, null);
     expect(p.chosenIndex).toBeNull();
@@ -238,12 +238,20 @@ describe("« Une autre ! » : rien ne part hors ligne", () => {
     p.toggleEncore();
     expect(p.encore).toBe(false);
     expect(p.socket.emit).not.toHaveBeenCalled();
-    expect(p.feedback?.msg).toBe("Pas reçu, retape");
+    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
   });
 
   it("pendant le décompte de la partie suivante : ignoré", () => {
     const p = joueur();
     p.startSec = 4;
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+  });
+
+  it("décompte fini mais manche 1 pas encore là : toujours ignoré", () => {
+    const p = joueur();
+    p.replaying = true;
     p.toggleEncore();
     expect(p.encore).toBe(false);
     expect(p.socket.emit).not.toHaveBeenCalled();

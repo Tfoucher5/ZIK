@@ -24,8 +24,8 @@ describe("téléphone en fin de partie", () => {
       rank: 1,
       title: "Tu gagnes !",
       medal: "or",
-      score: "1 520 pts",
-      gap: "40 points devant Sam.",
+      score: "1 520 pts",
+      gap: "40 points devant Sam.",
     });
   });
 
@@ -33,7 +33,7 @@ describe("téléphone en fin de partie", () => {
     expect(endView(solo({ ...top[1], rank: 2 }))).toMatchObject({
       title: "2e sur 8",
       medal: "ar",
-      gap: "À 40 points de Léa.",
+      gap: "À 40 points de Léa.",
     });
     expect(endView(solo({ ...top[2], rank: 3 })).medal).toBe("br");
   });
@@ -43,7 +43,7 @@ describe("téléphone en fin de partie", () => {
     expect(v).toMatchObject({
       title: "5e sur 8",
       medal: null,
-      gap: "Le podium était à 290 points.",
+      gap: "Le podium était à 290 points.",
     });
   });
 
@@ -52,7 +52,7 @@ describe("téléphone en fin de partie", () => {
       "À égalité avec Tom.",
     );
     expect(endView(solo({ username: "Inès", score: 1309, rank: 4 })).gap).toBe(
-      "Le podium était à 1 point.",
+      "Le podium était à 1 point.",
     );
   });
 
@@ -84,12 +84,12 @@ describe("téléphone en fin de partie", () => {
       rank: 2,
       title: "Ton équipe finit 2e",
       medal: "ar",
-      score: "1 105 pts",
-      gap: "À 135 points de Bleue.",
+      score: "1 105 pts",
+      gap: "À 135 points de Bleue.",
     });
     expect(endView({ teams, myTeam: 1 })).toMatchObject({
       title: "Ton équipe gagne !",
-      gap: "135 points devant Rouge.",
+      gap: "135 points devant Rouge.",
     });
   });
 

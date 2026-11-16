@@ -13,6 +13,7 @@ export function listenRound(p, socket, chrono) {
   socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (data) => {
     p.restored = null;
+    p.replaying = false;
     p.phase = "round";
     p.special = data.special ?? null;
     p.specialIntro = !!data.special;
