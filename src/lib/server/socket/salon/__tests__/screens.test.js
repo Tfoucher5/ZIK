@@ -155,7 +155,10 @@ describe("joueur parti puis revenu, par les handlers", () => {
       const ana = await telephone("t1", "Ana");
       const token = ana.recu.find((e) => e.event === "salon_joined").payload
         .token;
-      salonRooms[CODE].players.Ana.score = 200;
+      Object.assign(salonRooms[CODE].players.Ana, {
+        score: 200,
+        scoreBeforeRound: 200,
+      });
 
       ana.s.deconnecte();
       const salon = salonRooms[CODE];

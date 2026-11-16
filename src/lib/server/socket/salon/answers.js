@@ -1,7 +1,13 @@
 import { calcSpeedBonus } from "../../services/music/playlist.js";
 import { cleanString } from "../../services/music/trackText.js";
 import { salonRooms } from "../../state.js";
-import { closeMsg, gradeGuess, markFound, partName } from "../scoring.js";
+import {
+  calcQcmPoints,
+  closeMsg,
+  gradeGuess,
+  markFound,
+  partName,
+} from "../scoring.js";
 import {
   broadcastRoster,
   broadcastScores,
@@ -9,7 +15,8 @@ import {
   staff,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
-import { qcmPoints, roundMult } from "./specials.js";
+import { gamePlayers } from "./departed.js";
+import { roundMult } from "./specials.js";
 import { int, safe, str } from "../safe.js";
 // Téléphones des joueurs : équipe et réponses
 export function registerAnswers(socket, io) {
@@ -146,7 +153,7 @@ export function scoreQcmRound(salon, io) {
   const game = salon.game;
   // Premier à trouver : la bonne réponse la plus rapide
   if (!game.firstFinder) {
-    const firstCorrect = Object.values(salon.players)
+    const firstCorrect = gamePlayers(salon)
       .filter(
         (p) =>
           p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex,
@@ -158,13 +165,15 @@ export function scoreQcmRound(salon, io) {
     if (firstCorrect) game.firstFinder = firstCorrect.username;
   }
 
-  for (const p of Object.values(salon.players)) {
+  // Partis compris : leur réponse donnée avant le départ compte
+  for (const p of gamePlayers(salon)) {
     const correct =
       p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex;
     let points = 0;
     // Réseau coupé après avoir répondu : la réponse enregistrée compte quand même
     if (correct) {
-      points = qcmPoints(salon, p);
+      const max = game.timerMax ?? salon.settings.roundDuration;
+      points = calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
       p.score += points;
       p.foundArtist = true;
       p.foundTitle = true;

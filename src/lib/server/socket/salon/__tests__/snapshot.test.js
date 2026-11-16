@@ -24,6 +24,7 @@ const { salonRooms } = await import("../../../state.js");
 const { serializeSalon, reviveSalon, saveSnapshot, restoreSalon } =
   await import("../snapshot.js");
 const { timerClock } = await import("../timers.js");
+const { addPlayer, resetRoundFlags } = await import("../players.js");
 
 const io = {
   to: () => ({ emit: () => {} }),
@@ -71,6 +72,9 @@ describe("instantané d'un salon", () => {
     expect(Object.values(data.departed)[0]).toMatchObject({
       username: "Zoe",
       score: 80,
+      // Réponse de la manche en cours, rendue s'il revient
+      foundFeats: [],
+      _choiceIndex: null,
     });
   });
 
@@ -111,6 +115,22 @@ describe("instantané d'un salon", () => {
     expect(g.currentTrack).toBe(g.fullPlaylist[1]);
     // Vidéo déjà trouvée : pas de nouvelle recherche YouTube
     expect(g.videos.get(g.fullPlaylist[1])).toEqual({ id: "v1" });
+  });
+
+  it("parti puis revenu dans la manche coupée : ses points sautent une fois", () => {
+    const salon = salonEnManche();
+    const zoe = Object.values(salon.departed)[0];
+    addPlayer(salon, "Zoe", "s4", zoe.token);
+    const revu = revive(salon);
+    nettoie(salon);
+    expect(revu.players.Zoe).toMatchObject({ score: 50, scoreBeforeRound: 50 });
+    // Manche rejouée : nouvelle réponse possible, notée une fois
+    resetRoundFlags(revu);
+    expect(revu.players.Zoe).toMatchObject({
+      foundTitle: false,
+      _fullFoundCounted: false,
+      scoreBeforeRound: 50,
+    });
   });
 
   it("coupure pendant la recherche de la vidéo : la manche est aussi rejouée", () => {
