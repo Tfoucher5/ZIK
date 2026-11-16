@@ -61,6 +61,7 @@ export function getPlayerList(salon) {
     foundThisRound: !!p._fullFoundCounted,
     answeredThisRound:
       !p.left && (p.foundArtist || p.foundTitle || p.foundFeats.some(Boolean)),
+    encore: !!p.encore,
     ...(p.left && { left: true }),
   }));
 }
@@ -93,7 +94,7 @@ export function phoneLists(salon, username) {
     teams: phoneTeams(standings(salon)),
     night: phoneNight(nightView(salon))?.(username) ?? null,
     evening: {
-      ...evening,
+      intermission: evening.intermission,
       finale: phoneNight(evening.finale)?.(username) ?? null,
     },
     roster: phoneRoster(getPlayerList(salon)),
@@ -159,6 +160,7 @@ export function broadcastRoster(code, io) {
       roster,
       teams: pTeams,
       team: salon.players[username]?.team ?? null,
+      encore: !!salon.players[username]?.encore,
     }));
   });
   // Arrivées, départs, équipes, retraits : l'instantané suit, au plus 1 par seconde
@@ -199,6 +201,7 @@ export function resetStats(salon) {
   for (const p of Object.values(salon.players)) {
     p.score = 0;
     p.stats = { found: 0, first: 0 };
+    p.encore = false;
   }
   closeDeparted(salon);
 }
