@@ -98,13 +98,18 @@ test("QCM : tap pendant une coupure jamais verrouillé à tort, réponse compté
   await expect(cases.first()).toBeEnabled();
   await expect(tv.locator(".sh-answered")).toContainText("0 / 1");
 
-  // Retour du réseau : la manche est à jour tout de suite, la réponse compte
+  // Retour du réseau : la manche est à jour tout de suite, la réponse compte.
+  // Le websocket a pu garder le tap et le livrer au retour (seul l'accusé est
+  // perdu) : le serveur l'a compté et, seul joueur, a révélé la manche.
+  // Sinon la case est restée libre et le re-tap verrouille.
   await ctx.setOffline(false);
   await expect(tel.getByText("Connexion perdue")).toBeHidden({
     timeout: 2_000,
   });
   await expect(tel.getByText("Manche 1 / 5")).toBeVisible();
+  const revelee = tel.locator("button.sx-choice.reveal-correct");
   await expect(async () => {
+    if (await revelee.count()) return;
     await cases.nth(1).click({ timeout: 500 });
     await expect(verrou).toBeVisible({ timeout: 500 });
   }).toPass({ timeout: 2_000 });
