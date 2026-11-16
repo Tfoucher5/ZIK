@@ -124,6 +124,44 @@
 .sp-frise li:last-child:not(:first-child) {
   text-align: right;
 }
+/* Bandeau du haut : entrée depuis la file, réseau perdu pendant la file */
+.sp-strip {
+  margin: -22px -16px 0;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+.sp-strip.ok {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--success) 50%, transparent);
+}
+.sp-strip.ok i {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--success);
+  color: #000;
+  font-style: normal;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.sp-strip.lost {
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--warn) 50%, transparent);
+  color: var(--soft);
+  font-weight: 500;
+}
+.sp-strip.lost b {
+  color: var(--warn);
+}
 /* Choix d'équipe : l'écran fait la hauteur du téléphone, la liste défile dedans */
 .sp.sp-fill {
   height: 100dvh;

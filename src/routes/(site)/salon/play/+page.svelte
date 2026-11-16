@@ -9,6 +9,7 @@
   import PlayBoard from '$lib/components/salon/play/PlayBoard.svelte';
   import PlayEvening from '$lib/components/salon/play/PlayEvening.svelte';
   import PlayGameOver from '$lib/components/salon/play/PlayGameOver.svelte';
+  import PlayQueue from '$lib/components/salon/play/PlayQueue.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
   import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
@@ -46,7 +47,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </svelte:head>
 
-{#if !p.joined}
+{#if p.waiting}
+  <main class="sp"><div class="sp-body"><PlayQueue {p} /></div></main>
+{:else if !p.joined}
   <a class="salon-back salon-play-backlink" href="/">← Accueil ZIK</a>
   <JoinForm
     bind:codeInput={p.codeInput}
@@ -84,6 +87,9 @@
     <NoticeBanner message={p.adminNotice} />
 
     <div class="sp-body">
+      {#if p.admitted && lobby && !p.team}
+        <p class="sp-strip ok" role="status"><i aria-hidden="true">✓</i><span>Une place s'est libérée. Tu es dedans, {p.username}.</span></p>
+      {/if}
       <!-- Avant le contenu : la barre collante de fin de partie ne les cache pas -->
       {#if p.restarting}<p class="sp-error">Mise à jour en cours : reconnexion automatique dans quelques secondes. La manche en cours sera rejouée.</p>{/if}
       {#if p.restored}<p class="sp-error">Mise à jour terminée{p.restored.resumeIn ? ` : la manche reprend dans ${p.restored.resumeIn} secondes` : ''}.</p>{/if}

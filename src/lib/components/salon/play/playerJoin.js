@@ -7,10 +7,25 @@ export function listenJoin(p, socket, chrono, c, u) {
     if (data.endsAt) chrono.start(data.endsAt, data.now);
     else chrono.stop();
   });
+  // Soirée complète : en file. Le jeton garde la place et le pseudo à chaque
+  // reconnexion (sendJoin le renvoie)
+  socket.on("salon_waiting", ({ username, token }) => {
+    p.joining = false;
+    p.waiting = true;
+    p.username = username;
+    p.code = c;
+    p.token = token;
+    try {
+      localStorage.setItem("zik_salon_player_" + c, token);
+    } catch {
+      /* stockage bloqué : le jeton reste en mémoire */
+    }
+  });
   socket.on("salon_server_restart", () => (p.restarting = true));
   // Aussi après une coupure pendant une demande : on la refait d'un clic
   socket.on("salon_name_taken", ({ username }) => {
     p.joining = false;
+    p.waiting = false;
     p.reclaimPending = false;
     p.nameTaken = username;
   });
@@ -22,7 +37,18 @@ export function listenJoin(p, socket, chrono, c, u) {
   });
 }
 
+// « Quitter la file » confirmé : retour au formulaire, pseudo gardé
+export function quitQueue(p) {
+  p.socket?.emit("salon_queue_leave", {});
+  p.socket?.disconnect();
+  p.socket = null;
+  p.waiting = false;
+}
+
 function onJoined(p, data, c, u) {
+  // Sorti de la file : bandeau d'entrée, gardé après une simple reconnexion
+  p.admitted = !!p.waiting || (!!p.admitted && !!data.reconnecting);
+  p.waiting = false;
   p.restarting = false;
   // Le serveur renvoie la phase : une relance en cours se lit au décompte renvoyé
   p.replaying = false;

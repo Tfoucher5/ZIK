@@ -22,6 +22,9 @@ export class SalonPlayer {
   // Pseudo déjà dans la soirée sans le jeton de ce téléphone : « C'est toi ? »
   nameTaken = $state(null);
   reclaimPending = $state(false);
+  // Soirée complète : en file, puis entrée annoncée par un bandeau
+  waiting = $state(false);
+  admitted = $state(false);
   // Jeton du joueur, gardé en mémoire : le stockage peut être bloqué (navigation privée)
   token = null;
   // Code de la soirée visée par la dernière tentative de jonction
@@ -250,7 +253,8 @@ export class SalonPlayer {
         ? (await this.#sb.auth.getSession().catch(() => null))?.data.session
             ?.access_token
         : null;
-      socket.emit("salon_join_player", { code: c, username: u, token, auth });
+      const join = { code: c, username: u, token, auth, wait: true };
+      socket.emit("salon_join_player", join);
     };
     socket.on("connect", this.sendJoin);
     listenPlayer(this, socket, c, u);
