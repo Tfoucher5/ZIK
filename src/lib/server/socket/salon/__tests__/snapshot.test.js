@@ -24,7 +24,9 @@ const { salonRooms } = await import("../../../state.js");
 const { serializeSalon, reviveSalon, saveSnapshot, restoreSalon } =
   await import("../snapshot.js");
 const { timerClock } = await import("../timers.js");
-const { addPlayer, resetRoundFlags } = await import("../players.js");
+const { addPlayer, getPlayerList, resetRoundFlags } =
+  await import("../players.js");
+const { eveningView } = await import("../evening.js");
 
 const io = {
   to: () => ({ emit: () => {} }),
@@ -213,6 +215,18 @@ describe("instantané d'un salon", () => {
       });
       expect(revu.players.Ana.score).toBe(450);
     }
+  });
+
+  it("QR en grand et « Une autre ! » survivent ; absents d'un vieil instantané", () => {
+    const salon = salonEnManche();
+    nettoie(salon);
+    const vieux = revive(salon);
+    salon.qrBig = true;
+    salon.players.Ana.encore = true;
+    const revu = revive(salon);
+    expect([revu.qrBig, revu.players.Ana.encore]).toEqual([true, true]);
+    expect(getPlayerList(vieux).every((p) => p.encore === false)).toBe(true);
+    expect(eveningView(vieux).qr).toBe(false);
   });
 
   it("une base injoignable ne lève jamais", async () => {

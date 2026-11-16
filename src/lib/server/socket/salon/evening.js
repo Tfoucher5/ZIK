@@ -1,12 +1,21 @@
-import { adminSalon, nightView, requirePro } from "./players.js";
-import { num, optional, safe } from "../safe.js";
+import { salonRooms } from "../../state.js";
+import {
+  adminSalon,
+  broadcastRoster,
+  nightView,
+  requirePro,
+  staff,
+} from "./players.js";
+import { bool, num, optional, safe } from "../safe.js";
 import { emitSplit, phoneNight } from "./phoneView.js";
 
-// Entre deux parties : entracte (pour tous) et podium final de la soirée (Pro)
+// Entre deux parties : entracte (pour tous), podium final de la soirée (Pro)
+// et QR en grand (TV et régie seulement)
 export function eveningView(salon) {
   return {
     intermission: salon.intermission ?? null,
     finale: salon.finale ? nightView(salon) : null,
+    qr: !!salon.qrBig,
   };
 }
 
@@ -15,17 +24,22 @@ const emit = (salon, io) => {
   const view = eveningView(salon);
   const finale = phoneNight(view.finale);
   emitSplit(io, salon.code, "salon_evening", view, (u) => ({
-    ...view,
+    intermission: view.intermission,
     finale: finale?.(u) ?? null,
   }));
 };
+const emitStaff = (salon, io) =>
+  staff(salon.code, io).emit("salon_evening", eveningView(salon));
 
-// Une partie qui démarre referme l'entracte et le podium
+// Une partie qui démarre referme l'entracte, le podium et le QR
 export function closeEvening(salon, io) {
-  if (!salon.intermission && !salon.finale) return;
+  if (!salon.intermission && !salon.finale && !salon.qrBig) return;
+  const phones = salon.intermission || salon.finale;
   salon.intermission = null;
   salon.finale = false;
-  emit(salon, io);
+  salon.qrBig = false;
+  if (phones) emit(salon, io);
+  else emitStaff(salon, io);
 }
 
 export function registerEvening(socket, io) {
@@ -62,11 +76,30 @@ export function registerEvening(socket, io) {
     if (!salon.nightGames) return;
     salon.finale = true;
     salon.intermission = null;
+    salon.qrBig = false;
     emit(salon, io);
   });
 
   safe(socket, "salon_evening_close", {}, () => {
     const salon = adminSalon(socket);
     if (salon) closeEvening(salon, io);
+  });
+
+  safe(socket, "salon_qr_big", { on: bool() }, ({ on }) => {
+    const salon = adminSalon(socket);
+    if (!salon || !idle(salon) || salon.finale || !!salon.qrBig === on) return;
+    salon.qrBig = on;
+    emitStaff(salon, io);
+  });
+
+  // « Une autre ! » au podium : compté pour la TV et la régie, ne lance rien
+  safe(socket, "salon_encore", { on: bool() }, ({ on }) => {
+    if (socket.salonRole !== "player") return;
+    const salon = salonRooms[socket.salonCode];
+    const p = salon?.players[socket.salonUsername];
+    if (!p || p.socketId !== socket.id) return;
+    if (salon.game.phase !== "gameover" || !!p.encore === on) return;
+    p.encore = on;
+    broadcastRoster(salon.code, io);
   });
 }
