@@ -50,7 +50,7 @@
             <span class="pp-cover">
               <SleeveArt id={pl.id} />
               <b>{pl.name}</b>
-              <small>{pl.trackCount} titres</small>
+              <small>{pl.trackCount} titre{pl.trackCount > 1 ? 's' : ''}</small>
             </span>
             <span class="pp-stamp" aria-hidden="true">Au programme</span>
           </button>
@@ -82,7 +82,7 @@
         <span>Ta playlist Deezer ? <button type="button" class="pp-lien" onclick={onLogin}>Connecte-toi pour l'importer</button></span>
       {/if}
       {#if communityTotal && !showCommunity}
-        <button type="button" class="pp-lien" onclick={() => (showCommunity = true)}>+ {communityTotal} playlists de la communauté</button>
+        <button type="button" class="pp-lien" onclick={() => (showCommunity = true)}>+ {communityTotal} playlist{communityTotal > 1 ? 's' : ''} de la communauté</button>
       {/if}
     </p>
   {/if}
@@ -103,7 +103,7 @@
     font-size: 16px;
   }
   .pp-search::placeholder { color: var(--muted); }
-  .pp-search:focus-visible { outline: 0; border-bottom-color: var(--text); }
+  .pp-search:focus-visible { outline: 0; border-bottom-color: var(--text); box-shadow: inset 0 -2px 0 var(--text); }
 
   /* Le bac à disques : la pochette cochée laisse sortir son vinyle */
   .pp-crate {

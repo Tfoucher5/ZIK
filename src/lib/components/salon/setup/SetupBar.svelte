@@ -11,7 +11,7 @@
     {:else if !selectedCount}
       <p class="recap">Choisis au moins une playlist</p>
     {:else}
-      <p class="recap"><b>{selectedCount}</b> playlist{selectedCount > 1 ? 's' : ''} · <b>{totalTracks}</b> titres · <b>{maxRounds}</b> manches</p>
+      <p class="recap"><b>{selectedCount}</b> playlist{selectedCount > 1 ? 's' : ''} · <b>{totalTracks}</b> titre{totalTracks > 1 ? 's' : ''} · <b>{maxRounds}</b> manches</p>
     {/if}
     <button type="button" class="btn-main" onclick={onCreate} disabled={creating || loading || !selectedCount}>
       {creating ? 'Création…' : 'Créer la soirée'}

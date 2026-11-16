@@ -130,7 +130,7 @@ export async function GET({ request, url }) {
     request.headers.get("x-forwarded-for") ||
     "unknown";
   if (!salonRooms[code] && (await lookUp(code, ip)) === "throttled")
-    return json({ error: "Réessayez dans un instant." }, { status: 503 });
+    return json({ error: "Réessaie dans un instant." }, { status: 503 });
   const salon = salonRooms[code];
   if (!salon)
     return json({ error: "Cette soirée n'existe plus." }, { status: 404 });
@@ -147,7 +147,7 @@ export async function PATCH({ request }) {
   const user = token ? await verifyToken(token) : null;
   if (token && !user)
     return json(
-      { error: "Votre session a expiré. Reconnectez-vous." },
+      { error: "Ta session a expiré. Reconnecte-toi." },
       { status: 401 },
     );
 
@@ -156,7 +156,7 @@ export async function PATCH({ request }) {
     body = await request.json();
   } catch {
     return json(
-      { error: "Demande invalide. Rechargez la page." },
+      { error: "Demande invalide. Recharge la page." },
       { status: 400 },
     );
   }
@@ -164,7 +164,7 @@ export async function PATCH({ request }) {
   const { code, playlistIds, key } = body ?? {};
   if (!user && !key)
     return json(
-      { error: "Rouvrez la régie depuis l'écran TV de la soirée." },
+      { error: "Rouvre la régie depuis l'écran TV de la soirée." },
       { status: 401 },
     );
   if (!code)

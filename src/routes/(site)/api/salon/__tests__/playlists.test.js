@@ -52,7 +52,7 @@ describe("/api/salon : réponses d'erreur", () => {
     );
     expect(res.status).toBe(401);
     expect((await res.json()).error).toBe(
-      "Rouvrez la régie depuis l'écran TV de la soirée.",
+      "Rouvre la régie depuis l'écran TV de la soirée.",
     );
   });
 

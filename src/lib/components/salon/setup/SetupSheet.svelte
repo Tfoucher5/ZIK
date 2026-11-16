@@ -1,5 +1,6 @@
 <script>
   import SetupBlock from './SetupBlock.svelte';
+  import { radioGroup } from '$lib/components/ui/radioGroup.js';
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
   import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '$lib/data/salonOptions.js';
 
@@ -22,7 +23,7 @@
 </script>
 
 {#snippet seg(label, options, value, set, unit = '', locked = () => false)}
-  <div class="seg" role="radiogroup" aria-label={label}>
+  <div class="seg" role="radiogroup" {@attach radioGroup} aria-label={label}>
     {#each options as o (o)}
       <button type="button" role="radio" aria-checked={value === o} class:verrou={locked(o)} onclick={() => set(o)}>{o}{unit}</button>
     {/each}
@@ -34,7 +35,7 @@
 </SetupBlock>
 
 <SetupBlock n="03" title="Les réponses">
-  <div class="choix" role="radiogroup" aria-label="Mode de réponse">
+  <div class="choix" role="radiogroup" {@attach radioGroup} aria-label="Mode de réponse">
     {#each MODES as [id, titre, sous] (id)}
       <button type="button" role="radio" aria-checked={s.answerMode === id} class:verrou={id === 'buzzer' && !s.pro} onclick={() => pickMode(id)}>
         <b>{titre}{#if id === 'buzzer'}<span class="pro-tag">ZIK Pro</span>{/if}</b><small>{sous}</small>
@@ -44,7 +45,7 @@
 </SetupBlock>
 
 <SetupBlock n="04" title="Les équipes">
-  <div class="choix deux" role="radiogroup" aria-label="Équipes">
+  <div class="choix deux" role="radiogroup" {@attach radioGroup} aria-label="Équipes">
     <button type="button" role="radio" aria-checked={s.teamCount === 0} onclick={() => s.pickTeams(0)}><b>Chacun pour soi</b></button>
     <button type="button" role="radio" aria-checked={s.teamCount === 2} onclick={() => s.pickTeams(2)}><b>2 équipes</b></button>
   </div>
@@ -65,7 +66,7 @@
   <div class="reg"><span>Temps pour répondre</span>{@render seg('Temps pour répondre', SALON_DURATIONS, s.roundDuration, (v) => (s.roundDuration = v), ' s')}</div>
   <div class="reg">
     <span>Manche suivante</span>
-    <div class="seg" role="radiogroup" aria-label="Manche suivante">
+    <div class="seg" role="radiogroup" {@attach radioGroup} aria-label="Manche suivante">
       <button type="button" role="radio" aria-checked={!s.manualNext} onclick={() => (s.manualNext = false)}>Automatique</button>
       <button type="button" role="radio" aria-checked={s.manualNext} onclick={() => (s.manualNext = true)}>Quand je clique</button>
     </div>
@@ -75,7 +76,7 @@
   {/if}
   <div class="reg">
     <span>Manches spéciales <span class="pro-tag">ZIK Pro</span></span>
-    <div class="seg" role="radiogroup" aria-label="Manches spéciales">
+    <div class="seg" role="radiogroup" {@attach radioGroup} aria-label="Manches spéciales">
       <button type="button" role="radio" aria-checked={!s.specials} onclick={() => (s.specials = false)}>Non</button>
       <button type="button" role="radio" aria-checked={s.specials} class:verrou={!s.pro} onclick={() => s.proOnly('specials', () => (s.specials = true))}>Au hasard</button>
     </div>

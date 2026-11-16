@@ -1,5 +1,5 @@
 <script>
-  import { getContext, onMount } from 'svelte';
+  import { getContext, onMount, untrack } from 'svelte';
   import { page } from '$app/state';
   import JsonLd from '$lib/components/ui/JsonLd.svelte';
   import PlaylistPicker from '$lib/components/salon/playlists/PlaylistPicker.svelte';
@@ -21,13 +21,15 @@
   const userId = $derived(zik.user?.id ?? null);
 
   onMount(() => s.restore());
+  // Seuls authReady et userId relancent le chargement : l'état lu par load() ne doit pas boucler
   $effect(() => {
-    if (zik.authReady) s.load(userId);
+    const id = userId;
+    if (zik.authReady) untrack(() => s.load(id));
   });
 
-  function login() {
+  function login(view = 'register') {
     rememberSignupRef('salon-setup');
-    zik.openAuthModal('register');
+    zik.openAuthModal(view);
   }
 </script>
 
@@ -55,7 +57,7 @@
   <div class="cr">
     <section class="cr-tete">
       <SetupHero />
-      <SetupPro user={zik.user} pro={s.pro} proRow={s.proRow} portalBusy={s.portalBusy} onPortal={() => s.openPortal()} onLogin={login} />
+      <SetupPro user={zik.user} pro={s.pro} proRow={s.proRow} portalBusy={s.portalBusy} onPortal={() => s.openPortal()} onLogin={() => login('login')} />
     </section>
 
     <div class="cr-set">
@@ -66,7 +68,7 @@
         {:else if s.playlistsState === 'loading'}
           <p class="cr-attente">Chargement des playlists…</p>
         {/if}
-        <PlaylistPicker playlists={s.playlists} bind:selectedIds={s.selectedIds} onLogin={zik.user ? null : login} />
+        <PlaylistPicker playlists={s.playlists} bind:selectedIds={s.selectedIds} onLogin={zik.user ? null : () => login()} />
       </SetupBlock>
       <SetupSheet {s} />
     </div>

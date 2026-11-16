@@ -134,7 +134,7 @@ export async function patchSalonPlaylists(sb, code, playlistIds) {
   });
   const d = await res.json();
   if (!res.ok)
-    throw new Error(d.error || "Le changement n'a pas pu se faire. Réessayez.");
+    throw new Error(d.error || "Le changement n'a pas pu se faire. Réessaie.");
   return d;
 }
 
@@ -171,9 +171,7 @@ export async function goToStripe(sb, path, body = {}) {
   const d = await res.json().catch(() => ({}));
   if (!res.ok || !d.url)
     throw new Error(
-      d.error ||
-        d.message ||
-        "Stripe ne répond pas, réessayez dans un instant.",
+      d.error || d.message || "Stripe ne répond pas, réessaie dans un instant.",
     );
   window.location.href = d.url;
 }
