@@ -23,9 +23,9 @@
   line-height: 0.88;
   text-transform: uppercase;
 }
+/* Le seul magenta de l'écran est le bouton */
 .sp-join h1 em {
   font-style: normal;
-  color: var(--accent);
 }
 .sp-field {
   display: flex;
