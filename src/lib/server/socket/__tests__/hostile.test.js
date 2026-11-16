@@ -151,9 +151,9 @@ describe("entrées hostiles sur tous les handlers", () => {
       expect({}[k], k).toBeUndefined();
   });
 
-  it("45 handlers enregistrés", () => {
+  it("46 handlers enregistrés", () => {
     const count = Object.values(handlers).reduce((n, l) => n + l.length, 0);
-    expect(count).toBe(45);
+    expect(count).toBe(46);
   });
 
   it("wait n'accepte qu'un booléen", () => {
@@ -215,6 +215,7 @@ describe("entrées hostiles sur tous les handlers", () => {
     salon_close: [undefined],
     salon_volume: [{ volume: 55 }],
     salon_tv_volume: [{ volume: 0 }, { volume: 100 }],
+    salon_tv_sound: [{ ok: true }, { ok: false }],
     salon_kick: [{ username: "Julie" }],
     salon_reclaim_request: [{ code: "ABC123", username: "Julie" }],
     salon_reclaim_answer: [
