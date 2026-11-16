@@ -71,6 +71,16 @@ describe("vue téléphone", () => {
     expect(r.recent.at(-1)).toEqual({ username: "j99", team: 1 });
   });
 
+  it("« Une autre ! » : un nombre, partis exclus, jamais les noms", () => {
+    const liste = [
+      ...joueurs(3).map((p, i) => ({ ...p, encore: i < 2 })),
+      { username: "parti", left: true, encore: true },
+    ];
+    const r = phoneRoster(liste);
+    expect(r.encore).toBe(2);
+    expect(r.recent.every((p) => !("encore" in p))).toBe(true);
+  });
+
   it("soirée : rang de chacun sans la liste", () => {
     const n = phoneNight({ games: 2, players: joueurs(5), teams: null })("j4");
     expect(n).toEqual({

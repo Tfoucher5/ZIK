@@ -62,7 +62,10 @@ export function finishGame(code, io) {
   clearOutage(salon, io);
   recordSalonGameEnd(salon);
   const all = gamePlayers(salon);
-  for (const p of all) p.night += p.score;
+  for (const p of all) {
+    p.night += p.score;
+    p.encore = false;
+  }
   salon.nightGames = (salon.nightGames ?? 0) + 1;
   const scores = all
     .map((p) => ({

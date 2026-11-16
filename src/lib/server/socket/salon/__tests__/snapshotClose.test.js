@@ -32,7 +32,9 @@ vi.mock("../../../config.js", () => ({
 const { salonRooms } = await import("../../../state.js");
 const { saveSnapshot, dropSnapshot, restoreSalon, freezeAndSaveAll } =
   await import("../snapshot.js");
-const { salonEnManche, nettoie } = await import("./snapshotHarness.js");
+const { salonEnManche, nettoie, revive } = await import("./snapshotHarness.js");
+const { getPlayerList } = await import("../players.js");
+const { eveningView } = await import("../evening.js");
 
 const io = {
   to: () => ({ emit: () => {} }),
@@ -46,6 +48,20 @@ beforeEach(() => {
   lenteurs = 0;
   effacementLent = false;
   for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+});
+
+describe("entre deux parties", () => {
+  it("QR en grand et « Une autre ! » survivent ; absents d'un vieil instantané", () => {
+    const salon = salonEnManche();
+    nettoie(salon);
+    const vieux = revive(salon);
+    salon.qrBig = true;
+    salon.players.Ana.encore = true;
+    const revu = revive(salon);
+    expect([revu.qrBig, revu.players.Ana.encore]).toEqual([true, true]);
+    expect(getPlayerList(vieux).every((p) => p.encore === false)).toBe(true);
+    expect(eveningView(vieux).qr).toBe(false);
+  });
 });
 
 describe("fermeture d'un salon pendant une sauvegarde", () => {
