@@ -33,3 +33,12 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · retoucher
 - **Recommandation** : la regarder avec le son, puis oui
 - **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v3.mp4
+
+## Maquette : passer en ZIK Pro en pleine soirée
+
+- **Chantier** : Passage Pro en pleine soirée (Nina, DA)
+- **Depuis** : 16/11
+- **Question** : Concept « la jauge » : quand le salon gratuit est plein, la régie montre 12 places, un mur, puis les prénoms de ceux qui attendent à l'entrée ; « Fais-les entrer » avec la Soirée 24 h (7,90 €) en un clic et « Voir les abonnements » en lien. Seul l'organisateur voit un prix ; les téléphones affichent « Tu entres si une place se libère. » ; la TV au plus « 3 en attente ». Écrans : régie, /pro depuis la régie, /pro/merci, téléphone en file, TV. 15 choix dans l'onglet « À valider », dont : prénoms plutôt qu'un nombre (le serveur devra envoyer les pseudos de la file à la régie), paiement sans fenêtre « Confirmer » (un clic de moins), compte déjà Pro = soirée Pro dès la connexion, pas de rang affiché dans la file, ligne « 3 en attente » sur la TV.
+- **Options** : valider · valider avec mes réponses · retoucher
+- **Recommandation** : valider tel quel
+- **Lien** : https://claude.ai/artifact/E2T27xQHBqxss5BGYmUEeb
