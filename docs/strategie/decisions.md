@@ -2,6 +2,20 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Réponses de Théo depuis le QG (matin)
+
+**Release v3.32** : Théo n'attend pas ses tests humains (« techniquement ça fonctionne déjà ») : release maintenant, achat test et vraie soirée multi-téléphones après.
+
+**Pro en pleine soirée** : Soirée 24 h en un clic depuis la régie, plus un lien vers les abonnements (/pro dans un nouvel onglet). Compte obligatoire pour payer. File d'attente des refusés : « tu entres si une place se libère ». Détail dans `docs/specs/2026-11-16-pro-en-pleine-soiree.md`.
+
+**Régie, titre remplacé** : Théo doute de l'utilité d'un message en direct. Choix du CEO : pas d'alerte pendant la manche ; le titre remplacé est seulement marqué dans la liste des titres de la régie (« remplacé : illisible sur la TV »), pour que l'organisateur comprenne pourquoi il n'a pas joué.
+
+**Maquette création et avant-partie** : validée, avec retouches : responsive et pas d'éléments trop gros (surtout quand les 200+ playlists publiques sont dépliées), sélection de base retirée complètement, lobby TV qui tient avec beaucoup de joueurs, décompte sans « Montez le son » (le son sort de la TV, pas des téléphones), téléphone qui scrolle au-delà de 3 équipes, autres onglets de la régie à montrer.
+
+**Maquette fin de partie et Rejouer** : téléphone, régie, Rejouer et entracte validés. À reprendre : écran TV de fin un peu chargé, bouton de la régie pour afficher le QR en grand sur la TV, story à partager à refaire (« horrible »), podium TV trop simple (le téléphone est nickel).
+
+**Promo** : vidéo « vraie partie » abandonnée (une manche est trop longue, pas assez dynamique). DA réseaux « Colle & magenta » validée, carrousel validé. Vidéo « Feuille de match » validée, en ajoutant à la fin que c'est le multijoueur. Chaque post reste validé par Théo avant planification (vidéo, légende, date).
+
 ## 16/11/2026 — Retours sur le lot 1 promo
 
 **Décision de Théo** : quiz emojis abandonné (format jugé nul). Vidéo de vraie partie : trop lente, il faut le vrai son de la partie, 15-25 s sans moment plat. Carrousel « ces sons ont 30 ans » : bonne idée, à restyler avec plus de pâte ZIK. Une DA réseaux propre à ZIK est en cours (Nina).
