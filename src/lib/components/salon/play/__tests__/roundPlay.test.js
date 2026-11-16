@@ -31,4 +31,10 @@ describe("QCM : écran du téléphone selon l'accusé", () => {
     expect(html).not.toContain("Envoi…");
     expect(html).not.toMatch(/disabled/);
   });
+
+  it("révélation : la case choisie marquée fausse, la bonne en avant", () => {
+    const html = vue({ chosenIndex: 2, allFound: true, revealCorrectIndex: 1 });
+    expect(html).toMatch(/c2[^"]*reveal-wrong/);
+    expect(html).toMatch(/c1[^"]*reveal-correct/);
+  });
 });

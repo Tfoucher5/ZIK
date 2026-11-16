@@ -145,7 +145,7 @@ export function endRound(code, reason, io) {
     track,
     game.currentVideo,
   );
-  emitRoundEnd(io, code, roundSummary);
+  emitRoundEnd(io, code, roundSummary, salon.players);
   scheduleCleanup(code);
   saveSnapshot(salon);
 

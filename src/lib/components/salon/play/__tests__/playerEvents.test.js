@@ -83,3 +83,30 @@ describe("téléphone : retour après une coupure en QCM", () => {
     expect(p).toMatchObject({ special: null, buzzer: null, buzzLocked: false });
   });
 });
+
+describe("téléphone : révélation QCM après un accusé perdu", () => {
+  const finDeManche = (p, data) => {
+    const handlers = {};
+    const socket = { on: (evt, fn) => (handlers[evt] = fn) };
+    listenPlayer(p, socket, "ABCDEF", "Bob");
+    handlers.salon_round_end({ ranking: null, teams: null, ...data });
+  };
+
+  it("la case comptée par le serveur s'affiche à la révélation", () => {
+    vi.useFakeTimers();
+    // Accusé expiré : la case a été rendue côté téléphone
+    const p = { answerMode: "multiple", chosenIndex: null, allFound: false };
+    finDeManche(p, { correctChoiceIndex: 1, chosenIndex: 2 });
+    expect(p.chosenIndex).toBe(2);
+    expect(p.revealCorrectIndex).toBe(1);
+    vi.runAllTimers();
+    expect(p.phase).toBe("summary");
+    vi.useRealTimers();
+  });
+
+  it("mode texte : la vue sans case ne touche à rien", () => {
+    const p = { answerMode: "text", chosenIndex: null };
+    finDeManche(p, {});
+    expect(p.chosenIndex).toBeNull();
+  });
+});
