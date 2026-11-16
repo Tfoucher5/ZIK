@@ -126,12 +126,8 @@ export class SalonPlayer {
     this.guess = "";
   };
 
-  #notReceived = () =>
-    this.showFeedback({
-      type: "miss",
-      correct: false,
-      msg: "Pas reçu, réessaie",
-    });
+  #notReceived = (msg = "Pas reçu, retape") =>
+    this.showFeedback({ type: "miss", correct: false, msg });
 
   // Verrouillé seulement quand le serveur a reçu la réponse : hors ligne le tap
   // n'est pas envoyé, et sans accusé la case est rendue
@@ -158,7 +154,7 @@ export class SalonPlayer {
   // Hors ligne ou pendant le décompte, rien ne part : le serveur refuserait
   toggleEncore = () => {
     if (this.startSec > 0 || this.replaying) return;
-    if (!this.socket?.connected) return this.#notReceived();
+    if (!this.socket?.connected) return this.#notReceived("Pas reçu, réessaie");
     this.encore = !this.encore;
     this.socket.emit("salon_encore", { on: this.encore });
   };

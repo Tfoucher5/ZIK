@@ -105,7 +105,7 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     expect(p.chosenIndex).toBeNull();
     expect(p.allFound).toBe(false);
     expect(envoi.emit).not.toHaveBeenCalled();
-    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
+    expect(p.feedback?.msg).toBe("Pas reçu, retape");
   });
 
   it("accusé reçu : la réponse est verrouillée", () => {
@@ -135,7 +135,7 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     envoi.cb(new Error("timeout"));
     expect(p.chosenIndex).toBeNull();
     expect(p.allFound).toBe(false);
-    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
+    expect(p.feedback?.msg).toBe("Pas reçu, retape");
     p.submitChoice(2);
     envoi.cb(null, null);
     expect(p.chosenIndex).toBeNull();
