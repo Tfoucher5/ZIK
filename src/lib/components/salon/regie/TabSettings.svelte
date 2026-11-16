@@ -1,207 +1,192 @@
 <script>
-  import SpecialsInfo from '$lib/components/salon/setup/SpecialsInfo.svelte';
-  import CloseEvening from '$lib/components/salon/regie/CloseEvening.svelte';
+  import CloseEvening from './CloseEvening.svelte';
+  import MediaCheck from './MediaCheck.svelte';
+  import { radioGroup } from '$lib/components/ui/radioGroup.js';
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
   import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
+  import { resumeReglages } from './onglets.js';
 
   /**
-   * Onglet « Réglages ». Secondaire : la configuration se fait en amont sur
-   * /salon, la régie sert à piloter. On garde la distinction existante entre
-   * ce qui s'applique en direct et ce qui attend la fin de la partie.
+   * Onglet « Réglages » : les quatre lignes de la création (musique, manches,
+   * réponses, équipes), puis la soirée (`children`) et sa fermeture. En partie,
+   * le mode de réponse et le nombre d'équipes attendent la partie suivante.
    *
    * @type {{
-   *   settings: any, phase: string, round: number, pro: boolean,
+   *   settings: any, phase: string, round: number, pro: boolean, mediaCheck: any,
+   *   playlistNames: string[],
    *   onSet: (patch: any) => void,
+   *   onSound: (patch: any) => void,
    *   onRenameTeam: (team: number, name: string) => void,
    *   onUpsell: (f: string) => void,
-   *   onOpenPlaylists: () => void, playlistNames: string[],
+   *   onOpenPlaylists: () => void,
    *   onClose: () => void,
+   *   children?: import('svelte').Snippet,
    * }}
    */
-  let { settings, phase, round, pro, onSet, onRenameTeam, onUpsell, onOpenPlaylists, onSound, onClose, playlistNames = [] } = $props();
+  let { settings, phase, round, pro, mediaCheck, playlistNames = [], onSet, onSound, onRenameTeam, onUpsell, onOpenPlaylists, onClose, children } = $props();
 
   const idle = $derived(phase === 'lobby' || phase === 'gameover');
+  const r = $derived(resumeReglages(settings, playlistNames));
+  const nbEquipes = $derived(settings.teams?.length ?? 0);
+  const reste = $derived(Math.max(0, (settings.maxRounds ?? 0) - round));
+  const PLUS = SALON_TEAMS.filter((n) => n > FREE_MAX_TEAMS);
+
+  // En 1024 px tout est déplié ; au téléphone, la ligne utile du moment
+  let large = $state(false);
+  $effect(() => {
+    const mq = matchMedia('(min-width: 900px)');
+    large = mq.matches;
+    const maj = () => (large = mq.matches);
+    mq.addEventListener('change', maj);
+    return () => mq.removeEventListener('change', maj);
+  });
+  const ouvert = (n) => large || (idle ? n === '02' : n !== '01' && n !== '02');
+
+  const equipes = (n) => (!pro && n > FREE_MAX_TEAMS ? onUpsell('teams') : onSet({ teamCount: n }));
 </script>
 
-{#if phase === 'gameover'}<h2 class="ts-titre">Partie suivante</h2>{/if}
+{#snippet seg(label, options, value, set, unit = '', locked = () => false, disabled = () => false)}
+  <div class="rg-seg" role="radiogroup" {@attach radioGroup} aria-label={label}>
+    {#each options as o (o)}
+      <button type="button" role="radio" aria-checked={value === o} class:verrou={locked(o)} disabled={disabled(o)} onclick={() => set(o)}>{o}{unit}</button>
+    {/each}
+  </div>
+{/snippet}
+
+{#snippet ouiNon(label, on, set, pro = false)}
+  <div class="rg-reg fil">
+    <span>{label}{#if pro}<span class="pro-tag">ZIK Pro</span>{/if}</span>
+    {@render seg(label, ['Oui', 'Non'], on ? 'Oui' : 'Non', (v) => set(v === 'Oui'))}
+  </div>
+{/snippet}
+
+{#snippet ligne(n, titre, sous, corps)}
+  <details class="rg-plus" open={ouvert(n)}>
+    <summary><span class="n">{n}</span><span><b>{titre}</b><small>{sous}</small></span></summary>
+    {@render corps()}
+  </details>
+{/snippet}
+
+{#snippet fige(label, valeur)}
+  <div class="rg-reg fil"><span>{label}</span><p class="rg-fige"><b>{valeur}</b>Entre deux parties</p></div>
+{/snippet}
+
 <p class="ts-note">
   {idle
-    ? 'Les changements prennent effet à la prochaine partie. Pas besoin de nouveau salon : les joueurs restent.'
+    ? 'Les changements prennent effet à la prochaine partie. Pas besoin de nouvelle soirée : les joueurs restent.'
     : 'Les changements prennent effet dès la manche suivante.'}
 </p>
 
-<div class="ts-field">
-  <span>Playlist</span>
-  <div class="ts-playlist">
-    <p>{playlistNames.join(', ') || 'Sélection en cours'}</p>
-    <button class="sx-btn" onclick={onOpenPlaylists}>Changer de playlist</button>
-  </div>
-</div>
-
-<div class="ts-field">
-  <span>Manches</span>
-  <div class="ts-seg">
-    {#each SALON_ROUNDS as n (n)}
-      <button class:on={settings.maxRounds === n} disabled={!idle && n < round} onclick={() => onSet({ maxRounds: n })}>{n}</button>
-    {/each}
-  </div>
-</div>
-
-<div class="ts-field">
-  <span>Temps pour répondre</span>
-  <div class="ts-seg">
-    {#each SALON_DURATIONS as n (n)}
-      <button class:on={settings.roundDuration === n} onclick={() => onSet({ roundDuration: n })}>{n} s</button>
-    {/each}
-  </div>
-</div>
-
-<div class="ts-field">
-  <span>Manche suivante</span>
-  <div class="ts-seg">
-    <button class:on={!settings.manualNext} onclick={() => onSet({ manualNext: false })}>Automatique</button>
-    <button class:on={settings.manualNext} onclick={() => onSet({ manualNext: true })}>Quand je clique</button>
-  </div>
-</div>
-
-{#if !settings.manualNext}
-  <div class="ts-field">
-    <span>Réponse affichée</span>
-    <div class="ts-seg">
-      {#each SALON_REVEALS as n (n)}
-        <button class:on={settings.showAnswerDuration === n} onclick={() => onSet({ showAnswerDuration: n })}>{n} s</button>
-      {/each}
-    </div>
-  </div>
-{/if}
-
-<div class="ts-field">
-  <span>Réponses {#if !idle}<small>entre deux parties</small>{/if}</span>
-  <div class="ts-seg">
-    <button class:on={settings.answerMode === 'free'} disabled={!idle} onclick={() => onSet({ answerMode: 'free' })}>Texte libre</button>
-    <button class:on={settings.answerMode === 'multiple'} disabled={!idle} onclick={() => onSet({ answerMode: 'multiple' })}>4 choix</button>
-    <button class:on={settings.answerMode === 'buzzer'} class:ts-locked={!pro} disabled={!idle}
-      onclick={() => (pro ? onSet({ answerMode: 'buzzer' }) : onUpsell('buzzer'))}>Buzzer{#if !pro}<i>Pro</i>{/if}</button>
-  </div>
-  {#if settings.answerMode === 'buzzer'}
-    <div class="ts-son">
-      <b>Son du buzz</b>
-      <div class="ts-seg">
-        <button class:on={settings.buzzSound !== false} onclick={() => onSound({ buzzSound: true })}>Oui</button>
-        <button class:on={settings.buzzSound === false} onclick={() => onSound({ buzzSound: false })}>Non</button>
+<div class="ts">
+  <div class="ts-col">
+    {#snippet musique()}
+      <div class="rg-reg">
+        {#if idle}<MediaCheck check={mediaCheck} />{:else}<p class="ts-mu">Le changement vaut pour les {reste} manches qui restent.</p>{/if}
+        <button class="rg-em ts-em" type="button" onclick={onOpenPlaylists}>Changer de playlist</button>
       </div>
-    </div>
-  {/if}
-</div>
+    {/snippet}
+    {@render ligne('01', 'La musique', r.musique, musique)}
 
-<div class="ts-field">
-  <span>Décompte avant la partie</span>
-  <div class="ts-seg">
-    <button class:on={settings.countStart !== false} onclick={() => onSound({ countStart: true })}>Oui</button>
-    <button class:on={settings.countStart === false} onclick={() => onSound({ countStart: false })}>Non</button>
+    {#snippet manches()}
+      <div class="rg-reg"><span>Manches</span>{@render seg('Manches', SALON_ROUNDS, settings.maxRounds, (n) => onSet({ maxRounds: n }), '', () => false, (n) => !idle && n < round)}</div>
+      <div class="rg-reg"><span>Temps pour répondre</span>{@render seg('Temps pour répondre', SALON_DURATIONS, settings.roundDuration, (n) => onSet({ roundDuration: n }), ' s')}</div>
+      <div class="rg-reg">
+        <span>Manche suivante</span>
+        {@render seg('Manche suivante', ['Automatique', 'Quand je clique'], settings.manualNext ? 'Quand je clique' : 'Automatique', (v) => onSet({ manualNext: v !== 'Automatique' }))}
+      </div>
+      {#if !settings.manualNext}
+        <div class="rg-reg"><span>Réponse affichée</span>{@render seg('Réponse affichée', SALON_REVEALS, settings.showAnswerDuration, (n) => onSet({ showAnswerDuration: n }), ' s')}</div>
+      {/if}
+      {@render ouiNon('Décompte avant la partie', settings.countStart !== false, (v) => onSound({ countStart: v }))}
+      {#if !settings.manualNext}
+        {@render ouiNon('Décompte avant le titre suivant', settings.countNext !== false, (v) => onSound({ countNext: v }))}
+      {/if}
+    {/snippet}
+    {@render ligne('02', 'Les manches', r.manches, manches)}
   </div>
-</div>
 
-{#if !settings.manualNext}
-  <div class="ts-field">
-    <span>Décompte avant le titre suivant</span>
-    <div class="ts-seg">
-      <button class:on={settings.countNext !== false} onclick={() => onSound({ countNext: true })}>Oui</button>
-      <button class:on={settings.countNext === false} onclick={() => onSound({ countNext: false })}>Non</button>
-    </div>
-  </div>
-{/if}
+  <div class="ts-col">
+    {#snippet reponses()}
+      {#if idle}
+        <div class="rg-reg">
+          <span>Mode de réponse</span>
+          {@render seg('Mode de réponse', ['4 choix', 'Texte libre', 'Buzzer'], r.mode,
+            (v) => (v === 'Buzzer' ? (pro ? onSet({ answerMode: 'buzzer' }) : onUpsell('buzzer')) : onSet({ answerMode: v === '4 choix' ? 'multiple' : 'free' })),
+            '', (v) => v === 'Buzzer' && !pro)}
+        </div>
+      {:else}
+        {@render fige('Mode de réponse', r.mode)}
+      {/if}
+      {#if settings.answerMode === 'buzzer'}
+        {@render ouiNon('Son du buzz', settings.buzzSound !== false, (v) => onSound({ buzzSound: v }))}
+      {/if}
+      <div class="rg-reg fil">
+        <span>Manches spéciales <span class="pro-tag">ZIK Pro</span></span>
+        {@render seg('Manches spéciales', ['Non', 'Au hasard'], settings.specials ? 'Au hasard' : 'Non',
+          (v) => (v === 'Non' ? onSet({ specials: false }) : pro ? onSet({ specials: true }) : onUpsell('specials')),
+          '', (v) => v !== 'Non' && !pro)}
+        <small>Points doubles, intro éclair, sprint : environ une manche sur quatre.</small>
+      </div>
+    {/snippet}
+    {@render ligne('03', 'Les réponses', r.reponses, reponses)}
 
-<div class="ts-field">
-  <span>Manches spéciales <small>au hasard</small><SpecialsInfo /></span>
-  <div class="ts-seg">
-    <button class:on={!settings.specials} onclick={() => onSet({ specials: false })}>Non</button>
-    <button class:on={settings.specials} class:ts-locked={!pro}
-      onclick={() => (pro ? onSet({ specials: true }) : onUpsell('specials'))}>Oui{#if !pro}<i>Pro</i>{/if}</button>
-  </div>
-</div>
+    {#snippet equipesCorps()}
+      {#if idle}
+        <div class="rg-reg">
+          <span>Nombre d'équipes</span>
+          {@render seg("Nombre d'équipes", ['Chacun pour soi', '2 équipes'], nbEquipes === 0 ? 'Chacun pour soi' : nbEquipes === 2 ? '2 équipes' : null,
+            (v) => equipes(v === '2 équipes' ? 2 : 0))}
+          {@render seg("Plus d'équipes", PLUS, nbEquipes, equipes, '', () => !pro)}
+          {#if pro}
+            <label class="ts-autre">Autre nombre
+              <input type="number" min="2" max="100" placeholder="2 à 100" value={SALON_TEAMS.includes(nbEquipes) ? '' : nbEquipes}
+                onchange={(e) => onSet({ teamCount: Math.round(+e.currentTarget.value) || 0 })}>
+            </label>
+          {/if}
+        </div>
+      {:else}
+        {@render fige("Nombre d'équipes", nbEquipes ? `${nbEquipes} équipes` : 'Chacun pour soi')}
+      {/if}
+      {#if settings.teams}
+        <div class="rg-reg">
+          <span>Noms des équipes <span class="pro-tag">ZIK Pro</span></span>
+          <div class="ts-noms">
+            {#each settings.teams as t (t.id)}
+              <input style="--tc:{teamColor(t.id)}" value={t.name} maxlength="24" readonly={!pro} aria-label="Nom de l'équipe {t.name}"
+                onclick={() => { if (!pro) onUpsell('teamEdit'); }}
+                onchange={(e) => onRenameTeam(t.id, e.currentTarget.value)}>
+            {/each}
+          </div>
+        </div>
+      {/if}
+    {/snippet}
+    {@render ligne('04', 'Les équipes', r.equipes, equipesCorps)}
 
-<div class="ts-field">
-  <span>Équipes {#if !idle}<small>entre deux parties</small>{/if}</span>
-  <div class="ts-seg">
-    {#each SALON_TEAMS as n (n)}
-      {@const locked = !pro && n > FREE_MAX_TEAMS}
-      <button
-        class:on={(settings.teams?.length ?? 0) === n}
-        class:ts-locked={locked}
-        disabled={!idle}
-        onclick={() => (locked ? onUpsell('teams') : onSet({ teamCount: n }))}
-      >{n || 'Aucune'}{#if locked}<i>Pro</i>{/if}</button>
-    {/each}
-    {#if pro}
-      <input class="ts-input ts-nombre" type="number" min="2" max="100" placeholder="Autre" disabled={!idle} aria-label="Autre nombre d'équipes"
-        value={SALON_TEAMS.includes(settings.teams?.length ?? 0) ? '' : settings.teams.length}
-        onchange={(e) => onSet({ teamCount: Math.round(+e.currentTarget.value) || 0 })}>
+    {@render children?.()}
+    {#if idle}
+      {@render ouiNon('Roulement de tambour', settings.finaleSound !== false, (v) => (pro ? onSound({ finaleSound: v }) : onUpsell('night')), true)}
     {/if}
+    <CloseEvening {onClose} />
   </div>
 </div>
-
-{#if settings.teams}
-  <div class="ts-field">
-    <span>Noms des équipes</span>
-    <div class="ts-teamnames">
-      {#each settings.teams as t (t.id)}
-        <input class="ts-input" style="--tc:{teamColor(t.id)}" value={t.name} maxlength="24" readonly={!pro}
-          onclick={() => { if (!pro) onUpsell('teamEdit'); }}
-          onchange={(e) => onRenameTeam(t.id, e.target.value)}>
-      {/each}
-    </div>
-  </div>
-{/if}
-
-<CloseEvening {onClose} />
 
 <style>
-  .ts-titre { margin: 0 0 6px; font-size: 1.2rem; }
-  .ts-note { font-size: 0.82rem; color: var(--dim); margin: 0 0 20px; }
-  .ts-playlist { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .ts-playlist p { flex: 1; min-width: 160px; margin: 0; font-weight: 600; }
-
-  .ts-field { margin-bottom: 20px; }
-  .ts-field > span {
-    display: block; font-size: 0.84rem; color: var(--mid); margin-bottom: 8px;
+  .ts-note { padding-bottom: 12px; font-size: 14px; line-height: 1.4; color: var(--muted); border-bottom: 1px solid var(--line-2); }
+  .ts { display: grid; }
+  .ts-col { display: grid; align-content: start; min-width: 0; }
+  .ts-mu { font-size: 15px; line-height: 1.3; color: var(--soft); }
+  .ts-em { justify-self: start; }
+  .ts-autre { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--muted); }
+  .ts-autre input, .ts-noms input {
+    min-width: 0; height: 48px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 12px;
+    background: rgb(255 255 255 / 0.06); color: var(--text); font: inherit; font-size: 16px; font-weight: 600;
   }
-  .ts-field > span small {
-    font-size: 0.68rem; color: var(--dim); margin-left: 6px;
-    text-transform: uppercase; letter-spacing: 0.1em;
-  }
+  .ts-autre input { width: 108px; }
+  .ts-noms { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ts-noms input { border-left: 4px solid var(--tc); }
 
-  .ts-seg { display: flex; flex-wrap: wrap; gap: 6px; }
-  .ts-seg button {
-    /* 44px : utilisable au doigt, la tablette est le support principal. */
-    min-height: 44px;
-    padding: 9px 16px; border-radius: 2px;
-    border: 1px solid var(--border2); background: none; color: var(--mid);
-    font-family: var(--s-mono); font-size: 0.82rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 7px;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .ts-seg button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .ts-seg button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
-  .ts-seg button:disabled { opacity: 0.4; cursor: default; }
-
-  /* Un point magenta sans légende ne disait rien : étiquette explicite. */
-  .ts-seg button.ts-locked { border-style: dashed; }
-  .ts-seg i {
-    font-style: normal; font-size: 0.58rem; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 2px 6px; border-radius: 2px;
-    background: rgb(var(--accent-rgb) / 0.16); color: var(--accent);
-  }
-
-  .ts-son { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
-  .ts-son b { font-size: 0.9rem; font-weight: 600; }
-  .ts-nombre { width: 90px; border-left-width: 1px; }
-  .ts-teamnames { display: flex; flex-wrap: wrap; gap: 8px; }
-  .ts-input {
-    padding: 10px 12px; min-height: 44px; border-radius: 2px;
-    border: 1px solid var(--border2); border-left: 3px solid var(--tc);
-    background: var(--bg2); color: var(--text); font: inherit; font-size: 0.86rem;
-    max-width: 180px;
+  @media (min-width: 900px) {
+    .ts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 44px; }
+    .ts-noms { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 </style>

@@ -129,6 +129,11 @@ export function listenRegie(r, socket) {
     r.history = [...r.history, { answer: d.answer, cover: d.cover }];
     r.applyScores(d.scores);
   });
+  socket.on("salon_replaced", ({ round, replaced }) => {
+    r.history = r.history.map((h, i) =>
+      i === round - 1 ? { ...h, replaced } : h,
+    );
+  });
   socket.on("salon_game_over", (d) => {
     r.phase = "gameover";
     r.teams = d.teams;
@@ -166,7 +171,7 @@ export function listenRegie(r, socket) {
   socket.on("salon_pro", ({ pro }) => {
     r.pro = pro;
     r.upsell = null;
-    r.flash("ZIK Pro activé pour ce salon.");
+    r.flash("ZIK Pro activé pour cette soirée.");
   });
   socket.on("salon_closed", () => {
     forgetSalon(r.code);

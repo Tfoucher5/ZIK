@@ -94,6 +94,28 @@ describe("signaler un titre depuis la régie", () => {
     expect(m.signalements[0][0]).toBe("t3");
   });
 
+  it("titre remplacé : noté dans l'historique, annoncé à la régie seule", () => {
+    salonRooms[CODE].settings.manualNext = true;
+    Object.assign(game().currentTrack, { title: "T", artist: "A" });
+    game().replaced = "France Gall - Ella, elle l'a";
+    endRound(CODE, "Temps écoulé !", h.io);
+    expect(game().history[2]).toMatchObject({
+      answer: "A - T",
+      replaced: "France Gall - Ella, elle l'a",
+    });
+    expect(game().replaced).toBeNull();
+    const envois = h.emissions.filter((e) =>
+      JSON.stringify(e.payload ?? {}).includes("Ella"),
+    );
+    expect(envois).toEqual([
+      {
+        cibles: [`salon:ctrl:${CODE}`],
+        event: "salon_replaced",
+        payload: { round: 3, replaced: "France Gall - Ella, elle l'a" },
+      },
+    ]);
+  });
+
   it("manche inconnue ou titre en cours hors manche : rien n'est signalé", () => {
     regie.handlers.salon_report_video({ reason: "x", round: 9 });
     game().phase = "lobby";

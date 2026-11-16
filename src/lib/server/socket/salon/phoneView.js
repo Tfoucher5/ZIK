@@ -83,7 +83,7 @@ export function emitGameOver(io, code, over) {
 }
 
 // QCM : chaque téléphone reçoit la case comptée pour lui, jamais celle des autres
-export function emitRoundEnd(io, code, summary, players) {
+export function emitRoundEnd(io, code, summary, players, history = []) {
   const rank = ranker(withPrevRank(summary.scores));
   const phone = {
     ...summary,
@@ -97,6 +97,14 @@ export function emitRoundEnd(io, code, summary, players) {
       chosenIndex: players?.[u]?._choiceIndex ?? null,
     }),
   }));
+  // Titre remplacé (illisible sur la TV) : seulement pour la régie, après
+  // salon_round_end qui crée la ligne
+  const replaced = history.at(-1)?.replaced;
+  if (replaced)
+    io.to(`salon:ctrl:${code}`).emit("salon_replaced", {
+      round: history.length,
+      replaced,
+    });
 }
 
 // Reprise après une coupure : de quoi rétablir l'écran du téléphone
