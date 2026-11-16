@@ -21,7 +21,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : PR `chore/deps-develop` vers develop (svelte, vite, nodemailer, failles modérées corrigées, Dependabot vers develop) ; après fusion, recette du salon sur le staging ; stripe 23 avec Théo, kit 3 plus tard
+- **Prochaine étape** : #489 fusionnée puis annulée : scénario salon rouge 2 fois sur le staging (le 2e téléphone clique sur « Rejoindre » sans effet). Le scénario relancé après l'annulation dit si les dépendances sont en cause ; Dependabot vise maintenant develop
 
 ## Refonte de l'accueil
 
