@@ -238,7 +238,9 @@ describe("entracte et podium final", () => {
         { username: "Bob", team: 1 },
       ],
       count: 2,
+      encore: 0,
     });
+    expect(vue.encore).toBe(false);
     expect(vue.teams.find((t) => t.id === 1)).toMatchObject({ size: 1 });
     expect(vue.teams[0]).not.toHaveProperty("members");
   });

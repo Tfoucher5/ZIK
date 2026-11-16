@@ -78,6 +78,23 @@ describe("instantané d'un salon", () => {
     });
   });
 
+  it("la file d'attente survit, dans l'ordre, avec ses jetons", () => {
+    const salon = salonEnManche();
+    salon.waiting = [
+      { username: "Lea", token: "t-lea", userId: null, socketId: "s9" },
+      {
+        username: "Max",
+        token: "t-max",
+        userId: "u1",
+        socketId: null,
+        leftAt: 5,
+      },
+    ];
+    const revu = revive(salon);
+    nettoie(salon);
+    expect(revu.waiting).toEqual(salon.waiting);
+  });
+
   it("si l'hôte avait mis en pause, la pause est gardée et rien ne repart seul", () => {
     const salon = salonEnManche();
     salon.game.paused = true;

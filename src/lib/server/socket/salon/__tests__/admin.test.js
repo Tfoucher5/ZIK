@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 // Pas de base en test : les instantanés sont couverts par snapshot.test.js
 vi.mock("../snapshot.js", () => ({
-  saveSnapshot: async () => {},
+  saveSnapshot: vi.fn(async () => {}),
   freezeAndSaveAll: async () => {},
   purgeSnapshots: async () => {},
   dropSnapshot: async () => {},
@@ -50,6 +50,7 @@ const {
 } = await import("../admin.js");
 const { departPlayer } = await import("../departed.js");
 const { note } = await import("../journal.js");
+const { saveSnapshot } = await import("../snapshot.js");
 
 const CODE = "AIDE01";
 
@@ -246,9 +247,12 @@ describe("dépannage d'un salon depuis l'admin", () => {
     expect(() => supportKick(CODE, "Inconnu")).toThrow();
   });
 
-  it("offre le Pro et prévient la régie et la TV", () => {
+  it("offre le Pro, le sauvegarde et prévient la régie et la TV", () => {
+    saveSnapshot.mockClear();
     supportGiftPro(CODE);
     expect(salonRooms[CODE].pro).toBe(true);
+    // Un redémarrage ne doit pas reprendre le Pro offert
+    expect(saveSnapshot).toHaveBeenCalledWith(salonRooms[CODE]);
     expect(salonLiveState(CODE).proGift).toBe(true);
     expect(vus(h, "salon_pro")[0].cibles).toEqual([
       `salon:screens:${CODE}`,

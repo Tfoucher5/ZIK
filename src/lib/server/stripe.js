@@ -17,11 +17,13 @@ export function getStripe() {
 
 // Formule ZIK Pro -> prix Stripe (créés dans le Dashboard, un jeu test et un jeu live)
 export function priceFor(plan) {
-  return {
+  const prices = {
     night: process.env.STRIPE_PRICE_NIGHT,
     monthly: process.env.STRIPE_PRICE_MONTHLY,
     yearly: process.env.STRIPE_PRICE_YEARLY,
-  }[plan];
+  };
+  // « constructor », « toString »… : hérités, ce ne sont pas des formules
+  return Object.hasOwn(prices, plan) ? prices[plan] : undefined;
 }
 
 export function planForPrice(priceId) {

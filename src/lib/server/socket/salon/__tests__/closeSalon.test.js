@@ -68,7 +68,8 @@ describe("« Fermer la soirée »", () => {
     expect(salonRooms[CODE]).toBeUndefined();
     expect(fermetures(h)).toEqual([
       {
-        cibles: [`salon:${CODE}`],
+        // File d'attente comprise : ces téléphones ne sont pas dans salon:<code>
+        cibles: [`salon:${CODE}`, `salon:wait:${CODE}`],
         event: "salon_closed",
         payload: { message: "L'hôte a fermé la soirée." },
       },

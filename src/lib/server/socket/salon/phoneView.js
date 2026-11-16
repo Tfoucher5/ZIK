@@ -47,7 +47,8 @@ export function phoneNight(night) {
   });
 }
 
-// Salle d'attente : effectif et dernières arrivées (partis exclus)
+// Salle d'attente : effectif, dernières arrivées et nombre de « Une autre ! »
+// (partis exclus), jamais la liste des demandeurs
 export function phoneRoster(players) {
   const here = players.filter((p) => !p.left);
   return {
@@ -55,6 +56,7 @@ export function phoneRoster(players) {
       .slice(-RECENT)
       .map(({ username, team }) => ({ username, team })),
     count: here.length,
+    encore: here.filter((p) => p.encore).length,
   };
 }
 
