@@ -28,7 +28,7 @@
     capture: () => scrollY,
     restore: (y) => {
       retour = y;
-      if (pins.live) replacer(y);
+      if (pins.live) replacer(y, "", pins.st);
     },
   };
 
@@ -44,7 +44,7 @@
       (s) => {
         if (fini) return s();
         stop = s;
-        replacer(retour, location.hash);
+        replacer(retour, location.hash, pins.st);
       },
       () => html.classList.add('rm'),
     );

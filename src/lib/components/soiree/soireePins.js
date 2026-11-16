@@ -76,6 +76,7 @@ export async function mountPins(reg) {
   );
   // Les espaces d'épinglage allongent la page : positions recalculées tout de suite
   ScrollTrigger.refresh();
+  reg.st = ScrollTrigger;
   reg.live = true;
   return () => {
     reg.live = false;
@@ -88,8 +89,25 @@ export async function mountPins(reg) {
  * d'un retour arrière (y), sinon l'ancre de l'adresse. Sans eux, la page plus
  * courte a ramené le scroll en haut.
  */
-export function replacer(y, hash) {
-  if (y != null) return scrollTo({ top: y, behavior: "instant" });
+export function replacer(y, hash, st) {
   const id = hash ? decodeURIComponent(hash.slice(1)) : "";
-  document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+  const poser = () =>
+    y != null
+      ? scrollTo({ top: y, behavior: "instant" })
+      : document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+  poser();
+  if (!st || (y == null && !id)) return;
+  // Images et vidéos chargées après coup relancent l'épinglage et décalent la
+  // page : on repose la cible tant que le visiteur n'a pas bougé lui-même
+  const gestes = ["wheel", "touchstart", "keydown", "pointerdown"];
+  const fin = () => {
+    st.removeEventListener("refresh", poser);
+    gestes.forEach((g) => removeEventListener(g, fin));
+    clearTimeout(t);
+  };
+  st.addEventListener("refresh", poser);
+  gestes.forEach((g) =>
+    addEventListener(g, fin, { once: true, passive: true }),
+  );
+  const t = setTimeout(fin, 5000);
 }
