@@ -155,50 +155,10 @@
   background: var(--danger);
   color: #000;
 }
-
-/* Prochaine partie (fin de partie, écran piloté) */
-.sh-next {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.sh-next-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.sh-seg {
-  display: inline-flex;
-  border: 1px solid var(--border2);
-  border-radius: 3px;
-}
-.sh-seg button {
-  padding: 8px 12px;
-  background: none;
-  border: 0;
-  border-right: 1px solid var(--border2);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-.sh-seg button:last-child {
-  border-right: 0;
-}
-.sh-seg button.on {
-  background: var(--text);
-  color: var(--bg);
-}
-
 @keyframes sh-in {
   from {
     opacity: 0;
     transform: scale(0.9);
-  }
-}
-@keyframes sh-rise {
-  from {
-    transform: scaleY(0.1);
   }
 }
 @keyframes sh-up {
@@ -208,9 +168,6 @@
 }
 
 @media (max-width: 1000px) {
-  .sh-over-grid {
-    grid-template-columns: 1fr;
-  }
   .sh-body {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;

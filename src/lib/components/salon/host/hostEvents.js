@@ -28,6 +28,7 @@ export function listenHost(h, socket) {
     h.night = data.night;
     h.intermission = data.evening?.intermission ?? null;
     h.finale = data.evening?.finale ?? null;
+    h.qrBig = !!data.evening?.qr;
     h.buzzer = data.buzzer;
     h.mediaCheck = data.mediaCheck;
     socket.emit("salon_tv_volume", { volume: h.volume });
@@ -49,9 +50,10 @@ export function listenHost(h, socket) {
   socket.on("salon_night", ({ night }) => {
     h.night = night;
   });
-  socket.on("salon_evening", ({ intermission, finale }) => {
+  socket.on("salon_evening", ({ intermission, finale, qr }) => {
     h.intermission = intermission;
     h.finale = finale;
+    h.qrBig = !!qr;
   });
   socket.on("salon_buzzed", (buzzer) => {
     h.buzzer = buzzer;

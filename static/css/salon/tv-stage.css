@@ -176,43 +176,6 @@
   visibility: visible;
 }
 
-/* Code et QR pour rejoindre (fin de partie) */
-.sh-code {
-  display: flex;
-  gap: 8px;
-}
-.sh-code b {
-  display: grid;
-  place-items: center;
-  width: clamp(48px, 5vw, 84px);
-  aspect-ratio: 0.8;
-  border: 2px solid var(--text);
-  border-radius: 3px;
-  font-family: var(--s-mono);
-  font-size: clamp(1.8rem, 3.4vw, 3.4rem);
-  font-weight: 600;
-}
-.sh-lobby-url {
-  margin-top: 18px;
-  font-size: clamp(0.95rem, 1.3vw, 1.2rem);
-  color: var(--mid);
-}
-.sh-lobby-url b {
-  color: var(--text);
-  font-weight: 600;
-}
-.sh-qr {
-  padding: 14px;
-  background: #fff;
-  border-radius: 3px;
-  box-shadow: 8px 8px 0 var(--accent);
-}
-.sh-qr img {
-  display: block;
-  width: clamp(180px, 22vw, 320px);
-  height: auto;
-}
-
 /* Manche */
 .sh-roundview {
   align-items: center;

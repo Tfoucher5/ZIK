@@ -12,7 +12,10 @@
   import HostLobby from '$lib/components/salon/host/HostLobby.svelte';
   import HostPrep from '$lib/components/salon/host/HostPrep.svelte';
   import LobbyCountdown from '$lib/components/salon/host/LobbyCountdown.svelte';
+  import HostGameOver from '$lib/components/salon/host/HostGameOver.svelte';
+  import HostQrBig from '$lib/components/salon/host/HostQrBig.svelte';
   import { lobbyShown, prepShown } from '$lib/components/salon/host/lobbyView.js';
+  import { gameOverShown, qrBigShown } from '$lib/components/salon/host/gameOverView.js';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -52,16 +55,11 @@
     <HostCenter
       bind:this={h.hostCenter}
       phase={h.phase} code={h.code} timerVal={h.timerVal} timerMax={h.timerMax} timerStarted={h.timerStarted}
-      players={h.players} roundEnd={h.roundEnd} gameOver={h.gameOver}
-      paused={h.paused} pro={h.pro}
+      players={h.players} roundEnd={h.roundEnd}
+      paused={h.paused}
       round={h.round} total={h.total}
       choices={h.choices}
       answerMode={h.settings.answerMode || 'free'}
-      onRestart={h.restartGame}
-      settings={h.settings}
-      onSetting={(patch) => h.socket?.emit('salon_update_settings', patch)}
-      onChangePlaylists={h.canChangePlaylists ? h.openPicker : null}
-      onNewSalon={h.closeSalon}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
       buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} connLost={h.connLost}
@@ -69,9 +67,11 @@
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
     {#if lobbyShown(h)}<HostLobby {h} />{/if}
+    {#if gameOverShown(h)}<HostGameOver {h} />{/if}
+    {#if qrBigShown(h)}<HostQrBig code={h.code} onClose={h.controls ? null : () => h.setQrBig(false)} />{/if}
   </div>
 
-  <LobbyCountdown sec={h.startSec} />
+  <LobbyCountdown sec={h.startSec} rejouer={h.phase === 'gameover' || h.phase === 'summary'} />
   <BigCountdown sec={h.nextShown && h.nextSec <= 3 && !h.paused ? h.nextSec : 0} />
 
   {#if h.phase === 'lobby' && !h.controls}

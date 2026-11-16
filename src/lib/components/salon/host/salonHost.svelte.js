@@ -54,6 +54,8 @@ export class SalonHost {
   special = $state(null);
   intermission = $state(null);
   finale = $state(null);
+  // QR en grand (régie ou TV seule), renvoyé par le serveur
+  qrBig = $state(false);
   // Intro éclair : la musique est coupée, une reprise après un buzz raté ne la relance pas
   flashCut = false;
   paused = $state(false);
@@ -143,6 +145,9 @@ export class SalonHost {
   closeSalon = () => {
     this.socket?.emit("salon_close");
     setTimeout(() => (window.location.href = "/salon"), 2000);
+  };
+  setQrBig = (on) => {
+    this.socket?.emit("salon_qr_big", { on });
   };
   togglePause = () => {
     this.socket?.emit(this.paused ? "salon_resume" : "salon_pause");
