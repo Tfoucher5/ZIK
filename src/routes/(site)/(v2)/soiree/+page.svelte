@@ -24,11 +24,15 @@
 
   // Retour arrière : scroll noté au départ, reposé après l'épinglage (replacer)
   let retour = null;
+  let lacher = () => {};
   export const snapshot = {
     capture: () => scrollY,
     restore: (y) => {
       retour = y;
-      if (pins.live) replacer(y);
+      if (pins.live) {
+        lacher();
+        lacher = replacer(y, "", pins.st);
+      }
     },
   };
 
@@ -44,7 +48,7 @@
       (s) => {
         if (fini) return s();
         stop = s;
-        replacer(retour, location.hash);
+        lacher = replacer(retour, location.hash, pins.st);
       },
       () => html.classList.add('rm'),
     );
