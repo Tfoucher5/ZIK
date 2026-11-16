@@ -8,15 +8,19 @@ export function listenJoin(p, socket, chrono, c, u) {
     else chrono.stop();
   });
   // Soirée complète : en file. Le jeton garde la place et le pseudo à chaque
-  // reconnexion (sendJoin le renvoie)
+  // reconnexion (sendJoin le renvoie). Aussi un joueur retiré du lobby après
+  // une coupure, puis remis en file
   socket.on("salon_waiting", ({ username, token }) => {
     p.joining = false;
+    p.joined = false;
     p.waiting = true;
     p.username = username;
     p.code = c;
     p.token = token;
     try {
       localStorage.setItem("zik_salon_player_" + c, token);
+      // Page rechargée : le pseudo est déjà tapé
+      localStorage.setItem("salon_user", username);
     } catch {
       /* stockage bloqué : le jeton reste en mémoire */
     }
@@ -37,12 +41,15 @@ export function listenJoin(p, socket, chrono, c, u) {
   });
 }
 
-// « Quitter la file » confirmé : retour au formulaire, pseudo gardé
+// « Quitter la file » confirmé : retour au formulaire, pseudo gardé. On ne
+// coupe qu'à l'accusé, sinon un relais qui regroupe les trames perd la sortie
+// et le pseudo reste réservé 10 minutes
 export function quitQueue(p) {
-  p.socket?.emit("salon_queue_leave", {});
-  p.socket?.disconnect();
+  const s = p.socket;
   p.socket = null;
   p.waiting = false;
+  if (!s?.connected) return s?.disconnect();
+  s.timeout(2000).emit("salon_queue_leave", {}, () => s.disconnect());
 }
 
 function onJoined(p, data, c, u) {

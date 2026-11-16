@@ -229,7 +229,12 @@ describe("file d'attente des refusés", () => {
 
   it("salon_queue_leave : sort de la file, sans effet hors file", async () => {
     const a = await arrive("w1", "Ana", { wait: true });
-    await a.handlers.salon_queue_leave();
+    // Accusé envoyé une fois la sortie faite : le téléphone peut couper
+    let restant;
+    const ack = vi.fn(() => (restant = file().length));
+    await a.handlers.salon_queue_leave({}, ack);
+    expect(ack).toHaveBeenCalledTimes(1);
+    expect(restant).toBe(0);
     expect(file()).toEqual([]);
     expect(dans(a, `salon:wait:${CODE}`)).toBe(false);
     await expect(joueurs[1].handlers.salon_queue_leave()).resolves.toBe(

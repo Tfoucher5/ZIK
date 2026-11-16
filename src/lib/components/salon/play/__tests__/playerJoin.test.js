@@ -31,6 +31,7 @@ describe("téléphone en file d'attente", () => {
       token: "jeton-file",
     });
     expect(store.zik_salon_player_KZ4P2M).toBe("jeton-file");
+    expect(store.salon_user).toBe("Lina");
   });
 
   it("stockage bloqué : le jeton reste en mémoire", () => {
@@ -63,13 +64,56 @@ describe("téléphone en file d'attente", () => {
     expect(p.admitted).toBe(false);
   });
 
-  it("« Quitter la file » prévient le serveur et coupe la connexion", () => {
-    const socket = { emit: vi.fn(), disconnect: vi.fn() };
+  it("« Quitter la file » : la connexion ne coupe qu'à l'accusé du serveur", () => {
+    const envoi = { emit: vi.fn((ev, data, cb) => (envoi.cb = cb)) };
+    const socket = {
+      connected: true,
+      timeout: vi.fn(() => envoi),
+      disconnect: vi.fn(),
+    };
     const p = { waiting: true, socket };
     quitQueue(p);
-    expect(socket.emit).toHaveBeenCalledWith("salon_queue_leave", {});
-    expect(socket.disconnect).toHaveBeenCalled();
     expect(p).toMatchObject({ waiting: false, socket: null });
+    expect(socket.timeout).toHaveBeenCalledWith(2000);
+    expect(envoi.emit).toHaveBeenCalledWith(
+      "salon_queue_leave",
+      {},
+      expect.any(Function),
+    );
+    expect(socket.disconnect).not.toHaveBeenCalled();
+    envoi.cb(null);
+    expect(socket.disconnect).toHaveBeenCalled();
+  });
+
+  it("« Quitter la file » hors ligne : rien n'est envoyé, la connexion est coupée", () => {
+    const socket = { connected: false, timeout: vi.fn(), disconnect: vi.fn() };
+    const p = { waiting: true, socket };
+    quitQueue(p);
+    expect(socket.timeout).not.toHaveBeenCalled();
+    expect(socket.disconnect).toHaveBeenCalled();
+    expect(p.waiting).toBe(false);
+  });
+
+  it("joueur retiré du lobby puis remis en file : écran de file, puis formulaire s'il quitte", () => {
+    const p = { joined: true, joining: false, leave: vi.fn() };
+    const { h } = ecoute(p);
+    h.salon_waiting({ username: "Lina", token: "jeton-file" });
+    expect(p).toMatchObject({ joined: false, waiting: true });
+    quitQueue(p);
+    expect(p).toMatchObject({ joined: false, waiting: false });
+  });
+
+  it("joueur remis en file puis refusé : retour au formulaire avec le message", () => {
+    const p = { joined: true, leave: vi.fn() };
+    const { h, socket } = ecoute(p);
+    h.salon_waiting({ username: "Lina", token: "jeton-file" });
+    h.salon_error({ message: "La soirée est complète." });
+    expect(p).toMatchObject({
+      joined: false,
+      waiting: false,
+      joinError: "La soirée est complète.",
+    });
+    expect(socket.disconnect).toHaveBeenCalled();
   });
 
   it.each(["Ce pseudo est déjà pris.", "La soirée est complète."])(

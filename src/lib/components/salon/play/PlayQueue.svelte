@@ -7,6 +7,8 @@
   const seats = [...Array(FREE_MAX_PLAYERS).keys()];
   let confirming = $state(false);
   const quit = () => (confirming ? quitQueue(p) : (confirming = true));
+  // Équipes connues seulement si ce téléphone était déjà entré dans la soirée
+  const steps = $derived(p.teams ? ['Pseudo', 'Équipe', 'La TV'] : ['Pseudo', 'La TV']);
 </script>
 
 <section class="sp-queue" aria-labelledby="sp-queue-h">
@@ -36,15 +38,16 @@
   {/if}
 
   <div class="bottom">
-    {#if confirming}
-      <button class="quit sure" onclick={quit}>Confirmer : quitter la file</button>
-      <small>Tu perds ta place dans la file et ton pseudo réservé.</small>
-    {:else}
-      {#if !p.connLost}<p class="sp-hint">En attendant, rien ne t'empêche de chanter.</p>{/if}
-      <button class="quit" onclick={quit}>Quitter la file</button>
-    {/if}
+    {#if !confirming && !p.connLost}<p class="sp-hint">En attendant, rien ne t'empêche de chanter.</p>{/if}
+    <!-- Un seul bouton : le focus reste dessus au second appui -->
+    <button class="quit" class:sure={confirming} onclick={quit} aria-describedby={confirming ? 'sp-queue-quit' : undefined}>
+      {confirming ? 'Confirmer : quitter la file' : 'Quitter la file'}
+    </button>
+    {#if confirming}<small id="sp-queue-quit">Tu perds ta place dans la file et ton pseudo réservé.</small>{/if}
   </div>
-  <ol class="sp-frise" style="--p:.33"><li class="on">Pseudo</li><li>Équipe</li><li>La TV</li></ol>
+  <ol class="sp-frise" style:--p={1 / steps.length}>
+    {#each steps as s, i (s)}<li class:on={i === 0}>{s}</li>{/each}
+  </ol>
 </section>
 
 <style>
@@ -64,6 +67,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .sp-strip.lost {
+    background: color-mix(in srgb, var(--warn) 12%, transparent);
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--warn) 50%, transparent);
+    color: var(--soft);
+    font-weight: 500;
+  }
+  .sp-strip.lost b {
+    color: var(--warn);
   }
   .sp-state b {
     color: var(--bleu);
