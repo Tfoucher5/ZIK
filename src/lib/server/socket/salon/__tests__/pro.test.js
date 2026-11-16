@@ -69,6 +69,14 @@ describe("grantPro", () => {
     expect(saves().filter(([, a]) => a.p_code === "PRO001")).toHaveLength(1);
     expect(s._journal[0].text).toMatch(/Pro/);
   });
+
+  it("sans Socket.io : rien ne lève, le salon passe Pro et est sauvegardé", () => {
+    const s = salon("PRO002", "u1");
+    expect(grantPro(s, null)).toBe(true);
+    expect(s.pro).toBe(true);
+    expect(emissions).toHaveLength(0);
+    expect(saves()).toHaveLength(1);
+  });
 });
 
 describe("proForHost", () => {

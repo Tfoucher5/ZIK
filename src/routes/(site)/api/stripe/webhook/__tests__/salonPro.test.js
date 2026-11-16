@@ -19,7 +19,10 @@ const pro = vi.hoisted(() => ({
   syncSubscription: vi.fn(),
   isPro: vi.fn(),
 }));
-vi.mock("$lib/server/services/pro.js", () => pro);
+vi.mock("$lib/server/services/pro.js", async (orig) => ({
+  ...(await orig()),
+  ...pro,
+}));
 vi.mock("$lib/server/mail/send.js", () => ({
   sendMail: vi.fn(async () => {}),
   ADMIN_EMAIL: "admin@test",
@@ -30,6 +33,9 @@ vi.mock("$lib/server/services/admin/alerts.js", () => ({
 
 const { POST } = await import("../+server.js");
 const { salonRooms, setIO } = await import("$lib/server/state.js");
+const { sendMail } = await import("$lib/server/mail/send.js");
+
+const ACTIF = { status: "active", current_period_end: "2099-01-01T00:00:00Z" };
 
 const emissions = [];
 const io = {
@@ -87,7 +93,8 @@ beforeEach(() => {
   emissions.length = 0;
   for (const k of Object.keys(salonRooms)) delete salonRooms[k];
   for (const f of Object.values(pro)) f.mockReset();
-  pro.getProRow.mockResolvedValue({ current_period_end: "2099-01-01" });
+  pro.getProRow.mockResolvedValue(ACTIF);
+  sendMail.mockClear();
   setIO(io);
 });
 afterEach(() => setIO(null));
@@ -109,11 +116,50 @@ describe("webhook Stripe : le salon en cours passe Pro", () => {
   it("webhook rejoué : rien n'est refait", async () => {
     const s = salon("SOIR01", "u1");
     await webhook(session());
-    pro.getProRow.mockResolvedValue({ stripe_last_session: "cs_1" });
+    pro.getProRow.mockResolvedValue({ ...ACTIF, stripe_last_session: "cs_1" });
     await webhook(session());
     expect(pro.activateNight).toHaveBeenCalledOnce();
     expect(salonPro()).toHaveLength(1);
     expect(s.pro).toBe(true);
+  });
+
+  it("rejeu après un premier passage coupé : le salon bascule", async () => {
+    const s = salon("SOIR01", "u1");
+    pro.getProRow
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(new Error("base injoignable"));
+    await expect(webhook(session())).rejects.toThrow();
+    expect(s.pro).toBe(false);
+    pro.getProRow.mockResolvedValue({ ...ACTIF, stripe_last_session: "cs_1" });
+    expect((await webhook(session())).status).toBe(200);
+    expect(pro.activateNight).toHaveBeenCalledOnce();
+    expect(s.pro).toBe(true);
+  });
+
+  it("aucune ligne active en base : le salon ne bascule pas", async () => {
+    const s = salon("ABON01", "u1");
+    pro.getProRow.mockResolvedValue({
+      status: "canceled",
+      current_period_end: "2099-01-01T00:00:00Z",
+    });
+    await webhook(session({ mode: "subscription", subscription: "sub_1" }));
+    expect(s.pro).toBe(false);
+    expect(emissions).toHaveLength(0);
+  });
+
+  it("panne côté salon : 200 et mails partis quand même", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    salon("SOIR01", "u1");
+    setIO({
+      to: () => {
+        throw new Error("socket en panne");
+      },
+    });
+    const res = await webhook(session());
+    expect(res.status).toBe(200);
+    expect(sendMail).toHaveBeenCalled();
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
   });
 
   it("non payé ou sans compte : rien ne bouge", async () => {

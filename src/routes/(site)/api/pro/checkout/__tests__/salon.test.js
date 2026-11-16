@@ -9,9 +9,9 @@ vi.mock("$lib/server/config.js", () => ({
   }),
 }));
 const create = vi.hoisted(() => vi.fn(async () => ({ url: "https://pay" })));
-vi.mock("$lib/server/stripe.js", () => ({
+vi.mock("$lib/server/stripe.js", async (orig) => ({
+  ...(await orig()),
   getStripe: () => ({ checkout: { sessions: { create } } }),
-  priceFor: (plan) => ({ night: "price_night", monthly: "price_m" })[plan],
 }));
 vi.mock("$lib/server/middleware/auth.js", async (orig) => ({
   ...(await orig()),
@@ -74,6 +74,8 @@ async function post(body, auth = true) {
 }
 
 beforeEach(() => {
+  vi.stubEnv("STRIPE_PRICE_NIGHT", "price_night");
+  vi.stubEnv("STRIPE_PRICE_MONTHLY", "price_m");
   create.mockClear();
   getProRow.mockReset();
   getProRow.mockResolvedValue(null);
@@ -149,6 +151,17 @@ describe("paiement depuis la régie", () => {
       (await post({ plan: "night", salon: "FINI01", key: "cle" })).status,
     ).toBe(404);
     expect(salonRooms.SOIR01.hostUserId).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("formules héritées de l'objet : refusées, aucun rattachement", async () => {
+    salon("ABC123");
+    for (const plan of ["constructor", "toString", "__proto__"])
+      expect(
+        (await post({ plan, salon: "ABC123", key: "cle" })).status,
+        plan,
+      ).toBe(400);
+    expect(salonRooms.ABC123.hostUserId).toBeNull();
     expect(create).not.toHaveBeenCalled();
   });
 
