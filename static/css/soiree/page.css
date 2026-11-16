@@ -198,7 +198,7 @@
   gap: 14px;
 }
 .sv .mono3 {
-  width: min(100%, 300px, calc((100svh - 400px) / 2.2 + 30px));
+  width: min(100%, 300px, calc((100svh - 400px) / 1.67 + 30px));
   justify-self: center;
   align-self: center;
   gap: 14px;
@@ -243,7 +243,7 @@
     width: min(100%, calc((100svh - 190px) * 1.7));
   }
   .sv .mono3 {
-    width: min(100%, 300px, calc((100svh - 220px) / 2.2 + 30px));
+    width: min(100%, 300px, calc((100svh - 220px) / 1.67 + 30px));
     justify-self: start;
     margin-left: 6%;
   }
