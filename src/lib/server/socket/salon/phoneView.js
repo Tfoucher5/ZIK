@@ -70,12 +70,14 @@ export function emitSplit(io, code, event, full, phone) {
   }
 }
 
-// Podium de fin de partie : la TV garde tout (historique, soirée complète)
+// Podium de fin de partie : la TV garde tout (historique, soirée complète),
+// sauf les titres remplacés, réservés à la régie (salon_replaced)
 export function emitGameOver(io, code, over) {
   const rank = ranker(over.scores);
   const night = phoneNight(over.night);
   const teams = phoneTeams(over.teams);
-  emitSplit(io, code, "salon_game_over", over, (u) => ({
+  const history = over.history?.map(({ answer, cover }) => ({ answer, cover }));
+  emitSplit(io, code, "salon_game_over", { ...over, history }, (u) => ({
     ranking: rank(u),
     teams,
     night: night?.(u) ?? null,
@@ -83,7 +85,7 @@ export function emitGameOver(io, code, over) {
 }
 
 // QCM : chaque téléphone reçoit la case comptée pour lui, jamais celle des autres
-export function emitRoundEnd(io, code, summary, players) {
+export function emitRoundEnd(io, code, summary, players, history = []) {
   const rank = ranker(withPrevRank(summary.scores));
   const phone = {
     ...summary,
@@ -97,6 +99,14 @@ export function emitRoundEnd(io, code, summary, players) {
       chosenIndex: players?.[u]?._choiceIndex ?? null,
     }),
   }));
+  // Titre remplacé (illisible sur la TV) : seulement pour la régie, après
+  // salon_round_end qui crée la ligne
+  const replaced = history.at(-1)?.replaced;
+  if (replaced)
+    io.to(`salon:ctrl:${code}`).emit("salon_replaced", {
+      round: history.length,
+      replaced,
+    });
 }
 
 // Reprise après une coupure : de quoi rétablir l'écran du téléphone

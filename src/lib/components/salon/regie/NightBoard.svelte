@@ -1,9 +1,8 @@
 <script>
   import { teamColor } from '$lib/data/salonOptions.js';
   /**
-   * Classement de la soirée (ZIK Pro), en tête de l'onglet Joueurs : le
-   * cumul des parties terminées dans ce salon. La liste en dessous reste
-   * celle de la partie en cours.
+   * Classement de la soirée (ZIK Pro) : le cumul des parties terminées. Replié
+   * sur une ligne, déplié par « Voir ».
    *
    * @type {{ night: any, pro: boolean, onReset: () => void, onUpsell: () => void }}
    */
@@ -11,8 +10,11 @@
 
   const TOP = 10;
   let confirme = $state(false);
+  const liste = $derived(night ? (night.teams ?? night.players.slice(0, TOP)) : []);
+  const tete = $derived(liste[0]?.name ?? liste[0]?.username);
 
-  function reset() {
+  function reset(e) {
+    e.stopPropagation();
     if (!confirme) { confirme = true; return; }
     confirme = false;
     onReset();
@@ -21,78 +23,60 @@
 
 <svelte:window onclick={() => (confirme = false)} />
 
-<section class="nb">
-  <header class="nb-head">
-    <b>Soirée{#if night} · {night.games} partie{night.games > 1 ? 's' : ''}{/if}</b>
+<ul class="rg-g">
+  <li>
     {#if !pro}
-      <button class="nb-pro" onclick={onUpsell}>Débloquer<i>Pro</i></button>
-    {:else if night}
-      <button class="nb-reset" class:confirme onclick={(e) => { e.stopPropagation(); reset(); }}>
-        {confirme ? 'Confirmer la remise à zéro' : 'Remettre à zéro'}
+      <button class="rg-l" type="button" onclick={onUpsell}>
+        <b>Classement de la soirée <span class="pro-tag">ZIK Pro</span></b>
+        <small>Les points de chaque partie s'additionnent sur toute la soirée, et le classement s'affiche sur la TV entre deux parties.</small>
+        <em>Débloquer</em>
       </button>
+    {:else if !night}
+      <div class="rg-l nb-info">
+        <b>Classement de la soirée <span class="pro-tag">ZIK Pro</span></b>
+        <small>Démarre à la fin de la première partie. Garde cette soirée d'une partie à l'autre : les joueurs n'ont rien à ressaisir.</small>
+      </div>
+    {:else}
+      <details>
+        <summary class="rg-l">
+          <b>Classement de la soirée <span class="pro-tag">ZIK Pro</span></b>
+          <small>{night.games} partie{night.games > 1 ? 's' : ''} jouée{night.games > 1 ? 's' : ''}{tete ? ` · ${tete} en tête` : ''}</small>
+          <em>Voir</em>
+        </summary>
+        <ol class="nb-rangs">
+          {#each liste as e, i (e.id ?? e.username)}
+            <li style="--tc:{e.id != null ? teamColor(e.id) : e.team != null ? teamColor(e.team) : 'var(--line-2)'}">
+              <span>{i + 1}</span><b>{e.name ?? e.username}{e.left ? ' · a quitté' : ''}</b><span class="nb-pts">{e.score}</span>
+            </li>
+          {/each}
+        </ol>
+        {#if !night.teams && night.players.length > TOP}
+          <p class="nb-note">et {night.players.length - TOP} autres joueurs</p>
+        {/if}
+        <button class="nb-reset" class:confirme type="button" onclick={reset}>
+          {confirme ? 'Confirmer la remise à zéro' : 'Remettre à zéro'}
+        </button>
+      </details>
     {/if}
-  </header>
-
-  {#if !pro}
-    <p class="nb-note">Les points de chaque partie s'additionnent sur toute la soirée, et le classement s'affiche sur la TV entre deux parties.</p>
-  {:else if !night}
-    <p class="nb-note">Le classement de la soirée démarre à la fin de la première partie. Gardez ce salon d'une partie à l'autre : les joueurs n'ont rien à ressaisir.</p>
-  {:else}
-    <ol class="nb-list">
-      {#each night.teams ?? night.players.slice(0, TOP) as e, i (e.id ?? e.username)}
-        <li style="--tc:{e.id != null ? teamColor(e.id) : e.team != null ? teamColor(e.team) : 'var(--border2)'}">
-          <span class="nb-rang">{i + 1}</span>
-          <span class="nb-nom">{e.name ?? e.username}{e.left ? ' · a quitté' : ''}</span>
-          <span class="nb-pts">{e.score}</span>
-        </li>
-      {/each}
-    </ol>
-    {#if !night.teams && night.players.length > TOP}
-      <p class="nb-note">et {night.players.length - TOP} autres joueurs</p>
-    {/if}
-  {/if}
-</section>
-
-<p class="nb-kicker">Cette partie</p>
+  </li>
+</ul>
 
 <style>
-  .nb {
-    margin-bottom: 24px;
-    padding: 14px;
-    border: 1px solid var(--border2);
-    border-radius: 3px;
+  .nb-info { cursor: default; }
+  .nb-rangs { list-style: none; display: grid; gap: 4px; padding-bottom: 4px; }
+  .nb-rangs li {
+    display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    min-height: 44px; padding: 0 14px 0 10px;
+    border-left: 4px solid var(--tc); border-radius: 0 10px 10px 0; background: rgb(255 255 255 / 0.045);
   }
-  .nb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .nb-head b { font-size: 0.95rem; }
-  .nb-note { margin: 10px 0 0; font-size: 0.82rem; color: var(--mid); line-height: 1.5; }
-
-  .nb-reset, .nb-pro {
-    padding: 7px 12px; border-radius: 2px;
-    border: 1px solid var(--border2); background: none; color: var(--mid);
-    font: inherit; font-size: 0.76rem; cursor: pointer;
+  .nb-rangs span { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .nb-rangs b { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-rangs .nb-pts { font-weight: 700; font-size: 16px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .nb-note { padding: 4px 0; font-size: 14px; color: var(--muted); }
+  .nb-reset {
+    min-height: 44px; margin: 4px 0 8px; padding: 0 4px; border: 0; background: none; color: var(--soft);
+    font: inherit; font-size: 15px; text-decoration: underline; text-decoration-color: var(--line-2);
+    text-underline-offset: 4px; cursor: pointer;
   }
-  .nb-reset.confirme { border-color: var(--danger); color: var(--danger); font-weight: 700; }
-  .nb-pro { display: inline-flex; align-items: center; gap: 7px; border-style: dashed; }
-  .nb-pro i {
-    font-style: normal; font-size: 0.58rem; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 2px 6px; border-radius: 2px;
-    background: rgb(var(--accent-rgb) / 0.16); color: var(--accent);
-  }
-
-  .nb-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  .nb-list li {
-    display: flex; align-items: center; gap: 12px;
-    padding: 8px 12px; border-left: 3px solid var(--tc); background: var(--surface);
-    border-radius: 2px; font-size: 0.9rem;
-  }
-  .nb-rang { width: 22px; font-family: var(--s-mono); font-size: 0.78rem; color: var(--dim); }
-  .nb-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-  .nb-pts { font-family: var(--s-mono); font-weight: 700; color: var(--accent); }
-
-  .nb-kicker {
-    margin: 0 0 12px;
-    font-family: var(--s-mono); font-size: 0.66rem;
-    letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
-  }
+  .nb-reset.confirme { color: var(--danger); font-weight: 700; }
 </style>

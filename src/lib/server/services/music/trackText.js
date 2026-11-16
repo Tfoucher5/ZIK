@@ -26,6 +26,10 @@ export function displayString(str) {
   return withoutBrackets(str, " ").replace(/\s+/g, " ").trim();
 }
 
+// « Artiste - Titre », comme affiché à la révélation
+export const answerText = (track) =>
+  `${displayString(track.mainArtist || track.artist)} - ${displayString(track.title)}`;
+
 export function parseFeaturing(artistStr) {
   if (!artistStr) return { main: "", feats: [] };
 
