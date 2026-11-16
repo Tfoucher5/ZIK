@@ -16,7 +16,7 @@ const MAX_PLAYLISTS = 50;
 
 function playlistsError(ids) {
   if (!Array.isArray(ids) || ids.length === 0)
-    return "Choisissez au moins une playlist.";
+    return "Choisis au moins une playlist.";
   if (ids.length > MAX_PLAYLISTS)
     return `${MAX_PLAYLISTS} playlists maximum par soirée`;
   return ids.every(isUuid) ? null : "Une des playlists choisies n'existe pas.";
@@ -29,7 +29,7 @@ export async function POST({ request }) {
     user = await verifyToken(token);
     if (!user)
       return json(
-        { error: "Votre session a expiré. Reconnectez-vous." },
+        { error: "Ta session a expiré. Reconnecte-toi." },
         { status: 401 },
       );
   } else {
@@ -40,7 +40,7 @@ export async function POST({ request }) {
       return json(
         {
           error:
-            "Beaucoup de soirées sont ouvertes sans compte en ce moment. Connectez-vous pour créer la vôtre.",
+            "Beaucoup de soirées sont ouvertes sans compte en ce moment. Connecte-toi pour créer la tienne.",
         },
         { status: 429 },
       );
@@ -51,7 +51,7 @@ export async function POST({ request }) {
     body = await request.json();
   } catch {
     return json(
-      { error: "Demande invalide. Rechargez la page." },
+      { error: "Demande invalide. Recharge la page." },
       { status: 400 },
     );
   }

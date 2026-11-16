@@ -39,13 +39,13 @@ describe("/api/salon : réponses d'erreur", () => {
     });
     expect(res.status).toBe(400);
     expect((await res.json()).error).toBe(
-      "Demande invalide. Rechargez la page.",
+      "Demande invalide. Recharge la page.",
     );
   });
 
   it("textes pour l'organisateur : liste vide, régie sans clé", async () => {
     expect((await (await creer([])).json()).error).toBe(
-      "Choisissez au moins une playlist.",
+      "Choisis au moins une playlist.",
     );
     const res = await PATCH(
       requete("PATCH", { code: "ABC", playlistIds: ids(1) }),
