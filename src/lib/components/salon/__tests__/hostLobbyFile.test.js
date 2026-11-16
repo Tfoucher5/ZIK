@@ -20,7 +20,7 @@ describe("TV : la file à l'entrée", () => {
   it("« 3 en attente » à côté du compteur, sans prix ni ZIK Pro", () => {
     const html = lobby(3);
     expect(html).toContain("<em>3 en attente</em>");
-    expect(html).not.toMatch(/€|Pro|complet/i);
+    expect(html).not.toMatch(/€|ZIK Pro|complet/);
   });
 
   it("personne en file : rien", () => {

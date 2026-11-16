@@ -131,6 +131,35 @@ describe("la file se voit", () => {
     expect(derniere(CTRL)).toEqual({ count: 0, names: [] });
   });
 
+  it("en file ici, entre dans un autre salon : la file d'ici est annoncée vide, rien vers l'autre", async () => {
+    const a = await arrive("w1", "Ana", { wait: true });
+    const A = salon();
+    salonDeTest();
+    salonRooms.AUTRE = Object.assign(salonRooms[CODE], { code: "AUTRE" });
+    salonRooms[CODE] = A;
+    h.emissions.length = 0;
+    await a.handlers.salon_join_player({ code: "AUTRE", username: "Ana" });
+    expect(salonRooms.AUTRE.players.Ana).toBeDefined();
+    expect(derniere(CTRL)).toEqual({ count: 0, names: [] });
+    expect(
+      annonces().filter((e) => e.cibles.some((c) => c.endsWith(":AUTRE"))),
+    ).toEqual([]);
+  });
+
+  it("même téléphone sans jeton qui redemande : même rang, pas d'erreur", async () => {
+    const a = await arrive("w1", "Ana", { wait: true });
+    await arrive("w2", "Bob", { wait: true });
+    await a.handlers.salon_join_player({
+      code: CODE,
+      username: "Ana",
+      wait: true,
+    });
+    expect(a.de("salon_waiting")).toHaveLength(2);
+    expect(a.de("salon_error")).toEqual([]);
+    expect(salon().waiting.map((w) => w.username)).toEqual(["Ana", "Bob"]);
+    expect(derniere(CTRL)).toEqual({ count: 2, names: ["Ana", "Bob"] });
+  });
+
   it("après une reprise : 0 en file à l'arrivée de la régie, 1 au retour du téléphone", async () => {
     const a = await arrive("w1", "Ana", { wait: true });
     const { token } = a.de("salon_waiting")[0];
