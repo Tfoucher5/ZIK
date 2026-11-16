@@ -4,35 +4,22 @@
    * ou la couleur de l'équipe) montent du sol, 3e, 2e puis 1re (`step` 1 à 3).
    * Le nom rétrécit jusqu'à tenir dans sa colonne, jamais coupé.
    * `entries` : [{ key, rank, name, score, color?, avg?, tag? }] dans l'ordre des places.
+   * Podium de la soirée (`soiree`) : titre centré ; `drum` : l'égaliseur s'emballe et
+   * la colonne d'or hésite, sans nom.
    */
   import { eqBars } from './lobbyView.js';
+  import { fit } from './fitText.js';
 
-  let { entries = [], step = 3, tags = true, title = 'Le podium' } = $props();
+  let { entries = [], step = 3, tags = true, title = 'Le podium', soiree = false, drum = false } = $props();
 
   const bars = eqBars(44, 1.3);
   const MEDAL = ['var(--gold)', 'var(--silver)', 'var(--bronze)'];
   // À l'écran : 2e, 1re, 3e
   let cols = $derived([entries[1], entries[0], entries[2]].filter(Boolean));
-
-  function fit(node) {
-    const run = () => {
-      node.style.fontSize = '';
-      const min = parseFloat(getComputedStyle(node.parentElement).fontSize) * 1.46;
-      let f = parseFloat(getComputedStyle(node).fontSize);
-      while (node.firstElementChild.offsetWidth > node.clientWidth + 1 && f > min) {
-        f = Math.max(min, f * 0.94);
-        node.style.fontSize = `${f}px`;
-      }
-    };
-    const ro = new ResizeObserver(run);
-    ro.observe(node.parentElement);
-    document.fonts?.ready.then(run);
-    return { update: run, destroy: () => ro.disconnect() };
-  }
 </script>
 
-<div class="pz">
-  <h1 class="pt">{title}</h1>
+<div class="pz" class:soiree class:drum>
+  {#key title}<h1 class="pt">{title}</h1>{/key}
   <div class="sh-eqz pe" class:vif={step < 3} class:off={step >= 3} aria-hidden="true">
     {#each bars as style, i (i)}<i {style}></i>{/each}
   </div>
@@ -99,9 +86,10 @@
     grid-template-columns: 372fr 520fr;
     padding-right: 20%;
   }
+  /* Seul classé : la colonne d'or au moins aussi large qu'une 2e */
   .n1 {
-    grid-template-columns: 520fr;
-    padding: 0 30%;
+    grid-template-columns: min(100%, 30em);
+    justify-content: center;
   }
   .col {
     position: relative;
@@ -193,11 +181,57 @@
   .tag.off {
     opacity: 0;
   }
+  .soiree .pt {
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 6.15em;
+    animation: titre 0.6s cubic-bezier(0.2, 1.3, 0.4, 1);
+  }
+  .soiree .pod {
+    left: 8.5em;
+    right: 8.5em;
+    grid-template-columns: 420fr 600fr 420fr;
+  }
+  .soiree .n2 {
+    grid-template-columns: 420fr 600fr;
+    padding: 0 15%;
+  }
+  .soiree .n1 {
+    grid-template-columns: min(100%, 30em);
+  }
+  .drum .pe :global(i) {
+    animation-duration: 0.17s;
+  }
+  .drum .r1 .in {
+    animation: hesite 0.36s ease-in-out infinite alternate;
+  }
+  .drum .r1 .in > * {
+    opacity: 0;
+  }
+  @keyframes hesite {
+    from {
+      transform: translateY(calc(100% - 9.9em));
+    }
+    to {
+      transform: translateY(calc(100% - 22.4em));
+    }
+  }
+  @keyframes titre {
+    from {
+      opacity: 0;
+      transform: translateY(1.5em) scale(0.8);
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .in,
     .tag,
     .pe {
       transition: none;
+    }
+    .pt,
+    .drum .r1 .in {
+      animation: none;
     }
   }
 </style>
