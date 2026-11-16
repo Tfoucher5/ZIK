@@ -4,19 +4,24 @@
 
   /**
    * Avant la partie : effectif, quatre contrôles en mots, équipes.
-   * @type {{ screens: number|null, tvSound: boolean|null, mediaCheck: any, players: any[], teams: any[]|null, tvUrl: string }}
+   * `attente` : téléphones à l'entrée d'une soirée complète, `children` : la jauge et l'offre.
+   * @type {{ screens: number|null, tvSound: boolean|null, mediaCheck: any, players: any[], teams: any[]|null, tvUrl: string,
+   *   attente?: number, children?: import('svelte').Snippet }}
    */
-  let { screens, tvSound, mediaCheck, players, teams, tvUrl } = $props();
+  let { screens, tvSound, mediaCheck, players, teams, tvUrl, attente = 0, children } = $props();
 
   const p = $derived(prepChecks({ screens, tvSound, mediaCheck, players, teams }));
   const ICONES = { ok: '✓', non: '!', attente: '…' };
 </script>
 
 <section class="rp">
+  {#if attente}<p class="rg-k"><b class="rp-plein" aria-hidden="true">●</b>Complet</p>{/if}
   <h2 class="rp-titre">
     {p.joueurs} joueur{p.joueurs > 1 ? 's' : ''}
-    <span>{p.equipes ? `${p.equipes.length} équipes` : 'Chacun pour soi'}</span>
+    <span>{attente ? `${attente} attend${attente > 1 ? 'ent' : ''} à l'entrée` : p.equipes ? `${p.equipes.length} équipes` : 'Chacun pour soi'}</span>
   </h2>
+
+  {@render children?.()}
 
   <ul class="rp-checks">
     {#each p.checks as c (c.id)}
@@ -51,6 +56,7 @@
 
 <style>
   .rp { display: grid; gap: 14px; margin-bottom: 26px; }
+  .rp-plein { color: var(--warn); }
 
   .rp-titre {
     margin: 0;

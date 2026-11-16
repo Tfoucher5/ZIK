@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import { SupportChat } from "../support/supportChat.svelte.js";
 import { loadSalonPlaylists } from "../../../data/salonPlaylists.js";
 import { listenRegie } from "./regieEvents.js";
+import { RegiePro } from "./regiePro.svelte.js";
 import { etatManche } from "./onglets.js";
 import {
   takeSalonKeyFromUrl,
@@ -52,6 +53,7 @@ export class SalonRegie {
   // Joueurs qui demandent à reprendre leur place depuis un autre téléphone
   reclaims = $state([]);
   upsell = $state(null);
+  offre = new RegiePro(this);
   // null tant que le serveur n'a pas répondu : on n'alarme pas à tort.
   screens = $state(null);
   // Test du son fait sur la TV : null tant qu'il n'a pas eu lieu

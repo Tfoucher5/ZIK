@@ -49,6 +49,7 @@ const ECRANS = [
       mergeRoster() {},
       applyScores() {},
       chat: { update() {} },
+      offre: { onJoined() {} },
       players: [],
       history: [],
     }),
