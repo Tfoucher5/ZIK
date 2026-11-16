@@ -54,7 +54,7 @@
 
   .rp-titre {
     margin: 0;
-    font-family: "Barlow Condensed", sans-serif; font-weight: 900;
+    font-family: var(--s-cond); font-weight: 900;
     font-size: 4rem; line-height: 0.86; text-transform: uppercase;
   }
   .rp-titre span { display: block; font-size: 1.9rem; font-weight: 800; color: var(--mid); line-height: 1; }
@@ -86,11 +86,11 @@
     min-width: 0;
   }
   .rp-eqs b {
-    font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 1.25rem; text-transform: uppercase;
+    font-family: var(--s-cond); font-weight: 800; font-size: 1.25rem; text-transform: uppercase;
     min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .rp-eqs span {
-    font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 2.1rem; line-height: 0.9;
+    font-family: var(--s-cond); font-weight: 900; font-size: 2.1rem; line-height: 0.9;
     font-variant-numeric: tabular-nums;
   }
   .rp-eqs .vide span {
