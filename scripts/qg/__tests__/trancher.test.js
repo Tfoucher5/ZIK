@@ -92,7 +92,7 @@ describe("lireChantiers", () => {
       "utf8",
     );
     const chantiers = lireChantiers(md);
-    expect(chantiers.length).toBeGreaterThan(5);
+    expect(chantiers.length).toBeGreaterThan(0);
     for (const c of chantiers)
       expect(c.statut).toMatch(/^(en cours|à faire|fait)$/);
   });

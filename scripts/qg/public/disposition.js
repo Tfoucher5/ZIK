@@ -45,13 +45,12 @@ const equerre = (x, z, n) =>
 // Rangée contre un mur à l'ouest, l'agent face au mur.
 const contreMur = (x, z, n) => serie(n, (k) => ({ x, z: z + k * 1.6, a: Q }));
 
-// L'espace de chaque pôle : îlots remplis dans l'ordre, bureau du chef face à son équipe, décor.
+// L'espace de chaque pôle : îlots remplis dans l'ordre, décor (les chefs sont à la Direction).
 // Décor : ["plante", x, z], ["etagere", x, z, angle, longueur], ["cloison", x0, z0, x1, z1] (cloison basse).
 const ESPACES = {
   tech: {
     titre: [-24.2, -1],
     ilots: [tourne(-26.6, -2.9, 3), tourne(-22.6, -2.9, 3)],
-    chef: { x: -24.2, z: 3, a: 0 },
     deco: [
       ["plante", -24.2, -4],
       ["etagere", -24.2, 5.5, 0, 2.4],
@@ -63,7 +62,6 @@ const ESPACES = {
   produit: {
     titre: [-12.5, -1.4],
     ilots: [face(-18.2, -2.3, 3), tourne(-12, -2.6, 2), equerre(-8, 0.3, 4)],
-    chef: { x: -16.6, z: 0.6, a: 0 },
     deco: [
       ["etagere", -13.65, -1.8, Q, 2.2],
       ["plante", -9.4, -1],
@@ -73,7 +71,6 @@ const ESPACES = {
   marketing: {
     titre: [-15.6, 2.9],
     ilots: [face(-18.6, 3.5, 2), tourne(-14.2, 3.2, 2)],
-    chef: { x: -11.3, z: 3.6, a: Q },
     deco: [
       ["cloison", -19.2, 2.1, -16.6, 2.1],
       ["cloison", -15, 2.1, -12.4, 2.1],
@@ -82,7 +79,6 @@ const ESPACES = {
   operations: {
     titre: [9.5, -1.8],
     ilots: [contreMur(5.5, -2.4, 2), face(7.9, -2.3, 3)],
-    chef: { x: 13.6, z: -1.6, a: Q },
     deco: [
       ["plante", 12.6, -3],
       ["cloison", 7, 0.75, 10, 0.75],
@@ -91,7 +87,6 @@ const ESPACES = {
   argent: {
     titre: [10.2, 3.3],
     ilots: [tourne(7.5, 2.2, 2), equerre(10.8, 4.4, 3)],
-    chef: { x: 11.4, z: 2.2, a: Math.PI },
     deco: [
       ["plante", 9.9, 2.4],
       ["plante", 15.3, 5.4],
@@ -154,15 +149,15 @@ export function disposer(effectifs) {
       postes.push(...ext);
       plusLong = Math.max(plusLong, reste);
     }
-    const { titre, chef, deco } = e;
-    poles[id] = { titre, chef, deco, ilots, postes };
+    const { titre, deco } = e;
+    poles[id] = { titre, deco, ilots, postes };
   }
   const ouest = plusLong ? Math.floor(OUEST - 1.2 - plusLong * 1.6) : OUEST;
   return { poles, ouest };
 }
 
 // Liste /agents → membres de chaque pôle, du board et le reste.
-// chef-tech, chef-produit… sont les chefs des pôles, déjà à leur bureau (chef-projet est un membre).
+// chef-tech, chef-produit… sont les chefs des pôles, à leur bureau de la Direction (chef-projet est un membre).
 export function repartir(agents) {
   const equipes = Object.fromEntries(Object.keys(NOMS).map((p) => [p, []]));
   const board = [];

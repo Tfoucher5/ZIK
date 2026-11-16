@@ -85,12 +85,15 @@ export class Recrutement {
     return postes.filter((p) => !pris.has(p));
   }
 
+  // Le board siège à la Direction (Victor à son bureau, les autres au comptoir de Gérard).
   siege(id, svc) {
     const d = this.s.d;
     const pris = new Set([...this.s.persos.values()].map((p) => p.siege));
-    if (svc === "board")
-      for (const s of id === "avocat" ? [d.avocat, d.invite] : [d.invite])
+    if (svc === "board") {
+      const { avocat, invites } = this.s.dir;
+      for (const s of id === "avocat" ? [avocat, ...invites] : invites)
         if (!pris.has(s)) return s;
+    }
     const postes = d.services[svc]?.postes ?? d.renforts;
     const ancien = postes[this.places.get(id)];
     if (ancien && !pris.has(ancien)) return ancien;
@@ -104,12 +107,18 @@ export class Recrutement {
     this.s.retirer(id);
     const a = this.modele.fiches.get(id);
     const nom = a.nom && a.nom !== id ? a.nom : undefined;
+    const dir = this.s.dir;
+    const niveau =
+      siege === dir.avocat || dir.invites.includes(siege)
+        ? "direction"
+        : "plateau";
     const p = this.s.perso(
       id,
       a.role,
       COULEURS[svc],
-      arrivee ? this.s.d.ascenseur : siege,
+      arrivee ? this.s.niveaux[niveau].ascenseur : siege,
       nom,
+      niveau,
     );
     p.siege = siege;
     const k = (this.s.d.services[svc]?.postes ?? this.s.d.renforts).indexOf(
@@ -130,6 +139,6 @@ export class Recrutement {
     const p = this.s.persos.get(id);
     if (!p) return;
     Object.assign(p, { temporaire: true, voulu: false, depart: true });
-    p.aller(this.s.d.ascenseur);
+    p.aller(this.s.niveaux[p.niveau].ascenseur);
   }
 }

@@ -112,13 +112,75 @@ function en3D(fn) {
   }
 }
 
+// Chantiers et décisions à trancher, affichés aussi dans le penthouse de Théo.
+const docs = { chantiers: [], aTrancher: [], limites: null };
+async function majDocs() {
+  try {
+    const [c, t, l] = await Promise.all(
+      ["/chantiers", "/a-trancher", "/limites"].map((u) =>
+        fetch(u).then((r) => r.json()),
+      ),
+    );
+    Object.assign(docs, { chantiers: c, aTrancher: t, limites: l });
+  } catch {
+    return; // serveur arrêté : on garde les dernières données
+  }
+  if (etat) penthouse();
+}
+function penthouse() {
+  const par = (e) => docs.chantiers.filter((c) => c.etat === e).length;
+  const l = docs.limites;
+  en3D((s) =>
+    s.donnees({
+      limite: l && {
+        cinqHeures: l.five_hour?.used_percentage,
+        semaine: l.seven_day?.used_percentage,
+      },
+      chantiers: {
+        enCours: par("en-cours"),
+        aFaire: par("a-faire"),
+        fait: par("fait"),
+      },
+      aTrancher: docs.aTrancher.filter((d) => !d.envoye).length,
+      agentsActifs: etat.agents.filter((x) => x.actif).length,
+      heure: new Date(etat.maintenant),
+    }),
+  );
+}
+
 function rafraichir() {
   const { a, nb } = activite();
   const enSeance = seance(a);
   majTableau(etat, org);
   en3D((s) => s.maj(a, nb, enSeance));
+  penthouse();
   fiche();
 }
+
+// Ascenseur : boutons et touches 1, 2, 3 ; « Ville » montre toute la tour.
+const boutons = [...document.querySelectorAll("[data-etage]")];
+function etage(choix) {
+  en3D((s) => s.voir(choix));
+  for (const b of boutons)
+    b.setAttribute("aria-pressed", String(b.dataset.etage === String(choix)));
+}
+if (scene) {
+  $("ascenseur").hidden = false;
+  for (const b of boutons)
+    b.addEventListener("click", () =>
+      etage(b.dataset.etage === "ville" ? "ville" : Number(b.dataset.etage)),
+    );
+  addEventListener("keydown", (e) => {
+    const n = ["Digit1", "Digit2", "Digit3"].indexOf(e.code);
+    const k = n < 0 ? ["Numpad1", "Numpad2", "Numpad3"].indexOf(e.code) : n;
+    if (k < 0 || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest?.("input, textarea, select, [contenteditable]"))
+      return;
+    etage(k);
+  });
+}
+majDocs();
+setInterval(majDocs, 10e3);
 
 // Réglages d'affichage gardés dans le navigateur ; « Masquer » cache tout le tableau de bord.
 const memoire = {

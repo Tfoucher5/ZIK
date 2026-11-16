@@ -26,6 +26,16 @@ Un bouton « Masquer le tableau de bord » cache tout (la 3D reste) ; le choix e
 - **Chantiers** : en cours, reste à faire, fait, lus dans `docs/strategie/chantiers.md` (tenu à jour par la session CEO).
 - **En direct** (à droite) : une ligne par action, en français (« Lit reclaim.js », « Lance les tests », « Ouvre une PR »), avec le prénom et l'heure. Jamais la commande brute.
 
+## La tour en 3D
+
+La 3D est une tour de nuit en coupe, au milieu d'une ville. Chaque étage est un groupe Three.js avec sa grille de passage (`etages.js`) :
+
+- **1 Plateau** (`plan.js`, `nord.js`, `disposition.js`) : les équipes, chaque pôle dans son quartier (grand nom et liseré de sa couleur au sol), salles de réunion de pôle, coins détente, accueil.
+- **2 Direction** (`direction.js`) : un bureau vitré par chef (Claire en angle), la salle du board « Le Disque d'Or », le bureau de Victor, le comptoir de Gérard.
+- **3 Penthouse** (`penthouse.js`) : le bureau de Théo, qui affiche limite, chantiers et décisions à trancher.
+
+Le panneau d'ascenseur (ou les touches 1, 2, 3) fait voler la caméra vers un étage et masque ceux du dessus ; « Ville » montre toute la tour. Rendu (`rendu.js`) et ville (`ville.js`) sont à part.
+
 ## Barre d'état (limite exacte)
 
 Claude Code passe à la barre d'état les limites d'utilisation (`rate_limits`, abonnés Pro et Max). `statusline.mjs` les écrit dans `boite/limites.json` et affiche « modèle · 5 h x % · semaine y % ». À ajouter dans `~/.claude/settings.json` :

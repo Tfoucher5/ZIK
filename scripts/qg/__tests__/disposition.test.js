@@ -55,11 +55,10 @@ const rectDeco = ([type, ...v]) => {
   return [x - lx / 2, z - lz / 2, x + lx / 2, z + lz / 2];
 };
 
-// Tout ce qui occupe le sol : bureaux, chefs, renforts, décor des pôles.
+// Tout ce qui occupe le sol : bureaux, renforts, décor des pôles.
 const objets = ({ poles }) => [
   ...Object.entries(poles).flatMap(([id, p]) => [
     ...p.postes.map((b, k) => [`${id} poste ${k}`, emprise(b)]),
-    [`${id} chef`, emprise(p.chef)],
     ...p.deco.map((d) => [`${id} ${d[0]}`, rectDeco(d)]),
   ]),
   ...RENFORTS.map((b, k) => [`renfort ${k}`, emprise(b)]),
@@ -106,7 +105,6 @@ describe("disposer", () => {
         const apres = disposer({ ...eff, [id]: eff[id] + 1 }).poles;
         for (const [p, v] of Object.entries(avant)) {
           expect(apres[p].postes.slice(0, v.postes.length)).toEqual(v.postes);
-          expect(apres[p].chef).toEqual(v.chef);
         }
         expect(apres[id].postes).toHaveLength(avant[id].postes.length + 2);
       }
