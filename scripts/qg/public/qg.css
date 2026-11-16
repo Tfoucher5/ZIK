@@ -60,6 +60,7 @@ body {
   border-radius: 999px;
   padding: 6px 14px;
   cursor: pointer;
+  text-decoration: none;
 }
 .bouton:hover,
 .bouton:focus-visible {
@@ -155,78 +156,6 @@ body {
   padding: 2px 7px;
   font-size: 10px;
 }
-.zone.pole {
-  padding: 5px 16px;
-  font-size: 17px;
-  letter-spacing: 0.12em;
-}
-.etiquette.chef .nom {
-  padding: 1px 6px;
-  border-bottom: 2px solid var(--c);
-  border-radius: 4px;
-}
-.etiquette.fondateur .nom {
-  padding: 2px 8px;
-  font-size: 14px;
-  color: #fbbf24;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
-  background: rgba(20, 14, 2, 0.6);
-}
-.ascenseur {
-  position: fixed;
-  right: 412px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px;
-  background: rgba(8, 10, 16, 0.88);
-  border: 1px solid var(--bord);
-  border-radius: 14px;
-  backdrop-filter: blur(8px);
-}
-.sans-panneaux .ascenseur {
-  right: 16px;
-}
-.ascenseur button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 6px 14px 6px 8px;
-  font: inherit;
-  font-size: 13px;
-  color: var(--doux);
-  background: #0d111b;
-  border: 1px solid var(--bord);
-  border-radius: 10px;
-  cursor: pointer;
-}
-.ascenseur b {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid currentColor;
-  font-variant-numeric: tabular-nums;
-}
-.ascenseur button:hover,
-.ascenseur button:focus-visible {
-  color: var(--texte);
-  border-color: var(--doux);
-}
-.ascenseur button[aria-pressed="true"] {
-  color: #fbbf24;
-  border-color: #fbbf24;
-  text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
-}
-.ascenseur button[aria-pressed="true"] b {
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
-}
 .sans-pieces .zone,
 .sans-agents .etiquette,
 .sans-activite .etiquette .act,
@@ -240,9 +169,6 @@ body {
   }
   .etiquette .act {
     display: none;
-  }
-  .ascenseur {
-    right: 16px;
   }
   .etiquette .nom,
   .zone {

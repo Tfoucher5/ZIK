@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 17/11/2026 — Plans de la ZIK TOWER validés
+
+**Décision de Théo** : plans validés (« c'est pas mal, j'ai hâte de voir ça »). Le QG devient la ZIK TOWER, tout l'immeuble à ZIK. Le plan (`scripts/qg/public/tour/plan.js`, page `/plans.html`) est la source de vérité : la 3D se construit depuis lui et toute modif de structure ou de salle y est reportée. Salles de réunion = festivals, autres pièces = monde de la musique. Café du RDC ouvert au public sans accès au reste. Agents qui vivent (ascenseurs, balades là où ils ont le droit), lumière jour/nuit en temps réel, chaque pièce utile.
+
 ## 16/11/2026 — Feuille de match v3 validée
 
 **Décision de Théo** : « oui tel quel et j'approuve la date aussi ». Vidéo montée sur une musique CC0, programmée le 22/11 à 18 h dans TikTok Studio (le clic final « Programmer » est à faire par Théo, refusé par le filtre de sécurité de Claude).

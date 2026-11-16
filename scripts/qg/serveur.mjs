@@ -148,7 +148,7 @@ const json = (res, donnees) => {
 const TYPES = { html: "text/html", js: "text/javascript", css: "text/css" };
 const fichier = (url) => {
   const nom = url === "/" ? "index.html" : url.slice(1);
-  return /^[a-z0-9-]+\.(html|js|css)$/.test(nom) &&
+  return /^(tour\/(niveaux\/)?)?[a-z0-9-]+\.(html|js|css)$/.test(nom) &&
     existsSync(join(ici, "public", nom))
     ? nom
     : null;
