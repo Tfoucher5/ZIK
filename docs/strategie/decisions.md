@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Feuille de match v3 validée
+
+**Décision de Théo** : « oui tel quel et j'approuve la date aussi ». Vidéo montée sur une musique CC0, programmée le 22/11 à 18 h dans TikTok Studio (le clic final « Programmer » est à faire par Théo, refusé par le filtre de sécurité de Claude).
+
 ## 16/11/2026 — ZIK Pro en pleine soirée : maquette validée
 
 **Décision de Théo** : « je valide tout ». Maquette « la jauge » (https://claude.ai/artifact/E2T27xQHBqxss5BGYmUEeb) avec ses 15 choix : prénoms de ceux qui attendent sur la régie, Soirée 24 h en un clic + lien abonnements, paiement sans fenêtre « Confirmer », compte déjà Pro = soirée Pro dès la connexion, « ZIK Pro activé » jusqu'à « Compris », pas de rang dans la file, « Tu entres si une place se libère. », TV au plus « N en attente », retour OAuth sur /pro.

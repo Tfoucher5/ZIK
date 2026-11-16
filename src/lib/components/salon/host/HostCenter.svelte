@@ -1,7 +1,6 @@
 <script>
   import { SPECIALS } from '$lib/data/salonOptions.js';
   import { onMount, onDestroy } from 'svelte';
-  import HostGameOver from './HostGameOver.svelte';
   import HostBuzz from './HostBuzz.svelte';
   import HostIntermission from './HostIntermission.svelte';
   import AudioReveal from './AudioReveal.svelte';
@@ -11,12 +10,11 @@
   let {
     phase = 'lobby', code = '', timerVal = 0, timerMax = 30, timerStarted = false,
     players = [],
-    roundEnd = null, gameOver = null,
+    roundEnd = null,
     round = 0, total = 10,
     choices = null, answerMode = 'free',
-    paused = false, pro = false, settings = {},
-    onSetting,
-    onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
+    paused = false,
+    onMusicReady, onVideoError,
     buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, connLost = false, onJudge,
   } = $props();
 
@@ -104,8 +102,6 @@
       {/if}
     </div>
   {/if}
-
-  <HostGameOver {phase} {gameOver} {total} {settings} {pro} {code} {onSetting} {onRestart} {onChangePlaylists} {onNewSalon} />
 
   {#if intermission}<HostIntermission {intermission} {code} />{/if}
 
