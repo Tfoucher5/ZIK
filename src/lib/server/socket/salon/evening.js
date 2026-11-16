@@ -20,6 +20,9 @@ export function eveningView(salon) {
 }
 
 const idle = (salon) => ["lobby", "gameover"].includes(salon.game.phase);
+// Décompte, recherche du titre ou panne vidéo : la phase n'a pas encore changé
+const launching = ({ game }) =>
+  !!(game._starting || game._resolving || game.videoOutage);
 const emit = (salon, io) => {
   const view = eveningView(salon);
   const finale = phoneNight(view.finale);
@@ -87,7 +90,9 @@ export function registerEvening(socket, io) {
 
   safe(socket, "salon_qr_big", { on: bool() }, ({ on }) => {
     const salon = adminSalon(socket);
-    if (!salon || !idle(salon) || salon.finale || !!salon.qrBig === on) return;
+    if (!salon || !!salon.qrBig === on) return;
+    // Fermer reste toujours possible, même en pleine manche
+    if (on && (!idle(salon) || launching(salon) || salon.finale)) return;
     salon.qrBig = on;
     emitStaff(salon, io);
   });
@@ -98,7 +103,8 @@ export function registerEvening(socket, io) {
     const salon = salonRooms[socket.salonCode];
     const p = salon?.players[socket.salonUsername];
     if (!p || p.socketId !== socket.id) return;
-    if (salon.game.phase !== "gameover" || !!p.encore === on) return;
+    if (salon.game.phase !== "gameover" || launching(salon)) return;
+    if (!!p.encore === on) return;
     p.encore = on;
     broadcastRoster(salon.code, io);
   });

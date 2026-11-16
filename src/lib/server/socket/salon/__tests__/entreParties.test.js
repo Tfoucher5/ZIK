@@ -233,3 +233,44 @@ describe("« Une autre ! »", () => {
     expect(versTelephones()).toEqual([]);
   });
 });
+
+describe("pendant un lancement", () => {
+  it("décompte d'une revanche ou d'un lancement : ni QR ni « Une autre ! »", async () => {
+    salon.settings.countStart = true;
+    for (const [phase, start] of [
+      ["gameover", "salon_restart"],
+      ["lobby", "salon_start"],
+    ]) {
+      salon.game._starting = false;
+      salon.game.phase = phase;
+      await regie.handlers[start]();
+      expect(salon.game._starting, start).toBe(true);
+      salon.game.phase = "gameover";
+      await qr(regie, true);
+      await encore("Ana", true);
+      expect(salon.qrBig, start).toBeFalsy();
+      expect(salon.players.Ana.encore, start).toBe(false);
+      clearTimeout(salon.game.breakTimer);
+    }
+  });
+
+  it("recherche du titre ou panne vidéo : ouverture refusée", async () => {
+    for (const k of ["_resolving", "videoOutage"]) {
+      salon.game[k] = k === "_resolving" ? { gen: 1 } : true;
+      await qr(regie, true);
+      await encore("Ana", true);
+      expect(salon.qrBig, k).toBeFalsy();
+      expect(salon.players.Ana.encore, k).toBeFalsy();
+      salon.game[k] = null;
+    }
+  });
+
+  it("fermeture du QR acceptée en pleine manche", async () => {
+    salon.qrBig = true;
+    salon.game.phase = "round";
+    salon.game._starting = true;
+    await qr(regie, false);
+    expect(salon.qrBig).toBe(false);
+    expect(envois("salon_evening").at(-1).payload.qr).toBe(false);
+  });
+});

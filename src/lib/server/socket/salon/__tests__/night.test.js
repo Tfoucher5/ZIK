@@ -73,6 +73,13 @@ describe("classement de la soirée", () => {
     ]);
   });
 
+  it("fin de partie : « Une autre ! » de la partie d'avant repart à zéro", () => {
+    const salon = salonDeTest(false);
+    addPlayer(salon, "Ana", "s1").encore = true;
+    jouer(salon, { Ana: 10 });
+    expect(salon.players.Ana.encore).toBe(false);
+  });
+
   it("réservé au Pro, mais les points sont gardés si le salon passe Pro", () => {
     const salon = salonDeTest(false);
     addPlayer(salon, "Ana", "s1");
