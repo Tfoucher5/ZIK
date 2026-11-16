@@ -186,6 +186,7 @@ describe("une soirée complète", () => {
     const { tv, regie } = await ouvrir({ answerMode: "multiple" }, 1);
     const alice = await joueur("alice");
     const bob = await joueur("bob");
+    const carole = await joueur("carole");
 
     regie.socket.emit("salon_start");
     const manche = await alice.attend("salon_round_start");
@@ -198,6 +199,11 @@ describe("une soirée complète", () => {
     await alice.attend("salon_timer_started");
     const juste = salonRooms[h.code].game.correctChoiceIndex;
     alice.socket.emit("salon_submit_choice", { choiceIndex: juste });
+    // Bonne réponse enregistrée puis coupure avant la fin : les points restent
+    carole.socket.emit("salon_submit_choice", { choiceIndex: juste });
+    await pause(40);
+    carole.socket.disconnect();
+    await pause(40);
     bob.socket.emit("salon_submit_choice", {
       choiceIndex: (juste + 1) % manche.choices.length,
     });
@@ -205,6 +211,7 @@ describe("une soirée complète", () => {
     const podium = await tv.attend("salon_game_over");
     const score = (nom) => podium.scores.find((s) => s.username === nom).score;
     expect(score("alice")).toBeGreaterThan(score("bob"));
+    expect(score("carole")).toBeGreaterThan(0);
     const vue = await alice.attend("salon_game_over");
     expect(vue.ranking.me).toMatchObject({ username: "alice", rank: 1 });
     // Le téléphone ne reçoit jamais la liste complète des joueurs
@@ -213,7 +220,7 @@ describe("une soirée complète", () => {
         expect(d).not.toHaveProperty("players");
         expect(d).not.toHaveProperty("scores");
       }
-    expect(alice.de("salon_round_end")[0].ranking.count).toBe(2);
+    expect(alice.de("salon_round_end")[0].ranking.count).toBe(3);
     expect(alice.moi).not.toHaveProperty("players");
 
     regie.socket.emit("salon_restart");
