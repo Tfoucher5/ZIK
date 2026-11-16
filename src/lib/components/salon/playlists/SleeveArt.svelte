@@ -30,7 +30,7 @@
 </script>
 
 {#if art}
-  <svg class="sleeve-art" viewBox="0 0 100 68" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">
+  <svg class="sleeve-art" viewBox="0 0 100 68" preserveAspectRatio="xMaxYMin meet" aria-hidden="true">
     {#if art === 'disco'}
       <circle cx="66" cy="34" r="24" />
       <g class="cut">
@@ -76,12 +76,15 @@
 
 <style>
   .sleeve-art {
-    flex: 1 1 0;
-    min-height: 0;
-    width: 100%;
-    margin-bottom: 6px;
+    position: absolute;
+    top: 6px;
+    right: 4px;
+    width: 66%;
     fill: #111;
     pointer-events: none;
+  }
+  @container (min-width: 560px) {
+    .sleeve-art { width: 46%; }
   }
   .cut, .cut line {
     fill: none;

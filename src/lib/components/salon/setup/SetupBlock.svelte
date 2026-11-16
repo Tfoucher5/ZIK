@@ -1,38 +1,22 @@
 <script>
-  let { letter, title, children } = $props();
+  let { n, title, aide = '', children } = $props();
 </script>
 
-<section class="st-block">
-  <h2><span>{letter}</span>{title}</h2>
+<section class="ligne">
+  <header><span class="n">{n}</span><h2>{title}</h2>{#if aide}<span class="aide">{aide}</span>{/if}</header>
   {@render children()}
 </section>
 
 <style>
-  .st-block {
+  .ligne {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 24px;
-    padding: 40px 0;
-    border-bottom: 1px solid var(--border);
+    gap: 14px;
+    min-width: 0;
+    padding: 20px 0 6px;
+    border-top: 1px solid var(--line-2);
   }
-  .st-block h2 {
-    font-family: var(--s-cond);
-    font-weight: 800;
-    font-size: 1.6rem;
-    text-transform: uppercase;
-    line-height: 1;
-  }
-  .st-block h2 span {
-    display: block;
-    margin-bottom: 8px;
-    font-family: var(--s-mono);
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--dim);
-  }
-
-  @media (max-width: 760px) {
-    .st-block { grid-template-columns: 1fr; gap: 18px; padding: 30px 0; }
-    .st-block h2 span { display: inline; margin: 0 10px 0 0; }
-  }
+  header { display: flex; align-items: baseline; gap: 12px; }
+  .n { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  h2 { font-weight: 900; font-size: 2.1rem; line-height: 0.9; }
+  .aide { margin-left: auto; font-size: 14px; color: var(--muted); white-space: nowrap; }
 </style>

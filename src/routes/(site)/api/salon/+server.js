@@ -16,7 +16,7 @@ const MAX_PLAYLISTS = 50;
 
 function playlistsError(ids) {
   if (!Array.isArray(ids) || ids.length === 0)
-    return "Choisissez au moins une playlist.";
+    return "Choisis au moins une playlist.";
   if (ids.length > MAX_PLAYLISTS)
     return `${MAX_PLAYLISTS} playlists maximum par soirée`;
   return ids.every(isUuid) ? null : "Une des playlists choisies n'existe pas.";
@@ -29,7 +29,7 @@ export async function POST({ request }) {
     user = await verifyToken(token);
     if (!user)
       return json(
-        { error: "Votre session a expiré. Reconnectez-vous." },
+        { error: "Ta session a expiré. Reconnecte-toi." },
         { status: 401 },
       );
   } else {
@@ -40,7 +40,7 @@ export async function POST({ request }) {
       return json(
         {
           error:
-            "Beaucoup de soirées sont ouvertes sans compte en ce moment. Connectez-vous pour créer la vôtre.",
+            "Beaucoup de soirées sont ouvertes sans compte en ce moment. Connecte-toi pour créer la tienne.",
         },
         { status: 429 },
       );
@@ -51,7 +51,7 @@ export async function POST({ request }) {
     body = await request.json();
   } catch {
     return json(
-      { error: "Demande invalide. Rechargez la page." },
+      { error: "Demande invalide. Recharge la page." },
       { status: 400 },
     );
   }
@@ -130,7 +130,7 @@ export async function GET({ request, url }) {
     request.headers.get("x-forwarded-for") ||
     "unknown";
   if (!salonRooms[code] && (await lookUp(code, ip)) === "throttled")
-    return json({ error: "Réessayez dans un instant." }, { status: 503 });
+    return json({ error: "Réessaie dans un instant." }, { status: 503 });
   const salon = salonRooms[code];
   if (!salon)
     return json({ error: "Cette soirée n'existe plus." }, { status: 404 });
@@ -147,7 +147,7 @@ export async function PATCH({ request }) {
   const user = token ? await verifyToken(token) : null;
   if (token && !user)
     return json(
-      { error: "Votre session a expiré. Reconnectez-vous." },
+      { error: "Ta session a expiré. Reconnecte-toi." },
       { status: 401 },
     );
 
@@ -156,7 +156,7 @@ export async function PATCH({ request }) {
     body = await request.json();
   } catch {
     return json(
-      { error: "Demande invalide. Rechargez la page." },
+      { error: "Demande invalide. Recharge la page." },
       { status: 400 },
     );
   }
@@ -164,7 +164,7 @@ export async function PATCH({ request }) {
   const { code, playlistIds, key } = body ?? {};
   if (!user && !key)
     return json(
-      { error: "Rouvrez la régie depuis l'écran TV de la soirée." },
+      { error: "Rouvre la régie depuis l'écran TV de la soirée." },
       { status: 401 },
     );
   if (!code)

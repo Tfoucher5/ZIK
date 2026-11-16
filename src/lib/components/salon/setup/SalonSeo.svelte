@@ -1,14 +1,15 @@
 <script>
+  import Faq from '$lib/components/ui/Faq.svelte';
   import { FAQ_GROUPS, STEPS, OCCASIONS } from './salonSetupSeo.js';
 </script>
 
-<section class="st-seo" aria-labelledby="st-seo-title">
-  <h2 id="st-seo-title">Le blind test de soirée, sans animateur</h2>
+<section class="seo" aria-labelledby="seo-titre">
+  <h2 id="seo-titre" class="grad">Le blind test de soirée, sans animateur</h2>
 
-  <div class="st-seo-grid">
+  <div class="grille">
     <div>
       <h3>Comment ça marche</h3>
-      <ol class="st-steps">
+      <ol class="etapes">
         {#each STEPS as [head, rest], i (head)}
           <li><span>{String(i + 1).padStart(2, '0')}</span><p><b>{head}</b> {rest}</p></li>
         {/each}
@@ -16,7 +17,7 @@
     </div>
     <div>
       <h3>Pour chaque occasion</h3>
-      <ul class="st-occasions">
+      <ul class="occasions">
         {#each OCCASIONS as [slug, label] (slug)}
           <li><a href="/blind-test/{slug}">{label}</a></li>
         {/each}
@@ -26,110 +27,59 @@
   </div>
 
   <h3>Questions fréquentes</h3>
-  <div class="st-faq">
+  <div class="faq">
     {#each FAQ_GROUPS as g (g.title)}
-      <div class="st-faq-group">
-        <p class="st-faq-title">{g.title}</p>
-        {#each g.items as { q, a } (q)}
-          <details>
-            <summary>{q}</summary>
-            <p>{a}</p>
-          </details>
-        {/each}
+      <div>
+        <p class="faq-titre">{g.title}</p>
+        <Faq items={g.items} />
       </div>
     {/each}
   </div>
 </section>
 
 <style>
-  .st-seo {
-    margin-top: 56px;
-    padding-top: 36px;
-    border-top: 2px solid var(--text);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .st-seo h2 {
-    font-family: var(--s-cond);
-    font-weight: 900;
-    font-size: 1.8rem;
-    text-transform: uppercase;
-  }
-  .st-seo h3 {
-    margin: 14px 0 10px;
-    font-family: var(--s-mono);
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--mid);
-  }
-  .st-seo-grid {
+  .seo {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 40px;
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 64px 20px 88px;
   }
-  .st-steps { display: flex; flex-direction: column; gap: 12px; list-style: none; }
-  .st-steps li { display: flex; gap: 14px; }
-  .st-steps span { font-family: var(--s-mono); font-size: 0.8rem; color: var(--accent); padding-top: 2px; }
-  .st-steps p { font-size: 0.92rem; color: var(--mid); line-height: 1.55; }
-  .st-steps b { color: var(--text); font-weight: 600; }
-  .st-occasions { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
-  .st-occasions a {
-    display: inline-block;
-    padding: 7px 12px;
-    border: 1px solid var(--border2);
-    border-radius: 3px;
-    font-size: 0.88rem;
+  h2 { font-weight: 900; font-size: clamp(2.1rem, 9vw, 4rem); }
+  h3 {
+    margin: 14px 0 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .grille { display: grid; gap: 24px; }
+  .etapes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .etapes li { display: flex; gap: 14px; }
+  .etapes span { padding-top: 2px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .etapes p { font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .etapes b { font-weight: 600; color: var(--text); }
+  .occasions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .occasions a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-size: 15px;
     color: var(--text);
     text-decoration: none;
   }
-  .st-occasions a:hover { border-color: var(--text); }
+  .occasions a:hover { background: rgba(255, 255, 255, 0.06); }
+  .faq { display: grid; gap: 24px; align-items: start; }
+  .faq-titre { padding-bottom: 8px; font-family: var(--titre); font-weight: 900; font-size: 1.3rem; text-transform: uppercase; }
 
-  .st-faq {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
-    align-items: start;
-  }
-  .st-faq-title {
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--text);
-    font-family: var(--s-cond);
-    font-weight: 900;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-  }
-  .st-faq details { border-bottom: 1px solid var(--border); }
-  .st-faq summary {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 0;
-    font-size: 0.92rem;
-    font-weight: 600;
-    cursor: pointer;
-    list-style: none;
-  }
-  .st-faq summary::-webkit-details-marker { display: none; }
-  .st-faq summary::after {
-    content: '+';
-    flex: none;
-    font-family: var(--s-mono);
-    color: var(--accent);
-    transition: transform 0.2s;
-  }
-  .st-faq details[open] summary::after { transform: rotate(45deg); }
-  .st-faq summary:hover { color: var(--accent); }
-  .st-faq details p {
-    padding: 0 0 14px;
-    font-size: 0.9rem;
-    color: var(--mid);
-    line-height: 1.6;
-  }
-
-  @media (max-width: 760px) {
-    .st-seo-grid, .st-faq { grid-template-columns: 1fr; gap: 24px; }
+  @media (min-width: 900px) {
+    .seo { padding-block: 96px 130px; }
+    .grille { grid-template-columns: 1.2fr 1fr; gap: 40px; }
+    .faq { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 </style>

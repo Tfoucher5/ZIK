@@ -6,8 +6,8 @@ describe("univers d'une page", () => {
     expect(universOf("/")).toBe("aiguillage");
   });
 
-  it("vitrine, offres et comparatifs sont côté soirée", () => {
-    for (const p of ["/soiree", "/pro", "/pro/merci", "/vs/kahoot"])
+  it("vitrine, offres, comparatifs et création sont côté soirée", () => {
+    for (const p of ["/soiree", "/pro", "/pro/merci", "/vs/kahoot", "/salon"])
       expect(universOf(p)).toBe("soiree");
   });
 
@@ -17,6 +17,7 @@ describe("univers d'une page", () => {
       "/rooms",
       "/zikle",
       "/soirees",
+      "/salons",
       "/profile",
       "/vs",
     ])
