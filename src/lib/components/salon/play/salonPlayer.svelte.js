@@ -81,6 +81,8 @@ export class SalonPlayer {
   intermission = $state(null);
   finale = $state(null);
   myTeam = $state(null);
+  // « Changer » d'équipe : la liste revient en plein écran
+  teamOpen = $state(false);
   paused = $state(false);
 
   socket = null;
@@ -91,7 +93,10 @@ export class SalonPlayer {
 
   myRank = $derived(this.ranking?.me?.rank ?? 0);
   board = $derived(podium(this.ranking));
-  teamName = $derived(this.teams?.find((t) => t.id === this.myTeam)?.name);
+  team = $derived(this.teams?.find((t) => t.id === this.myTeam));
+  teamName = $derived(this.team?.name);
+  // Sans équipe valable (pas choisie, ou retirée par la régie) : on choisit
+  choosingTeam = $derived(!!this.teams && (!this.team || this.teamOpen));
 
   constructor(sb) {
     this.#sb = sb;
@@ -107,6 +112,7 @@ export class SalonPlayer {
 
   pickTeam = (id) => {
     this.myTeam = id;
+    this.teamOpen = false;
     this.socket?.emit("salon_pick_team", { team: id });
   };
 

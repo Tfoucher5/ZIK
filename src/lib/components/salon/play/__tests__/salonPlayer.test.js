@@ -152,3 +152,62 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     expect(p.allFound).toBe(false);
   });
 });
+
+describe("avant la partie : choix d'équipe", () => {
+  const EQUIPES = [
+    { id: 0, name: "Rouge", size: 1 },
+    { id: 1, name: "Bleue", size: 0 },
+  ];
+  function joueur() {
+    const p = new SalonPlayer(null);
+    p.socket = { emit: vi.fn() };
+    return p;
+  }
+
+  it("sans équipes, pas d'écran de choix", () => {
+    expect(joueur().choosingTeam).toBe(false);
+  });
+
+  it("équipes activées en cours de lobby : le choix s'ouvre, puis se ferme une fois l'équipe prise", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    expect(p.choosingTeam).toBe(true);
+    p.pickTeam(1);
+    expect(p.socket.emit).toHaveBeenCalledWith("salon_pick_team", { team: 1 });
+    expect(p.choosingTeam).toBe(false);
+    expect(p.teamName).toBe("Bleue");
+  });
+
+  it("« Changer » rouvre la liste, un nouveau choix la referme", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.pickTeam(0);
+    p.teamOpen = true;
+    expect(p.choosingTeam).toBe(true);
+    p.pickTeam(1);
+    expect(p.choosingTeam).toBe(false);
+    expect(p.myTeam).toBe(1);
+  });
+
+  it("équipe donnée par la régie : pas d'écran de choix", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.myTeam = 0;
+    expect(p.choosingTeam).toBe(false);
+  });
+
+  it("équipe retirée par la régie : le choix revient", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.pickTeam(1);
+    p.teams = [EQUIPES[0]];
+    expect(p.choosingTeam).toBe(true);
+  });
+
+  it("équipes désactivées : le choix disparaît", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.teams = null;
+    expect(p.choosingTeam).toBe(false);
+  });
+});

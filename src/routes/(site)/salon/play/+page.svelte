@@ -22,10 +22,15 @@
     return h;
   }
 
+  let codeKnown = $state(false);
+  const lobby = $derived(p.phase === 'lobby' || p.phase === 'starting');
+
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
-    p.checkResume(params.get('code')?.toUpperCase() || '');
-    if (params.get('code')) document.getElementById('sp-username')?.focus();
+    const code = params.get('code')?.toUpperCase() || '';
+    p.checkResume(code);
+    codeKnown = /^[A-Z0-9]{6}$/.test(code);
+    if (code) document.getElementById('sp-username')?.focus();
   });
 
   onDestroy(() => p.destroy());
@@ -52,28 +57,31 @@
     onJoin={p.connectAndJoin}
     onReclaim={p.requestReclaim}
     onChangeName={p.changeName}
+    {codeKnown}
   />
 {:else}
-  <main class="sp">
+  <main class="sp" class:sp-fill={p.choosingTeam && lobby}>
     {#if p.connLost && !p.restarting}
       <p class="sp-conn" role="status">Connexion perdue : on te reconnecte. Ta place et tes points sont gardés.</p>
     {/if}
+    {#if !lobby}
     <header class="sp-head">
       <span class="sp-av" style="--h:{hue(p.username)}">{p.username[0]?.toUpperCase() ?? '?'}</span>
       <div>
         <div class="sp-name">{p.username}</div>
         <div class="sp-salon">
-          Salon {p.code}
+          {p.code}
           {#if p.teamName}<span class="sp-team-tag" style="--tc:{teamColor(p.myTeam)}">{p.teamName}</span>{/if}
         </div>
       </div>
       <div class="sp-score">{p.myScore}<small>points</small></div>
     </header>
+    {/if}
 
     <NoticeBanner message={p.adminNotice} />
 
     <div class="sp-body">
-      {#if p.phase === 'lobby' || p.phase === 'starting'}
+      {#if lobby}
         <PlayLobby {p} />
       {:else if p.phase === 'round'}
         <RoundPlay
@@ -121,5 +129,5 @@
   {/if}
 
   <FeedbackOverlay feedback={p.feedback} />
-  <BigCountdown sec={p.startSec} label="La partie commence" />
+  <BigCountdown sec={p.startSec} label="La partie commence" hint="Le son sort de la TV." />
 {/if}

@@ -13,7 +13,17 @@
     onJoin,
     onReclaim,
     onChangeName,
+    codeKnown = false,
   } = $props();
+
+  // Code lu dans le QR ou tapé dans le bandeau : affiché en tuiles, un seul champ à remplir
+  let editCode = $state(false);
+  const tiles = $derived(codeKnown && !editCode && codeInput.length === 6);
+
+  function changeCode() {
+    editCode = true;
+    setTimeout(() => document.querySelector('.sp-code-input')?.focus());
+  }
 </script>
 
 <main class="sp sp-join">
@@ -45,6 +55,13 @@
     <p class="sx-kicker"><b>●</b> ZIK Soirée</p>
     <h1>Entre dans<br><em>la partie.</em></h1>
   </div>
+  {#if tiles}
+  <div class="sp-code-tiles">
+    <span class="sx-kicker">Code</span>
+    <span class="sp-tuiles" aria-label="Code {codeInput}">{#each [...codeInput] as c, i (i)}<b>{c}</b>{/each}</span>
+    <button class="salon-join-link" onclick={changeCode}>Changer</button>
+  </div>
+  {:else}
   <label class="sp-field">
     <span class="sx-kicker">Code affiché sur la TV</span>
     <input
@@ -62,6 +79,7 @@
     >
   </label>
   <QrScanner onCode={(code) => { codeInput = code; document.getElementById('sp-username')?.focus(); }} />
+  {/if}
   <label class="sp-field">
     <span class="sx-kicker">Ton pseudo</span>
     <input
@@ -79,6 +97,8 @@
   <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={onJoin} disabled={joining}>
     {joining ? 'Connexion…' : 'Rejoindre'}
   </button>
+  <p class="sp-hint">Sans appli, sans compte.</p>
+  <ol class="sp-frise" style="--p:.33"><li class="on">Pseudo</li><li>Équipe</li><li>La TV</li></ol>
 {/if}
 </main>
 
@@ -86,5 +106,35 @@
   .sp-resume {
     margin: 0;
     color: var(--mid);
+  }
+  .sp-code-tiles {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sp-code-tiles button {
+    margin-left: auto;
+    min-height: 44px;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+  .sp-tuiles {
+    display: flex;
+    gap: 0.16em;
+    font-family: var(--s-mono);
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+  .sp-tuiles b {
+    display: grid;
+    place-items: center;
+    width: 1.22em;
+    height: 1.5em;
+    border-radius: 0.14em;
+    background: rgb(255 255 255 / 0.09);
+    border-bottom: 0.06em solid rgb(255 255 255 / 0.45);
+  }
+  .sp-hint {
+    margin-top: -14px;
   }
 </style>
