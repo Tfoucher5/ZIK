@@ -8,6 +8,8 @@ import {
   patchSalonPlaylists,
 } from "../../../client/salonClient.js";
 
+const PREP = "zik_salon_prep";
+
 // État de l'écran TV du mode Salon (l'hôte) et connexion à la partie.
 export class SalonHost {
   code = $state("");
@@ -66,6 +68,9 @@ export class SalonHost {
   // Régies branchées (badge) ; null tant que le serveur n'a rien dit
   controls = $state(null);
   helpOpen = $state(false);
+  // « Prépare la TV » passée (code affiché) ; le son entendu ou non au test
+  prepDone = $state(false);
+  tvSound = null;
   userId = $state(null);
   chat = new SupportChat();
 
@@ -103,6 +108,20 @@ export class SalonHost {
       this.#beforeMute = this.volume;
       this.applyVolume(0);
     } else this.applyVolume(this.#beforeMute);
+  };
+
+  showCode = () => {
+    this.prepDone = true;
+    try {
+      localStorage.setItem(PREP, this.code);
+    } catch {
+      /* stockage indisponible : la prépa reviendra au rechargement */
+    }
+  };
+
+  setTvSound = (ok) => {
+    this.tvSound = ok;
+    this.socket?.emit("salon_tv_sound", { ok });
   };
 
   /** Branché par listenCountdowns */
@@ -170,6 +189,11 @@ export class SalonHost {
       return;
     }
     this.key = takeSalonKeyFromUrl(this.code);
+    try {
+      this.prepDone = localStorage.getItem(PREP) === this.code;
+    } catch {
+      /* stockage indisponible */
+    }
     const savedVol = parseInt(localStorage.getItem("zik_salon_vol") ?? "100");
     this.volume = Number.isNaN(savedVol) ? 100 : savedVol;
     this.hostCenter?.setVolume(this.volume);

@@ -31,6 +31,9 @@ export function listenHost(h, socket) {
     h.buzzer = data.buzzer;
     h.mediaCheck = data.mediaCheck;
     socket.emit("salon_tv_volume", { volume: h.volume });
+    if (h.tvSound != null) socket.emit("salon_tv_sound", { ok: h.tvSound });
+    // Une TV rechargée en pleine partie ne repasse jamais par « Prépare la TV »
+    if (data.phase && data.phase !== "lobby") h.prepDone = true;
     h.paused = data.paused;
     if (data.endsAt) {
       h.timerMax = data.timerMax;
@@ -104,6 +107,7 @@ export function listenHost(h, socket) {
 
   socket.on("salon_game_starting", () => {
     h.phase = "starting";
+    h.prepDone = true;
   });
 
   socket.on("salon_next_video", ({ videoId, startSeconds }) =>
