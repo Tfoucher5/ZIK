@@ -84,6 +84,8 @@ export class SalonPlayer {
   // « Changer » d'équipe : la liste revient en plein écran
   teamOpen = $state(false);
   paused = $state(false);
+  // « Une autre ! » demandé par ce joueur à la fin de la partie
+  encore = $state(false);
 
   socket = null;
   revealTimer = null; // délai avant de passer au résumé
@@ -149,6 +151,14 @@ export class SalonPlayer {
           this.#notReceived();
         }
       });
+  };
+
+  // Hors ligne ou pendant le décompte, rien ne part : le serveur refuserait
+  toggleEncore = () => {
+    if (this.startSec > 0) return;
+    if (!this.socket?.connected) return this.#notReceived();
+    this.encore = !this.encore;
+    this.socket.emit("salon_encore", { on: this.encore });
   };
 
   buzz = () => {

@@ -8,6 +8,7 @@
   import PlayLobby from '$lib/components/salon/play/PlayLobby.svelte';
   import PlayBoard from '$lib/components/salon/play/PlayBoard.svelte';
   import PlayEvening from '$lib/components/salon/play/PlayEvening.svelte';
+  import PlayGameOver from '$lib/components/salon/play/PlayGameOver.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
   import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
@@ -24,6 +25,8 @@
 
   let codeKnown = $state(false);
   const lobby = $derived(p.phase === 'lobby' || p.phase === 'starting');
+  // Décompte reçu après une partie : on rejoue avec les mêmes joueurs
+  const replay = $derived(p.phase === 'gameover' || p.phase === 'summary');
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
@@ -64,7 +67,7 @@
     {#if p.connLost && !p.restarting}
       <p class="sp-conn" role="status">Connexion perdue : on te reconnecte. Ta place et tes points sont gardés.</p>
     {/if}
-    {#if !lobby}
+    {#if !lobby && p.phase !== 'gameover'}
     <header class="sp-head">
       <span class="sp-av" style="--h:{hue(p.username)}">{p.username[0]?.toUpperCase() ?? '?'}</span>
       <div>
@@ -103,14 +106,15 @@
         {#if p.board.length > 1 && p.allFound && (p.answerMode !== 'multiple' || (p.chosenIndex !== null && p.revealCorrectIndex === null))}
           <PlayBoard {p} />
         {/if}
-      {:else if p.phase === 'summary' || p.phase === 'gameover'}
+      {:else if p.phase === 'summary'}
         <SummaryView
-          phase={p.phase} roundEnd={p.roundEnd} finalRanking={p.finalRanking} ranking={p.ranking}
-          username={p.username} teams={p.teams} night={p.night} myTeam={p.myTeam}
+          roundEnd={p.roundEnd} ranking={p.ranking}
+          username={p.username} teams={p.teams} myTeam={p.myTeam}
           round={p.round} total={p.total}
-          onLeave={p.leave}
         />
-        {#if p.phase === 'summary' && p.nextShown && p.nextSec > 0}<p class="sp-next">Titre suivant dans {p.nextSec} s</p>{/if}
+        {#if p.nextShown && p.nextSec > 0}<p class="sp-next">Titre suivant dans {p.nextSec} s</p>{/if}
+      {:else if p.phase === 'gameover'}
+        <PlayGameOver {p} />
       {/if}
 
       {#if p.restarting}<p class="sp-error">Mise à jour en cours : reconnexion automatique dans quelques secondes. La manche en cours sera rejouée.</p>{/if}
@@ -121,7 +125,7 @@
   </main>
 
   {#if p.intermission || p.finale}
-    <PlayEvening intermission={p.intermission} finale={p.finale} myTeam={p.myTeam} />
+    <PlayEvening intermission={p.intermission} finale={p.finale} myTeam={p.myTeam} username={p.username} code={p.code} />
   {/if}
 
   {#if p.paused && !p.buzzer}
@@ -129,5 +133,9 @@
   {/if}
 
   <FeedbackOverlay feedback={p.feedback} />
-  <BigCountdown sec={p.startSec} label="La partie commence" hint="Le son sort de la TV." />
+  <BigCountdown
+    sec={p.startSec}
+    label={replay && p.startSec > 3 ? 'On remet ça.' : 'La partie commence'}
+    hint={!replay ? 'Le son sort de la TV.' : p.startSec > 3 ? 'Tes points repartent de zéro. Tu gardes ta place.' : ''}
+  />
 {/if}

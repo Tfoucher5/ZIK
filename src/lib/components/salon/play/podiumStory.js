@@ -9,8 +9,8 @@ export const STORY_H = 1920;
 export const MEDAL = ["#f4c542", "#b4b4c4", "#c87a40"];
 export const ACCENT = "#ff00ff";
 
-const ord = (n) => `${n}${n === 1 ? "re" : "e"}`;
-const pts = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+export const ord = (n) => `${n}${n === 1 ? "re" : "e"}`;
+export const pts = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 const dateFr = (d) =>
   new Intl.DateTimeFormat("fr-FR", {
     day: "numeric",

@@ -131,3 +131,35 @@ describe("téléphone : révélation QCM après un accusé perdu", () => {
     expect(p.chosenIndex).toBeNull();
   });
 });
+
+describe("téléphone : « Une autre ! »", () => {
+  const ecoute = (p) => {
+    const handlers = {};
+    listenPlayer(p, { on: (evt, fn) => (handlers[evt] = fn) }, "ABCDEF", "Ana");
+    return handlers;
+  };
+
+  it("la demande vient du salon_roster du serveur, y compris après une coupure", () => {
+    const p = { encore: false };
+    const h = ecoute(p);
+    h.salon_roster({
+      roster: { recent: [], count: 3, encore: 1 },
+      teams: null,
+      encore: true,
+    });
+    expect(p.encore).toBe(true);
+    expect(p.roster.encore).toBe(1);
+    h.salon_roster({
+      roster: { recent: [], count: 3, encore: 0 },
+      teams: null,
+    });
+    expect(p.encore).toBe(false);
+  });
+
+  it("rejouer remet la demande à zéro", () => {
+    const p = { encore: true, finalRanking: {} };
+    ecoute(p).salon_restarted();
+    expect(p.encore).toBe(false);
+    expect(p.finalRanking).toBeNull();
+  });
+});
