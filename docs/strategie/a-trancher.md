@@ -15,6 +15,15 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
+## Plans de la ZIK TOWER
+
+- **Chantier** : QG
+- **Depuis** : 16/11
+- **Question** : Les plans de la ZIK TOWER te vont-ils avant qu'on code la 3D ? Coupe (cliquable) puis un plan par niveau : RDC hall et La Scène, N1 restaurant, N2 bien-être (sport, jeux, sieste), N3-N4 plateaux des pôles autour de l'atrium boisé et du mur d'eau, N5 conférences, N6 Direction (chaque chef au-dessus de son pôle), N7 ton penthouse, toit héliport et enseigne.
+- **Options** : je valide tel quel ; je valide avec retouches (dis lesquelles) ; je refais
+- **Recommandation** : valider avec les ajustements de l'architecte (en bas de la page) : ascenseurs publics jusqu'au N6, penthouse par ascenseur privé seulement, 2e escalier de secours, sous-sol technique
+- **Lien** : C:\Users\Teamr\AppData\Local\Temp\claude\c23315e6417d4b11\1c92b168-99f4-4167-adef-5abaca3a40ae\scratchpad\zik-tower\index.html
+
 ## Statut de vente et TVA
 
 - **Chantier** : Argent / légal
