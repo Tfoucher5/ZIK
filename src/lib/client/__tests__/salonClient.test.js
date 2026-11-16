@@ -7,6 +7,7 @@ import {
   saveSetup,
   readSetup,
   setupFor,
+  goToStripe,
 } from "../salonClient.js";
 import { FREE_MAX_TEAMS } from "../../data/proPlans.js";
 import { listenHost } from "../../components/salon/host/hostEvents.js";
@@ -146,5 +147,23 @@ describe("réglages repris selon l'offre de l'hôte", () => {
       roundDuration: 30,
       answerMode: "multiple",
     });
+  });
+});
+
+describe("Stripe qui ne répond pas", () => {
+  const sb = {
+    auth: { getSession: async () => ({ data: { session: null } }) },
+  };
+  beforeEach(() =>
+    vi.stubGlobal("fetch", async () => ({ ok: false, json: async () => ({}) })),
+  );
+
+  it("tutoie par défaut, /pro passe son message au vouvoiement", async () => {
+    await expect(goToStripe(sb, "/api/pro/portal")).rejects.toThrow(
+      "Stripe ne répond pas, réessaie dans un instant.",
+    );
+    await expect(
+      goToStripe(sb, "/api/pro/portal", {}, "Réessayez."),
+    ).rejects.toThrow("Réessayez.");
   });
 });

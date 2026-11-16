@@ -30,7 +30,12 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
   });
   const tv = await ecran.newPage();
   await tv.goto(`/salon/host?code=${code}&key=${key}`);
-  await expect(tv.locator(".sh-join-code")).toHaveText(code);
+  // Écran privé « Prépare la TV » d'abord, puis le code pour tout le monde
+  await tv.getByRole("button", { name: "Afficher le code" }).click();
+  await expect(tv.locator(".lb-code")).toHaveAttribute(
+    "aria-label",
+    `Code ${code}`,
+  );
 
   const regie = await (await browser.newContext()).newPage();
   await regie.goto(`/salon/regie?code=${code}&key=${key}`);
@@ -43,7 +48,11 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
   );
   for (const [i, tel] of [alice, bob, chloe].entries()) {
     await tel.goto(`/salon/play?code=${code}`);
-    await tel.locator(".sp-code-input").fill(code);
+    // Code venu de l'URL (QR de la TV) : affiché en tuiles, seul le pseudo reste
+    await expect(tel.locator(".sp-tuiles")).toHaveAttribute(
+      "aria-label",
+      `Code ${code}`,
+    );
     await tel.getByPlaceholder("Ex. : Julie").fill(NOMS[i]);
     await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
     await expect(tel.getByPlaceholder("Ex. : Julie")).toBeHidden();

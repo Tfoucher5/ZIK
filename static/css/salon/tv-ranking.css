@@ -136,9 +136,6 @@
   padding: 12px 24px;
   border-top: 1px solid var(--border);
 }
-.sh-auto {
-  color: var(--mid);
-}
 .sh-toast {
   position: fixed;
   left: 50%;

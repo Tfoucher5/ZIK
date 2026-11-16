@@ -45,7 +45,7 @@
             <p class="kk"><b>●</b> {s.count}</p>
             <div class="lob-h">Sortez vos<br /><em>téléphones.</em></div>
             <div class="code">{#each 'KZ4P2M' as c, i (i)}<b>{c}</b>{/each}</div>
-            <p class="lob-url">Scannez le QR code ou allez sur <b>zik-music.fr/salon/play</b></p>
+            <p class="lob-url">Scannez le QR code, ou allez sur <b>zik-music.fr</b> et tapez le code.</p>
           </div>
           <Qr />
           <div class="tms">
