@@ -210,6 +210,11 @@
 .sp-guess input:focus {
   border-color: var(--text);
 }
+/* La bordure blanche marque déjà le focus : pas de second anneau v2 */
+.v2 .sp-guess input:focus-visible,
+.v2 .sp-field input:focus-visible {
+  outline: none;
+}
 .sp-guess .sx-btn {
   padding: 0 18px;
 }
