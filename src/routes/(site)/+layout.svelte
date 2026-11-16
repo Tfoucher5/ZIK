@@ -30,6 +30,7 @@
   let authReady   = $state(false);
   let authOpen     = $state(false);
   let authView     = $state('login');
+  let authOpts     = $state({});
   let contactOpen  = $state(false);
 
   setContext('zik', {
@@ -77,8 +78,10 @@
     initPush(async () => (await sb.auth.getSession())?.data?.session?.access_token).catch(() => {});
   }
 
-  function openAuthModal(view = 'login') {
+  // opts : next (page où revenir), note (« Ensuite : … »), onRegistered(email)
+  function openAuthModal(view = 'login', opts = {}) {
     authView = view;
+    authOpts = opts;
     authOpen = true;
   }
 
@@ -181,6 +184,9 @@
   {sb}
   bind:open={authOpen}
   bind:view={authView}
+  next={authOpts.next}
+  note={authOpts.note}
+  onRegistered={authOpts.onRegistered}
   onClose={() => { authOpen = false; }}
 />
 

@@ -8,14 +8,15 @@
   import AuthAlert from './AuthAlert.svelte';
   import AuthButton from './AuthButton.svelte';
   import { captchaOn, CAPTCHA_MSG } from './authForm.svelte.js';
+  import { authRedirect } from './redirect.js';
 
   /**
    * @type {{
    *   sb: any, form: import('./authForm.svelte.js').AuthForm, nowLabel: string,
-   *   setView: (v: string) => void, onRegistered: () => void
+   *   setView: (v: string) => void, onRegistered: () => void, next?: string
    * }}
    */
-  let { sb, form, nowLabel, setView, onRegistered } = $props();
+  let { sb, form, nowLabel, setView, onRegistered, next } = $props();
 
   let error = $state('');
   let loading = $state(false);
@@ -43,6 +44,7 @@
       options: {
         data: { username: form.username, signup_ref: signupRef() ?? undefined },
         captchaToken: captchaToken ?? undefined,
+        emailRedirectTo: next ? authRedirect(window.location.origin, next) : undefined,
       },
     });
     loading = false;
@@ -57,7 +59,7 @@
   switchText="Déjà sur la liste ?" switchLabel="Faire vérifier" onSwitch={() => setView('login')}>
   <YouLine reg live name={form.username || 'ton blaze ici'} hint="C'est ce nom qu'on criera au micro" />
 
-  <OAuthButtons {sb} divider="ou remplis la fiche" />
+  <OAuthButtons {sb} {next} divider="ou remplis la fiche" />
 
   <AuthField id="gl-pseudo" label="Pseudo" bind:value={form.username} placeholder="MonPseudo" maxlength={20} autocomplete="username" />
   <AuthField id="gl-remail" label="Email" type="email" bind:value={form.regEmail} placeholder="ton@email.com" autocomplete="email" />

@@ -1,15 +1,17 @@
 <script>
-  /** @type {{ sb: any, divider: string }} */
-  let { sb, divider } = $props();
+  import { authRedirect } from './redirect.js';
+
+  /** @type {{ sb: any, divider: string, next?: string }} */
+  let { sb, divider, next } = $props();
 
   async function signInWithGoogle() {
     if (!sb) return;
-    await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+    await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: authRedirect(window.location.origin, next) } });
   }
 
   async function signInWithDiscord() {
     if (!sb) return;
-    await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: window.location.origin } });
+    await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: authRedirect(window.location.origin, next) } });
   }
 </script>
 
