@@ -70,6 +70,24 @@ describe("grantPro", () => {
     expect(s._journal[0].text).toMatch(/Pro/);
   });
 
+  it("file en cours : salon_pro part avant la file vidée", () => {
+    const s = salon("PRO003", "u1");
+    s.waiting = [
+      { username: "Ana", token: "t", socketId: null, leftAt: Date.now() },
+    ];
+    grantPro(s, io);
+    expect(emissions.map((e) => [e.event, e.cibles, e.payload])).toEqual([
+      [
+        "salon_pro",
+        ["salon:screens:PRO003", "salon:ctrl:PRO003"],
+        { pro: true },
+      ],
+      ["salon_queue", ["salon:ctrl:PRO003"], { count: 0, names: [] }],
+      ["salon_queue", ["salon:screens:PRO003"], { count: 0 }],
+    ]);
+    expect(s.waiting).toBeUndefined();
+  });
+
   it("sans Socket.io : rien ne lève, le salon passe Pro et est sauvegardé", () => {
     const s = salon("PRO002", "u1");
     expect(grantPro(s, null)).toBe(true);

@@ -60,6 +60,14 @@ describe("Prépare la TV", () => {
     expect(prepShown(h)).toBe(false);
   });
 
+  it("la file à l'entrée : la TV garde le nombre, 0 quand elle se vide", () => {
+    expect(h.waiting).toBe(0);
+    h.socket.handlers.salon_queue({ count: 3 });
+    expect(h.waiting).toBe(3);
+    h.socket.handlers.salon_queue({ count: 0 });
+    expect(h.waiting).toBe(0);
+  });
+
   it("« Afficher le code » est retenu pour ce salon", () => {
     h.showCode();
     expect(h.prepDone).toBe(true);

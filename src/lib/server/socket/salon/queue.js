@@ -27,7 +27,30 @@ function purge(salon, io) {
   );
 }
 
-function enqueue(salon, socket, entry) {
+// Les pseudos de la file ne vont qu'à la régie, la TV n'a que le nombre.
+// Jamais vers les téléphones.
+export function announceQueue(salon, io) {
+  const live = (salon.waiting ?? []).filter((w) => socketOf(io, w));
+  io.to(`salon:ctrl:${salon.code}`).emit("salon_queue", {
+    count: live.length,
+    names: live.slice(0, 3).map((w) => w.username),
+  });
+  io.to(`salon:screens:${salon.code}`).emit("salon_queue", {
+    count: live.length,
+  });
+}
+
+// Pseudo gardé pour un téléphone en file, même coupé le temps du délai de grâce
+export function reserved(salon, io, username, token, socket) {
+  if (!salon.waiting) return false;
+  purge(salon, io);
+  return salon.waiting.some(
+    (w) =>
+      w.username === username && w.token !== token && w.socketId !== socket.id,
+  );
+}
+
+function enqueue(salon, socket, io, entry) {
   entry.socketId = socket.id;
   delete entry.leftAt;
   socket.salonWait = salon.code;
@@ -36,6 +59,7 @@ function enqueue(salon, socket, entry) {
     username: entry.username,
     token: entry.token,
   });
+  announceQueue(salon, io);
 }
 
 // Salon complet : le joueur est refusé, ou mis en file s'il l'a demandé (wait)
@@ -47,9 +71,7 @@ export function refuse(salon, socket, io, { username, token, userId, wait }) {
   const mine = queue.find(
     (w) => (token && w.token === token) || w.socketId === socket.id,
   );
-  if (mine) return enqueue(salon, socket, mine);
-  if (wait && queue.some((w) => w.username === username))
-    return socket.emit("salon_error", { message: "Ce pseudo est déjà pris." });
+  if (mine) return enqueue(salon, socket, io, mine);
 
   salon.limitHits = (salon.limitHits ?? 0) + 1;
   note(salon, `${username} refusé : limite gratuite atteinte`);
@@ -67,7 +89,7 @@ export function refuse(salon, socket, io, { username, token, userId, wait }) {
     feature: "players",
   });
   if (!wait || queue.length >= MAX_WAITING)
-    return socket.emit("salon_error", { message: "Le salon est complet." });
+    return socket.emit("salon_error", { message: "La soirée est complète." });
 
   const entry = {
     username,
@@ -75,25 +97,34 @@ export function refuse(salon, socket, io, { username, token, userId, wait }) {
     userId: userId ?? null,
   };
   (salon.waiting ??= []).push(entry);
-  enqueue(salon, socket, entry);
+  enqueue(salon, socket, io, entry);
 }
 
-// Sortie de la file : admis, placé directement ou parti de lui-même
+// Sortie de la file : admis, placé directement ou parti de lui-même.
+// Vrai si une entrée a été retirée.
 export function unqueue(salon, socket, token = null) {
+  const before = salon?.waiting?.length ?? 0;
   if (salon?.waiting)
     salon.waiting = salon.waiting.filter(
       (w) => w.socketId !== socket.id && !(token && w.token === token),
     );
   if (socket.salonWait) socket.leave(waitRoom(socket.salonWait));
   socket.salonWait = null;
+  return (salon?.waiting?.length ?? 0) < before;
+}
+
+export function quitQueue(socket, io) {
+  const salon = salonRooms[socket.salonWait];
+  if (unqueue(salon, socket)) announceQueue(salon, io);
 }
 
 // Téléphone en file coupé : sa place l'attend le temps du délai de grâce
-export function leaveQueue(socket) {
-  const w = salonRooms[socket.salonWait]?.waiting?.find(
-    (w) => w.socketId === socket.id,
-  );
-  if (w) Object.assign(w, { socketId: null, leftAt: Date.now() });
+export function leaveQueue(socket, io) {
+  const salon = salonRooms[socket.salonWait];
+  const w = salon?.waiting?.find((w) => w.socketId === socket.id);
+  if (!w) return;
+  Object.assign(w, { socketId: null, leftAt: Date.now() });
+  announceQueue(salon, io);
 }
 
 // Une place libérée : les premiers connectés de la file entrent, les absents
@@ -115,6 +146,7 @@ export function admitWaiting(salon, io) {
       }
     }
     if (salon.pro || !salon.waiting.length) delete salon.waiting;
+    announceQueue(salon, io);
   } catch (err) {
     console.error("[salon] file d'attente", err?.stack ?? err);
   }

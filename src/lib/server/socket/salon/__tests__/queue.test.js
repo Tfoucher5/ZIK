@@ -84,7 +84,9 @@ describe("file d'attente des refusés", () => {
 
   it("13e sans wait (ancien téléphone) : refus identique, pas de file", async () => {
     const w = await arrive("w1", "Lea");
-    expect(w.de("salon_error")).toEqual([{ message: "Le salon est complet." }]);
+    expect(w.de("salon_error")).toEqual([
+      { message: "La soirée est complète." },
+    ]);
     expect(w.de("salon_waiting")).toEqual([]);
     expect(salon().waiting).toBeUndefined();
     expect(salon().limitHits).toBe(1);
@@ -257,7 +259,7 @@ describe("file d'attente des refusés", () => {
       salon().waiting.push({ username: `f${i}`, token: `t${i}` });
     const trop = await arrive("w4", "Zed", { wait: true });
     expect(trop.de("salon_error")).toEqual([
-      { message: "Le salon est complet." },
+      { message: "La soirée est complète." },
     ]);
     expect(salon().waiting).toHaveLength(200);
   });

@@ -37,7 +37,7 @@
       {#if !h.controls}<div class="lb-check"><MediaCheck check={h.mediaCheck} tv solo /></div>{/if}
     </div>
     <figure class="lb-qr">
-      <p class="lb-cpt"><i></i><b>{v.count}</b> {plural(v.count, 'joueur')} {plural(v.count, 'connecté')}</p>
+      <p class="lb-cpt"><i></i><b>{v.count}</b> {plural(v.count, 'joueur')} {plural(v.count, 'connecté')}{#if h.waiting > 0}<em>{h.waiting} en attente</em>{/if}</p>
       <div><QrCode text={salonPlayUrl(h.code)} label="QR code pour rejoindre la partie" /></div>
       <figcaption>Scannez pour jouer</figcaption>
     </figure>

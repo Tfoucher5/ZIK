@@ -20,7 +20,14 @@ import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
 import { dropReclaim, pendingReclaims } from "./reclaim.js";
 import { scheduleCleanup, sendBreak, timerClock } from "./timers.js";
-import { isFull, refuse, unqueue } from "./queue.js";
+import {
+  announceQueue,
+  isFull,
+  quitQueue,
+  refuse,
+  reserved,
+  unqueue,
+} from "./queue.js";
 import { bool, key, optional, safe, str } from "../safe.js";
 
 // key absente (TV ouverte avec le seul code) : le handler répond « réservé à l'hôte »
@@ -86,6 +93,7 @@ export function registerJoin(socket, io) {
     else announceNextVideo(salon, io);
     scheduleCleanup(code);
     broadcastScreens(code, io);
+    announceQueue(salon, io);
     if (salon.game.restored) resumeAfterRestart(salon, io);
   });
 
@@ -142,6 +150,7 @@ export function registerJoin(socket, io) {
     sendBreak(socket, salon.game);
     scheduleCleanup(code);
     broadcastScreens(code, io);
+    announceQueue(salon, io);
   });
 
   // ── Player joins ──────────────────────────────────────────────────────────
@@ -181,8 +190,7 @@ export function joinPlayer(
 ) {
   const { code } = salon;
   // En file d'un autre salon : il la quitte avant d'entrer ici
-  if (socket.salonWait && socket.salonWait !== code)
-    unqueue(salonRooms[socket.salonWait], socket);
+  if (socket.salonWait && socket.salonWait !== code) quitQueue(socket, io);
   if (salon.banned.has(username.toLowerCase()) || salon.banned.has(token))
     return socket.emit("salon_error", {
       message: "L'hôte t'a retiré de ce salon.",
@@ -196,9 +204,12 @@ export function joinPlayer(
     else return socket.emit("salon_name_taken", { username });
   }
 
+  // Un téléphone en file coupé garde son pseudo, même si une place est libre
+  if (reserved(salon, io, username, token, socket))
+    return socket.emit("salon_error", { message: "Ce pseudo est déjà pris." });
   if (!salon.players[username] && isFull(salon))
     return refuse(salon, socket, io, { username, token, userId, wait });
-  unqueue(salon, socket, token);
+  if (unqueue(salon, socket, token)) announceQueue(salon, io);
 
   // Un retardataire entre dans la partie en cours avec 0 point, par le même
   // chemin qu'une reconnexion. Pendant le podium (gameover), il passe par le
