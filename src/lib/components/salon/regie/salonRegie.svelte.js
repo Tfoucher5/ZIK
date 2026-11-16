@@ -36,6 +36,8 @@ export class SalonRegie {
   mediaCheck = $state(null);
   intermission = $state(null);
   finale = $state(null);
+  // QR en grand sur la TV (fin de partie, entracte)
+  qrBig = $state(false);
   timerVal = $state(0);
   startSec = $state(0);
   nextSec = $state(0);

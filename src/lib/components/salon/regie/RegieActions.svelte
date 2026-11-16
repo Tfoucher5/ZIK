@@ -30,18 +30,14 @@
 <svelte:window onclick={() => { menuOuvert = false; confirmeFin = false; }} />
 
 {#if phase === 'lobby'}
-  <footer class="ra">
-    <button class="rg-btn on ra-lance" onclick={() => onAction('salon_start')} disabled={!joueurs}>
+  <footer class="rg-bar">
+    <button class="rg-btn on rg-lance" onclick={() => onAction('salon_start')} disabled={!joueurs}>
       {joueurs ? 'Lancer la partie' : 'En attente de joueurs'}
     </button>
     {#if joueurs && countStart}<p>La TV lance un décompte de 5 secondes.</p>{/if}
   </footer>
-{:else if phase === 'gameover'}
-  <footer class="ra">
-    <button class="rg-btn on ra-lance" onclick={() => onAction('salon_restart')}>Lancer la partie suivante</button>
-  </footer>
 {:else}
-  <footer class="ra jeu">
+  <footer class="rg-bar jeu">
     <p>{note}</p>
     <div class="ra-acts">
       {#if buzzer && phase === 'round'}
@@ -78,16 +74,7 @@
 {/if}
 
 <style>
-  .ra {
-    position: relative; flex-shrink: 0;
-    display: grid; gap: 8px;
-    padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid var(--line-2);
-    background: rgb(7 7 11 / 0.94);
-  }
-  .ra > p { text-align: center; font-size: 14px; line-height: 1.3; color: var(--muted); }
-  .ra-lance { min-height: 72px; font-size: 28px; }
-  .ra.jeu > p { display: none; }
+  .jeu > p { display: none; }
 
   .ra-acts { display: grid; grid-template-columns: 1fr 1fr 60px; gap: 8px; }
   .ra-acts .rg-btn { min-height: 60px; padding: 0 6px; }
@@ -109,10 +96,8 @@
   .ra-menu .ra-danger.confirme { background: rgb(248 113 113 / 0.14); }
 
   @media (min-width: 900px) {
-    .ra { display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 24px; }
-    .ra.jeu { flex-direction: row; }
-    .ra > p, .ra.jeu > p { display: block; text-align: left; font-size: 15px; }
-    .ra-lance { width: auto; min-width: 340px; padding: 0 40px; }
+    .jeu { flex-direction: row; }
+    .jeu > p { display: block; }
     .ra-acts { grid-template-columns: 220px 220px 60px; flex-shrink: 0; }
     .ra-menu { right: 24px; }
   }

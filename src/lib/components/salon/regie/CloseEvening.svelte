@@ -11,7 +11,7 @@
 
 {#if barre}
   <button class="rg-btn ce-barre" type="button" onclick={() => (confirme = true)}>Fermer la soirée</button>
-  <p class="ce-note">Une confirmation est demandée.</p>
+  <p>Une confirmation est demandée.</p>
 {:else}
   <div class="ce">
     <button class="rg-fermer" type="button" onclick={() => (confirme = true)}>Fermer la soirée</button>
@@ -20,7 +20,7 @@
 {/if}
 
 {#if confirme}
-  <button class="ce-voile" type="button" tabindex="-1" aria-label="Annuler" onclick={() => (confirme = false)}></button>
+  <button class="ce-voile" type="button" tabindex="-1" aria-hidden="true" onclick={() => (confirme = false)}></button>
   <div class="ce-feuille" role="alertdialog" aria-modal="true" aria-labelledby="ce-titre">
     <h2 id="ce-titre">Fermer la soirée ?</h2>
     <ul>
@@ -40,9 +40,11 @@
 
 <style>
   .ce { display: grid; gap: 8px; justify-items: start; padding-top: 18px; }
-  .ce small, .ce-note { font-size: 14px; line-height: 1.4; color: var(--muted); }
-  .ce-note { text-align: center; }
+  .ce small { font-size: 14px; line-height: 1.4; color: var(--muted); }
   .ce-barre { min-height: 72px; font-size: 26px; }
+  @media (min-width: 900px) {
+    .ce-barre { width: auto; min-width: 340px; padding: 0 40px; }
+  }
 
   .ce-voile { position: fixed; inset: 0; z-index: 90; border: 0; background: rgb(0 0 0 / 0.6); cursor: default; }
   .ce-feuille {

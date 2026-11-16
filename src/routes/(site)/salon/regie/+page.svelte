@@ -7,6 +7,8 @@
   import RegieTabs from '$lib/components/salon/regie/RegieTabs.svelte';
   import RegieEtat from '$lib/components/salon/regie/RegieEtat.svelte';
   import RegieActions from '$lib/components/salon/regie/RegieActions.svelte';
+  import RegieEnd from '$lib/components/salon/regie/RegieEnd.svelte';
+  import RegieEndBar from '$lib/components/salon/regie/RegieEndBar.svelte';
   import TabDirect from '$lib/components/salon/regie/TabDirect.svelte';
   import RegiePrep from '$lib/components/salon/regie/RegiePrep.svelte';
   import TabPlayers from '$lib/components/salon/regie/TabPlayers.svelte';
@@ -33,7 +35,7 @@
 <svelte:head>
   <title>Régie {r.code} - ZIK Soirée</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="/css/salon/regie.css?v={version}">
+  {#each ['regie', 'regie-reglages'] as f (f)}<link rel="stylesheet" href="/css/salon/{f}.css?v={version}">{/each}
 </svelte:head>
 
 <div class="rg">
@@ -89,7 +91,17 @@
             onReport={(reason, round) => r.send('salon_report_video', { reason, round })}
           >
             {#snippet haut()}
-              {#if prep}<RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} />{/if}
+              {#if prep}
+                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} />
+              {:else if r.phase === 'gameover'}
+                <RegieEnd
+                  players={r.players} teams={r.teams} rounds={r.history.length} night={r.night}
+                  intermission={r.intermission} finale={r.finale} qrBig={r.qrBig} pro={r.pro} tambour={r.settings.finaleSound !== false}
+                  musique={playlistNames.join(', ') || 'Sélection en cours'}
+                  onSend={r.send} onUpsell={(f) => (r.upsell = f)} onPlaylists={r.openPlaylists}
+                  onClose={() => r.send('salon_close')}
+                />
+              {/if}
             {/snippet}
           </TabDirect>
         {:else if r.onglet === 'joueurs'}
@@ -112,8 +124,9 @@
             onOpenPlaylists={r.openPlaylists}
             onClose={() => r.send('salon_close')}
           >
-            {#if r.idle}
-              <RegieEvening pro={r.pro} night={r.night} intermission={r.intermission} finale={r.finale} lobby={r.phase === 'lobby'}
+            <!-- En fin de partie, la soirée se pilote depuis Direct -->
+            {#if r.phase === 'lobby'}
+              <RegieEvening pro={r.pro} night={r.night} intermission={r.intermission} finale={r.finale} lobby
                 onSend={r.send} onUpsell={(f) => (r.upsell = f)} />
             {/if}
           </TabSettings>
@@ -121,13 +134,18 @@
       </div>
     </div>
 
-    <RegieActions
-      phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} countStart={r.settings.countStart !== false}
-      buzzer={r.buzzer} note={r.etat.note}
-      onAction={(ev) => r.send(ev)}
-      onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
-      onGate={r.gate}
-    />
+    {#if r.phase === 'gameover'}
+      <RegieEndBar intermission={r.intermission} finale={r.finale} countStart={r.settings.countStart !== false}
+        onRestart={() => r.send('salon_restart')} onClose={() => r.send('salon_close')} />
+    {:else}
+      <RegieActions
+        phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} countStart={r.settings.countStart !== false}
+        buzzer={r.buzzer} note={r.etat.note}
+        onAction={(ev) => r.send(ev)}
+        onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
+        onGate={r.gate}
+      />
+    {/if}
   {/if}
 
   {#if r.notice}<p class="rg-notice" role="status">{r.notice}</p>{/if}
