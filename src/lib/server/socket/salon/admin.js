@@ -1,6 +1,7 @@
 import { salonRooms, getIO } from "../../state.js";
 import { displayString } from "../../services/music/trackText.js";
-import { kickPlayer, staff } from "./players.js";
+import { kickPlayer } from "./players.js";
+import { grantPro } from "./pro.js";
 import { nextRound, pauseGame, resumeGame, revealRound } from "./timers.js";
 import { applySettings } from "./rooms.js";
 import { supportView } from "./support.js";
@@ -119,9 +120,8 @@ export function supportKick(code, username) {
 export function supportGiftPro(code) {
   const { salon, io } = liveSalon(code);
   if (salon.pro) throw new Error("Ce salon est déjà en Pro.");
-  salon.pro = true;
   salon.proGift = true;
-  staff(code, io).emit("salon_pro", { pro: true });
+  grantPro(salon, io);
 }
 
 /** Réglages appliqués comme depuis la régie, sans la barrière du Pro. */

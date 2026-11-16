@@ -25,20 +25,11 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Recommandation** : créer la micro-entreprise, faire confirmer la franchise de TVA par l'URSSAF ou un comptable, puis envoyer le SIRET à Claude qui corrige CGV, mentions légales, /pro et factures Stripe. Seuils de franchise services 2026 : 37 500 € / 41 250 € (à vérifier sur service-public.gouv.fr)
 - **Lien** : https://formalites.entreprise.gouv.fr/
 
-## Post 1 : carrousel « ces sons ont 30 ans » (TikTok)
-
-- **Chantier** : Marketing (Clara, Nina)
-- **Depuis** : 16/11
-- **Question** : Je le programme sur le compte TikTok ZIK avec Claude in Chrome, **mardi 17/11 à 18 h**, avec cette légende : « Ces sons ont 30 ans. Lequel tu connais encore par cœur ? Le blind test multijoueur, c'est sur zik-music.fr » et les hashtags #blindtest #nostalgie #annees90 #musique90 #quizmusical. Musique tendance choisie dans TikTok au moment de programmer.
-- **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · non
-- **Recommandation** : oui, tel quel
-- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/planche-carrousel.png
-
-## Post 2 : vidéo « Feuille de match » v2 (TikTok)
+## Post 2 : « Feuille de match » v3, montée sur la musique (TikTok)
 
 - **Chantier** : Marketing (Sami, Nina)
 - **Depuis** : 16/11
-- **Question** : La v2 finit sur une carte « BLIND TEST · MULTIJOUEUR · EN LIGNE, contre tes potes, gratuit, sans appli, zik-music.fr » (31 s) avec les vrais bruitages du jeu (buzzer à chaque bonne réponse, roulement de tambour sur le 7/10), sans musique dans le fichier. Je la programme **jeudi 19/11 à 18 h** avec la légende « 7/10 sur les années 80. Tu fais mieux ? Viens me battre en ligne, c'est gratuit : zik-music.fr » et #blindtest #blindtestmusical #annees80 #quizmusical #jeuentrepotes ?
-- **Options** : oui, tel quel · oui, autre légende ou date (écris-la) · retoucher la vidéo
+- **Question** : La vidéo est maintenant montée sur une musique continue (synthwave années 80 sans voix, libre de droits CC0), chaque coupe et chaque gommette tombe sur le temps, la musique ne s'arrête jamais, fondu à la fin ; bruitages du jeu par-dessus (33,6 s). Dans TikTok on ne rajoute pas de musique. Je la programme **dimanche 22/11 à 18 h** avec la légende « 7/10 sur les années 80. Tu fais mieux ? Viens me battre en ligne, c'est gratuit : zik-music.fr » et #blindtest #blindtestmusical #annees80 #quizmusical #jeuentrepotes ?
+- **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · retoucher
 - **Recommandation** : la regarder avec le son, puis oui
-- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v2.mp4
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v3.mp4
