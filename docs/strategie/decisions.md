@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Maquette fin de partie v2 validée
+
+**Décision de Théo** : maquette validée (https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5), story « bien mieux ». 1) la playlist jouée quitte la TV : oui. 2) « prix » pas compris : ce sont les mentions « le plus rapide », « le plus régulier », « meilleur joueur » ; choix du CEO : gardées en petites étiquettes sur le nom. 3) aplat plein écran du vainqueur seulement au podium de la soirée. Idée de Théo à cadrer plus tard : des « paramètres avancés » de soirée (sons, animations, compte à rebours…). 4) nom de la soirée en tête de la story : oui. 5) QR en grand sans fermeture automatique : oui.
+
 ## 16/11/2026 — Posts TikTok
 
 **Décision de Théo** : carrousel « ces sons ont 30 ans » le 19/11 (un post part déjà le 16), avec une musique qui a 30 ans en 2026 : programmé par Claude le 19/11 à 18 h avec « Wannabe » (Spice Girls, 1996). « Feuille de match » validée, mais la musique doit être choisie et montée par nous dans la vidéo (les coupes hachaient la musique ajoutée dans TikTok) ; date fixée après le 19/11, en fonction du carrousel.
