@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { MAT, mur, plante, poste, solForme, titre } from "./meubles.js";
+import { MAT, etiquette, mur, plante, poste, solForme } from "./meubles.js";
 import { credence, tapis } from "./deco.js";
 import { COULEURS, SALLES, contour, facades } from "./batiment.js";
-import { NOMS } from "./disposition.js";
+import { NOMS, OUEST } from "./disposition.js";
 import { bandeNord } from "./nord.js";
 import { salle } from "./salles.js";
 import { espaces } from "./espaces.js";
@@ -16,15 +16,35 @@ const DECOR = {
     mur(scene, grille, x0, z0, x1, z1, { type: "plein", h: 1.1 }),
 };
 
-// Espace d'un pôle : un tapis par îlot, le décor, les postes et le bureau du chef.
-function quartier(scene, grille, id, { titre: t, ilots, deco, postes, chef }) {
+// Signalétique d'un quartier : grand nom du pôle et liseré de sa couleur au sol autour des îlots.
+function signaletique(scene, id, [x, z], ilots) {
+  const e = etiquette(NOMS[id], COULEURS[id], "zone pole");
+  e.position.set(x, 3.4, z);
+  scene.add(e);
+  const dedans = ilots.filter((b) => b[0] > OUEST);
+  const [x0, z0, x1, z1] = [0, 1, 2, 3].map((k) =>
+    (k < 2 ? Math.min : Math.max)(
+      ...dedans.map((b) => b[k] + (k < 2 ? -0.35 : 0.35)),
+    ),
+  );
   const c = COULEURS[id];
-  titre(scene, NOMS[id], c, t[0], t[1], null, 3.2);
+  for (const [cx, cz, l, p] of [
+    [(x0 + x1) / 2, z0, x1 - x0, 0.12],
+    [(x0 + x1) / 2, z1, x1 - x0, 0.12],
+    [x0, (z0 + z1) / 2, 0.12, z1 - z0],
+    [x1, (z0 + z1) / 2, 0.12, z1 - z0],
+  ])
+    tapis(scene, cx, cz, l, p, c, 0.85);
+}
+
+// Espace d'un pôle : signalétique, un tapis par îlot, le décor et les postes.
+function quartier(scene, grille, id, { titre: t, ilots, deco, postes }) {
+  const c = COULEURS[id];
+  signaletique(scene, id, t, ilots);
   for (const [x0, z0, x1, z1] of ilots)
     tapis(scene, (x0 + x1) / 2, (z0 + z1) / 2, x1 - x0, z1 - z0, c, 0.16);
   for (const [type, ...v] of deco) DECOR[type](scene, grille, ...v);
-  const bureau = (b, sep) => poste(scene, grille, b.x, b.z, b.a, c, sep);
-  return { chef: bureau(chef, false), postes: postes.map((b) => bureau(b)) };
+  return { postes: postes.map((b) => poste(scene, grille, b.x, b.z, b.a, c)) };
 }
 
 // { poles, ouest } : place des pôles et bord ouest du bâtiment, calculés par disposer().
@@ -56,12 +76,10 @@ export function plan(scene, grille, { poles, ouest }) {
 
   const { accueil, invite, renforts, pauses } = espaces(scene, grille);
   return {
-    ...nord,
     services,
     renforts,
     accueil,
-    invite,
-    pauses: [...pauses, ...nord.platine, ...nord.wc],
+    pauses: [...pauses, invite, ...nord.detente, ...nord.platine, ...nord.wc],
     ascenseur: {
       place: new THREE.Vector3(-0.5, 0, 2.6),
       angle: 0,

@@ -84,6 +84,20 @@
       </header>
       <div class="liste"></div>
     </dialog>
+    <nav id="ascenseur" class="ascenseur" aria-label="Ascenseur" hidden>
+      <button type="button" data-etage="2" aria-pressed="false">
+        <b>3</b> Penthouse
+      </button>
+      <button type="button" data-etage="1" aria-pressed="false">
+        <b>2</b> Direction
+      </button>
+      <button type="button" data-etage="0" aria-pressed="true">
+        <b>1</b> Plateau
+      </button>
+      <button type="button" data-etage="ville" aria-pressed="false">
+        <b>◇</b> Ville
+      </button>
+    </nav>
     <div id="board" class="board" hidden>Board en séance</div>
     <div id="fiche" class="fiche" hidden></div>
     <script type="module" src="/qg.js"></script>

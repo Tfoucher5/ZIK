@@ -15,13 +15,13 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : fait
 - **Équipe** : Opérations
-- **Prochaine étape** : en prod le 16/11 (avant-partie, fin de partie, régie, ZIK Pro en pleine soirée) ; tests réels de Théo : soirée multi-téléphones dont iPhone, 13e joueur puis Soirée 24 h en test Stripe sur le staging
+- **Prochaine étape** : en prod le 16/11 (avant-partie, fin de partie, régie, ZIK Pro en pleine soirée) ; vraie soirée testée par Théo le 16/11 (OK, une attente de son à la 10e manche) ; restent iPhone, 13e joueur puis Soirée 24 h en test Stripe, QR à 5 m
 
 ## Promo
 
 - **Statut** : en cours
 - **Équipe** : Marketing
-- **Prochaine étape** : carrousel programmé le 19/11 à 18 h ; Feuille de match prête pour le 22/11 à 18 h (Théo clique « Programmer » dans TikTok Studio)
+- **Prochaine étape** : carrousel programmé le 19/11 à 18 h ; Feuille de match en brouillon TikTok (date 22/11 18 h), Théo la programme depuis Brouillons
 
 ## Retouches après tests réels
 
@@ -34,3 +34,9 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Statut** : à faire
 - **Équipe** : Théo
 - **Prochaine étape** : reporté par Théo (voir « À trancher »)
+
+## QG « La Tour »
+
+- **Statut** : fait
+- **Équipe** : Technique
+- **Prochaine étape** : tour de nuit à 3 étages (Plateau, Direction, Penthouse de Théo), ville, ascenseur 1 · 2 · 3 · Ville ; retours de Théo à prendre

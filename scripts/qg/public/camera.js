@@ -14,7 +14,7 @@ const TOUCHES = {
 };
 const saisie = (el) =>
   el?.closest?.("input, textarea, select, [contenteditable]");
-const SOL = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const HAUT = new THREE.Vector3(0, 1, 0);
 
 // Caméra libre : clic gauche tourne, clic droit ou clic molette déplace, molette zoome vers le curseur,
 // ZQSD ou flèches avancent, double-clic sur le sol s'y rend. Toujours au-dessus du sol, jamais loin du plateau.
@@ -22,6 +22,7 @@ export class Camera {
   constructor(camera, dom) {
     this.camera = camera;
     this.dom = dom;
+    this.y = 0;
     this.c = new OrbitControls(camera, dom);
     Object.assign(this.c, {
       enableDamping: true,
@@ -57,7 +58,7 @@ export class Camera {
     return this.camera.position.distanceTo(this.c.target);
   }
 
-  // Point du sol sous le curseur, ou null hors du plateau.
+  // Point du sol de l'étage affiché sous le curseur, ou null hors de l'étage.
   sol(e) {
     const r = this.dom.getBoundingClientRect();
     const rayon = new THREE.Raycaster();
@@ -68,15 +69,20 @@ export class Camera {
       ),
       this.camera,
     );
-    const p = rayon.ray.intersectPlane(SOL, new THREE.Vector3());
+    const sol = new THREE.Plane(HAUT, -this.y);
+    const p = rayon.ray.intersectPlane(sol, new THREE.Vector3());
     return p && this.bornes?.containsPoint(p) ? p : null;
   }
 
-  // Vue d'ensemble du plateau [xmin, xmax, zmin, zmax], cadrée sur la taille de la zone 3D.
-  cadrer([x0, x1, z0, z1], ensemble = true) {
+  // Vue d'ensemble d'un étage [xmin, xmax, zmin, zmax] à la hauteur this.y, cadrée sur la zone 3D.
+  // Renvoie la distance de la vue d'ensemble.
+  cadrer(cadre, ensemble = true) {
+    const [x0, x1, z0, z1] = cadre;
+    this.cadre = cadre;
+    const y = this.y;
     this.bornes = new THREE.Box3(
-      new THREE.Vector3(x0, -1, z0),
-      new THREE.Vector3(x1, 1, z1),
+      new THREE.Vector3(x0, y - 1, z0),
+      new THREE.Vector3(x1, y + 1, z1),
     );
     const demiV = THREE.MathUtils.degToRad(this.camera.fov / 2);
     const demiH = Math.atan(Math.tan(demiV) * this.camera.aspect);
@@ -87,12 +93,24 @@ export class Camera {
         (z1 - z0) / 2 / Math.tan(demiV),
       );
     this.c.maxDistance = d * 1.6;
-    if (!ensemble) return;
+    if (!ensemble) return d;
     this.vol = null;
-    this.c.target.set((x0 + x1) / 2, 0, (z0 + z1) / 2 + 0.5);
+    this.c.target.set((x0 + x1) / 2, y, (z0 + z1) / 2 + 0.5);
     this.camera.position
       .copy(this.c.target)
       .add(new THREE.Vector3(0.1, 0.71, 0.7).normalize().multiplyScalar(d));
+    return d;
+  }
+
+  // Vol vers un étage (ascenseur) : même angle de vue, nouvelle hauteur et nouvelles bornes.
+  voler(cadre, y, recul = 1) {
+    this.y = y;
+    const d = this.cadrer(cadre, false) * recul;
+    const [x0, x1, z0, z1] = cadre;
+    this.vol = {
+      cible: new THREE.Vector3((x0 + x1) / 2, y, (z0 + z1) / 2 + 0.5),
+      distance: d,
+    };
   }
 
   // Décale la cible et la caméra ensemble : la vue glisse sans tourner.
@@ -124,11 +142,11 @@ export class Camera {
       if (this.c.target.distanceTo(this.vol.cible) < 0.05) this.vol = null;
     }
     this.c.update();
-    if (this.bornes) {
+    if (this.bornes && !this.vol) {
       const dedans = this.c.target
         .clone()
         .clamp(this.bornes.min, this.bornes.max);
-      this.glisser(dedans.sub(this.c.target).setY(-this.c.target.y));
+      this.glisser(dedans.sub(this.c.target).setY(this.y - this.c.target.y));
     }
   }
 }
