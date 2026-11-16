@@ -80,7 +80,8 @@ export function emitGameOver(io, code, over) {
   }));
 }
 
-export function emitRoundEnd(io, code, summary) {
+// QCM : chaque téléphone reçoit la case comptée pour lui, jamais celle des autres
+export function emitRoundEnd(io, code, summary, players) {
   const rank = ranker(withPrevRank(summary.scores));
   const phone = {
     ...summary,
@@ -90,6 +91,9 @@ export function emitRoundEnd(io, code, summary) {
   emitSplit(io, code, "salon_round_end", summary, (u) => ({
     ...phone,
     ranking: rank(u),
+    ...(summary.correctChoiceIndex !== undefined && {
+      chosenIndex: players?.[u]?._choiceIndex ?? null,
+    }),
   }));
 }
 
