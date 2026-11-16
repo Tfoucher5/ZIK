@@ -1,22 +1,23 @@
 <script>
   import RegieAnswer from './RegieAnswer.svelte';
+  import TitresJoues from './TitresJoues.svelte';
+  import { RAISONS } from './reponse.js';
   /**
-   * Onglet « Direct » : ce qui se passe maintenant.
+   * Onglet « Direct » : ce qui se passe maintenant à gauche, les titres joués
+   * à droite (dessous au téléphone). `haut` : avant-partie ou fin de partie.
    *
    * @type {{
-   *   phase: string, track: any, answerMode: string,
-   *   volume: number, pro: boolean, history: any[],
+   *   phase: string, etat: ReturnType<typeof import('./onglets.js').etatManche>,
+   *   track: any, answerMode: string, volume: number, pro: boolean, history: any[],
    *   onVolume: (v: number) => void,
    *   onReport: (reason: string, round?: number) => void,
+   *   haut?: import('svelte').Snippet,
    * }}
    */
-  let { phase, track, answerMode, volume, pro, history, onVolume, onReport } = $props();
+  let { phase, etat, track, answerMode, volume, pro, history, onVolume, onReport, haut } = $props();
 
-  const RAISONS = ['Mauvaise version', 'Pas le bon titre', 'Démarre sur un blanc', 'Pas de son'];
+  const live = $derived(phase === 'round' || phase === 'summary');
   let signale = $state(null);
-  // Titres joués : on peut signaler après coup, quand on n'a pas eu le temps
-  let ouvert = $state(null);
-  let signales = $state({});
 
   // Un signalement par titre : on repart de zéro à la manche suivante
   $effect(() => {
@@ -28,123 +29,69 @@
     signale = raison;
     onReport(raison);
   }
-
-  // Nouvelle partie : l'historique repart de zéro, les signalements aussi
-  $effect(() => {
-    if (!history.length) {
-      signales = {};
-      ouvert = null;
-    }
-  });
-
-  function signalerManche(manche, raison) {
-    signales = { ...signales, [manche]: raison };
-    ouvert = null;
-    onReport(raison, manche);
-  }
 </script>
 
-{#if track}
-  <section class="td-bloc">
-    <h3 class="sx-kicker">{phase === 'round' ? 'Titre en cours' : 'Dernier titre'}</h3>
-    <RegieAnswer {track} {phase} {answerMode} />
-    {#if phase === 'round' || phase === 'summary'}
-      <div class="td-report">
-        {#if signale}
-          <p>Merci, c'est noté : « {signale} ». On corrige la vidéo pour les prochaines fois.</p>
-        {:else}
-          <span>Un souci avec la vidéo ?</span>
-          <div class="td-report-btns">
-            {#each RAISONS as r (r)}
-              <button type="button" onclick={() => signaler(r)}>{r}</button>
-            {/each}
-          </div>
-        {/if}
-      </div>
+<div class:rg-cols={history.length}>
+  <div class="rg-col">
+    {@render haut?.()}
+
+    {#if live || phase === 'starting'}
+      <p class="rg-k"><b aria-hidden="true">●</b>{etat.kicker}</p>
+      <h1 class="rg-h1">{etat.titre}<span>{etat.sous}</span></h1>
+      <span class="rg-jauge"><i style="--p:{etat.p}"></i></span>
     {/if}
-  </section>
-{/if}
 
-<section class="td-bloc">
-  <label class="td-volume">
-    <span>Volume de la TV <b>{volume} %</b>{#if !pro}<i class="td-pro">Pro</i>{/if}</span>
-    <input type="range" min="0" max="100" step="5" value={volume} oninput={(e) => { onVolume(+e.target.value); if (!pro) e.target.value = volume; }}>
-  </label>
-</section>
-
-{#if history.length}
-  <section class="td-bloc">
-    <h3 class="sx-kicker">Titres joués</h3>
-    <ol class="td-history">
-      {#each [...history].reverse() as h, i (history.length - i)}
-        {@const manche = history.length - i}
+    {#if live && track}
+      <section class="td-titre">
+        <p class="rg-k">{phase === 'round' ? 'Titre en cours' : 'Sur la TV'}</p>
+        <RegieAnswer {track} {phase} {answerMode} />
+      </section>
+      <ul class="rg-g">
         <li>
-          <div class="td-ligne">
-            <span>{String(manche).padStart(2, '0')}</span>
-            <p>{h.answer}</p>
-            {#if signales[manche]}
-              <em>Signalé</em>
-            {:else}
-              <button type="button" class="td-signaler" aria-expanded={ouvert === manche}
-                onclick={() => (ouvert = ouvert === manche ? null : manche)}>Signaler</button>
-            {/if}
-          </div>
-          {#if ouvert === manche}
-            <div class="td-report-btns">
-              {#each RAISONS as r (r)}
-                <button type="button" onclick={() => signalerManche(manche, r)}>{r}</button>
-              {/each}
-            </div>
+          {#if signale}
+            <p class="td-merci">Merci, c'est noté : « {signale} ». On corrige la vidéo pour les prochaines fois.</p>
+          {:else}
+            <details>
+              <summary class="rg-l"><b>Un souci avec la vidéo ?</b><small>Dis-le, on la corrige pour les prochaines fois.</small><em>Signaler</em></summary>
+              <div class="rg-chips">
+                {#each RAISONS as r (r)}<button type="button" onclick={() => signaler(r)}>{r}</button>{/each}
+              </div>
+            </details>
           {/if}
         </li>
-      {/each}
-    </ol>
-  </section>
-{/if}
+      </ul>
+    {/if}
+
+    <label class="td-vol">
+      <span>Volume de la TV {#if !pro}<span class="pro-tag">ZIK Pro</span>{/if}<b>{volume} %</b></span>
+      <input type="range" min="0" max="100" step="5" value={volume} style="--v:{volume}%"
+        oninput={(e) => { onVolume(+e.currentTarget.value); if (!pro) e.currentTarget.value = String(volume); }}>
+    </label>
+  </div>
+
+  {#if history.length}
+    <div class="rg-col"><TitresJoues {history} onReport={(raison, manche) => onReport(raison, manche)} /></div>
+  {/if}
+</div>
 
 <style>
-  .td-bloc { margin-bottom: 26px; }
-  .td-bloc:last-child { margin-bottom: 0; }
+  .td-titre { display: grid; gap: 8px; padding-top: 4px; }
+  .td-merci { padding: 14px 0; font-size: 15px; line-height: 1.4; color: var(--soft); }
 
-  .td-report { margin-top: 14px; font-size: 0.82rem; color: var(--dim); }
-  .td-report p { color: var(--mid); }
-  .td-report-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .td-report-btns button {
-    min-height: 44px;
-    padding: 6px 10px; border: 1px solid var(--border); border-radius: 3px;
-    background: var(--surface); color: var(--text); font: inherit; font-size: 0.78rem; cursor: pointer;
+  .td-vol { display: grid; }
+  .td-vol > span { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
+  .td-vol .pro-tag { margin: 0; }
+  .td-vol b { margin-left: auto; font-family: var(--mono); font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .td-vol input { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; margin: 0; background: none; cursor: pointer; }
+  .td-vol input::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 6px;
+    background: linear-gradient(90deg, var(--violet), var(--accent)) 0 / var(--v, 80%) 100% no-repeat, var(--line-2);
   }
-  .td-report-btns button:hover { border-color: var(--accent); }
-
-  .td-volume { display: block; }
-  .td-volume span { display: block; font-size: 0.86rem; color: var(--mid); margin-bottom: 8px; }
-  .td-volume b { color: var(--text); }
-  .td-volume input {
-    width: 100%;
-    /* Sans ça le curseur repasse au bleu natif du navigateur. */
-    accent-color: var(--accent);
+  .td-vol input::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 26px; height: 26px; margin-top: -10px;
+    border: 0; border-radius: 50%; background: var(--text); box-shadow: 0 2px 8px #000;
   }
-
-  .td-pro {
-    font-style: normal; font-size: 0.6rem; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    margin-left: 7px; padding: 2px 6px; border-radius: 2px;
-    background: rgb(var(--accent-rgb) / 0.16); color: var(--accent);
-  }
-
-  .td-history { margin: 12px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
-  .td-history li {
-    padding: 9px 0; border-bottom: 1px solid var(--border);
-    font-size: 0.88rem;
-  }
-  .td-ligne { display: flex; gap: 12px; align-items: center; }
-  .td-ligne p { flex: 1; min-width: 0; margin: 0; }
-  .td-ligne em { font-style: normal; font-size: 0.78rem; color: var(--dim); }
-  .td-signaler {
-    min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 3px;
-    background: none; color: var(--mid); font: inherit; font-size: 0.78rem; cursor: pointer;
-  }
-  .td-signaler:hover, .td-signaler[aria-expanded="true"] { border-color: var(--accent); color: var(--text); }
-  .td-history li:last-child { border-bottom: none; }
-  .td-history span { font-family: var(--s-mono); font-size: 0.72rem; color: var(--dim); flex-shrink: 0; }
+  .td-vol input::-moz-range-track { height: 6px; border-radius: 6px; background: var(--line-2); }
+  .td-vol input::-moz-range-progress { height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--violet), var(--accent)); }
+  .td-vol input::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 50%; background: var(--text); }
 </style>

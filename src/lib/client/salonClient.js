@@ -182,6 +182,3 @@ export async function goToStripe(
 // Page joueur du salon, ouverte par les QR codes
 export const salonPlayUrl = (code) =>
   "https://www.zik-music.fr/salon/play?code=" + code;
-
-export const salonQrUrl = (code, size) =>
-  `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(salonPlayUrl(code))}&bgcolor=ffffff&color=000000`;

@@ -129,6 +129,8 @@ describe("titre sans vidéo en salon", () => {
     await vi.waitFor(() => expect(game.currentTrack).toBe(b));
     expect(game.currentRound).toBe(1);
     expect(game.sessionPlaylist).toEqual([spare]);
+    // La régie le verra barré dans les titres joués
+    expect(game.replaced).toBe("A - a");
     clearTimeout(game.musicReadyTimer);
   });
 });

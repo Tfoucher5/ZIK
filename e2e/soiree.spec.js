@@ -52,6 +52,14 @@ for (const ancre of ["faq", "offres"]) {
       viewport: { width: 1440, height: 900 },
     });
     const page = await ctx.newPage();
+    // Latence d'un vrai réseau : GSAP arrive pendant le défilement vers l'ancre
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: 40,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    });
     await page.goto(`/soiree#${ancre}`);
     await expect(page.locator(".pin-spacer").first()).toBeAttached();
     await expect(page.locator(`#${ancre} h2`)).toBeInViewport();
