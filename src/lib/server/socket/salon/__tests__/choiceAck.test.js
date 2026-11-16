@@ -6,6 +6,7 @@ vi.mock("../rounds.js", () => ({ checkEveryoneDone: () => {} }));
 const { salonRooms } = await import("../../../state.js");
 const { registerAnswers, scoreQcmRound } = await import("../answers.js");
 const { addPlayer } = await import("../players.js");
+const { departPlayer } = await import("../departed.js");
 const { CODE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
 
@@ -111,5 +112,43 @@ describe("QCM : fin de manche avec un joueur coupé", () => {
     });
     const retours = emissions.filter((e) => e.event === "salon_feedback");
     expect(retours.map((e) => e.cibles)).toEqual([["s2"]]);
+  });
+});
+
+describe("QCM : joueur parti en pleine manche", () => {
+  it("parti le plus rapide : premier à trouver, points notés en fin de manche", async () => {
+    await choisit({ choiceIndex: 2 });
+    const s = salonRooms[CODE];
+    addPlayer(s, "Bob", "s2");
+    Object.assign(s.players.Bob, {
+      _fullFoundCounted: true,
+      _choiceIndex: 2,
+      _choiceTimeTaken: 20,
+    });
+    const { token } = s.players.Ana;
+    departPlayer(s, "Ana");
+    expect(s.departed[token].score).toBe(0);
+
+    scoreQcmRound(s, io);
+
+    expect(s.game.firstFinder).toBe("Ana");
+    expect(s.departed[token].score).toBeGreaterThan(s.players.Bob.score);
+  });
+
+  it("parti puis revenu dans la manche : sa réponse est gardée, comptée une fois", async () => {
+    await choisit({ choiceIndex: 2 });
+    const s = salonRooms[CODE];
+    const { token } = s.players.Ana;
+    departPlayer(s, "Ana");
+    const back = addPlayer(s, "Ana", "s1", token);
+    expect(back).toMatchObject({ _fullFoundCounted: true, _choiceIndex: 2 });
+    // Seconde réponse refusée : l'accusé rend la première
+    expect(await choisit({ choiceIndex: 1 })).toHaveBeenCalledWith(2);
+
+    scoreQcmRound(s, io);
+
+    expect(back.score).toBeGreaterThan(0);
+    expect(back.score).toBeLessThanOrEqual(1000);
+    expect(s.departed).toEqual({});
   });
 });

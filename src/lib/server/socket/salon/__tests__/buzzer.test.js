@@ -19,7 +19,9 @@ vi.mock("../session.js", () => ({
 const { salonRooms } = await import("../../../state.js");
 const { registerBuzzer } = await import("../buzzer.js");
 const { registerEvening } = await import("../evening.js");
-const { addPlayer, broadcastRoster } = await import("../players.js");
+const { departPlayer } = await import("../departed.js");
+const { addPlayer, broadcastRoster, getPlayerList, resetRoundFlags } =
+  await import("../players.js");
 const { drawSpecial, roundMult } = await import("../specials.js");
 
 const CODE = "BUZZ01";
@@ -111,6 +113,21 @@ describe("mode buzzer", () => {
     expect(salon.players.Bob.score).toBeGreaterThan(800);
     expect(salon.game.phase).toBe("summary");
     expect(salon.game.firstFinder).toBe("Bob");
+  });
+
+  it("bonne réponse d'un joueur parti pendant le jugement : points gardés", () => {
+    const salon = salonDeTest();
+    const { token } = salon.players.Bob;
+    joueur("Bob")("salon_buzz");
+    departPlayer(salon, "Bob");
+    regie()("salon_buzz_judge", { correct: true });
+    expect(salon.departed[token].score).toBeGreaterThan(800);
+    expect(salon.departed[token].stats).toEqual({ found: 1, first: 1 });
+    expect(salon.game.phase).toBe("summary");
+    // Manche suivante : il ne compte pas parmi ceux qui ont répondu
+    resetRoundFlags(salon);
+    const bob = getPlayerList(salon).find((p) => p.username === "Bob");
+    expect(bob.foundThisRound).toBe(false);
   });
 
   it("tout le monde s'est trompé : fin de manche", () => {

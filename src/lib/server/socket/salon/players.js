@@ -203,7 +203,7 @@ export function resetStats(salon) {
 }
 
 export function resetRoundFlags(salon) {
-  for (const p of Object.values(salon.players)) {
+  for (const p of gamePlayers(salon)) {
     p.scoreBeforeRound = p.score;
     p.foundArtist = false;
     p.foundTitle = false;

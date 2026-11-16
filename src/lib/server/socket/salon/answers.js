@@ -15,6 +15,7 @@ import {
   staff,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
+import { gamePlayers } from "./departed.js";
 import { roundMult } from "./specials.js";
 import { int, safe, str } from "../safe.js";
 // Téléphones des joueurs : équipe et réponses
@@ -152,7 +153,7 @@ export function scoreQcmRound(salon, io) {
   const game = salon.game;
   // Premier à trouver : la bonne réponse la plus rapide
   if (!game.firstFinder) {
-    const firstCorrect = Object.values(salon.players)
+    const firstCorrect = gamePlayers(salon)
       .filter(
         (p) =>
           p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex,
@@ -164,7 +165,8 @@ export function scoreQcmRound(salon, io) {
     if (firstCorrect) game.firstFinder = firstCorrect.username;
   }
 
-  for (const p of Object.values(salon.players)) {
+  // Partis compris : leur réponse donnée avant le départ compte
+  for (const p of gamePlayers(salon)) {
     const correct =
       p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex;
     let points = 0;
