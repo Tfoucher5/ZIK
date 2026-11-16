@@ -10,13 +10,13 @@
   <div>
     <b>ZIK Pro est actif sur votre compte</b>
     <span>
-      {#if pro.plan === 'night'}Passe Soirée valable jusqu'au {checkout.endLabel}.
+      {#if pro.plan === 'night'}Soirée 24 h valable jusqu'au {checkout.endLabel}.
       {:else if pro.plan === 'manual'}Accès offert jusqu'au {checkout.endLabel}.
       {:else}Formule {pro.plan === 'yearly' ? 'Annuel' : 'Mensuel'}, prochaine échéance le {checkout.endLabel}.{/if}
     </span>
   </div>
   {#if pro.stripe_customer_id}
-    <button class="pro-status-btn" onclick={checkout.openPortal} disabled={checkout.busy === 'portal'}>
+    <button type="button" class="btn-line" onclick={checkout.openPortal} disabled={checkout.busy === 'portal'}>
       {checkout.busy === 'portal' ? 'Ouverture…' : checkout.subscribed ? 'Gérer mon abonnement' : 'Mes factures'}
     </button>
   {/if}
@@ -28,11 +28,12 @@
     align-items: center;
     gap: 14px;
     flex-wrap: wrap;
-    margin: 0 0 20px;
-    padding: 14px 18px;
-    border: 1px solid rgb(var(--accent-rgb) / 0.4);
-    border-radius: 14px;
-    background: rgb(var(--accent-rgb) / 0.08);
+    max-width: 1080px;
+    margin: 0 auto 24px;
+    padding: 16px 20px;
+    border: 1px solid var(--line-2);
+    border-radius: 18px;
+    background: var(--surface);
   }
   .pro-status > div {
     flex: 1;
@@ -46,14 +47,8 @@
   .pro-status b {
     color: var(--text);
   }
-  .pro-status-btn {
-    padding: 9px 16px;
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    background: none;
-    color: var(--accent);
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
+  .pro-status button:disabled {
+    opacity: 0.55;
+    cursor: default;
   }
 </style>

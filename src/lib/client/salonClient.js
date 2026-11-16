@@ -1,3 +1,10 @@
+import { FREE_MAX_TEAMS } from "../data/proPlans.js";
+import {
+  SALON_ROUNDS,
+  SALON_DURATIONS,
+  SALON_REVEALS,
+} from "../data/salonOptions.js";
+
 // Clé de régie d'un salon, gardée par le navigateur qui l'a créé : l'écran TV
 // et la régie ouverts sur ce navigateur n'ont pas besoin de la redemander.
 const k = (code) => `zik_salon_key_${code}`;
@@ -32,6 +39,57 @@ export async function openLastSalon(fetchFn = fetch) {
   const res = await fetchFn(`/api/salon?code=${code}`).catch(() => null);
   if (res?.status === 404) forgetSalon(code);
   return res?.ok ? code : null;
+}
+
+// Dernière préparation de soirée (playlists et réglages) : un habitué relance en un clic
+const SETUP = "zik_salon_setup";
+
+export function saveSetup(playlistIds, settings) {
+  try {
+    localStorage.setItem(SETUP, JSON.stringify({ playlistIds, settings }));
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
+// Réglages connus et du bon type ; la page filtre les playlists encore proposées
+export function readSetup(defaults) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETUP) ?? "null");
+    if (!saved || typeof saved !== "object") return null;
+    const playlistIds = Array.isArray(saved.playlistIds)
+      ? saved.playlistIds
+      : [];
+    const settings = {};
+    for (const [key, value] of Object.entries(defaults))
+      if (typeof saved.settings?.[key] === typeof value)
+        settings[key] = saved.settings[key];
+    return { playlistIds, settings };
+  } catch {
+    return null;
+  }
+}
+
+const ALLOWED = {
+  maxRounds: SALON_ROUNDS,
+  roundDuration: SALON_DURATIONS,
+  showAnswerDuration: SALON_REVEALS,
+  answerMode: ["free", "multiple", "buzzer"],
+};
+
+// Réglages repris pour cet hôte : une valeur hors des choix proposés, ou que l'offre
+// gratuite n'ouvre pas (buzzer, manches spéciales, équipes en plus), retombe sur le défaut.
+// Le serveur ferait la même chose sans prévenir : l'hôte verrait un mode qu'il n'aura pas.
+export function setupFor(saved, pro, defaults) {
+  const s = { ...defaults, ...saved };
+  for (const [key, values] of Object.entries(ALLOWED))
+    if (!values.includes(s[key])) s[key] = defaults[key];
+  if (!pro) {
+    if (s.answerMode === "buzzer") s.answerMode = defaults.answerMode;
+    s.specials = defaults.specials;
+    s.teamCount = Math.min(s.teamCount, FREE_MAX_TEAMS);
+  }
+  return s;
 }
 
 export function forgetSalon(code) {
@@ -75,7 +133,8 @@ export async function patchSalonPlaylists(sb, code, playlistIds) {
     body: JSON.stringify({ code, playlistIds, key: salonKey(code) }),
   });
   const d = await res.json();
-  if (!res.ok) throw new Error(d.error || "Changement impossible");
+  if (!res.ok)
+    throw new Error(d.error || "Le changement n'a pas pu se faire. Réessayez.");
   return d;
 }
 

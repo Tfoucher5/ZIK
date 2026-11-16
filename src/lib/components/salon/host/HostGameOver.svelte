@@ -1,10 +1,12 @@
 <script>
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
   import { SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
+  import { salonQrUrl } from '$lib/client/salonClient.js';
 
-  /** Fin de partie sur la TV : vainqueur, podium révélé pas à pas, playlist et réglages de la suivante. */
+  /** Fin de partie sur la TV : vainqueur, podium révélé pas à pas, playlist et réglages de la suivante,
+   *  et un grand QR pour ceux qui arrivent ou reviennent entre deux parties. */
   let {
-    phase, gameOver, total, settings, pro,
+    phase, gameOver, total, settings, pro, code,
     onSetting, onRestart, onChangePlaylists = null, onNewSalon,
   } = $props();
 
@@ -71,40 +73,56 @@
     </div>
   {/if}
 
-  {#if gameOver?.history?.length}
-    <div class="sh-tracks" class:on={revealStep >= 4}>
-      <p class="sx-kicker">La playlist de la partie</p>
-      <ol>
-        {#each gameOver.history as h, i (i)}
-          <li title={h.answer}>
-            {#if h.cover}<img src={h.cover} alt="">{:else}<span></span>{/if}
-            <small>{String(i + 1).padStart(2, '0')}</small>
-          </li>
-        {/each}
-      </ol>
-    </div>
-  {/if}
+  <div class="sh-over-mid">
+    <div class="sh-over-left">
+      {#if gameOver?.history?.length}
+        <div class="sh-tracks" class:on={revealStep >= 4}>
+          <p class="sx-kicker">La playlist de la partie</p>
+          <ol>
+            {#each gameOver.history as h, i (i)}
+              <li title={h.answer}>
+                {#if h.cover}<img src={h.cover} alt="">{:else}<span></span>{/if}
+                <small>{String(i + 1).padStart(2, '0')}</small>
+              </li>
+            {/each}
+          </ol>
+        </div>
+      {/if}
 
-  <div class="sh-next">
-    <p class="sx-kicker">Prochaine partie</p>
-    <div class="sh-next-row">
-      <div class="sh-seg" role="radiogroup" aria-label="Réponses">
-        <button class:on={settings.answerMode === 'free'} onclick={() => onSetting({ answerMode: 'free' })}>Texte libre</button>
-        <button class:on={settings.answerMode === 'multiple'} onclick={() => onSetting({ answerMode: 'multiple' })}>4 choix</button>
-        {#if pro}<button class:on={settings.answerMode === 'buzzer'} onclick={() => onSetting({ answerMode: 'buzzer' })}>Buzzer</button>{/if}
-      </div>
-      <div class="sh-seg" role="radiogroup" aria-label="Équipes">
-        <!-- Écran public : on ne montre que ce que le salon peut faire -->
-        {#each SALON_TEAMS.filter(n => pro || n <= FREE_MAX_TEAMS) as n (n)}
-          <button class:on={(settings.teams?.length ?? 0) === n} onclick={() => onSetting({ teamCount: n })}>{n === 0 ? 'Solo' : n === 2 ? '2 équipes' : n}</button>
-        {/each}
-      </div>
-      <div class="sh-seg" role="radiogroup" aria-label="Manches">
-        {#each [5, 10, 15, 20] as n (n)}
-          <button class:on={settings.maxRounds === n} onclick={() => onSetting({ maxRounds: n })}>{n} manches</button>
-        {/each}
+      <div class="sh-next">
+        <p class="sx-kicker">Prochaine partie</p>
+        <div class="sh-next-row">
+          <div class="sh-seg" role="radiogroup" aria-label="Réponses">
+            <button class:on={settings.answerMode === 'free'} onclick={() => onSetting({ answerMode: 'free' })}>Texte libre</button>
+            <button class:on={settings.answerMode === 'multiple'} onclick={() => onSetting({ answerMode: 'multiple' })}>4 choix</button>
+            {#if pro}<button class:on={settings.answerMode === 'buzzer'} onclick={() => onSetting({ answerMode: 'buzzer' })}>Buzzer</button>{/if}
+          </div>
+          <div class="sh-seg" role="radiogroup" aria-label="Équipes">
+            <!-- Écran public : on ne montre que ce que le salon peut faire -->
+            {#each SALON_TEAMS.filter(n => pro || n <= FREE_MAX_TEAMS) as n (n)}
+              <button class:on={(settings.teams?.length ?? 0) === n} onclick={() => onSetting({ teamCount: n })}>{n === 0 ? 'Solo' : n === 2 ? '2 équipes' : n}</button>
+            {/each}
+          </div>
+          <div class="sh-seg" role="radiogroup" aria-label="Manches">
+            {#each [5, 10, 15, 20] as n (n)}
+              <button class:on={settings.maxRounds === n} onclick={() => onSetting({ maxRounds: n })}>{n} manches</button>
+            {/each}
+          </div>
+        </div>
       </div>
     </div>
+
+    <aside class="sh-over-join" aria-label="Rejoindre la prochaine partie">
+      <div class="sh-qr"><img src={salonQrUrl(code, 320)} alt="QR code pour rejoindre" width="320" height="320"></div>
+      <div>
+        <p class="sx-kicker">Pas encore dans la partie ?</p>
+        <p class="sh-over-join-title">Scannez pour jouer</p>
+        <div class="sh-code" aria-label="Code {code}">
+          {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
+        </div>
+        <p class="sh-lobby-url">ou <b>zik-music.fr/salon/play</b></p>
+      </div>
+    </aside>
   </div>
   <div class="sh-over-actions">
     <button class="sx-btn sx-btn-primary" onclick={onRestart}>Lancer la partie suivante</button>

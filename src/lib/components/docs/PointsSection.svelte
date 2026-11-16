@@ -16,9 +16,9 @@
   </p>
   <DocTable {...speedBonus} />
 
-  <h3>Le score Kahoot (Mode Salon QCM)</h3>
+  <h3>Le score en QCM (ZIK Soirée)</h3>
   <p>
-    En Mode Salon avec le QCM, le scoring fonctionne différemment : <strong>plus tu réponds vite, plus tu gagnes de points</strong>. Le score maximal est de <strong>1 000 points</strong> si tu réponds immédiatement, et il descend progressivement jusqu'à un minimum de <strong>200 points</strong> si tu réponds à la dernière seconde. Répondre faux ou ne pas répondre donne 0 point.
+    Avec ZIK Soirée en QCM, le scoring fonctionne différemment : <strong>plus tu réponds vite, plus tu gagnes de points</strong>. Le score maximal est de <strong>1 000 points</strong> si tu réponds immédiatement, et il descend progressivement jusqu'à un minimum de <strong>200 points</strong> si tu réponds à la dernière seconde. Répondre faux ou ne pas répondre donne 0 point.
   </p>
   <DocTable {...salonKahoot} />
 
@@ -43,6 +43,6 @@
 
   <h3>Le classement en temps réel</h3>
   <p>
-    Un tableau de scores s'affiche en temps réel dans la room, mis à jour après chaque validation. Le joueur avec le plus de points en tête de liste est celui qui a répondu le plus vite et le plus souvent correctement. En Mode Salon, le classement est affiché sur l'écran hôte entre chaque manche.
+    Un tableau de scores s'affiche en temps réel dans la room, mis à jour après chaque validation. Le joueur avec le plus de points en tête de liste est celui qui a répondu le plus vite et le plus souvent correctement. Avec ZIK Soirée, le classement est affiché sur l'écran hôte entre chaque manche.
   </p>
 </section>

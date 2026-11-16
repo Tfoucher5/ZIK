@@ -21,17 +21,13 @@ export const FAQ = [
     a: "En Mode Classique, les joueurs saisissent librement le titre et l'artiste — c'est le mode compétitif avec classement ELO. En Mode QCM, quatre propositions sont affichées et il faut choisir la bonne — plus accessible, sans ELO.",
   },
   {
-    q: "Comment fonctionne le Mode Salon ?",
-    a: "En Mode Salon, un hôte lance une session depuis son ordinateur ou sa TV. Les invités rejoignent depuis leur smartphone en entrant un code ou en scannant un QR code. La musique est diffusée uniquement depuis l'écran de l'hôte.",
-  },
-  {
     q: "Puis-je importer mes playlists Deezer ?",
     a: "Oui. ZIK permet l'import direct de playlists publiques Deezer en quelques clics. Il est aussi possible de créer des playlists manuellement sur le site.",
     ld: "Oui. ZIK permet l'import direct de playlists publiques Deezer en quelques clics.",
   },
   {
     q: "ZIK fonctionne-t-il sur mobile ?",
-    a: "Oui. ZIK est conçu mobile-first. Le Mode Salon est particulièrement adapté aux smartphones pour les joueurs invités.",
+    a: "Oui. ZIK est conçu mobile-first : on joue depuis le navigateur du téléphone, sans appli.",
   },
   {
     q: "C'est quoi Zikle ?",

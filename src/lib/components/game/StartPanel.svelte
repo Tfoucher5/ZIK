@@ -47,7 +47,6 @@
       <p>Tu es seul pour l&apos;instant. Le blind test, c&apos;est mieux à plusieurs&nbsp;!</p>
       <div class="g-alone-actions">
         <button class="g-alone-btn" onclick={copyLink}>{linkCopied ? 'Lien copié' : 'Copier le lien de la room'}</button>
-        <a class="g-alone-btn" href="/salon">Soirée entre amis : Mode Salon</a>
       </div>
     </div>
   {/if}

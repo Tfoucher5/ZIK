@@ -80,7 +80,7 @@
 
 <svelte:head>
   <title>Rooms de Blind Test Multijoueur en Ligne - ZIK</title>
-  <meta name="description" content="Rejoins une room de blind test multijoueur gratuit ou crée la tienne. Mode Classique avec classement ELO ou Mode QCM, playlists Deezer. Jusqu'à 20 joueurs en temps réel." />
+  <meta name="description" content="Rejoins une room de blind test multijoueur gratuit ou crée la tienne. Mode Classique avec classement ELO ou Mode QCM, playlists Deezer. Joue en temps réel contre les autres joueurs." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.zik-music.fr/rooms" />
   <meta property="og:title" content="Rooms de Blind Test Multijoueur - ZIK" />

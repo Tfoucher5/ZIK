@@ -9,7 +9,7 @@
    * @type {{
    *   slug: string, name: string, title: string, description: string,
    *   ogTitle: string, ogDescription: string, ldName: string, ldDescription: string,
-   *   h1: string, intro: string, sections: VsSection[], cta: { text: string, label: string }
+   *   h1: string, intro: string, sections: VsSection[], cta: { text: string, label: string, href?: string }
    * }}
    */
   let { slug, name, title, description, ogTitle, ogDescription, ldName, ldDescription, h1, intro, sections, cta } = $props();
@@ -103,7 +103,7 @@
 
     <div class="vs-cta">
       <p>{cta.text}</p>
-      <a href="/" class="vs-cta-btn">{cta.label}</a>
+      <a href={cta.href ?? '/soiree'} class="vs-cta-btn">{cta.label}</a>
     </div>
 
   </article>

@@ -13,6 +13,7 @@
   import TabSettings from '$lib/components/salon/regie/TabSettings.svelte';
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
+  import ReclaimRequests from '$lib/components/salon/regie/ReclaimRequests.svelte';
   import { SalonRegie } from '$lib/components/salon/regie/salonRegie.svelte.js';
   import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
@@ -41,6 +42,7 @@
   />
 
   <NoticeBanner message={r.adminNotice} />
+  <ReclaimRequests usernames={r.reclaims} onAnswer={(username, accept) => r.send('salon_reclaim_answer', { username, accept })} />
 
   {#if r.restarting}
     <p class="rg-outage" role="status">
@@ -49,6 +51,10 @@
   {:else if r.restored}
     <p class="rg-outage" role="status">
       <b>Mise à jour terminée.</b> {r.restored.resumeIn ? `La manche coupée reprend dans ${r.restored.resumeIn} secondes.` : 'Tout le monde est reconnecté.'}
+    </p>
+  {:else if r.connLost}
+    <p class="rg-outage" role="status">
+      <b>Connexion perdue.</b> La régie se reconnecte toute seule. La partie continue sur la TV, les joueurs gardent leurs points.
     </p>
   {:else if r.videoOutage}
     <p class="rg-outage" role="status">

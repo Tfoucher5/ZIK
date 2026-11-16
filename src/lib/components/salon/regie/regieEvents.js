@@ -20,6 +20,7 @@ export function listenRegie(r, socket) {
     r.pro = d.pro;
     r.error = "";
     r.settings = d.settings;
+    r.reclaims = d.reclaims ?? [];
     r.mergeRoster(d.players);
     r.teams = d.teams;
     r.night = d.night;
@@ -156,6 +157,7 @@ export function listenRegie(r, socket) {
   });
   // Volume réel de la TV, réglé là-bas ou par une autre régie
   socket.on("salon_volume", ({ volume }) => (r.volume = volume));
+  socket.on("salon_reclaims", ({ usernames }) => (r.reclaims = usernames));
   socket.on("salon_pro_required", ({ feature }) => {
     r.upsell = feature;
   });

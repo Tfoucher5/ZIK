@@ -1,6 +1,5 @@
 import { RARITIES } from "./rarity.js";
-
-const SITE_URL = "https://www.zik-music.fr";
+import { SITE_URL, shareFile, downloadBlob } from "../../client/shareFile.js";
 
 export const shareText = (card) =>
   `J'ai décroché la carte ${RARITIES[card.rarity].label} « ${card.title} » de ${card.artist} sur ZIK !`;
@@ -28,14 +27,8 @@ export async function shareCard(card) {
     const file =
       blob &&
       new File([blob], `zik-carte-${card.number}.png`, { type: "image/png" });
-    if (file && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], text, url: SITE_URL });
-        return "shared";
-      } catch (e) {
-        if (e.name === "AbortError") return "cancelled";
-      }
-    }
+    const shared = file && (await shareFile(file, text));
+    if (shared) return shared;
   }
 
   // ClipboardItem reçoit une promesse : Safari exige que l'écriture parte
@@ -53,12 +46,7 @@ export async function shareCard(card) {
 
   const blob = await fetchImage(card).catch(() => null);
   if (blob) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `zik-carte-${card.number}.png`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadBlob(blob, `zik-carte-${card.number}.png`);
   }
   await navigator.clipboard?.writeText(`${text} ${SITE_URL}`).catch(() => {});
   return "downloaded";

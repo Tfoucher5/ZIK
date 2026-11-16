@@ -1,4 +1,5 @@
 import { ZIK } from "./deco.js";
+import { OUEST } from "./disposition.js";
 
 export const COULEURS = {
   ceo: ZIK.or,
@@ -11,8 +12,9 @@ export const COULEURS = {
   renforts: "#94A3B8",
 };
 
-// Contour du plateau : façade nord en biais, angles coupés à l'est, décroché au sud-ouest.
-export const CONTOUR = [
+// Contour du plateau : façade nord en biais, angles coupés à l'est, aile ouest
+// qui s'allonge avec l'extension des bureaux (bord ouest en x = ouest).
+export const contour = (ouest = OUEST) => [
   [-20, -8],
   [8, -10],
   [15, -10],
@@ -21,13 +23,15 @@ export const CONTOUR = [
   [16, 10],
   [-8, 10],
   [-8, 6],
-  [-20, 6],
+  [ouest, 6],
+  [ouest, -4.5],
+  [-20, -4.5],
 ];
-export const LIMITES = [-21, 22, -11, 11];
+export const limites = (ouest = OUEST) => [ouest - 1, 22, -11, 11];
 
 // Murs extérieurs : baies vitrées au nord et à l'est, murs pleins à l'ouest.
 // Côté caméra (sud), les murs sont coupés à hauteur d'appui comme sur une maquette.
-export const FACADES = [
+export const facades = (ouest = OUEST) => [
   [-20, -8, 8, -10, "fenetre"],
   [8, -10, 15, -10, "fenetre"],
   [15, -10, 21, -4, "fenetre"],
@@ -39,8 +43,10 @@ export const FACADES = [
   [6, 10, -2, 10, "fenetre", 1.2],
   [-2, 10, -8, 10, "plein", 1.1],
   [-8, 10, -8, 6, "plein"],
-  [-8, 6, -20, 6, "fenetre", 1.2],
-  [-20, 6, -20, -8, "plein"],
+  [-8, 6, ouest, 6, "fenetre", 1.2],
+  [ouest, 6, ouest, -4.5, "plein"],
+  [ouest, -4.5, -20, -4.5, "fenetre"],
+  [-20, -4.5, -20, -8, "plein"],
 ];
 
 // Ligne des bureaux et salles fermés le long de la façade nord.

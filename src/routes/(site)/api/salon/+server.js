@@ -16,10 +16,10 @@ const MAX_PLAYLISTS = 50;
 
 function playlistsError(ids) {
   if (!Array.isArray(ids) || ids.length === 0)
-    return "Au moins une playlist requise";
+    return "Choisissez au moins une playlist.";
   if (ids.length > MAX_PLAYLISTS)
     return `${MAX_PLAYLISTS} playlists maximum par soirée`;
-  return ids.every(isUuid) ? null : "Playlist invalide";
+  return ids.every(isUuid) ? null : "Une des playlists choisies n'existe pas.";
 }
 
 export async function POST({ request }) {
@@ -27,14 +27,21 @@ export async function POST({ request }) {
   let user = null;
   if (token) {
     user = await verifyToken(token);
-    if (!user) return json({ error: "Session invalide" }, { status: 401 });
+    if (!user)
+      return json(
+        { error: "Votre session a expiré. Reconnectez-vous." },
+        { status: 401 },
+      );
   } else {
     const guestSalons = Object.values(salonRooms).filter(
       (s) => !s.hostUserId,
     ).length;
     if (guestSalons >= MAX_GUEST_SALONS)
       return json(
-        { error: "Trop de salons ouverts, connecte-toi pour en créer un." },
+        {
+          error:
+            "Beaucoup de soirées sont ouvertes sans compte en ce moment. Connectez-vous pour créer la vôtre.",
+        },
         { status: 429 },
       );
   }
@@ -43,7 +50,10 @@ export async function POST({ request }) {
   try {
     body = await request.json();
   } catch {
-    return json({ error: "Corps invalide" }, { status: 400 });
+    return json(
+      { error: "Demande invalide. Rechargez la page." },
+      { status: 400 },
+    );
   }
 
   const { playlistIds, settings, origin } = body ?? {};
@@ -65,22 +75,65 @@ export async function POST({ request }) {
   }
 }
 
-// Recherches ratées par HTTP, toutes requêtes confondues (même plafond que par
-// socket) : des codes au hasard ne martèlent pas la base
-const httpLookups = {};
+// Recherches ratées ou en cours par HTTP, par adresse (même plafond que par
+// socket) : des codes au hasard ne martèlent pas la base. L'adresse se
+// falsifie, d'où aussi un plafond global large. Exportée pour les tests.
+export const _missesByIp = new Map();
+const allMisses = [];
+const MAX_IP_MISSES = 5;
+const MAX_ALL_MISSES = 200;
+const MISS_WINDOW_MS = 60 * 1000;
 
-export async function GET({ url }) {
+function prune(list, now) {
+  while (list.length && now - list[0] > MISS_WINDOW_MS) list.shift();
+  return list;
+}
+
+function unmark(list, now) {
+  const i = list.lastIndexOf(now);
+  if (i >= 0) list.splice(i, 1);
+}
+
+async function lookUp(code, ip) {
+  const now = Date.now();
+  prune(allMisses, now);
+  // Au plus MAX_ALL_MISSES adresses dans la fenêtre : table bornée
+  if (_missesByIp.size > MAX_ALL_MISSES)
+    for (const [addr, l] of _missesByIp)
+      if (!prune(l, now).length) _missesByIp.delete(addr);
+  const mine = prune(_missesByIp.get(ip) ?? [], now);
+  if (allMisses.length >= MAX_ALL_MISSES || mine.length >= MAX_IP_MISSES)
+    return "throttled";
+  // Compté avant l'attente : une rafale parallèle ne passe pas sous le plafond
+  allMisses.push(now);
+  mine.push(now);
+  _missesByIp.set(ip, mine);
+  // Plafonds tenus ici : restoreSalon reçoit un compteur neuf
+  await restoreSalon(code, getIO(), {});
+  if (!salonRooms[code]) return;
+  unmark(allMisses, now);
+  unmark(mine, now);
+  if (!mine.length) _missesByIp.delete(ip);
+}
+
+export async function GET({ request, url }) {
   const code = url.searchParams.get("code")?.toUpperCase();
   if (!/^[A-Z0-9]{4,12}$/.test(code ?? ""))
-    return json({ error: "Code requis" }, { status: 400 });
+    return json(
+      { error: "Le code de la soirée fait 6 caractères." },
+      { status: 400 },
+    );
   // Juste après un redémarrage, le salon n'est encore que dans son instantané
-  if (
-    !salonRooms[code] &&
-    (await restoreSalon(code, getIO(), httpLookups)) === "throttled"
-  )
-    return json({ error: "Réessayez dans un instant" }, { status: 503 });
+  // Railway pose X-Real-IP ; X-Forwarded-For en repli
+  const ip =
+    request.headers.get("x-real-ip") ||
+    request.headers.get("x-forwarded-for") ||
+    "unknown";
+  if (!salonRooms[code] && (await lookUp(code, ip)) === "throttled")
+    return json({ error: "Réessayez dans un instant." }, { status: 503 });
   const salon = salonRooms[code];
-  if (!salon) return json({ error: "Salon introuvable" }, { status: 404 });
+  if (!salon)
+    return json({ error: "Cette soirée n'existe plus." }, { status: 404 });
   return json({
     exists: true,
     phase: salon.game.phase,
@@ -93,18 +146,29 @@ export async function PATCH({ request }) {
   const token = request.headers.get("authorization")?.slice(7);
   const user = token ? await verifyToken(token) : null;
   if (token && !user)
-    return json({ error: "Session invalide" }, { status: 401 });
+    return json(
+      { error: "Votre session a expiré. Reconnectez-vous." },
+      { status: 401 },
+    );
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return json({ error: "Corps invalide" }, { status: 400 });
+    return json(
+      { error: "Demande invalide. Rechargez la page." },
+      { status: 400 },
+    );
   }
 
   const { code, playlistIds, key } = body ?? {};
-  if (!user && !key) return json({ error: "Non authentifié" }, { status: 401 });
-  if (!code) return json({ error: "Code requis" }, { status: 400 });
+  if (!user && !key)
+    return json(
+      { error: "Rouvrez la régie depuis l'écran TV de la soirée." },
+      { status: 401 },
+    );
+  if (!code)
+    return json({ error: "Le code de la soirée manque." }, { status: 400 });
   const playlistsErr = playlistsError(playlistIds);
   if (playlistsErr) return json({ error: playlistsErr }, { status: 400 });
 

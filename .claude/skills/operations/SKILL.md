@@ -1,6 +1,6 @@
 ---
 name: operations
-description: Chef Opérations (COO) de ZIK — fait tourner les équipes : prend la prochaine tâche du plan et la fait passer par le circuit complet (cadrage produit, code, tests, relecture, PR vers develop, recette sur le staging, release), trie le support. Utilise ce skill pour la routine quotidienne, quand Théo dit « avance », « fais la suite du plan », « on en est où », ou quand /ceo le demande.
+description: "Chef Opérations (COO) de ZIK — fait tourner les équipes : prend la prochaine tâche du plan et la fait passer par le circuit complet (cadrage produit, code, tests, relecture, PR vers develop, recette sur le staging, release), trie le support. Utilise ce skill pour la routine quotidienne, quand Théo dit « avance », « fais la suite du plan », « on en est où », ou quand /ceo le demande."
 argument-hint: "[suite | état | support | tâche précise]"
 allowed-tools: Bash(git status *) Bash(git log *) Bash(git fetch *) Bash(date *)
 ---
@@ -24,10 +24,10 @@ Agent `support`. Bug en prod établi : `/incident` puis `/hotfix`. Le reste devi
 
 1. Agent `chef-projet` : prochaine tâche. Si elle demande Théo (argent, nouvelle page, nouveau mode de jeu, données de prod, réglage sur son PC), **ne la lance pas** : passe à la suivante et note-la dans le compte rendu.
 2. `/demarrer <tâche>` : branche depuis `develop`.
-3. Interface ou parcours touchés : `/produit cadrer <tâche>` d'abord.
+3. Interface ou parcours touchés : il faut une fiche `docs/specs/` validée par Théo. Pas de fiche : `/produit cadrer <tâche>`, puis passe à la tâche suivante tant qu'elle n'est pas validée.
 4. `/tech <tâche>` : plan, code, tests, relecture.
 5. `/terminer` : Définition de terminé, PR vers `develop`, fusion si tout est vert.
-6. Après fusion et déploiement sur `[DEV]` : agent `recette` sur le staging. KO → retour à `/tech` sur une branche `fix/`.
+6. Après fusion et déploiement sur `[DEV]` : agent `recette` sur le staging, avec les critères de la fiche et la grille de `docs/strategie/vision.md`. KO → retour à `/tech` sur une branche `fix/`.
 7. `develop` a de quoi livrer et la porte du `CLAUDE.md` est tenue : `/release`.
 8. Une seule tâche par lancement. Si une étape échoue deux fois, arrête-toi et rends compte au lieu d'insister.
 

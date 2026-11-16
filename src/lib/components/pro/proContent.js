@@ -2,123 +2,97 @@ import {
   FREE_MAX_PLAYERS,
   FREE_MAX_TEAMS,
   TESTED_LABEL,
+  PRIX_SOIREE,
 } from "../../data/proPlans.js";
 
+// free : null = la fonction n'existe pas en gratuit ; ok : coche verte devant
 export const COMPARE = [
-  [
-    "Joueurs par salon",
-    `jusqu'à ${FREE_MAX_PLAYERS}`,
-    `pas de limite imposée, ${TESTED_LABEL}`,
-  ],
-  [
-    "Équipes",
-    `jusqu'à ${FREE_MAX_TEAMS}`,
-    `plus de ${FREE_MAX_TEAMS}, renommables`,
-  ],
-  ["Classement", "partie par partie", "cumulé sur la soirée, podium final"],
-  ["Modes de réponse", "texte libre, 4 choix", "+ buzzer avec l'animateur"],
-  ["Manches spéciales", "non", "points doubles, intro éclair, sprint"],
-  [
-    "Régie sur un second écran",
-    "lancer, pause, manche suivante, exclure un joueur",
-    "tout : révéler, terminer, corriger les points, volume de la TV",
-  ],
-  ["Réglages en pleine partie", "entre deux parties", "à tout moment"],
-];
-
-export const ETAPES = [
   {
-    n: "1",
-    titre: "Ouvrez un salon sur l'écran",
-    texte:
-      "Depuis l'ordinateur relié à la TV ou au vidéoprojecteur, choisissez un thème et lancez le salon. Un code à 6 caractères s'affiche.",
+    k: "Joueurs par salon",
+    free: `jusqu'à ${FREE_MAX_PLAYERS}`,
+    pro: `Pas de limite de joueurs, ${TESTED_LABEL}`,
   },
   {
-    n: "2",
-    titre: "Vos invités rejoignent",
-    texte:
-      "Ils ouvrent zik-music.fr sur leur téléphone, saisissent le code et leur pseudo. Rien à télécharger, rien à installer.",
+    k: "Équipes",
+    free: `${FREE_MAX_TEAMS} équipes`,
+    pro: `Plus de ${FREE_MAX_TEAMS}, renommables, joueurs déplaçables`,
   },
   {
-    n: "3",
-    titre: "La soirée se déroule seule",
-    texte:
-      "L'écran diffuse les extraits et le classement, les téléphones servent de manettes. Vous n'avez plus rien à animer.",
-  },
-];
-
-export const USAGES = [
-  {
-    titre: "Bars et restaurants",
-    texte:
-      "Remplissez un mardi soir sans payer d'animateur. La partie tourne sur la TV, les clients jouent sur leur téléphone, vous n'avez qu'à annoncer le thème.",
+    k: "Façons de répondre",
+    free: "Texte libre, 4 choix",
+    freeOk: true,
+    pro: "+ buzzer, l'animateur valide",
   },
   {
-    titre: "Associations et MJC",
-    texte:
-      "Une animation qui fonctionne de 12 à 77 ans, sans matériel spécifique et sans budget. Le Mode QCM évite d'avoir à taper au clavier.",
+    k: "Manches spéciales",
+    free: null,
+    pro: "Points doubles, intro éclair, sprint",
   },
   {
-    titre: "Entreprises et CE",
-    texte:
-      "Un temps d'équipe qui ne ressemble pas à une réunion. Fonctionne aussi à distance : chacun rejoint le salon depuis chez lui.",
+    k: "Classement",
+    free: "Partie par partie",
+    freeOk: true,
+    pro: "Cumulé sur la soirée, podium final",
   },
   {
-    titre: "Anniversaires, EVJF et EVG",
-    texte:
-      "Créez une playlist sur mesure à partir de Deezer et transformez-la en blind test en quelques minutes.",
+    k: "Régie sur un second écran",
+    free: "Lancer, pause, manche suivante, exclure un joueur",
+    freeOk: true,
+    pro: "+ révéler, terminer, corriger les points, volume de la TV",
   },
-];
-
-export const BESOINS = [
-  "Un écran relié à un ordinateur : télévision, vidéoprojecteur ou simple moniteur",
-  "Du son, idéalement autre chose que les haut-parleurs de l'écran",
-  "Une connexion internet correcte pour l'ordinateur hôte",
-  "Un téléphone par joueur, avec ou sans wifi",
-];
-
-export const TRUST = [
-  ["Paiement sécurisé", "par Stripe : carte, Apple Pay, Google Pay"],
-  ["Facture automatique", "envoyée par e-mail à chaque paiement"],
-  ["Sans engagement", ": résiliation en un clic depuis cette page"],
+  {
+    k: "Changer les réglages",
+    free: "Entre deux parties",
+    pro: "À tout moment, même en pleine partie",
+  },
+  {
+    k: "Prix",
+    free: "0 €, sans carte",
+    pro: `Dès ${PRIX_SOIREE} la soirée`,
+    proNoCheck: true,
+  },
 ];
 
 export const FAQ = [
-  [
-    "Faut-il installer quelque chose ?",
-    "Non, ni pour l'hôte ni pour les joueurs. Tout se passe dans le navigateur.",
-  ],
-  [
-    "Mes clients doivent-ils créer un compte ?",
-    "Non. Ils saisissent un code et un pseudo, c'est tout. Un compte ne sert qu'à conserver ses statistiques et son classement.",
-  ],
-  [
-    "Et si la connexion coupe pendant la partie ?",
-    "Un joueur déconnecté retrouve sa partie et ses points en rejoignant. Côté hôte, le salon reste ouvert quelques minutes le temps de revenir.",
-  ],
-  [
-    "Peut-on jouer à distance ?",
-    "Oui. Il suffit de partager l'écran de l'hôte en visio et de donner le code du salon.",
-  ],
-  [
-    "Comment se passe le paiement ?",
-    "Choisissez une formule, payez par carte, Apple Pay ou Google Pay sur la page sécurisée de Stripe, et ZIK Pro s'active tout de suite sur votre compte. Le reçu et la facture arrivent par e-mail.",
-  ],
-  [
-    "Puis-je arrêter quand je veux ?",
-    "Oui. Le passe Soirée ne se renouvelle jamais. Les abonnements se résilient en un clic depuis cette page : ZIK Pro reste actif jusqu'à la fin de la période déjà payée, sans autre prélèvement.",
-  ],
-  [
-    "Puis-je afficher ZIK dans mon établissement ?",
-    "Bien sûr, et ça fait plaisir. Écrivez-nous si vous voulez un visuel ou un QR code à imprimer pour vos tables.",
-  ],
+  {
+    q: "Combien de joueurs en même temps ?",
+    a: `Jusqu'à ${FREE_MAX_PLAYERS} en gratuit. Avec ZIK Pro, pas de limite de joueurs, ${TESTED_LABEL} dans un salon. Chacun joue sur son téléphone, sans rien installer.`,
+  },
+  {
+    q: "Faut-il un compte pour payer ?",
+    a: "Oui : ZIK Pro s'active sur votre compte ZIK. Vos clients, eux, n'ont jamais besoin de compte : un code et un pseudo suffisent.",
+  },
+  {
+    q: "Puis-je avoir une facture au nom du bar ?",
+    a: "Oui. Sur la page de paiement Stripe, indiquez le nom de l'établissement, son adresse et, si vous en avez un, votre numéro de TVA. La facture arrive par e-mail.",
+  },
+  {
+    q: "Comment résilier ?",
+    a: "Sur cette page, connecté à votre compte, bouton « Gérer mon abonnement ». ZIK Pro reste actif jusqu'à la fin de la période déjà payée, puis plus rien n'est prélevé.",
+  },
+  {
+    q: "Où retrouver mes factures ?",
+    a: "Dans vos e-mails, et sur cette page tant que ZIK Pro est actif : bouton « Mes factures » ou « Gérer mon abonnement ».",
+  },
+  {
+    q: "J'ai déjà une Soirée 24 h en cours, j'en reprends une ?",
+    a: "La nouvelle Soirée 24 h s'ajoute à la suite : 24 h de plus après la fin de celle en cours. Utile seulement si votre événement dure plus longtemps.",
+  },
+  {
+    q: "Le paiement est passé mais ZIK Pro n'est pas actif",
+    a: "L'activation prend en général quelques secondes. Rechargez la page dans une minute. Si rien ne bouge, écrivez-nous : c'est réglé dans la journée, inutile de payer à nouveau.",
+  },
 ];
+
+export const LEAD = `La musique et le classement sur la TV, les réponses sur les téléphones de vos clients. Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro dès ${PRIX_SOIREE} la soirée.`;
+
+export const DESCRIPTION = `Blind test pour bar, camping, association ou entreprise : la musique et le classement sur la TV, les réponses sur les téléphones. Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro dès ${PRIX_SOIREE} la soirée.`;
 
 export const PAGE_JSON_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "WebPage",
-  name: "Organiser un blind test - ZIK pour les bars, associations et entreprises",
-  description: `Animez une soirée blind test sans animateur : l'écran affiche la partie, vos invités jouent sur leur téléphone. Sans installation, gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs, ZIK Pro pour les bars et événements.`,
+  name: "ZIK Pro - le blind test qui fait la soirée, chez vous",
+  description: DESCRIPTION,
   url: "https://www.zik-music.fr/pro",
   inLanguage: "fr-FR",
   isPartOf: {
@@ -138,38 +112,19 @@ export const PAGE_JSON_LD = JSON.stringify({
       {
         "@type": "ListItem",
         position: 2,
-        name: "Organiser un blind test",
+        name: "ZIK Pro",
         item: "https://www.zik-music.fr/pro",
       },
     ],
   },
 });
 
-const question = (name, text) => ({
-  "@type": "Question",
-  name,
-  acceptedAnswer: { "@type": "Answer", text },
-});
-
 export const FAQ_JSON_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: [
-    question(
-      "Combien de personnes peuvent jouer en même temps ?",
-      `Jusqu'à ${FREE_MAX_PLAYERS} joueurs en version gratuite, pas de limite imposée avec ZIK Pro, ${TESTED_LABEL} dans un salon. Chacun joue sur son propre téléphone, il n'y a rien à installer.`,
-    ),
-    question(
-      "Faut-il créer un compte pour organiser une soirée ?",
-      "Non. L'hôte lance un salon depuis un navigateur et les joueurs rejoignent avec un code. Aucune inscription n'est demandée.",
-    ),
-    question(
-      "Est-ce que c'est payant ?",
-      `Le Mode Salon est gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs et ${FREE_MAX_TEAMS} équipes. ZIK Pro débloque plus de joueurs et d'équipes, le classement de la soirée et la régie complète, dès 7,90 € la soirée.`,
-    ),
-    question(
-      "Quel matériel faut-il prévoir ?",
-      "Un écran relié à un ordinateur, du son, une connexion internet correcte, et un téléphone par joueur.",
-    ),
-  ],
+  mainEntity: FAQ.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
 });

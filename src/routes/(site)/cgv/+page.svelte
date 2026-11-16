@@ -12,7 +12,7 @@
 
 <svelte:head>
   <title>ZIK - Conditions Générales de Vente</title>
-  <meta name="description" content="Conditions Générales de Vente de ZIK Pro : formules Soirée, Mensuel et Annuel du Mode Salon, paiement, résiliation, rétractation et responsabilités.">
+  <meta name="description" content="Conditions Générales de Vente de ZIK Pro : formules Soirée 24 h, Mensuel et Annuel du Mode Salon, paiement, résiliation, rétractation et responsabilités.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.zik-music.fr/cgv">
 </svelte:head>
@@ -65,7 +65,7 @@
     <h2>6. Paiement</h2>
     <p>Le paiement est traité par <strong>Stripe Payments Europe Ltd</strong>, prestataire de paiement agréé. Les moyens acceptés sont ceux proposés sur la page de paiement (carte bancaire, Apple Pay, Google Pay…). ZIK n'a jamais accès aux numéros de carte.</p>
     <ul>
-      <li><strong>Soirée :</strong> paiement unique, sans renouvellement.</li>
+      <li><strong>Soirée 24 h :</strong> paiement unique, sans renouvellement.</li>
       <li><strong>Mensuel et Annuel :</strong> paiement au début de chaque période, puis renouvellement automatique pour une période identique, jusqu'à résiliation.</li>
     </ul>
     <p>En cas d'échec d'un prélèvement, Stripe relance automatiquement le paiement. Si le paiement reste impossible, l'accès à ZIK Pro est suspendu jusqu'à régularisation. Le compte ZIK et la version gratuite du Mode Salon restent utilisables.</p>
@@ -73,7 +73,7 @@
 
   <section>
     <h2>7. Durée, résiliation</h2>
-    <p>Le passe <strong>Soirée</strong> donne accès à ZIK Pro pendant 24 heures à compter du paiement. Un nouveau passe acheté avant la fin du précédent s'ajoute à sa suite.</p>
+    <p>La formule <strong>Soirée 24 h</strong> donne accès à ZIK Pro pendant 24 heures à compter du paiement. Une nouvelle Soirée 24 h achetée avant la fin de la précédente s'ajoute à sa suite.</p>
     <p>Les abonnements <strong>Mensuel</strong> et <strong>Annuel</strong> sont sans engagement au-delà de la période en cours. Le client les résilie à tout moment, en un clic, depuis la page ZIK Pro (bouton « Gérer mon abonnement »), ou par simple e-mail. La résiliation prend effet à la fin de la période déjà payée : ZIK Pro reste actif jusque-là et aucun autre paiement n'est prélevé. Une période commencée n'est pas remboursée, sauf dans les cas prévus aux articles 8 et 9.</p>
     <p>ZIK peut suspendre ou résilier l'accès à ZIK Pro en cas de manquement grave aux présentes CGV ou aux CGU (fraude, abus, contournement des limites), après avertissement par e-mail sauf urgence.</p>
   </section>
@@ -81,7 +81,7 @@
   <section>
     <h2>8. Droit de rétractation (particuliers)</h2>
     <p>Le client qui achète en tant que consommateur dispose en principe d'un délai de 14 jours pour se rétracter. ZIK Pro étant un service numérique activé immédiatement, le client demande expressément, en validant son paiement, que le service commence tout de suite, et reconnaît qu'il perd son droit de rétractation une fois le service pleinement exécuté (articles L221-25 et L221-28 du Code de la consommation).</p>
-    <p>Concrètement : un passe Soirée entièrement consommé n'est pas remboursable. Pour un abonnement, le consommateur qui se rétracte dans les 14 jours par e-mail à <a href="mailto:{SELLER.email}">{SELLER.email}</a> est remboursé au prorata de la période non utilisée.</p>
+    <p>Concrètement : une Soirée 24 h entièrement consommée n'est pas remboursable. Pour un abonnement, le consommateur qui se rétracte dans les 14 jours par e-mail à <a href="mailto:{SELLER.email}">{SELLER.email}</a> est remboursé au prorata de la période non utilisée.</p>
     <p>Ce droit ne s'applique pas aux achats faits par un professionnel pour les besoins de son activité.</p>
   </section>
 

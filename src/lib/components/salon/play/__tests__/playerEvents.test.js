@@ -45,4 +45,77 @@ describe("téléphone : retour après une coupure en QCM", () => {
     reprise(p, { round: 2, chosenIndex: 1 });
     expect(p.chosenIndex).toBe(1);
   });
+
+  it("buzzer verrouillé et manche spéciale retrouvés, sans rejouer l'intro", () => {
+    const p = { round: 2, buzzLocked: false, specialIntro: true };
+    reprise(p, {
+      round: 2,
+      special: "double",
+      buzzer: "Ana",
+      buzzLocked: true,
+    });
+    expect(p).toMatchObject({
+      special: "double",
+      specialIntro: false,
+      buzzer: "Ana",
+      buzzLocked: true,
+    });
+  });
+
+  it("décompte annulé pendant la coupure : il s'arrête au retour", () => {
+    const handlers = {};
+    const socket = { on: (evt, fn) => (handlers[evt] = fn) };
+    const p = { round: 2 };
+    listenPlayer(p, socket, "ABCDEF", "Bob");
+    handlers.salon_countdown({
+      kind: "next",
+      endsAt: Date.now() + 9_000,
+      now: Date.now(),
+    });
+    expect(p.nextSec).toBeGreaterThan(0);
+    handlers.salon_joined({ username: "Bob", reconnecting: true, round: 2 });
+    expect(p.nextSec).toBe(0);
+  });
+
+  it("serveur sans manche spéciale ni buzz : l'ancien état est effacé", () => {
+    const p = { round: 2, special: "double", buzzer: "Ana", buzzLocked: true };
+    reprise(p, { round: 3 });
+    expect(p).toMatchObject({ special: null, buzzer: null, buzzLocked: false });
+  });
+});
+
+describe("téléphone : révélation QCM après un accusé perdu", () => {
+  const finDeManche = (p, data) => {
+    const handlers = {};
+    const socket = { on: (evt, fn) => (handlers[evt] = fn) };
+    listenPlayer(p, socket, "ABCDEF", "Bob");
+    handlers.salon_round_end({ ranking: null, teams: null, ...data });
+  };
+
+  it("la case comptée par le serveur s'affiche à la révélation", () => {
+    vi.useFakeTimers();
+    // Accusé expiré : la case a été rendue côté téléphone
+    const p = { answerMode: "multiple", chosenIndex: null, allFound: false };
+    finDeManche(p, { correctChoiceIndex: 1, chosenIndex: 2 });
+    expect(p.chosenIndex).toBe(2);
+    expect(p.revealCorrectIndex).toBe(1);
+    vi.runAllTimers();
+    expect(p.phase).toBe("summary");
+    vi.useRealTimers();
+  });
+
+  it("case en « Envoi… » jamais reçue par le serveur : elle disparaît", () => {
+    vi.useFakeTimers();
+    const p = { answerMode: "multiple", chosenIndex: 3, allFound: false };
+    finDeManche(p, { correctChoiceIndex: 1, chosenIndex: null });
+    expect(p.chosenIndex).toBeNull();
+    expect(p.revealCorrectIndex).toBe(1);
+    vi.useRealTimers();
+  });
+
+  it("mode texte : la vue sans case ne touche à rien", () => {
+    const p = { answerMode: "text", chosenIndex: null };
+    finDeManche(p, {});
+    expect(p.chosenIndex).toBeNull();
+  });
 });

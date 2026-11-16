@@ -24,6 +24,7 @@ const { salonRooms } = await import("../../../state.js");
 const { serializeSalon, reviveSalon, saveSnapshot, restoreSalon } =
   await import("../snapshot.js");
 const { timerClock } = await import("../timers.js");
+const { addPlayer, resetRoundFlags } = await import("../players.js");
 
 const io = {
   to: () => ({ emit: () => {} }),
@@ -42,8 +43,10 @@ describe("instantané d'un salon", () => {
   it("tout l'état passe en JSON, sans timers, sockets ni caches", () => {
     const salon = salonEnManche();
     salon.game._resolving = { gen: 1 };
+    salon.game._break = { kind: "next", endsAt: 1, show: true };
     salon._journal = [{ at: 1, text: "Hôte déconnecté" }];
     salon._tvVolume = 40;
+    salon._reclaims = { Ana: "socket-1" };
     salon._ctrlLeaveTimer = setTimeout(() => {}, 0);
     const data = serializeSalon(salon);
     clearTimeout(salon._ctrlLeaveTimer);
@@ -56,15 +59,22 @@ describe("instantané d'un salon", () => {
     expect(data._coalesce).toBeUndefined();
     // Volume de la TV et départ de régie en attente : recalculés à l'arrivée
     expect(data._tvVolume).toBeUndefined();
+    // Ids de socket : sans valeur après un redémarrage
+    expect(data._reclaims).toBeUndefined();
     expect(data._ctrlLeaveTimer).toBeUndefined();
     expect(data.game.interval).toBeUndefined();
     expect(data.game.videos).toBeUndefined();
     expect(data.game._resolving).toBeUndefined();
+    // Décompte en cours : son timer ne survit pas au redémarrage
+    expect(data.game._break).toBeUndefined();
     expect(data.players.Ana._dcTimer).toBeUndefined();
     expect(data.banned).toEqual(["troll", "jeton-banni"]);
     expect(Object.values(data.departed)[0]).toMatchObject({
       username: "Zoe",
       score: 80,
+      // Réponse de la manche en cours, rendue s'il revient
+      foundFeats: [],
+      _choiceIndex: null,
     });
   });
 
@@ -105,6 +115,22 @@ describe("instantané d'un salon", () => {
     expect(g.currentTrack).toBe(g.fullPlaylist[1]);
     // Vidéo déjà trouvée : pas de nouvelle recherche YouTube
     expect(g.videos.get(g.fullPlaylist[1])).toEqual({ id: "v1" });
+  });
+
+  it("parti puis revenu dans la manche coupée : ses points sautent une fois", () => {
+    const salon = salonEnManche();
+    const zoe = Object.values(salon.departed)[0];
+    addPlayer(salon, "Zoe", "s4", zoe.token);
+    const revu = revive(salon);
+    nettoie(salon);
+    expect(revu.players.Zoe).toMatchObject({ score: 50, scoreBeforeRound: 50 });
+    // Manche rejouée : nouvelle réponse possible, notée une fois
+    resetRoundFlags(revu);
+    expect(revu.players.Zoe).toMatchObject({
+      foundTitle: false,
+      _fullFoundCounted: false,
+      scoreBeforeRound: 50,
+    });
   });
 
   it("coupure pendant la recherche de la vidéo : la manche est aussi rejouée", () => {

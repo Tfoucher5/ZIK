@@ -2,6 +2,7 @@ import { salonRooms } from "../../state.js";
 import { calcQcmPoints } from "../scoring.js";
 import { adminSalon, broadcastScores } from "./players.js";
 import { endRound } from "./rounds.js";
+import { departed } from "./departed.js";
 import { roundMult } from "./specials.js";
 import { clearPause, pauseGame, resumeGame } from "./timers.js";
 import { bool, safe } from "../safe.js";
@@ -34,7 +35,10 @@ export function registerBuzzer(socket, io) {
     if (!game?.buzzer || game.phase !== "round") return;
     const { code } = salon;
     const { username, at } = game.buzzer;
-    const player = salon.players[username];
+    // Parti pendant le jugement : sa réponse compte quand même
+    const player =
+      salon.players[username] ??
+      departed(salon).find((d) => d.username === username);
     game.buzzer = null;
     io.to(`salon:${code}`).emit("salon_buzz_result", {
       username,

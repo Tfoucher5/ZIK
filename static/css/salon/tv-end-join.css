@@ -1,0 +1,74 @@
+/* Fin de partie : QR et code pour ceux qui arrivent ou reviennent entre deux parties */
+/* Bas de l'écran : playlist et réglages à gauche, QR pour (re)joindre à droite */
+.sh-over-mid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: clamp(24px, 4vw, 64px);
+}
+.sh-over-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.sh-over-join {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 2.5vw, 40px);
+}
+/* L'action magenta de l'écran reste « Lancer la partie suivante » */
+.sh-over-join .sh-qr {
+  box-shadow: none;
+}
+.sh-over-join .sh-qr img {
+  width: clamp(150px, 15vw, 280px);
+}
+.sh-over-join-title {
+  margin: 6px 0 14px;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 2.6vw, 3rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.sh-over-join .sh-code b {
+  width: clamp(36px, 3.4vw, 60px);
+  font-size: clamp(1.4rem, 2.4vw, 2.4rem);
+}
+/* TV en 720p : QR et code plus compacts, le code reste à 28 px pour être lu de loin */
+@media (max-width: 1500px) {
+  .sh-over-join {
+    gap: 16px;
+  }
+  .sh-over-join .sh-qr {
+    padding: 8px;
+  }
+  .sh-over-join .sh-qr img {
+    width: 140px;
+  }
+  .sh-over-join .sh-code {
+    gap: 6px;
+  }
+  .sh-over-join-title {
+    display: none;
+  }
+  .sh-over-join .sh-code b {
+    width: 40px;
+    font-size: 1.75rem;
+  }
+}
+
+/* TV ouverte sur un téléphone ou une petite tablette : tout passe en une colonne */
+@media (max-width: 1000px) {
+  .sh-over-mid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sh-over-join {
+    flex-wrap: wrap;
+  }
+  .sh-over-join .sh-code b {
+    width: 34px;
+    font-size: 1.4rem;
+  }
+}

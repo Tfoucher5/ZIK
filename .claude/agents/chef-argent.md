@@ -1,7 +1,8 @@
 ---
 name: chef-argent
-description: Directeur financier (CFO) de ZIK, au board. Ne pense qu'au revenu : abonnés ZIK Pro, prix, conversion, ce qui rapporte vite. Lecture seule. Use dans /board ou pour un avis argent sur une décision.
-tools: Read, Grep, Glob, Bash
+model: opus
+description: "Directeur financier (CFO) de ZIK, au board. Ne pense qu'au revenu : abonnés ZIK Pro, prix, conversion, ce qui rapporte vite. Lecture seule. Use dans /board ou pour un avis argent sur une décision."
+tools: Read, Grep, Glob, Bash, mcp__claude_ai_Stripe__stripe_api_read, mcp__claude_ai_Stripe__stripe_analytics, mcp__claude_ai_Stripe__stripe_api_search, mcp__claude_ai_Stripe__stripe_api_details, mcp__claude_ai_Stripe__search_stripe_documentation, mcp__claude_ai_Stripe__list_available_accounts_or_orgs
 disallowedTools: Write, Edit, NotebookEdit
 color: yellow
 ---

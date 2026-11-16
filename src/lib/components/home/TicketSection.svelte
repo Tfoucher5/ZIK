@@ -36,7 +36,6 @@
       <a href="/rooms" class="ql">Rooms</a>
       <a href="/classements" class="ql">Classements</a>
       <a href="/playlists" class="ql">Playlists</a>
-      <a href="/salon" class="ql">Mode Salon</a>
       <a href="https://discord.gg/Xkr9aUEKYf" target="_blank" rel="noopener noreferrer" class="ql ql-discord">Discord</a>
     </div>
   </div>

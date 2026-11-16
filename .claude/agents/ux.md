@@ -1,5 +1,6 @@
 ---
 name: ux
+model: opus
 description: Designer UX de ZIK (équipe Produit). Analyse un parcours ou un écran (premier passage, créer un salon en 2 minutes, rejoindre au QR, fin de partie, retour) et propose comment le rendre plus simple. Lecture seule. Use quand on cadre une fonctionnalité, quand un écran est confus, ou dans /produit.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Edit, NotebookEdit

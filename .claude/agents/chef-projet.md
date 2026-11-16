@@ -1,5 +1,6 @@
 ---
 name: chef-projet
+model: sonnet
 description: Chef de projet de ZIK (équipe Opérations). Lit le plan, les PR, les branches et les commits, dit où on en est, ce qui bloque et quelle est la prochaine tâche, découpée en étapes. Lecture seule. Use au début de /operations, pour /ceo semaine, ou quand Théo demande « on en est où ».
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit

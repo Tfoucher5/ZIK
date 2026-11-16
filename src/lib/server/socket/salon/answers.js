@@ -15,6 +15,7 @@ import {
   staff,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
+import { gamePlayers } from "./departed.js";
 import { roundMult } from "./specials.js";
 import { int, safe, str } from "../safe.js";
 // Téléphones des joueurs : équipe et réponses
@@ -104,7 +105,8 @@ export function registerAnswers(socket, io) {
     socket,
     "salon_submit_choice",
     { choiceIndex: int(0, 9) },
-    ({ choiceIndex }) => {
+    // Accusé : la case retenue par le serveur, null si la réponse est refusée
+    ({ choiceIndex }, ack) => {
       const code = socket.salonCode;
       const username = socket.salonUsername;
       const salon = salonRooms[code];
@@ -113,12 +115,15 @@ export function registerAnswers(socket, io) {
         !salon ||
         salon.game.phase !== "round" ||
         salon.game.paused ||
-        !salon.game.timerActive
+        !salon.game.timerActive ||
+        choiceIndex >= (salon.game.choices?.length ?? 0)
       )
-        return;
+        return ack(null);
 
       const player = salon.players[username];
-      if (!player || player._fullFoundCounted) return;
+      if (!player) return ack(null);
+      // Renvoi après un accusé perdu : la première réponse reste
+      if (player._fullFoundCounted) return ack(player._choiceIndex ?? null);
 
       const game = salon.game;
       const timeTaken = (Date.now() - game.startTime) / 1000;
@@ -136,6 +141,7 @@ export function registerAnswers(socket, io) {
         totalFeatCount: game.currentTrack?.cleanFeatArtists?.length || 0,
       });
 
+      ack(choiceIndex);
       // Scores are NOT updated here — deferred to endRound
       checkEveryoneDone(code, io);
     },
@@ -145,14 +151,12 @@ export function registerAnswers(socket, io) {
 // QCM : les points ne tombent qu'à la fin de la manche, avec le retour de chacun
 export function scoreQcmRound(salon, io) {
   const game = salon.game;
-  // Determine firstFinder: the correct player with the lowest timeTaken
+  // Premier à trouver : la bonne réponse la plus rapide
   if (!game.firstFinder) {
-    const firstCorrect = Object.values(salon.players)
+    const firstCorrect = gamePlayers(salon)
       .filter(
         (p) =>
-          p._fullFoundCounted &&
-          p._choiceIndex === game.correctChoiceIndex &&
-          !p._disconnected,
+          p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex,
       )
       .sort(
         (a, b) =>
@@ -161,40 +165,35 @@ export function scoreQcmRound(salon, io) {
     if (firstCorrect) game.firstFinder = firstCorrect.username;
   }
 
-  for (const p of Object.values(salon.players)) {
-    if (!p.socketId || p._disconnected) continue;
-    if (p._fullFoundCounted) {
-      // They answered — evaluate
-      const correct = p._choiceIndex === game.correctChoiceIndex;
-      if (correct) {
-        const max = game.timerMax ?? salon.settings.roundDuration;
-        const points =
-          calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
-        p.score += points;
-        p.foundArtist = true;
-        p.foundTitle = true;
-        io.to(p.socketId).emit("salon_feedback", {
-          type: "success_title",
-          correct: true,
-          points,
-          msg: `Bonne réponse ! (+${points} pts)`,
-        });
-      } else {
-        io.to(p.socketId).emit("salon_feedback", {
-          type: "miss",
-          correct: false,
-          points: 0,
-          msg: "Raté !",
-        });
-      }
-    } else {
-      // Didn't answer in time
-      io.to(p.socketId).emit("salon_feedback", {
-        type: "miss",
-        correct: false,
-        points: 0,
-        msg: "Temps écoulé…",
-      });
+  // Partis compris : leur réponse donnée avant le départ compte
+  for (const p of gamePlayers(salon)) {
+    const correct =
+      p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex;
+    let points = 0;
+    // Réseau coupé après avoir répondu : la réponse enregistrée compte quand même
+    if (correct) {
+      const max = game.timerMax ?? salon.settings.roundDuration;
+      points = calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
+      p.score += points;
+      p.foundArtist = true;
+      p.foundTitle = true;
     }
+    if (!p.socketId) continue;
+    io.to(p.socketId).emit(
+      "salon_feedback",
+      correct
+        ? {
+            type: "success_title",
+            correct: true,
+            points,
+            msg: `Bonne réponse ! (+${points} pts)`,
+          }
+        : {
+            type: "miss",
+            correct: false,
+            points: 0,
+            msg: p._fullFoundCounted ? "Raté !" : "Temps écoulé…",
+          },
+    );
   }
 }

@@ -1,6 +1,9 @@
+import { universOf } from "../layout/univers.js";
+
 const KEY = "zik_onboarding_done";
 
 // Pages où on arrive pour une action précise (lien d'invitation, mot de passe) : pas d'interruption.
+// Le tutoriel du jeu n'a pas sa place hors de l'univers jeu (aiguillage, ZIK Soirée).
 const SKIP_PATHS = ["/room/", "/reset-password", "/statut"];
 
 let _open = $state(false);
@@ -23,7 +26,11 @@ export const onboarding = {
 };
 
 export function shouldAutoStart(pathname) {
-  if (SKIP_PATHS.some((p) => pathname.startsWith(p))) return false;
+  if (
+    universOf(pathname) !== "jeu" ||
+    SKIP_PATHS.some((p) => pathname.startsWith(p))
+  )
+    return false;
   try {
     return localStorage.getItem(KEY) !== "1";
   } catch {

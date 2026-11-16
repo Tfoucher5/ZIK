@@ -23,7 +23,7 @@ vi.mock("../timers.js", () => ({
 
 const { salonRooms } = await import("../../../state.js");
 const { departPlayer, gamePlayers } = await import("../departed.js");
-const { finishGame } = await import("../rounds.js");
+const { endRound, finishGame } = await import("../rounds.js");
 const { addPlayer, nightView, resetStats, standings } =
   await import("../players.js");
 
@@ -130,6 +130,46 @@ describe("classement de la soirée", () => {
       "Ana",
       "Bob",
     ]);
+  });
+
+  it("un joueur parti après une bonne réponse QCM garde ses points de la manche", () => {
+    const salon = salonDeTest(true);
+    Object.assign(salon.settings, { answerMode: "multiple", manualNext: true });
+    Object.assign(salon.game, {
+      phase: "round",
+      correctChoiceIndex: 1,
+      timerMax: 30,
+      currentTrack: { title: "T", artist: "A" },
+    });
+    const ana = addPlayer(salon, "Ana", "s1");
+    addPlayer(salon, "Bob", "s2");
+    Object.assign(ana, {
+      _fullFoundCounted: true,
+      _choiceIndex: 1,
+      _choiceTimeTaken: 0,
+    });
+    departPlayer(salon, "Ana");
+    endRound(CODE, "Temps écoulé", io);
+
+    finishGame(CODE, io);
+    const [, over] = sent.at(-1);
+    expect(over.scores[0]).toMatchObject({
+      username: "Ana",
+      score: 1000,
+      found: 1,
+      left: true,
+    });
+  });
+
+  it("un joueur parti après une mauvaise réponse QCM ne marque rien", () => {
+    const salon = salonDeTest(true);
+    Object.assign(salon.settings, { answerMode: "multiple" });
+    Object.assign(salon.game, { phase: "round", correctChoiceIndex: 1 });
+    const ana = addPlayer(salon, "Ana", "s1");
+    Object.assign(ana, { _fullFoundCounted: true, _choiceIndex: 0 });
+    departPlayer(salon, "Ana");
+    expect(salon.departed[ana.token]).toMatchObject({ score: 0 });
+    expect(ana.stats.found).toBe(0);
   });
 
   it("un joueur revenu en pleine partie retrouve son score, sans doublon", () => {

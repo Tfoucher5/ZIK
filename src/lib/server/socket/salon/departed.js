@@ -6,6 +6,20 @@ import { note } from "./journal.js";
 
 export const departed = (salon) => Object.values(salon.departed ?? {});
 
+// Réponse de la manche en cours : notée en fin de manche, rendue au retour
+const ROUND_STATE = [
+  "foundArtist",
+  "foundTitle",
+  "foundFeats",
+  "foundExtras",
+  "_fullFoundCounted",
+  "_choiceIndex",
+  "_choiceTimeTaken",
+  "_buzzLocked",
+];
+const roundState = (p) =>
+  Object.fromEntries(ROUND_STATE.filter((k) => k in p).map((k) => [k, p[k]]));
+
 export function departPlayer(salon, username) {
   const p = salon.players[username];
   delete salon.players[username];
@@ -25,6 +39,7 @@ export function departPlayer(salon, username) {
     night: p.night,
     inGame,
     left: true,
+    ...(inGame && roundState(p)),
   };
 }
 
@@ -38,8 +53,11 @@ export function restoreDeparted(salon, player, token) {
   if (salon.settings.teams?.some((t) => t.id === back.team))
     player.team = back.team;
   if (back.inGame) {
-    player.score = player.scoreBeforeRound = back.score;
+    player.score = back.score;
+    // Manche coupée par un redémarrage après son retour : ses points sautent aussi
+    player.scoreBeforeRound = back.scoreBeforeRound ?? back.score;
     player.stats = back.stats;
+    Object.assign(player, roundState(back));
   }
 }
 

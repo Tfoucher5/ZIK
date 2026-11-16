@@ -43,3 +43,6 @@ coverage/
 # Playwright
 test-results/
 playwright-report/
+
+# Boîte du QG (réponses de Théo, limites d'utilisation)
+scripts/qg/boite/

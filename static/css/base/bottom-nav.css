@@ -84,4 +84,7 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
   }
+  #bottom-nav.bn-soiree {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }

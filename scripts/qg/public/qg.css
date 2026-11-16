@@ -1,10 +1,12 @@
 :root {
   --fond: #05070d;
-  --verre: rgba(14, 19, 32, 0.72);
+  --verre: rgba(14, 19, 32, 0.78);
   --bord: rgba(120, 150, 220, 0.18);
   --texte: #e8ecf6;
   --doux: #8f9bb5;
   --vif: #5ef0c0;
+  --alerte: #ffb347;
+  --rouge: #ff7a7a;
 }
 * {
   box-sizing: border-box;
@@ -14,7 +16,7 @@ body {
   background: var(--fond);
   color: var(--texte);
   font:
-    14px/1.4 system-ui,
+    15px/1.45 system-ui,
     "Segoe UI",
     sans-serif;
   overflow: hidden;
@@ -27,7 +29,8 @@ body {
   position: fixed;
   top: 16px;
   left: 20px;
-  z-index: 2;
+  right: 20px;
+  z-index: 4;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -48,16 +51,20 @@ body {
   content: "● ";
   color: var(--vif);
 }
-.compteurs {
-  position: fixed;
-  top: 60px;
-  left: 20px;
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  gap: 10px;
+.bouton {
+  font: inherit;
+  font-size: 13px;
+  color: var(--texte);
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
 }
-.compteurs div,
-.panneau,
+.bouton:hover,
+.bouton:focus-visible {
+  border-color: var(--doux);
+}
 .fiche,
 .board {
   background: var(--verre);
@@ -65,83 +72,9 @@ body {
   border-radius: 12px;
   backdrop-filter: blur(8px);
 }
-.compteurs div {
-  padding: 10px 14px;
-  min-width: 130px;
-}
-.compteurs small,
-.compteurs em {
-  display: block;
-  color: var(--doux);
-  font-size: 11px;
-  font-style: normal;
-}
-.compteurs strong {
-  font-size: 22px;
-  font-variant-numeric: tabular-nums;
-}
-.panneau {
-  position: fixed;
-  padding: 12px 14px;
-  width: 340px;
-}
-.panneau h2 {
-  margin: 0 0 8px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--doux);
-}
-.flux {
-  top: 16px;
-  right: 16px;
-  bottom: 16px;
-  overflow: hidden;
-}
-.flux ol,
-.sessions ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.flux li {
-  padding: 5px 0;
-  border-bottom: 1px solid var(--bord);
-  font-size: 12px;
-  animation: entree 0.4s ease-out;
-}
-.flux time {
-  color: var(--doux);
-  margin-right: 6px;
-}
-.flux b {
-  color: var(--vif);
-  margin-right: 4px;
-}
-.sessions {
-  left: 20px;
-  bottom: 16px;
-  max-height: 34vh;
-  overflow: auto;
-}
-.sessions li {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 12px;
-  color: var(--doux);
-}
-.sessions li.actif {
-  color: var(--texte);
-}
-.sessions li.actif::before {
-  content: "●";
-  color: var(--vif);
-}
 .board {
   position: fixed;
-  top: 16px;
+  top: 64px;
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 18px;
@@ -161,20 +94,14 @@ body {
 .fiche h3 {
   margin: 0 0 6px;
 }
-.fiche dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 12px;
-  margin: 8px 0;
-  font-size: 13px;
-}
-.fiche dt {
+.fiche p {
+  margin: 0;
   color: var(--doux);
 }
 .fiche ul {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   padding-left: 18px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--doux);
 }
 .etiquette {
@@ -185,6 +112,10 @@ body {
 .etiquette .nom {
   font-size: 12px;
   font-weight: 600;
+}
+.etiquette .nom span {
+  font-weight: 400;
+  opacity: 0.7;
 }
 .etiquette .act {
   font-size: 11px;
@@ -220,49 +151,9 @@ body {
   box-shadow: 0 0 14px color-mix(in srgb, var(--c) 60%, transparent);
   pointer-events: none;
 }
-@media (max-width: 900px) {
-  .compteurs {
-    grid-template-columns: repeat(2, auto);
-  }
-  .flux {
-    top: auto;
-    height: 30vh;
-    width: calc(100vw - 32px);
-  }
-  .sessions,
-  .etiquette .act {
-    display: none;
-  }
-  .etiquette .nom,
-  .zone {
-    font-size: 10px;
-  }
-}
 .zone.piece {
   padding: 2px 7px;
   font-size: 10px;
-}
-.etiquette .nom span {
-  font-weight: 400;
-  opacity: 0.7;
-}
-.plier {
-  all: unset;
-  cursor: pointer;
-  width: 100%;
-}
-.plier::after {
-  content: " ▾";
-  color: var(--doux);
-}
-.replie .plier::after {
-  content: " ▸";
-}
-.replie > :not(h2) {
-  display: none;
-}
-.replie {
-  height: auto !important;
 }
 .sans-pieces .zone,
 .sans-agents .etiquette,
@@ -272,16 +163,14 @@ body {
 }
 @media (max-width: 900px) {
   .barre {
-    right: 16px;
     flex-wrap: wrap;
     row-gap: 8px;
   }
-
-  .compteurs {
-    top: 96px;
+  .etiquette .act {
+    display: none;
   }
-  .board {
-    top: auto;
-    bottom: calc(30vh + 28px);
+  .etiquette .nom,
+  .zone {
+    font-size: 10px;
   }
 }

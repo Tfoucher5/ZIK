@@ -6,7 +6,7 @@
   import PlaylistPicker from '$lib/components/salon/playlists/PlaylistPicker.svelte';
   import { loadSalonPlaylists, DEFAULT_SALON_PLAYLIST } from '$lib/data/salonPlaylists.js';
   import { rememberSignupRef, tagNewUser } from '$lib/client/signupRef.js';
-  import { saveSalonKey, fetchPro, proActive, goToStripe } from '$lib/client/salonClient.js';
+  import { saveSalonKey, fetchPro, proActive, goToStripe, saveSetup, readSetup, setupFor } from '$lib/client/salonClient.js';
   import ProUpsell from '$lib/components/salon/setup/ProUpsell.svelte';
   import SetupHero from '$lib/components/salon/setup/SetupHero.svelte';
   import ResumeSalon from '$lib/components/salon/setup/ResumeSalon.svelte';
@@ -44,6 +44,35 @@
   let autoPicked   = $state(false);
   let creating     = $state(false);
   let error        = $state('');
+  let playlistsState = $state('loading');
+
+  const currentSettings = () => ({ maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials });
+  const DEFAULTS = currentSettings();
+  // Dernière préparation lue une fois au montage ; la part réservée à Pro attend fetchPro
+  let saved = null;
+  let freeSetup = null;
+
+  function applySettings(s) {
+    ({ maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials } = s);
+  }
+
+  function restoreSettings() {
+    saved = readSetup(DEFAULTS);
+    if (!saved) return;
+    freeSetup = setupFor(saved.settings, false, DEFAULTS);
+    applySettings(freeSetup);
+  }
+
+  // Une seule fois, et seulement sur les réglages que l'hôte n'a pas touchés entre-temps
+  function restorePro() {
+    if (!freeSetup) return;
+    const full = setupFor(saved.settings, true, DEFAULTS);
+    const now = currentSettings();
+    for (const k of ['answerMode', 'specials', 'teamCount'])
+      if (now[k] === freeSetup[k]) now[k] = full[k];
+    applySettings(now);
+    freeSetup = null;
+  }
 
   let totalTrackCount = $derived(
     allPlaylists
@@ -68,28 +97,39 @@
     else teamCount = n;
   }
 
+  // onMount et onAuthStateChange chargent en même temps : seul le dernier appel compte
+  let loadSeq = 0;
   async function loadPlaylists() {
-    fetchPro(sb, user?.id).then((r) => (proRow = r)).catch(() => {});
+    const seq = ++loadSeq;
+    fetchPro(sb, user?.id).then((r) => {
+      proRow = r;
+      if (seq === loadSeq && proActive(r)) restorePro();
+    }).catch(() => {});
+    if (playlistsState === 'error') playlistsState = 'loading';
     try {
       const flat = await loadSalonPlaylists(sb, user?.id ?? null);
+      if (seq !== loadSeq) return;
       allPlaylists = flat;
+      playlistsState = 'ok';
       // ?playlist=id1,id2 : lien depuis une page /blind-test/<thème>
       const wanted = (new URLSearchParams(window.location.search).get('playlist') ?? '')
         .split(',')
         .filter((id) => flat.some((p) => p.id === id));
+      const remembered = (saved?.playlistIds ?? []).filter((id) => flat.some((p) => p.id === id));
       if (wanted.length) selectedIds = wanted;
+      else if (selectedIds.length === 0 && remembered.length) selectedIds = remembered;
       else if (selectedIds.length === 0 && flat.length > 0) {
         selectedIds = [flat.find(p => p.id === DEFAULT_SALON_PLAYLIST)?.id ?? flat[0].id];
         autoPicked = true;
       }
     } catch {
-      error = 'Impossible de charger les playlists.';
+      if (seq === loadSeq) playlistsState = 'error';
     }
   }
 
   async function createSalon() {
     error = '';
-    if (selectedIds.length === 0) { error = 'Choisis au moins une playlist.'; return; }
+    if (selectedIds.length === 0) { error = 'Choisissez au moins une playlist.'; return; }
     creating = true;
     try {
       const { data: { session } } = await sb.auth.getSession();
@@ -101,15 +141,17 @@
         body: JSON.stringify({
           origin: new URLSearchParams(window.location.search).get('ref'),
           playlistIds: selectedIds,
-          settings: { maxRounds, roundDuration, answerMode, manualNext, showAnswerDuration, teamCount, specials },
+          settings: currentSettings(),
         }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'Erreur création salon');
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "La soirée n'a pas pu être créée. Réessayez dans un instant.");
       saveSalonKey(d.code, d.key);
+      saveSetup(selectedIds, currentSettings());
       window.location.href = `/salon/host?code=${d.code}`;
     } catch (e) {
-      error = e.message;
+      // fetch rejette en TypeError quand le réseau coupe : jamais de message brut du navigateur
+      error = e instanceof TypeError ? 'La connexion a coupé. Réessayez.' : e.message;
       creating = false;
     }
   }
@@ -118,6 +160,7 @@
     if (!sb) return;
     const { data: { session } } = await sb.auth.getSession();
     user = session?.user ?? null;
+    restoreSettings();
     authReady = true;
     loadPlaylists();
 
@@ -157,6 +200,9 @@
     <p class="st-loading">Chargement…</p>
   {:else}
     <SetupBlock letter="A" title="La musique">
+      {#if playlistsState === 'error'}
+        <p class="st-load-err" role="alert">Les playlists n'ont pas pu être chargées. <button onclick={loadPlaylists}>Réessayer</button></p>
+      {/if}
       <div><PlaylistPicker playlists={allPlaylists} bind:selectedIds bind:autoPicked onLogin={user ? null : () => openAuth('register')} /></div>
     </SetupBlock>
 
@@ -176,6 +222,7 @@
 {#if authReady}
   <SetupBar
     selectedCount={selectedIds.length} {totalTrackCount} {maxRounds} {error} {creating}
+    loading={playlistsState === 'loading'}
     onCreate={createSalon}
   />
 {/if}
@@ -192,6 +239,17 @@
   }
 
   .st-loading { padding: 40px 0; color: var(--mid); }
+  .st-load-err { margin: 0 0 12px; color: var(--danger); }
+  .st-load-err button {
+    min-height: 44px;
+    margin-left: 8px;
+    padding: 0 14px;
+    border: 1px solid currentColor;
+    background: none;
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
 
   @media (max-width: 760px) {
     .st { padding: 16px 16px 150px; }

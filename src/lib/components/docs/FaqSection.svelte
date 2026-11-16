@@ -47,7 +47,7 @@
       <summary>Est-ce que ZIK fonctionne sur mobile ?</summary>
       <div class="faq-body">
         <p>
-          Oui, entièrement. ZIK est optimisé pour mobile (responsive design). La saisie de réponses sur clavier tactile peut être légèrement moins rapide que sur clavier physique, mais l'expérience reste complète. En Mode Salon, l'interface joueur est spécifiquement conçue pour les smartphones.
+          Oui, entièrement. ZIK est optimisé pour mobile (responsive design). La saisie de réponses sur clavier tactile peut être légèrement moins rapide que sur clavier physique, mais l'expérience reste complète. Avec ZIK Soirée, l'interface joueur est spécifiquement conçue pour les smartphones.
         </p>
       </div>
     </details>
@@ -107,10 +107,10 @@
     </details>
 
     <details class="faq-item">
-      <summary>Le Mode Salon sauvegarde-t-il les scores ?</summary>
+      <summary>Les scores d'une soirée comptent-ils dans le classement ?</summary>
       <div class="faq-body">
         <p>
-          Non. Le Mode Salon est entièrement éphémère : les scores existent en mémoire sur le serveur pendant la durée de la session. Dès que l'hôte ferme l'onglet ou que le salon expire, tout est perdu. Si vous voulez conserver les résultats, prenez une capture d'écran du podium final affiché sur l'écran hôte.
+          Non. Les parties de ZIK Soirée ne comptent ni pour l'ELO ni pour les classements en ligne. Le podium s'affiche sur la TV à la fin de chaque partie, et un joueur qui quitte en cours de route garde son score. Pour garder un souvenir des résultats, prenez une photo du podium.
         </p>
       </div>
     </details>

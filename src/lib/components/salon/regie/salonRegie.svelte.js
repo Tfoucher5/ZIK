@@ -1,3 +1,4 @@
+import { watchConnection } from "../connection.js";
 import { io } from "socket.io-client";
 import { SupportChat } from "../support/supportChat.svelte.js";
 import { loadSalonPlaylists } from "../../../data/salonPlaylists.js";
@@ -35,6 +36,8 @@ export class SalonRegie {
   adminNotice = $state("");
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
+  // Cet écran a perdu le réseau (affiché après quelques secondes)
+  connLost = $state(false);
   // Après un redémarrage : « mise à jour terminée », la manche repart seule
   restored = $state(null);
   mediaCheck = $state(null);
@@ -57,6 +60,8 @@ export class SalonRegie {
   notice = $state("");
   confirmKick = $state(null);
   pro = $state(false);
+  // Joueurs qui demandent à reprendre leur place depuis un autre téléphone
+  reclaims = $state([]);
   upsell = $state(null);
   // null tant que le serveur n'a pas répondu : on n'alarme pas à tort.
   screens = $state(null);
@@ -199,6 +204,8 @@ export class SalonRegie {
       reconnectionAttempts: Infinity,
     });
     this.socket = socket;
+    this.stopWatch?.();
+    this.stopWatch = watchConnection(socket, (v) => (this.connLost = v));
     socket.on("connect", () =>
       this.send("salon_join_control", { code: this.code, key: this.key }),
     );
@@ -210,5 +217,6 @@ export class SalonRegie {
   destroy() {
     this.socket?.disconnect();
     this.stopCountdowns?.();
+    this.stopWatch?.();
   }
 }

@@ -19,7 +19,7 @@
     paused = false, pro = false, settings = {},
     onSetting,
     onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
-    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, mediaCheck = null, mediaSolo = true, onJudge,
+    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, connLost = false, mediaCheck = null, mediaSolo = true, onJudge,
   } = $props();
 
   let membersOf = (id) => players.filter(p => p.team === id);
@@ -137,7 +137,7 @@
     </div>
   {/if}
 
-  <HostGameOver {phase} {gameOver} {total} {settings} {pro} {onSetting} {onRestart} {onChangePlaylists} {onNewSalon} />
+  <HostGameOver {phase} {gameOver} {total} {settings} {pro} {code} {onSetting} {onRestart} {onChangePlaylists} {onNewSalon} />
 
   {#if intermission}<HostIntermission {intermission} {code} />{/if}
 
@@ -166,6 +166,12 @@
         <h2>C'est reparti</h2>
         <p>Tout le monde est reconnecté. Les points sont gardés.</p>
       {/if}
+    </div>
+  {:else if connLost}
+    <div class="sh-outage sh-restart" role="status">
+      <p class="sx-kicker">Connexion perdue</p>
+      <h2>Reconnexion en cours</h2>
+      <p>La TV a perdu internet et se reconnecte toute seule. Les joueurs gardent leur place et leurs points.</p>
     </div>
   {:else if videoOutage}
     <div class="sh-outage" role="status">

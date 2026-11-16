@@ -6,7 +6,6 @@ import { checkEveryoneDone } from "./rounds.js";
 import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
 import { saveSnapshot } from "./snapshot.js";
-import { timerClock } from "./timers.js";
 import {
   emitSplit,
   phoneNight,
@@ -84,45 +83,6 @@ export function nightView(salon) {
     players,
     teams: teamStandings(salon.settings.teams, players),
   };
-}
-
-// Reprise après une coupure : de quoi rétablir l'écran du téléphone
-export function reconnectView(salon, player) {
-  const data = {
-    username: player.username,
-    token: player.token,
-    reconnecting: true,
-    settings: {
-      answerMode: salon.settings.answerMode,
-      maxRounds: salon.settings.maxRounds,
-    },
-    phase: salon.game.phase,
-    paused: salon.game.paused,
-    round: salon.game.currentRound,
-    team: player.team,
-    ...phoneLists(salon, player.username),
-    score: player.score,
-    foundArtist: player.foundArtist,
-    foundTitle: player.foundTitle,
-    foundFeatCount: player.foundFeats.filter(Boolean).length,
-    foundExtrasCount: player.foundExtras.filter(Boolean).length,
-    allFound: player._fullFoundCounted,
-    timerVal: salon.game.timerValue,
-    timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
-    timerActive: salon.game.timerActive,
-    ...timerClock(salon.game),
-  };
-  if (salon.game.phase === "round") {
-    data.extras = (salon.game.currentTrack?.extraAnswers || []).map((e) => ({
-      label: e.label,
-    }));
-    if (salon.settings.answerMode === "multiple") {
-      data.choices = salon.game.choices;
-      data.chosenIndex = player._choiceIndex ?? null;
-      data.featCount = salon.game.currentTrack?.featArtists?.length || 0;
-    }
-  }
-  return data;
 }
 
 // Équipes, soirée et salle d'attente vues d'un téléphone (salon_joined)
@@ -243,7 +203,7 @@ export function resetStats(salon) {
 }
 
 export function resetRoundFlags(salon) {
-  for (const p of Object.values(salon.players)) {
+  for (const p of gamePlayers(salon)) {
     p.scoreBeforeRound = p.score;
     p.foundArtist = false;
     p.foundTitle = false;

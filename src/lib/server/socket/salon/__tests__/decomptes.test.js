@@ -106,6 +106,67 @@ describe("décompte avant le titre suivant", () => {
   });
 });
 
+describe("écran qui rejoint pendant un décompte", () => {
+  const arrivee = async (id, evt, payload) => {
+    const s = makeSocket(id, h.rooms);
+    const recus = [];
+    s.emit = (event, p) => event === "salon_countdown" && recus.push(p);
+    h.connecte(s);
+    await s.handlers[evt](payload);
+    return recus;
+  };
+  const arrivees = async () => ({
+    tv: await arrivee("tv", "salon_join_host", { code: CODE, key: CLE }),
+    rg: await arrivee("rg", "salon_join_control", { code: CODE, key: CLE }),
+    tel: await arrivee("tel", "salon_join_player", {
+      code: CODE,
+      username: "Ana",
+    }),
+  });
+
+  beforeEach(() => {
+    registerSalon(h.io);
+    game().phase = "summary";
+  });
+
+  it("TV, régie et téléphone reçoivent l'heure de reprise", async () => {
+    armNext(CODE, h.io, 7);
+    vi.advanceTimersByTime(2_000);
+    const recu = await arrivees();
+    for (const id of ["tv", "rg", "tel"])
+      expect(recu[id], id).toEqual([
+        { kind: "next", endsAt: 1_007_000, now: 1_002_000, show: true },
+      ]);
+  });
+
+  it("nouveau joueur pendant le décompte de lancement : il le reçoit", async () => {
+    game().phase = "lobby";
+    armNext(CODE, h.io, 5, "start");
+    vi.advanceTimersByTime(1_000);
+    const recus = await arrivee("neuf", "salon_join_player", {
+      code: CODE,
+      username: "Nouveau",
+    });
+    expect(salonRooms[CODE].players.Nouveau).toBeDefined();
+    expect(recus).toEqual([
+      { kind: "start", endsAt: 1_005_000, now: 1_001_000 },
+    ]);
+  });
+
+  it("décompte annulé par une pause, ou terminé : rien", async () => {
+    armNext(CODE, h.io, 7);
+    pauseGame(CODE, h.io);
+    for (const recus of Object.values(await arrivees()))
+      expect(recus).toEqual([]);
+    resumeGame(CODE, h.io);
+    vi.advanceTimersByTime(3_000);
+    expect(m.manches).toBe(1);
+    expect(
+      await arrivee("tv2", "salon_join_host", { code: CODE, key: CLE }),
+    ).toEqual([]);
+  });
+});
+
 describe("décompte de lancement", () => {
   let regie;
   beforeEach(() => {

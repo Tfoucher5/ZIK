@@ -1,5 +1,6 @@
 ---
 name: idees
+model: opus
 description: Chercheur d'idées produit de ZIK. Propose des fonctionnalités et des améliorations d'expérience (visuel, joueur en ligne, joueur en soirée, organisateur, ZIK Pro), classées par impact et effort, chacune appuyée sur une preuve. Lecture seule. Use quand Théo ou Claude lancent /idees, une fois la liste du plan bien avancée.
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 disallowedTools: Write, Edit, NotebookEdit

@@ -41,7 +41,7 @@
     Même principe avec Deezer : copiez le lien de votre playlist Deezer (Format : <code>https://www.deezer.com/fr/playlist/...</code>) et collez-le dans la barre d'ajout : un aperçu s'affiche, puis un clic importe tous les titres.
   </p>
 
-  <DocTip label="Conseil pour le Mode Salon :">
+  <DocTip label="Conseil pour ZIK Soirée :">
     Créez une playlist dédiée à votre événement avant la soirée. Importez vos favoris depuis Deezer, ajustez manuellement si besoin, puis sélectionnez cette playlist lors de la création de votre salon.
   </DocTip>
 

@@ -1,15 +1,15 @@
 <header class="st-top">
-  <a class="st-top-link" href="/">← ZIK</a>
+  <a class="st-top-link" href="/soiree">← Comment ça marche</a>
   <a class="st-top-link st-top-join" href="/salon/play">Invité ? <b>Entrer le code</b></a>
 </header>
 
 <section class="st-hero">
-  <p class="st-kicker">Mode salon</p>
+  <p class="st-kicker">Créer une soirée</p>
   <h1>Ce soir,<br>c'est <em>blind test.</em></h1>
   <ol class="st-how">
-    <li><b>La TV</b> diffuse la musique</li>
-    <li><b>Les téléphones</b> servent de buzzer</li>
-    <li><b>Personne</b> n'a besoin de compte</li>
+    <li><b>Choisissez</b> la musique</li>
+    <li><b>Affichez</b> le code sur la TV</li>
+    <li><b>Les invités</b> jouent sur leur téléphone</li>
   </ol>
 </section>
 
