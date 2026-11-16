@@ -5,17 +5,23 @@
 
 export const NEWS = [
   {
-    date: "2026-11-14",
+    date: "2026-11-16",
     version: "3.32.0",
     tag: "Nouveauté",
-    title: "Un accueil, deux univers : jouer en ligne ou animer une soirée",
+    title: "Un nouvel accueil, une page ZIK Soirée et des soirées plus solides",
+    proItems: [
+      "La page ZIK Pro est refaite : les trois formules côte à côte, la Soirée 24 h mise en avant pour les bars, et une page de remerciement qui explique quoi faire ensuite.",
+      "Une coupure de réseau ne fait plus perdre de points : la réponse d'un joueur coupé ou parti en pleine manche est comptée une fois, et il retrouve sa place en revenant.",
+    ],
     summary:
-      "L'accueil te demande ce que tu viens faire : jouer en ligne, ou animer une soirée sur la TV. Un code ? Un seul champ suffit.",
+      "Nouvel accueil : jouer en ligne ou animer une soirée, à toi de choisir. Et une page qui montre tout ce que ZIK Soirée sait faire.",
     items: [
-      "L'accueil a deux portes : « Jouer en ligne » mène aux rooms, au Zikle et aux classements (sur /jouer), « Animer une soirée » présente ZIK Soirée.",
-      "Un seul champ « J'ai un code » : code d'une room en ligne ou code affiché sur la TV, ZIK t'emmène au bon endroit.",
-      "Une soirée ouverte depuis moins de 12 h ? L'accueil propose de la reprendre en un clic.",
-      "« Quitter » une partie en ligne ramène aux rooms.",
+      "L'accueil est refait : deux portes, « Jouer en ligne » (rooms, Zikle, classements) ou « Animer une soirée » sur la TV, et un seul champ pour entrer un code.",
+      "Nouvelle page /soiree : la TV, la régie et les téléphones expliqués en animations, de la création au podium.",
+      "Nouvel en-tête sur ces pages, avec la connexion et ton avatar.",
+      "Entre deux parties, la TV affiche le QR code et le code en grand : ceux qui arrivent rejoignent la partie suivante.",
+      "En fin de partie, chaque joueur peut partager le podium en story depuis son téléphone.",
+      "Reprendre sa place depuis un autre téléphone ; buzzer, manches spéciales et décompte qui reprennent après une coupure ; réponse à 4 choix confirmée par le serveur.",
     ],
   },
   {
