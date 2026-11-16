@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { lobbyView, prepShown, teamCap } from "../host/lobbyView.js";
+import {
+  lobbyShown,
+  lobbyView,
+  prepShown,
+  teamCap,
+} from "../host/lobbyView.js";
 
 const joueurs = (n, extra = () => ({})) =>
   Array.from({ length: n }, (_, i) => ({ username: `J${i}`, ...extra(i) }));
@@ -82,6 +87,28 @@ describe("lobby de la TV", () => {
     expect(v.count).toBe(1);
     expect(v.teams[0]).toMatchObject({ size: 1, names: [{ key: "Sam" }] });
     expect(v.teams[1].size).toBe(0);
+  });
+});
+
+describe("lobby affiché ou non", () => {
+  it("en lobby et pendant le décompte", () => {
+    expect(lobbyShown({ phase: "lobby" })).toBe(true);
+    expect(lobbyShown({ phase: "starting" })).toBe(true);
+    expect(lobbyShown({ phase: "round" })).toBe(false);
+  });
+
+  it("jamais par-dessus l'entracte ni un message de panne", () => {
+    for (const etat of [
+      { intermission: { endsAt: 1 } },
+      { restarting: true },
+      { restored: { resumeIn: null } },
+      { connLost: true },
+      { videoOutage: 5 },
+    ])
+      expect(
+        lobbyShown({ phase: "lobby", ...etat }),
+        JSON.stringify(etat),
+      ).toBe(false);
   });
 });
 

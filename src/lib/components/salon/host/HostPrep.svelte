@@ -28,16 +28,19 @@
     aide = '';
     step = 1;
     if (!audio) {
-      audio = new Audio('/sounds/test-son.ogg');
+      audio = new Audio();
+      audio.src = audio.canPlayType('audio/ogg; codecs=opus') ? '/sounds/test-son.ogg' : '/sounds/test-son.mp3';
       audio.loop = true;
       audio.onplaying = () => (playing = true);
       audio.onpause = () => (playing = false);
     }
     audio.volume = h.volume / 100;
     audio.currentTime = 0;
-    audio.play().catch(() => {
+    audio.play().catch((e) => {
       step = 0;
-      aide = 'Le navigateur bloque le son : clique encore une fois.';
+      aide = e?.name === 'NotAllowedError'
+        ? 'Le navigateur bloque le son : clique encore une fois.'
+        : "L'extrait ne se lit pas ici. Tu peux quand même afficher le code.";
     });
   }
 
@@ -72,8 +75,8 @@
     <li>
       <span class="n">01</span>
       <h2>Ta régie</h2>
-      <p>Scanne ce QR avec ton téléphone : c'est ta télécommande pour la soirée.</p>
       {#if regieUrl}
+        <p>Scanne ce QR avec ton téléphone : c'est ta télécommande pour la soirée.</p>
         <div class="obj">
           <div class="pp-qr"><QrCode text={regieUrl} label="QR code de la régie" /></div>
           <small>Ce QR donne le contrôle de la soirée. Ne le montre pas aux joueurs.</small>

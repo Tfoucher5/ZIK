@@ -12,7 +12,7 @@
   import HostLobby from '$lib/components/salon/host/HostLobby.svelte';
   import HostPrep from '$lib/components/salon/host/HostPrep.svelte';
   import LobbyCountdown from '$lib/components/salon/host/LobbyCountdown.svelte';
-  import { prepShown } from '$lib/components/salon/host/lobbyView.js';
+  import { lobbyShown, prepShown } from '$lib/components/salon/host/lobbyView.js';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -38,7 +38,7 @@
     <a class="sx-btn sx-btn-primary" href="/salon/play?code={h.code}">Rejoindre comme joueur</a>
   </main>
 {:else}
-<div class="sh" class:sh-calm={calm}>
+<div class="sh" class:sh-calm={calm} inert={prepShown(h)}>
   <div>
     <HostTopBar {h} bind:calm />
     <NoticeBanner message={h.adminNotice} tv />
@@ -68,7 +68,7 @@
       onJudge={(correct) => h.socket?.emit('salon_buzz_judge', { correct })}
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
-    {#if h.phase === 'lobby' || h.phase === 'starting'}<HostLobby {h} />{/if}
+    {#if lobbyShown(h)}<HostLobby {h} />{/if}
   </div>
 
   <LobbyCountdown sec={h.startSec} />

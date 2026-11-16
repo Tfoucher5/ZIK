@@ -8,6 +8,6 @@ drumroll.ogg
   « Drum Roll Intro.ogg » par Iwan Sounds and DIY, licence CC0
   https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg
 
-test-son.ogg
+test-son.ogg, test-son.mp3 (repli pour les navigateurs sans Opus)
   Boucle de 8 s à 118 bpm créée pour ZIK par synthèse (calculée sample par
   sample, aucun échantillon extérieur), versée dans le domaine public, CC0

@@ -51,5 +51,15 @@ export const eqBars = (n, k = 1.7) =>
     return `--d:${((i * 0.137) % 0.5).toFixed(3)};--a:${(h * 0.25).toFixed(2)};--b:${h.toFixed(2)}`;
   });
 
+// Lobby de la TV : il s'efface devant l'entracte et les messages de panne
+// (mise à jour, connexion perdue, musique en panne), posés sous lui
+export const lobbyShown = (h) =>
+  (h.phase === "lobby" || h.phase === "starting") &&
+  !h.intermission &&
+  !h.restarting &&
+  !h.restored &&
+  !h.connLost &&
+  !h.videoOutage;
+
 // « Prépare la TV » : seulement avant la première partie, jamais par-dessus un jeu
 export const prepShown = (h) => h.joined && h.phase === "lobby" && !h.prepDone;
