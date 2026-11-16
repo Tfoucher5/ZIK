@@ -4,12 +4,12 @@ vi.mock("../snapshot.js", () => ({ saveSnapshot: async () => {} }));
 vi.mock("../rounds.js", () => ({ checkEveryoneDone: () => {} }));
 
 const { salonRooms } = await import("../../../state.js");
-const { registerAnswers } = await import("../answers.js");
+const { registerAnswers, scoreQcmRound } = await import("../answers.js");
 const { addPlayer } = await import("../players.js");
 const { CODE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
 
-let socket, emissions;
+let socket, emissions, io;
 
 beforeEach(() => {
   salonDeTest();
@@ -26,6 +26,7 @@ beforeEach(() => {
   addPlayer(s, "Ana", "s1");
   const h = makeIo();
   emissions = h.emissions;
+  io = h.io;
   socket = makeSocket("s1", h.rooms);
   socket.salonCode = CODE;
   socket.salonUsername = "Ana";
@@ -84,5 +85,31 @@ describe("QCM : accusé de réception de la réponse", () => {
     for (const ack of [undefined, 42, "x", {}])
       await socket.handlers.salon_submit_choice({ choiceIndex: 2 }, ack);
     expect(salonRooms[CODE].players.Ana._choiceIndex).toBe(2);
+  });
+});
+
+describe("QCM : fin de manche avec un joueur coupé", () => {
+  it("sa bonne réponse, la plus rapide, compte sans lui envoyer de retour", async () => {
+    await choisit({ choiceIndex: 2 });
+    const s = salonRooms[CODE];
+    addPlayer(s, "Bob", "s2");
+    Object.assign(s.players.Bob, {
+      _fullFoundCounted: true,
+      _choiceIndex: 2,
+      _choiceTimeTaken: 20,
+    });
+    Object.assign(s.players.Ana, { _disconnected: true, socketId: null });
+    emissions.length = 0;
+
+    scoreQcmRound(s, io);
+
+    expect(s.game.firstFinder).toBe("Ana");
+    expect(s.players.Ana.score).toBeGreaterThan(0);
+    expect(s.players.Ana).toMatchObject({
+      foundArtist: true,
+      foundTitle: true,
+    });
+    const retours = emissions.filter((e) => e.event === "salon_feedback");
+    expect(retours.map((e) => e.cibles)).toEqual([["s2"]]);
   });
 });

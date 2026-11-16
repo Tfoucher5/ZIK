@@ -150,14 +150,12 @@ export function registerAnswers(socket, io) {
 // QCM : les points ne tombent qu'à la fin de la manche, avec le retour de chacun
 export function scoreQcmRound(salon, io) {
   const game = salon.game;
-  // Determine firstFinder: the correct player with the lowest timeTaken
+  // Premier à trouver : la bonne réponse la plus rapide
   if (!game.firstFinder) {
     const firstCorrect = Object.values(salon.players)
       .filter(
         (p) =>
-          p._fullFoundCounted &&
-          p._choiceIndex === game.correctChoiceIndex &&
-          !p._disconnected,
+          p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex,
       )
       .sort(
         (a, b) =>
@@ -167,39 +165,33 @@ export function scoreQcmRound(salon, io) {
   }
 
   for (const p of Object.values(salon.players)) {
-    if (!p.socketId || p._disconnected) continue;
-    if (p._fullFoundCounted) {
-      // They answered — evaluate
-      const correct = p._choiceIndex === game.correctChoiceIndex;
-      if (correct) {
-        const max = game.timerMax ?? salon.settings.roundDuration;
-        const points =
-          calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
-        p.score += points;
-        p.foundArtist = true;
-        p.foundTitle = true;
-        io.to(p.socketId).emit("salon_feedback", {
-          type: "success_title",
-          correct: true,
-          points,
-          msg: `Bonne réponse ! (+${points} pts)`,
-        });
-      } else {
-        io.to(p.socketId).emit("salon_feedback", {
-          type: "miss",
-          correct: false,
-          points: 0,
-          msg: "Raté !",
-        });
-      }
-    } else {
-      // Didn't answer in time
-      io.to(p.socketId).emit("salon_feedback", {
-        type: "miss",
-        correct: false,
-        points: 0,
-        msg: "Temps écoulé…",
-      });
+    const correct =
+      p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex;
+    let points = 0;
+    // Réseau coupé après avoir répondu : la réponse enregistrée compte quand même
+    if (correct) {
+      const max = game.timerMax ?? salon.settings.roundDuration;
+      points = calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
+      p.score += points;
+      p.foundArtist = true;
+      p.foundTitle = true;
     }
+    if (!p.socketId) continue;
+    io.to(p.socketId).emit(
+      "salon_feedback",
+      correct
+        ? {
+            type: "success_title",
+            correct: true,
+            points,
+            msg: `Bonne réponse ! (+${points} pts)`,
+          }
+        : {
+            type: "miss",
+            correct: false,
+            points: 0,
+            msg: p._fullFoundCounted ? "Raté !" : "Temps écoulé…",
+          },
+    );
   }
 }

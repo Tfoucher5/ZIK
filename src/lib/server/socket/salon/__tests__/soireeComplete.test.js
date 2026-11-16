@@ -186,6 +186,7 @@ describe("une soirée complète", () => {
     const { tv, regie } = await ouvrir({ answerMode: "multiple" }, 1);
     const alice = await joueur("alice");
     const bob = await joueur("bob");
+    const carole = await joueur("carole");
 
     regie.socket.emit("salon_start");
     const manche = await alice.attend("salon_round_start");
@@ -197,14 +198,21 @@ describe("une soirée complète", () => {
     tv.socket.emit("salon_music_ready");
     await alice.attend("salon_timer_started");
     const juste = salonRooms[h.code].game.correctChoiceIndex;
+    const faux = (juste + 1) % manche.choices.length;
     alice.socket.emit("salon_submit_choice", { choiceIndex: juste });
-    bob.socket.emit("salon_submit_choice", {
-      choiceIndex: (juste + 1) % manche.choices.length,
+    // Bonne réponse enregistrée puis coupure avant la fin : les points restent
+    await carole.socket.emitWithAck("salon_submit_choice", {
+      choiceIndex: juste,
     });
+    carole.socket.disconnect();
+    // Le serveur doit voir la coupure avant la dernière réponse
+    await pause(40);
+    bob.socket.emit("salon_submit_choice", { choiceIndex: faux });
 
     const podium = await tv.attend("salon_game_over");
     const score = (nom) => podium.scores.find((s) => s.username === nom).score;
     expect(score("alice")).toBeGreaterThan(score("bob"));
+    expect(score("carole")).toBeGreaterThan(0);
     const vue = await alice.attend("salon_game_over");
     expect(vue.ranking.me).toMatchObject({ username: "alice", rank: 1 });
     // Le téléphone ne reçoit jamais la liste complète des joueurs
@@ -213,13 +221,11 @@ describe("une soirée complète", () => {
         expect(d).not.toHaveProperty("players");
         expect(d).not.toHaveProperty("scores");
       }
-    expect(alice.de("salon_round_end")[0].ranking.count).toBe(2);
+    expect(alice.de("salon_round_end")[0].ranking.count).toBe(3);
     // Chaque téléphone reçoit la case comptée pour lui ; la TV, aucune
     await bob.attend("salon_round_end");
     expect(alice.de("salon_round_end")[0].chosenIndex).toBe(juste);
-    expect(bob.de("salon_round_end")[0].chosenIndex).toBe(
-      (juste + 1) % manche.choices.length,
-    );
+    expect(bob.de("salon_round_end")[0].chosenIndex).toBe(faux);
     expect(tv.de("salon_round_end")[0]).not.toHaveProperty("chosenIndex");
     expect(alice.moi).not.toHaveProperty("players");
 
