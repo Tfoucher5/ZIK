@@ -29,6 +29,9 @@ export function listenHost(h, socket) {
     h.intermission = data.evening?.intermission ?? null;
     h.finale = data.evening?.finale ?? null;
     h.qrBig = !!data.evening?.qr;
+    h.relaunching = false;
+    // TV rechargée en fin de partie : le podium est déjà en place
+    h.overRevealed = data.phase === "gameover";
     h.buzzer = data.buzzer;
     h.mediaCheck = data.mediaCheck;
     socket.emit("salon_tv_volume", { volume: h.volume });
@@ -120,6 +123,7 @@ export function listenHost(h, socket) {
   socket.on("salon_round_start", (data) => {
     h.restored = null;
     h.phase = "round";
+    h.relaunching = false;
     h.special = data.special ?? null;
     h.videoOutage = null;
     h.buzzer = null;
@@ -211,6 +215,8 @@ export function listenHost(h, socket) {
   socket.on("salon_game_over", (data) => {
     h.phase = "gameover";
     h.gameOver = data;
+    h.relaunching = false;
+    h.overRevealed = false;
     h.teams = data.teams;
     h.night = data.night;
     h.hostCenter?.fadeOut();
@@ -220,6 +226,7 @@ export function listenHost(h, socket) {
     h.mergeRoster(players);
     h.roundEnd = null;
     h.gameOver = null;
+    h.relaunching = true;
   });
 
   socket.on(

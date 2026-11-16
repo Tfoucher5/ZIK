@@ -15,7 +15,7 @@
   import HostGameOver from '$lib/components/salon/host/HostGameOver.svelte';
   import HostQrBig from '$lib/components/salon/host/HostQrBig.svelte';
   import { lobbyShown, prepShown } from '$lib/components/salon/host/lobbyView.js';
-  import { gameOverShown, qrBigShown } from '$lib/components/salon/host/gameOverView.js';
+  import { gameOverShown, isReplay, qrBigShown, tvAlone } from '$lib/components/salon/host/gameOverView.js';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -68,13 +68,13 @@
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
     {#if lobbyShown(h)}<HostLobby {h} />{/if}
     {#if gameOverShown(h)}<HostGameOver {h} />{/if}
-    {#if qrBigShown(h)}<HostQrBig code={h.code} onClose={h.controls ? null : () => h.setQrBig(false)} />{/if}
+    {#if qrBigShown(h)}<HostQrBig code={h.code} onClose={tvAlone(h) ? () => h.setQrBig(false) : null} />{/if}
   </div>
 
-  <LobbyCountdown sec={h.startSec} rejouer={h.phase === 'gameover' || h.phase === 'summary'} />
+  <LobbyCountdown sec={h.startSec} rejouer={isReplay(h.phase)} />
   <BigCountdown sec={h.nextShown && h.nextSec <= 3 && !h.paused ? h.nextSec : 0} />
 
-  {#if h.phase === 'lobby' && !h.controls}
+  {#if h.phase === 'lobby' && tvAlone(h)}
     <footer class="sh-foot">
       <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={h.startGame} disabled={h.players.length === 0}>
         {h.players.length === 0 ? 'En attente de joueurs' : 'Lancer la partie'}

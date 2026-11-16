@@ -74,7 +74,6 @@
       <li><strong>Spotify Web API</strong> &mdash; import de playlists r&eacute;serv&eacute; &agrave; l&rsquo;&eacute;diteur du site en raison des restrictions du mode d&eacute;veloppeur Spotify (seuls les comptes explicitement autoris&eacute;s dans le tableau de bord Spotify Developer peuvent utiliser cette fonctionnalit&eacute;)</li>
       <li><strong>Stripe</strong> (Stripe Payments Europe Ltd) &mdash; paiement de ZIK Pro. Stripe re&ccedil;oit votre e-mail, vos informations de facturation et de paiement&nbsp;; ZIK n&rsquo;a jamais acc&egrave;s &agrave; votre num&eacute;ro de carte. Les factures sont conserv&eacute;es 10 ans (obligation comptable).</li>
       <li><strong>DiceBear</strong> &mdash; g&eacute;n&eacute;ration d&rsquo;avatars via URL (aucune donn&eacute;e personnelle envoy&eacute;e)</li>
-      <li><strong>api.qrserver.com</strong> &mdash; g&eacute;n&eacute;ration du QR code en Mode Salon (le code salon est envoy&eacute; sous forme d&rsquo;URL uniquement)</li>
       <li><strong>Discord</strong> &mdash; le bot Discord ZIK acc&egrave;de &agrave; votre identifiant Discord uniquement lors d&rsquo;une liaison volontaire de compte (commande <code>/link</code>). Cet identifiant est stock&eacute; dans la base Supabase exclusivement pour associ&eacute; votre compte ZIK &agrave; votre compte Discord et afficher vos stats depuis Discord. Il n&rsquo;est pas partag&eacute; avec des tiers.</li>
     </ul>
   </section>

@@ -6,10 +6,11 @@
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
   import { SALON_ROUNDS, SALON_TEAMS } from '$lib/data/salonOptions.js';
 
-  let { h, gameOver } = $props();
+  let { h, night = false } = $props();
 
   let panel = $state(null);
   const set = (patch) => h.socket?.emit('salon_update_settings', patch);
+  const modal = (node) => node.showModal();
 </script>
 
 <div class="cmd">
@@ -23,7 +24,7 @@
 </div>
 
 {#if panel === 'reglages'}
-  <div class="pn" role="dialog" aria-labelledby="fin-reg">
+  <dialog class="pn sh-tv" aria-labelledby="fin-reg" use:modal onclose={() => (panel = null)}>
     <h2 id="fin-reg">Partie suivante</h2>
     <div class="seg" role="group" aria-label="Réponses">
       <button aria-pressed={h.settings.answerMode === 'free'} onclick={() => set({ answerMode: 'free' })}>Texte libre</button>
@@ -41,20 +42,21 @@
       {/each}
     </div>
     <div class="act"><button class="tb" type="button" onclick={() => (panel = null)}>Fermer</button></div>
-  </div>
+  </dialog>
 {:else if panel === 'fermer'}
-  <div class="pn" role="alertdialog" aria-labelledby="fin-close">
+  <dialog class="pn sh-tv" role="alertdialog" aria-labelledby="fin-close" use:modal onclose={() => (panel = null)}>
     <h2 id="fin-close">Fermer la soirée&nbsp;?</h2>
     <ul>
       <li>Tous les joueurs devront ressaisir un nouveau code.</li>
-      {#if gameOver?.night}<li>Le classement de la soirée repartira de zéro.</li>{/if}
+      {#if night}<li>Le classement de la soirée repartira de zéro.</li>{/if}
     </ul>
     <p>Pour changer de playlist ou de réglages, inutile : « Lancer la partie suivante » garde tout le monde.</p>
     <div class="act">
-      <button class="tb" type="button" onclick={() => (panel = null)}>Rester</button>
+      <!-- svelte-ignore a11y_autofocus -->
+      <button class="tb" type="button" autofocus onclick={() => (panel = null)}>Rester</button>
       <button class="tb rouge" type="button" onclick={h.closeSalon}>Fermer la soirée</button>
     </div>
-  </div>
+  </dialog>
 {/if}
 
 <style>
@@ -120,10 +122,17 @@
     text-underline-offset: 0.2em;
     cursor: pointer;
   }
+  /* Fenêtre modale native : focus dedans, Échap pour fermer, le reste inerte */
   .pn {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    z-index: 5;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    color: var(--text);
     display: flex;
     flex-direction: column;
     justify-content: center;

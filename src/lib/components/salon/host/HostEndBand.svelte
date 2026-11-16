@@ -6,6 +6,7 @@
    */
   import { salonPlayUrl } from '$lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
+  import CodeTiles from './CodeTiles.svelte';
 
   let { code, encore, onQr = null } = $props();
 </script>
@@ -14,7 +15,8 @@
   <div class="g" aria-live="polite">
     {#if encore.n}
       <h2>Une autre&nbsp;!</h2>
-      <span class="jauge"><i style="--p:{encore.of ? encore.n / encore.of : 0}"></i></span>
+      <!-- TV seule : le bouton de la partie suivante est le seul magenta -->
+      <span class="jauge" class:sobre={onQr}><i style="--p:{encore.of ? encore.n / encore.of : 0}"></i></span>
       <p><b>{encore.n}</b> sur {encore.of} en redemandent. Gardez vos téléphones.</p>
     {:else}
       <h2>Gardez vos téléphones.</h2>
@@ -22,9 +24,7 @@
   </div>
   <div class="d">
     <p>Pas encore dans la partie&nbsp;? Scannez, ou tapez ce code sur <b>zik-music.fr</b>.</p>
-    <div class="code" aria-label="Code {code}">
-      {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
-    </div>
+    <CodeTiles {code} />
     {#if onQr}
       <button class="qr" type="button" onclick={onQr} aria-label="Afficher le QR en grand">
         <QrCode text={salonPlayUrl(code)} />
@@ -83,6 +83,9 @@
     transform: scaleX(var(--p, 0));
     transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+  .sobre i {
+    background: var(--text);
+  }
   .d {
     display: flex;
     align-items: center;
@@ -98,23 +101,6 @@
   .d p b {
     color: var(--text);
     font-weight: 600;
-  }
-  .code {
-    flex: none;
-    display: flex;
-    gap: 0.16em;
-    font-family: var(--s-mono);
-    font-weight: 700;
-    font-size: 2.9em;
-  }
-  .code b {
-    display: grid;
-    place-items: center;
-    width: 1.22em;
-    height: 1.5em;
-    border-radius: 0.14em;
-    background: rgb(255 255 255 / 0.09);
-    border-bottom: 0.06em solid rgb(255 255 255 / 0.45);
   }
   .qr {
     flex: none;

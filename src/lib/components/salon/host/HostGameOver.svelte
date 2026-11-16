@@ -8,17 +8,23 @@
   import HostPodium from './HostPodium.svelte';
   import HostEndBand from './HostEndBand.svelte';
   import HostEndCommands from './HostEndCommands.svelte';
-  import { gameOverView } from './gameOverView.js';
+  import { untrack } from 'svelte';
+  import { endResult, gameOverView, tvAlone } from './gameOverView.js';
 
   let { h } = $props();
 
-  let alone = $derived(!h.controls);
-  let v = $derived(gameOverView(h.gameOver, h.players, alone ? 4 : 7));
-  let step = $state(0);
+  let alone = $derived(tvAlone(h));
+  let over = $derived(endResult(h));
+  let v = $derived(gameOverView(over, h.players, alone ? 4 : 7));
+  let step = $state(4);
 
+  // Une seule révélation par partie : rouvert après le QR, l'entracte ou une
+  // panne, ou rechargé, le podium est déjà en place
   $effect(() => {
-    if (!h.gameOver) return;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return void (step = 4);
+    void h.gameOver;
+    if (untrack(() => h.overRevealed) || matchMedia('(prefers-reduced-motion: reduce)').matches)
+      return void (step = 4);
+    h.overRevealed = true;
     step = 0;
     const timers = [500, 1500, 2700, 3900].map((ms, i) => setTimeout(() => (step = i + 1), ms));
     return () => timers.forEach(clearTimeout);
@@ -43,7 +49,7 @@
           {#if v.list.more}<li class="plus">et {v.list.more} autre{v.list.more > 1 ? 's' : ''}</li>{/if}
         </ol>
       {/if}
-      {#if alone}<HostEndCommands {h} gameOver={h.gameOver} />{/if}
+      {#if alone}<HostEndCommands {h} night={!!over.night} />{/if}
     </aside>
   </div>
   <HostEndBand code={h.code} encore={v.encore} onQr={alone ? () => h.setQrBig(true) : null} />
