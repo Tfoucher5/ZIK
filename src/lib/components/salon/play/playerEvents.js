@@ -78,6 +78,7 @@ export function listenPlayer(p, socket, c, u) {
   // Soirée fermée : retour au formulaire avec le message, plus de reprise
   socket.on("salon_closed", ({ message }) => {
     p.leave();
+    p.waiting = false;
     p.restarting = false;
     p.joinError = message;
   });
@@ -86,7 +87,8 @@ export function listenPlayer(p, socket, c, u) {
     p.joining = false;
     p.restarting = false;
     if (!p.joined) {
-      // Salon fermé ou pseudo refusé : retour au formulaire, pseudo gardé
+      // Soirée fermée, pseudo refusé ou file pleine : retour au formulaire, pseudo gardé
+      p.waiting = false;
       p.resume = null;
       p.nameTaken = null;
       p.reclaimPending = false;

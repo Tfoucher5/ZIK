@@ -257,3 +257,41 @@ describe("« Une autre ! » : rien ne part hors ligne", () => {
     expect(p.socket.emit).not.toHaveBeenCalled();
   });
 });
+
+describe("file d'attente : la demande de place", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const envoi = async (p) => {
+    const s = sockets.at(-1);
+    s.emit = vi.fn();
+    await p.sendJoin();
+    return s.emit.mock.calls[0];
+  };
+
+  it("chaque connexion demande la file si la soirée est complète, avec le jeton de la file", async () => {
+    vi.stubGlobal("localStorage", { getItem: () => null });
+    const p = new SalonPlayer(null);
+    rejoint(p, "KZ4P2M");
+    // salon_waiting a donné un jeton : la reconnexion le renvoie
+    p.token = "jeton-file";
+    expect(await envoi(p)).toEqual([
+      "salon_join_player",
+      {
+        code: "KZ4P2M",
+        username: "Ana",
+        token: "jeton-file",
+        auth: null,
+        wait: true,
+      },
+    ]);
+  });
+
+  it("page rechargée pendant l'attente : le jeton gardé sur le téléphone repart", async () => {
+    vi.stubGlobal("localStorage", {
+      getItem: (k) => (k === "zik_salon_player_KZ4P2M" ? "jeton-file" : null),
+    });
+    const p = new SalonPlayer(null);
+    rejoint(p, "KZ4P2M");
+    expect((await envoi(p))[1].token).toBe("jeton-file");
+  });
+});

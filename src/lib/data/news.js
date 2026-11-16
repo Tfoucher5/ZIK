@@ -17,6 +17,10 @@ export const NEWS = [
       "Le lobby de la TV se lit de loin, même avec beaucoup de joueurs : le code en grand, les derniers arrivés et le compte des autres.",
       "Sur le téléphone, le code lu dans le QR s'affiche en tuiles, il ne reste que le pseudo à taper. Le choix d'équipe prend tout l'écran.",
       "La régie affiche une liste de vérifications avant la partie (TV, son, musique, joueurs) et un seul bouton pour lancer.",
+      "Soirée gratuite complète : les joueurs en plus attendent sur leur téléphone, leur pseudo est gardé, et ils entrent tout seuls dès qu'une place se libère.",
+    ],
+    proItems: [
+      "Soirée complète : passe en ZIK Pro depuis la régie et tous ceux qui attendent entrent aussitôt, sans recréer la soirée ni rescanner le QR code.",
     ],
   },
   {

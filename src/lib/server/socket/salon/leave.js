@@ -44,8 +44,11 @@ export function scheduleDeparture(
 
 // Départs : écran TV, régie, joueurs
 export function registerLeave(socket, io) {
-  // Le téléphone ne veut plus attendre une place
-  safe(socket, "salon_queue_leave", {}, () => quitQueue(socket, io));
+  // Le téléphone ne veut plus attendre une place : il ne coupe qu'à l'accusé
+  safe(socket, "salon_queue_leave", {}, (_, ack) => {
+    quitQueue(socket, io);
+    ack();
+  });
 
   safe(socket, "disconnect", {}, () => {
     dropReclaimOf(socket, io);
