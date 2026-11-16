@@ -20,6 +20,7 @@ import {
   tableCafe,
 } from "./pieces.js";
 import { cabine } from "./noyau.js";
+import { RENFORTS } from "./disposition.js";
 
 const V = (x, z) => new THREE.Vector3(x, 0, z);
 const debout = (x, z, angle) => ({ place: V(x, z), angle, debout: true });
@@ -123,20 +124,19 @@ export function espaces(scene, grille) {
     fauteuil(scene, grille, -5.2, 3.2, (3 * Math.PI) / 4, "#5BC0EB"),
   );
 
-  titre(scene, "Les Choristes", "#94A3B8", 15, -2.6, "postes des renforts");
-  const renforts = [14.2, 15.8].flatMap((x) => [
-    poste(scene, grille, x, -1.6, Math.PI, "#94A3B8"),
-    poste(scene, grille, x, -0.75, 0, "#94A3B8"),
-  ]);
-  murVegetal(scene, 16.95, 2.3, -Math.PI / 2, 2);
-  poufs(scene, grille, 15.6, 2.4, ["#3DDC84", "#c026d3", "#F4E04D"]);
+  titre(scene, "Les Choristes", "#94A3B8", 15.2, 0.2, "postes des renforts");
+  const renforts = RENFORTS.map((b) =>
+    poste(scene, grille, b.x, b.z, b.a, "#94A3B8"),
+  );
+  murVegetal(scene, 16.95, 1.5, -Math.PI / 2, 2);
+  // Coin pause de l'aile ouest, derrière la cloison de la Technique.
+  poufs(scene, grille, -21.8, 4, ["#3DDC84", "#c026d3", "#F4E04D"]);
 
-  // Cabines d'appel réparties dans l'open space, près des équipes.
+  // Cabines d'appel : deux dans l'aile ouest, une près du Marketing.
   pauses.push(
-    cabine(scene, grille, -19.35, 2.85, Math.PI / 2, "#5BC0EB"),
+    cabine(scene, grille, -27.2, 3, Math.PI / 2, "#5BC0EB"),
+    cabine(scene, grille, -27.2, 4.6, Math.PI / 2, "#3DDC84"),
     cabine(scene, grille, -11.2, 5.2, Math.PI, "#F4E04D"),
-    cabine(scene, grille, 14.3, 5, Math.PI, "#3DDC84"),
-    cabine(scene, grille, 15.5, 5, Math.PI, "#FF4F9A"),
   );
 
   boite(scene, 0.7, 1, 0.6, MAT.blanc, 5.6, 0.5, 1.5);
@@ -144,10 +144,9 @@ export function espaces(scene, grille) {
   grille.bloquer(5.6, 1.5, 0.7, 0.6, 0.1);
   pauses.push(
     debout(5.6, 2.2, Math.PI),
-    debout(-18.5, 5.4, 0),
+    debout(-21.8, 5.5, 0),
     debout(18.2, 7.4, 0.675),
   );
-  plante(scene, grille, -19.3, 5.3, 1.2, true);
 
   return { invite, accueil: hotesse, renforts, pauses };
 }

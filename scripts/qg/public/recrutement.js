@@ -4,12 +4,14 @@ import { COULEURS, limites } from "./plan.js";
 const PERIODE = 10000;
 
 // Les bureaux suivent /agents, relue toutes les 10 s : un agent recruté sort de l'ascenseur et prend
-// un poste libre de son pôle, un agent supprimé repart. Un pôle plein fait remonter un plateau agrandi.
+// un poste libre de son pôle, un agent supprimé repart. Un pôle plein fait remonter un plateau agrandi,
+// où chacun reprend son numéro de poste (disposer() ne déplace pas les postes existants).
 export class Recrutement {
   constructor(scene) {
     this.s = scene;
     this.modele = repartir([]);
     this.membres = new Set();
+    this.places = new Map();
     this.tour();
     setInterval(() => this.tour(), PERIODE);
   }
@@ -54,7 +56,10 @@ export class Recrutement {
       ),
     );
     this.s.monter(d, limites(d.ouest));
-    for (const id of m.fiches.keys()) this.embaucher(id, false);
+    // Ceux qui avaient déjà un poste le reprennent avant que les nouveaux choisissent.
+    const ids = [...m.fiches.keys()];
+    ids.sort((a, b) => this.places.has(b) - this.places.has(a));
+    for (const id of ids) this.embaucher(id, false);
   }
 
   // Pôle d'un agent, « board », ou « renforts » pour les agents sans pôle.
@@ -86,7 +91,10 @@ export class Recrutement {
     if (svc === "board")
       for (const s of id === "avocat" ? [d.avocat, d.invite] : [d.invite])
         if (!pris.has(s)) return s;
-    return (d.services[svc]?.postes ?? d.renforts).find((p) => !pris.has(p));
+    const postes = d.services[svc]?.postes ?? d.renforts;
+    const ancien = postes[this.places.get(id)];
+    if (ancien && !pris.has(ancien)) return ancien;
+    return postes.find((p) => !pris.has(p));
   }
 
   embaucher(id, arrivee) {
@@ -104,6 +112,10 @@ export class Recrutement {
       nom,
     );
     p.siege = siege;
+    const k = (this.s.d.services[svc]?.postes ?? this.s.d.renforts).indexOf(
+      siege,
+    );
+    if (k >= 0) this.places.set(id, k);
     if (arrivee) {
       p.aller(siege);
       p.arrivee = 12;
@@ -114,6 +126,7 @@ export class Recrutement {
 
   partir(id) {
     this.membres.delete(id);
+    this.places.delete(id);
     const p = this.s.persos.get(id);
     if (!p) return;
     Object.assign(p, { temporaire: true, voulu: false, depart: true });
