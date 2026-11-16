@@ -1,6 +1,7 @@
 // Vidéo « Feuille de match » en DA réseaux (1080×1920) : une vraie partie, notée à la main case par case.
 // Papier animé image par image (pose puis tremblé), jamais d'interpolation. Zone sûre x 60–940, y 160–1480.
-// node scripts/da/partie.mjs [--essai 0,3.2,9.5] → out/lot1-da/feuille-de-match.mp4 (ou images d'essai)
+// Fin : carte « blind test multijoueur » (retour de Théo). Son : vrais sons de la TV ZIK, jamais de musique.
+// node scripts/da/partie.mjs [--essai 0,3.2,9.5] → out/lot1-da/feuille-de-match-v2.mp4 (ou images d'essai)
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -20,6 +21,7 @@ const FF = "node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe";
 const OUT = "out/lot1-da";
 const REC = "public/rec/lot1-partie";
 const FPS = 30;
+const SONS = "../../../ZIK/static/sounds"; // dépôt principal, sons CC0 (CREDITS.txt)
 const idx = JSON.parse(readFileSync(`${REC}/index.json`, "utf8")).frames;
 const plan = (t) => {
   let a = 0,
@@ -47,6 +49,7 @@ const SEGS = [
   { src: 298.2, d: 1.0, m: 9, ev: [[0.3, "v9"]] },
   { src: 304.6, d: 2.5, m: 10, ev: [[1.1, "v10"], [1.3, "k10"]] },
   { d: 3.4, m: 10, ev: [[0, "e1"], [0.2, "e2"], [0.4, "e3"], [0.9, "e4"], [1.5, "e5"]] },
+  { d: 4.4, m: 11, ev: [[0, "f1"], [0.2, "f2"], [0.45, "f3"], [1.0, "f4"], [1.6, "f5"], [2.2, "f6"]] },
 ];
 const TROUVE = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1];
 
@@ -130,13 +133,65 @@ const ELS = [
       `<div class="mono" style="font-size:25px;color:#111;filter:url(#toner)">ton score en commentaire<br><span style="font-size:40px">zik-music.fr</span></div>`,
     ),
   ],
+  [
+    "f1",
+    330,
+    390,
+    bande({ x: 70, y: 300, rot: -2.5, seed: 11 }, "blind test", 172),
+  ],
+  [
+    "f2",
+    440,
+    560,
+    bande({ x: 84, y: 500, rot: 1.8, seed: 12, mag: 1 }, "multijoueur", 150),
+  ],
+  [
+    "f3",
+    300,
+    730,
+    bande({ x: 70, y: 712, rot: -1.2, seed: 13 }, "en ligne", 132),
+  ],
+  ["f4", 420, 980, posca(130, 922, "contre tes potes.", 108, -3)],
+  [
+    "f5",
+    330,
+    1160,
+    colle(
+      {
+        x: 84,
+        y: 1120,
+        rot: -1.6,
+        seed: 14,
+        a: 2.5,
+        style:
+          "padding:20px 26px 16px;display:flex;align-items:center;gap:18px",
+      },
+      `<i class="point" style="width:30px;height:30px"></i><div class="mono" style="font-size:40px;color:#111;filter:url(#toner)">gratuit · sans appli</div>`,
+    ),
+  ],
+  [
+    "f6",
+    470,
+    1330,
+    colle(
+      {
+        x: 110,
+        y: 1262,
+        rot: 1.8,
+        seed: 15,
+        a: 2.5,
+        style: "padding:26px 34px 20px",
+      },
+      `<div class="mono" style="font-size:26px;color:#111;opacity:.7;filter:url(#toner)">dans ton navigateur</div><div class="mono" style="font-size:72px;color:#111;letter-spacing:.06em;filter:url(#toner)">zik-music.fr</div>`,
+    ),
+  ],
 ];
-const TETES = Array.from({ length: 11 }, (_, m) =>
+const TETES = Array.from({ length: 12 }, (_, m) =>
   bandeau({
     y: 168,
-    rubrique: "Vraie partie · années 80",
-    code: String(Math.max(1, m)).padStart(2, "0"),
-    part: Math.max(0.012, m / 10),
+    rubrique: m > 10 ? "Blind test · en ligne" : "Vraie partie · années 80",
+    code: String(Math.min(10, Math.max(1, m))).padStart(2, "0"),
+    part: Math.min(1, Math.max(0.012, m / 10)),
   }).replace(">code<", ">manche<"),
 );
 
@@ -149,7 +204,17 @@ for (const s of SEGS) {
   if (s.src != null) vie.ecran[1] = at;
   for (const [o, id] of s.ev) vie[id] = [s.t0 + o, id[0] === "v" ? 1e9 : at];
 }
+const FIN = SEGS.at(-1).t0; // la carte multijoueur remplace la piste
+for (const id of ["piste", ...TROUVE.map((_, i) => `v${i + 1}`)])
+  vie[id][1] = FIN;
 const TOTAL = Math.round(at * FPS);
+// buzz de la TV à chaque manche trouvée, roulement de la finale (coup à 3,5 s) calé sur le score
+const SFX = [
+  ...TROUVE.flatMap((ok, i) =>
+    ok ? [["buzz", vie[`v${i + 1}`][0], 0.5]] : [],
+  ),
+  ["drumroll", SEGS.at(-2).t0 - 3.5, 1.6],
+];
 const POSE = 3; // images de « pose » : la pièce arrive de travers, puis se cale
 const graine = (id) =>
   [...id].reduce((n, c) => n * 31 + c.charCodeAt(0), 7) | 0;
@@ -242,6 +307,22 @@ if (essai > 0) {
     String(FPS),
     "-i",
     `${OUT}/_images/%05d.jpg`,
+    ...SFX.flatMap(([f]) => ["-i", `${SONS}/${f}.ogg`]),
+    "-filter_complex",
+    SFX.map(
+      ([, t, v], i) =>
+        `[${i + 1}:a]adelay=${Math.round(t * 1000)}:all=1,volume=${v}[a${i}]`,
+    ).join(";") +
+      `;${SFX.map((_, i) => `[a${i}]`).join("")}amix=inputs=${SFX.length}:normalize=0,apad[son]`,
+    "-map",
+    "0:v",
+    "-map",
+    "[son]",
+    "-shortest",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "160k",
     "-vf",
     "scale=in_range=pc:out_range=tv,format=yuv420p",
     "-c:v",
@@ -252,7 +333,7 @@ if (essai > 0) {
     "colorprim=bt709:transfer=bt709:colormatrix=bt709:range=tv",
     "-movflags",
     "+faststart",
-    `${OUT}/feuille-de-match.mp4`,
+    `${OUT}/feuille-de-match-v2.mp4`,
   ]);
   rmSync(`${OUT}/_images`, { recursive: true });
   rmSync(`${OUT}/_partie.html`);
