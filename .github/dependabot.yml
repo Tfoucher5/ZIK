@@ -1,8 +1,9 @@
 version: 2
 updates:
   # 1. Gestion des dépendances (ex: npm, yarn, pnpm)
-  - package-ecosystem: "npm" # Change par "pip" ou "composer" selon ta techno
+  - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly" # Une fois par semaine (le lundi matin) c'est parfait
       day: "monday"
@@ -10,7 +11,6 @@ updates:
     labels:
       - "dependencies"
       - "automated-pr"
-    # Optionnel : Ignorer les mises à jour mineures pour ne pas être spammé
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
+    groups:
+      correctifs:
+        update-types: ["patch"]

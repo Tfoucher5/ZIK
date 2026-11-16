@@ -17,6 +17,12 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Technique
 - **Prochaine étape** : #445 à #448 et #450 fusionnées, recette staging OK ; reste la recette > 12 téléphones dont un iPhone avant la release
 
+## Dépendances à jour
+
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : PR `chore/deps-develop` vers develop (svelte, vite, nodemailer, failles modérées corrigées, Dependabot vers develop) ; après fusion, recette du salon sur le staging ; stripe 23 avec Théo, kit 3 plus tard
+
 ## Refonte de l'accueil
 
 - **Statut** : en cours
