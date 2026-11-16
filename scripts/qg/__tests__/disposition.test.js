@@ -1,55 +1,122 @@
 import { describe, expect, it } from "vitest";
-import { disposer, repartir, repli } from "../public/disposition.js";
-
-// Étendue en x d'un pôle : ses bureaux, puis le bureau du chef et son fauteuil au bout.
-const etendue = ({ x, sens, cols }) => {
-  const bout = x + sens * (cols * 1.6 + 2);
-  return [Math.min(x, bout), Math.max(x, bout)];
-};
+import {
+  OUEST,
+  RENFORTS,
+  disposer,
+  emprise,
+  repartir,
+  repli,
+} from "../public/disposition.js";
 
 const ACTUEL = { produit: 7, tech: 5, operations: 3, marketing: 4, argent: 2 };
+const PLEIN = {
+  produit: 12,
+  tech: 12,
+  operations: 12,
+  marketing: 12,
+  argent: 12,
+};
+
+// Espaces communs et passages tracés ailleurs (espaces.js, nord.js, plan.js) : aucun bureau dessus.
+const COMMUNS = {
+  "allée nord et portes des bureaux": [-20, -4.5, 17, -3.45],
+  "noyau (toilettes, ascenseurs, escalier)": [-2, -3.2, 5, 2],
+  accueil: [-2, 2, 6, 6],
+  "La Discothèque": [-10, 2.4, -4, 5.6],
+  "porte du Refrain": [-3.6, 5, -2, 6],
+  "machine à café": [5.1, 1.1, 6.1, 2.5],
+  "porte du Tempo": [16.2, 4, 17, 5.4],
+  "passage vers La Grosse Caisse": [14.8, -4.5, 17, -2.4],
+  cuisine: [6, 5.8, 17, 10],
+  "cabine du sud-ouest": [-11.75, 4.7, -10.65, 5.7],
+  "cabines de l'aile": [-27.75, 2.45, -26.65, 5.15],
+  poufs: [-22.8, 3, -20.8, 5],
+};
+
+// Deux rectangles qui se touchent à peine (arrondis de calcul) ne se croisent pas.
+const croise = (a, b) =>
+  a[0] < b[2] - 0.01 &&
+  b[0] < a[2] - 0.01 &&
+  a[1] < b[3] - 0.01 &&
+  b[1] < a[3] - 0.01;
+
+const rectDeco = ([type, ...v]) => {
+  if (type === "plante")
+    return [v[0] - 0.35, v[1] - 0.35, v[0] + 0.35, v[1] + 0.35];
+  if (type === "cloison")
+    return [
+      Math.min(v[0], v[2]) - 0.15,
+      Math.min(v[1], v[3]) - 0.15,
+      Math.max(v[0], v[2]) + 0.15,
+      Math.max(v[1], v[3]) + 0.15,
+    ];
+  const [x, z, a, l] = v;
+  const [lx, lz] = Math.abs(Math.cos(a)) > 0.5 ? [l, 0.42] : [0.42, l];
+  return [x - lx / 2, z - lz / 2, x + lx / 2, z + lz / 2];
+};
+
+// Tout ce qui occupe le sol : bureaux, chefs, renforts, décor des pôles.
+const objets = ({ poles }) => [
+  ...Object.entries(poles).flatMap(([id, p]) => [
+    ...p.postes.map((b, k) => [`${id} poste ${k}`, emprise(b)]),
+    [`${id} chef`, emprise(p.chef)],
+    ...p.deco.map((d) => [`${id} ${d[0]}`, rectDeco(d)]),
+  ]),
+  ...RENFORTS.map((b, k) => [`renfort ${k}`, emprise(b)]),
+];
 
 describe("disposer", () => {
-  it("prévoit deux postes par membre, chaque pôle dans sa rangée", () => {
+  it("prévoit deux postes par membre, au moins deux", () => {
     const { poles } = disposer(ACTUEL);
-    expect(poles.produit.cols * 2).toBe(14);
-    expect(poles.marketing).toMatchObject({ cols: 4, sens: 1, z: 3 });
-    expect(poles.operations).toMatchObject({ cols: 3, sens: 1, z: -1.5 });
-    expect(poles.argent).toMatchObject({ cols: 2, sens: -1, z: 3 });
+    expect(poles.produit.postes).toHaveLength(14);
+    expect(poles.argent.postes).toHaveLength(4);
+    expect(disposer({}).poles.argent.postes).toHaveLength(2);
   });
 
-  it("ne superpose aucun pôle d'une même rangée", () => {
-    const { poles } = disposer({ ...ACTUEL, tech: 12 });
-    const liste = Object.values(poles);
-    for (const a of liste)
-      for (const b of liste) {
-        if (a === b || a.z !== b.z) continue;
-        const [a0, a1] = etendue(a);
-        const [b0, b1] = etendue(b);
-        expect(a1 <= b0 || b1 <= a0).toBe(true);
+  it("loge l'équipe actuelle sans extension", () => {
+    expect(disposer(ACTUEL).ouest).toBe(OUEST);
+  });
+
+  it("ne superpose rien, ni sur les espaces communs, et reste dans le bâtiment", () => {
+    for (const eff of [{}, ACTUEL, PLEIN, { ...ACTUEL, tech: 9 }]) {
+      const d = disposer(eff);
+      const liste = objets(d);
+      for (let i = 0; i < liste.length; i++) {
+        const [nom, r] = liste[i];
+        expect(r[0] > d.ouest && r[2] <= 17, nom).toBe(true);
+        expect(r[1] > -4.5 && r[3] < 5.8, nom).toBe(true);
+        for (const [lieu, c] of Object.entries(COMMUNS))
+          expect(croise(r, c), `${nom} sur ${lieu}`).toBe(false);
+        for (let j = i + 1; j < liste.length; j++)
+          expect(croise(r, liste[j][1]), `${nom} / ${liste[j][0]}`).toBe(false);
+      }
+    }
+  });
+
+  it("donne le même plan pour les mêmes effectifs", () => {
+    expect(JSON.stringify(disposer(ACTUEL))).toBe(
+      JSON.stringify(disposer({ ...ACTUEL })),
+    );
+  });
+
+  it("ne déplace aucun poste existant quand un agent arrive", () => {
+    for (const eff of [ACTUEL, { ...ACTUEL, tech: 6, marketing: 5 }, PLEIN])
+      for (const id of Object.keys(eff)) {
+        const avant = disposer(eff).poles;
+        const apres = disposer({ ...eff, [id]: eff[id] + 1 }).poles;
+        for (const [p, v] of Object.entries(avant)) {
+          expect(apres[p].postes.slice(0, v.postes.length)).toEqual(v.postes);
+          expect(apres[p].chef).toEqual(v.chef);
+        }
+        expect(apres[id].postes).toHaveLength(avant[id].postes.length + 2);
       }
   });
 
-  it("agrandit l'aile ouest pour que la rangée tienne dans le bâtiment", () => {
-    const petit = disposer({ produit: 2, tech: 2 });
-    expect(petit.ouest).toBe(-20);
-    const grand = disposer(ACTUEL);
-    const plusLoin = Math.min(
-      ...Object.values(grand.poles).map((p) => etendue(p)[0]),
-    );
-    expect(grand.ouest).toBeLessThan(-20);
-    expect(grand.ouest).toBeLessThanOrEqual(plusLoin - 0.5);
-  });
-
-  it("envoie un pôle trop grand pour sa rangée au bout de la rangée qui s'agrandit", () => {
-    const avant = disposer(ACTUEL);
-    const apres = disposer({ ...ACTUEL, marketing: 9 });
-    expect(apres.poles.marketing).toMatchObject({ z: -1.5, sens: -1 });
-    expect(apres.ouest).toBeLessThan(avant.ouest);
-  });
-
-  it("garde au moins une colonne à un pôle vide", () => {
-    expect(disposer({}).poles.argent.cols).toBe(1);
+  it("ouvre l'allée du pôle dans l'extension ouest quand son espace est plein", () => {
+    const d = disposer({ ...ACTUEL, produit: 9 });
+    expect(d.ouest).toBeLessThan(OUEST);
+    expect(d.poles.produit.postes.filter((b) => b.x < OUEST)).toHaveLength(4);
+    expect(d.poles.produit.ilots.at(-1)[2]).toBeLessThan(OUEST);
   });
 });
 
