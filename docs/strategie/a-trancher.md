@@ -25,20 +25,11 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Recommandation** : créer la micro-entreprise, faire confirmer la franchise de TVA par l'URSSAF ou un comptable, puis envoyer le SIRET à Claude qui corrige CGV, mentions légales, /pro et factures Stripe. Seuils de franchise services 2026 : 37 500 € / 41 250 € (à vérifier sur service-public.gouv.fr)
 - **Lien** : https://formalites.entreprise.gouv.fr/
 
-## Post 1 : carrousel « ces sons ont 30 ans » (TikTok)
+## Maquette fin de partie v2 (tes retours appliqués)
 
-- **Chantier** : Marketing (Clara, Nina)
+- **Chantier** : Fin de partie + Rejouer (Nina, DA)
 - **Depuis** : 16/11
-- **Question** : Je le programme sur le compte TikTok ZIK avec Claude in Chrome, **mardi 17/11 à 18 h**, avec cette légende : « Ces sons ont 30 ans. Lequel tu connais encore par cœur ? Le blind test multijoueur, c'est sur zik-music.fr » et les hashtags #blindtest #nostalgie #annees90 #musique90 #quizmusical. Musique tendance choisie dans TikTok au moment de programmer.
-- **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · non
-- **Recommandation** : oui, tel quel
-- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/planche-carrousel.png
-
-## Post 2 : vidéo « Feuille de match » v2 (TikTok)
-
-- **Chantier** : Marketing (Sami, Nina)
-- **Depuis** : 16/11
-- **Question** : La v2 finit sur une carte « BLIND TEST · MULTIJOUEUR · EN LIGNE, contre tes potes, gratuit, sans appli, zik-music.fr » (31 s) avec les vrais bruitages du jeu (buzzer à chaque bonne réponse, roulement de tambour sur le 7/10), sans musique dans le fichier. Je la programme **jeudi 19/11 à 18 h** avec la légende « 7/10 sur les années 80. Tu fais mieux ? Viens me battre en ligne, c'est gratuit : zik-music.fr » et #blindtest #blindtestmusical #annees80 #quizmusical #jeuentrepotes ?
-- **Options** : oui, tel quel · oui, autre légende ou date (écris-la) · retoucher la vidéo
-- **Recommandation** : la regarder avec le son, puis oui
-- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v2.mp4
+- **Question** : Idée ajoutée : « le podium est un égaliseur » (les barres de la musique deviennent le classement, le vainqueur prend l'écran à sa couleur). TV de fin allégée (3 zones au lieu de 5), podium TV mis en scène, bouton régie « Afficher le QR en grand » (onglet 4), story refaite en 9:16 (3 variantes). Régie, Rejouer et entracte inchangés. 5 choix dans l'onglet « À valider » : 1) la playlist jouée quitte la TV ; 2) prix en étiquettes sur les noms ; 3) aplat du vainqueur à chaque partie ou seulement au podium de soirée ; 4) story : nom de la soirée ou du lieu en tête, magenta hors podium ; 5) QR en grand sans fermeture automatique.
+- **Options** : valider · valider avec mes réponses aux 5 choix · retoucher
+- **Recommandation** : 1 oui, 2 oui, 3 seulement au podium de soirée (sinon ça lasse), 4 nom de la soirée, 5 oui
+- **Lien** : https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5
