@@ -1,6 +1,7 @@
 <script>
   import { salonPlayUrl } from '$lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
+  import CodeTiles from './CodeTiles.svelte';
 
   /** Entracte : heure de reprise indicative (facultative) et code pour les retardataires. Le classement reste dans la colonne de droite. */
   let { intermission, code } = $props();
@@ -23,9 +24,7 @@
     <div>
       <h3>Gardez vos téléphones.</h3>
       <p>Pas encore dans la partie ? Scannez, ou tapez ce code sur <b>zik-music.fr</b>.</p>
-      <div class="code" aria-label="Code {code}">
-        {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
-      </div>
+      <div class="cm"><CodeTiles {code} size="2.3em" /></div>
     </div>
   </div>
 </section>
@@ -127,21 +126,7 @@
     color: var(--text);
     font-weight: 600;
   }
-  .code {
-    display: flex;
-    gap: 0.16em;
-    margin-top: 0.27em;
-    font-family: var(--s-mono);
-    font-weight: 700;
-    font-size: 2.3em;
-  }
-  .code b {
-    display: grid;
-    place-items: center;
-    width: 1.22em;
-    height: 1.5em;
-    border-radius: 0.14em;
-    background: rgb(255 255 255 / 0.09);
-    border-bottom: 0.06em solid rgb(255 255 255 / 0.45);
+  .cm {
+    margin-top: 0.62em;
   }
 </style>

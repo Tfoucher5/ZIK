@@ -1,7 +1,7 @@
 <script>
   /**
    * Barre du haut de l'écran TV : QR code pour rejoindre, manche, pause, volume, régie.
-   * En lobby et pendant les manches, les réglages de l'hôte se cachent après 5 s sans geste
+   * En lobby, pendant les manches et en fin de partie, les réglages de l'hôte se cachent après 5 s sans geste
    * (`calm`, remonté à la page pour cacher le curseur) ; QR, manche, aide et régie restent.
    */
   import { onDestroy } from 'svelte';
@@ -68,7 +68,7 @@
 
 <header class="sh-top" class:calm>
   <a class="sh-brand sh-fade" href="/" title="Retour au site">ZIK <span>Soirée</span></a>
-  {#if h.phase !== 'lobby' && h.phase !== 'starting'}
+  {#if !['lobby', 'starting', 'gameover'].includes(h.phase)}
     <div class="sh-join">
       <QrCode text={salonPlayUrl(h.code)} size={44} />
       <div>

@@ -2,11 +2,11 @@
   /**
    * Décompte de lancement sur la TV : à 5 et 4, on rappelle que le son sort de
    * la TV ; à 3, 2, 1, le gros chiffre. Rien quand le décompte est coupé
-   * (le serveur n'en envoie pas).
+   * (le serveur n'en envoie pas). `rejouer` : relance depuis la fin de partie.
    */
   import { eqBars } from './lobbyView.js';
 
-  let { sec = 0 } = $props();
+  let { sec = 0, rejouer = false } = $props();
 
   const bars = eqBars(20, 1.3);
 </script>
@@ -14,8 +14,9 @@
 {#if sec > 0}
   <div class="lc sh-tv" role="timer" aria-live="assertive">
     {#if sec > 3}
-      <h2>Le son sort<br>de la TV.</h2>
+      {#if rejouer}<h2>On remet ça.</h2>{:else}<h2>Le son sort<br>de la TV.</h2>{/if}
       <div class="sh-eqz vif">{#each bars as style, i (i)}<i {style}></i>{/each}</div>
+      {#if rejouer}<p>Mêmes joueurs · scores à zéro</p>{/if}
       <p>La partie commence dans {sec}</p>
     {:else}
       <p>La partie commence</p>
