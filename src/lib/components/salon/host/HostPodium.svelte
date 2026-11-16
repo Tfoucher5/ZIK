@@ -86,9 +86,10 @@
     grid-template-columns: 372fr 520fr;
     padding-right: 20%;
   }
+  /* Seul classé : la colonne d'or au moins aussi large qu'une 2e */
   .n1 {
-    grid-template-columns: 520fr;
-    padding: 0 30%;
+    grid-template-columns: min(100%, 30em);
+    justify-content: center;
   }
   .col {
     position: relative;
@@ -197,8 +198,7 @@
     padding: 0 15%;
   }
   .soiree .n1 {
-    grid-template-columns: 1fr;
-    padding: 0 30%;
+    grid-template-columns: min(100%, 30em);
   }
   .drum .pe :global(i) {
     animation-duration: 0.17s;

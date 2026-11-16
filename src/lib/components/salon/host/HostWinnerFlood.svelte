@@ -37,7 +37,7 @@
     <div>
       <h1 use:fit={winner.name}><span>{winner.name}</span></h1>
       <h2>gagne la soirée</h2>
-      <p>{winner.score.toLocaleString('fr-FR')} pts{winner.avg ? ' de moyenne' : ''} · {games} partie{games > 1 ? 's' : ''}</p>
+      <p>{winner.score.toLocaleString('fr-FR')} pts{winner.avg ? ' de moyenne' : ''} · {games} partie{games > 1 ? 's' : ''}{winner.tag ? ` · ${winner.tag.toLowerCase()}` : ''}</p>
     </div>
     <div class="sh-eqz vif">{#each bars as style, i (i)}<i {style}></i>{/each}</div>
   </div>

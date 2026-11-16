@@ -5,21 +5,16 @@
    * places suivantes. Séquence et instants dans finaleSteps.js.
    */
   import { untrack } from 'svelte';
-  import { teamColor } from '$lib/data/salonOptions.js';
   import { launchConfetti } from '$lib/components/game/confetti.js';
   import { playSound, SOUNDS } from './sounds.js';
   import HostPodium from './HostPodium.svelte';
   import HostWinnerFlood from './HostWinnerFlood.svelte';
   import { FINALE_START, finaleSteps } from './finaleSteps.js';
+  import { finaleView } from './gameOverView.js';
 
   let { finale, volume = 100, sound = true } = $props();
 
-  let ranked = $derived(
-    finale.teams
-      ? finale.teams.map((t) => ({ key: 't' + t.id, name: t.name, score: t.score, color: teamColor(t.id), avg: true }))
-      : finale.players.map((p) => ({ key: p.username, name: p.username, score: p.score, left: p.left, color: p.team != null ? teamColor(p.team) : null })),
-  );
-  let podium = $derived(ranked.slice(0, 3).map((e, i) => ({ ...e, rank: i + 1, color: finale.teams ? e.color : null })));
+  let f = $derived(finaleView(finale));
   let v = $state({ ...FINALE_START });
   let section;
 
@@ -28,19 +23,24 @@
     const { vol, steps } = untrack(() => ({
       vol: volume / 100,
       steps: finaleSteps({
-        count: ranked.length,
+        count: f.podium.length,
         sound,
         reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
       }),
     }));
+    let drumroll = null;
     const timers = steps.map((s) =>
       setTimeout(() => {
         v = { ...v, ...s.set };
-        if (s.drumroll) playSound(SOUNDS.drumroll, vol);
+        if (s.drumroll) drumroll = playSound(SOUNDS.drumroll, vol);
         if (s.confetti) launchConfetti(240, section);
       }, s.at),
     );
-    return () => timers.forEach(clearTimeout);
+    // Podium retiré pendant le tambour : le son s'arrête avec lui
+    return () => {
+      timers.forEach(clearTimeout);
+      drumroll?.pause();
+    };
   });
 </script>
 
@@ -52,27 +52,27 @@
 
   <div class="sc">
     <HostPodium
-      entries={podium}
+      entries={f.podium}
       step={v.step}
-      tags={false}
       soiree
       drum={v.drum}
       title={v.drum ? 'Et le grand gagnant est…' : 'Le podium de la soirée'}
     />
   </div>
 
-  {#if ranked.length > 3}
+  {#if f.rest.length}
+    <!-- Une ligne seulement : les places qui ne tiennent pas passent à la ligne, masquée -->
     <ol class="reste" class:on={v.rest}>
-      {#each ranked.slice(3, 8) as e, i (e.key)}
+      {#each f.rest.slice(0, 5) as e, i (e.key)}
         <li style:--i={i} style:--tc={e.color ?? 'rgb(255 255 255 / 0.16)'}>
-          <span>{i + 4}</span>{e.name}<em>{e.score.toLocaleString('fr-FR')} pts{e.left ? ' · parti' : ''}</em>
+          <span>{e.rank}</span>{e.name}<em>{e.score.toLocaleString('fr-FR')} pts{e.tag ? ` · ${e.tag.toLowerCase()}` : ''}</em>
         </li>
       {/each}
     </ol>
   {/if}
   <p class="pied">Merci d'avoir joué · <b>ZIK</b> · zik-music.fr</p>
 
-  {#if podium[0]}<HostWinnerFlood winner={podium[0]} games={finale.games} mode={v.flood} />{/if}
+  {#if f.podium[0]}<HostWinnerFlood winner={f.podium[0]} games={finale.games} mode={v.flood} />{/if}
 </section>
 
 <style>
@@ -139,9 +139,11 @@
   .reste {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 0.62em;
+    gap: 3em 0.62em;
     height: 3.33em;
+    overflow: hidden;
     margin: 1.25em 0 0;
     padding: 0;
     list-style: none;

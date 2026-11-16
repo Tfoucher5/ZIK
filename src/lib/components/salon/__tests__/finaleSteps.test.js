@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { FINALE_END, FINALE_START, finaleSteps } from "../host/finaleSteps.js";
+import {
+  DRUMROLL_MS,
+  FINALE_END,
+  FINALE_START,
+  finaleSteps,
+} from "../host/finaleSteps.js";
+import { finaleView } from "../host/gameOverView.js";
 import { FINALE_WINNER_MS } from "../../../data/salonOptions.js";
 
 // État affiché à un instant donné de la séquence
@@ -43,16 +49,71 @@ describe("podium de la soirée sur la TV", () => {
     expect(un.find((s) => s.set.flood === "in").at).toBe(FINALE_WINNER_MS);
   });
 
-  it("sans son : même séquence, pas de tambour joué", () => {
+  it("sans son : même séquence à l'écran, pas de tambour joué", () => {
     const muet = finaleSteps({ sound: false });
+    const ecran = (s) => s.filter((x) => !x.drumroll);
     expect(muet.some((s) => s.drumroll)).toBe(false);
-    expect(finaleSteps().filter((s) => s.drumroll)).toHaveLength(1);
-    expect(muet.map((s) => s.at)).toEqual(finaleSteps().map((s) => s.at));
+    expect(muet).toEqual(ecran(finaleSteps()));
+  });
+
+  it("le roulement de tambour (4 s) se termine sur le vainqueur", () => {
+    const tambour = finaleSteps().filter((s) => s.drumroll);
+    expect(tambour).toHaveLength(1);
+    expect(tambour[0].at + DRUMROLL_MS).toBe(FINALE_WINNER_MS);
+    expect(DRUMROLL_MS).toBeGreaterThanOrEqual(3980);
   });
 
   it("mouvements réduits : tout d'un coup, sans aplat ni confettis", () => {
     const s = finaleSteps({ count: 8, reduced: true });
     expect(s).toEqual([{ at: 0, set: FINALE_END }]);
     expect(s.some((x) => x.confetti || x.drumroll)).toBe(false);
+  });
+
+  it("classement vide : ni tambour ni confettis", () => {
+    const s = finaleSteps({ count: 0 });
+    expect(s.some((x) => x.confetti || x.drumroll || x.set.flood)).toBe(false);
+  });
+});
+
+describe("classement du podium de la soirée", () => {
+  it("chacun pour soi : médailles sur le podium, couleur d'équipe pour la suite", () => {
+    const players = ["Léa", "Sam", "Tom", "Jade"].map((u, i) => ({
+      username: u,
+      score: 4000 - i * 100,
+      team: i === 3 ? 2 : null,
+    }));
+    const f = finaleView({ games: 3, players, teams: null });
+    expect(f.podium.map((e) => [e.rank, e.name, e.color])).toEqual([
+      [1, "Léa", null],
+      [2, "Sam", null],
+      [3, "Tom", null],
+    ]);
+    expect(f.rest).toEqual([
+      expect.objectContaining({ rank: 4, name: "Jade", color: "var(--q2)" }),
+    ]);
+  });
+
+  it("en équipes : couleur d'équipe et moyenne", () => {
+    const teams = [
+      { id: 1, name: "Bleue", score: 1400, members: [] },
+      { id: 0, name: "Rouge", score: 1300, members: [] },
+    ];
+    const f = finaleView({ games: 2, players: [], teams });
+    expect(f.podium[0]).toMatchObject({
+      rank: 1,
+      name: "Bleue",
+      color: "var(--q1)",
+      avg: true,
+    });
+    expect(f.rest).toEqual([]);
+  });
+
+  it("un joueur parti reste classé et marqué, podium compris", () => {
+    const players = [{ username: "Zoé", score: 900, left: true }];
+    expect(finaleView({ games: 2, players }).podium[0].tag).toBe("Parti");
+  });
+
+  it("classement absent : rien à montrer", () => {
+    expect(finaleView(null)).toEqual({ podium: [], rest: [] });
   });
 });
