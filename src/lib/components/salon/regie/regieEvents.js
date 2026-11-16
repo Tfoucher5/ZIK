@@ -15,9 +15,11 @@ export function listenRegie(r, socket) {
     if (resumeIn == null) setTimeout(() => (r.restored = null), 4000);
   });
   socket.on("salon_control_joined", (d) => {
+    const dormait = r.ready && !r.pro;
     r.restarting = false;
     r.ready = true;
     r.pro = d.pro;
+    r.offre.onJoined(d.pro, dormait);
     r.error = "";
     r.settings = d.settings;
     r.reclaims = d.reclaims ?? [];
@@ -169,13 +171,15 @@ export function listenRegie(r, socket) {
   socket.on("salon_volume", ({ volume }) => (r.volume = volume));
   socket.on("salon_tv_sound", ({ ok }) => (r.tvSound = ok));
   socket.on("salon_reclaims", ({ usernames }) => (r.reclaims = usernames));
+  // Soirée complète : l'offre est dans la page (RegiePro), pas par-dessus
   socket.on("salon_pro_required", ({ feature }) => {
-    r.upsell = feature;
+    if (feature !== "players") r.upsell = feature;
   });
+  socket.on("salon_queue", (d) => r.offre.onQueue(d));
   socket.on("salon_pro", ({ pro }) => {
     r.pro = pro;
     r.upsell = null;
-    r.flash("ZIK Pro activé pour cette soirée.");
+    r.offre.onPro(pro);
   });
   socket.on("salon_closed", () => {
     forgetSalon(r.code);

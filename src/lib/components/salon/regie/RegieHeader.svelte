@@ -21,9 +21,11 @@
 <svelte:window onclick={() => (menuOuvert = false)} />
 
 <header class="rh">
-  <div class="rh-ligne">
+  <div class="rh-ligne" class:pro>
     <span class="rh-logo">ZIK<i></i><em>Régie</em></span>
-    {#if !pro}
+    {#if pro}
+      <span class="pro-tag rh-pro">ZIK Pro</span>
+    {:else}
       <button class="rh-free" onclick={() => onUpsell('players')}>
         Gratuit · {joueurs} / {maxGratuit} <b>Passer à Pro</b>
       </button>
@@ -109,8 +111,11 @@
   .rh-tv-absent { background: rgb(248 113 113 / 0.12); color: var(--danger); border-top: 1px solid rgb(248 113 113 / 0.35); }
   .rh-tv-double { background: rgb(255 179 71 / 0.12); color: var(--warn); border-top: 1px solid rgb(255 179 71 / 0.35); }
 
+  .rh-pro { margin: 0 auto 0 8px; font-size: 12px; }
+  .pro .rh-logo { margin-right: 0; }
+
   @media (max-width: 640px) {
-    .rh-free { display: none; }
+    .rh-free, .pro .rh-logo em { display: none; }
   }
   @media (min-width: 900px) {
     .rh-ligne { min-height: 64px; padding: 0 16px 0 24px; }

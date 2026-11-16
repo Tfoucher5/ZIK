@@ -62,6 +62,7 @@ describe("volume vu par la régie", () => {
       settings: {},
       mergeRoster: () => {},
       chat: { update: () => {} },
+      offre: { onJoined: () => {} },
     };
     listenRegie(r, s);
     s.handlers.salon_control_joined({

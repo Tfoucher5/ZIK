@@ -1,7 +1,8 @@
 <script>
   import { PLANS, PRO_FEATURES, PRO_COMING } from '$lib/data/proPlans.js';
 
-  let { feature = null, onClose } = $props();
+  // `code` : ouvert depuis une régie, /pro reconnaît la soirée. Rien n'y est promis qui n'existe pas encore.
+  let { feature = null, code = '', onClose } = $props();
 </script>
 
 <svelte:window onkeydown={(e) => { if (e.key === 'Escape') onClose(); }} />
@@ -26,11 +27,13 @@
         </li>
       {/each}
     </ul>
-    <div class="pu-coming">
-      <p class="pu-k">Bientôt dans ZIK Pro</p>
-      <ul>{#each PRO_COMING as c (c)}<li>{c}</li>{/each}</ul>
-    </div>
-    <a class="pu-cta" href="/pro#tarifs" target="_blank" rel="noopener">Découvrir ZIK Pro</a>
+    {#if !code}
+      <div class="pu-coming">
+        <p class="pu-k">Bientôt dans ZIK Pro</p>
+        <ul>{#each PRO_COMING as c (c)}<li>{c}</li>{/each}</ul>
+      </div>
+    {/if}
+    <a class="pu-cta" href={code ? `/pro?salon=${encodeURIComponent(code)}#tarifs` : '/pro#tarifs'} target="_blank" rel="noopener">Découvrir ZIK Pro</a>
   </div>
 </div>
 

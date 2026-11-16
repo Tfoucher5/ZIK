@@ -11,6 +11,7 @@
   import RegieEndBar from '$lib/components/salon/regie/RegieEndBar.svelte';
   import TabDirect from '$lib/components/salon/regie/TabDirect.svelte';
   import RegiePrep from '$lib/components/salon/regie/RegiePrep.svelte';
+  import RegiePro from '$lib/components/salon/regie/RegiePro.svelte';
   import TabPlayers from '$lib/components/salon/regie/TabPlayers.svelte';
   import NightBoard from '$lib/components/salon/regie/NightBoard.svelte';
   import RegieEvening from '$lib/components/salon/regie/RegieEvening.svelte';
@@ -26,6 +27,7 @@
   const r = new SalonRegie(createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey));
 
   const prep = $derived(r.phase === 'lobby' && r.onglet === 'direct');
+  const attente = $derived(r.pro ? 0 : r.offre.count);
   const playlistNames = $derived(r.allPlaylists.filter((pl) => r.settings.playlistIds?.includes(pl.id)).map((pl) => pl.name));
 
   onMount(() => r.mount());
@@ -84,6 +86,7 @@
 
     <div class="rg-corps">
       <div class="rg-zone">
+        {#if !prep}<RegiePro o={r.offre} pro={r.pro} replie />{/if}
         {#if r.onglet === 'direct'}
           <TabDirect
             phase={r.phase} etat={r.etat} track={r.track} answerMode={r.settings.answerMode}
@@ -93,7 +96,9 @@
           >
             {#snippet haut()}
               {#if prep}
-                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} />
+                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} {attente}>
+                  <RegiePro o={r.offre} pro={r.pro} players={r.players} />
+                </RegiePrep>
               {:else if r.phase === 'gameover'}
                 <RegieEnd
                   players={r.players} teams={r.teams} rounds={r.history.length} night={r.night}
@@ -141,7 +146,7 @@
     {:else}
       <RegieActions
         phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} countStart={r.settings.countStart !== false}
-        buzzer={r.buzzer} note={r.etat.note}
+        buzzer={r.buzzer} note={r.etat.note} {attente}
         onAction={(ev) => r.send(ev)}
         onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
         onGate={r.gate}
@@ -170,7 +175,7 @@
     })}
   />
 
-  {#if r.upsell}<ProUpsell feature={r.upsell} onClose={() => (r.upsell = null)} />{/if}
+  {#if r.upsell}<ProUpsell feature={r.upsell} code={r.code} onClose={() => (r.upsell = null)} />{/if}
 
   {#if r.pickerOpen}
     <PlaylistModal
