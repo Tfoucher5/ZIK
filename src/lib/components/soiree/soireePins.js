@@ -87,16 +87,22 @@ export async function mountPins(reg) {
 /**
  * Remet la page à sa place une fois les espaces d'épinglage créés : la position
  * d'un retour arrière (y), sinon l'ancre de l'adresse. Sans eux, la page plus
- * courte a ramené le scroll en haut.
+ * courte a ramené le scroll en haut. Avec `st` (ScrollTrigger), la cible est
+ * reposée à chaque recalcul pendant 5 s. Renvoie la fonction qui arrête tout.
  */
 export function replacer(y, hash, st) {
-  const id = hash ? decodeURIComponent(hash.slice(1)) : "";
+  let id = "";
+  try {
+    id = hash ? decodeURIComponent(hash.slice(1)) : "";
+  } catch {
+    /* ancre mal formée : rien à viser */
+  }
   const poser = () =>
     y != null
       ? scrollTo({ top: y, behavior: "instant" })
       : document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
   poser();
-  if (!st || (y == null && !id)) return;
+  if (!st || (y == null && !id)) return () => {};
   // Images et vidéos chargées après coup relancent l'épinglage et décalent la
   // page : on repose la cible tant que le visiteur n'a pas bougé lui-même
   const gestes = ["wheel", "touchstart", "keydown", "pointerdown"];
@@ -110,4 +116,5 @@ export function replacer(y, hash, st) {
     addEventListener(g, fin, { once: true, passive: true }),
   );
   const t = setTimeout(fin, 5000);
+  return fin;
 }

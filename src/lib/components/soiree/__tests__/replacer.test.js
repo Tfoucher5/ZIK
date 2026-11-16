@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { replacer } from "../soireePins.js";
 
 // ScrollTrigger simulé : garde ses écouteurs « refresh »
@@ -23,6 +23,8 @@ function monde() {
   vi.stubGlobal("removeEventListener", (g) => delete gestes[g]);
   return { cible, gestes };
 }
+
+beforeEach(() => vi.useFakeTimers());
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -76,5 +78,21 @@ describe("replacer", () => {
     const st = faux();
     replacer(null, "", st);
     expect(st.ecoute.size).toBe(0);
+  });
+
+  it("démontage : la fonction rendue retire tous les écouteurs", () => {
+    const { cible, gestes } = monde();
+    const st = faux();
+    const lacher = replacer(null, "#offres", st);
+    lacher();
+    st.refresh();
+    expect(cible.scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(st.ecoute.size).toBe(0);
+    expect(Object.keys(gestes)).toEqual([]);
+  });
+
+  it("ancre mal formée : ne lève pas", () => {
+    monde();
+    expect(() => replacer(null, "#%E0%", faux())).not.toThrow();
   });
 });
