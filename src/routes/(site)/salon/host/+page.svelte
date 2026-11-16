@@ -1,5 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import { version } from '$app/environment';
   import HostCenter from '$lib/components/salon/host/HostCenter.svelte';
   import HostTopBar from '$lib/components/salon/host/HostTopBar.svelte';
   import PlayerSidebar from '$lib/components/salon/host/PlayerSidebar.svelte';
@@ -8,6 +9,10 @@
   import SalonHelp from '$lib/components/salon/support/SalonHelp.svelte';
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
+  import HostLobby from '$lib/components/salon/host/HostLobby.svelte';
+  import HostPrep from '$lib/components/salon/host/HostPrep.svelte';
+  import LobbyCountdown from '$lib/components/salon/host/LobbyCountdown.svelte';
+  import { prepShown } from '$lib/components/salon/host/lobbyView.js';
   import { SalonHost } from '$lib/components/salon/host/salonHost.svelte.js';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
@@ -22,13 +27,14 @@
 <svelte:head>
   <title>ZIK Soirée - Hôte {h.code}</title>
   <meta name="robots" content="noindex, nofollow">
+  {#each ["tv-prep", "tv-lobby"] as f (f)}<link rel="stylesheet" href="/css/salon/{f}.css?v={version}">{/each}
 </svelte:head>
 
 {#if !h.joined && h.error}
   <main class="sh-locked">
     <p class="sx-kicker"><b>●</b> ZIK Salon</p>
     <h1>Écran réservé<br>à l'hôte.</h1>
-    <p>{h.error} Pour rejoindre la partie, va sur <b>zik-music.fr/salon/play</b> et entre le code affiché sur la TV.</p>
+    <p>{h.error} Pour rejoindre la partie, va sur <b>zik-music.fr</b> et entre le code affiché sur la TV.</p>
     <a class="sx-btn sx-btn-primary" href="/salon/play?code={h.code}">Rejoindre comme joueur</a>
   </main>
 {:else}
@@ -46,7 +52,7 @@
     <HostCenter
       bind:this={h.hostCenter}
       phase={h.phase} code={h.code} timerVal={h.timerVal} timerMax={h.timerMax} timerStarted={h.timerStarted}
-      players={h.players} teams={h.teams} roundEnd={h.roundEnd} gameOver={h.gameOver}
+      players={h.players} roundEnd={h.roundEnd} gameOver={h.gameOver}
       paused={h.paused} pro={h.pro}
       round={h.round} total={h.total}
       choices={h.choices}
@@ -58,16 +64,17 @@
       onNewSalon={h.closeSalon}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
-      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} connLost={h.connLost} mediaCheck={h.mediaCheck} mediaSolo={!h.controls}
+      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} connLost={h.connLost}
       onJudge={(correct) => h.socket?.emit('salon_buzz_judge', { correct })}
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />
+    {#if h.phase === 'lobby' || h.phase === 'starting'}<HostLobby {h} />{/if}
   </div>
 
-  <BigCountdown sec={h.startSec} label="La partie commence" />
+  <LobbyCountdown sec={h.startSec} />
   <BigCountdown sec={h.nextShown && h.nextSec <= 3 && !h.paused ? h.nextSec : 0} />
 
-  {#if h.phase === 'lobby'}
+  {#if h.phase === 'lobby' && !h.controls}
     <footer class="sh-foot">
       <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={h.startGame} disabled={h.players.length === 0}>
         {h.players.length === 0 ? 'En attente de joueurs' : 'Lancer la partie'}
@@ -77,6 +84,8 @@
 </div>
 
 {/if}
+
+{#if prepShown(h)}<HostPrep {h} />{/if}
 
 {#if h.finale}<HostFinale finale={h.finale} volume={h.volume} sound={h.settings.finaleSound !== false} />{/if}
 

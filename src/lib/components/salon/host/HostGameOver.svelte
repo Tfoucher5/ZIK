@@ -120,7 +120,7 @@
         <div class="sh-code" aria-label="Code {code}">
           {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
         </div>
-        <p class="sh-lobby-url">ou <b>zik-music.fr/salon/play</b></p>
+        <p class="sh-lobby-url">ou allez sur <b>zik-music.fr</b> et tapez le code</p>
       </div>
     </aside>
   </div>

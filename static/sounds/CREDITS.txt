@@ -1,4 +1,4 @@
-Sons de l'écran TV du mode salon, tous libres de droits (Wikimedia Commons).
+Sons de l'écran TV du mode salon, tous libres de droits.
 
 buzz.ogg
   « Simple Happy Beep.ogg » par waveplaySFX, licence CC0
@@ -7,3 +7,7 @@ buzz.ogg
 drumroll.ogg
   « Drum Roll Intro.ogg » par Iwan Sounds and DIY, licence CC0
   https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg
+
+test-son.ogg
+  Boucle de 8 s à 118 bpm créée pour ZIK par synthèse (calculée sample par
+  sample, aucun échantillon extérieur), versée dans le domaine public, CC0
