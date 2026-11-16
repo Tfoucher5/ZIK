@@ -45,7 +45,7 @@ export function proWelcome({ plan, periodEnd }) {
       ])}
       ${paragraph(`${strong("Ce qui est débloqué")}<br>${perks}`)}
       ${button("https://www.zik-music.fr/salon", "Ouvrir un salon")}
-      ${paragraph(isNight ? "Le passe Soirée ne se renouvelle pas : aucun prélèvement ne suivra." : "Factures, carte bancaire et résiliation : tout se gère en un clic depuis la page ZIK Pro, bouton « Gérer mon abonnement ».")}
+      ${paragraph(isNight ? "La Soirée 24 h ne se renouvelle pas : aucun prélèvement ne suivra." : "Factures, carte bancaire et résiliation : tout se gère en un clic depuis la page ZIK Pro, bouton « Gérer mon abonnement ».")}
       ${small("Une question, un souci pendant la soirée ? Répondez simplement à ce mail, je lis tout. Théo, créateur de ZIK")}
     `,
   });

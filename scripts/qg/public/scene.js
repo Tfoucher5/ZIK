@@ -1,69 +1,56 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+import { Camera } from "./camera.js";
 import { Grille } from "./chemins.js";
-import { COULEURS, LIMITES, plan } from "./plan.js";
+import { NOMS } from "./disposition.js";
+import { COULEURS, plan } from "./plan.js";
 import { fiche } from "./noms.js";
 import { Perso } from "./perso.js";
-import { animerPortes } from "./portes.js";
+import { animerPortes, oublierPortes } from "./portes.js";
+import { Recrutement } from "./recrutement.js";
 
 // Ces métiers restent à leur poste ; les autres se réunissent en salle dès qu'ils sont deux du même service.
 const AU_POSTE = ["dev", "test-writer", "reviewer", "recette", "incident"];
 
 export class Scene3D {
   constructor(conteneur, surClic) {
+    this.conteneur = conteneur;
     this.persos = new Map();
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(
-      42,
-      innerWidth / innerHeight,
-      0.1,
-      500,
-    );
-    const loin = innerWidth < 700 ? 1.7 : 1;
-    this.camera.position.set(9 * loin, 31 * loin, 31 * loin);
+    this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
     this.rendu = new THREE.WebGLRenderer({ antialias: true });
     this.rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
-    this.rendu.setSize(innerWidth, innerHeight);
     this.rendu.shadowMap.enabled = true;
     this.rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.rendu.domElement.style.display = "block";
+    if (getComputedStyle(conteneur).position === "static")
+      conteneur.style.position = "relative";
     conteneur.appendChild(this.rendu.domElement);
     this.etiquettes = new CSS2DRenderer();
-    this.etiquettes.setSize(innerWidth, innerHeight);
     Object.assign(this.etiquettes.domElement.style, {
       position: "absolute",
       top: "0",
+      left: "0",
       pointerEvents: "none",
     });
     conteneur.appendChild(this.etiquettes.domElement);
-    this.controles = new OrbitControls(this.camera, this.rendu.domElement);
-    this.controles.target.set(innerWidth < 700 ? 0 : 4.5, 0, 0.5);
-    this.controles.enableDamping = true;
-    this.controles.maxPolarAngle = Math.PI / 2.3;
-    this.controles.minDistance = 4;
-    this.controles.maxDistance = 70;
+    this.vue = new Camera(this.camera, this.rendu.domElement);
     this.ciel = new THREE.HemisphereLight("#dbe8ff", "#3a3328", 1);
     this.soleil = new THREE.DirectionalLight("#fff1dc", 2);
     this.soleil.position.set(10, 26, 14);
     this.soleil.castShadow = true;
     this.soleil.shadow.mapSize.set(2048, 2048);
     this.soleil.shadow.bias = -0.0005;
-    Object.assign(this.soleil.shadow.camera, {
-      left: -26,
-      right: 26,
-      top: 18,
-      bottom: -18,
-      far: 90,
-    });
     this.scene.add(this.ciel, this.soleil);
     this.ambiance();
     setInterval(() => this.ambiance(), 60000);
     const rayon = new THREE.Raycaster();
     this.rendu.domElement.addEventListener("click", (e) => {
+      const r = this.rendu.domElement.getBoundingClientRect();
       rayon.setFromCamera(
         new THREE.Vector2(
-          (e.clientX / innerWidth) * 2 - 1,
-          -(e.clientY / innerHeight) * 2 + 1,
+          ((e.clientX - r.left) / r.width) * 2 - 1,
+          -((e.clientY - r.top) / r.height) * 2 + 1,
         ),
         this.camera,
       );
@@ -72,14 +59,22 @@ export class Scene3D {
       )[0]?.object.userData.id;
       surClic(id ? id.split("#")[0] : null);
     });
-    addEventListener("resize", () => {
-      this.camera.aspect = innerWidth / innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.rendu.setSize(innerWidth, innerHeight);
-      this.etiquettes.setSize(innerWidth, innerHeight);
-    });
+    new ResizeObserver(() => this.taille()).observe(conteneur);
+    this.taille();
+    this.equipe = new Recrutement(this);
     this.horloge = new THREE.Clock();
     this.rendu.setAnimationLoop(() => this.image());
+  }
+
+  // La scène occupe son conteneur, pas l'écran : le tableau de bord peut l'entourer ou se masquer.
+  taille() {
+    const l = this.conteneur.clientWidth || innerWidth;
+    const h = this.conteneur.clientHeight || innerHeight;
+    this.camera.aspect = l / h;
+    this.camera.updateProjectionMatrix();
+    this.rendu.setSize(l, h);
+    this.etiquettes.setSize(l, h);
+    if (this.bornes) this.vue.cadrer(this.bornes, false);
   }
 
   // Jour ou nuit selon l'heure du PC.
@@ -92,53 +87,68 @@ export class Scene3D {
     this.soleil.color.set(jour ? "#fff1dc" : "#9fb4ff");
   }
 
-  perso(id, role, couleur, siege) {
-    const p = new Perso(
-      this.scene,
-      this.grille,
-      id,
-      fiche(id, role),
-      couleur,
-      siege,
-    );
+  // Ancienne entrée : l'organigramme du CLAUDE.md, gardé en repli tant que /agents n'existe pas.
+  construire(org) {
+    this.equipe.repli(org);
+  }
+
+  // Monte le plateau pour une disposition (place des pôles, bord ouest) ; tout ce qui existait est retiré.
+  monter(disposition, limites) {
+    this.vider();
+    const premier = !this.d;
+    this.grille = new Grille(...limites);
+    this.d = plan(this.scene, this.grille, disposition);
+    const r = Math.max(26, 4 - disposition.ouest);
+    Object.assign(this.soleil.shadow.camera, {
+      left: -r,
+      right: r,
+      top: 18,
+      bottom: -18,
+      far: 90,
+    });
+    this.soleil.shadow.camera.updateProjectionMatrix();
+    this.bornes = [limites[0], limites[1], limites[2], limites[3]];
+    this.vue.cadrer(this.bornes, premier);
+    this.perso("theo", undefined, "#ffffff", this.d.theo);
+    this.perso("accueil", undefined, "#ff00ff", this.d.accueil).fixe = true;
+    this.perso("ceo", undefined, COULEURS.ceo, this.d.ceo);
+    for (const [id, s] of Object.entries(this.d.services))
+      this.perso(id, undefined, COULEURS[id], s.chef);
+  }
+
+  vider() {
+    if (!this.d) return;
+    oublierPortes();
+    this.scene.traverse((o) => o.element?.remove());
+    for (const o of [...this.scene.children]) {
+      if (o === this.ciel || o === this.soleil) continue;
+      o.traverse((x) => x.geometry?.dispose());
+      this.scene.remove(o);
+    }
+    this.persos.clear();
+  }
+
+  // role et nom remplacent ceux de noms.js quand /agents les donne.
+  perso(id, role, couleur, siege, nom) {
+    const base = fiche(id, role ?? id);
+    const f = { ...base, ...(nom && { nom }), ...(role && { role }) };
+    const p = new Perso(this.scene, this.grille, id, f, couleur, siege);
     this.persos.set(id, p);
     return p;
   }
 
-  construire(org) {
-    this.org = org;
-    this.grille = new Grille(...LIMITES);
-    this.d = plan(this.scene, this.grille, org);
-    this.perso("theo", "fondateur", "#ffffff", this.d.theo);
-    this.perso("accueil", "accueil", "#ff00ff", this.d.accueil).fixe = true;
-    this.perso("ceo", "CEO", COULEURS.ceo, this.d.ceo);
-    this.libres = new Map([["renforts", this.d.renforts]]);
-    for (const [id, s] of Object.entries(this.d.services)) {
-      const c = org.chefs.find((x) => x.id === id);
-      this.perso(id, `chef ${c.skill}`, COULEURS[id], s.chef);
-      c.equipe.forEach((m, i) => this.perso(m, m, COULEURS[id], s.postes[i]));
-      this.libres.set(id, s.extra);
-    }
-    for (const b of org.board.filter(
-      (x) => !x.includes("*") && !this.persos.has(x),
-    ))
-      this.perso(
-        b,
-        b,
-        COULEURS.board,
-        b === "avocat" ? this.d.avocat : this.d.invite,
-      );
-  }
-
-  service(id) {
-    return id === "renforts"
-      ? "renforts"
-      : this.org.chefs.find((c) => c.equipe.includes(id) || c.id === id)?.id;
+  retirer(id) {
+    const p = this.persos.get(id);
+    if (!p) return;
+    this.scene.remove(p.g);
+    p.lab.element.remove();
+    this.persos.delete(id);
   }
 
   // Copies d'un agent lancé plusieurs fois : elles sortent de l'ascenseur, prennent un poste libre et repartent.
   clones(id, n) {
-    const libres = this.libres.get(this.service(id)) ?? [];
+    const svc = this.equipe.service(id);
+    const libres = this.equipe.libres(svc);
     const voulus = id === "renforts" ? n : n - 1;
     const asc = this.d.ascenseur;
     for (let i = 0; i < libres.length; i++) {
@@ -148,7 +158,7 @@ export class Scene3D {
         p = this.perso(
           cle,
           id === "renforts" ? "renfort" : fiche(id).role,
-          COULEURS[this.service(id)],
+          COULEURS[svc],
           asc,
         );
         p.siege = libres[i];
@@ -162,23 +172,23 @@ export class Scene3D {
   }
 
   maj(activite, nb, seance) {
+    if (!this.d) return;
     const multiples = new Set(
       [...nb.keys()].filter((id) => id !== "theo" && id !== "ceo"),
     );
     for (const [id, p] of this.persos)
-      if (p.temporaire) multiples.add(id.split("#")[0]);
+      if (p.temporaire && id.includes("#")) multiples.add(id.split("#")[0]);
     for (const id of multiples) this.clones(id, nb.get(id) ?? 0);
     const enSeance = new Set(seance);
     const reunions = new Map();
     for (const [id, s] of Object.entries(this.d.services)) {
-      const c = this.org.chefs.find((x) => x.id === id);
-      const membres = c.equipe.filter(
+      const membres = (this.equipe.modele.equipes[id] ?? []).filter(
         (m) => activite.has(m) && !AU_POSTE.includes(m) && !enSeance.has(m),
       );
       if (membres.length >= 2) {
         reunions.set(id, { salle: s.salle, membres });
         s.salle.tele.allumer(
-          `Réunion ${c.nom.replace(/ \(.*\)/, "")}`,
+          `Réunion ${NOMS[id]}`,
           membres.map((m) => `${fiche(m).nom} · ${activite.get(m)}`),
         );
       } else s.salle.tele.eteindre();
@@ -189,9 +199,10 @@ export class Scene3D {
     for (const [id, p] of this.persos) {
       const base = id.split("#")[0];
       const texte = activite.get(base);
-      const actif = p.temporaire ? p.voulu : texte != null;
+      const nouveau = p.arrivee > 0;
+      const actif = p.temporaire ? p.voulu : texte != null || nouveau;
       if (p.actif && !actif) p.pause = 1 + Math.random() * 4;
-      p.etat(actif, texte ?? "");
+      p.etat(actif, texte ?? (nouveau ? "vient d'arriver" : ""));
       const ecran = p.siege.ecran;
       if (p.temporaire) {
         if (ecran) ecran.material.emissiveIntensity = p.voulu ? 0.9 : 0.05;
@@ -204,7 +215,7 @@ export class Scene3D {
       else if (id === "ceo" && enSeance.size) but = this.d.board.debout;
       else if (r) but = r.salle.sieges[r.membres.indexOf(id)];
       else if (reunions.has(id) && actif) but = reunions.get(id).salle.debout;
-      else if (actif && texte.startsWith("pilote ")) {
+      else if (texte?.startsWith("pilote ")) {
         const cible = this.persos.get(texte.slice(7).split(" ")[0]);
         if (cible && !salleDe(cible.id))
           but = {
@@ -229,27 +240,25 @@ export class Scene3D {
   }
 
   image() {
-    if (!this.d) return;
     const dt = Math.min(this.horloge.getDelta(), 0.25);
-    const t = this.horloge.elapsedTime;
-    const prises = new Set([...this.persos.values()].map((p) => p.but));
-    const libres = this.d.pauses.filter((p) => !prises.has(p));
-    for (const [id, p] of this.persos) {
-      if (!p.actif && !p.temporaire && !p.fixe) p.flaner(dt, libres);
-      p.animer(dt, t);
-      if (p.depart && !p.chemin.length) {
-        this.scene.remove(p.g);
-        p.lab.element.remove();
-        this.persos.delete(id);
+    this.vue.maj(dt);
+    if (this.d) {
+      const t = this.horloge.elapsedTime;
+      const prises = new Set([...this.persos.values()].map((p) => p.but));
+      const libres = this.d.pauses.filter((p) => !prises.has(p));
+      for (const [id, p] of this.persos) {
+        if (p.arrivee > 0) p.arrivee -= dt;
+        if (!p.actif && !p.temporaire && !p.fixe) p.flaner(dt, libres);
+        p.animer(dt, t);
+        if (p.depart && !p.chemin.length) this.retirer(id);
       }
+      animerPortes(
+        dt,
+        [...this.persos.values()].map((p) => p.g.position),
+      );
+      for (const s of Object.values(this.d.services)) s.salle.tele.animer(dt);
+      this.d.board.tele.animer(dt);
     }
-    animerPortes(
-      dt,
-      [...this.persos.values()].map((p) => p.g.position),
-    );
-    for (const s of Object.values(this.d.services)) s.salle.tele.animer(dt);
-    this.d.board.tele.animer(dt);
-    this.controles.update();
     this.rendu.render(this.scene, this.camera);
     this.etiquettes.render(this.scene, this.camera);
   }

@@ -6,6 +6,8 @@
     <title>QG ZIK</title>
     <link rel="stylesheet" href="/qg.css" />
     <link rel="stylesheet" href="/reglages.css" />
+    <link rel="stylesheet" href="/tableau.css" />
+    <link rel="stylesheet" href="/trancher.css" />
     <script type="importmap">
       {
         "imports": {
@@ -20,6 +22,12 @@
     <header class="barre">
       <h1>QG <span>ZIK</span></h1>
       <span id="liaison" class="liaison">connexion…</span>
+      <button type="button" id="ouvrir-trancher" class="bouton-trancher vide">
+        À trancher <span class="badge">–</span>
+      </button>
+      <button type="button" id="masquer" class="bouton" aria-pressed="false">
+        Masquer le tableau de bord
+      </button>
       <details class="reglages">
         <summary>⚙ Réglages</summary>
         <div class="menu">
@@ -35,46 +43,50 @@
             ><input type="checkbox" data-bascule="sans-activite" checked /> Ce
             que font les agents</label
           >
-          <label
-            ><input type="checkbox" data-bascule="sans-panneaux" checked />
-            Panneaux d'infos</label
-          >
         </div>
       </details>
     </header>
-    <section class="compteurs panneau-ui">
-      <div>
-        <small>Coût aujourd'hui</small><strong id="c-cout">–</strong
-        ><em>équivalent API</em>
-      </div>
-      <div>
-        <small>Tokens aujourd'hui</small><strong id="c-tokens">–</strong>
-      </div>
-      <div>
-        <small>Agents au travail</small><strong id="c-agents">–</strong>
-      </div>
-      <div>
-        <small>Sessions actives</small><strong id="c-sessions">–</strong>
-      </div>
-    </section>
-    <aside class="panneau panneau-ui flux">
-      <h2>
-        <button type="button" class="plier" aria-expanded="true">
-          En direct
-        </button>
-      </h2>
-      <ol id="flux"></ol>
+    <aside class="colonne gauche panneau-ui">
+      <section class="bloc">
+        <h2>Limite d'utilisation</h2>
+        <div id="limite"><p class="vide">En attente des journaux…</p></div>
+      </section>
+      <section class="bloc">
+        <h2>Qui fait quoi</h2>
+        <ul id="equipe" class="equipe"></ul>
+      </section>
+      <section class="bloc chantiers">
+        <h2>Chantiers</h2>
+        <div id="chantiers"></div>
+      </section>
     </aside>
-    <aside class="panneau panneau-ui sessions">
-      <h2>
-        <button type="button" class="plier" aria-expanded="true">
-          Sessions
-        </button>
-      </h2>
-      <ul id="sessions"></ul>
+    <aside class="colonne droite panneau-ui">
+      <section class="bloc flux">
+        <h2>En direct</h2>
+        <ol id="flux"></ol>
+      </section>
     </aside>
+    <dialog id="trancher" class="trancher" aria-labelledby="trancher-titre">
+      <header>
+        <h2 id="trancher-titre">À trancher</h2>
+        <p class="aide">
+          Réponds librement, les brouillons restent sur ce PC. « Envoyer » les
+          dépose pour Claude.
+        </p>
+        <button type="button" class="bouton" id="copier">
+          Copier toutes mes réponses
+        </button>
+        <button type="button" class="bouton principal" id="envoyer">
+          Envoyer
+        </button>
+        <button type="button" class="bouton" id="fermer">Fermer</button>
+        <p id="trancher-etat" class="etat" role="status"></p>
+      </header>
+      <div class="liste"></div>
+    </dialog>
     <div id="board" class="board" hidden>Board en séance</div>
     <div id="fiche" class="fiche" hidden></div>
     <script type="module" src="/qg.js"></script>
+    <script type="module" src="/trancher.js"></script>
   </body>
 </html>

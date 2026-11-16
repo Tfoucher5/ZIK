@@ -1,38 +1,31 @@
 import * as THREE from "three";
 import { MAT, mur, poste, solForme, titre } from "./meubles.js";
 import { tapis } from "./deco.js";
-import { CONTOUR, COULEURS, FACADES, SALLES } from "./batiment.js";
+import { COULEURS, SALLES, contour, facades } from "./batiment.js";
+import { NOMS } from "./disposition.js";
 import { bandeNord } from "./nord.js";
 import { salle } from "./salles.js";
 import { espaces } from "./espaces.js";
 
-export { COULEURS, LIMITES } from "./batiment.js";
+export { COULEURS, limites } from "./batiment.js";
 
-// Quartiers de l'open space : centre, rangée (z), colonnes, côté du bureau du chef.
-const QUARTIERS = {
-  tech: [-16, -1.5, 4, 1],
-  produit: [-5.8, -1.5, 3, -1],
-  argent: [-15.5, 3, 2, 1],
-  operations: [8.4, -1.5, 3, 1],
-  marketing: [8, 3, 2, 1],
-};
-
-// Deux rangées de bureaux dos à dos ; le chef est en bout, face à son équipe.
-function quartier(scene, grille, id, nom, equipe) {
-  const [cx, z0, cols, cote] = QUARTIERS[id];
+// Deux rangées de bureaux dos à dos à partir de x ; le chef est au bout, face à son équipe.
+// Les postes vont du plus proche au plus loin du bord : les postes libres restent au bout.
+function quartier(scene, grille, id, { x, sens, z, cols }) {
   const c = COULEURS[id];
   const l = cols * 1.6;
-  titre(scene, nom, c, cx, z0 - 1.3, null, 3.2);
-  tapis(scene, cx + (cote * 0.9) / 2, z0 + 0.42, l + 2.4, 3.7, c, 0.16);
+  const cx = x + (sens * l) / 2;
+  titre(scene, NOMS[id], c, cx, z - 1.3, null, 3.2);
+  tapis(scene, cx + (sens * 0.9) / 2, z + 0.42, l + 2.4, 3.7, c, 0.16);
   const postes = [];
-  for (let r = 0; r < 2; r++)
-    for (let k = 0; k < cols; k++)
+  for (let k = 0; k < cols; k++)
+    for (let r = 0; r < 2; r++)
       postes.push(
         poste(
           scene,
           grille,
-          cx + (k - (cols - 1) / 2) * 1.6,
-          r ? z0 + 0.85 : z0,
+          x + sens * (k + 0.5) * 1.6,
+          r ? z + 0.85 : z,
           r ? 0 : Math.PI,
           c,
         ),
@@ -40,21 +33,23 @@ function quartier(scene, grille, id, nom, equipe) {
   const chef = poste(
     scene,
     grille,
-    cx + cote * (l / 2 + 0.7),
-    z0 + 0.42,
-    cote > 0 ? Math.PI / 2 : -Math.PI / 2,
+    x + sens * (l + 0.7),
+    z + 0.42,
+    (sens * Math.PI) / 2,
     c,
     false,
   );
-  return { chef, postes, extra: postes.slice(equipe.length) };
+  return { chef, postes };
 }
 
-export function plan(scene, grille, org) {
-  grille.masque(CONTOUR);
-  const dalle = solForme(scene, CONTOUR, MAT.sombre, -0.3);
+// { poles, ouest } : place des pôles et bord ouest du bâtiment, calculés par disposer().
+export function plan(scene, grille, { poles, ouest }) {
+  const forme = contour(ouest);
+  grille.masque(forme);
+  const dalle = solForme(scene, forme, MAT.sombre, -0.3);
   dalle.material.side = THREE.DoubleSide;
-  solForme(scene, CONTOUR, MAT.beton, 0);
-  for (const [x0, z0, x1, z1, type, h] of FACADES)
+  solForme(scene, forme, MAT.beton, 0);
+  for (const [x0, z0, x1, z1, type, h] of facades(ouest))
     mur(scene, grille, x0, z0, x1, z1, { type, h });
   const nord = bandeNord(scene, grille);
 
@@ -69,15 +64,9 @@ export function plan(scene, grille, org) {
   mur(scene, grille, 17, 1, 17, 5.5, { portes: [[3.1, 4.3]] });
 
   const services = {};
-  for (const c of org.chefs.filter((x) => QUARTIERS[x.id])) {
-    services[c.id] = quartier(
-      scene,
-      grille,
-      c.id,
-      c.nom.replace(/ \(.*\)/, ""),
-      c.equipe,
-    );
-    services[c.id].salle = salle(scene, grille, c.id);
+  for (const [id, p] of Object.entries(poles)) {
+    services[id] = quartier(scene, grille, id, p);
+    services[id].salle = salle(scene, grille, id);
   }
 
   const { accueil, invite, renforts, pauses } = espaces(scene, grille);

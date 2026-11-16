@@ -1,6 +1,6 @@
 ---
 name: tech
-description: Chef Technique (CTO) de ZIK — fait coder une tâche par son équipe : plan de l'agent architecte, code par un ou plusieurs agents dev en parallèle (worktrees), tests par test-writer, relecture par reviewer, puis /terminer. Utilise ce skill dès qu'une tâche de code est prête (après /demarrer et, si interface, /produit), ou quand /operations ou /ceo le demandent.
+description: "Chef Technique (CTO) de ZIK — fait coder une tâche par son équipe : plan de l'agent architecte, code par un ou plusieurs agents dev en parallèle (worktrees), tests par test-writer, relecture par reviewer, puis /terminer. Utilise ce skill dès qu'une tâche de code est prête (après /demarrer et, si interface, /produit), ou quand /operations ou /ceo le demandent."
 argument-hint: "[tâche à coder]"
 allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(git rev-parse *)
 ---

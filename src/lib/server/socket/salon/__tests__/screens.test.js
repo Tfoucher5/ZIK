@@ -155,7 +155,10 @@ describe("joueur parti puis revenu, par les handlers", () => {
       const ana = await telephone("t1", "Ana");
       const token = ana.recu.find((e) => e.event === "salon_joined").payload
         .token;
-      salonRooms[CODE].players.Ana.score = 200;
+      Object.assign(salonRooms[CODE].players.Ana, {
+        score: 200,
+        scoreBeforeRound: 200,
+      });
 
       ana.s.deconnecte();
       const salon = salonRooms[CODE];
@@ -168,8 +171,8 @@ describe("joueur parti puis revenu, par les handlers", () => {
 
       const intrus = await telephone("t2", "Ana", "autre");
       expect(intrus.recu.at(-1)).toMatchObject({
-        event: "salon_error",
-        payload: { message: "Ce pseudo est déjà pris." },
+        event: "salon_name_taken",
+        payload: { username: "Ana" },
       });
 
       await telephone("t3", "Ana", token);

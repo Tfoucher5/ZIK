@@ -1,0 +1,39 @@
+/* /soiree : mouvements réduits, sections dépliées (classe .rm et media dès le premier rendu). */
+
+/* Mouvements réduits : sections dépliées, toutes les phrases lisibles */
+html.rm .sv .pin-in {
+  height: auto;
+  padding-block: 72px;
+}
+html.rm .sv .beats {
+  gap: 8px;
+}
+html.rm .sv .beat {
+  grid-area: auto;
+  opacity: 1;
+  transform: none;
+}
+html.rm .sv .duo,
+html.rm .sv .solo {
+  width: min(100%, 560px);
+}
+
+/* Même dépliage dès le premier rendu, avant que le layout pose .rm (pas de saut) */
+@media (prefers-reduced-motion: reduce) {
+  html .sv .pin-in {
+    height: auto;
+    padding-block: 72px;
+  }
+  html .sv .beats {
+    gap: 8px;
+  }
+  html .sv .beat {
+    grid-area: auto;
+    opacity: 1;
+    transform: none;
+  }
+  html .sv .duo,
+  html .sv .solo {
+    width: min(100%, 560px);
+  }
+}

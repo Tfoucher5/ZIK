@@ -58,7 +58,7 @@
       onNewSalon={h.closeSalon}
       onMusicReady={() => h.socket?.emit('salon_music_ready')}
       onVideoError={(videoId) => h.socket?.emit('salon_video_failed', { videoId })}
-      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} mediaCheck={h.mediaCheck} mediaSolo={!h.controls}
+      buzzer={h.buzzer} special={h.special} specialIntro={h.specialIntro} intermission={h.intermission} videoOutage={h.videoOutage} restarting={h.restarting} restored={h.restored} connLost={h.connLost} mediaCheck={h.mediaCheck} mediaSolo={!h.controls}
       onJudge={(correct) => h.socket?.emit('salon_buzz_judge', { correct })}
     />
     <PlayerSidebar players={h.players} teams={h.teams} night={h.night} phase={h.phase} deltas={h.deltas} answerMode={h.settings.answerMode || 'free'} />

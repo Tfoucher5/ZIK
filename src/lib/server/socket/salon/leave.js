@@ -5,6 +5,7 @@ import { departPlayer } from "./departed.js";
 import { cleanupNow } from "./timers.js";
 import { safe } from "../safe.js";
 import { note } from "./journal.js";
+import { dropReclaimOf } from "./reclaim.js";
 
 // Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
 // fermer la soirée
@@ -33,6 +34,7 @@ export function scheduleDeparture(salon, username, io) {
 // Départs : écran TV, régie, joueurs
 export function registerLeave(socket, io) {
   safe(socket, "disconnect", {}, () => {
+    dropReclaimOf(socket, io);
     const code = socket.salonCode;
     if (!code) return;
     const salon = salonRooms[code];

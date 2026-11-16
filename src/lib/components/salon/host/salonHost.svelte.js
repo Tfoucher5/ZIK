@@ -1,3 +1,4 @@
+import { watchConnection } from "../connection.js";
 import { io } from "socket.io-client";
 import { listenHost } from "./hostEvents.js";
 import { SupportChat } from "../support/supportChat.svelte.js";
@@ -42,6 +43,8 @@ export class SalonHost {
   adminNotice = $state("");
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
+  // Cet écran a perdu le réseau (affiché après quelques secondes)
+  connLost = $state(false);
   // Après un redémarrage : « mise à jour terminée », la manche repart seule
   restored = $state(null);
   mediaCheck = $state(null);
@@ -198,6 +201,8 @@ export class SalonHost {
       reconnectionDelayMax: 5000,
     });
     this.socket = socket;
+    this.stopWatch?.();
+    this.stopWatch = watchConnection(socket, (v) => (this.connLost = v));
 
     socket.on("connect", () =>
       socket.emit("salon_join_host", { code: roomCode, key: this.key }),
@@ -209,5 +214,6 @@ export class SalonHost {
   destroy() {
     this.socket?.disconnect();
     this.stopCountdowns();
+    this.stopWatch?.();
   }
 }

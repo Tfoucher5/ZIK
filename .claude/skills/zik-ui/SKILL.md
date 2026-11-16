@@ -25,7 +25,7 @@ Lis la fiche de l'écran concerné dans le brief avant de le toucher.
 4. **Régie** : les actions de la manche en cours (Révéler, Pause, Manche suivante, Terminer) toujours visibles sans défilement, même en tablette (1024 px). Toute action destructive demande une confirmation.
 5. **Téléphone** : 390 px, une colonne, actions dans la moitié basse, zones tactiles d'au moins 44 px. Jamais la réponse ni le média avant la révélation.
 6. **Un seul accent magenta par écran**, pour l'action ou l'information principale.
-7. **Textes en français**, phrases courtes, tutoiement côté joueurs, vouvoiement côté organisateurs et pages d'offres. Pas de jargon technique. Pas de chiffre, de nom ou de témoignage inventé : une donnée manquante ne s'affiche pas.
+7. **Textes en français**, phrases courtes, tu pour les joueurs, l'accueil, la création et la régie, vous sur /pro et /soiree, vous pluriel sur la TV ; univers ZIK Soirée toujours sombre. Pas de jargon technique. Pas de chiffre, de nom ou de témoignage inventé : une donnée manquante ne s'affiche pas.
 8. **États à prévoir** pour chaque écran : chargement, vide, erreur avec action pour réessayer, reconnexion, maintenance annoncée, fonction Pro verrouillée quand c'est pertinent. Message calme, jamais d'erreur brute devant la salle.
 9. **Couleur jamais seule** : une équipe, un statut ou une bonne réponse a toujours un libellé.
 10. **Conventions du dépôt** : Svelte 5 (runes), pas de framework CSS, CSS global par dossier dans `static/css/<domaine>/` chargé par la page, sinon `<style>` scoped. Moins de 300 lignes par fichier.

@@ -5,7 +5,7 @@
 </script>
 
 <div>
-  <p class="sx-kicker"><b>●</b> Connecté</p>
+  <p class="sx-kicker"><b>●</b> {p.connLost ? "Reconnexion…" : "Connecté"}</p>
   <div class="sp-big">C'est bon,<br>tu es dedans.</div>
   <p class="sp-hint">Regarde la TV : la partie démarre quand l'hôte la lance.</p>
 </div>

@@ -55,7 +55,8 @@ const compress = compression({
       "text/event-stream",
     ) && compression.filter(req, res),
 });
-const IMMUTABLE_RE = /^\/(css|fonts|favicon)\//;
+// media/ : fichiers versionnés dans leur nom, un changement = un nouveau nom
+const IMMUTABLE_RE = /^\/(css|fonts|favicon|media)\//;
 const server = createServer((req, res) => {
   // Hors SvelteKit : répond même si le rendu des pages est saturé
   if (req.url === "/healthz") return healthz(res);

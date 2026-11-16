@@ -10,17 +10,18 @@ import {
   getPlayerList,
   nightView,
   phoneLists,
-  reconnectView,
   standings,
 } from "./players.js";
 import { nameTaken } from "./departed.js";
+import { reconnectView } from "./phoneView.js";
 import { restoreSalon, resumeAfterRestart } from "./snapshot.js";
 import { currentTrackInfo } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
-import { scheduleCleanup, timerClock } from "./timers.js";
+import { dropReclaim, pendingReclaims } from "./reclaim.js";
+import { scheduleCleanup, sendBreak, timerClock } from "./timers.js";
 import { key, optional, safe, str } from "../safe.js";
 
 // key absente (TV ouverte avec le seul code) : le handler répond « réservé à l'hôte »
@@ -78,6 +79,7 @@ export function registerJoin(socket, io) {
       support: supportView(salon),
     });
     sendNotice(socket);
+    sendBreak(socket, salon.game);
     if (salon.game.phase === "lobby" && !salon.game.sessionPlaylist.length)
       prepareSession(code, io);
     else announceNextVideo(salon, io);
@@ -131,9 +133,11 @@ export function registerJoin(socket, io) {
       history: game.history,
       trackCount: game.fullPlaylist.length,
       tvVolume: salon._tvVolume ?? null,
+      reclaims: pendingReclaims(salon),
       support: supportView(salon),
     });
     sendNotice(socket);
+    sendBreak(socket, salon.game);
     scheduleCleanup(code);
     broadcastScreens(code, io);
   });
@@ -192,10 +196,12 @@ export function registerJoin(socket, io) {
         });
 
       const taken = nameTaken(salon, username);
-      if (taken && taken.token !== token)
-        return socket.emit("salon_error", {
-          message: "Ce pseudo est déjà pris.",
-        });
+      if (taken && taken.token !== token) {
+        // Même compte ZIK : c'est bien lui, même sur un autre téléphone
+        if (account && taken.userId === account.id) token = taken.token;
+        // Sinon le téléphone propose « C'est toi ? » et l'hôte confirme (reclaim.js)
+        else return socket.emit("salon_name_taken", { username });
+      }
 
       const late =
         !salon.players[username] &&
@@ -205,6 +211,20 @@ export function registerJoin(socket, io) {
         addPlayer(salon, username, socket.id, token).scoreBeforeRound ??= 0;
       if (salon.players[username]) {
         const existing = salon.players[username];
+        // Place reprise sur un autre téléphone : l'ancien est prévenu et lâché
+        const old =
+          existing.socketId !== socket.id &&
+          io.sockets.sockets.get(existing.socketId);
+        if (old) {
+          old.salonCode = null;
+          old.leave(`salon:${code}`);
+          old.leave(`salon:players:${code}`);
+          old.emit("salon_closed", {
+            message: "Ta place a été reprise sur un autre appareil.",
+          });
+        }
+        // Revenu avec son jeton : sa demande à l'hôte n'a plus lieu d'être
+        dropReclaim(salon, username, io);
         // Cancel pending removal timer
         clearTimeout(existing._dcTimer);
         existing._dcTimer = null;
@@ -220,6 +240,7 @@ export function registerJoin(socket, io) {
 
         socket.emit("salon_joined", reconnectView(salon, existing));
         sendNotice(socket);
+        sendBreak(socket, salon.game);
         broadcastRoster(code, io);
         scheduleCleanup(code);
         return;
@@ -245,6 +266,7 @@ export function registerJoin(socket, io) {
         ...phoneLists(salon, username),
       });
       sendNotice(socket);
+      sendBreak(socket, salon.game);
       broadcastRoster(code, io);
       scheduleCleanup(code);
     },

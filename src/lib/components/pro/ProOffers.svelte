@@ -1,241 +1,250 @@
 <script>
-  import { PLANS } from '$lib/data/proPlans.js';
+  import { flushSync } from 'svelte';
+  import { PLANS, TESTED_LABEL } from '$lib/data/proPlans.js';
+  import ProPlanStatus from './ProPlanStatus.svelte';
+  import ProConfirm from './ProConfirm.svelte';
+  import { calm } from './demos.js';
 
   let { checkout } = $props();
 
-  // Apparition en cascade des cartes quand elles arrivent à l'écran
-  function reveal(node) {
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { node.classList.add('in'); io.disconnect(); }
-    }, { threshold: 0.15 });
-    io.observe(node);
-    return { destroy: () => io.disconnect() };
+  const FILTERS = [
+    ['all', 'Tout voir'],
+    ['once', 'Pour une soirée'],
+    ['often', 'Pour les lieux'],
+  ];
+  let filter = $state('all');
+  const shown = $derived(PLANS.filter((p) => filter === 'all' || (p.id === 'night') === (filter === 'once')));
+
+  function pick(f) {
+    const apply = () => {
+      filter = f;
+      flushSync();
+    };
+    if (document.startViewTransition && !calm()) document.startViewTransition(apply);
+    else apply();
   }
 </script>
 
-<div class="pro-offers">
-  {#each PLANS as p, i (p.id)}
-    <article class="pro-offer" class:featured={p.featured} style="--d:{i * 110}ms" use:reveal>
-      {#if p.badge}<span class="pro-offer-badge">{p.badge}</span>{/if}
-      <h3 class="pro-offer-name">{p.name}</h3>
-      <p class="pro-offer-pitch">{p.pitch}</p>
-      <div class="pro-offer-price">
-        <strong>{p.price}</strong>
-        <span>{p.period}</span>
-      </div>
-      <ul class="pro-offer-perks">
-        {#each p.perks as perk (perk)}<li>{perk}</li>{/each}
-        <li class="pro-offer-all">Tout ZIK Pro inclus</li>
-      </ul>
-      <button
-        class="pro-offer-btn"
-        onclick={() => checkout.buy(p.id)}
-        disabled={checkout.busy !== null || checkout.subscribed}
-      >
-        {#if checkout.busy === p.id}Redirection vers le paiement…
-        {:else if checkout.subscribed}Déjà abonné
-        {:else if p.id === 'night' && checkout.nightActive}Prolonger de 24 h
-        {:else if p.id === 'night'}Prendre la soirée
-        {:else}Choisir {p.name.toLowerCase()}{/if}
-      </button>
-    </article>
-  {/each}
-</div>
+<section id="tarifs" class="offres" aria-labelledby="pro-offres">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="label"><i></i>Offres</span>
+      <h2 class="grad" id="pro-offres">ZIK Pro, à votre rythme</h2>
+      <p>Une date ou toutes les semaines : les trois formules débloquent les mêmes fonctions ZIK Pro.</p>
+    </div>
+
+    {#if checkout.activePro}<ProPlanStatus {checkout} />{/if}
+
+    <div class="seg" role="group" aria-label="Filtrer les offres">
+      {#each FILTERS as [f, txt] (f)}
+        <button type="button" aria-pressed={filter === f} onclick={() => pick(f)}>{txt}</button>
+      {/each}
+    </div>
+
+    <div class="plans" class:one={shown.length === 1} class:two={shown.length === 2}>
+      {#each shown as p (p.id)}
+        <article class="plan card" class:top={p.featured} style="view-transition-name:plan-{p.id}" aria-labelledby="plan-{p.id}">
+          <span class="badge">{p.badge}</span>
+          <h3 id="plan-{p.id}">{p.name}</h3>
+          <div class="price">{p.price}<small>{p.period}</small></div>
+          <p class="pitch">{p.pitch}</p>
+          <ul>
+            {#each p.perks as perk (perk)}<li>{perk}</li>{/each}
+          </ul>
+          <button
+            type="button"
+            class={p.featured ? 'btn-main' : 'btn-line'}
+            onclick={() => checkout.buy(p.id)}
+            disabled={checkout.busy !== null || checkout.subscribed}
+          >
+            {#if checkout.busy === p.id}Redirection vers le paiement…
+            {:else if checkout.subscribed}Déjà abonné
+            {:else if p.id === 'night' && checkout.nightActive}Prolonger de 24 h
+            {:else}{p.cta}{/if}
+          </button>
+        </article>
+      {/each}
+    </div>
+
+    {#if checkout.payError}<p class="err" role="alert">{checkout.payError}</p>{/if}
+
+    <p class="note">Pas de limite de joueurs, {TESTED_LABEL} · <a href="#comparatif">Gratuit ou ZIK Pro ?</a></p>
+    <p class="note">Prix en euros, TVA non applicable. En payant, vous acceptez les <a href="/cgv">conditions générales de vente</a>.</p>
+  </div>
+  <ProConfirm {checkout} />
+</section>
 
 <style>
-  @property --pro-angle {
-    syntax: "<angle>";
-    initial-value: 0deg;
-    inherits: false;
+  .offres {
+    border-radius: 32px 32px 0 0;
+    background: var(--surface-alt);
+    border-top: 1px solid var(--line-2);
+    box-shadow: 0 -40px 80px -20px rgba(0, 0, 0, 0.8);
   }
-  .pro-offers {
+  .seg {
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 5px;
+    margin-bottom: 24px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    overflow-x: auto;
+  }
+  .seg button {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--muted);
+    font-family: var(--titre);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--text);
+    color: #000;
+  }
+  .plans {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    align-items: stretch;
-    margin-top: 8px;
+    gap: 14px;
   }
-  .pro-offer {
+  .plan {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 26px 22px 22px;
-    border: 1px solid var(--border2);
-    border-radius: 18px;
-    background: rgb(var(--c-glass) / 0.04);
-    opacity: 0;
-    transform: translateY(24px);
-    transition:
-      opacity 0.6s ease var(--d),
-      transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d),
-      box-shadow 0.25s ease,
-      border-color 0.25s ease;
+    gap: 12px;
+    min-width: 0;
+    padding: 24px;
   }
-  .pro-offer:global(.in) {
-    opacity: 1;
-    transform: none;
-  }
-  .pro-offer:global(.in):hover {
-    transform: translateY(-6px);
-    border-color: rgb(var(--accent-rgb) / 0.6);
-    box-shadow: 0 18px 40px -18px rgb(var(--accent-rgb) / 0.55);
-  }
-  .pro-offer.featured {
-    border-color: transparent;
+  .plan.top {
     background:
-      linear-gradient(var(--bg), var(--bg)) padding-box,
-      conic-gradient(
-          from var(--pro-angle),
-          var(--accent),
-          rgb(var(--accent-rgb) / 0.15),
-          #ff00ff,
-          rgb(var(--accent-rgb) / 0.15),
-          var(--accent)
-        )
-        border-box;
-    border-width: 2px;
-    animation: pro-spin 5s linear infinite;
+      linear-gradient(180deg, #1e0b24, var(--surface) 55%) padding-box,
+      conic-gradient(from var(--pro-ang), #ff00ff, #7b5cff, #2fb8ff, #ff00ff) border-box;
+    animation: ang 6s linear infinite;
+    box-shadow: 0 30px 90px -40px rgba(255, 0, 255, 0.7);
   }
-  .pro-offer.featured::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    z-index: -1;
-    border-radius: inherit;
-    background: radial-gradient(
-      60% 50% at 50% 0%,
-      rgb(var(--accent-rgb) / 0.35),
-      transparent
-    );
-    filter: blur(24px);
-  }
-  .pro-offer-badge {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: var(--on-accent);
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .pro-offer-name {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 1.4rem;
-    font-weight: 900;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-  :global(.pro-section) .pro-offer-pitch {
-    margin: -8px 0 0;
-    font-size: 0.86rem;
-    min-height: 3em;
-  }
-  .pro-offer-price {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .pro-offer-price strong {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 3.2rem;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--text);
-  }
-  .pro-offer.featured .pro-offer-price strong {
-    background: linear-gradient(90deg, var(--accent), #ff00ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .pro-offer-price span {
-    font-size: 0.8rem;
-    color: var(--mid);
-  }
-  :global(.pro-section) ul.pro-offer-perks {
-    flex: 1;
-    margin: 0;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-  }
-  :global(.pro-section) ul.pro-offer-perks li {
-    font-size: 0.86rem;
-    padding-left: 24px;
-  }
-  :global(.pro-section) ul.pro-offer-perks li::before {
-    content: "✓";
-  }
-  :global(.pro-section) ul.pro-offer-perks li.pro-offer-all {
-    color: var(--text);
+  .badge {
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #d4d5e2;
+    font-family: var(--mono);
     font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
-  .pro-offer-btn {
-    width: 100%;
-    padding: 13px 16px;
-    border: 1px solid var(--border2);
-    border-radius: 12px;
-    background: rgb(var(--c-glass) / 0.06);
-    color: var(--text);
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 1.02rem;
+  h3 {
     font-weight: 800;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    transition:
-      background 0.2s,
-      color 0.2s,
-      transform 0.15s;
+    font-size: 1.7rem;
   }
-  .pro-offer-btn:hover:not(:disabled) {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--on-accent);
+  .price {
+    font-family: var(--titre);
+    font-weight: 900;
+    font-size: 46px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
-  .pro-offer-btn:active:not(:disabled) {
-    transform: scale(0.98);
+  .price small {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--corps);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--muted);
   }
-  .pro-offer.featured .pro-offer-btn {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--on-accent);
+  .pitch {
+    color: var(--muted);
+    font-size: 15px;
   }
-  .pro-offer-btn:disabled {
+  ul {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+    color: #c9cad8;
+  }
+  li::before {
+    content: '✓ ';
+    color: var(--ok);
+  }
+  .plan button {
+    width: 100%;
+    margin-top: auto;
+  }
+  .plan button:disabled {
     opacity: 0.55;
     cursor: default;
+    transform: none;
+    box-shadow: none;
   }
-  @keyframes pro-spin {
+  .err {
+    margin-top: 18px;
+    text-align: center;
+    color: var(--danger);
+  }
+  .note {
+    margin-top: 18px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .note + .note {
+    margin-top: 6px;
+  }
+  .note a {
+    color: var(--text);
+  }
+  :global(::view-transition-group(*)) {
+    animation-duration: 0.5s;
+    animation-timing-function: var(--out);
+  }
+  @property --pro-ang {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+  @keyframes ang {
     to {
-      --pro-angle: 360deg;
+      --pro-ang: 360deg;
     }
   }
-  @media (max-width: 760px) {
-    .pro-offers {
-      grid-template-columns: 1fr;
+  @media (min-width: 900px) {
+    .offres {
+      border-radius: 40px 40px 0 0;
+      padding-top: 96px;
     }
-    .pro-offer.featured {
-      order: -1;
+    .offres .head {
+      justify-items: center;
+      text-align: center;
     }
-    :global(.pro-section) .pro-offer-pitch {
-      min-height: 0;
+    .seg {
+      margin: 0 auto 36px;
     }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .pro-offer {
-      opacity: 1;
-      transform: none;
-      transition: none;
+    .plans {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-width: 1080px;
+      margin-inline: auto;
     }
-    .pro-offer.featured {
-      animation: none;
+    .plans.one {
+      grid-template-columns: minmax(0, 360px);
+      justify-content: center;
+    }
+    .plans.two {
+      grid-template-columns: repeat(2, minmax(0, 360px));
+      justify-content: center;
     }
   }
 </style>

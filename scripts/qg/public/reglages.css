@@ -4,8 +4,7 @@
   margin-left: 8px;
   font-size: 12px;
 }
-.reglages summary,
-.plier {
+.reglages summary {
   font: inherit;
   color: var(--texte);
   cursor: pointer;

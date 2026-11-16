@@ -12,7 +12,10 @@ export const COULEURS = {
 };
 
 // Contour du plateau : façade nord en biais, angles coupés à l'est, décroché au sud-ouest.
-export const CONTOUR = [
+// ouest < -20 : aile ajoutée au bout de la rangée de bureaux quand les pôles ne tiennent plus.
+const AILE = [-4.5, 2.2];
+const aile = (ouest) => ouest < -20;
+export const contour = (ouest = -20) => [
   [-20, -8],
   [8, -10],
   [15, -10],
@@ -22,12 +25,20 @@ export const CONTOUR = [
   [-8, 10],
   [-8, 6],
   [-20, 6],
+  ...(aile(ouest)
+    ? [
+        [-20, AILE[1]],
+        [ouest, AILE[1]],
+        [ouest, AILE[0]],
+        [-20, AILE[0]],
+      ]
+    : []),
 ];
-export const LIMITES = [-21, 22, -11, 11];
+export const limites = (ouest = -20) => [Math.min(-21, ouest - 1), 22, -11, 11];
 
 // Murs extérieurs : baies vitrées au nord et à l'est, murs pleins à l'ouest.
 // Côté caméra (sud), les murs sont coupés à hauteur d'appui comme sur une maquette.
-export const FACADES = [
+export const facades = (ouest = -20) => [
   [-20, -8, 8, -10, "fenetre"],
   [8, -10, 15, -10, "fenetre"],
   [15, -10, 21, -4, "fenetre"],
@@ -40,7 +51,15 @@ export const FACADES = [
   [-2, 10, -8, 10, "plein", 1.1],
   [-8, 10, -8, 6, "plein"],
   [-8, 6, -20, 6, "fenetre", 1.2],
-  [-20, 6, -20, -8, "plein"],
+  ...(aile(ouest)
+    ? [
+        [-20, 6, -20, AILE[1], "plein"],
+        [-20, AILE[1], ouest, AILE[1], "fenetre", 1.2],
+        [ouest, AILE[1], ouest, AILE[0], "plein"],
+        [ouest, AILE[0], -20, AILE[0], "fenetre"],
+        [-20, AILE[0], -20, -8, "plein"],
+      ]
+    : [[-20, 6, -20, -8, "plein"]]),
 ];
 
 // Ligne des bureaux et salles fermés le long de la façade nord.

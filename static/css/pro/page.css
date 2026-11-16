@@ -1,0 +1,83 @@
+/* Page /pro : sections, en-têtes, cartes (DESIGN.md v2) */
+
+.pro section {
+  position: relative;
+  padding-block: 88px;
+}
+.pro .calm {
+  background: var(--surface-alt);
+}
+.pro .wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: max(20px, env(safe-area-inset-left, 0px))
+    max(20px, env(safe-area-inset-right, 0px));
+}
+.pro .head {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+.pro .head h2 {
+  font-weight: 900;
+  font-size: clamp(2.5rem, 11vw, 5.4rem);
+}
+.pro .head p {
+  color: var(--muted);
+  font-size: 1.08rem;
+  max-width: 34em;
+}
+.pro .ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pro .card {
+  border-radius: 22px;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(
+        170deg,
+        rgba(255, 255, 255, 0.16),
+        rgba(255, 255, 255, 0.03)
+      )
+      border-box;
+  border: 1px solid transparent;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    html:not(.rm) .pro .head h2 {
+      mask-image: linear-gradient(
+        180deg,
+        #000 var(--pro-m),
+        transparent calc(var(--pro-m) + 25%)
+      );
+      animation: pro-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+  }
+}
+@property --pro-m {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@keyframes pro-wipe {
+  from {
+    --pro-m: -25%;
+  }
+  to {
+    --pro-m: 100%;
+  }
+}
+
+@media (min-width: 900px) {
+  .pro section {
+    padding-block: 130px;
+  }
+  .pro .head {
+    margin-bottom: 56px;
+  }
+}

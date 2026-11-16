@@ -102,15 +102,14 @@ export function endRound(code, reason, io) {
 
   if (salon.settings.answerMode === "multiple") scoreQcmRound(salon, io);
 
-  for (const p of Object.values(salon.players)) {
+  for (const p of gamePlayers(salon)) {
     const ok =
       salon.settings.answerMode === "multiple"
         ? p._fullFoundCounted && p._choiceIndex === game.correctChoiceIndex
         : p._fullFoundCounted;
     if (ok) p.stats.found++;
+    if (p.username === game.firstFinder) p.stats.first++;
   }
-  if (game.firstFinder && salon.players[game.firstFinder])
-    salon.players[game.firstFinder].stats.first++;
 
   const scores = gamePlayers(salon)
     .map((p) => ({
@@ -145,7 +144,7 @@ export function endRound(code, reason, io) {
     track,
     game.currentVideo,
   );
-  emitRoundEnd(io, code, roundSummary);
+  emitRoundEnd(io, code, roundSummary, salon.players);
   scheduleCleanup(code);
   saveSnapshot(salon);
 

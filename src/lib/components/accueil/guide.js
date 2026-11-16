@@ -1,7 +1,10 @@
 import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from "../../data/proPlans.js";
 
+// Texte de fond de l'accueil pour les moteurs : l'immeuble en coupe, un palier par univers
 export const UNIVERS = [
   {
+    rep: ["Aux étages", "1–3"],
+    img: ["/media/accueil/immeuble.v1.webp", 720, 1560],
     titre: "Blind test en ligne",
     texte:
       "Rejoins une room publique par thème (années 80, rap français, Disney…) et affronte d'autres joueurs en direct, ou crée une room privée avec tes playlists Deezer et partage son code à tes amis. Chaque jour, le Zikle propose une chanson à deviner en 6 essais. Avec un compte gratuit, tu grimpes au classement ELO et tu débloques des succès.",
@@ -11,9 +14,23 @@ export const UNIVERS = [
       ["/blind-test", "Blind test par thème"],
       ["/playlists", "Playlists"],
       ["/classements", "Classements"],
+      ["/blind-test/artistes", "Blind test par artiste"],
+    ],
+    themes: [
+      "Thèmes",
+      [
+        ["/blind-test/annees-80", "Années 80"],
+        ["/blind-test/annees-2000", "Années 2000"],
+        ["/blind-test/rap-fr", "Rap français"],
+        ["/blind-test/rock", "Rock & Metal"],
+        ["/blind-test/chanson-francaise", "Chanson française"],
+        ["/blind-test/techno", "Techno"],
+      ],
     ],
   },
   {
+    rep: ["En bas", "RDC"],
+    img: ["/media/accueil/podium.v1.webp", 1600, 900],
     titre: "Blind test en soirée",
     texte: `Pour une soirée entre amis, un anniversaire, un bar, un camping, une entreprise ou une association : la TV diffuse la musique et le classement, les invités scannent le QR code et répondent sur leur téléphone, en solo ou en équipes. Aucune application à installer, aucun compte pour les joueurs, gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs.`,
     liens: [
@@ -21,6 +38,16 @@ export const UNIVERS = [
       ["/salon", "Créer une soirée"],
       ["/salon/play", "Rejoindre une soirée"],
       ["/pro", "ZIK Pro pour les lieux"],
+    ],
+    themes: [
+      "Pour",
+      [
+        ["/blind-test/bar", "Bar"],
+        ["/blind-test/camping", "Camping"],
+        ["/blind-test/soiree", "Anniversaire et soirée entre amis"],
+        ["/blind-test/entreprise", "Entreprise"],
+        [null, "Association"],
+      ],
     ],
   },
 ];
@@ -40,7 +67,7 @@ export const FAQ = [
   },
   {
     q: "Où trouver le code d'une partie ?",
-    a: "En soirée, le code de 6 caractères est affiché en grand sur la TV, à côté du QR code. Pour une room privée en ligne, c'est la personne qui l'a créée qui le partage. Dans les deux cas, il se tape dans le champ « J'ai un code » en haut de cette page.",
+    a: "En soirée, le code de 6 caractères est affiché en grand sur la TV, à côté du QR code. Pour une room privée en ligne, c'est la personne qui l'a créée qui le partage. Dans les deux cas, il se tape dans le champ « Code » en haut de cette page.",
   },
 ];
 

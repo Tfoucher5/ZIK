@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  emitRoundEnd,
   emitSplit,
   phoneNight,
   phoneRoster,
@@ -7,6 +8,28 @@ import {
   ranker,
   withPrevRank,
 } from "../phoneView.js";
+
+// TV et régie via io.to, téléphones alice (s1) et bob (s2) un par un
+const ioFactice = (envois) => {
+  const tel = (id, nom) => ({
+    salonUsername: nom,
+    emit: (ev, d) => envois.push({ id, ev, d }),
+  });
+  return {
+    to: (cible) => ({
+      emit: (ev, d) => envois.push({ id: cible, ev, d }),
+    }),
+    sockets: {
+      adapter: {
+        rooms: new Map([["salon:players:C", new Set(["s1", "s2", "parti"])]]),
+      },
+      sockets: new Map([
+        ["s1", tel("s1", "alice")],
+        ["s2", tel("s2", "bob")],
+      ]),
+    },
+  };
+};
 
 const joueurs = (n) =>
   Array.from({ length: n }, (_, i) => ({
@@ -59,27 +82,42 @@ describe("vue téléphone", () => {
     expect(phoneNight(null)).toBeNull();
   });
 
+  it("fin de manche QCM : chaque téléphone sa case, jamais celle des autres", () => {
+    const envois = [];
+    const io = ioFactice(envois);
+    const summary = {
+      answer: "X - Y",
+      correctChoiceIndex: 1,
+      scores: [
+        { username: "alice", score: 10, delta: 10 },
+        { username: "bob", score: 0, delta: 0 },
+      ],
+      teams: null,
+    };
+    const players = { alice: { _choiceIndex: 1 }, bob: { _choiceIndex: 3 } };
+    emitRoundEnd(io, "C", summary, players);
+    const vue = (id) => envois.find((e) => e.id === id).d;
+    expect(vue("s1").chosenIndex).toBe(1);
+    expect(vue("s2").chosenIndex).toBe(3);
+    expect(JSON.stringify(vue("s1"))).not.toContain('"chosenIndex":3');
+    expect(vue("s1").scores).toBeUndefined();
+    expect(envois[0].d).not.toHaveProperty("chosenIndex");
+  });
+
+  it("fin de manche : sans réponse comptée, null ; hors QCM, pas de champ", () => {
+    const envois = [];
+    const summary = { scores: [], teams: null, correctChoiceIndex: 0 };
+    emitRoundEnd(ioFactice(envois), "C", summary, {});
+    expect(envois[1].d.chosenIndex).toBeNull();
+    envois.length = 0;
+    const texte = { scores: [], teams: null, correctChoiceIndex: undefined };
+    emitRoundEnd(ioFactice(envois), "C", texte, {});
+    expect(envois[1].d).not.toHaveProperty("chosenIndex");
+  });
+
   it("TV et régie reçoivent tout, chaque téléphone sa vue", () => {
     const envois = [];
-    const tel = (id, nom) => ({
-      salonUsername: nom,
-      emit: (ev, d) => envois.push({ id, ev, d }),
-    });
-    const io = {
-      to: (cible) => ({
-        emit: (ev, d) => envois.push({ id: cible, ev, d }),
-      }),
-      sockets: {
-        adapter: {
-          rooms: new Map([["salon:players:C", new Set(["s1", "s2", "parti"])]]),
-        },
-        sockets: new Map([
-          ["s1", tel("s1", "alice")],
-          ["s2", tel("s2", "bob")],
-        ]),
-      },
-    };
-    emitSplit(io, "C", "ev", { tout: 1 }, (u) => ({ moi: u }));
+    emitSplit(ioFactice(envois), "C", "ev", { tout: 1 }, (u) => ({ moi: u }));
     expect(envois).toEqual([
       { id: ["salon:screens:C", "salon:ctrl:C"], ev: "ev", d: { tout: 1 } },
       { id: "s1", ev: "ev", d: { moi: "alice" } },

@@ -1,0 +1,172 @@
+/* « À trancher » : bouton de la barre, fenêtre plein écran pour répondre. */
+.bouton-trancher {
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0a0d14;
+  background: var(--alerte);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--alerte) 50%, transparent);
+}
+.bouton-trancher.vide {
+  color: var(--texte);
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  box-shadow: none;
+}
+.badge {
+  display: inline-block;
+  min-width: 26px;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #0a0d14;
+  color: var(--alerte);
+  text-align: center;
+  letter-spacing: 0;
+}
+.vide .badge {
+  background: var(--bord);
+  color: var(--texte);
+}
+.trancher {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--fond);
+  color: var(--texte);
+}
+.trancher::backdrop {
+  background: var(--fond);
+}
+.trancher > header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 40px;
+  background: var(--fond);
+  border-bottom: 1px solid var(--bord);
+}
+.trancher h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--alerte);
+}
+.trancher .aide {
+  flex: 1;
+  margin: 0;
+  color: var(--doux);
+}
+.trancher .principal {
+  background: var(--alerte);
+  border-color: var(--alerte);
+  color: #0a0d14;
+  font-weight: 700;
+}
+.trancher .etat {
+  flex-basis: 100%;
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--vif);
+}
+.trancher .liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+  gap: 20px;
+  padding: 24px 40px 40px;
+}
+.decision {
+  padding: 18px 20px;
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  background: rgba(14, 19, 32, 0.9);
+}
+.decision h3 {
+  display: inline;
+  margin: 0 8px 0 0;
+  font-size: 18px;
+}
+.decision header small {
+  display: block;
+  margin-top: 4px;
+  color: var(--doux);
+}
+.decision .statut,
+.decision .envoye {
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--doux);
+  color: var(--doux);
+  font-size: 12px;
+}
+.decision .envoye {
+  border-color: var(--vif);
+  color: var(--vif);
+}
+.decision dl {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 6px 14px;
+  margin: 14px 0;
+}
+.decision dt {
+  color: var(--doux);
+}
+.decision dd {
+  margin: 0;
+}
+.decision a {
+  color: var(--vif);
+  word-break: break-all;
+}
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.option {
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  color: var(--texte);
+  background: transparent;
+  border: 1px solid var(--alerte);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.option:hover,
+.option:focus-visible {
+  background: color-mix(in srgb, var(--alerte) 18%, transparent);
+}
+.decision textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  padding: 10px;
+  resize: vertical;
+}
+.decision textarea:focus {
+  outline: 2px solid var(--alerte);
+  border-color: transparent;
+}

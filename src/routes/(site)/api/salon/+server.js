@@ -75,11 +75,48 @@ export async function POST({ request }) {
   }
 }
 
-// Recherches ratées par HTTP, toutes requêtes confondues (même plafond que par
-// socket) : des codes au hasard ne martèlent pas la base
-const httpLookups = {};
+// Recherches ratées ou en cours par HTTP, par adresse (même plafond que par
+// socket) : des codes au hasard ne martèlent pas la base. L'adresse se
+// falsifie, d'où aussi un plafond global large. Exportée pour les tests.
+export const _missesByIp = new Map();
+const allMisses = [];
+const MAX_IP_MISSES = 5;
+const MAX_ALL_MISSES = 200;
+const MISS_WINDOW_MS = 60 * 1000;
 
-export async function GET({ url }) {
+function prune(list, now) {
+  while (list.length && now - list[0] > MISS_WINDOW_MS) list.shift();
+  return list;
+}
+
+function unmark(list, now) {
+  const i = list.lastIndexOf(now);
+  if (i >= 0) list.splice(i, 1);
+}
+
+async function lookUp(code, ip) {
+  const now = Date.now();
+  prune(allMisses, now);
+  // Au plus MAX_ALL_MISSES adresses dans la fenêtre : table bornée
+  if (_missesByIp.size > MAX_ALL_MISSES)
+    for (const [addr, l] of _missesByIp)
+      if (!prune(l, now).length) _missesByIp.delete(addr);
+  const mine = prune(_missesByIp.get(ip) ?? [], now);
+  if (allMisses.length >= MAX_ALL_MISSES || mine.length >= MAX_IP_MISSES)
+    return "throttled";
+  // Compté avant l'attente : une rafale parallèle ne passe pas sous le plafond
+  allMisses.push(now);
+  mine.push(now);
+  _missesByIp.set(ip, mine);
+  // Plafonds tenus ici : restoreSalon reçoit un compteur neuf
+  await restoreSalon(code, getIO(), {});
+  if (!salonRooms[code]) return;
+  unmark(allMisses, now);
+  unmark(mine, now);
+  if (!mine.length) _missesByIp.delete(ip);
+}
+
+export async function GET({ request, url }) {
   const code = url.searchParams.get("code")?.toUpperCase();
   if (!/^[A-Z0-9]{4,12}$/.test(code ?? ""))
     return json(
@@ -87,10 +124,12 @@ export async function GET({ url }) {
       { status: 400 },
     );
   // Juste après un redémarrage, le salon n'est encore que dans son instantané
-  if (
-    !salonRooms[code] &&
-    (await restoreSalon(code, getIO(), httpLookups)) === "throttled"
-  )
+  // Railway pose X-Real-IP ; X-Forwarded-For en repli
+  const ip =
+    request.headers.get("x-real-ip") ||
+    request.headers.get("x-forwarded-for") ||
+    "unknown";
+  if (!salonRooms[code] && (await lookUp(code, ip)) === "throttled")
     return json({ error: "Réessayez dans un instant." }, { status: 503 });
   const salon = salonRooms[code];
   if (!salon)

@@ -19,15 +19,19 @@ Tu es le CEO. Tu ne codes pas toi-même : tu décides de l'ordre, tu fais travai
 
 Chefs, skills et équipes : tableau « L'entreprise d'agents » du `CLAUDE.md` (seule source, lue aussi par le QG).
 
+## Mode entreprise : tout le monde travaille en même temps
+
+À chaque demande, liste les chantiers ouverts (produit, dev, opérations, promo, argent) et lance **en parallèle, en arrière-plan**, une équipe par chantier indépendant. Plusieurs équipes de dev peuvent avancer ensemble : agents `dev` en worktrees, un chantier = une branche = une PR, jamais les mêmes fichiers. La promo (`community`, `contenu`, `seo`) avance chaque semaine quoi qu'il arrive. Un savoir-faire manque : recrute un agent (fichier `.claude/agents/`, nom dans `scripts/qg/public/noms.js`, ligne dans le tableau du `CLAUDE.md`). Relis chaque rendu avant de le transmettre ; ce qui se voit passe toujours par la porte concept.
+
 ## Second cerveau, à lire avant de décider
 
-`CLAUDE.md`, `docs/strategie/etat.md` (chiffres), `docs/strategie/decisions.md` (décisions), `docs/audit/2026-11-02-a-valider.md` (plan), `docs/idees/` (idées retenues), la mémoire du projet.
+`docs/strategie/vision.md` (direction, trois chiffres, qui décide quoi), `CLAUDE.md`, `docs/strategie/etat.md` (chiffres), `docs/strategie/decisions.md` (décisions), `docs/audit/2026-11-02-a-valider.md` (plan), `docs/idees/` (idées retenues), la mémoire du projet.
 
 ## `semaine` (lundi)
 
 1. `/etat` : chiffres à jour.
 2. Agents `chef-projet` et `support` en parallèle : où on en est, ce qui bloque, ce que disent les clients.
-3. Choisis **3 priorités** de la semaine, chacune liée à un objectif (clients Pro, joueurs qui jouent ensemble, retour des joueurs, trafic) et à un chiffre de `etat.md`.
+3. Choisis **3 priorités** de la semaine, chacune liée à un des trois chiffres de la vision (soirées réussies, organisateurs fidèles, clients payants) et à sa valeur dans `etat.md`. Ce qui sort de la vision est refusé ou proposé à Théo.
 4. Ce qui relève d'une grosse décision (offre, prix, nouveau mode, nouvelle page, changement de cap) : propose un `/board`, ne le tranche pas seul.
 5. Compte rendu (ci-dessous) ; les tâches retenues sont ajoutées au plan dans une PR `docs(plan): …` vers `develop`.
 

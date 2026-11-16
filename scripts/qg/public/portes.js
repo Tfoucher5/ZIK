@@ -4,6 +4,8 @@ import * as THREE from "three";
 const PORTES = [];
 const OUVERTURE = 1.45;
 
+export const oublierPortes = () => (PORTES.length = 0);
+
 export function porte(scene, x, z, angle, l, mat, sens = 1) {
   const pivot = new THREE.Group();
   pivot.position.set(x, 0, z);
