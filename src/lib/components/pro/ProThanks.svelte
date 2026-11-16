@@ -1,10 +1,13 @@
 <script>
   import { getContext } from 'svelte';
   import { fetchPro, proActive } from '$lib/client/salonClient.js';
-  import { thanksPhase, STATUS, planLabel, endTitle } from './thanks.js';
+  import { thanksPhase, STATUS, planLabel, endTitle, REGIE, regieLine } from './thanks.js';
+  import { thanksRegie, forgetIntent, backToRegie } from './intent.js';
 
   const zik = getContext('zik');
   let pro = $state(null);
+  // Paiement parti d'une régie encore ouverte : on y renvoie
+  let { regie = null } = $props();
   const active = $derived(proActive(pro));
   const endLabel = $derived(
     pro ? new Date(pro.current_period_end).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '',
@@ -12,6 +15,13 @@
   let waitedTooLong = $state(false);
   const phase = $derived(thanksPhase({ active, waitedTooLong, authReady: zik.authReady, user: zik.user }));
   const pending = $derived(phase === 'late' ? 'Pas encore reçue' : 'En attente de Stripe…');
+
+  $effect(() => {
+    thanksRegie(localStorage, fetch).then((code) => { if (code) regie = code; });
+  });
+  $effect(() => {
+    if (active) forgetIntent(localStorage);
+  });
 
   // Stripe prévient ZIK par webhook : on attend l'activation quelques secondes
   $effect(() => {
@@ -37,9 +47,14 @@
   <article class="card s-{phase}" aria-labelledby="merci-t">
     <svg class="check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" /><path d="M15 27l7 7 15-16" /></svg>
     <span class="st" role="status"><i></i>{STATUS[phase]}</span>
-    <h1 class="grad" id="merci-t">{phase === 'on' ? 'Merci, paiement reçu !' : 'Merci !'}</h1>
+    <h1 class="grad" id="merci-t">{phase === 'on' ? (regie ? "C'est actif." : 'Merci, paiement reçu !') : 'Merci !'}</h1>
 
-    {#if phase === 'on'}
+    {#if regie && REGIE[phase]}
+      <p class="msg">
+        {REGIE[phase][0]}<b>{regie}</b>{REGIE[phase][1]}
+        {#if phase === 'late'}Si rien ne bouge dans quelques minutes, écrivez à <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a>. <b>Inutile de payer à nouveau.</b>{/if}
+      </p>
+    {:else if phase === 'on'}
       <p class="msg">ZIK Pro est actif. Créez votre soirée en restant connecté avec ce compte : pas de limite de joueurs, buzzer, manches spéciales et classement de la soirée sont débloqués.</p>
     {:else if phase === 'late'}
       <p class="msg">Le paiement est bien passé, l'activation prend un peu plus de temps que prévu. Rechargez la page dans une minute. Si rien ne bouge, écrivez à <a href="mailto:theo@zik-music.fr">theo@zik-music.fr</a> : c'est réglé dans la journée. <b>Inutile de payer à nouveau.</b></p>
@@ -53,6 +68,7 @@
       <dl>
         <div><dt>Formule</dt><dd class:wait={!active}>{active ? planLabel(pro.plan) : pending}</dd></div>
         {#if active}<div><dt>{endTitle(pro.plan)}</dt><dd>{endLabel}</dd></div>{/if}
+        {#if regie}<div><dt>Soirée</dt><dd class:wait={!active}>{regieLine(regie, active)}</dd></div>{/if}
         <div><dt>Compte</dt><dd>{zik.user.email}</dd></div>
       </dl>
     {/if}
@@ -60,6 +76,8 @@
     <div class="ctas">
       {#if phase === 'out'}
         <button type="button" class="btn-main" onclick={() => zik.openAuthModal('login')}>Me connecter</button>
+      {:else if regie}
+        <button type="button" class="btn-main" onclick={() => backToRegie(regie)}>Retourner sur la régie</button>
       {:else}
         <a class="btn-main" href="/salon">{phase === 'on' ? 'Créer ma soirée Pro' : 'Créer une soirée'}</a>
       {/if}

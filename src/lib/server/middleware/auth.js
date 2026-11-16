@@ -29,15 +29,19 @@ setInterval(() => {
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
 const _rl = new Map(); // ip -> { count, resetAt }
 
-export function checkRateLimit(ip, max, windowMs) {
+export function checkRateLimit(
+  ip,
+  max,
+  windowMs,
+  message = "Trop de requetes, reessaie dans un instant.",
+) {
   const now = Date.now();
   const e = _rl.get(ip);
   if (!e || e.resetAt < now) {
     _rl.set(ip, { count: 1, resetAt: now + windowMs });
     return;
   }
-  if (e.count >= max)
-    throw error(429, "Trop de requetes, reessaie dans un instant.");
+  if (e.count >= max) throw error(429, message);
   e.count++;
 }
 

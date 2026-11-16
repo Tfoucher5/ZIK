@@ -1,10 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render } from "svelte/server";
 import ProFaq from "../ProFaq.svelte";
 import ProOffers from "../ProOffers.svelte";
 import ProHero from "../ProHero.svelte";
 import { FAQ, FAQ_JSON_LD, COMPARE } from "../proContent.js";
 import { PLANS, PRO_PERKS } from "../../../data/proPlans.js";
+
+vi.mock("$env/dynamic/public", () => ({ env: {} }));
 
 const decode = (s) =>
   s
@@ -61,6 +63,98 @@ describe("cartes des offres", () => {
       props: { checkout: { ...checkout, subscribed: true } },
     });
     expect(body.match(/Déjà abonné/g)).toHaveLength(3);
+  });
+
+  it("sans régie : pas de bloc, le Mensuel mis en avant", () => {
+    const { body } = render(ProOffers, { props: { checkout } });
+    expect(body).not.toContain("Depuis votre régie");
+    expect(body).not.toContain("Votre choix");
+    expect(body.match(/plan card[^"]*top/g)).toHaveLength(1);
+  });
+
+  describe("arrivée par la régie", () => {
+    const regie = (over) =>
+      decode(
+        render(ProOffers, {
+          props: {
+            checkout: {
+              ...checkout,
+              regie: "KZ4P2M",
+              intent: { plan: "night", salon: "KZ4P2M" },
+              chosen: PLANS[0],
+              step: "compte",
+              zik: { user: null },
+              ...over,
+            },
+          },
+        }).body,
+      );
+
+    it("le bloc, la soirée et la formule choisie mise en avant", () => {
+      const body = regie();
+      expect(body).toContain("Depuis votre régie");
+      expect(body).toContain('aria-label="Code KZ4P2M"');
+      expect(body).toContain("Créer mon compte");
+      expect(body.match(/>Votre choix</g)).toHaveLength(1);
+      const top = body.match(
+        /<article class="plan card[^"]*top[\s\S]*?<\/h3>/g,
+      );
+      expect(top).toHaveLength(1);
+      expect(top[0]).toContain("Soirée 24 h");
+    });
+
+    it("chaque étape a son texte", () => {
+      const u = { user: { email: "bar@exemple.fr" } };
+      expect(regie({ step: "mail", pendingEmail: "bar@exemple.fr" })).toContain(
+        "Renvoyer l'e-mail",
+      );
+      expect(
+        regie({ step: "payer", zik: u, attached: true, nightEnd: "demain" }),
+      ).toContain("Payer 7,90 €");
+      // Pas de paiement tant que la soirée n'est pas rattachée
+      const verif = regie({ step: "payer", zik: u, attached: false });
+      expect(verif).not.toContain("Payer 7,90 €");
+      expect(verif).toContain("Vérification de la soirée");
+      const refus = regie({
+        step: "payer",
+        zik: u,
+        attachError: "Cette soirée n'est plus en cours.",
+        attachRefused: true,
+      });
+      expect(refus).toContain("Cette soirée n'est plus en cours.");
+      expect(refus).not.toContain("Payer 7,90 €");
+      expect(refus).toContain("Continuer sans cette soirée");
+      expect(refus).toContain("Cette soirée ne peut pas passer en ZIK Pro");
+      expect(refus).not.toContain("passe en ZIK Pro toute seule");
+      // Sans formule choisie, le refus passe avant le choix de formule
+      const sansFormule = regie({
+        step: "formule",
+        zik: u,
+        intent: { plan: null, salon: "KZ4P2M" },
+        attachError: "Cette soirée n'est plus en cours.",
+        attachRefused: true,
+      });
+      expect(sansFormule).toContain("Cette soirée n'est plus en cours.");
+      expect(sansFormule).not.toContain("Choisissez votre formule");
+      // Panne : réessayer d'abord, jamais « continuer sans » ni Stripe
+      const panne = regie({
+        step: "payer",
+        zik: u,
+        attachError:
+          "La vérification de votre soirée n'a pas abouti. Réessayez dans un instant.",
+      });
+      expect(panne).toContain("Vérification interrompue");
+      expect(panne).toMatch(/class="btn-main[^"]*"[^>]*>Réessayer</);
+      expect(panne).not.toContain("Continuer sans cette soirée");
+      expect(panne).not.toContain("Stripe ne répond pas");
+      expect(panne).not.toContain("Payer 7,90 €");
+      expect(regie({ step: "actif", activated: true })).toContain(
+        "Rien à payer",
+      );
+      expect(
+        regie({ step: "formule", intent: { plan: null, salon: "KZ4P2M" } }),
+      ).toContain("Choisissez votre formule");
+    });
   });
 
   it("rappelle la TVA et les CGV sous les offres", () => {

@@ -12,10 +12,10 @@
   /**
    * @type {{
    *   sb: any, form: import('./authForm.svelte.js').AuthForm, nowLabel: string,
-   *   entering: boolean, setView: (v: string) => void, onLogged: () => void
+   *   entering: boolean, setView: (v: string) => void, onLogged: () => void, next?: string
    * }}
    */
-  let { sb, form, nowLabel, entering, setView, onLogged } = $props();
+  let { sb, form, nowLabel, entering, setView, onLogged, next } = $props();
 
   let error = $state('');
   let loading = $state(false);
@@ -57,7 +57,7 @@
 
   <YouLine name="Toi" hint="La prochaine ligne est pour toi" />
 
-  <OAuthButtons {sb} divider="ou dicte au videur" />
+  <OAuthButtons {sb} {next} divider="ou dicte au videur" />
 
   <AuthField id="gl-email" label="Email" type="email" bind:value={form.email} placeholder="ton@email.com" autocomplete="email" />
   <AuthField id="gl-pwd" label="Mot de passe" toggle bind:show={form.showLoginPwd} bind:value={form.password}

@@ -165,7 +165,108 @@ describe("paiement depuis la régie", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("corps hostiles : toujours une réponse 4xx, jamais 500", async () => {
+  it("attach différent de true : chemin de paiement habituel", async () => {
+    for (const attach of ["oui", 42, {}, [], 1, "true"]) {
+      create.mockClear();
+      const res = await post({ plan: "night", attach });
+      expect(await res.json(), JSON.stringify(attach)).toEqual({
+        url: "https://pay",
+      });
+      expect(create).toHaveBeenCalledTimes(1);
+    }
+  });
+});
+
+describe("rattachement à la connexion (attach: true) : jamais de Stripe", () => {
+  it("salon valide, compte gratuit : rattaché, rien d'activé", async () => {
+    const s = salon("SOIR01");
+    const res = await post({ salon: "SOIR01", key: "cle", attach: true });
+    expect(await res.json()).toEqual({ activated: false });
+    expect(s.hostUserId).toBe("u1");
+    expect(s.pro).toBe(false);
+  });
+
+  it("formule facultative, même inconnue ou présente", async () => {
+    for (const plan of [undefined, "night", "monthly", "__proto__", 42]) {
+      salon("SOIR01");
+      const res = await post({
+        plan,
+        salon: "SOIR01",
+        key: "cle",
+        attach: true,
+      });
+      expect(res.status, String(plan)).toBe(200);
+    }
+  });
+
+  it("compte déjà Pro : la soirée passe Pro tout de suite", async () => {
+    const s = salon("SOIR01");
+    getProRow.mockResolvedValue(ACTIF);
+    const res = await post({ salon: "SOIR01", key: "cle", attach: true });
+    expect(await res.json()).toEqual({ activated: true });
+    expect(s.pro).toBe(true);
+  });
+
+  it("refus 403 et 404 avant tout, aucun rattachement", async () => {
+    salon("SOIR01");
+    salon("AUTR01", "u2");
+    const cas = [
+      [{ salon: "SOIR01", key: "x" }, 403],
+      [{ salon: "AUTR01", key: "cle" }, 403],
+      [{ salon: "FINI01", key: "cle" }, 404],
+      [{ key: "cle" }, 400],
+    ];
+    for (const [body, status] of cas)
+      expect((await post({ ...body, attach: true })).status).toBe(status);
+    expect(salonRooms.SOIR01.hostUserId).toBeNull();
+    expect(salonRooms.AUTR01.hostUserId).toBe("u2");
+  });
+
+  it("corps hostiles : 4xx, jamais 500", async () => {
+    salon("ABC123");
+    const corps = [
+      { attach: true },
+      { attach: true, salon: {} },
+      { attach: true, salon: "__proto__", key: "cle" },
+      { attach: true, salon: "ABC123", key: 42 },
+      { attach: true, salon: "ABC123", key: "k".repeat(1_000_000) },
+      { attach: true, salon: ["ABC123"], key: "cle" },
+      { attach: true, salon: "abc123", key: "cle" },
+    ];
+    for (const body of corps) {
+      const { status } = await post(body);
+      expect(status, JSON.stringify(body).slice(0, 60)).toBeGreaterThanOrEqual(
+        400,
+      );
+      expect(status).toBeLessThan(500);
+    }
+    expect(salonRooms.ABC123.hostUserId).toBeNull();
+  });
+
+  it("aucune session Stripe, dans tous les cas", async () => {
+    salon("SOIR01");
+    salon("AUTR01", "u2");
+    const bodies = [
+      { salon: "SOIR01", key: "cle" },
+      { plan: "night", salon: "SOIR01", key: "cle" },
+      { plan: "monthly", salon: "SOIR01", key: "cle", confirm: true },
+      { plan: "yearly", salon: "AUTR01", key: "cle" },
+      { plan: "night", salon: "FINI01", key: "cle" },
+      { plan: "night", salon: "SOIR01", key: "x" },
+      { plan: "night" },
+      {},
+    ];
+    for (const row of [null, ACTIF, { ...ACTIF, status: "canceled" }])
+      for (const body of bodies) {
+        getProRow.mockResolvedValue(row);
+        await post({ ...body, attach: true });
+      }
+    expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe("corps hostiles", () => {
+  it("toujours une réponse 4xx, jamais 500", async () => {
     salon("ABC123");
     const corps = [
       "null",
