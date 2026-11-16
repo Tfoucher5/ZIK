@@ -1,5 +1,5 @@
 import { adminSalon, requirePro } from "./players.js";
-import { num, safe } from "../safe.js";
+import { bool, num, safe } from "../safe.js";
 
 const clamp = (v) => Math.min(Math.max(Math.round(Number(v) || 0), 0), 100);
 
@@ -23,5 +23,13 @@ export function registerVolume(socket, io) {
     io.to(`salon:ctrl:${salon.code}`).emit("salon_volume", {
       volume: salon._tvVolume,
     });
+  });
+
+  // Son de la TV testé : indicatif pour la régie, ne bloque jamais le lancement.
+  safe(socket, "salon_tv_sound", { ok: bool() }, ({ ok }) => {
+    const salon = adminSalon(socket);
+    if (!salon || socket.salonRole !== "screen") return;
+    salon._tvSound = ok;
+    io.to(`salon:ctrl:${salon.code}`).emit("salon_tv_sound", { ok });
   });
 }
