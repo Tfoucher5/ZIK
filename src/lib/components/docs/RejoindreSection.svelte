@@ -26,6 +26,6 @@
 
   <h3>Rejoindre ZIK Soirée</h3>
   <p>
-    Pour rejoindre un salon, scannez le QR code affiché sur l'écran hôte (TV ou vidéoprojecteur) ou saisissez le code de 6 caractères manuellement sur la page <a href="/salon/play">/salon/play</a>. Aucun compte n'est nécessaire pour jouer en tant que participant.
+    Pour rejoindre un salon, scannez le QR code affiché sur l'écran hôte (TV ou vidéoprojecteur) ou allez sur <a href="/">zik-music.fr</a> et tapez le code de 6 caractères. Aucun compte n'est nécessaire pour jouer en tant que participant.
   </p>
 </section>

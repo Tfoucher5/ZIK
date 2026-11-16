@@ -16,17 +16,27 @@ test("TV en 390 px sans débordement", async ({ browser, request }) => {
   });
   const tv = await ctx.newPage();
   await tv.goto(`/salon/host?code=${code}&key=${key}`);
-  await expect(tv.locator(".sh-join-code")).toHaveText(code);
-
-  const depassent = await tv.evaluate(() =>
-    [...document.querySelectorAll(".sh *")]
-      .filter((e) => e.getBoundingClientRect().right > innerWidth + 1)
-      .map((e) => `${e.tagName}.${e.className}`),
+  const depassent = (sel) =>
+    tv.evaluate(
+      (sel) =>
+        [...document.querySelectorAll(sel)]
+          .filter((e) => e.getBoundingClientRect().right > innerWidth + 1)
+          .map((e) => `${e.tagName}.${e.className}`),
+      sel,
+    );
+  const afficher = tv.getByRole("button", { name: "Afficher le code" });
+  await expect(afficher).toBeVisible();
+  expect(await depassent(".pp *")).toEqual([]);
+  await afficher.click();
+  await expect(tv.locator(".lb-code")).toHaveAttribute(
+    "aria-label",
+    `Code ${code}`,
   );
-  expect(depassent).toEqual([]);
+
+  expect(await depassent(".sh *")).toEqual([]);
   await expect(tv.getByRole("link", { name: "Régie" })).toBeInViewport();
-  await expect(tv.locator(".sh-lobby .sx-kicker")).toBeInViewport();
-  await tv.locator(".sh-lobby .sh-qr").scrollIntoViewIfNeeded();
-  await expect(tv.locator(".sh-lobby .sh-qr")).toBeInViewport({ ratio: 1 });
+  await expect(tv.locator(".lb-code")).toBeInViewport();
+  await tv.locator(".lb-qr").scrollIntoViewIfNeeded();
+  await expect(tv.locator(".lb-qr")).toBeInViewport({ ratio: 1 });
   await ctx.close();
 });
