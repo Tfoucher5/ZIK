@@ -33,3 +33,12 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · retoucher
 - **Recommandation** : la regarder avec le son, puis oui
 - **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v3.mp4
+
+## Maquette : les autres onglets de la régie
+
+- **Chantier** : Création + avant-partie (Nina, DA)
+- **Depuis** : 16/11
+- **Question** : Tu voulais voir les autres onglets de la régie. Concept « le retour de scène » : Direct (« ça joue ? »), Joueurs (« qui suit ? »), Réglages (« la setlist », qui reprend les 4 lignes de la création), en 390 et 1024, avant et pendant la partie (onglets 6, 7, 8 de la maquette). Le titre remplacé est marqué discrètement dans les titres joués. Choix à confirmer : 1) sur téléphone, la liste des joueurs passe avant les équipes ; 2) équipe, score et exclure repliés sur la ligne d'un joueur (un appui de plus sur téléphone, tout visible en 1024) ; 3) « Bonne réponse » sans le pseudo dans le bouton (il est dans « Sam a buzzé ») ; 4) « a décroché » au lieu de « déconnecté », et le mot « salon » disparaît de la régie.
+- **Options** : valider · valider avec mes réponses · retoucher
+- **Recommandation** : valider les 4
+- **Lien** : https://claude.ai/artifact/8kDW3iEd9fTamoxy6A4Fn2
