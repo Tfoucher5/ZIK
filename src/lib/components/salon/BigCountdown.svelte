@@ -4,13 +4,14 @@
    * fond opaque) ou 3, 2, 1 avant le titre suivant (sans libellé, la réponse
    * reste visible derrière).
    */
-  let { sec = 0, label = '' } = $props();
+  let { sec = 0, label = '', hint = '' } = $props();
 </script>
 
 {#if sec > 0}
   <div class="big-cd" class:voile={!label} role="timer" aria-live="assertive">
     {#if label}<p class="sx-kicker">{label}</p>{/if}
     {#key sec}<b>{sec}</b>{/key}
+    {#if hint}<p class="hint">{hint}</p>{/if}
   </div>
 {/if}
 
@@ -33,6 +34,10 @@
   }
   .big-cd p {
     font-size: clamp(1.2rem, 3vw, 2.4rem);
+  }
+  .big-cd .hint {
+    font-size: 1.1rem;
+    color: var(--mid);
   }
   b {
     font-family: var(--s-cond);

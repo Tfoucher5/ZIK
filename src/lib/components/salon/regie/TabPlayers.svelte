@@ -50,7 +50,7 @@
 {#if players.length === 0}
   <div class="tp-vide">
     <p><b>Personne pour l'instant.</b></p>
-    <p>Les joueurs rejoignent sur <b>zik-music.fr/salon/play</b> avec le code <b class="tp-code">{code}</b>, ou en scannant le QR code affiché sur la TV.</p>
+    <p>Les joueurs scannent le QR code affiché sur la TV, ou vont sur <b>zik-music.fr</b> et tapent le code <b class="tp-code">{code}</b>.</p>
   </div>
 {:else}
   <ul class="tp-list">

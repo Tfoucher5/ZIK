@@ -16,6 +16,18 @@ describe("téléphone : soirée fermée par l'hôte", () => {
   });
 });
 
+describe("téléphone : lancement de la partie", () => {
+  it("referme la liste des équipes ouverte par « Changer »", () => {
+    const handlers = {};
+    const socket = { on: (evt, fn) => (handlers[evt] = fn) };
+    const p = { teamOpen: true };
+    listenPlayer(p, socket, "ABCDEF", "Ana");
+    handlers.salon_game_starting();
+    expect(p.teamOpen).toBe(false);
+    expect(p.phase).toBe("starting");
+  });
+});
+
 describe("téléphone : retour après une coupure en QCM", () => {
   const reprise = (p, data) => {
     const handlers = {};

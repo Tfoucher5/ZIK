@@ -171,3 +171,49 @@ describe("volume de la TV partagé avec la régie", () => {
     expect(salonRooms[CODE]._tvVolume).toBe(70);
   });
 });
+
+describe("son de la TV testé, vu par la régie", () => {
+  const sonVu = () => h.emissions.filter((e) => e.event === "salon_tv_sound");
+  const sonALArrivee = (r) =>
+    r.recu.find((e) => e.event === "salon_control_joined").payload.tvSound;
+
+  it("la TV annonce le test, seules les régies le reçoivent", () => {
+    tv().handlers.salon_tv_sound({ ok: true });
+    const [envoi] = sonVu();
+    expect(sonVu()).toHaveLength(1);
+    expect([envoi.cibles].flat()).toEqual([REGIE]);
+    expect(envoi.payload).toEqual({ ok: true });
+    expect(salonRooms[CODE]._tvSound).toBe(true);
+  });
+
+  it("une régie arrivée après reçoit le résultat du test", () => {
+    tv().handlers.salon_tv_sound({ ok: false });
+    expect(sonALArrivee(regie())).toBe(false);
+  });
+
+  it("sans test annoncé, la régie reçoit null", () => {
+    tv();
+    expect(sonALArrivee(regie())).toBeNull();
+  });
+
+  it("payload mal formé : rien retenu, rien relayé", () => {
+    const t = tv();
+    for (const p of [{}, { ok: "oui" }, 42, null]) t.handlers.salon_tv_sound(p);
+    expect(sonVu()).toEqual([]);
+    expect(salonRooms[CODE]._tvSound).toBeUndefined();
+  });
+
+  it("régie, joueur ou inconnu ne peuvent pas l'annoncer", () => {
+    tv();
+    const joueur = makeSocket("j", h.rooms);
+    joueur.salonCode = CODE;
+    joueur.salonRole = "player";
+    const inconnu = makeSocket("x", h.rooms);
+    h.connecte(joueur);
+    h.connecte(inconnu);
+    for (const s of [regie(), joueur, inconnu])
+      s.handlers.salon_tv_sound({ ok: true });
+    expect(sonVu()).toEqual([]);
+    expect(salonRooms[CODE]._tvSound).toBeUndefined();
+  });
+});

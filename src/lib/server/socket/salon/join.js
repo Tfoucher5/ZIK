@@ -134,6 +134,7 @@ export function registerJoin(socket, io) {
       history: game.history,
       trackCount: game.fullPlaylist.length,
       tvVolume: salon._tvVolume ?? null,
+      tvSound: salon._tvSound ?? null,
       reclaims: pendingReclaims(salon),
       support: supportView(salon),
     });
