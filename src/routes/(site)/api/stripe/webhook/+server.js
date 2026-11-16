@@ -2,6 +2,7 @@ import { json } from "@sveltejs/kit";
 import { getStripe } from "$lib/server/stripe.js";
 import {
   getProRow,
+  isProActive,
   activateNight,
   syncSubscription,
 } from "$lib/server/services/pro.js";
@@ -10,11 +11,25 @@ import { proWelcome, proSaleAlert } from "$lib/server/mail/proPurchase.js";
 import { alertAdminsSafe } from "$lib/server/services/admin/alerts.js";
 import { PLAN_LABELS } from "$lib/shared/admin/players.js";
 import { noteEvent } from "$lib/server/services/health/opsEvents.js";
+import { proForHost } from "$lib/server/socket/salon/pro.js";
+
+// Salons en cours de l'acheteur, seulement si l'accès est vraiment ouvert en
+// base ; une panne côté salon ne fait jamais échouer le webhook
+function salonsPro(userId, row) {
+  try {
+    if (isProActive(row)) proForHost(userId);
+  } catch (e) {
+    console.error("[stripe] passage Pro du salon :", e?.message ?? e);
+  }
+}
 
 async function onCheckoutCompleted(session) {
   const userId = session.client_reference_id;
   if (!userId || session.payment_status !== "paid") return;
-  if ((await getProRow(userId))?.stripe_last_session === session.id) return;
+  const before = await getProRow(userId);
+  // Déjà traité : on rattrape seulement un passage Pro du salon resté en route
+  if (before?.stripe_last_session === session.id)
+    return salonsPro(userId, before);
 
   const plan = session.metadata?.plan;
   if (session.mode === "payment") {
@@ -25,6 +40,7 @@ async function onCheckoutCompleted(session) {
   }
 
   const row = await getProRow(userId);
+  salonsPro(userId, row);
   const email = session.customer_details?.email;
   alertAdminsSafe("admin_money", {
     title: `Nouveau Pro : ${PLAN_LABELS[plan] ?? plan ?? "?"}`,

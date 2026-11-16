@@ -25,11 +25,11 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Recommandation** : créer la micro-entreprise, faire confirmer la franchise de TVA par l'URSSAF ou un comptable, puis envoyer le SIRET à Claude qui corrige CGV, mentions légales, /pro et factures Stripe. Seuils de franchise services 2026 : 37 500 € / 41 250 € (à vérifier sur service-public.gouv.fr)
 - **Lien** : https://formalites.entreprise.gouv.fr/
 
-## Maquette fin de partie v2 (tes retours appliqués)
+## Post 2 : « Feuille de match » v3, montée sur la musique (TikTok)
 
-- **Chantier** : Fin de partie + Rejouer (Nina, DA)
+- **Chantier** : Marketing (Sami, Nina)
 - **Depuis** : 16/11
-- **Question** : Idée ajoutée : « le podium est un égaliseur » (les barres de la musique deviennent le classement, le vainqueur prend l'écran à sa couleur). TV de fin allégée (3 zones au lieu de 5), podium TV mis en scène, bouton régie « Afficher le QR en grand » (onglet 4), story refaite en 9:16 (3 variantes). Régie, Rejouer et entracte inchangés. 5 choix dans l'onglet « À valider » : 1) la playlist jouée quitte la TV ; 2) prix en étiquettes sur les noms ; 3) aplat du vainqueur à chaque partie ou seulement au podium de soirée ; 4) story : nom de la soirée ou du lieu en tête, magenta hors podium ; 5) QR en grand sans fermeture automatique.
-- **Options** : valider · valider avec mes réponses aux 5 choix · retoucher
-- **Recommandation** : 1 oui, 2 oui, 3 seulement au podium de soirée (sinon ça lasse), 4 nom de la soirée, 5 oui
-- **Lien** : https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5
+- **Question** : La vidéo est maintenant montée sur une musique continue (synthwave années 80 sans voix, libre de droits CC0), chaque coupe et chaque gommette tombe sur le temps, la musique ne s'arrête jamais, fondu à la fin ; bruitages du jeu par-dessus (33,6 s). Dans TikTok on ne rajoute pas de musique. Je la programme **dimanche 22/11 à 18 h** avec la légende « 7/10 sur les années 80. Tu fais mieux ? Viens me battre en ligne, c'est gratuit : zik-music.fr » et #blindtest #blindtestmusical #annees80 #quizmusical #jeuentrepotes ?
+- **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · retoucher
+- **Recommandation** : la regarder avec le son, puis oui
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v3.mp4
