@@ -3,17 +3,14 @@
   /**
    * Onglet « Direct » : ce qui se passe maintenant.
    *
-   * Le mode d'emploi n'apparaît qu'en lobby, où il sert ; une fois la partie
-   * lancée il encombrait la colonne principale sans rien apporter.
-   *
    * @type {{
-   *   phase: string, code: string, track: any, answerMode: string,
+   *   phase: string, track: any, answerMode: string,
    *   volume: number, pro: boolean, history: any[],
    *   onVolume: (v: number) => void,
    *   onReport: (reason: string, round?: number) => void,
    * }}
    */
-  let { phase, code, track, answerMode, volume, pro, history, onVolume, onReport } = $props();
+  let { phase, track, answerMode, volume, pro, history, onVolume, onReport } = $props();
 
   const RAISONS = ['Mauvaise version', 'Pas le bon titre', 'Démarre sur un blanc', 'Pas de son'];
   let signale = $state(null);
@@ -46,17 +43,6 @@
     onReport(raison, manche);
   }
 </script>
-
-{#if phase === 'lobby'}
-  <section class="td-bloc">
-    <h3 class="sx-kicker">Pour démarrer</h3>
-    <ol class="td-help">
-      <li><b>Ouvre l'écran TV</b> sur l'ordinateur branché à la télé, par le menu « Liens » en haut.</li>
-      <li><b>Les joueurs scannent le QR code</b> affiché sur la TV, ou vont sur zik-music.fr/salon/play avec le code <b>{code}</b>.</li>
-      <li><b>Lance la partie</b> quand tout le monde apparaît dans l'onglet Joueurs.</li>
-    </ol>
-  </section>
-{/if}
 
 {#if track}
   <section class="td-bloc">
@@ -119,11 +105,6 @@
 <style>
   .td-bloc { margin-bottom: 26px; }
   .td-bloc:last-child { margin-bottom: 0; }
-
-  .td-help { margin: 12px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
-  .td-help li { font-size: 0.9rem; line-height: 1.5; color: var(--mid); }
-  .td-help b { color: var(--text); }
-
 
   .td-report { margin-top: 14px; font-size: 0.82rem; color: var(--dim); }
   .td-report p { color: var(--mid); }

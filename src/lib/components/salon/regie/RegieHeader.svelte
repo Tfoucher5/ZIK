@@ -12,7 +12,7 @@
    *   round: number, maxRounds: number,
    *   timerVal: number, timerMax: number, timerOn: boolean,
    *   screens: number|null, joueurs: number, repondu: number,
-   *   pro: boolean, maxGratuit: number,
+   *   pro: boolean, maxGratuit: number, prep: boolean,
    *   tvUrl: string, regieUrl: string,
    *   onCopy: (url: string, quoi: string) => void,
    *   onUpsell: (f: string) => void,
@@ -22,7 +22,7 @@
   let {
     code, phase, phaseLabel, paused, round, maxRounds,
     timerVal, timerMax, timerOn, screens, joueurs, repondu,
-    pro, maxGratuit, tvUrl, regieUrl, onCopy, onUpsell, onHelp,
+    pro, maxGratuit, prep, tvUrl, regieUrl, onCopy, onUpsell, onHelp,
   } = $props();
 
   let menuOuvert = $state(false);
@@ -67,6 +67,8 @@
     </div>
   </div>
 
+  <!-- Avant la partie, la checklist de l'onglet Direct dit déjà tout ça. -->
+  {#if !prep}
   <!-- État de l'écran TV : l'exploitant n'a aucun autre moyen de le savoir,
        surtout depuis un téléphone ou une tablette. -->
   {#if etatTv === 'absent'}
@@ -89,6 +91,7 @@
     {/if}
     {#if etatTv === 'ok'}<span class="rh-tv-ok">Écran TV connecté</span>{/if}
   </div>
+  {/if}
 </header>
 
 <style>

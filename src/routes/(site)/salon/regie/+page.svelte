@@ -6,6 +6,7 @@
   import RegieTabs from '$lib/components/salon/regie/RegieTabs.svelte';
   import RegieActions from '$lib/components/salon/regie/RegieActions.svelte';
   import TabDirect from '$lib/components/salon/regie/TabDirect.svelte';
+  import RegiePrep from '$lib/components/salon/regie/RegiePrep.svelte';
   import TabPlayers from '$lib/components/salon/regie/TabPlayers.svelte';
   import NightBoard from '$lib/components/salon/regie/NightBoard.svelte';
   import RegieEvening from '$lib/components/salon/regie/RegieEvening.svelte';
@@ -21,6 +22,8 @@
   let { data } = $props();
   const r = new SalonRegie(createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey));
 
+  const prep = $derived(r.phase === 'lobby' && r.onglet === 'direct');
+
   onMount(() => r.mount());
   onDestroy(() => r.destroy());
 </script>
@@ -35,7 +38,7 @@
     code={r.code} phase={r.phase} phaseLabel={r.phaseLabel} paused={r.paused} round={r.round} maxRounds={r.settings.maxRounds ?? 0}
     timerVal={r.timerVal} timerMax={r.timerMax} timerOn={r.timerOn} screens={r.screens}
     joueurs={r.players.length} repondu={r.answered}
-    pro={r.pro} maxGratuit={FREE_MAX_PLAYERS} tvUrl={r.tvUrl} regieUrl={r.regieUrl}
+    pro={r.pro} maxGratuit={FREE_MAX_PLAYERS} {prep} tvUrl={r.tvUrl} regieUrl={r.regieUrl}
     onCopy={r.copy}
     onUpsell={(f) => (r.upsell = f)}
     onHelp={() => (r.helpOpen = true)}
@@ -74,10 +77,11 @@
 
     <div class="rg-corps">
       <div class="rg-zone">
-        {#if r.idle && r.mediaCheck}<div class="rg-media"><MediaCheck check={r.mediaCheck} /></div>{/if}
+        {#if r.idle && !prep && r.mediaCheck}<div class="rg-media"><MediaCheck check={r.mediaCheck} /></div>{/if}
         {#if r.onglet === 'direct'}
+          {#if prep}<RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} />{/if}
           <TabDirect
-            phase={r.phase} code={r.code} track={r.track} answerMode={r.settings.answerMode}
+            phase={r.phase} track={r.track} answerMode={r.settings.answerMode}
             volume={r.volume} pro={r.pro} history={r.history}
             onVolume={r.setVolume}
             onReport={(reason, round) => r.send('salon_report_video', { reason, round })}
@@ -111,7 +115,7 @@
     </div>
 
     <RegieActions
-      phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} buzzer={r.buzzer}
+      phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} countStart={r.settings.countStart !== false} buzzer={r.buzzer}
       onAction={(ev) => r.send(ev)}
       onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
       onGate={r.gate}
