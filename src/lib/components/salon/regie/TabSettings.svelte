@@ -5,6 +5,7 @@
   import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
   import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
   import { resumeReglages } from './onglets.js';
+  import { ecranLarge } from './large.svelte.js';
 
   /**
    * Onglet « Réglages » : les quatre lignes de la création (musique, manches,
@@ -32,15 +33,8 @@
   const PLUS = SALON_TEAMS.filter((n) => n > FREE_MAX_TEAMS);
 
   // En 1024 px tout est déplié ; au téléphone, la ligne utile du moment
-  let large = $state(false);
-  $effect(() => {
-    const mq = matchMedia('(min-width: 900px)');
-    large = mq.matches;
-    const maj = () => (large = mq.matches);
-    mq.addEventListener('change', maj);
-    return () => mq.removeEventListener('change', maj);
-  });
-  const ouvert = (n) => large || (idle ? n === '02' : n !== '01' && n !== '02');
+  const ecran = ecranLarge();
+  const ouvert = (n) => ecran.large || (idle ? n === '02' : n !== '01' && n !== '02');
 
   const equipes = (n) => (!pro && n > FREE_MAX_TEAMS ? onUpsell('teams') : onSet({ teamCount: n }));
 </script>

@@ -1,6 +1,7 @@
 <script>
   import RegieEvening from './RegieEvening.svelte';
   import CloseEvening from './CloseEvening.svelte';
+  import MediaCheck from './MediaCheck.svelte';
   import { finTete, encore } from './fin.js';
 
   /**
@@ -9,10 +10,11 @@
    *
    * @type {{ players: any[], teams: any[]|null, rounds: number, night: any,
    *   intermission: any, finale: any, qrBig: boolean, pro: boolean, musique: string, tambour?: boolean,
+   *   mediaCheck: any,
    *   onSend: (ev: string, payload?: any) => void, onUpsell: (f: string) => void,
    *   onPlaylists: () => void, onClose: () => void }}
    */
-  let { players, teams, rounds, night, intermission, finale, qrBig, pro, musique, tambour = true, onSend, onUpsell, onPlaylists, onClose } = $props();
+  let { players, teams, rounds, night, intermission, finale, qrBig, pro, musique, tambour = true, mediaCheck, onSend, onUpsell, onPlaylists, onClose } = $props();
 
   const t = $derived(finTete({ players, teams, rounds, night, intermission, finale, tambour }));
   const e = $derived(encore(players));
@@ -30,6 +32,9 @@
     </button>
   {/if}
 </div>
+
+<!-- Musique de la partie suivante : seulement la vérification en cours ou l'alerte -->
+{#if !finale}<MediaCheck check={mediaCheck} tv solo={false} />{/if}
 
 {#if !finale && !intermission && e.n}
   <div class="fe-enc">

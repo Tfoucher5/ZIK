@@ -140,8 +140,7 @@
 .rg-l:disabled em {
   color: var(--muted);
 }
-.rg-l.confirme em,
-.rg-em.confirme {
+.rg-l.confirme em {
   border-color: var(--danger);
   color: var(--danger);
 }

@@ -1,6 +1,7 @@
 <script>
   import { teamColor } from '$lib/data/salonOptions.js';
   import { statutJoueur } from './onglets.js';
+  import { ecranLarge } from './large.svelte.js';
   /**
    * Onglet « Joueurs » : une ligne par joueur. Au téléphone, on touche la
    * ligne pour changer l'équipe, corriger le score ou exclure ; en 1024 px tout
@@ -20,6 +21,9 @@
   let { players, teams, phase, code, pro, step, confirmKick, onScore, onSetScore, onKick, onTeam, children } = $props();
 
   const live = $derived(phase === 'round' || phase === 'summary');
+  // Équipes : moyenne dès que la partie a commencé, jusqu'au podium
+  const scores = $derived(phase !== 'lobby');
+  const ecran = ecranLarge();
   let ouvert = $state(null);
 
   // Saisie directe : la valeur part à la validation, puis le champ revient
@@ -43,6 +47,7 @@
     <h1 class="rg-h1">Personne<span>pour l'instant</span></h1>
     <p>Les joueurs scannent le QR code affiché sur la TV, ou vont sur <b>zik-music.fr</b> et tapent le code.</p>
     <p class="tp-tuiles" aria-label="Code {code}">{#each code.split('') as c, i (i)}<b>{c}</b>{/each}</p>
+    {@render children?.()}
   </div>
 {:else}
   <div class="tp">
@@ -53,7 +58,7 @@
           {@const st = statutJoueur(p, phase)}
           <li class="jr" class:off={p.offline} class:open={ouvert === p.username}
             style="--tc:{teams && p.team != null ? teamColor(p.team) : 'transparent'}">
-            <button class="jr-t" type="button" aria-expanded={ouvert === p.username}
+            <button class="jr-t" type="button" tabindex={ecran.large ? -1 : 0} aria-expanded={ouvert === p.username}
               onclick={() => (ouvert = ouvert === p.username ? null : p.username)}>
               <i></i><b>{p.username}</b>
               {#if st}<span class="jr-st {st.cls}">{st.label}</span>{/if}
@@ -83,12 +88,12 @@
 
     <section class="tp-col tp-cote">
       {#if teams}
-        <p class="rg-k">{live ? 'Équipes · moyenne des joueurs' : 'Équipes'}</p>
+        <p class="rg-k">{scores ? 'Équipes · moyenne des joueurs' : 'Équipes'}</p>
         <ul class="tp-eqs">
           {#each teams as t (t.id)}
             <li style="--tc:{teamColor(t.id)}">
-              <b>{t.name}</b><span>{live ? t.score : t.members.length}</span>
-              {#if live}<small>{t.members.length} joueur{t.members.length > 1 ? 's' : ''}</small>{/if}
+              <b>{t.name}</b><span>{scores ? t.score : t.members.length}</span>
+              {#if scores}<small>{t.members.length} joueur{t.members.length > 1 ? 's' : ''}</small>{/if}
             </li>
           {/each}
         </ul>

@@ -62,13 +62,11 @@
       </ul>
     {/if}
 
-    {#if phase !== 'gameover'}
-      <label class="td-vol">
-        <span>Volume de la TV {#if !pro}<span class="pro-tag">ZIK Pro</span>{/if}<b>{volume} %</b></span>
-        <input type="range" min="0" max="100" step="5" value={volume} style="--v:{volume}%"
-          oninput={(e) => { onVolume(+e.currentTarget.value); if (!pro) e.currentTarget.value = String(volume); }}>
-      </label>
-    {/if}
+    <label class="td-vol">
+      <span>Volume de la TV {#if !pro}<span class="pro-tag">ZIK Pro</span>{/if}<b>{volume} %</b></span>
+      <input type="range" min="0" max="100" step="5" value={volume} style="--v:{volume}%"
+        oninput={(e) => { onVolume(+e.currentTarget.value); if (!pro) e.currentTarget.value = String(volume); }}>
+    </label>
   </div>
 
   {#if history.length}
@@ -77,7 +75,6 @@
 </div>
 
 <style>
-  .rg-col { display: grid; gap: 14px; align-content: start; min-width: 0; }
   .td-titre { display: grid; gap: 8px; padding-top: 4px; }
   .td-merci { padding: 14px 0; font-size: 15px; line-height: 1.4; color: var(--soft); }
 

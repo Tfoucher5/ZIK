@@ -77,7 +77,8 @@
   {:else}
     <RegieTabs actif={r.onglet} joueurs={r.players.length} onChange={(id) => (r.onglet = id)} />
     {#if r.live && r.onglet !== 'direct'}
-      <RegieEtat round={r.round} maxRounds={r.settings.maxRounds ?? 0} paused={r.paused} chrono={r.etat.chrono} p={r.etat.p} repondu={r.answered} joueurs={r.players.length} />
+      <RegieEtat round={r.round} maxRounds={r.settings.maxRounds ?? 0} paused={r.paused} chrono={r.etat.chrono} p={r.etat.p} repondu={r.answered} joueurs={r.players.length}
+        buzzer={r.phase === 'round' ? (r.buzzer?.username ?? null) : null} />
     {/if}
     <ReclaimRequests usernames={r.reclaims} onAnswer={(username, accept) => r.send('salon_reclaim_answer', { username, accept })} />
 
@@ -97,7 +98,7 @@
                 <RegieEnd
                   players={r.players} teams={r.teams} rounds={r.history.length} night={r.night}
                   intermission={r.intermission} finale={r.finale} qrBig={r.qrBig} pro={r.pro} tambour={r.settings.finaleSound !== false}
-                  musique={playlistNames.join(', ') || 'Sélection en cours'}
+                  musique={playlistNames.join(', ') || 'Sélection en cours'} mediaCheck={r.mediaCheck}
                   onSend={r.send} onUpsell={(f) => (r.upsell = f)} onPlaylists={r.openPlaylists}
                   onClose={() => r.send('salon_close')}
                 />
