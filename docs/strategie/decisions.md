@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Onglets de la régie validés
+
+**Décision de Théo** : « je valide ! C'est bien plus propre qu'actuellement. » Onglets Direct, Joueurs et Réglages de la maquette avant-partie (https://claude.ai/artifact/8kDW3iEd9fTamoxy6A4Fn2), avec les 4 choix recommandés : joueurs avant équipes sur téléphone, gestes repliés sur la ligne d'un joueur, « Bonne réponse » sans pseudo, « a décroché » et plus de mot « salon » en régie. Titre remplacé marqué discrètement dans les titres joués.
+
 ## 16/11/2026 — Maquette fin de partie v2 validée
 
 **Décision de Théo** : maquette validée (https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5), story « bien mieux ». 1) la playlist jouée quitte la TV : oui. 2) « prix » pas compris : ce sont les mentions « le plus rapide », « le plus régulier », « meilleur joueur » ; choix du CEO : gardées en petites étiquettes sur le nom. 3) aplat plein écran du vainqueur seulement au podium de la soirée. Idée de Théo à cadrer plus tard : des « paramètres avancés » de soirée (sons, animations, compte à rebours…). 4) nom de la soirée en tête de la story : oui. 5) QR en grand sans fermeture automatique : oui.
