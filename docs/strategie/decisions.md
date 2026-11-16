@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Posts TikTok
+
+**Décision de Théo** : carrousel « ces sons ont 30 ans » le 19/11 (un post part déjà le 16), avec une musique qui a 30 ans en 2026 : programmé par Claude le 19/11 à 18 h avec « Wannabe » (Spice Girls, 1996). « Feuille de match » validée, mais la musique doit être choisie et montée par nous dans la vidéo (les coupes hachaient la musique ajoutée dans TikTok) ; date fixée après le 19/11, en fonction du carrousel.
+
 ## 16/11/2026 — Réponses de Théo depuis le QG (matin)
 
 **Release v3.32** : Théo n'attend pas ses tests humains (« techniquement ça fonctionne déjà ») : release maintenant, achat test et vraie soirée multi-téléphones après.
