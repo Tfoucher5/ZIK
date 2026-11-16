@@ -2,6 +2,7 @@ import { fetchPro, proActive, goToStripe } from "$lib/client/salonClient.js";
 import { PLANS } from "$lib/data/proPlans.js";
 
 const INTENT_KEY = "zik_pro_intent";
+const PANNE = "Stripe ne répond pas, réessayez dans un instant.";
 
 const fmtDate = (d) =>
   new Date(d).toLocaleString("fr-FR", {
@@ -97,10 +98,12 @@ export class ProCheckout {
     const plan = this.confirmPlan;
     this.busy = plan;
     try {
-      await goToStripe(this.zik.sb, "/api/pro/checkout", {
-        plan,
-        confirm: true,
-      });
+      await goToStripe(
+        this.zik.sb,
+        "/api/pro/checkout",
+        { plan, confirm: true },
+        PANNE,
+      );
     } catch (err) {
       this.payError = err.message;
       this.busy = null;
@@ -112,7 +115,7 @@ export class ProCheckout {
     this.payError = "";
     this.busy = "portal";
     try {
-      await goToStripe(this.zik.sb, "/api/pro/portal");
+      await goToStripe(this.zik.sb, "/api/pro/portal", {}, PANNE);
     } catch (err) {
       this.payError = err.message;
       this.busy = null;

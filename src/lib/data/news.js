@@ -6,6 +6,21 @@
 export const NEWS = [
   {
     date: "2026-11-16",
+    version: "3.33.0",
+    tag: "Nouveauté",
+    title: "Une soirée plus simple à préparer et à rejoindre",
+    summary:
+      "ZIK Soirée : création refaite, « Prépare la TV » avant d'afficher le code, et un lobby lisible de loin.",
+    items: [
+      "Créer une soirée est refait : aucune playlist n'est cochée d'office, tu choisis tes playlists et c'est parti.",
+      "« Prépare la TV » : avant d'afficher le code, la TV montre le QR de ta régie, passe en plein écran et teste le son.",
+      "Le lobby de la TV se lit de loin, même avec beaucoup de joueurs : le code en grand, les derniers arrivés et le compte des autres.",
+      "Sur le téléphone, le code lu dans le QR s'affiche en tuiles, il ne reste que le pseudo à taper. Le choix d'équipe prend tout l'écran.",
+      "La régie affiche une liste de vérifications avant la partie (TV, son, musique, joueurs) et un seul bouton pour lancer.",
+    ],
+  },
+  {
+    date: "2026-11-16",
     version: "3.32.0",
     tag: "Nouveauté",
     title: "Un nouvel accueil, une page ZIK Soirée et des soirées plus solides",

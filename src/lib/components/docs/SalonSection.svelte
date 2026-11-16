@@ -30,6 +30,7 @@
   <h3>L'écran hôte (TV / ordi)</h3>
   <p>L'écran hôte (<a href="/salon/host">/salon/host</a>) est optimisé pour être affiché en grand :</p>
   <ul class="doc-list">
+    <li><strong>Prépare la TV :</strong> avant la première partie, un écran privé montre le QR code de la régie, passe en plein écran et teste le son. Le code n'apparaît qu'après « Afficher le code »</li>
     <li><strong>Lobby :</strong> QR code géant + code de 6 caractères pour rejoindre, liste des joueurs connectés qui se met à jour en temps réel</li>
     <li><strong>Pendant la manche :</strong> Visualizer audio animé, timer géant décomptant en temps réel, titre de la manche (masqué), nombre de joueurs ayant répondu</li>
     <li><strong>Classement joueurs :</strong> Affiché avec des icônes selon le score — 🎤 (top 1), 🎸 (top 2-3), 🎵 (autres) — et mis à jour en direct</li>
@@ -39,9 +40,9 @@
   </ul>
 
   <h3>L'interface joueur (téléphone)</h3>
-  <p>Les joueurs accèdent à <a href="/salon/play">/salon/play</a> sur leur smartphone :</p>
+  <p>Les joueurs jouent sur leur smartphone, sans appli ni compte :</p>
   <ul class="doc-list">
-    <li><strong>Rejoindre :</strong> Scanner le QR code affiché sur l'écran hôte, ou saisir manuellement le code de 6 caractères</li>
+    <li><strong>Rejoindre :</strong> Scanner le QR code affiché sur la TV, ou aller sur <a href="/">zik-music.fr</a> et taper le code de 6 caractères</li>
     <li><strong>Timer SVG :</strong> Un cercle SVG décompte le temps restant visuellement, avec changement de couleur progressif (vert → orange → rouge)</li>
     <li><strong>Mode texte libre :</strong> Champ de saisie classique, même moteur de détection que les rooms normales</li>
     <li><strong>Mode QCM :</strong> 4 boutons avec les formes emblématiques — ▲ Triangle, ◆ Losange, ● Cercle, ■ Carré — chacun avec une couleur distincte. Un seul appui suffit pour valider.</li>

@@ -16,6 +16,7 @@ test("révélation d'une manche sans vidéo", async ({ browser, request }) => {
         maxRounds: 5,
         roundDuration: 15,
         manualNext: true,
+        teamCount: 2,
       },
     },
   });
@@ -46,16 +47,22 @@ test("révélation d'une manche sans vidéo", async ({ browser, request }) => {
   });
   const tv = await ecran.newPage();
   await tv.goto(`/salon/host?code=${code}&key=${key}`);
-  await expect(tv.locator(".sh-join-code")).toHaveText(code);
+  await tv.getByRole("button", { name: "Afficher le code" }).click();
+  await expect(tv.locator(".lb-code")).toHaveAttribute(
+    "aria-label",
+    `Code ${code}`,
+  );
 
   const regie = await (await browser.newContext()).newPage();
   await regie.goto(`/salon/regie?code=${code}&key=${key}`);
   const tel = await (await browser.newContext(devices["iPhone 13"])).newPage();
   await tel.goto(`/salon/play?code=${code}`);
-  await tel.locator(".sp-code-input").fill(code);
   await tel.getByPlaceholder("Ex. : Julie").fill("Alice");
   await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
-  await expect(tel.getByPlaceholder("Ex. : Julie")).toBeHidden();
+  // Deux équipes : le choix prend tout l'écran, puis l'attente dans son équipe
+  await expect(tel.getByRole("heading", { name: /Choisis/ })).toBeVisible();
+  await tel.locator(".sp-camp").first().click();
+  await expect(tel.getByText("Tu joues pour")).toBeVisible();
 
   await regie
     .getByRole("button", { name: "Lancer la partie", exact: true })

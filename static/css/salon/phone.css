@@ -239,13 +239,3 @@
   color: var(--mid);
   font-size: 0.9rem;
 }
-.sp-rank {
-  margin-top: auto;
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--mid);
-}
-.sp-rank b {
-  font-family: var(--s-mono);
-  color: var(--text);
-}
