@@ -39,7 +39,7 @@ export function storyData({
     return {
       ...base(i + 1),
       count: teams.length,
-      unit: `place sur ${teams.length} équipes`,
+      unit: `place sur ${teams.length} équipe${teams.length > 1 ? "s" : ""}`,
       name: t.name,
       score: pts(t.score),
       average: true,

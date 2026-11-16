@@ -8,6 +8,7 @@
   $effect(() => {
     const d = data;
     file = null;
+    status = '';
     let off = false;
     prepareStory(d).then((f) => { if (!off) file = f; }).catch(() => { if (!off) status = 'unavailable'; });
     return () => (off = true);
@@ -21,9 +22,9 @@
 <!-- Image impossible à préparer sur ce téléphone : pas de bouton qui ne mène à rien -->
 {#if status !== 'unavailable'}
   <button class="story" onclick={partager} disabled={!file}>
-    <span class="mini" aria-hidden="true" style="--mc:{data.color}"><i></i><i></i><i></i></span>
+    <span class="mini" aria-hidden="true" style="--mc:{data.rank <= 3 ? data.color : 'var(--text)'}"><i></i><i></i><i></i></span>
     <span>
-      <b>{status === 'downloaded' ? 'Image enregistrée' : status === 'error' ? "Le partage n'a pas marché, réessaie" : file ? 'Partager le podium en story' : "Préparation de l'image…"}</b>
+      <b aria-live="polite">{status === 'downloaded' ? 'Image enregistrée' : status === 'error' ? "Le partage n'a pas marché, réessaie" : file ? 'Partager le podium en story' : "Préparation de l'image…"}</b>
       <small>« {data.line} »</small>
     </span>
     <em aria-hidden="true">↗</em>
@@ -41,10 +42,14 @@
     padding: 8px 18px 8px 8px;
     border-radius: 18px;
     border: 1px solid var(--border2);
-    background: rgba(255, 255, 255, 0.045);
+    background: var(--surface);
     color: var(--text);
     text-align: left;
     cursor: pointer;
+  }
+  .story:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .story:disabled {
     cursor: wait;
@@ -54,7 +59,7 @@
     width: 46px;
     aspect-ratio: 9 / 16;
     border-radius: 6px;
-    background: #050507;
+    background: var(--bg);
     border: 1px solid var(--border2);
     display: flex;
     align-items: flex-end;
@@ -64,7 +69,7 @@
   .mini i {
     width: 4px;
     height: 44%;
-    background: #34343f;
+    background: var(--dim);
   }
   .mini i:first-child {
     flex: 1;

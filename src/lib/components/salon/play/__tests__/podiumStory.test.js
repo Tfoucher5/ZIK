@@ -80,6 +80,10 @@ describe("story : ma colonne", () => {
       color: MEDAL[1],
       line: "Mon équipe, à la 2e place",
     });
+    expect(JSON.stringify(d)).not.toMatch(/Léa|Bob|Chloé|Inès/);
+    // Une seule équipe : singulier
+    const seule = storyData({ teams: teams.slice(1, 2), myTeam: 0, now });
+    expect(seule.unit).toBe("place sur 1 équipe");
     // Pas d'équipe choisie : la place du joueur
     const solo = storyData({ finalRanking, teams, username: "Inès", now });
     expect(solo.line).toBe("Inès, à la 5e place sur 8");
