@@ -119,10 +119,35 @@ describe("cartes des offres", () => {
         step: "payer",
         zik: u,
         attachError: "Cette soirée n'est plus en cours.",
+        attachRefused: true,
       });
       expect(refus).toContain("Cette soirée n'est plus en cours.");
       expect(refus).not.toContain("Payer 7,90 €");
       expect(refus).toContain("Continuer sans cette soirée");
+      expect(refus).toContain("Cette soirée ne peut pas passer en ZIK Pro");
+      expect(refus).not.toContain("passe en ZIK Pro toute seule");
+      // Sans formule choisie, le refus passe avant le choix de formule
+      const sansFormule = regie({
+        step: "formule",
+        zik: u,
+        intent: { plan: null, salon: "KZ4P2M" },
+        attachError: "Cette soirée n'est plus en cours.",
+        attachRefused: true,
+      });
+      expect(sansFormule).toContain("Cette soirée n'est plus en cours.");
+      expect(sansFormule).not.toContain("Choisissez votre formule");
+      // Panne : réessayer d'abord, jamais « continuer sans » ni Stripe
+      const panne = regie({
+        step: "payer",
+        zik: u,
+        attachError:
+          "La vérification de votre soirée n'a pas abouti. Réessayez dans un instant.",
+      });
+      expect(panne).toContain("Vérification interrompue");
+      expect(panne).toMatch(/class="btn-main[^"]*"[^>]*>Réessayer</);
+      expect(panne).not.toContain("Continuer sans cette soirée");
+      expect(panne).not.toContain("Stripe ne répond pas");
+      expect(panne).not.toContain("Payer 7,90 €");
       expect(regie({ step: "actif", activated: true })).toContain(
         "Rien à payer",
       );

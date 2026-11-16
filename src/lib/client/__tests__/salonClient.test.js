@@ -216,13 +216,32 @@ describe("Stripe qui ne répond pas", () => {
     expect(await attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).toEqual({
       activated: false,
     });
-    vi.stubGlobal("fetch", async () => ({
-      ok: false,
-      json: async () => ({ error: "Cette soirée n'est plus en cours." }),
-    }));
-    await expect(attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).rejects.toThrow(
-      "Cette soirée n'est plus en cours.",
-    );
+  });
+
+  it("rattachement : refus (403, 404) distinct d'une panne (401, 429, 500, réseau)", async () => {
+    const reponse = (status) =>
+      vi.stubGlobal("fetch", async () => ({
+        ok: false,
+        status,
+        json: async () => ({ error: "Cette soirée n'est plus en cours." }),
+      }));
+    for (const status of [403, 404]) {
+      reponse(status);
+      await expect(
+        attachSalonTo(sb, "KZ4P2M", "cle", "Panne."),
+      ).rejects.toMatchObject({
+        message: "Cette soirée n'est plus en cours.",
+        refused: true,
+      });
+    }
+    for (const status of [400, 401, 429, 500, 502]) {
+      reponse(status);
+      const e = await attachSalonTo(sb, "KZ4P2M", "cle", "Panne.").catch(
+        (x) => x,
+      );
+      expect(e.message, String(status)).toBe("Panne.");
+      expect(e.refused).toBeUndefined();
+    }
   });
 
   it("réponse sans page de paiement ni activation : erreur", async () => {

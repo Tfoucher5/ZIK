@@ -16,6 +16,8 @@ import {
 } from "./intent.js";
 
 const PANNE = "Stripe ne répond pas, réessayez dans un instant.";
+const PANNE_ATTACH =
+  "La vérification de votre soirée n'a pas abouti. Réessayez dans un instant.";
 
 const fmtDate = (d) =>
   new Date(d).toLocaleString("fr-FR", {
@@ -38,6 +40,8 @@ export class ProCheckout {
   attaching = $state(false);
   attached = $state(false);
   attachError = $state("");
+  // Soirée finie ou à un autre compte : on ne peut que continuer sans elle
+  attachRefused = $state(false);
   activated = $state(false);
   uid = null;
 
@@ -96,6 +100,7 @@ export class ProCheckout {
     this.attached = false;
     this.activated = false;
     this.attachError = "";
+    this.attachRefused = false;
   }
 
   async load() {
@@ -125,12 +130,19 @@ export class ProCheckout {
     const salon = this.regie;
     this.attaching = true;
     this.attachError = "";
+    this.attachRefused = false;
     try {
-      const d = await attachSalonTo(this.zik.sb, salon, salonKey(salon), PANNE);
+      const d = await attachSalonTo(
+        this.zik.sb,
+        salon,
+        salonKey(salon),
+        PANNE_ATTACH,
+      );
       this.attached = true;
       if (d.activated) this.done();
     } catch (err) {
       this.attachError = err.message;
+      this.attachRefused = err.refused === true;
     } finally {
       this.attaching = false;
     }
@@ -142,6 +154,7 @@ export class ProCheckout {
     forgetIntent(localStorage);
     this.intent = null;
     this.attachError = "";
+    this.attachRefused = false;
     if (plan) this.buy(plan);
   };
 

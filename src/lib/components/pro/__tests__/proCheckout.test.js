@@ -151,16 +151,34 @@ describe("/pro depuis la régie", () => {
 
   it("soirée refusée : l'erreur, pas de paiement, puis sortie sans la soirée", async () => {
     attachSalonTo.mockRejectedValueOnce(
-      new Error("Cette soirée n'est plus en cours."),
+      Object.assign(new Error("Cette soirée n'est plus en cours."), {
+        refused: true,
+      }),
     );
     const c = await start(URL_REGIE, { id: "u1" });
     expect(c.attachError).toBe("Cette soirée n'est plus en cours.");
+    expect(c.attachRefused).toBe(true);
     expect(c.attached).toBe(false);
     c.withoutSoiree();
+    expect(c.attachRefused).toBe(false);
     expect(c.regie).toBeNull();
     expect(c.attachError).toBe("");
     expect(c.confirmPlan).toBe("night");
     expect(localStorage.getItem("zik_pro_intent")).toBeNull();
+    expect(goToStripe).not.toHaveBeenCalled();
+  });
+
+  it("panne au rattachement : pas un refus, un réessai rattache", async () => {
+    attachSalonTo.mockRejectedValueOnce(new Error("Panne."));
+    const c = await start(URL_REGIE, { id: "u1" });
+    expect(c.attachError).toBe("Panne.");
+    expect(c.attachRefused).toBe(false);
+    expect(c.regie).toBe("KZ4P2M");
+    attachSalonTo.mockResolvedValueOnce({ activated: false });
+    await c.attach();
+    expect(c.attached).toBe(true);
+    expect(c.attachError).toBe("");
+    expect(c.step).toBe("payer");
     expect(goToStripe).not.toHaveBeenCalled();
   });
 

@@ -25,11 +25,11 @@
 <section id="depuis-regie" class="caisse" aria-labelledby="caisse-t">
   <div class="tete">
     <span class="label"><i></i>Depuis votre régie</span>
-    <h2 class="grad" id="caisse-t">{deja ? 'Votre soirée est passée en ZIK Pro' : 'Votre soirée passe en ZIK Pro toute seule'}</h2>
+    <h2 class="grad" id="caisse-t">{deja ? 'Votre soirée est passée en ZIK Pro' : checkout.attachRefused ? 'Cette soirée ne peut pas passer en ZIK Pro' : 'Votre soirée passe en ZIK Pro toute seule'}</h2>
     <div class="soiree"><span class="k">Soirée en cours</span><span class="tuiles" aria-label="Code {checkout.regie}">{#each checkout.regie as ch, i (i)}<b aria-hidden="true">{ch}</b>{/each}</span></div>
   </div>
   <div class="texte">
-    <p class="lead">{deja ? 'Plus de limite de joueurs : ceux qui attendaient entrent.' : 'Dès le paiement, plus de limite de joueurs : ceux qui attendent entrent.'} Rien à recréer, personne ne rescanne.</p>
+    {#if !checkout.attachRefused}<p class="lead">{deja ? 'Plus de limite de joueurs : ceux qui attendaient entrent.' : 'Dès le paiement, plus de limite de joueurs : ceux qui attendent entrent.'} Rien à recréer, personne ne rescanne.</p>{/if}
     <p class="rassure"><b aria-hidden="true">●</b><span>Votre régie reste ouverte dans l'autre onglet : la soirée continue{deja ? '' : ' pendant que vous payez'}.</span></p>
   </div>
   <div class="droite">
@@ -48,6 +48,19 @@
         <h3>Rien à payer</h3>
         <p>Votre compte a déjà ZIK Pro. En vous connectant, vous avez rattaché la soirée <b>{checkout.regie}</b> : elle vient de passer en ZIK Pro.</p>
         <button type="button" class="btn-main" onclick={checkout.back}>Retourner sur la régie</button>
+      {:else if checkout.attachError && checkout.attachRefused}
+        <h3>Soirée non rattachée</h3>
+        <p class="err" role="alert">{checkout.attachError}</p>
+        <div class="btns">
+          <button type="button" class="btn-main" onclick={checkout.withoutSoiree}>Continuer sans cette soirée</button>
+          <button type="button" class="btn-line" onclick={checkout.attach}>Réessayer</button>
+        </div>
+        <small>ZIK Pro s'active alors sur votre compte : vos prochaines soirées, créées connecté, seront en ZIK Pro.</small>
+      {:else if checkout.attachError}
+        <h3>Vérification interrompue</h3>
+        <p class="err" role="alert">{checkout.attachError}</p>
+        <button type="button" class="btn-main" onclick={checkout.attach}>Réessayer</button>
+        <small>Rien n'a été payé. Votre soirée continue pendant ce temps.</small>
       {:else if step === 'formule'}
         <h3>Choisissez votre formule</h3>
         <p>Au mois ou à l'année : la soirée <b>{checkout.regie}</b> passe en ZIK Pro dès le paiement, comme toutes celles que vous lancerez ensuite.</p>
@@ -68,14 +81,6 @@
         <Captcha bind:this={captcha} bind:token={captchaToken} />
         <button type="button" class="lien" onclick={resend}>Renvoyer l'e-mail</button>
         {#if resent}<small role="status">{resent}</small>{/if}
-      {:else if checkout.attachError}
-        <h3>Soirée non rattachée</h3>
-        <p class="err" role="alert">{checkout.attachError}</p>
-        <div class="btns">
-          <button type="button" class="btn-main" onclick={checkout.withoutSoiree}>Continuer sans cette soirée</button>
-          <button type="button" class="btn-line" onclick={checkout.attach}>Réessayer</button>
-        </div>
-        <small>ZIK Pro s'active alors sur votre compte : vos prochaines soirées, créées connecté, seront en ZIK Pro.</small>
       {:else}
         <h3>Vérifiez et payez</h3>
         <dl class="fiche">

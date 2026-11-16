@@ -175,7 +175,10 @@ async function postAuth(sb, path, body, panne) {
   } catch {
     throw new Error(panne);
   }
-  if (!res.ok) throw new Error(d.error || d.message || panne);
+  if (!res.ok)
+    throw Object.assign(new Error(d.error || d.message || panne), {
+      status: res.status,
+    });
   return d;
 }
 
@@ -195,15 +198,23 @@ export async function goToStripe(
 }
 
 // Rattache une soirée au compte connecté. Ne navigue jamais : une réponse
-// qui proposerait un paiement est une erreur.
+// qui proposerait un paiement est une erreur. `refused` : la soirée est
+// finie ou à un autre compte (403, 404) ; sinon `panne`, à réessayer.
 export async function attachSalonTo(sb, salon, key, panne) {
-  const d = await postAuth(
-    sb,
-    "/api/pro/checkout",
-    { salon, key, attach: true },
-    panne,
-  );
-  if (typeof d.activated !== "boolean" || d.url) throw new Error(panne);
+  let d;
+  try {
+    d = await postAuth(
+      sb,
+      "/api/pro/checkout",
+      { salon, key, attach: true },
+      panne,
+    );
+  } catch (e) {
+    if (e.status === 403 || e.status === 404)
+      throw Object.assign(e, { refused: true });
+    throw new Error(panne, { cause: e });
+  }
+  if (typeof d.activated !== "boolean") throw new Error(panne);
   return d;
 }
 
