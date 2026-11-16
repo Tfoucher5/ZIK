@@ -1,28 +1,25 @@
 <script>
-  import { teamColor, SPECIALS } from '$lib/data/salonOptions.js';
+  import { SPECIALS } from '$lib/data/salonOptions.js';
   import { onMount, onDestroy } from 'svelte';
   import HostGameOver from './HostGameOver.svelte';
   import HostBuzz from './HostBuzz.svelte';
-  import MediaCheck from '../regie/MediaCheck.svelte';
   import HostIntermission from './HostIntermission.svelte';
   import AudioReveal from './AudioReveal.svelte';
   import { HostYoutube } from './hostYoutube.svelte.js';
   import { HostAudio } from './hostAudio.js';
-  import { salonQrUrl } from '$lib/client/salonClient.js';
 
   let {
     phase = 'lobby', code = '', timerVal = 0, timerMax = 30, timerStarted = false,
-    players = [], teams = null,
+    players = [],
     roundEnd = null, gameOver = null,
     round = 0, total = 10,
     choices = null, answerMode = 'free',
     paused = false, pro = false, settings = {},
     onSetting,
     onRestart, onNewSalon, onMusicReady, onVideoError, onChangePlaylists = null,
-    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, connLost = false, mediaCheck = null, mediaSolo = true, onJudge,
+    buzzer = null, special = null, specialIntro = false, intermission = null, videoOutage = null, restarting = false, restored = null, connLost = false, onJudge,
   } = $props();
 
-  let membersOf = (id) => players.filter(p => p.team === id);
   let answeredCount = $derived(players.filter(p => p.answeredThisRound || p.foundThisRound).length);
   let finders = $derived(players.filter(p => p.foundThisRound));
   let timerLevel = $derived(!timerMax || timerVal / timerMax >= 0.4 ? '' : timerVal / timerMax >= 0.2 ? 'warn' : 'danger');
@@ -67,35 +64,6 @@
   <div class="sh-cover" class:off={phase === 'summary'}></div>
   <!-- Sans vidéo, le lecteur garde la vidéo d'avant : la pochette la cache -->
   {#if phase === 'summary' && enAudio && roundEnd}<AudioReveal cover={roundEnd.cover} />{/if}
-
-  <section class="sh-layer" class:on={phase === 'lobby' || phase === 'starting'}>
-    <div class="sh-lobby">
-      <div>
-        <p class="sx-kicker"><b>●</b> {players.length} joueur{players.length !== 1 ? 's' : ''} connecté{players.length !== 1 ? 's' : ''}</p>
-        <h1>Sortez vos<br><em>téléphones.</em></h1>
-        <div class="sh-code" aria-label="Code {code}">
-          {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
-        </div>
-        <p class="sh-lobby-url">Scannez le QR code ou allez sur <b>zik-music.fr/salon/play</b></p>
-        <MediaCheck check={mediaCheck} tv solo={mediaSolo} />
-      </div>
-      <div class="sh-qr"><img src={salonQrUrl(code, 320)} alt="QR code pour rejoindre" width="320" height="320"></div>
-    </div>
-    {#if teams}
-      <div class="sh-teams" class:serre={teams.length > 8}>
-        {#each teams as t (t.id)}
-          <div class="sh-team" style="--tc:{teamColor(t.id)}">
-            <b>{t.name}</b>
-            <span>{membersOf(t.id).map(p => p.username).join(', ') || 'Personne encore'}</span>
-          </div>
-        {/each}
-      </div>
-    {:else if players.length}
-      <p class="sh-lobby-names">
-        {#each players as p (p.username)}<span>{p.username}</span>{/each}
-      </p>
-    {/if}
-  </section>
 
   <section class="sh-layer sh-roundview" class:on={phase === 'round'}>
     {#if special}<p class="sh-special">Manche spéciale · {SPECIALS[special].label}<small>{SPECIALS[special].hint}</small></p>{/if}

@@ -34,11 +34,8 @@
   padding-left: 24px;
   border-left: 1px solid var(--border);
 }
-.sh-join img {
-  width: 44px;
-  height: 44px;
+.sh-join svg {
   border-radius: 2px;
-  background: #fff;
 }
 .sh-join-url {
   font-size: 0.8rem;
@@ -113,6 +110,7 @@
 }
 
 .sh-body {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 340px;
   min-height: 0;
@@ -178,25 +176,7 @@
   visibility: visible;
 }
 
-/* Lobby */
-.sh-lobby {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: clamp(24px, 5vw, 80px);
-}
-.sh-lobby h1 {
-  margin: 14px 0 26px;
-  font-family: var(--s-cond);
-  font-weight: 900;
-  font-size: clamp(2.6rem, 5.4vw, 5.6rem);
-  line-height: 0.9;
-  text-transform: uppercase;
-}
-.sh-lobby h1 em {
-  font-style: normal;
-  color: var(--accent);
-}
+/* Code et QR pour rejoindre (fin de partie) */
 .sh-code {
   display: flex;
   gap: 8px;

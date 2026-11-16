@@ -1,13 +1,14 @@
 <script>
   /**
    * Barre du haut de l'écran TV : QR code pour rejoindre, manche, pause, volume, régie.
-   * Pendant les manches, les réglages de l'hôte se cachent après 5 s sans geste
+   * En lobby et pendant les manches, les réglages de l'hôte se cachent après 5 s sans geste
    * (`calm`, remonté à la page pour cacher le curseur) ; QR, manche, aide et régie restent.
    */
   import { onDestroy } from 'svelte';
-  import { salonQrUrl } from '$lib/client/salonClient.js';
+  import { salonPlayUrl } from '$lib/client/salonClient.js';
+  import QrCode from '../QrCode.svelte';
   import HostSounds from './HostSounds.svelte';
-  import { IDLE_MS, barCalm, isLive } from './hostCalm.js';
+  import { IDLE_MS, barCalm, calmable, isLive } from './hostCalm.js';
 
   let { h, calm = $bindable(false) } = $props();
 
@@ -36,7 +37,7 @@
   }
 
   $effect(() => {
-    if (live) wake();
+    if (calmable(h.phase)) wake();
   });
 
   $effect(() => {
@@ -67,13 +68,15 @@
 
 <header class="sh-top" class:calm>
   <a class="sh-brand sh-fade" href="/" title="Retour au site">ZIK <span>Soirée</span></a>
-  <div class="sh-join">
-    <img src={salonQrUrl(h.code, 100)} alt="" width="44" height="44">
-    <div>
-      <div class="sh-join-url">zik-music.fr/salon/play</div>
-      <div class="sh-join-code">{h.code}</div>
+  {#if h.phase !== 'lobby' && h.phase !== 'starting'}
+    <div class="sh-join">
+      <QrCode text={salonPlayUrl(h.code)} size={44} />
+      <div>
+        <div class="sh-join-url">zik-music.fr</div>
+        <div class="sh-join-code">{h.code}</div>
+      </div>
     </div>
-  </div>
+  {/if}
   <div class="sh-top-right">
     {#if live}
       <span class="sh-round">Manche <b>{h.round} / {h.total}</b></span>

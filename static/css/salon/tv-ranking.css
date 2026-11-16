@@ -224,12 +224,4 @@
   .sh-vol input {
     display: none;
   }
-  .sh-lobby {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-  .sh-lobby .sh-code {
-    justify-content: center;
-  }
 }

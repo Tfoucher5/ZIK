@@ -40,6 +40,7 @@ export function listenPlayer(p, socket, c, u) {
   };
   socket.on("salon_game_starting", () => {
     p.phase = "starting";
+    p.teamOpen = false;
     resetScores();
   });
   socket.on("salon_restarted", resetScores);
