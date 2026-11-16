@@ -11,12 +11,12 @@
    * pour qu'un geste de travers ne coupe pas la soirée d'un client.
    *
    * @type {{
-   *   phase: string, paused: boolean, pro: boolean, joueurs: number,
+   *   phase: string, paused: boolean, pro: boolean, joueurs: number, countStart?: boolean,
    *   onAction: (evenement: string) => void,
    *   onGate: (feature: string, fn: () => void) => void,
    * }}
    */
-  let { phase, paused, pro, joueurs, buzzer = null, onAction, onGate, onJudge } = $props();
+  let { phase, paused, pro, joueurs, countStart = true, buzzer = null, onAction, onGate, onJudge } = $props();
 
   let menuOuvert = $state(false);
   let confirmeFin = $state(false);
@@ -40,9 +40,10 @@
       <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onJudge(true)}>Bonne réponse · {buzzer.username}</button>
       <button class="sx-btn sx-btn-lg ra-large" onclick={() => onJudge(false)}>Raté</button>
     {:else if phase === 'lobby'}
-      <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onAction('salon_start')} disabled={!joueurs}>
+      <button class="sx-btn sx-btn-primary sx-btn-lg ra-large ra-lance" onclick={() => onAction('salon_start')} disabled={!joueurs}>
         {joueurs ? 'Lancer la partie' : 'En attente de joueurs'}
       </button>
+      {#if joueurs && countStart}<p class="ra-note">La TV lance un décompte de 5 secondes.</p>{/if}
     {:else if phase === 'gameover'}
       <button class="sx-btn sx-btn-primary sx-btn-lg ra-large" onclick={() => onAction('salon_restart')}>Lancer la partie suivante</button>
     {:else if live}
@@ -92,6 +93,9 @@
   .ra-principal { display: flex; gap: 10px; flex: 1; min-width: 0; }
   /* Cibles larges : la régie se pilote au doigt sur tablette. */
   .ra-large { flex: 1; min-height: 52px; }
+  .ra-principal:has(.ra-lance) { flex-direction: column; gap: 8px; }
+  .ra-principal .ra-lance { min-height: 72px; font-size: 1.6rem; }
+  .ra-note { margin: 0; text-align: center; font-size: 0.88rem; color: var(--mid); line-height: 1.3; }
 
   .ra-menu-wrap { position: relative; flex-shrink: 0; }
   .ra-plus { min-height: 52px; min-width: 52px; font-size: 1.2rem; line-height: 1; }

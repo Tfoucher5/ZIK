@@ -65,6 +65,8 @@ export class SalonRegie {
   upsell = $state(null);
   // null tant que le serveur n'a pas répondu : on n'alarme pas à tort.
   screens = $state(null);
+  // Test du son fait sur la TV : null tant qu'il n'a pas eu lieu
+  tvSound = $state(null);
   onglet = $state("direct");
   helpOpen = $state(false);
   userId = $state(null);
