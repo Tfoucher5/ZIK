@@ -94,7 +94,7 @@ describe("file d'attente des refusés", () => {
     const b = await arrive("w2", "Bob", { wait: true });
     const c = await arrive("w3", "Cy", { wait: true });
     await coupe(a);
-    await coupe(joueurs[0]);
+    kickPlayer(salon(), "J1", h.io);
     expect(b.de("salon_joined")).toHaveLength(1);
     expect(salon().players.Bob).toBeDefined();
     expect(dans(b, `salon:players:${CODE}`)).toBe(true);
@@ -138,9 +138,52 @@ describe("file d'attente des refusés", () => {
     const b = await arrive("w2", "Bob", { wait: true });
     await coupe(a);
     salon().waiting[0].leftAt = Date.now() - 11 * 60 * 1000;
-    await coupe(joueurs[0]);
+    kickPlayer(salon(), "J1", h.io);
     expect(b.de("salon_joined")).toHaveLength(1);
     expect(salon().waiting).toBeUndefined();
+  });
+
+  it("rechargement au lobby avec une file : place gardée 30 s, puis cédée", async () => {
+    vi.useFakeTimers();
+    try {
+      const a = await arrive("w1", "Ana", { wait: true });
+      const token = salon().players.J1.token;
+      await coupe(joueurs[0]);
+      expect(salon().players.J1).toBeDefined();
+      expect(a.de("salon_joined")).toEqual([]);
+      const retour = await arrive("p1b", "J1", { token });
+      expect(retour.de("salon_joined")[0].reconnecting).toBe(true);
+      vi.advanceTimersByTime(31_000);
+      expect(a.de("salon_joined")).toEqual([]);
+      expect(file()).toEqual(["Ana"]);
+
+      await coupe(joueurs[1]);
+      vi.advanceTimersByTime(29_000);
+      expect(a.de("salon_joined")).toEqual([]);
+      vi.advanceTimersByTime(2_000);
+      expect(salon().players.J2).toBeUndefined();
+      expect(a.de("salon_joined")).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("en file ailleurs : quitte la file avant d'entrer, jamais admis deux fois", async () => {
+    const a = await arrive("w1", "Ana", { wait: true });
+    const A = salon();
+    salonDeTest();
+    salonRooms.AUTRE = Object.assign(salonRooms[CODE], { code: "AUTRE" });
+    salonRooms[CODE] = A;
+    await a.handlers.salon_join_player({ code: "AUTRE", username: "Ana" });
+    expect(salonRooms.AUTRE.players.Ana).toBeDefined();
+    expect(file()).toEqual([]);
+    expect(dans(a, `salon:wait:${CODE}`)).toBe(false);
+    // Entrée restée en file sur un socket déjà dans un salon : ignorée
+    A.waiting = [{ username: "Ana", token: "t", socketId: a.id }];
+    kickPlayer(A, "J1", h.io);
+    expect(A.players.Ana).toBeUndefined();
+    expect(a.de("salon_joined")).toHaveLength(1);
+    expect(() => admitWaiting(A, undefined)).not.toThrow();
   });
 
   it("salon_queue_leave : sort de la file, sans effet hors file", async () => {

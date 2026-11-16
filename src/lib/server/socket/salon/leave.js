@@ -16,10 +16,16 @@ const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 const HOST_IDLE_GRACE = 2 * 60 * 60 * 1000; // 2 h
 // Un téléphone verrouillé le temps d'un passage au comptoir garde sa place
 export const PLAYER_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
+const LOBBY_RECONNECT_GRACE = 30 * 1000;
 export const CONTROL_LEAVE_DELAY = 5000;
 
 // Joueur hors ligne : sa place l'attend le temps du délai de grâce
-export function scheduleDeparture(salon, username, io) {
+export function scheduleDeparture(
+  salon,
+  username,
+  io,
+  delay = PLAYER_RECONNECT_GRACE,
+) {
   const player = salon.players[username];
   player._disconnected = true;
   player.socketId = null;
@@ -30,7 +36,7 @@ export function scheduleDeparture(salon, username, io) {
     departPlayer(s, username);
     broadcastRoster(salon.code, io);
     admitWaiting(s, io);
-  }, PLAYER_RECONNECT_GRACE);
+  }, delay);
 }
 
 // Départs : écran TV, régie, joueurs
@@ -81,7 +87,13 @@ export function registerLeave(socket, io) {
       // Ce téléphone a déjà été remplacé par une reconnexion
       if (!player || player.socketId !== socket.id) return;
 
-      // Dans le lobby : retiré tout de suite, il peut revenir avec le même pseudo
+      // Dans le lobby : retiré tout de suite, il peut revenir avec le même pseudo.
+      // Si des joueurs attendent, un rechargement ne leur cède pas la place.
+      if (salon.game.phase === "lobby" && salon.waiting?.length) {
+        scheduleDeparture(salon, username, io, LOBBY_RECONNECT_GRACE);
+        broadcastRoster(code, io);
+        return;
+      }
       if (salon.game.phase === "lobby") {
         departPlayer(salon, username);
         broadcastRoster(code, io);

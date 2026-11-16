@@ -179,6 +179,9 @@ export function joinPlayer(
   { username, token, userId, wait },
 ) {
   const { code } = salon;
+  // En file d'un autre salon : il la quitte avant d'entrer ici
+  if (socket.salonWait && socket.salonWait !== code)
+    unqueue(salonRooms[socket.salonWait], socket);
   if (salon.banned.has(username.toLowerCase()) || salon.banned.has(token))
     return socket.emit("salon_error", {
       message: "L'hôte t'a retiré de ce salon.",

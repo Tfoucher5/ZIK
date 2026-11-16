@@ -100,12 +100,13 @@ export function leaveQueue(socket) {
 // gardent leur rang. Appelé hors safe(), d'où les try/catch.
 export function admitWaiting(salon, io) {
   try {
-    if (!salon?.waiting) return;
+    if (!io || !salon?.waiting) return;
     purge(salon, io);
     for (const w of [...salon.waiting]) {
       if (isFull(salon)) break;
       const socket = socketOf(io, w);
-      if (!socket) continue;
+      // Déjà entré dans un salon entre-temps
+      if (!socket || socket.salonCode) continue;
       try {
         unqueue(salon, socket, w.token);
         joinPlayer(io, salon, socket, { ...w, wait: false });

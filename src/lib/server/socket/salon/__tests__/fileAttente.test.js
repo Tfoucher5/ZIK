@@ -83,7 +83,12 @@ describe("file d'attente d'un salon gratuit plein", () => {
       "quatorze",
     ]);
 
+    // Coupure au lobby : la place est gardée, la file attend
     joueurs[0].socket.disconnect();
+    await pause(40);
+    expect(treize.de("salon_joined")).toEqual([]);
+    // Retrait par l'hôte : la place part tout de suite à la file
+    regie.socket.emit("salon_kick", { username: "j1" });
     const entree = await treize.attend("salon_joined");
     expect(entree.username).toBe("treize");
     expect(quatorze.de("salon_joined")).toEqual([]);
