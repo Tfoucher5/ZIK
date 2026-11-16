@@ -16,6 +16,15 @@ Puis ouvrir http://localhost:4747. Rien à installer : Node seul, Three.js est c
 
 Options : `--port 5000`, `--filtre ZIK` (dossiers de projet suivis, `ZIK` par défaut), `--tous` (toutes les sessions Claude Code du PC).
 
+## Les plans de la ZIK Tower
+
+**Le plan est la source de vérité.** La tour du QG (niveaux, noyau, murs, portes, pièces, accès, postes, mobilier) est décrite dans `public/tour/plan.js` et `public/tour/niveaux/<niveau>.js` : données pures, en mètres, origine au coin nord-ouest, x vers l'est, y vers le sud. La 3D se construit à partir de ces données ; une salle ajoutée, déplacée ou renommée l'est d'abord là, et se voit donc sur le plan.
+
+- Bouton « Plans » de la barre (ou http://localhost:4747/plans.html) : coupe cliquable, un plan par niveau (sous-sol au toit), légende « pièce · usage · qui · pourquoi », altimétrie. Rendu par `tour/dessin.js` (plans), `tour/coupe.js` et `tour/page.js`, styles dans `plans*.css`.
+- Une pièce : `id`, `nom`, `usage`, `poly`, `acces` (`public`, `employes`, `pole:<chef>`, `direction`, `fondateur`, `service`), `mobilier` (types de `tour/outils.js`) ; `occupants` est déduit des postes. Les salles de réunion (`reunion: true`) portent un nom de festival (`FESTIVALS`), les autres un nom tiré de la musique.
+- Une porte : position, largeur, axe, sens, et `entre` (les deux lieux qu'elle relie, `rue` ou `service` pour dehors). Une porte entre un lieu public et un lieu qui ne l'est pas a un `controle` (portiques, badge, accueil, issue).
+- `__tests__/plan-tour.test.js` garde la cohérence : emprise, chevauchements, portes qui relient ce qu'elles annoncent, noyau, arrêts des ascenseurs, un poste par agent de `noms.js`, festivals uniques, café public isolé du reste. Lancer `npx vitest run scripts/qg` après chaque changement de plan.
+
 ## Le tableau de bord
 
 Un bouton « Masquer le tableau de bord » cache tout (la 3D reste) ; le choix est gardé.
@@ -25,16 +34,6 @@ Un bouton « Masquer le tableau de bord » cache tout (la 3D reste) ; le choix e
 - **Qui fait quoi** : sessions et agents au travail, avec prénom, rôle, tâche (description du lancement) et depuis combien de temps.
 - **Chantiers** : en cours, reste à faire, fait, lus dans `docs/strategie/chantiers.md` (tenu à jour par la session CEO).
 - **En direct** (à droite) : une ligne par action, en français (« Lit reclaim.js », « Lance les tests », « Ouvre une PR »), avec le prénom et l'heure. Jamais la commande brute.
-
-## La tour en 3D
-
-La 3D est une tour de nuit en coupe, au milieu d'une ville. Chaque étage est un groupe Three.js avec sa grille de passage (`etages.js`) :
-
-- **1 Plateau** (`plan.js`, `nord.js`, `disposition.js`) : les équipes, chaque pôle dans son quartier (grand nom et liseré de sa couleur au sol), salles de réunion de pôle, coins détente, accueil.
-- **2 Direction** (`direction.js`) : un bureau vitré par chef (Claire en angle), la salle du board « Le Disque d'Or », le bureau de Victor, le comptoir de Gérard.
-- **3 Penthouse** (`penthouse.js`) : le bureau de Théo, qui affiche limite, chantiers et décisions à trancher.
-
-Le panneau d'ascenseur (ou les touches 1, 2, 3) fait voler la caméra vers un étage et masque ceux du dessus ; « Ville » montre toute la tour. Rendu (`rendu.js`) et ville (`ville.js`) sont à part.
 
 ## Barre d'état (limite exacte)
 
