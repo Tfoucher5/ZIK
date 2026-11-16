@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — ZIK Pro en pleine soirée : maquette validée
+
+**Décision de Théo** : « je valide tout ». Maquette « la jauge » (https://claude.ai/artifact/E2T27xQHBqxss5BGYmUEeb) avec ses 15 choix : prénoms de ceux qui attendent sur la régie, Soirée 24 h en un clic + lien abonnements, paiement sans fenêtre « Confirmer », compte déjà Pro = soirée Pro dès la connexion, « ZIK Pro activé » jusqu'à « Compris », pas de rang dans la file, « Tu entres si une place se libère. », TV au plus « N en attente », retour OAuth sur /pro.
+
 ## 16/11/2026 — Onglets de la régie validés
 
 **Décision de Théo** : « je valide ! C'est bien plus propre qu'actuellement. » Onglets Direct, Joueurs et Réglages de la maquette avant-partie (https://claude.ai/artifact/8kDW3iEd9fTamoxy6A4Fn2), avec les 4 choix recommandés : joueurs avant équipes sur téléphone, gestes repliés sur la ligne d'un joueur, « Bonne réponse » sans pseudo, « a décroché » et plus de mot « salon » en régie. Titre remplacé marqué discrètement dans les titres joués.
