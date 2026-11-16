@@ -155,8 +155,14 @@ export async function fetchPro(sb, userId) {
 export const proActive = (row) =>
   row?.status === "active" && new Date(row.current_period_end) > new Date();
 
-// Paiement ou espace client : le serveur crée la page Stripe, on y part
-export async function goToStripe(sb, path, body = {}) {
+// Paiement ou espace client : le serveur crée la page Stripe, on y part.
+// `panne` : message si Stripe ne répond pas (/pro vouvoie)
+export async function goToStripe(
+  sb,
+  path,
+  body = {},
+  panne = "Stripe ne répond pas, réessaie dans un instant.",
+) {
   const {
     data: { session },
   } = await sb.auth.getSession();
@@ -169,10 +175,7 @@ export async function goToStripe(sb, path, body = {}) {
     body: JSON.stringify(body),
   });
   const d = await res.json().catch(() => ({}));
-  if (!res.ok || !d.url)
-    throw new Error(
-      d.error || d.message || "Stripe ne répond pas, réessaie dans un instant.",
-    );
+  if (!res.ok || !d.url) throw new Error(d.error || d.message || panne);
   window.location.href = d.url;
 }
 

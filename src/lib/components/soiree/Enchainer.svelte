@@ -55,7 +55,7 @@
               <p class="kk"><b>●</b> On souffle un peu</p>
               <h3>Entracte</h3>
               <p class="when">Reprise vers 22:15</p>
-              <p>Pas encore dans la partie ? <b>zik-music.fr/salon/play</b> · code <b>KZ4P2M</b></p>
+              <p>Pas encore dans la partie ? <b>zik-music.fr</b> · code <b>KZ4P2M</b></p>
             </div>
             <div class="qrb"><Qr /></div>
           </div>
