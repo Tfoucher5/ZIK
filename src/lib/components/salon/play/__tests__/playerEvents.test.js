@@ -104,6 +104,15 @@ describe("téléphone : révélation QCM après un accusé perdu", () => {
     vi.useRealTimers();
   });
 
+  it("case en « Envoi… » jamais reçue par le serveur : elle disparaît", () => {
+    vi.useFakeTimers();
+    const p = { answerMode: "multiple", chosenIndex: 3, allFound: false };
+    finDeManche(p, { correctChoiceIndex: 1, chosenIndex: null });
+    expect(p.chosenIndex).toBeNull();
+    expect(p.revealCorrectIndex).toBe(1);
+    vi.useRealTimers();
+  });
+
   it("mode texte : la vue sans case ne touche à rien", () => {
     const p = { answerMode: "text", chosenIndex: null };
     finDeManche(p, {});

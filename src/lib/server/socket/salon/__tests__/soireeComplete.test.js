@@ -214,6 +214,13 @@ describe("une soirée complète", () => {
         expect(d).not.toHaveProperty("scores");
       }
     expect(alice.de("salon_round_end")[0].ranking.count).toBe(2);
+    // Chaque téléphone reçoit la case comptée pour lui ; la TV, aucune
+    await bob.attend("salon_round_end");
+    expect(alice.de("salon_round_end")[0].chosenIndex).toBe(juste);
+    expect(bob.de("salon_round_end")[0].chosenIndex).toBe(
+      (juste + 1) % manche.choices.length,
+    );
+    expect(tv.de("salon_round_end")[0]).not.toHaveProperty("chosenIndex");
     expect(alice.moi).not.toHaveProperty("players");
 
     regie.socket.emit("salon_restart");
