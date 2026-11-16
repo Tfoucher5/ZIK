@@ -73,6 +73,8 @@ export class SalonHost {
   #beforeMute = 100;
   // Régies branchées (badge) ; null tant que le serveur n'a rien dit
   controls = $state(null);
+  // Téléphones en file à l'entrée (salon gratuit plein), le nombre seul
+  waiting = $state(0);
   helpOpen = $state(false);
   // « Prépare la TV » passée (code affiché) ; le son entendu ou non au test
   prepDone = $state(false);
