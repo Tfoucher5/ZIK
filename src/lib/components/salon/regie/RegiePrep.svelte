@@ -100,7 +100,7 @@
 
   .rp-alerte {
     margin: 0; padding: 12px 14px; border-radius: 14px;
-    border: 1px solid rgb(251 191 36 / 0.5); background: rgb(251 191 36 / 0.08);
+    border: 1px solid rgb(255 179 71 / 0.5); background: rgb(255 179 71 / 0.08);
     font-size: 0.94rem; line-height: 1.4;
   }
   .rp-alerte b { color: var(--warn); }
