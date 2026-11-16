@@ -58,7 +58,7 @@
   {#if tiles}
   <div class="sp-code-tiles">
     <span class="sx-kicker">Code</span>
-    <span class="sp-tuiles" aria-label="Code {codeInput}">{#each [...codeInput] as c, i (i)}<b>{c}</b>{/each}</span>
+    <span class="sp-tuiles" role="img" aria-label="Code {codeInput}">{#each [...codeInput] as c, i (i)}<b>{c}</b>{/each}</span>
     <button class="salon-join-link" onclick={changeCode}>Changer</button>
   </div>
   {:else}

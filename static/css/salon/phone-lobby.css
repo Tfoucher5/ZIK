@@ -113,7 +113,7 @@
 }
 .sp-frise::after {
   width: calc(var(--p) * 100%);
-  background: linear-gradient(90deg, #7b5cff, var(--accent));
+  background: var(--text);
 }
 .sp-frise li.on {
   color: var(--text);

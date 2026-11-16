@@ -48,7 +48,7 @@
         <li class="me">{p.username} (toi)</li>
         {#each others as pl (pl.username)}<li>{pl.username}</li>{/each}
       </ul>
-      {#if size > others.length + 1}<p class="sp-hint">et {size - others.length - 1} autres</p>{/if}
+      {#if size > others.length + 1}<p class="sp-hint">et {size - others.length - 1} {size - others.length > 2 ? 'autres' : 'autre'}</p>{/if}
       <p class="sp-hint">{p.roster.count} joueur{p.roster.count > 1 ? 's' : ''} dans la soirée</p>
     </section>
     <ol class="sp-frise" style="--p:1">{#each steps as s (s)}<li class="on">{s}</li>{/each}</ol>
