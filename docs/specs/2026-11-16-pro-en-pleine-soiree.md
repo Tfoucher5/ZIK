@@ -1,6 +1,6 @@
 # Passer en ZIK Pro en pleine soirée
 
-Statut : à valider par Théo (argent et écrans visibles, porte concept).
+Statut : parcours validé par Théo le 16/11 (réponses ci-dessous) ; écrans 2 et 3 à maquetter avant le code.
 
 ## Problème
 
@@ -22,8 +22,8 @@ Au 13e joueur refusé, l'organisateur ouvre /pro dans un autre onglet, s'inscrit
 
 Pas de migration. Tests : régression webhook → salon Pro, entrées hostiles du paiement, webhook rejoué, instantané, intégration de la file d'attente.
 
-## Questions pour Théo
+## Réponses de Théo (16/11)
 
-1. En pleine soirée, la régie propose seulement la Soirée 24 h en un clic (abonnements sur /pro) ?
-2. Compte obligatoire maintenu pour payer (pas de paiement invité) ?
-3. Joueurs refusés en file d'attente, admis seuls dès que ZIK Pro est actif ?
+1. Oui : la régie propose la Soirée 24 h en un clic, **et aussi les abonnements** par un lien vers /pro ouvert dans un nouvel onglet.
+2. Compte obligatoire pour payer ou s'abonner.
+3. File d'attente oui, mais le texte n'est pas « en attendant que Pro soit actif » : c'est « tu entres **si une place se libère** » (un joueur qui part libère une place, le passage Pro en libère d'un coup).
