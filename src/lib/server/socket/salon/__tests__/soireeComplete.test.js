@@ -198,15 +198,16 @@ describe("une soirée complète", () => {
     tv.socket.emit("salon_music_ready");
     await alice.attend("salon_timer_started");
     const juste = salonRooms[h.code].game.correctChoiceIndex;
+    const faux = (juste + 1) % manche.choices.length;
     alice.socket.emit("salon_submit_choice", { choiceIndex: juste });
     // Bonne réponse enregistrée puis coupure avant la fin : les points restent
-    carole.socket.emit("salon_submit_choice", { choiceIndex: juste });
-    await pause(40);
-    carole.socket.disconnect();
-    await pause(40);
-    bob.socket.emit("salon_submit_choice", {
-      choiceIndex: (juste + 1) % manche.choices.length,
+    await carole.socket.emitWithAck("salon_submit_choice", {
+      choiceIndex: juste,
     });
+    carole.socket.disconnect();
+    // Le serveur doit voir la coupure avant la dernière réponse
+    await pause(40);
+    bob.socket.emit("salon_submit_choice", { choiceIndex: faux });
 
     const podium = await tv.attend("salon_game_over");
     const score = (nom) => podium.scores.find((s) => s.username === nom).score;
@@ -221,6 +222,11 @@ describe("une soirée complète", () => {
         expect(d).not.toHaveProperty("scores");
       }
     expect(alice.de("salon_round_end")[0].ranking.count).toBe(3);
+    // Chaque téléphone reçoit la case comptée pour lui ; la TV, aucune
+    await bob.attend("salon_round_end");
+    expect(alice.de("salon_round_end")[0].chosenIndex).toBe(juste);
+    expect(bob.de("salon_round_end")[0].chosenIndex).toBe(faux);
+    expect(tv.de("salon_round_end")[0]).not.toHaveProperty("chosenIndex");
     expect(alice.moi).not.toHaveProperty("players");
 
     regie.socket.emit("salon_restart");

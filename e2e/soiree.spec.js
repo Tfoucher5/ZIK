@@ -26,6 +26,18 @@ for (const width of [1440, 390]) {
       () => document.documentElement.scrollWidth - innerWidth,
     );
     expect(debord).toBeLessThanOrEqual(0);
+    // Pas de grand vide : les 4 choix remplissent l'écran du téléphone, et
+    // les offres suivent le matériel de près
+    const vides = await page.evaluate(() => {
+      const box = (s) => document.querySelector(s).getBoundingClientRect();
+      return {
+        choix: box("#reponses .qc").height / box("#reponses .phs").height,
+        offres:
+          box("#offres .label").top - box("#materiel li:last-child").bottom,
+      };
+    });
+    expect(vides.choix).toBeGreaterThan(0.5);
+    expect(vides.offres).toBeLessThan(200);
     expect(erreurs).toEqual([]);
   });
 }

@@ -140,6 +140,8 @@ export function listenPlayer(p, socket, c, u) {
     p.allFound = true;
     p.ranking = data.ranking;
     p.teams = data.teams;
+    // Accusé perdu (réseau lent) : le serveur dit quelle case il a comptée
+    if ("chosenIndex" in data) p.chosenIndex = data.chosenIndex;
 
     if (p.answerMode === "multiple" && data.correctChoiceIndex !== undefined) {
       // QCM : la bonne réponse s'affiche un instant avant le résumé

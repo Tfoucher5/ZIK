@@ -38,7 +38,7 @@
 </section>
 
 <style>
-  .offres { margin-top: 40px; border-radius: 32px 32px 0 0; background: var(--bg2); border-top: 1px solid var(--line-2); box-shadow: 0 -40px 80px -20px rgba(0, 0, 0, 0.8); }
+  .offres { margin-top: -40px; padding-top: 56px; border-radius: 32px 32px 0 0; background: var(--bg2); border-top: 1px solid var(--line-2); box-shadow: 0 -40px 80px -20px rgba(0, 0, 0, 0.8); }
   .seg { display: flex; gap: 4px; padding: 5px; margin-bottom: 24px; width: fit-content; max-width: 100%; border-radius: 999px; background: var(--surface); border: 1px solid var(--line-2); overflow-x: auto; }
   .seg button { border: 0; background: none; color: var(--muted); min-height: 44px; padding: 0 14px; border-radius: 999px; font-family: var(--titre); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; white-space: nowrap; }
   .seg button[aria-pressed='true'] { background: var(--text); color: #000; }
@@ -57,7 +57,7 @@
   .plan a { width: 100%; padding: 8px 14px; line-height: 1.1; white-space: normal; text-align: center; }
   .note { margin-top: 18px; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--muted); }
   @media (min-width: 900px) {
-    .offres { margin-top: 0; border-radius: 40px 40px 0 0; }
+    .offres { margin-top: -60px; padding-top: 80px; border-radius: 40px 40px 0 0; }
     .plans { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .plans.two { grid-template-columns: repeat(2, minmax(0, 340px)); justify-content: center; }
     .seg { margin-inline: auto; margin-bottom: 36px; }

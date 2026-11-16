@@ -150,7 +150,7 @@ export function registerAnswers(socket, io) {
 // QCM : les points ne tombent qu'à la fin de la manche, avec le retour de chacun
 export function scoreQcmRound(salon, io) {
   const game = salon.game;
-  // Determine firstFinder: the correct player with the lowest timeTaken
+  // Premier à trouver : la bonne réponse la plus rapide
   if (!game.firstFinder) {
     const firstCorrect = Object.values(salon.players)
       .filter(
