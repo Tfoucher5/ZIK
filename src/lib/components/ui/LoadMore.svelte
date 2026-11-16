@@ -4,7 +4,7 @@
 
 {#if hasMore}
   <div class="load-more-wrap">
-    <button class="load-more-btn" onclick={onLoad} disabled={loading}>
+    <button type="button" class="load-more-btn" onclick={onLoad} disabled={loading}>
       {loading ? 'Chargement…' : 'Charger plus'}
     </button>
   </div>
@@ -16,19 +16,21 @@
     justify-content: center;
     padding: 20px 0;
   }
+  /* Jetons v2 sur les pages refaites, valeurs v1 en repli ailleurs */
   .load-more-btn {
-    padding: 10px 28px;
-    border-radius: 20px;
-    border: 1px solid rgb(var(--c-glass) / 0.15);
+    min-height: 44px;
+    padding: 0 28px;
+    border-radius: 999px;
+    border: 1px solid var(--line-2, rgb(var(--c-glass) / 0.15));
     background: transparent;
-    color: rgb(var(--c-glass) / 0.7);
+    color: var(--text);
     font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background 0.15s, border-color 0.15s;
   }
   .load-more-btn:hover:not(:disabled) {
-    border-color: rgb(var(--accent-rgb) / 0.4);
-    color: var(--accent);
+    border-color: var(--text);
   }
   .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

@@ -7,6 +7,8 @@ import {
   saveSetup,
   readSetup,
   setupFor,
+  goToStripe,
+  attachSalonTo,
 } from "../salonClient.js";
 import { FREE_MAX_TEAMS } from "../../data/proPlans.js";
 import { listenHost } from "../../components/salon/host/hostEvents.js";
@@ -146,5 +148,111 @@ describe("réglages repris selon l'offre de l'hôte", () => {
       roundDuration: 30,
       answerMode: "multiple",
     });
+  });
+});
+
+describe("Stripe qui ne répond pas", () => {
+  const sb = {
+    auth: { getSession: async () => ({ data: { session: null } }) },
+  };
+  beforeEach(() =>
+    vi.stubGlobal("fetch", async () => ({ ok: false, json: async () => ({}) })),
+  );
+
+  it("tutoie par défaut, /pro passe son message au vouvoiement", async () => {
+    await expect(goToStripe(sb, "/api/pro/portal")).rejects.toThrow(
+      "Stripe ne répond pas, réessaie dans un instant.",
+    );
+    await expect(
+      goToStripe(sb, "/api/pro/portal", {}, "Réessayez."),
+    ).rejects.toThrow("Réessayez.");
+  });
+
+  it("rattachement : rend la réponse sans partir chez Stripe", async () => {
+    for (const activated of [true, false]) {
+      vi.stubGlobal("fetch", async () => ({
+        ok: true,
+        json: async () => ({ activated }),
+      }));
+      expect(await goToStripe(sb, "/api/pro/checkout")).toEqual({
+        activated,
+      });
+    }
+  });
+
+  it("réseau coupé : le message de la page, pas celui du navigateur", async () => {
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    await expect(
+      goToStripe(sb, "/api/pro/checkout", {}, "Réessayez."),
+    ).rejects.toThrow("Réessayez.");
+    await expect(
+      attachSalonTo(sb, "KZ4P2M", "cle", "Réessayez."),
+    ).rejects.toThrow("Réessayez.");
+  });
+
+  it("rattachement : jamais de navigation, une page de paiement est une erreur", async () => {
+    const href = "http://x/pro";
+    vi.stubGlobal("window", { location: { href } });
+    const body = vi.fn();
+    vi.stubGlobal("fetch", async (path, init) => {
+      body(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ url: "https://pay" }) };
+    });
+    await expect(attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).rejects.toThrow(
+      "Panne.",
+    );
+    expect(window.location.href).toBe(href);
+    expect(body).toHaveBeenCalledWith({
+      salon: "KZ4P2M",
+      key: "cle",
+      attach: true,
+    });
+    vi.stubGlobal("fetch", async () => ({
+      ok: true,
+      json: async () => ({ activated: false }),
+    }));
+    expect(await attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).toEqual({
+      activated: false,
+    });
+  });
+
+  it("rattachement : refus (403, 404) distinct d'une panne (401, 429, 500, réseau)", async () => {
+    const reponse = (status) =>
+      vi.stubGlobal("fetch", async () => ({
+        ok: false,
+        status,
+        json: async () => ({ error: "Cette soirée n'est plus en cours." }),
+      }));
+    for (const status of [403, 404]) {
+      reponse(status);
+      await expect(
+        attachSalonTo(sb, "KZ4P2M", "cle", "Panne."),
+      ).rejects.toMatchObject({
+        message: "Cette soirée n'est plus en cours.",
+        refused: true,
+      });
+    }
+    for (const status of [400, 401, 429, 500, 502]) {
+      reponse(status);
+      const e = await attachSalonTo(sb, "KZ4P2M", "cle", "Panne.").catch(
+        (x) => x,
+      );
+      expect(e.message, String(status)).toBe("Panne.");
+      expect(e.refused).toBeUndefined();
+    }
+  });
+
+  it("réponse sans page de paiement ni activation : erreur", async () => {
+    vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => ({}) }));
+    await expect(goToStripe(sb, "/api/pro/checkout")).rejects.toThrow(
+      "Stripe ne répond pas",
+    );
+    vi.stubGlobal("fetch", async () => ({
+      ok: true,
+      json: async () => ({ activated: "oui" }),
+    }));
+    await expect(goToStripe(sb, "/api/pro/checkout")).rejects.toThrow();
   });
 });

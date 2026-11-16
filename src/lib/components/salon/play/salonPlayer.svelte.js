@@ -22,6 +22,9 @@ export class SalonPlayer {
   // Pseudo déjà dans la soirée sans le jeton de ce téléphone : « C'est toi ? »
   nameTaken = $state(null);
   reclaimPending = $state(false);
+  // Soirée complète : en file, puis entrée annoncée par un bandeau
+  waiting = $state(false);
+  admitted = $state(false);
   // Jeton du joueur, gardé en mémoire : le stockage peut être bloqué (navigation privée)
   token = null;
   // Code de la soirée visée par la dernière tentative de jonction
@@ -81,7 +84,13 @@ export class SalonPlayer {
   intermission = $state(null);
   finale = $state(null);
   myTeam = $state(null);
+  // « Changer » d'équipe : la liste revient en plein écran
+  teamOpen = $state(false);
   paused = $state(false);
+  // « Une autre ! » demandé par ce joueur à la fin de la partie
+  encore = $state(false);
+  // Partie suivante lancée, manche 1 pas encore arrivée
+  replaying = $state(false);
 
   socket = null;
   revealTimer = null; // délai avant de passer au résumé
@@ -91,7 +100,10 @@ export class SalonPlayer {
 
   myRank = $derived(this.ranking?.me?.rank ?? 0);
   board = $derived(podium(this.ranking));
-  teamName = $derived(this.teams?.find((t) => t.id === this.myTeam)?.name);
+  team = $derived(this.teams?.find((t) => t.id === this.myTeam));
+  teamName = $derived(this.team?.name);
+  // Sans équipe valable (pas choisie, ou retirée par la régie) : on choisit
+  choosingTeam = $derived(!!this.teams && (!this.team || this.teamOpen));
 
   constructor(sb) {
     this.#sb = sb;
@@ -107,6 +119,7 @@ export class SalonPlayer {
 
   pickTeam = (id) => {
     this.myTeam = id;
+    this.teamOpen = false;
     this.socket?.emit("salon_pick_team", { team: id });
   };
 
@@ -116,12 +129,8 @@ export class SalonPlayer {
     this.guess = "";
   };
 
-  #notReceived = () =>
-    this.showFeedback({
-      type: "miss",
-      correct: false,
-      msg: "Pas reçu, retape",
-    });
+  #notReceived = (msg = "Pas reçu, retape") =>
+    this.showFeedback({ type: "miss", correct: false, msg });
 
   // Verrouillé seulement quand le serveur a reçu la réponse : hors ligne le tap
   // n'est pas envoyé, et sans accusé la case est rendue
@@ -143,6 +152,14 @@ export class SalonPlayer {
           this.#notReceived();
         }
       });
+  };
+
+  // Hors ligne ou pendant le décompte, rien ne part : le serveur refuserait
+  toggleEncore = () => {
+    if (this.startSec > 0 || this.replaying) return;
+    if (!this.socket?.connected) return this.#notReceived("Pas reçu, réessaie");
+    this.encore = !this.encore;
+    this.socket.emit("salon_encore", { on: this.encore });
   };
 
   buzz = () => {
@@ -236,7 +253,8 @@ export class SalonPlayer {
         ? (await this.#sb.auth.getSession().catch(() => null))?.data.session
             ?.access_token
         : null;
-      socket.emit("salon_join_player", { code: c, username: u, token, auth });
+      const join = { code: c, username: u, token, auth, wait: true };
+      socket.emit("salon_join_player", join);
     };
     socket.on("connect", this.sendJoin);
     listenPlayer(this, socket, c, u);

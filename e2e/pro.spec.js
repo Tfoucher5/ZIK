@@ -41,9 +41,39 @@ test("une formule choisie sans compte ouvre la connexion", async ({ page }) => {
   await page.getByRole("button", { name: "Prendre la Soirée 24 h" }).click();
   await expect(page.getByRole("dialog", { name: "Connexion" })).toBeVisible();
   const intent = await page.evaluate(() =>
-    sessionStorage.getItem("zik_pro_intent"),
+    JSON.parse(localStorage.getItem("zik_pro_intent")),
   );
-  expect(intent).toBe("night");
+  expect(intent).toMatchObject({ plan: "night", salon: null });
+});
+
+test("depuis la régie avec la clé : le bloc de la soirée", async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("zik_salon_key_KZ4P2M", "cle"),
+  );
+  await page.goto("/pro?formule=night&salon=KZ4P2M#tarifs", {
+    waitUntil: "networkidle",
+  });
+  const bloc = page.locator("#depuis-regie");
+  await expect(bloc).toContainText("Depuis votre régie");
+  await expect(bloc).toContainText("Soirée 24 h");
+  await expect(
+    bloc.getByRole("button", { name: "Créer mon compte" }),
+  ).toBeVisible();
+  await expect(
+    page.locator("#tarifs article", { hasText: "Votre choix" }),
+  ).toContainText("Soirée 24 h");
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await expect(page.getByRole("dialog", { name: "Connexion" })).toContainText(
+    "pour la soirée KZ4P2M",
+  );
+});
+
+test("depuis la régie sans la clé : pas de bloc", async ({ page }) => {
+  await page.goto("/pro?formule=night&salon=KZ4P2M#tarifs", {
+    waitUntil: "networkidle",
+  });
+  await expect(page.locator("#tarifs article")).toHaveCount(3);
+  await expect(page.locator("#depuis-regie")).toHaveCount(0);
 });
 
 test("le retour du paiement sans compte demande de se connecter", async ({

@@ -3,18 +3,12 @@ import { io } from "socket.io-client";
 import { SupportChat } from "../support/supportChat.svelte.js";
 import { loadSalonPlaylists } from "../../../data/salonPlaylists.js";
 import { listenRegie } from "./regieEvents.js";
+import { RegiePro } from "./regiePro.svelte.js";
+import { etatManche } from "./onglets.js";
 import {
   takeSalonKeyFromUrl,
   patchSalonPlaylists,
 } from "../../../client/salonClient.js";
-
-export const PHASES = {
-  lobby: "En attente",
-  starting: "Lancement",
-  round: "Manche en cours",
-  summary: "Réponse affichée",
-  gameover: "Partie terminée",
-};
 
 // État de la régie du mode Salon (pilotage depuis un second écran) et connexion.
 export class SalonRegie {
@@ -43,15 +37,11 @@ export class SalonRegie {
   mediaCheck = $state(null);
   intermission = $state(null);
   finale = $state(null);
+  // QR en grand sur la TV (fin de partie, entracte)
+  qrBig = $state(false);
   timerVal = $state(0);
   startSec = $state(0);
   nextSec = $state(0);
-  phaseLabel = $derived(
-    this.startSec
-      ? `Lancement dans ${this.startSec} s`
-      : PHASES[this.phase] +
-          (this.nextSec ? ` · suite dans ${this.nextSec} s` : ""),
-  );
   timerMax = $state(30);
   timerOn = $state(false);
   track = $state(null);
@@ -63,8 +53,11 @@ export class SalonRegie {
   // Joueurs qui demandent à reprendre leur place depuis un autre téléphone
   reclaims = $state([]);
   upsell = $state(null);
+  offre = new RegiePro(this);
   // null tant que le serveur n'a pas répondu : on n'alarme pas à tort.
   screens = $state(null);
+  // Test du son fait sur la TV : null tant qu'il n'a pas eu lieu
+  tvSound = $state(null);
   onglet = $state("direct");
   helpOpen = $state(false);
   userId = $state(null);
@@ -81,6 +74,22 @@ export class SalonRegie {
   step = $derived(this.settings.answerMode === "multiple" ? 100 : 1);
   answered = $derived(
     this.players.filter((p) => p.answeredThisRound || p.foundThisRound).length,
+  );
+  etat = $derived(
+    etatManche({
+      phase: this.phase,
+      paused: this.paused,
+      round: this.round,
+      maxRounds: this.settings.maxRounds ?? 0,
+      timerVal: this.timerVal,
+      timerMax: this.timerMax,
+      timerOn: this.timerOn,
+      joueurs: this.players.length,
+      repondu: this.answered,
+      buzzer: this.buzzer,
+      nextSec: this.nextSec,
+      startSec: this.startSec,
+    }),
   );
   origin = $derived(
     typeof window === "undefined" ? "" : window.location.origin,
@@ -177,13 +186,13 @@ export class SalonRegie {
       new URLSearchParams(window.location.search).get("code")?.toUpperCase() ||
       "";
     if (!this.code) {
-      this.error = "Code de salon manquant.";
+      this.error = "Code de soirée manquant.";
       return;
     }
     this.key = takeSalonKeyFromUrl(this.code) || "";
     if (!this.key) {
       this.error =
-        "Ce navigateur n'a pas la clé de ce salon. Ouvre le lien de régie donné à la création du salon.";
+        "Ce navigateur n'a pas la clé de cette soirée. Ouvre le lien de régie donné à la création de la soirée.";
       return;
     }
     this.#connect();
@@ -218,5 +227,6 @@ export class SalonRegie {
     this.socket?.disconnect();
     this.stopCountdowns?.();
     this.stopWatch?.();
+    this.offre.destroy();
   }
 }

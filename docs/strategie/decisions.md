@@ -2,6 +2,26 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 16/11/2026 — Feuille de match v3 validée
+
+**Décision de Théo** : « oui tel quel et j'approuve la date aussi ». Vidéo montée sur une musique CC0, programmée le 22/11 à 18 h dans TikTok Studio (le clic final « Programmer » est à faire par Théo, refusé par le filtre de sécurité de Claude).
+
+## 16/11/2026 — ZIK Pro en pleine soirée : maquette validée
+
+**Décision de Théo** : « je valide tout ». Maquette « la jauge » (https://claude.ai/artifact/E2T27xQHBqxss5BGYmUEeb) avec ses 15 choix : prénoms de ceux qui attendent sur la régie, Soirée 24 h en un clic + lien abonnements, paiement sans fenêtre « Confirmer », compte déjà Pro = soirée Pro dès la connexion, « ZIK Pro activé » jusqu'à « Compris », pas de rang dans la file, « Tu entres si une place se libère. », TV au plus « N en attente », retour OAuth sur /pro.
+
+## 16/11/2026 — Onglets de la régie validés
+
+**Décision de Théo** : « je valide ! C'est bien plus propre qu'actuellement. » Onglets Direct, Joueurs et Réglages de la maquette avant-partie (https://claude.ai/artifact/8kDW3iEd9fTamoxy6A4Fn2), avec les 4 choix recommandés : joueurs avant équipes sur téléphone, gestes repliés sur la ligne d'un joueur, « Bonne réponse » sans pseudo, « a décroché » et plus de mot « salon » en régie. Titre remplacé marqué discrètement dans les titres joués.
+
+## 16/11/2026 — Maquette fin de partie v2 validée
+
+**Décision de Théo** : maquette validée (https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5), story « bien mieux ». 1) la playlist jouée quitte la TV : oui. 2) « prix » pas compris : ce sont les mentions « le plus rapide », « le plus régulier », « meilleur joueur » ; choix du CEO : gardées en petites étiquettes sur le nom. 3) aplat plein écran du vainqueur seulement au podium de la soirée. Idée de Théo à cadrer plus tard : des « paramètres avancés » de soirée (sons, animations, compte à rebours…). 4) nom de la soirée en tête de la story : oui. 5) QR en grand sans fermeture automatique : oui.
+
+## 16/11/2026 — Posts TikTok
+
+**Décision de Théo** : carrousel « ces sons ont 30 ans » le 19/11 (un post part déjà le 16), avec une musique qui a 30 ans en 2026 : programmé par Claude le 19/11 à 18 h avec « Wannabe » (Spice Girls, 1996). « Feuille de match » validée, mais la musique doit être choisie et montée par nous dans la vidéo (les coupes hachaient la musique ajoutée dans TikTok) ; date fixée après le 19/11, en fonction du carrousel.
+
 ## 16/11/2026 — Réponses de Théo depuis le QG (matin)
 
 **Release v3.32** : Théo n'attend pas ses tests humains (« techniquement ça fonctionne déjà ») : release maintenant, achat test et vraie soirée multi-téléphones après.

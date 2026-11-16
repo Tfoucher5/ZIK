@@ -30,7 +30,12 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
   });
   const tv = await ecran.newPage();
   await tv.goto(`/salon/host?code=${code}&key=${key}`);
-  await expect(tv.locator(".sh-join-code")).toHaveText(code);
+  // Écran privé « Prépare la TV » d'abord, puis le code pour tout le monde
+  await tv.getByRole("button", { name: "Afficher le code" }).click();
+  await expect(tv.locator(".lb-code")).toHaveAttribute(
+    "aria-label",
+    `Code ${code}`,
+  );
 
   const regie = await (await browser.newContext()).newPage();
   await regie.goto(`/salon/regie?code=${code}&key=${key}`);
@@ -43,7 +48,11 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
   );
   for (const [i, tel] of [alice, bob, chloe].entries()) {
     await tel.goto(`/salon/play?code=${code}`);
-    await tel.locator(".sp-code-input").fill(code);
+    // Code venu de l'URL (QR de la TV) : affiché en tuiles, seul le pseudo reste
+    await expect(tel.locator(".sp-tuiles")).toHaveAttribute(
+      "aria-label",
+      `Code ${code}`,
+    );
     await tel.getByPlaceholder("Ex. : Julie").fill(NOMS[i]);
     await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
     await expect(tel.getByPlaceholder("Ex. : Julie")).toBeHidden();
@@ -119,20 +128,35 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
     }
   }
 
-  await expect(tv.getByText(`Vainqueur · ${MANCHES} manches`)).toBeVisible({
+  await expect(tv.getByRole("region", { name: "Fin de partie" })).toBeVisible({
     timeout: MANCHE_MAX_MS,
   });
-  // Entre deux parties, grand QR et code pour ceux qui arrivent ou reviennent
-  await expect(tv.locator(".sh-over-join .sh-qr img")).toBeVisible();
-  await expect(tv.locator(".sh-over-join .sh-code")).toHaveAttribute(
+  // Entre deux parties, QR et code pour ceux qui arrivent ou reviennent
+  await expect(tv.locator(".fin .bd .qr svg")).toBeVisible();
+  await expect(tv.locator(".fin .code")).toHaveAttribute(
     "aria-label",
     `Code ${code}`,
   );
   for (const nom of NOMS)
     await expect(
-      tv.locator(".sh-po-name").filter({ hasText: nom }),
+      tv.locator(".pz .nom").filter({ hasText: nom }),
     ).toBeAttached();
   for (const tel of [alice, bob, chloe])
     await expect(tel.getByText("Partie terminée")).toBeVisible();
   await expect(alice.getByText("Tu gagnes !")).toBeVisible();
+
+  // Fin de partie : « Une autre ! », QR en grand, puis la partie suivante
+  await bob.getByRole("button", { name: "Une autre !" }).click();
+  await expect(tv.getByText("1 sur 3 en redemandent")).toBeVisible();
+  await tv.screenshot({ path: "test-results/tv-fin.png" });
+  await regie.getByRole("button", { name: "Afficher le QR en grand" }).click();
+  const qrGrand = tv.getByRole("region", { name: "Rejoindre la partie" });
+  await expect(qrGrand).toContainText("Scannez");
+  await expect(qrGrand).toContainText("pour jouer");
+  await regie
+    .getByRole("button", { name: "Lancer la partie suivante" })
+    .click();
+  await expect(qrGrand).toHaveCount(0);
+  for (const tel of [alice, bob, chloe])
+    await expect(tel.getByText("On remet ça.").first()).toBeVisible();
 });

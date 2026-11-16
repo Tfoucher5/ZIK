@@ -1,6 +1,4 @@
-import { FREE_MAX_PLAYERS } from "../../../data/proPlans.js";
 import { verifyToken } from "../../middleware/auth.js";
-import { alertAdminsSafe } from "../../services/admin/alerts.js";
 import { getSalonNotice, salonRooms } from "../../state.js";
 import {
   addPlayer,
@@ -22,7 +20,15 @@ import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
 import { dropReclaim, pendingReclaims } from "./reclaim.js";
 import { scheduleCleanup, sendBreak, timerClock } from "./timers.js";
-import { key, optional, safe, str } from "../safe.js";
+import {
+  announceQueue,
+  isFull,
+  quitQueue,
+  refuse,
+  reserved,
+  unqueue,
+} from "./queue.js";
+import { bool, key, optional, safe, str } from "../safe.js";
 
 // key absente (TV ouverte avec le seul code) : le handler répond « réservé à l'hôte »
 const SCREEN_JOIN = { code: key(64), key: optional(str(200)) };
@@ -31,6 +37,8 @@ const PLAYER_JOIN = {
   username: str(100),
   token: optional(key(200)),
   auth: optional(str(8192)),
+  // Sans wait (anciens téléphones), un salon complet refuse sans file d'attente
+  wait: optional(bool()),
 };
 
 // Toujours envoyée, même vide : l'annonce a pu être retirée pendant une coupure
@@ -85,6 +93,7 @@ export function registerJoin(socket, io) {
     else announceNextVideo(salon, io);
     scheduleCleanup(code);
     broadcastScreens(code, io);
+    announceQueue(salon, io);
     if (salon.game.restored) resumeAfterRestart(salon, io);
   });
 
@@ -133,6 +142,7 @@ export function registerJoin(socket, io) {
       history: game.history,
       trackCount: game.fullPlaylist.length,
       tvVolume: salon._tvVolume ?? null,
+      tvSound: salon._tvSound ?? null,
       reclaims: pendingReclaims(salon),
       support: supportView(salon),
     });
@@ -140,6 +150,7 @@ export function registerJoin(socket, io) {
     sendBreak(socket, salon.game);
     scheduleCleanup(code);
     broadcastScreens(code, io);
+    announceQueue(salon, io);
   });
 
   // ── Player joins ──────────────────────────────────────────────────────────
@@ -147,7 +158,7 @@ export function registerJoin(socket, io) {
     socket,
     "salon_join_player",
     PLAYER_JOIN,
-    async ({ code, username, token, auth }) => {
+    async ({ code, username, token, auth, wait }) => {
       // Compte du joueur s'il est connecté : sa fiche admin liste ses salons
       const account = auth ? await verifyToken(auth).catch(() => null) : null;
       username = cleanUsername(username);
@@ -160,115 +171,112 @@ export function registerJoin(socket, io) {
         return socket.emit("salon_error", {
           message: "Salon introuvable ou expiré.",
         });
-
-      // ── Reconnect path: player was already in the game ────────────────────
-      // Un retardataire entre dans la partie en cours avec 0 point, par le même
-      // chemin qu'une reconnexion. Pendant le podium (gameover), il passe par le
-      // join normal et attend la partie suivante.
-      if (
-        !salon.players[username] &&
-        !salon.pro &&
-        Object.keys(salon.players).length >= FREE_MAX_PLAYERS
-      ) {
-        salon.limitHits = (salon.limitHits ?? 0) + 1;
-        note(salon, `${username} refusé : limite gratuite atteinte`);
-        alertAdminsSafe(
-          "admin_upsell",
-          {
-            title: `Salon ${code} plein`,
-            body: `Un joueur de plus a été refusé (limite gratuite de ${FREE_MAX_PLAYERS}).`,
-            url: `/admin/salons?code=${code}`,
-            tag: `full:${code}`,
-          },
-          { throttleMs: 60 * 60 * 1000 },
-        );
-        io.to(`salon:ctrl:${code}`).emit("salon_pro_required", {
-          feature: "players",
-        });
-        return socket.emit("salon_error", {
-          message: "Le salon est complet.",
-        });
-      }
-
-      if (salon.banned.has(username.toLowerCase()) || salon.banned.has(token))
-        return socket.emit("salon_error", {
-          message: "L'hôte t'a retiré de ce salon.",
-        });
-
-      const taken = nameTaken(salon, username);
-      if (taken && taken.token !== token) {
-        // Même compte ZIK : c'est bien lui, même sur un autre téléphone
-        if (account && taken.userId === account.id) token = taken.token;
-        // Sinon le téléphone propose « C'est toi ? » et l'hôte confirme (reclaim.js)
-        else return socket.emit("salon_name_taken", { username });
-      }
-
-      const late =
-        !salon.players[username] &&
-        salon.game.phase !== "lobby" &&
-        salon.game.phase !== "gameover";
-      if (late)
-        addPlayer(salon, username, socket.id, token).scoreBeforeRound ??= 0;
-      if (salon.players[username]) {
-        const existing = salon.players[username];
-        // Place reprise sur un autre téléphone : l'ancien est prévenu et lâché
-        const old =
-          existing.socketId !== socket.id &&
-          io.sockets.sockets.get(existing.socketId);
-        if (old) {
-          old.salonCode = null;
-          old.leave(`salon:${code}`);
-          old.leave(`salon:players:${code}`);
-          old.emit("salon_closed", {
-            message: "Ta place a été reprise sur un autre appareil.",
-          });
-        }
-        // Revenu avec son jeton : sa demande à l'hôte n'a plus lieu d'être
-        dropReclaim(salon, username, io);
-        // Cancel pending removal timer
-        clearTimeout(existing._dcTimer);
-        existing._dcTimer = null;
-        existing._disconnected = false;
-        existing.socketId = socket.id;
-        if (account) existing.userId = account.id;
-
-        socket.join(`salon:${code}`);
-        socket.join(`salon:players:${code}`);
-        socket.salonCode = code;
-        socket.salonRole = "player";
-        socket.salonUsername = username;
-
-        socket.emit("salon_joined", reconnectView(salon, existing));
-        sendNotice(socket);
-        sendBreak(socket, salon.game);
-        broadcastRoster(code, io);
-        scheduleCleanup(code);
-        return;
-      }
-
-      const player = addPlayer(salon, username, socket.id, token);
-      if (account) player.userId = account.id;
-
-      socket.join(`salon:${code}`);
-      socket.join(`salon:players:${code}`);
-      socket.salonCode = code;
-      socket.salonRole = "player";
-      socket.salonUsername = username;
-
-      socket.emit("salon_joined", {
+      joinPlayer(io, salon, socket, {
         username,
-        token: player.token,
-        settings: {
-          answerMode: salon.settings.answerMode,
-          maxRounds: salon.settings.maxRounds,
-        },
-        team: player.team,
-        ...phoneLists(salon, username),
+        token,
+        userId: account?.id,
+        wait,
       });
-      sendNotice(socket);
-      sendBreak(socket, salon.game);
-      broadcastRoster(code, io);
-      scheduleCleanup(code);
     },
   );
+}
+
+// Arrivée d'un téléphone, ou entrée d'un joueur de la file d'attente (queue.js)
+export function joinPlayer(
+  io,
+  salon,
+  socket,
+  { username, token, userId, wait },
+) {
+  const { code } = salon;
+  // En file d'un autre salon : il la quitte avant d'entrer ici
+  if (socket.salonWait && socket.salonWait !== code) quitQueue(socket, io);
+  if (salon.banned.has(username.toLowerCase()) || salon.banned.has(token))
+    return socket.emit("salon_error", {
+      message: "L'hôte t'a retiré de ce salon.",
+    });
+
+  const taken = nameTaken(salon, username);
+  if (taken && taken.token !== token) {
+    // Même compte ZIK : c'est bien lui, même sur un autre téléphone
+    if (userId && taken.userId === userId) token = taken.token;
+    // Sinon le téléphone propose « C'est toi ? » et l'hôte confirme (reclaim.js)
+    else return socket.emit("salon_name_taken", { username });
+  }
+
+  // Un téléphone en file coupé garde son pseudo, même si une place est libre
+  if (reserved(salon, io, username, token, socket))
+    return socket.emit("salon_error", { message: "Ce pseudo est déjà pris." });
+  if (!salon.players[username] && isFull(salon))
+    return refuse(salon, socket, io, { username, token, userId, wait });
+  if (unqueue(salon, socket, token)) announceQueue(salon, io);
+
+  // Un retardataire entre dans la partie en cours avec 0 point, par le même
+  // chemin qu'une reconnexion. Pendant le podium (gameover), il passe par le
+  // join normal et attend la partie suivante.
+  const late =
+    !salon.players[username] &&
+    salon.game.phase !== "lobby" &&
+    salon.game.phase !== "gameover";
+  if (late) addPlayer(salon, username, socket.id, token).scoreBeforeRound ??= 0;
+  if (salon.players[username]) {
+    const existing = salon.players[username];
+    // Place reprise sur un autre téléphone : l'ancien est prévenu et lâché
+    const old =
+      existing.socketId !== socket.id &&
+      io.sockets.sockets.get(existing.socketId);
+    if (old) {
+      old.salonCode = null;
+      old.leave(`salon:${code}`);
+      old.leave(`salon:players:${code}`);
+      old.emit("salon_closed", {
+        message: "Ta place a été reprise sur un autre appareil.",
+      });
+    }
+    // Revenu avec son jeton : sa demande à l'hôte n'a plus lieu d'être
+    dropReclaim(salon, username, io);
+    // Cancel pending removal timer
+    clearTimeout(existing._dcTimer);
+    existing._dcTimer = null;
+    existing._disconnected = false;
+    existing.socketId = socket.id;
+    if (userId) existing.userId = userId;
+
+    socket.join(`salon:${code}`);
+    socket.join(`salon:players:${code}`);
+    socket.salonCode = code;
+    socket.salonRole = "player";
+    socket.salonUsername = username;
+
+    socket.emit("salon_joined", reconnectView(salon, existing));
+    sendNotice(socket);
+    sendBreak(socket, salon.game);
+    broadcastRoster(code, io);
+    scheduleCleanup(code);
+    return;
+  }
+
+  const player = addPlayer(salon, username, socket.id, token);
+  if (userId) player.userId = userId;
+
+  socket.join(`salon:${code}`);
+  socket.join(`salon:players:${code}`);
+  socket.salonCode = code;
+  socket.salonRole = "player";
+  socket.salonUsername = username;
+
+  socket.emit("salon_joined", {
+    username,
+    token: player.token,
+    settings: {
+      answerMode: salon.settings.answerMode,
+      maxRounds: salon.settings.maxRounds,
+    },
+    team: player.team,
+    ...phoneLists(salon, username),
+  });
+  sendNotice(socket);
+  sendBreak(socket, salon.game);
+  broadcastRoster(code, io);
+  scheduleCleanup(code);
 }

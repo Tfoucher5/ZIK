@@ -151,9 +151,15 @@ describe("entrées hostiles sur tous les handlers", () => {
       expect({}[k], k).toBeUndefined();
   });
 
-  it("44 handlers enregistrés", () => {
+  it("48 handlers enregistrés", () => {
     const count = Object.values(handlers).reduce((n, l) => n + l.length, 0);
-    expect(count).toBe(44);
+    expect(count).toBe(48);
+  });
+
+  it("wait n'accepte qu'un booléen", () => {
+    const base = { code: "ABC123", username: "Julie" };
+    for (const wait of ["oui", 42, {}, []])
+      expect(validate(schemas.salon_join_player, { ...base, wait })).toBeNull();
   });
 
   // Formes exactes envoyées par la TV, la régie, les téléphones et le jeu en ligne
@@ -198,7 +204,9 @@ describe("entrées hostiles sur tous les handlers", () => {
     salon_join_player: [
       { code: "ABC123", username: "Julie", token: "t", auth: undefined },
       { code: "ABC123", username: "Julie", token: null, auth: "jwt" },
+      { code: "ABC123", username: "Julie", token: "t", wait: true },
     ],
+    salon_queue_leave: [undefined],
     salon_pick_team: [{ team: 0 }],
     salon_submit_guess: [{ guess: "daft punk" }],
     salon_submit_choice: [{ choiceIndex: 0 }],
@@ -207,6 +215,7 @@ describe("entrées hostiles sur tous les handlers", () => {
     salon_close: [undefined],
     salon_volume: [{ volume: 55 }],
     salon_tv_volume: [{ volume: 0 }, { volume: 100 }],
+    salon_tv_sound: [{ ok: true }, { ok: false }],
     salon_kick: [{ username: "Julie" }],
     salon_reclaim_request: [{ code: "ABC123", username: "Julie" }],
     salon_reclaim_answer: [
@@ -225,7 +234,15 @@ describe("entrées hostiles sur tous les handlers", () => {
     salon_intermission: [{ minutes: 0 }, { minutes: 15 }, { minutes: null }],
     salon_support_call: [{ message: "" }, { message: "La musique coupe" }],
     salon_support_send: [{ text: "Merci" }],
+    salon_qr_big: [{ on: true }, { on: false }],
+    salon_encore: [{ on: true }, { on: false }],
   };
+
+  it("salon_qr_big et salon_encore n'acceptent qu'un booléen", () => {
+    for (const evt of ["salon_qr_big", "salon_encore"])
+      for (const on of ["oui", 1, null, {}, []])
+        expect(validate(schemas[evt], { on }), evt).toBeNull();
+  });
 
   for (const evt of [
     "salon_pause",

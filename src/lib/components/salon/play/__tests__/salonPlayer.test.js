@@ -152,3 +152,146 @@ describe("QCM : la case ne se verrouille qu'à l'accusé du serveur", () => {
     expect(p.allFound).toBe(false);
   });
 });
+
+describe("avant la partie : choix d'équipe", () => {
+  const EQUIPES = [
+    { id: 0, name: "Rouge", size: 1 },
+    { id: 1, name: "Bleue", size: 0 },
+  ];
+  function joueur() {
+    const p = new SalonPlayer(null);
+    p.socket = { emit: vi.fn() };
+    return p;
+  }
+
+  it("sans équipes, pas d'écran de choix", () => {
+    expect(joueur().choosingTeam).toBe(false);
+  });
+
+  it("équipes activées en cours de lobby : le choix s'ouvre, puis se ferme une fois l'équipe prise", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    expect(p.choosingTeam).toBe(true);
+    p.pickTeam(1);
+    expect(p.socket.emit).toHaveBeenCalledWith("salon_pick_team", { team: 1 });
+    expect(p.choosingTeam).toBe(false);
+    expect(p.teamName).toBe("Bleue");
+  });
+
+  it("« Changer » rouvre la liste, un nouveau choix la referme", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.pickTeam(0);
+    p.teamOpen = true;
+    expect(p.choosingTeam).toBe(true);
+    p.pickTeam(1);
+    expect(p.choosingTeam).toBe(false);
+    expect(p.myTeam).toBe(1);
+  });
+
+  it("équipe donnée par la régie : pas d'écran de choix", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.myTeam = 0;
+    expect(p.choosingTeam).toBe(false);
+  });
+
+  it("équipe retirée par la régie : le choix revient", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.pickTeam(1);
+    p.teams = [EQUIPES[0]];
+    expect(p.choosingTeam).toBe(true);
+  });
+
+  it("équipes désactivées : le choix disparaît", () => {
+    const p = joueur();
+    p.teams = EQUIPES;
+    p.teams = null;
+    expect(p.choosingTeam).toBe(false);
+  });
+});
+
+describe("« Une autre ! » : rien ne part hors ligne", () => {
+  const joueur = (connected = true) => {
+    const p = new SalonPlayer(null);
+    p.socket = { connected, emit: vi.fn() };
+    return p;
+  };
+
+  it("en ligne : la bascule part au serveur, dans les deux sens", () => {
+    const p = joueur();
+    p.toggleEncore();
+    expect(p.encore).toBe(true);
+    expect(p.socket.emit).toHaveBeenLastCalledWith("salon_encore", {
+      on: true,
+    });
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).toHaveBeenLastCalledWith("salon_encore", {
+      on: false,
+    });
+  });
+
+  it("hors ligne : rien n'est envoyé ni coché, le joueur est prévenu", () => {
+    const p = joueur(false);
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
+  });
+
+  it("pendant le décompte de la partie suivante : ignoré", () => {
+    const p = joueur();
+    p.startSec = 4;
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+  });
+
+  it("décompte fini mais manche 1 pas encore là : toujours ignoré", () => {
+    const p = joueur();
+    p.replaying = true;
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+  });
+});
+
+describe("file d'attente : la demande de place", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const envoi = async (p) => {
+    const s = sockets.at(-1);
+    s.emit = vi.fn();
+    await p.sendJoin();
+    return s.emit.mock.calls[0];
+  };
+
+  it("chaque connexion demande la file si la soirée est complète, avec le jeton de la file", async () => {
+    vi.stubGlobal("localStorage", { getItem: () => null });
+    const p = new SalonPlayer(null);
+    rejoint(p, "KZ4P2M");
+    // salon_waiting a donné un jeton : la reconnexion le renvoie
+    p.token = "jeton-file";
+    expect(await envoi(p)).toEqual([
+      "salon_join_player",
+      {
+        code: "KZ4P2M",
+        username: "Ana",
+        token: "jeton-file",
+        auth: null,
+        wait: true,
+      },
+    ]);
+  });
+
+  it("page rechargée pendant l'attente : le jeton gardé sur le téléphone repart", async () => {
+    vi.stubGlobal("localStorage", {
+      getItem: (k) => (k === "zik_salon_player_KZ4P2M" ? "jeton-file" : null),
+    });
+    const p = new SalonPlayer(null);
+    rejoint(p, "KZ4P2M");
+    expect((await envoi(p))[1].token).toBe("jeton-file");
+  });
+});

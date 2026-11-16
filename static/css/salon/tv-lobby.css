@@ -1,0 +1,267 @@
+/* Lobby de la TV (host/HostLobby.svelte) : tout en em (.sh-tv), lisible à 5 m */
+.lb {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  padding: 1.4em 3.33em 1.8em;
+  overflow: hidden;
+  background: radial-gradient(90% 80% at 30% 0%, #1b0a20, #060608 70%);
+}
+.lb .lb-cpt {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--s-mono);
+  font-size: 1.56em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--soft, #d6d7e4);
+}
+.lb .lb-cpt i {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--success);
+}
+.lb .lb-cpt b {
+  font-size: 1.4em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.lb .lb-cpt em {
+  font-style: normal;
+  padding-left: 0.7em;
+  margin-left: 0.2em;
+  border-left: 2px solid var(--border);
+}
+.lb .lb-hero {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3.33em;
+  align-items: center;
+}
+.lb h1 {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 5.6em;
+  line-height: 0.94;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+.lb h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.lb .lb-code {
+  display: flex;
+  gap: 0.16em;
+  margin-top: 0.3em;
+  font-family: var(--s-mono);
+  font-weight: 700;
+  font-size: 4em;
+}
+.lb .lb-code b {
+  display: grid;
+  place-items: center;
+  width: 1.22em;
+  height: 1.5em;
+  border-radius: 0.14em;
+  background: rgb(255 255 255 / 0.09);
+  border-bottom: 0.06em solid rgb(255 255 255 / 0.45);
+}
+.lb .lb-url {
+  margin-top: 0.7em;
+  font-size: 1.77em;
+  color: var(--soft, #d6d7e4);
+}
+.lb .lb-url b {
+  color: var(--text);
+  font-weight: 600;
+}
+.lb .lb-check {
+  margin-top: 0.8em;
+  font-size: 1.5em;
+}
+.lb .lb-check .mc {
+  font-size: 1em;
+}
+.lb .lb-qr {
+  display: grid;
+  gap: 0.8em;
+  justify-items: center;
+}
+.lb .lb-qr div {
+  width: 17em;
+  padding: 1em;
+  border-radius: 1.3em;
+  background: #fff;
+}
+.lb figcaption {
+  font-family: var(--s-cond);
+  font-weight: 800;
+  font-size: 2em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.lb .lb-bas {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.6em;
+  overflow: hidden;
+}
+.lb .lb-eqs {
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 1.25em;
+}
+.lb .lb-eq {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.9em 1.35em 1.1em;
+  border-left: 0.6em solid var(--tc);
+  border-radius: 0.7em;
+  background: rgb(255 255 255 / 0.045);
+}
+.lb .lb-eq header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5em;
+}
+.lb h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 2.9em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.lb .nb {
+  flex: none;
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: 4.4em;
+  line-height: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.lb .nb small {
+  margin-left: 0.3em;
+  font-family: var(--s-mono);
+  font-weight: 500;
+  font-size: 0.33em;
+  color: var(--mid);
+}
+.lb .noms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 0.6em;
+  margin-top: 0.8em;
+  list-style: none;
+  font-size: 1.875em;
+}
+.lb .noms li {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.25em 0.45em 0.3em;
+  border-radius: 0.28em;
+  background: rgb(255 255 255 / 0.08);
+  outline: 0.08em solid transparent;
+  font-weight: 600;
+  line-height: 1;
+}
+.lb .noms li.vide {
+  padding-inline: 0;
+  background: none;
+  color: var(--mid);
+  font-weight: 400;
+}
+.lb .noms.solo {
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  padding: 0.6em 0.1em 0.1em;
+  border-top: 2px solid var(--border2);
+  font-size: 2.1em;
+}
+.lb .lb-plus,
+.lb .lb-vide {
+  flex: none;
+  margin-top: 0.5em;
+  font-size: 1.875em;
+  color: var(--mid);
+}
+.lb .lb-vide {
+  padding-top: 0.6em;
+  border-top: 2px solid var(--border2);
+}
+.lb .compact h1 {
+  font-size: 4.4em;
+}
+.lb .compact h1 br {
+  display: none;
+}
+.lb .compact .lb-code {
+  font-size: 3.2em;
+}
+.lb .compact .lb-qr div {
+  width: 13em;
+}
+/* 4 à 8 équipes : plus serré ; au-delà, nom et effectif seulement */
+.lb .serre .lb-eq {
+  padding: 0.7em 1em 0.8em;
+}
+.lb .serre h2 {
+  font-size: 2.1em;
+}
+.lb .serre .nb {
+  font-size: 3em;
+}
+.lb .serre .nb small {
+  font-size: 0.5em;
+}
+.lb .serre .noms {
+  font-size: 1.6em;
+  margin-top: 0.5em;
+}
+.lb .mini .lb-eq {
+  padding: 0.5em 0.9em;
+}
+.lb .mini h2 {
+  font-size: 1.7em;
+}
+.lb .mini .nb {
+  font-size: 2.2em;
+}
+.lb .mini .nb small {
+  font-size: 0.68em;
+}
+/* TV ouverte sur un écran en hauteur (téléphone, tablette) */
+@media (max-aspect-ratio: 1/1) {
+  .lb.sh-tv {
+    font-size: 2.4vw;
+    padding: 1.5em;
+  }
+  .lb .lb-hero {
+    grid-template-columns: 1fr;
+    gap: 1.5em;
+  }
+  .lb .lb-qr div {
+    width: 16em;
+  }
+  .lb .lb-eqs {
+    grid-template-columns: repeat(auto-fill, minmax(14em, 1fr));
+  }
+}

@@ -3,6 +3,7 @@ import { salonRooms } from "../../state.js";
 import { noteEvent } from "../../services/health/opsEvents.js";
 import { scheduleDeparture } from "./leave.js";
 import { nextRound, scheduleCleanup } from "./timers.js";
+import { refreshPro } from "./pro.js";
 
 // Instantané d'un salon dans Postgres (salon.snapshots) : écrit à chaque
 // changement de phase, de joueurs ou de réglages et sur SIGTERM, relu quand un
@@ -289,6 +290,7 @@ async function load(code, io) {
     for (const username of Object.keys(salon.players))
       scheduleDeparture(salon, username, io);
     scheduleCleanup(code);
+    await refreshPro(salon, io);
     console.log(`Salon "${code}" repris depuis son instantané`);
   } catch (e) {
     delete salonRooms[code];

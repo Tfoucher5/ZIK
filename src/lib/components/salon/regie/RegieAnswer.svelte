@@ -57,22 +57,23 @@
 </div>
 
 <style>
-  .ra-track { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+  .ra-track { display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); }
   .ra-track img {
-    width: 72px; height: 72px; border-radius: 3px; object-fit: cover; flex-shrink: 0;
+    width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
     background: var(--surface);
     transition: filter 0.8s ease, transform 0.8s ease;
   }
   .ra-track img.flou { filter: blur(14px) saturate(0.4); transform: scale(0.92); }
   .ra-id { min-width: 0; }
-  .ra-id b { display: block; font-size: 1.05rem; line-height: 1.3; overflow-wrap: anywhere; }
-  .ra-id b.brouille { font-family: var(--s-mono); color: var(--dim); letter-spacing: 0.05em; }
-  .ra-id small { display: block; font-size: 0.76rem; color: var(--dim); margin-top: 4px; }
+  .ra-id b { display: block; font-weight: 600; font-size: 18px; line-height: 1.2; overflow-wrap: anywhere; }
+  .ra-id b.brouille { font-family: var(--mono); font-weight: 500; font-size: 14px; color: #8587a0; letter-spacing: 0.02em; }
+  .ra-id small { display: block; font-size: 14px; color: var(--muted); margin-top: 3px; }
   .ra-secret { font-style: italic; }
   .ra-voir {
-    margin-top: 8px; padding: 7px 12px; border-radius: 3px;
-    border: 1px solid var(--border2); background: none; color: var(--text);
-    font: inherit; font-size: 0.8rem; cursor: pointer;
+    min-height: 44px; margin-top: 8px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid var(--line-2); background: none; color: var(--text);
+    font-family: var(--titre); font-weight: 700; font-size: 15px; letter-spacing: 0.04em;
+    text-transform: uppercase; cursor: pointer;
   }
   .ra-voir:hover { border-color: var(--accent); color: var(--accent); }
 </style>

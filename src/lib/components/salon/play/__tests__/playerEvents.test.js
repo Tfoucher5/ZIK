@@ -16,6 +16,18 @@ describe("téléphone : soirée fermée par l'hôte", () => {
   });
 });
 
+describe("téléphone : lancement de la partie", () => {
+  it("referme la liste des équipes ouverte par « Changer »", () => {
+    const handlers = {};
+    const socket = { on: (evt, fn) => (handlers[evt] = fn) };
+    const p = { teamOpen: true };
+    listenPlayer(p, socket, "ABCDEF", "Ana");
+    handlers.salon_game_starting();
+    expect(p.teamOpen).toBe(false);
+    expect(p.phase).toBe("starting");
+  });
+});
+
 describe("téléphone : retour après une coupure en QCM", () => {
   const reprise = (p, data) => {
     const handlers = {};
@@ -117,5 +129,46 @@ describe("téléphone : révélation QCM après un accusé perdu", () => {
     const p = { answerMode: "text", chosenIndex: null };
     finDeManche(p, {});
     expect(p.chosenIndex).toBeNull();
+  });
+});
+
+describe("téléphone : « Une autre ! »", () => {
+  const ecoute = (p) => {
+    const handlers = {};
+    listenPlayer(p, { on: (evt, fn) => (handlers[evt] = fn) }, "ABCDEF", "Ana");
+    return handlers;
+  };
+
+  it("la demande vient du salon_roster du serveur, y compris après une coupure", () => {
+    const p = { encore: false };
+    const h = ecoute(p);
+    h.salon_roster({
+      roster: { recent: [], count: 3, encore: 1 },
+      teams: null,
+      encore: true,
+    });
+    expect(p.encore).toBe(true);
+    expect(p.roster.encore).toBe(1);
+    h.salon_roster({
+      roster: { recent: [], count: 3, encore: 0 },
+      teams: null,
+    });
+    expect(p.encore).toBe(false);
+  });
+
+  it("rejouer remet la demande à zéro", () => {
+    const p = { encore: true, finalRanking: {} };
+    ecoute(p).salon_restarted();
+    expect(p.encore).toBe(false);
+    expect(p.finalRanking).toBeNull();
+  });
+
+  it("rejouer : attente sans faux résultat jusqu'à la manche 1", () => {
+    const p = { phase: "gameover", finalRanking: {} };
+    const h = ecoute(p);
+    h.salon_restarted();
+    expect(p).toMatchObject({ phase: "gameover", replaying: true });
+    h.salon_round_start({ round: 1, total: 10 });
+    expect(p).toMatchObject({ phase: "round", replaying: false });
   });
 });

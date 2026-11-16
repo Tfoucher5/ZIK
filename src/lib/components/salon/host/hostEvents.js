@@ -28,9 +28,16 @@ export function listenHost(h, socket) {
     h.night = data.night;
     h.intermission = data.evening?.intermission ?? null;
     h.finale = data.evening?.finale ?? null;
+    h.qrBig = !!data.evening?.qr;
+    h.relaunching = false;
+    // TV rechargée en fin de partie : le podium est déjà en place
+    h.overRevealed = data.phase === "gameover";
     h.buzzer = data.buzzer;
     h.mediaCheck = data.mediaCheck;
     socket.emit("salon_tv_volume", { volume: h.volume });
+    if (h.tvSound != null) socket.emit("salon_tv_sound", { ok: h.tvSound });
+    // Une TV rechargée en pleine partie ne repasse jamais par « Prépare la TV »
+    if (data.phase && data.phase !== "lobby") h.prepDone = true;
     h.paused = data.paused;
     if (data.endsAt) {
       h.timerMax = data.timerMax;
@@ -46,9 +53,10 @@ export function listenHost(h, socket) {
   socket.on("salon_night", ({ night }) => {
     h.night = night;
   });
-  socket.on("salon_evening", ({ intermission, finale }) => {
+  socket.on("salon_evening", ({ intermission, finale, qr }) => {
     h.intermission = intermission;
     h.finale = finale;
+    h.qrBig = !!qr;
   });
   socket.on("salon_buzzed", (buzzer) => {
     h.buzzer = buzzer;
@@ -85,6 +93,7 @@ export function listenHost(h, socket) {
   });
   socket.on("salon_volume", ({ volume }) => h.applyVolume(volume, false));
   socket.on("salon_controls", ({ count }) => (h.controls = count));
+  socket.on("salon_queue", ({ count }) => (h.waiting = count));
   socket.on("salon_paused", ({ paused }) => {
     h.paused = paused;
     if (paused) chrono.stop();
@@ -104,6 +113,7 @@ export function listenHost(h, socket) {
 
   socket.on("salon_game_starting", () => {
     h.phase = "starting";
+    h.prepDone = true;
   });
 
   socket.on("salon_next_video", ({ videoId, startSeconds }) =>
@@ -114,6 +124,7 @@ export function listenHost(h, socket) {
   socket.on("salon_round_start", (data) => {
     h.restored = null;
     h.phase = "round";
+    h.relaunching = false;
     h.special = data.special ?? null;
     h.videoOutage = null;
     h.buzzer = null;
@@ -205,6 +216,8 @@ export function listenHost(h, socket) {
   socket.on("salon_game_over", (data) => {
     h.phase = "gameover";
     h.gameOver = data;
+    h.relaunching = false;
+    h.overRevealed = false;
     h.teams = data.teams;
     h.night = data.night;
     h.hostCenter?.fadeOut();
@@ -214,6 +227,7 @@ export function listenHost(h, socket) {
     h.mergeRoster(players);
     h.roundEnd = null;
     h.gameOver = null;
+    h.relaunching = true;
   });
 
   socket.on(

@@ -1,151 +1,192 @@
 <script>
-  import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
-  import { SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
-  import { salonQrUrl } from '$lib/client/salonClient.js';
+  /**
+   * Fin de partie sur la TV : le podium monte du sol (3e, 2e, 1re), puis la suite
+   * du classement et la bande du bas. Sans son ni confettis. Posé sur la scène :
+   * le lecteur vidéo reste monté dessous pour précharger la partie suivante.
+   * TV seule (aucune régie connectée) : les commandes de l'hôte à droite.
+   */
+  import HostPodium from './HostPodium.svelte';
+  import HostEndBand from './HostEndBand.svelte';
+  import HostEndCommands from './HostEndCommands.svelte';
+  import { untrack } from 'svelte';
+  import { endResult, gameOverView, tvAlone } from './gameOverView.js';
 
-  /** Fin de partie sur la TV : vainqueur, podium révélé pas à pas, playlist et réglages de la suivante,
-   *  et un grand QR pour ceux qui arrivent ou reviennent entre deux parties. */
-  let {
-    phase, gameOver, total, settings, pro, code,
-    onSetting, onRestart, onChangePlaylists = null, onNewSalon,
-  } = $props();
+  let { h } = $props();
 
-  // En équipes, le podium est celui des équipes
-  let finalScores = $derived(gameOver?.scores ?? []);
-  let finalTeams = $derived(gameOver?.teams ?? null);
-  let ranked = $derived(
-    finalTeams
-      ? finalTeams.map(t => ({ key: 't' + t.id, name: t.name, score: t.score, team: t.id, sub: `${t.members.length} joueur${t.members.length > 1 ? 's' : ''}` }))
-      : finalScores.map(p => ({ key: p.username, name: p.username, score: p.score, team: p.team, sub: `${p.found} trouvé${p.found > 1 ? 's' : ''}${p.left ? ' · a quitté' : ''}` }))
-  );
-  let winner = $derived(ranked[0]);
-  let podiumSlots = $derived([
-    { e: ranked[1], pos: 2, step: 2 },
-    { e: ranked[0], pos: 1, step: 3 },
-    { e: ranked[2], pos: 3, step: 1 },
-  ]);
-  let bestPlayer = $derived(finalScores[0]);
-  let fastest = $derived([...finalScores].sort((a, b) => b.first - a.first)[0]);
-  let steadiest = $derived([...finalScores].sort((a, b) => b.found - a.found)[0]);
+  let alone = $derived(tvAlone(h));
+  let over = $derived(endResult(h));
+  let v = $derived(gameOverView(over, h.players, alone ? 4 : 7));
+  let step = $state(4);
 
-  let revealStep = $state(0);
-  let confirmNew = $state(false);
-
+  // Une seule révélation par partie : rouvert après le QR, l'entracte ou une
+  // panne, ou rechargé, le podium est déjà en place
   $effect(() => {
-    revealStep = 0;
-    if (phase !== 'gameover') return;
-    const timers = [500, 1500, 2700, 3900].map((ms, i) => setTimeout(() => { revealStep = i + 1; }, ms));
+    void h.gameOver;
+    if (untrack(() => h.overRevealed) || matchMedia('(prefers-reduced-motion: reduce)').matches)
+      return void (step = 4);
+    h.overRevealed = true;
+    step = 0;
+    const timers = [500, 1500, 2700, 3900].map((ms, i) => setTimeout(() => (step = i + 1), ms));
     return () => timers.forEach(clearTimeout);
   });
 </script>
 
-<section class="sh-layer sh-over" class:on={phase === 'gameover'}>
-  {#if winner}
-    <div class="sh-over-grid">
-      <div class="sh-winner" class:on={revealStep >= 3} style="--tc:{winner.team != null ? teamColor(winner.team) : 'var(--accent)'}">
-        <p class="sx-kicker">{finalTeams ? 'Équipe gagnante' : 'Vainqueur'} · {gameOver?.rounds ?? total} manches</p>
-        <div class="sh-winner-name">{winner.name}</div>
-        <div class="sh-winner-pts">{winner.score}<small>{finalTeams ? 'pts de moyenne' : 'pts'}</small></div>
-        <dl class="sh-awards">
-          {#if finalTeams && bestPlayer}
-            <div><dt>Meilleur joueur</dt><dd>{bestPlayer.username} <small>{bestPlayer.score} pts</small></dd></div>
-          {/if}
-          {#if fastest?.first > 0}
-            <div><dt>Le plus rapide</dt><dd>{fastest.username} <small>{fastest.first} fois 1re réponse</small></dd></div>
-          {/if}
-          {#if steadiest?.found > 0}
-            <div><dt>Le plus régulier</dt><dd>{steadiest.username} <small>{steadiest.found} titre{steadiest.found > 1 ? 's' : ''} trouvé{steadiest.found > 1 ? 's' : ''}</small></dd></div>
-          {/if}
-        </dl>
-      </div>
-
-      <div class="sh-podium">
-        {#each podiumSlots as slot (slot.pos)}
-          <div class="sh-po p{slot.pos}" class:on={slot.e && revealStep >= slot.step} style="--tc:{slot.e?.team != null ? teamColor(slot.e.team) : 'var(--text)'}">
-            {#if slot.e}
-              <span class="sh-po-name">{slot.e.name}</span>
-              <span class="sh-po-pts">{slot.e.score} pts · {slot.e.sub}</span>
-            {/if}
-            <div class="sh-po-block"><span>{slot.pos}</span></div>
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
-
-  <div class="sh-over-mid">
-    <div class="sh-over-left">
-      {#if gameOver?.history?.length}
-        <div class="sh-tracks" class:on={revealStep >= 4}>
-          <p class="sx-kicker">La playlist de la partie</p>
-          <ol>
-            {#each gameOver.history as h, i (i)}
-              <li title={h.answer}>
-                {#if h.cover}<img src={h.cover} alt="">{:else}<span></span>{/if}
-                <small>{String(i + 1).padStart(2, '0')}</small>
-              </li>
-            {/each}
-          </ol>
-        </div>
+<section class="fin sh-tv" class:s4={step >= 4} aria-label="Fin de partie">
+  <div class="sc">
+    <HostPodium entries={v.podium} {step} tags={step >= 4} />
+    <aside class="cl">
+      {#if v.list.rows.length}
+        <header><span>{v.list.title}</span>{#if v.list.count}<span>{v.list.count}</span>{/if}</header>
+        <ol>
+          {#each v.list.rows as r (r.key)}
+            <li class:j={r.color} style:--tc={r.color}>
+              <span class="rg">{String(r.rank).padStart(2, '0')}</span>
+              <span class="nm">{r.name}</span>
+              <span class="pt">{r.score.toLocaleString('fr-FR')}</span>
+              {#if r.tag}<small>{r.tag}</small>{/if}
+            </li>
+          {/each}
+          {#if v.list.more}<li class="plus">et {v.list.more} autre{v.list.more > 1 ? 's' : ''}</li>{/if}
+        </ol>
       {/if}
-
-      <div class="sh-next">
-        <p class="sx-kicker">Prochaine partie</p>
-        <div class="sh-next-row">
-          <div class="sh-seg" role="radiogroup" aria-label="Réponses">
-            <button class:on={settings.answerMode === 'free'} onclick={() => onSetting({ answerMode: 'free' })}>Texte libre</button>
-            <button class:on={settings.answerMode === 'multiple'} onclick={() => onSetting({ answerMode: 'multiple' })}>4 choix</button>
-            {#if pro}<button class:on={settings.answerMode === 'buzzer'} onclick={() => onSetting({ answerMode: 'buzzer' })}>Buzzer</button>{/if}
-          </div>
-          <div class="sh-seg" role="radiogroup" aria-label="Équipes">
-            <!-- Écran public : on ne montre que ce que le salon peut faire -->
-            {#each SALON_TEAMS.filter(n => pro || n <= FREE_MAX_TEAMS) as n (n)}
-              <button class:on={(settings.teams?.length ?? 0) === n} onclick={() => onSetting({ teamCount: n })}>{n === 0 ? 'Solo' : n === 2 ? '2 équipes' : n}</button>
-            {/each}
-          </div>
-          <div class="sh-seg" role="radiogroup" aria-label="Manches">
-            {#each [5, 10, 15, 20] as n (n)}
-              <button class:on={settings.maxRounds === n} onclick={() => onSetting({ maxRounds: n })}>{n} manches</button>
-            {/each}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <aside class="sh-over-join" aria-label="Rejoindre la prochaine partie">
-      <div class="sh-qr"><img src={salonQrUrl(code, 320)} alt="QR code pour rejoindre" width="320" height="320"></div>
-      <div>
-        <p class="sx-kicker">Pas encore dans la partie ?</p>
-        <p class="sh-over-join-title">Scannez pour jouer</p>
-        <div class="sh-code" aria-label="Code {code}">
-          {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
-        </div>
-        <p class="sh-lobby-url">ou <b>zik-music.fr/salon/play</b></p>
-      </div>
+      {#if alone}<HostEndCommands {h} night={!!over.night} />{/if}
     </aside>
   </div>
-  <div class="sh-over-actions">
-    <button class="sx-btn sx-btn-primary" onclick={onRestart}>Lancer la partie suivante</button>
-    {#if onChangePlaylists}
-      <button class="sx-btn" onclick={onChangePlaylists}>Changer de playlist</button>
-    {/if}
-    <!-- Un nouveau salon fait ressaisir le code à tout le monde : on perd des joueurs -->
-    <button class="sh-new-link" onclick={() => (confirmNew = true)}>Nouveau salon…</button>
-  </div>
-
-  {#if confirmNew}
-    <div class="sh-new-confirm" role="alertdialog" aria-labelledby="sh-new-title">
-      <p class="sx-kicker">Attention</p>
-      <h2 id="sh-new-title">Fermer ce salon ?</h2>
-      <ul>
-        <li>Tous les joueurs devront <b>ressaisir un nouveau code</b>.</li>
-        {#if gameOver?.night}<li>Le <b>classement de la soirée</b> repartira de zéro.</li>{/if}
-      </ul>
-      <p>Pour changer de playlist ou de réglages, inutile : « Lancer la partie suivante » garde tout le monde.</p>
-      <div class="sh-new-actions">
-        <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={() => (confirmNew = false)}>Rester dans ce salon</button>
-        <button class="sx-btn sx-btn-lg" onclick={onNewSalon}>Fermer et créer un nouveau salon</button>
-      </div>
-    </div>
-  {/if}
+  <HostEndBand code={h.code} encore={v.encore} onQr={alone ? () => h.setQrBig(true) : null} />
 </section>
+
+<style>
+  .fin {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    padding: 1.4em 3.33em 1.8em;
+    overflow: hidden;
+    background: radial-gradient(90% 80% at 30% 0%, #1b0a20, #060608 70%);
+  }
+  .sc {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22.9em;
+    gap: 3.33em;
+    margin-bottom: 1.2em;
+  }
+  .cl {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-left: 1.9em;
+    border-left: 1px solid rgb(255 255 255 / 0.16);
+  }
+  .cl header {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 0.43em;
+    font-family: var(--s-mono);
+    font-size: 1.46em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+  .cl ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cl li {
+    display: grid;
+    grid-template-columns: 1.6em minmax(0, 1fr) auto;
+    column-gap: 0.4em;
+    align-items: center;
+    min-height: 1.78em;
+    padding: 0.14em 0;
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+    font-size: 1.875em;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .cl li.j {
+    border-left: 0.28em solid var(--tc);
+    padding-left: 0.4em;
+  }
+  .rg {
+    font-family: var(--s-mono);
+    font-size: 0.78em;
+    font-weight: 500;
+    color: var(--mid);
+  }
+  .nm {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pt {
+    font-family: var(--s-mono);
+    font-weight: 700;
+    font-size: 0.83em;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl li small {
+    grid-column: 2 / -1;
+    margin-top: 0.1em;
+    font-family: var(--s-mono);
+    font-weight: 500;
+    font-size: 0.78em;
+    text-transform: uppercase;
+    color: var(--soft, #d6d7e4);
+  }
+  .cl li.plus {
+    display: block;
+    min-height: 0;
+    padding-top: 0.4em;
+    font-size: 1.46em;
+    font-weight: 400;
+    color: var(--mid);
+  }
+  .cl header,
+  .cl ol,
+  .fin :global(.bd > *) {
+    transition: opacity 0.6s;
+  }
+  .fin:not(.s4) .cl header,
+  .fin:not(.s4) .cl ol,
+  .fin:not(.s4) :global(.bd > *) {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cl header,
+    .cl ol,
+    .fin :global(.bd > *) {
+      transition: none;
+    }
+  }
+  /* TV ouverte sur un écran en hauteur : tout s'empile et la page défile */
+  @media (max-aspect-ratio: 1/1) {
+    .fin {
+      font-size: 2.4vw;
+      padding: 1.5em;
+      overflow-y: auto;
+    }
+    .sc {
+      flex: none;
+      grid-template-columns: 1fr;
+    }
+    .sc > :global(.pz) {
+      height: 70vh;
+    }
+    .cl {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .fin :global(.bd) {
+      height: auto;
+      grid-template-columns: 1fr;
+    }
+    .fin :global(.bd .d) {
+      flex-wrap: wrap;
+    }
+  }
+</style>

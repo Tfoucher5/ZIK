@@ -1,10 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { render } from "svelte/server";
 import ProThanks from "../ProThanks.svelte";
-import { thanksPhase, planLabel, endTitle } from "../thanks.js";
+import {
+  thanksPhase,
+  planLabel,
+  endTitle,
+  REGIE,
+  regieLine,
+} from "../thanks.js";
 
-const page = (zik) =>
-  render(ProThanks, { context: new Map([["zik", zik]]) }).body;
+const page = (zik, props = {}) =>
+  render(ProThanks, { props, context: new Map([["zik", zik]]) }).body;
 
 describe("état de /pro/merci", () => {
   const base = { active: false, waitedTooLong: false, authReady: true };
@@ -51,5 +57,30 @@ describe("page /pro/merci", () => {
     expect(body).not.toContain("paiement reçu");
     expect(body).toContain("Créer une soirée");
     expect(body).not.toContain("Créer ma soirée Pro");
+    expect(body).not.toContain("Retourner sur la régie");
+  });
+
+  it("paiement parti d'une régie : on peut déjà y retourner", () => {
+    const body = page(
+      { authReady: true, user: { id: "u1", email: "bar@exemple.fr" } },
+      { regie: "KZ4P2M" },
+    );
+    expect(body).toContain("Retourner sur la régie");
+    expect(body).not.toContain("Créer une soirée");
+    expect(body).toMatch(/<b[^>]*>KZ4P2M<\/b>/);
+    expect(body).toContain("passera en ZIK Pro toute seule");
+    expect(body).toContain("KZ4P2M · passage en cours");
+  });
+
+  it("régie mais sans compte : se connecter d'abord", () => {
+    const body = page({ authReady: true, user: null }, { regie: "KZ4P2M" });
+    expect(body).toContain("Me connecter");
+    expect(body).not.toContain("Retourner sur la régie");
+  });
+
+  it("textes de la régie : la soirée et son état", () => {
+    expect(regieLine("KZ4P2M", true)).toBe("KZ4P2M · en ZIK Pro");
+    expect(regieLine("KZ4P2M", false)).toBe("KZ4P2M · passage en cours");
+    for (const p of ["wait", "on", "late"]) expect(REGIE[p]).toHaveLength(2);
   });
 });

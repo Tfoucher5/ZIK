@@ -11,70 +11,50 @@ Ce qui est en cours et ce qui reste à faire, affiché dans le QG (bloc « Chant
 
 Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
-## Fiabilité v3.32
-
-- **Statut** : en cours
-- **Équipe** : Technique
-- **Prochaine étape** : #445 à #448 et #450 fusionnées, recette staging OK ; reste la recette > 12 téléphones dont un iPhone avant la release
-
-## Dépendances à jour
-
-- **Statut** : en cours
-- **Équipe** : Technique
-- **Prochaine étape** : #489 (svelte 5.57.3, vite 8.3.5, kit 2.70.4, nodemailer 10.6.0) annulée par #491 : scénario salon rouge 2 fois avec, vert sans (le 2e téléphone clique sur « Rejoindre » sans effet). Remonter une dépendance à la fois (svelte seul d'abord) avec le scénario salon sur une branche `chore/e2e-*` avant fusion ; nodemailer seul est sans risque pour le salon (failles modérées à corriger)
-
-## Refonte de l'accueil
-
-- **Statut** : en cours
-- **Équipe** : Technique puis Opérations
-- **Prochaine étape** : fusionnée (#476), recette sur le staging en cours
-
-## QG v2
-
-- **Statut** : fait
-- **Équipe** : Technique
-- **Prochaine étape** : Théo branche la statusline pour la vraie limite d'utilisation
-
-## Page /pro
-
-- **Statut** : en cours
-- **Équipe** : Technique puis Opérations
-- **Prochaine étape** : fusionnée (#471), recette sur le staging, puis achat test Stripe par Théo
-
-## Page /soiree
-
-- **Statut** : en cours
-- **Équipe** : Technique puis Opérations
-- **Prochaine étape** : fusionnée (#479), recette sur le staging ; bar 3D et fond animé à la release suivante
-
 ## Création et avant-partie
 
-- **Statut** : à faire
-- **Équipe** : Produit
-
-## Passage Pro en pleine soirée
-
-- **Statut** : à faire
-- **Équipe** : Produit
+- **Statut** : en cours
+- **Équipe** : Technique puis Opérations
+- **Prochaine étape** : création, TV, téléphone, régie et son testé fusionnés (#509, #510, #511, #513, #517) ; scénarios e2e adaptés et nouveautés en cours, puis recette staging
 
 ## Fin de partie et Rejouer
 
-- **Statut** : à faire
-- **Équipe** : Produit
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : serveur (#514) et story 9:16 (#515) fusionnés ; TV fin de partie, entracte TV, téléphone et régie en code ; podium de soirée ensuite
 
-## Régie
+## Onglets de la régie
 
-- **Statut** : à faire
-- **Équipe** : Produit
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : maquette validée par Théo, code en cours avec la régie de fin de partie
 
-## Promo de 2 semaines
+## Passage Pro en pleine soirée
 
-- **Statut** : à faire
+- **Statut** : en cours
+- **Équipe** : Technique puis Produit
+- **Prochaine étape** : serveur fusionné (salon Pro au paiement #504, file d'attente #505) ; maquette du bouton de paiement en régie et de l'écran d'attente téléphone à faire
+
+## Promo
+
+- **Statut** : en cours
 - **Équipe** : Marketing
-- **Prochaine étape** : à valider par Théo (voir « À trancher »)
+- **Prochaine étape** : carrousel programmé le 19/11 à 18 h ; Feuille de match prête pour le 22/11 à 18 h (Théo clique « Programmer » dans TikTok Studio)
+
+## QG
+
+- **Statut** : fait
+- **Équipe** : Technique
+- **Prochaine étape** : bureaux en vrais espaces d'équipe (#494)
+
+## Release v3.32.0
+
+- **Statut** : fait
+- **Équipe** : Opérations
+- **Prochaine étape** : en prod le 16/11 ; achat test Stripe et soirée multi-téléphones par Théo quand il veut
 
 ## Statut micro-entreprise
 
 - **Statut** : à faire
 - **Équipe** : Théo
-- **Prochaine étape** : créer la micro-entreprise (voir « À trancher »)
+- **Prochaine étape** : reporté par Théo (voir « À trancher »)

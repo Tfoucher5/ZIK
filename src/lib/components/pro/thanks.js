@@ -27,6 +27,25 @@ export function planLabel(plan) {
   return [PLAN_NAMES[plan] ?? "ZIK Pro", price].filter(Boolean).join(" · ");
 }
 
+// Paiement parti d'une régie : le texte autour du code de la soirée
+export const REGIE = {
+  wait: [
+    "Stripe confirme votre paiement à ZIK, ça prend en général quelques secondes. Votre soirée ",
+    " passera en ZIK Pro toute seule : vous pouvez déjà retourner sur votre régie.",
+  ],
+  on: [
+    "Merci, paiement reçu. Votre soirée ",
+    " vient de passer en ZIK Pro : plus de limite de joueurs, ceux qui attendaient entrent. Retournez sur votre régie, rien n'y a bougé.",
+  ],
+  late: [
+    "Le paiement est bien passé, l'activation prend un peu plus de temps que prévu. Votre soirée ",
+    " continue en attendant : retournez sur votre régie, elle passera en ZIK Pro toute seule.",
+  ],
+};
+
+export const regieLine = (code, active) =>
+  `${code} · ${active ? "en ZIK Pro" : "passage en cours"}`;
+
 // Un abonnement se renouvelle ; une Soirée 24 h ou un accès offert s'arrête
 export const endTitle = (plan) =>
   plan === "monthly" || plan === "yearly"

@@ -10,9 +10,15 @@ describe("réglages de la TV cachés pendant les manches", () => {
     expect(barCalm(manche, false)).toBe(false);
   });
 
-  it("toujours visibles hors des manches", () => {
-    for (const phase of ["lobby", "starting", "gameover"])
-      expect(barCalm({ phase }, true)).toBe(false);
+  it("cachés aussi au repos dans le lobby", () => {
+    expect(barCalm({ phase: "lobby" }, true)).toBe(true);
+    expect(barCalm({ phase: "lobby" }, false)).toBe(false);
+    expect(barCalm({ phase: "lobby", helpOpen: true }, true)).toBe(false);
+  });
+
+  it("cachés aussi en fin de partie, jamais au décompte", () => {
+    expect(barCalm({ phase: "gameover" }, true)).toBe(true);
+    expect(barCalm({ phase: "starting" }, true)).toBe(false);
   });
 
   it("gardés ouverts quand l'hôte en a besoin", () => {

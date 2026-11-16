@@ -39,20 +39,20 @@ describe("/api/salon : réponses d'erreur", () => {
     });
     expect(res.status).toBe(400);
     expect((await res.json()).error).toBe(
-      "Demande invalide. Rechargez la page.",
+      "Demande invalide. Recharge la page.",
     );
   });
 
   it("textes pour l'organisateur : liste vide, régie sans clé", async () => {
     expect((await (await creer([])).json()).error).toBe(
-      "Choisissez au moins une playlist.",
+      "Choisis au moins une playlist.",
     );
     const res = await PATCH(
       requete("PATCH", { code: "ABC", playlistIds: ids(1) }),
     );
     expect(res.status).toBe(401);
     expect((await res.json()).error).toBe(
-      "Rouvrez la régie depuis l'écran TV de la soirée.",
+      "Rouvre la régie depuis l'écran TV de la soirée.",
     );
   });
 

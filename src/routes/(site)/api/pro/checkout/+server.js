@@ -2,16 +2,38 @@ import { json } from "@sveltejs/kit";
 import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
 import { getStripe, priceFor } from "$lib/server/stripe.js";
 import { getProRow, isProActive } from "$lib/server/services/pro.js";
+import { attachSalon, proForHost } from "$lib/server/socket/salon/pro.js";
+
+const TROP = "Trop de demandes, réessayez dans un instant.";
 
 // Ouvre une page de paiement Stripe pour la formule choisie
 export async function POST({ request, url, getClientAddress }) {
-  checkRateLimit(`checkout:${getClientAddress()}`, 10, 60_000);
+  checkRateLimit(`checkout:${getClientAddress()}`, 10, 60_000, TROP);
   const { user } = await requireAuth(request);
-  const { plan, confirm } = await request.json().catch(() => ({}));
+  const { plan, confirm, salon, key, attach } =
+    (await request.json().catch(() => null)) ?? {};
+  // Connexion depuis la régie : on rattache la soirée, on ne paie jamais ici
+  if (attach === true) {
+    const refus = attachSalon(salon, key, user.id);
+    if (refus) return json({ error: refus.error }, { status: refus.status });
+    if (!isProActive(await getProRow(user.id)))
+      return json({ activated: false });
+    proForHost(user.id);
+    return json({ activated: true });
+  }
   const price = priceFor(plan);
   if (!price) return json({ error: "Formule inconnue." }, { status: 400 });
+  // Achat depuis la régie : le salon en cours passe Pro au paiement
+  if (salon != null) {
+    const refus = attachSalon(salon, key, user.id);
+    if (refus) return json({ error: refus.error }, { status: refus.status });
+  }
 
   const row = await getProRow(user.id);
+  if (salon != null && isProActive(row)) {
+    proForHost(user.id);
+    return json({ activated: true });
+  }
   const subscribed =
     row?.stripe_subscription_id &&
     row.status !== "canceled" &&

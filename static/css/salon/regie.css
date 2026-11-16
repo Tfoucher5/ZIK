@@ -1,0 +1,285 @@
+/* ── Régie ZIK Soirée : briques communes aux onglets ─────────────────────
+   Même gabarit du téléphone (390 px) à la tablette (1024 px) : deux
+   colonnes à partir de 900 px. Un seul bouton magenta par écran (.rg-btn.on).
+──────────────────────────────────────────────────────────────────────── */
+
+.rg-k {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rg-k > b {
+  color: var(--ok);
+  font-size: 10px;
+}
+
+.rg-h1 {
+  font-family: var(--titre);
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 0.86;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.rg-h1 span {
+  display: block;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.rg-jauge {
+  display: block;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--line-2);
+  overflow: hidden;
+}
+.rg-jauge i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--violet), var(--accent));
+  transform-origin: 0 50%;
+  transform: scaleX(var(--p, 0));
+  transition: transform 0.6s linear;
+}
+
+/* Colonnes : une seule au téléphone, deux à partir de 900 px */
+.rg-cols {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+.rg-col {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+
+/* Lignes d'action : un libellé, une aide, un bouton à droite */
+.rg-g {
+  list-style: none;
+  border-top: 1px solid var(--line-2);
+}
+.rg-g > li {
+  border-bottom: 1px solid var(--line);
+}
+.rg-l {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1px 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 60px;
+  padding: 9px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  list-style: none;
+  cursor: pointer;
+}
+.rg-l:disabled {
+  cursor: default;
+}
+.rg-l::-webkit-details-marker {
+  display: none;
+}
+.rg-l b {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.2;
+}
+.rg-l b .pro-tag {
+  margin: 0;
+}
+.rg-l small {
+  grid-column: 1;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+.rg-l em,
+.rg-em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-family: var(--titre);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rg-l em {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+.rg-l:disabled em {
+  color: var(--muted);
+}
+.rg-l.confirme em {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+details[open] > .rg-l em {
+  background: var(--text);
+  border-color: var(--text);
+  color: #000;
+}
+
+.rg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0 12px;
+}
+.rg-chips button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Boutons pleine largeur de la barre du bas */
+.rg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 60px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--text);
+  font-family: var(--titre);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.rg-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.rg-btn.on {
+  background: var(--accent);
+  box-shadow: none;
+  color: #000;
+}
+.rg-btn:disabled {
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: none;
+  color: var(--muted);
+  cursor: default;
+}
+.rg-btn.rouge {
+  background: var(--danger);
+  box-shadow: none;
+  color: #000;
+}
+
+/* Barre d'actions du bas, hors des onglets */
+.rg-bar {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  gap: 8px;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line-2);
+  background: rgb(7 7 11 / 0.94);
+}
+.rg-bar > p {
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+.rg-bar .rg-lance {
+  min-height: 72px;
+  font-size: 26px;
+}
+
+.rg-fermer {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgb(248 113 113 / 0.55);
+  border-radius: 999px;
+  background: none;
+  color: var(--danger);
+  font-family: var(--titre);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .rg-h1 {
+    font-size: 92px;
+  }
+  .rg-h1 span {
+    font-size: 38px;
+  }
+  .rg-cols {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    column-gap: 44px;
+  }
+  .rg-bar {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 12px 24px;
+  }
+  .rg-bar > p {
+    text-align: left;
+    font-size: 15px;
+  }
+  .rg-bar .rg-lance {
+    width: auto;
+    min-width: 340px;
+    padding: 0 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-jauge i {
+    transition: none;
+  }
+}

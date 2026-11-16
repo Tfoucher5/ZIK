@@ -34,11 +34,8 @@
   padding-left: 24px;
   border-left: 1px solid var(--border);
 }
-.sh-join img {
-  width: 44px;
-  height: 44px;
+.sh-join svg {
   border-radius: 2px;
-  background: #fff;
 }
 .sh-join-url {
   font-size: 0.8rem;
@@ -113,6 +110,7 @@
 }
 
 .sh-body {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 340px;
   min-height: 0;
@@ -178,61 +176,6 @@
   visibility: visible;
 }
 
-/* Lobby */
-.sh-lobby {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: clamp(24px, 5vw, 80px);
-}
-.sh-lobby h1 {
-  margin: 14px 0 26px;
-  font-family: var(--s-cond);
-  font-weight: 900;
-  font-size: clamp(2.6rem, 5.4vw, 5.6rem);
-  line-height: 0.9;
-  text-transform: uppercase;
-}
-.sh-lobby h1 em {
-  font-style: normal;
-  color: var(--accent);
-}
-.sh-code {
-  display: flex;
-  gap: 8px;
-}
-.sh-code b {
-  display: grid;
-  place-items: center;
-  width: clamp(48px, 5vw, 84px);
-  aspect-ratio: 0.8;
-  border: 2px solid var(--text);
-  border-radius: 3px;
-  font-family: var(--s-mono);
-  font-size: clamp(1.8rem, 3.4vw, 3.4rem);
-  font-weight: 600;
-}
-.sh-lobby-url {
-  margin-top: 18px;
-  font-size: clamp(0.95rem, 1.3vw, 1.2rem);
-  color: var(--mid);
-}
-.sh-lobby-url b {
-  color: var(--text);
-  font-weight: 600;
-}
-.sh-qr {
-  padding: 14px;
-  background: #fff;
-  border-radius: 3px;
-  box-shadow: 8px 8px 0 var(--accent);
-}
-.sh-qr img {
-  display: block;
-  width: clamp(180px, 22vw, 320px);
-  height: auto;
-}
-
 /* Manche */
 .sh-roundview {
   align-items: center;
@@ -289,4 +232,29 @@
 .sh-roundview .sx-choice {
   min-height: 84px;
   font-size: clamp(1rem, 1.4vw, 1.3rem);
+}
+
+/* Pause */
+.sh-pause {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgb(var(--bg-rgb) / 0.92);
+}
+.sh-pause span {
+  font-family: var(--s-cond);
+  font-weight: 900;
+  font-size: clamp(4rem, 14vw, 12rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sh-pause small {
+  color: var(--mid);
+  font-size: 1.1rem;
 }

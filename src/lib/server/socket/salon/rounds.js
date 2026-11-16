@@ -1,5 +1,5 @@
 import { salonRooms } from "../../state.js";
-import { displayString } from "../../services/music/trackText.js";
+import { answerText, displayString } from "../../services/music/trackText.js";
 import { reportTrackIssue } from "../../services/music/trackIssues.js";
 import { makeChoices, workAnswer } from "../scoring.js";
 import { recordSalonGameEnd } from "./persist.js";
@@ -62,7 +62,10 @@ export function finishGame(code, io) {
   clearOutage(salon, io);
   recordSalonGameEnd(salon);
   const all = gamePlayers(salon);
-  for (const p of all) p.night += p.score;
+  for (const p of all) {
+    p.night += p.score;
+    p.encore = false;
+  }
   salon.nightGames = (salon.nightGames ?? 0) + 1;
   const scores = all
     .map((p) => ({
@@ -98,7 +101,7 @@ export function endRound(code, reason, io) {
   game.phase = "summary";
 
   const track = game.currentTrack;
-  const answer = `${displayString(track.mainArtist || track.artist)} - ${displayString(track.title)}`;
+  const answer = answerText(track);
 
   if (salon.settings.answerMode === "multiple") scoreQcmRound(salon, io);
 
@@ -136,7 +139,10 @@ export function endRound(code, reason, io) {
         : undefined,
   };
 
-  game.history.push({ answer, cover: track.cover });
+  const entry = { answer, cover: track.cover };
+  if (game.replaced) entry.replaced = game.replaced;
+  game.replaced = null;
+  game.history.push(entry);
   // Pour signaler un titre déjà joué depuis la régie ; ne part jamais aux téléphones
   // Même case que history : un salon repris d'un instantané plus ancien a un
   // history sans historyMedia, ses premières cases restent vides
@@ -144,7 +150,7 @@ export function endRound(code, reason, io) {
     track,
     game.currentVideo,
   );
-  emitRoundEnd(io, code, roundSummary, salon.players);
+  emitRoundEnd(io, code, roundSummary, salon.players, game.history);
   scheduleCleanup(code);
   saveSnapshot(salon);
 
@@ -282,6 +288,8 @@ export function skipTrack(code, io) {
   game.interval = null;
   game.timerActive = false;
   noteMediaMiss();
+  // Le titre prévu pour la manche, pas les réserves essayées ensuite
+  game.replaced ??= game.currentTrack && answerText(game.currentTrack);
   game.currentRound--;
   game.skipStreak = (game.skipStreak ?? 0) + 1;
   if (game.skipStreak >= OUTAGE_AFTER)

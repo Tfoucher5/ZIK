@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-  {#each ["shared", "tv-stage", "tv-calm", "tv-screens", "tv-end", "tv-end-join", "tv-ranking", "tv-evening", "phone", "phone-lobby"] as f (f)}<link rel="stylesheet" href="/css/salon/{f}.css?v={version}">{/each}
+  {#each ["base/v2", "salon/shared", "salon/tv-stage", "salon/tv-calm", "salon/tv-screens", "salon/tv-ranking", "salon/tv-evening", "salon/phone", "salon/phone-lobby"] as f (f)}<link rel="stylesheet" href="/css/{f}.css?v={version}">{/each}
 </svelte:head>
 
-{@render children()}
+<div class="v2">{@render children()}</div>

@@ -46,6 +46,7 @@ describe("instantané d'un salon", () => {
     salon.game._break = { kind: "next", endsAt: 1, show: true };
     salon._journal = [{ at: 1, text: "Hôte déconnecté" }];
     salon._tvVolume = 40;
+    salon._tvSound = true;
     salon._reclaims = { Ana: "socket-1" };
     salon._ctrlLeaveTimer = setTimeout(() => {}, 0);
     const data = serializeSalon(salon);
@@ -59,6 +60,7 @@ describe("instantané d'un salon", () => {
     expect(data._coalesce).toBeUndefined();
     // Volume de la TV et départ de régie en attente : recalculés à l'arrivée
     expect(data._tvVolume).toBeUndefined();
+    expect(data._tvSound).toBeUndefined();
     // Ids de socket : sans valeur après un redémarrage
     expect(data._reclaims).toBeUndefined();
     expect(data._ctrlLeaveTimer).toBeUndefined();
@@ -76,6 +78,23 @@ describe("instantané d'un salon", () => {
       foundFeats: [],
       _choiceIndex: null,
     });
+  });
+
+  it("la file d'attente survit, dans l'ordre, avec ses jetons", () => {
+    const salon = salonEnManche();
+    salon.waiting = [
+      { username: "Lea", token: "t-lea", userId: null, socketId: "s9" },
+      {
+        username: "Max",
+        token: "t-max",
+        userId: "u1",
+        socketId: null,
+        leftAt: 5,
+      },
+    ];
+    const revu = revive(salon);
+    nettoie(salon);
+    expect(revu.waiting).toEqual(salon.waiting);
   });
 
   it("si l'hôte avait mis en pause, la pause est gardée et rien ne repart seul", () => {
@@ -184,8 +203,9 @@ describe("instantané d'un salon", () => {
     for (const phase of ["lobby", "gameover"]) {
       const salon = salonEnManche();
       salon.game.phase = phase;
-      salon.game.history.push({ answer: "x" });
+      salon.game.history.push({ answer: "x", replaced: "y" });
       salon.game.historyMedia = [{ trackId: "t0", videoId: "v0", start: 20 }];
+      salon.game.replaced = "z";
       const revu = revive(salon);
       nettoie(salon);
       expect(revu.game).toMatchObject({
@@ -193,7 +213,9 @@ describe("instantané d'un salon", () => {
         paused: false,
         currentRound: 2,
         historyMedia: [{ trackId: "t0", videoId: "v0", start: 20 }],
+        replaced: "z",
       });
+      expect(revu.game.history.at(-1)).toEqual({ answer: "x", replaced: "y" });
       expect(revu.players.Ana.score).toBe(450);
     }
   });

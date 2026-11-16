@@ -15,9 +15,11 @@ export function listenRegie(r, socket) {
     if (resumeIn == null) setTimeout(() => (r.restored = null), 4000);
   });
   socket.on("salon_control_joined", (d) => {
+    const dormait = r.ready && !r.pro;
     r.restarting = false;
     r.ready = true;
     r.pro = d.pro;
+    r.offre.onJoined(d.pro, dormait);
     r.error = "";
     r.settings = d.settings;
     r.reclaims = d.reclaims ?? [];
@@ -26,11 +28,13 @@ export function listenRegie(r, socket) {
     r.night = d.night;
     r.intermission = d.evening?.intermission ?? null;
     r.finale = d.evening?.finale ?? null;
+    // Instantané d'avant le QR en grand : champ absent, donc fermé
+    r.qrBig = !!d.evening?.qr;
     r.buzzer = d.buzzer;
     r.mediaCheck = d.mediaCheck;
+    r.tvSound = d.tvSound ?? null;
     if (d.tvVolume != null) r.volume = d.tvVolume;
     r.phase = d.phase;
-    if (d.phase === "gameover") r.onglet = "reglages";
     r.paused = d.paused;
     r.round = d.currentRound;
     r.timerVal = d.timerVal;
@@ -74,9 +78,10 @@ export function listenRegie(r, socket) {
   socket.on("salon_buzz_result", () => {
     r.buzzer = null;
   });
-  socket.on("salon_evening", ({ intermission, finale }) => {
+  socket.on("salon_evening", ({ intermission, finale, qr }) => {
     r.intermission = intermission;
     r.finale = finale;
+    r.qrBig = !!qr;
   });
   socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (d) => {
@@ -128,20 +133,27 @@ export function listenRegie(r, socket) {
     r.history = [...r.history, { answer: d.answer, cover: d.cover }];
     r.applyScores(d.scores);
   });
+  socket.on("salon_replaced", ({ round, replaced }) => {
+    r.history = r.history.map((h, i) =>
+      i === round - 1 ? { ...h, replaced } : h,
+    );
+  });
   socket.on("salon_game_over", (d) => {
     r.phase = "gameover";
     r.teams = d.teams;
     r.night = d.night;
     r.track = null;
-    // La suite de la soirée se prépare d'ici : playlist, mode, manches
-    r.onglet = "reglages";
   });
   socket.on("salon_night", ({ night }) => {
     r.night = night;
   });
+  // Le serveur enchaîne toujours sur le lancement (décompte ou non)
   socket.on("salon_restarted", ({ players }) => {
     r.mergeRoster(players);
     r.history = [];
+    r.phase = "starting";
+    r.round = 0;
+    r.track = null;
   });
   socket.on(
     "salon_playlists_changed",
@@ -157,14 +169,17 @@ export function listenRegie(r, socket) {
   });
   // Volume réel de la TV, réglé là-bas ou par une autre régie
   socket.on("salon_volume", ({ volume }) => (r.volume = volume));
+  socket.on("salon_tv_sound", ({ ok }) => (r.tvSound = ok));
   socket.on("salon_reclaims", ({ usernames }) => (r.reclaims = usernames));
+  // Soirée complète : l'offre est dans la page (RegiePro), pas par-dessus
   socket.on("salon_pro_required", ({ feature }) => {
-    r.upsell = feature;
+    if (feature !== "players") r.upsell = feature;
   });
+  socket.on("salon_queue", (d) => r.offre.onQueue(d));
   socket.on("salon_pro", ({ pro }) => {
     r.pro = pro;
     r.upsell = null;
-    r.flash("ZIK Pro activé pour ce salon.");
+    r.offre.onPro(pro);
   });
   socket.on("salon_closed", () => {
     forgetSalon(r.code);

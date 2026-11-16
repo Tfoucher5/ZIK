@@ -11,10 +11,13 @@
    *   open: boolean,
    *   view: 'login'|'register'|'confirm'|'reset',
    *   onClose: () => void,
-   *   onSuccess?: () => void
+   *   onSuccess?: () => void,
+   *   next?: string,
+   *   note?: string,
+   *   onRegistered?: (email: string) => void
    * }}
    */
-  let { sb, open, view = $bindable('login'), onClose, onSuccess } = $props();
+  let { sb, open, view = $bindable('login'), onClose, onSuccess, next, note, onRegistered } = $props();
 
   const form = new AuthForm();
 
@@ -56,11 +59,12 @@
 
   <section class="checkpoint">
     <button class="gl-close" onclick={close} aria-label="Fermer">✕</button>
+    {#if note}<p class="gl-note"><span>Ensuite</span>{note}</p>{/if}
 
     {#if view === 'login'}
-      <LoginForm {sb} {form} {nowLabel} {entering} {setView} onLogged={enter} />
+      <LoginForm {sb} {form} {nowLabel} {entering} {setView} {next} onLogged={enter} />
     {:else if view === 'register'}
-      <RegisterForm {sb} {form} {nowLabel} {setView} onRegistered={() => view = 'confirm'} />
+      <RegisterForm {sb} {form} {nowLabel} {setView} {next} onRegistered={() => { view = 'confirm'; onRegistered?.(form.regEmail); }} />
     {:else if view === 'reset'}
       <ResetForm {sb} {form} {nowLabel} {setView} />
     {:else if view === 'confirm'}
@@ -95,6 +99,14 @@
     color: var(--dim); font-size: 1.15rem; cursor: pointer; z-index: 5; line-height: 1; padding: 6px;
   }
   .gl-close:hover { color: var(--text); }
+  .gl-note {
+    margin: 0 36px 16px 0; padding: 10px 12px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06); color: var(--text); font-size: 15px; line-height: 1.35;
+  }
+  .gl-note span {
+    margin-right: 8px; font-family: var(--mono, monospace); font-size: 12px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid);
+  }
 
   @media (max-width: 920px) {
     .gl-overlay { grid-template-columns: 1fr; }

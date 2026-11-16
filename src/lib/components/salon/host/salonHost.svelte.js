@@ -8,6 +8,8 @@ import {
   patchSalonPlaylists,
 } from "../../../client/salonClient.js";
 
+const PREP = "zik_salon_prep";
+
 // État de l'écran TV du mode Salon (l'hôte) et connexion à la partie.
 export class SalonHost {
   code = $state("");
@@ -52,6 +54,12 @@ export class SalonHost {
   special = $state(null);
   intermission = $state(null);
   finale = $state(null);
+  // QR en grand (régie ou TV seule), renvoyé par le serveur
+  qrBig = $state(false);
+  // Relance demandée (salon_restarted) : la phase reste gameover jusqu'à la manche 1
+  relaunching = $state(false);
+  // Le podium de la partie a déjà été révélé : pas de deuxième fois au remontage
+  overRevealed = false;
   // Intro éclair : la musique est coupée, une reprise après un buzz raté ne la relance pas
   flashCut = false;
   paused = $state(false);
@@ -65,7 +73,12 @@ export class SalonHost {
   #beforeMute = 100;
   // Régies branchées (badge) ; null tant que le serveur n'a rien dit
   controls = $state(null);
+  // Téléphones en file à l'entrée (salon gratuit plein), le nombre seul
+  waiting = $state(0);
   helpOpen = $state(false);
+  // « Prépare la TV » passée (code affiché) ; le son entendu ou non au test
+  prepDone = $state(false);
+  tvSound = null;
   userId = $state(null);
   chat = new SupportChat();
 
@@ -105,6 +118,20 @@ export class SalonHost {
     } else this.applyVolume(this.#beforeMute);
   };
 
+  showCode = () => {
+    this.prepDone = true;
+    try {
+      localStorage.setItem(PREP, this.code);
+    } catch {
+      /* stockage indisponible : la prépa reviendra au rechargement */
+    }
+  };
+
+  setTvSound = (ok) => {
+    this.tvSound = ok;
+    this.socket?.emit("salon_tv_sound", { ok });
+  };
+
   /** Branché par listenCountdowns */
   stopCountdowns = () => {};
 
@@ -124,6 +151,9 @@ export class SalonHost {
   closeSalon = () => {
     this.socket?.emit("salon_close");
     setTimeout(() => (window.location.href = "/salon"), 2000);
+  };
+  setQrBig = (on) => {
+    this.socket?.emit("salon_qr_big", { on });
   };
   togglePause = () => {
     this.socket?.emit(this.paused ? "salon_resume" : "salon_pause");
@@ -170,6 +200,11 @@ export class SalonHost {
       return;
     }
     this.key = takeSalonKeyFromUrl(this.code);
+    try {
+      this.prepDone = localStorage.getItem(PREP) === this.code;
+    } catch {
+      /* stockage indisponible */
+    }
     const savedVol = parseInt(localStorage.getItem("zik_salon_vol") ?? "100");
     this.volume = Number.isNaN(savedVol) ? 100 : savedVol;
     this.hostCenter?.setVolume(this.volume);

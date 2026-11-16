@@ -1,77 +1,29 @@
-<header class="st-top">
-  <a class="st-top-link" href="/soiree">← Comment ça marche</a>
-  <a class="st-top-link st-top-join" href="/salon/play">Invité ? <b>Entrer le code</b></a>
-</header>
-
-<section class="st-hero">
-  <p class="st-kicker">Créer une soirée</p>
-  <h1>Ce soir,<br>c'est <em>blind test.</em></h1>
-  <ol class="st-how">
-    <li><b>Choisissez</b> la musique</li>
-    <li><b>Affichez</b> le code sur la TV</li>
-    <li><b>Les invités</b> jouent sur leur téléphone</li>
-  </ol>
-</section>
+<span class="label"><i></i>Créer une soirée</span>
+<h1>Ce soir,<br>c'est <span class="mag">blind&nbsp;test.</span></h1>
+<p class="lead">Choisis la musique, affiche le code sur la TV, tout le monde joue sur son téléphone.</p>
 
 <style>
-  .st-top { display: flex; justify-content: space-between; align-items: center; }
-  .st-top-link {
-    font-size: 0.85rem;
-    color: var(--mid);
-    text-decoration: none;
-  }
-  .st-top-link:hover { color: var(--text); }
-  .st-top-join b { color: var(--text); font-weight: 600; border-bottom: 1px solid currentColor; }
-
-  .st-hero {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: end;
-    gap: 24px 48px;
-    padding: 56px 0 44px;
-    border-bottom: 2px solid var(--text);
-  }
-  .st-kicker {
-    grid-column: 1 / -1;
-    font-family: var(--s-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
   h1 {
-    font-family: var(--s-cond);
     font-weight: 900;
-    font-size: clamp(3rem, 9vw, 6.4rem);
-    line-height: 0.86;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
+    font-size: clamp(3rem, 15vw, 6rem);
+    line-height: 0.84;
+    letter-spacing: -0.015em;
   }
-  h1 em { font-style: normal; color: var(--accent); }
-  .st-how {
-    list-style: none;
-    counter-reset: how;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-bottom: 8px;
+  .mag {
+    background: linear-gradient(90deg, #ff00ff, #ff8af5, #ff00ff);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: sheen 6s linear infinite;
   }
-  .st-how li {
-    counter-increment: how;
-    font-size: 0.95rem;
-    color: var(--mid);
+  @keyframes sheen {
+    to { background-position: -200% 0; }
   }
-  .st-how li::before {
-    content: counter(how);
-    display: inline-block;
-    width: 22px;
-    font-family: var(--s-mono);
-    font-size: 0.75rem;
-    color: var(--dim);
-  }
-  .st-how b { color: var(--text); font-weight: 600; }
+  .lead { max-width: 32em; font-size: 1.08rem; line-height: 1.5; color: var(--muted); }
 
-  @media (max-width: 760px) {
-    .st-hero { grid-template-columns: 1fr; padding: 36px 0 30px; }
+  @media (min-width: 900px) {
+    h1 { font-size: clamp(3rem, 5vw, 5rem); }
+    .lead { font-size: 1.2rem; }
   }
 </style>

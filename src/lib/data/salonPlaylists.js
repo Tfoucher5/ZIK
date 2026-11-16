@@ -1,12 +1,8 @@
-/** Playlist officielle cochée d'office : celle qui plaît au plus grand nombre en soirée. */
-export const DEFAULT_SALON_PLAYLIST = "09a2742e-121d-4b99-8e94-290b7f4b5eb4";
-
 /**
  * Playlists selectionnables pour un salon : celles de l'utilisateur, plus les
  * officielles et les publiques. Sans compte (userId null), seulement ces
  * dernieres. Partagee entre l'ecran de configuration et l'ecran hote, qui
- * proposent la meme liste. Ordre : officielles (la playlist par défaut en
- * tête), puis celles de l'utilisateur, puis les publiques.
+ * proposent la meme liste. Ordre : officielles (les plus longues en tête), puis celles de l'utilisateur, puis les publiques.
  */
 export async function loadSalonPlaylists(sb, userId) {
   let sharedQuery = sb
@@ -44,11 +40,7 @@ export async function loadSalonPlaylists(sb, userId) {
   // compte admin qui les gère) : elle a sa pochette dans le bac à disques.
   const official = [...(mine ?? []), ...(shared ?? [])]
     .filter((p) => p.is_official)
-    .sort(
-      (a, b) =>
-        (b.id === DEFAULT_SALON_PLAYLIST) - (a.id === DEFAULT_SALON_PLAYLIST) ||
-        (b.track_count ?? 0) - (a.track_count ?? 0),
-    )
+    .sort((a, b) => (b.track_count ?? 0) - (a.track_count ?? 0))
     .map((p) => toItem(p, "official"));
   const own = (mine ?? [])
     .filter((p) => !p.is_official)
