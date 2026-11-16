@@ -33,3 +33,12 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : valider · valider avec mes réponses aux 5 choix · retoucher
 - **Recommandation** : 1 oui, 2 oui, 3 seulement au podium de soirée (sinon ça lasse), 4 nom de la soirée, 5 oui
 - **Lien** : https://claude.ai/artifact/4fzYeHyZUxeaTPJGEAFpG5
+
+## Post 2 : « Feuille de match » v3, montée sur la musique (TikTok)
+
+- **Chantier** : Marketing (Sami, Nina)
+- **Depuis** : 16/11
+- **Question** : La vidéo est maintenant montée sur une musique continue (synthwave années 80 sans voix, libre de droits CC0), chaque coupe et chaque gommette tombe sur le temps, la musique ne s'arrête jamais, fondu à la fin ; bruitages du jeu par-dessus (33,6 s). Dans TikTok on ne rajoute pas de musique. Je la programme **dimanche 22/11 à 18 h** avec la légende « 7/10 sur les années 80. Tu fais mieux ? Viens me battre en ligne, c'est gratuit : zik-music.fr » et #blindtest #blindtestmusical #annees80 #quizmusical #jeuentrepotes ?
+- **Options** : oui, tel quel · oui, autre date ou légende (écris-la) · retoucher
+- **Recommandation** : la regarder avec le son, puis oui
+- **Lien** : C:/Users/Teamr/Documents/GitHub/ZIK-memes/promo/montage/out/lot1-da/feuille-de-match-v3.mp4
