@@ -32,13 +32,17 @@ export function proForHost(userId, io = getIO()) {
 /** Rattache un salon au compte qui paie. null si c'est fait, sinon l'erreur HTTP. */
 export function attachSalon(code, key, userId) {
   if (typeof code !== "string" || !/^[A-Z0-9]{4,12}$/.test(code))
-    return { status: 400, error: "Salon invalide." };
+    return { status: 400, error: "Soirée invalide." };
   const salon = Object.hasOwn(salonRooms, code) ? salonRooms[code] : null;
-  if (!salon) return { status: 404, error: "Ce salon n'est plus en cours." };
+  if (!salon)
+    return { status: 404, error: "Cette soirée n'est plus en cours." };
   if (typeof key !== "string" || key !== salon.adminKey)
-    return { status: 403, error: "Ce salon n'est pas le vôtre." };
+    return { status: 403, error: "Cette soirée n'est pas la vôtre." };
   if (salon.hostUserId && salon.hostUserId !== userId)
-    return { status: 403, error: "Ce salon est rattaché à un autre compte." };
+    return {
+      status: 403,
+      error: "Cette soirée est rattachée à un autre compte.",
+    };
   if (salon.hostUserId !== userId) {
     salon.hostUserId = userId;
     saveSnapshot(salon);

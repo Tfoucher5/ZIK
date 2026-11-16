@@ -6,7 +6,7 @@ import { cleanupNow } from "./timers.js";
 import { safe } from "../safe.js";
 import { note } from "./journal.js";
 import { dropReclaimOf } from "./reclaim.js";
-import { admitWaiting, leaveQueue, unqueue } from "./queue.js";
+import { admitWaiting, leaveQueue, quitQueue } from "./queue.js";
 
 // Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
 // fermer la soirée
@@ -45,13 +45,11 @@ export function scheduleDeparture(
 // Départs : écran TV, régie, joueurs
 export function registerLeave(socket, io) {
   // Le téléphone ne veut plus attendre une place
-  safe(socket, "salon_queue_leave", {}, () =>
-    unqueue(salonRooms[socket.salonWait], socket),
-  );
+  safe(socket, "salon_queue_leave", {}, () => quitQueue(socket, io));
 
   safe(socket, "disconnect", {}, () => {
     dropReclaimOf(socket, io);
-    leaveQueue(socket);
+    leaveQueue(socket, io);
     const code = socket.salonCode;
     if (!code) return;
     const salon = salonRooms[code];
