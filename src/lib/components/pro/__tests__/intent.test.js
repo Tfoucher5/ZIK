@@ -7,6 +7,8 @@ import {
   readIntent,
   stepOf,
   backToRegie,
+  resendSignup,
+  thanksRegie,
 } from "../intent.js";
 
 function store(init = {}) {
@@ -42,6 +44,12 @@ describe("intention gardée une heure", () => {
       salon: "KZ4P2M",
     });
     expect(loadIntent(s, T + 61 * 60_000)).toBeNull();
+  });
+
+  it("date dans le futur : oubliée", () => {
+    const s = store();
+    saveIntent(s, { plan: "night", salon: "KZ4P2M" }, T + 10 * 3600_000);
+    expect(loadIntent(s, T)).toBeNull();
   });
 
   it("JSON cassé, valeurs étrangères : rien", () => {
@@ -141,6 +149,74 @@ describe("étapes du bloc", () => {
     expect(stepOf({ plan: "night", user: u, activated: true })).toBe("actif");
     expect(stepOf({ plan: null, user: u, activated: true })).toBe("actif");
     expect(stepOf({ plan: null, user: u })).toBe("formule");
+  });
+});
+
+describe("renvoi de l'e-mail de confirmation", () => {
+  const opts = { origin: "https://www.zik-music.fr", captchaOn: true };
+
+  it("Captcha actif sans jeton : aucun appel", async () => {
+    const auth = { resend: vi.fn() };
+    expect(await resendSignup(auth, "a@b.fr", { ...opts, token: null })).toBe(
+      "Validez la vérification anti-robot.",
+    );
+    expect(auth.resend).not.toHaveBeenCalled();
+  });
+
+  it("jeton transmis, retour sur /pro", async () => {
+    const auth = { resend: vi.fn(async () => ({ error: null })) };
+    expect(await resendSignup(auth, "a@b.fr", { ...opts, token: "t" })).toBe(
+      "E-mail renvoyé.",
+    );
+    expect(auth.resend).toHaveBeenCalledWith({
+      type: "signup",
+      email: "a@b.fr",
+      options: {
+        emailRedirectTo: "https://www.zik-music.fr/pro",
+        captchaToken: "t",
+      },
+    });
+  });
+
+  it("Captcha absent : envoi sans jeton ; refus ou réseau coupé : message calme", async () => {
+    const ok = { resend: vi.fn(async () => ({ error: null })) };
+    await resendSignup(ok, "a@b.fr", { ...opts, captchaOn: false });
+    expect(ok.resend.mock.calls[0][0].options.captchaToken).toBeUndefined();
+    for (const resend of [
+      async () => ({ error: { message: "rate limit" } }),
+      async () => {
+        throw new Error("Failed to fetch");
+      },
+    ])
+      expect(
+        await resendSignup({ resend }, "a@b.fr", { ...opts, token: "t" }),
+      ).toBe("Envoi impossible pour le moment, réessayez dans une minute.");
+  });
+});
+
+describe("merci : retour possible sur la régie", () => {
+  const avec = () => {
+    const s = store();
+    saveIntent(s, { plan: "night", salon: "KZ4P2M" });
+    return s;
+  };
+
+  it("soirée encore ouverte : la régie", async () => {
+    const f = vi.fn(async () => ({ status: 200 }));
+    expect(await thanksRegie(avec(), f)).toBe("KZ4P2M");
+    expect(f).toHaveBeenCalledWith("/api/salon?code=KZ4P2M");
+  });
+
+  it("soirée finie (404), réseau coupé, pas d'intention : page normale", async () => {
+    expect(await thanksRegie(avec(), async () => ({ status: 404 }))).toBeNull();
+    expect(
+      await thanksRegie(avec(), async () => {
+        throw new Error("Failed to fetch");
+      }),
+    ).toBeNull();
+    const f = vi.fn();
+    expect(await thanksRegie(store(), f)).toBeNull();
+    expect(f).not.toHaveBeenCalled();
   });
 });
 

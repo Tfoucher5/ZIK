@@ -3,6 +3,7 @@ import {
   fetchPro,
   proActive,
   goToStripe,
+  attachSalonTo,
   salonKey,
 } from "$lib/client/salonClient.js";
 import { PLANS } from "$lib/data/proPlans.js";
@@ -38,6 +39,7 @@ export class ProCheckout {
   attached = $state(false);
   attachError = $state("");
   activated = $state(false);
+  uid = null;
 
   activePro = $derived(proActive(this.pro));
   subscribed = $derived(
@@ -70,6 +72,7 @@ export class ProCheckout {
     this.zik = zik;
     $effect(() => this.arrive());
     $effect(() => {
+      this.switchAccount(zik.user?.id ?? null);
       if (!zik.user) {
         this.pro = null;
         return;
@@ -81,9 +84,18 @@ export class ProCheckout {
   arrive() {
     const it = readIntent(location.search, localStorage, salonKey);
     this.intent = it;
-    // Retour de Google ou du lien de confirmation : /pro sans ancre
-    if (it?.salon && !location.hash)
+    // Retour de Google ou du lien de confirmation : /pro sans #tarifs
+    if (it?.salon && location.hash !== "#tarifs")
       document.getElementById("tarifs")?.scrollIntoView();
+  }
+
+  // Autre compte : son rattachement est à refaire
+  switchAccount(id) {
+    if (id === this.uid) return;
+    this.uid = id;
+    this.attached = false;
+    this.activated = false;
+    this.attachError = "";
   }
 
   async load() {
@@ -114,12 +126,7 @@ export class ProCheckout {
     this.attaching = true;
     this.attachError = "";
     try {
-      const d = await goToStripe(
-        this.zik.sb,
-        "/api/pro/checkout",
-        { salon, key: salonKey(salon), attach: true },
-        PANNE,
-      );
+      const d = await attachSalonTo(this.zik.sb, salon, salonKey(salon), PANNE);
       this.attached = true;
       if (d.activated) this.done();
     } catch (err) {
@@ -127,6 +134,15 @@ export class ProCheckout {
     } finally {
       this.attaching = false;
     }
+  };
+
+  // Soirée refusée (terminée, autre compte) : on achète pour le compte seul
+  withoutSoiree = () => {
+    const plan = this.intent?.plan;
+    forgetIntent(localStorage);
+    this.intent = null;
+    this.attachError = "";
+    if (plan) this.buy(plan);
   };
 
   done() {
@@ -158,7 +174,8 @@ export class ProCheckout {
       return;
     }
     if (!this.zik.user) {
-      saveIntent(localStorage, { plan, salon: null });
+      this.intent = { plan, salon: null };
+      saveIntent(localStorage, this.intent);
       this.zik.openAuthModal("register", { next: "/pro" });
       return;
     }

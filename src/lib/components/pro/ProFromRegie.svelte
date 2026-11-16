@@ -2,7 +2,7 @@
   import { PLANS } from '$lib/data/proPlans.js';
   import Captcha from '$lib/components/auth/Captcha.svelte';
   import { captchaOn } from '$lib/components/auth/authForm.svelte.js';
-  import { authRedirect } from '$lib/components/auth/redirect.js';
+  import { resendSignup } from './intent.js';
 
   let { checkout } = $props();
   const c = $derived(checkout.chosen);
@@ -12,18 +12,13 @@
   const accountPlan = $derived(PLANS.find((p) => p.id === checkout.pro?.plan)?.name ?? 'ZIK Pro');
 
   let captchaToken = $state(null);
-  let captcha;
+  let captcha = $state();
   let resent = $state('');
 
   async function resend() {
-    if (captchaOn && !captchaToken) { resent = 'Validez la vérification anti-robot.'; return; }
-    const { error } = await checkout.zik.sb.auth.resend({
-      type: 'signup',
-      email: checkout.pendingEmail,
-      options: { emailRedirectTo: authRedirect(location.origin, '/pro'), captchaToken: captchaToken ?? undefined },
-    });
-    captcha?.reset();
-    resent = error ? 'Envoi impossible pour le moment, réessayez dans une minute.' : 'E-mail renvoyé.';
+    const token = captchaToken;
+    resent = await resendSignup(checkout.zik.sb.auth, checkout.pendingEmail, { origin: location.origin, captchaOn, token });
+    if (token) captcha?.reset();
   }
 </script>
 
@@ -76,7 +71,11 @@
       {:else if checkout.attachError}
         <h3>Soirée non rattachée</h3>
         <p class="err" role="alert">{checkout.attachError}</p>
-        <button type="button" class="btn-line" onclick={checkout.attach}>Réessayer</button>
+        <div class="btns">
+          <button type="button" class="btn-main" onclick={checkout.withoutSoiree}>Continuer sans cette soirée</button>
+          <button type="button" class="btn-line" onclick={checkout.attach}>Réessayer</button>
+        </div>
+        <small>ZIK Pro s'active alors sur votre compte : vos prochaines soirées, créées connecté, seront en ZIK Pro.</small>
       {:else}
         <h3>Vérifiez et payez</h3>
         <dl class="fiche">

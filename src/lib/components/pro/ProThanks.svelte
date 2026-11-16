@@ -2,7 +2,7 @@
   import { getContext } from 'svelte';
   import { fetchPro, proActive } from '$lib/client/salonClient.js';
   import { thanksPhase, STATUS, planLabel, endTitle, REGIE, regieLine } from './thanks.js';
-  import { loadIntent, forgetIntent, backToRegie } from './intent.js';
+  import { thanksRegie, forgetIntent, backToRegie } from './intent.js';
 
   const zik = getContext('zik');
   let pro = $state(null);
@@ -17,11 +17,7 @@
   const pending = $derived(phase === 'late' ? 'Pas encore reçue' : 'En attente de Stripe…');
 
   $effect(() => {
-    const code = loadIntent(localStorage)?.salon;
-    if (!code) return;
-    fetch(`/api/salon?code=${code}`)
-      .then((r) => { if (r.status !== 404) regie = code; })
-      .catch(() => {});
+    thanksRegie(localStorage, fetch).then((code) => { if (code) regie = code; });
   });
   $effect(() => {
     if (active) forgetIntent(localStorage);

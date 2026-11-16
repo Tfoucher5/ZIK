@@ -4,9 +4,11 @@ import { getStripe, priceFor } from "$lib/server/stripe.js";
 import { getProRow, isProActive } from "$lib/server/services/pro.js";
 import { attachSalon, proForHost } from "$lib/server/socket/salon/pro.js";
 
+const TROP = "Trop de demandes, réessayez dans un instant.";
+
 // Ouvre une page de paiement Stripe pour la formule choisie
 export async function POST({ request, url, getClientAddress }) {
-  checkRateLimit(`checkout:${getClientAddress()}`, 10, 60_000);
+  checkRateLimit(`checkout:${getClientAddress()}`, 10, 60_000, TROP);
   const { user } = await requireAuth(request);
   const { plan, confirm, salon, key, attach } =
     (await request.json().catch(() => null)) ?? {};

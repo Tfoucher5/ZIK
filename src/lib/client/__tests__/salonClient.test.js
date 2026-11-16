@@ -8,6 +8,7 @@ import {
   readSetup,
   setupFor,
   goToStripe,
+  attachSalonTo,
 } from "../salonClient.js";
 import { FREE_MAX_TEAMS } from "../../data/proPlans.js";
 import { listenHost } from "../../components/salon/host/hostEvents.js";
@@ -177,6 +178,51 @@ describe("Stripe qui ne répond pas", () => {
         activated,
       });
     }
+  });
+
+  it("réseau coupé : le message de la page, pas celui du navigateur", async () => {
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    await expect(
+      goToStripe(sb, "/api/pro/checkout", {}, "Réessayez."),
+    ).rejects.toThrow("Réessayez.");
+    await expect(
+      attachSalonTo(sb, "KZ4P2M", "cle", "Réessayez."),
+    ).rejects.toThrow("Réessayez.");
+  });
+
+  it("rattachement : jamais de navigation, une page de paiement est une erreur", async () => {
+    const href = "http://x/pro";
+    vi.stubGlobal("window", { location: { href } });
+    const body = vi.fn();
+    vi.stubGlobal("fetch", async (path, init) => {
+      body(JSON.parse(init.body));
+      return { ok: true, json: async () => ({ url: "https://pay" }) };
+    });
+    await expect(attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).rejects.toThrow(
+      "Panne.",
+    );
+    expect(window.location.href).toBe(href);
+    expect(body).toHaveBeenCalledWith({
+      salon: "KZ4P2M",
+      key: "cle",
+      attach: true,
+    });
+    vi.stubGlobal("fetch", async () => ({
+      ok: true,
+      json: async () => ({ activated: false }),
+    }));
+    expect(await attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).toEqual({
+      activated: false,
+    });
+    vi.stubGlobal("fetch", async () => ({
+      ok: false,
+      json: async () => ({ error: "Cette soirée n'est plus en cours." }),
+    }));
+    await expect(attachSalonTo(sb, "KZ4P2M", "cle", "Panne.")).rejects.toThrow(
+      "Cette soirée n'est plus en cours.",
+    );
   });
 
   it("réponse sans page de paiement ni activation : erreur", async () => {

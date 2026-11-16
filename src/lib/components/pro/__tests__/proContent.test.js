@@ -122,6 +122,7 @@ describe("cartes des offres", () => {
       });
       expect(refus).toContain("Cette soirée n'est plus en cours.");
       expect(refus).not.toContain("Payer 7,90 €");
+      expect(refus).toContain("Continuer sans cette soirée");
       expect(regie({ step: "actif", activated: true })).toContain(
         "Rien à payer",
       );

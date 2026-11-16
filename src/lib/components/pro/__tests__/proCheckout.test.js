@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const goToStripe = vi.hoisted(() => vi.fn());
+const attachSalonTo = vi.hoisted(() => vi.fn());
 vi.mock("$lib/client/salonClient.js", async (orig) => ({
   ...(await orig()),
   goToStripe,
+  attachSalonTo,
   fetchPro: async () => null,
 }));
 const { ProCheckout } = await import("../proCheckout.svelte.js");
@@ -20,19 +22,25 @@ function storage(init = {}) {
 // Les effets ne tournent pas ici : arrive() puis resume() jouent l'ouverture
 // de la page et la connexion
 let zik;
-async function start(search = "", user = null) {
-  vi.stubGlobal("location", { search, hash: "#tarifs" });
+async function start(search = "", user = null, hash = "#tarifs") {
+  vi.stubGlobal("location", { search, hash });
   zik = { user, sb: {}, openAuthModal: vi.fn() };
   const c = new ProCheckout(zik);
   c.arrive();
+  c.switchAccount(user?.id ?? null);
   if (user) await c.resume();
   return c;
 }
 
+const scroll = vi.fn();
 beforeEach(() => {
   goToStripe.mockReset();
+  attachSalonTo.mockReset();
+  scroll.mockReset();
   vi.stubGlobal("localStorage", storage({ zik_salon_key_KZ4P2M: "cle" }));
-  vi.stubGlobal("document", { getElementById: () => null });
+  vi.stubGlobal("document", {
+    getElementById: () => ({ scrollIntoView: scroll }),
+  });
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -48,6 +56,16 @@ describe("/pro sans régie : comme avant", () => {
       salon: null,
     });
     expect(c.regie).toBeNull();
+  });
+
+  it("connexion dans la page, sans rechargement : « Confirmer » s'ouvre", async () => {
+    const c = await start();
+    c.buy("monthly");
+    zik.user = { id: "u1" };
+    await c.resume();
+    expect(c.confirmPlan).toBe("monthly");
+    expect(localStorage.getItem("zik_pro_intent")).toBeNull();
+    expect(goToStripe).not.toHaveBeenCalled();
   });
 
   it("connecté : fenêtre « Confirmer », mêmes arguments vers Stripe", async () => {
@@ -90,6 +108,14 @@ describe("/pro depuis la régie", () => {
     expect(c.step).toBe("mail");
   });
 
+  it("retour de Google (#access_token=…) : la page descend jusqu'au bloc", async () => {
+    await start(URL_REGIE, null, "#access_token=abc");
+    expect(scroll).toHaveBeenCalled();
+    scroll.mockReset();
+    await start(URL_REGIE, null, "#tarifs");
+    expect(scroll).not.toHaveBeenCalled();
+  });
+
   it("une carte change la formule, sans fenêtre ni connexion", async () => {
     const c = await start(URL_REGIE);
     c.buy("yearly");
@@ -99,18 +125,15 @@ describe("/pro depuis la régie", () => {
   });
 
   it("connecté : rattache sans payer, puis paie sans « Confirmer »", async () => {
-    goToStripe.mockResolvedValueOnce({ activated: false });
+    attachSalonTo.mockResolvedValueOnce({ activated: false });
     const c = await start(URL_REGIE, { id: "u1" });
-    expect(goToStripe.mock.calls[0][2]).toEqual({
-      salon: "KZ4P2M",
-      key: "cle",
-      attach: true,
-    });
+    expect(attachSalonTo.mock.calls[0].slice(1, 3)).toEqual(["KZ4P2M", "cle"]);
+    expect(goToStripe).not.toHaveBeenCalled();
     expect(c.attached).toBe(true);
     expect(c.step).toBe("payer");
     goToStripe.mockResolvedValueOnce(undefined);
     await c.payDirect();
-    expect(goToStripe.mock.calls[1][2]).toEqual({
+    expect(goToStripe.mock.calls[0][2]).toEqual({
       plan: "night",
       salon: "KZ4P2M",
       key: "cle",
@@ -119,19 +142,35 @@ describe("/pro depuis la régie", () => {
   });
 
   it("compte déjà Pro : rien à payer, intention effacée", async () => {
-    goToStripe.mockResolvedValueOnce({ activated: true });
+    attachSalonTo.mockResolvedValueOnce({ activated: true });
     const c = await start(URL_REGIE, { id: "u1" });
     expect(c.step).toBe("actif");
     expect(localStorage.getItem("zik_pro_intent")).toBeNull();
-    expect(goToStripe).toHaveBeenCalledTimes(1);
+    expect(goToStripe).not.toHaveBeenCalled();
   });
 
-  it("soirée refusée : l'erreur, pas de paiement", async () => {
-    goToStripe.mockRejectedValueOnce(
+  it("soirée refusée : l'erreur, pas de paiement, puis sortie sans la soirée", async () => {
+    attachSalonTo.mockRejectedValueOnce(
       new Error("Cette soirée n'est plus en cours."),
     );
     const c = await start(URL_REGIE, { id: "u1" });
     expect(c.attachError).toBe("Cette soirée n'est plus en cours.");
     expect(c.attached).toBe(false);
+    c.withoutSoiree();
+    expect(c.regie).toBeNull();
+    expect(c.attachError).toBe("");
+    expect(c.confirmPlan).toBe("night");
+    expect(localStorage.getItem("zik_pro_intent")).toBeNull();
+    expect(goToStripe).not.toHaveBeenCalled();
+  });
+
+  it("autre compte : le rattachement est refait", async () => {
+    attachSalonTo.mockResolvedValue({ activated: true });
+    const c = await start(URL_REGIE, { id: "u1" });
+    c.switchAccount("u1");
+    expect(c.attached).toBe(true);
+    c.switchAccount("u2");
+    expect(c.attached).toBe(false);
+    expect(c.activated).toBe(false);
   });
 });

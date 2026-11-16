@@ -155,6 +155,30 @@ export async function fetchPro(sb, userId) {
 export const proActive = (row) =>
   row?.status === "active" && new Date(row.current_period_end) > new Date();
 
+// Appel authentifié : la réponse du serveur, ou son message d'erreur.
+// Réseau coupé : `panne`, jamais un message technique du navigateur.
+async function postAuth(sb, path, body, panne) {
+  let res, d;
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    res = await fetch(path, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    d = await res.json().catch(() => ({}));
+  } catch {
+    throw new Error(panne);
+  }
+  if (!res.ok) throw new Error(d.error || d.message || panne);
+  return d;
+}
+
 // Paiement ou espace client : le serveur crée la page Stripe, on y part.
 // `panne` : message si Stripe ne répond pas (/pro vouvoie)
 export async function goToStripe(
@@ -163,22 +187,24 @@ export async function goToStripe(
   body = {},
   panne = "Stripe ne répond pas, réessaie dans un instant.",
 ) {
-  const {
-    data: { session },
-  } = await sb.auth.getSession();
-  const res = await fetch(path, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      Authorization: `Bearer ${session?.access_token}`,
-    },
-    body: JSON.stringify(body),
-  });
-  const d = await res.json().catch(() => ({}));
-  // Rattachement depuis la régie : réponse sans page de paiement
-  if (res.ok && typeof d.activated === "boolean") return d;
-  if (!res.ok || !d.url) throw new Error(d.error || d.message || panne);
+  const d = await postAuth(sb, path, body, panne);
+  // Compte déjà Pro depuis la régie : la soirée bascule, rien à payer
+  if (typeof d.activated === "boolean") return d;
+  if (!d.url) throw new Error(panne);
   window.location.href = d.url;
+}
+
+// Rattache une soirée au compte connecté. Ne navigue jamais : une réponse
+// qui proposerait un paiement est une erreur.
+export async function attachSalonTo(sb, salon, key, panne) {
+  const d = await postAuth(
+    sb,
+    "/api/pro/checkout",
+    { salon, key, attach: true },
+    panne,
+  );
+  if (typeof d.activated !== "boolean" || d.url) throw new Error(panne);
+  return d;
 }
 
 // Page joueur du salon, ouverte par les QR codes
