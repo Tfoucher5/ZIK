@@ -10,6 +10,7 @@ import { proWelcome, proSaleAlert } from "$lib/server/mail/proPurchase.js";
 import { alertAdminsSafe } from "$lib/server/services/admin/alerts.js";
 import { PLAN_LABELS } from "$lib/shared/admin/players.js";
 import { noteEvent } from "$lib/server/services/health/opsEvents.js";
+import { proForHost } from "$lib/server/socket/salon/pro.js";
 
 async function onCheckoutCompleted(session) {
   const userId = session.client_reference_id;
@@ -23,6 +24,7 @@ async function onCheckoutCompleted(session) {
     const sub = await getStripe().subscriptions.retrieve(session.subscription);
     await syncSubscription(sub, session.id);
   }
+  proForHost(userId);
 
   const row = await getProRow(userId);
   const email = session.customer_details?.email;
