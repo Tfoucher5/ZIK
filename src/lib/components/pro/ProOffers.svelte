@@ -3,9 +3,13 @@
   import { PLANS, TESTED_LABEL } from '$lib/data/proPlans.js';
   import ProPlanStatus from './ProPlanStatus.svelte';
   import ProConfirm from './ProConfirm.svelte';
+  import ProFromRegie from './ProFromRegie.svelte';
   import { calm } from './demos.js';
 
   let { checkout } = $props();
+  // Depuis la régie, la carte mise en avant est la formule choisie (le Mensuel par « abonnements »)
+  const top = $derived(checkout.regie ? (checkout.activated ? 'monthly' : (checkout.intent.plan ?? 'monthly')) : PLANS.find((p) => p.featured).id);
+  const mine = $derived(checkout.regie && !checkout.activated ? checkout.intent.plan : null);
 
   const FILTERS = [
     ['all', 'Tout voir'],
@@ -23,10 +27,16 @@
     if (document.startViewTransition && !calm()) document.startViewTransition(apply);
     else apply();
   }
+
+  // Arrivée par « Voir les abonnements » de la régie : les formules des lieux
+  $effect(() => {
+    if (checkout.regie && !checkout.intent.plan) filter = 'often';
+  });
 </script>
 
 <section id="tarifs" class="offres" aria-labelledby="pro-offres">
   <div class="wrap">
+    {#if checkout.regie}<ProFromRegie {checkout} />{/if}
     <div class="head rv">
       <span class="label"><i></i>Offres</span>
       <h2 class="grad" id="pro-offres">ZIK Pro, à votre rythme</h2>
@@ -41,10 +51,10 @@
       {/each}
     </div>
 
-    <div class="plans" class:one={shown.length === 1} class:two={shown.length === 2}>
+    <div class="plans" id="offres-plans" class:one={shown.length === 1} class:two={shown.length === 2}>
       {#each shown as p (p.id)}
-        <article class="plan card" class:top={p.featured} style="view-transition-name:plan-{p.id}" aria-labelledby="plan-{p.id}">
-          <span class="badge">{p.badge}</span>
+        <article class="plan card" class:top={p.id === top} style="view-transition-name:plan-{p.id}" aria-labelledby="plan-{p.id}">
+          <div class="badges"><span class="badge">{p.badge}</span>{#if p.id === mine}<span class="badge vous">Votre choix</span>{/if}</div>
           <h3 id="plan-{p.id}">{p.name}</h3>
           <div class="price">{p.price}<small>{p.period}</small></div>
           <p class="pitch">{p.pitch}</p>
@@ -53,7 +63,7 @@
           </ul>
           <button
             type="button"
-            class={p.featured ? 'btn-main' : 'btn-line'}
+            class={p.id === top ? 'btn-main' : 'btn-line'}
             onclick={() => checkout.buy(p.id)}
             disabled={checkout.busy !== null || checkout.subscribed}
           >
@@ -131,8 +141,12 @@
     animation: ang 6s linear infinite;
     box-shadow: 0 30px 90px -40px rgba(255, 0, 255, 0.7);
   }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   .badge {
-    align-self: flex-start;
     padding: 4px 10px;
     border-radius: 99px;
     background: rgba(255, 255, 255, 0.07);
@@ -142,6 +156,10 @@
     font-size: 13px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+  .badge.vous {
+    background: var(--text);
+    color: #000;
   }
   h3 {
     font-weight: 800;

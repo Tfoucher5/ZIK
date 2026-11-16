@@ -166,4 +166,28 @@ describe("Stripe qui ne répond pas", () => {
       goToStripe(sb, "/api/pro/portal", {}, "Réessayez."),
     ).rejects.toThrow("Réessayez.");
   });
+
+  it("rattachement : rend la réponse sans partir chez Stripe", async () => {
+    for (const activated of [true, false]) {
+      vi.stubGlobal("fetch", async () => ({
+        ok: true,
+        json: async () => ({ activated }),
+      }));
+      expect(await goToStripe(sb, "/api/pro/checkout")).toEqual({
+        activated,
+      });
+    }
+  });
+
+  it("réponse sans page de paiement ni activation : erreur", async () => {
+    vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => ({}) }));
+    await expect(goToStripe(sb, "/api/pro/checkout")).rejects.toThrow(
+      "Stripe ne répond pas",
+    );
+    vi.stubGlobal("fetch", async () => ({
+      ok: true,
+      json: async () => ({ activated: "oui" }),
+    }));
+    await expect(goToStripe(sb, "/api/pro/checkout")).rejects.toThrow();
+  });
 });

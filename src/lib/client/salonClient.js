@@ -175,6 +175,8 @@ export async function goToStripe(
     body: JSON.stringify(body),
   });
   const d = await res.json().catch(() => ({}));
+  // Rattachement depuis la régie : réponse sans page de paiement
+  if (res.ok && typeof d.activated === "boolean") return d;
   if (!res.ok || !d.url) throw new Error(d.error || d.message || panne);
   window.location.href = d.url;
 }
