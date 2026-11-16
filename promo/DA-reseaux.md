@@ -96,7 +96,7 @@ Ce qui ne change jamais : papier noir, bandeau, les trois polices, la trame des 
 - Halos, dégradés, particules, grain « cinéma », VHS, faux écran de téléphone dessiné.
 - La pochette en couleur plein cadre (ça devient une fiche Spotify) et le look Wrapped.
 - Le tampon, le papier d'écolier, le stylo bleu : essayés, hors univers ZIK.
-- Voix, visages, mains, musique incrustée.
+- Voix, visages, mains. Musique protégée (tubes) incrustée : jamais.
 
 ## Fabrication
 
@@ -113,4 +113,4 @@ node scripts/planche.mjs <sortie.png> 1080 1350 60,60,880,1130 <images…>   # p
 - `scripts/da/kit.mjs` : les matières (papier, bande, gommette, bandeau, cases, photocopie, Posca, scotch).
 - Pochettes : API Deezer (`cover_xl`) dans `public/pochettes/da/` (ignoré par git).
 - Vraie partie : rush `public/rec/lot1-partie/` (prise par `partie.mjs` du skill `zik-montage`).
-- Le son s'ajoute dans TikTok, jamais dans le fichier.
+- Son (retour de Théo du 16/11) : une vidéo montée avec des coupes porte sa propre musique libre de droits (CC0 ou Pixabay), continue, incrustée dans le fichier, coupes calées sur ses temps, sons du jeu mixés dessous, fondu à la fin. Source, URL et licence dans `promo/CREDITS-musique.md`. Les formats sans coupe gardent le son ajouté dans TikTok.

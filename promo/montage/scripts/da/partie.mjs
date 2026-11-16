@@ -1,7 +1,8 @@
 // Vidéo « Feuille de match » en DA réseaux (1080×1920) : une vraie partie, notée à la main case par case.
 // Papier animé image par image (pose puis tremblé), jamais d'interpolation. Zone sûre x 60–940, y 160–1480.
-// Fin : carte « blind test multijoueur » (retour de Théo). Son : vrais sons de la TV ZIK, jamais de musique.
-// node scripts/da/partie.mjs [--essai 0,3.2,9.5] → out/lot1-da/feuille-de-match-v2.mp4 (ou images d'essai)
+// Fin : carte « blind test multijoueur ». Son : une musique CC0 continue (retour de Théo du 16/11 : les coupes ne la coupent jamais),
+// montage calé sur ses temps, sons de la TV ZIK mixés dessous. Musique : promo/CREDITS-musique.md.
+// node scripts/da/partie.mjs [--essai 0,3.2,9.5] → out/lot1-da/feuille-de-match-v3.mp4 (ou images d'essai)
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -22,6 +23,9 @@ const OUT = "out/lot1-da";
 const REC = "public/rec/lot1-partie";
 const FPS = 30;
 const SONS = "../../../ZIK/static/sounds"; // dépôt principal, sons CC0 (CREDITS.txt)
+const MUSIQUE = "public/musique/synth-wave-aerobics.wav"; // CC0, 100 BPM, 1er temps de la 1re mesure à 0,149 s
+const TEMPS = 0.6; // un temps à 100 BPM = 18 images
+const FONDU = 3 * TEMPS;
 const idx = JSON.parse(readFileSync(`${REC}/index.json`, "utf8")).frames;
 const plan = (t) => {
   let a = 0,
@@ -34,23 +38,25 @@ const plan = (t) => {
   return pathToFileURL(`${REC}/${idx[a][0]}`).href;
 };
 
-// Années 80, 7/10. src = seconde du rush, d = durée, m = manche, ev = [instant, élément], zoom = instant du plan serré
+// Années 80, 7/10. Tout en temps de la musique : d = durée, ev = [temps, élément], zoom = temps du plan serré.
+// src = seconde du rush, choisie pour que la réponse de la TV tombe sur le temps de la coche.
+// Coupes sur les temps, score (temps 40) et carte finale (temps 48) sur un 1er temps de mesure. 56 temps = 33,6 s.
 // prettier-ignore
 const SEGS = [
-  { src: 3.5, d: 2.5, m: 1, ev: [[0, "h1"], [0.13, "h2"], [0.55, "h3"]] },
-  { src: 5.9, d: 1.4, m: 1, ev: [[1.0, "v1"]] },
-  { src: 51.3, d: 1.4, m: 2, ev: [[0.6, "v2"]] },
-  { src: 87.4, d: 3.7, m: 3, ev: [[1.95, "v3"], [2.2, "k3a"], [2.85, "k3b"]], zoom: 1.95 },
-  { src: 102.0, d: 3.2, m: 4, ev: [[2.0, "v4"], [2.2, "k4a"], [2.6, "k4b"]] },
-  { src: 163.0, d: 3.1, m: 5, ev: [[0.2, "k5a"], [0.85, "k5b"], [2.0, "v5"]] },
-  { src: 182.7, d: 0.9, m: 6, ev: [[0.3, "v6"]] },
-  { src: 219.8, d: 0.9, m: 7, ev: [[0.3, "v7"]] },
-  { src: 256.2, d: 2.8, m: 8, ev: [[1.7, "v8"], [1.9, "k8a"], [2.3, "k8b"]], zoom: 1.7 },
-  { src: 298.2, d: 1.0, m: 9, ev: [[0.3, "v9"]] },
-  { src: 304.6, d: 2.5, m: 10, ev: [[1.1, "v10"], [1.3, "k10"]] },
-  { d: 3.4, m: 10, ev: [[0, "e1"], [0.2, "e2"], [0.4, "e3"], [0.9, "e4"], [1.5, "e5"]] },
-  { d: 4.4, m: 11, ev: [[0, "f1"], [0.2, "f2"], [0.45, "f3"], [1.0, "f4"], [1.6, "f5"], [2.2, "f6"]] },
-];
+  { src: 3.5, d: 4, m: 1, ev: [[0, "h1"], [0.5, "h2"], [1, "h3"]] },
+  { src: 6.0, d: 2, m: 1, ev: [[1.5, "v1"]] },
+  { src: 51.3, d: 2, m: 2, ev: [[1, "v2"]] },
+  { src: 87.55, d: 6, m: 3, ev: [[3, "v3"], [3.5, "k3a"], [4.5, "k3b"]], zoom: 3 },
+  { src: 102.2, d: 5, m: 4, ev: [[3, "v4"], [3.5, "k4a"], [4, "k4b"]] },
+  { src: 163.2, d: 5, m: 5, ev: [[0.5, "k5a"], [1.5, "k5b"], [3, "v5"]] },
+  { src: 182.4, d: 2, m: 6, ev: [[1, "v6"]] },
+  { src: 219.5, d: 2, m: 7, ev: [[1, "v7"]] },
+  { src: 256.1, d: 5, m: 8, ev: [[3, "v8"], [3.5, "k8a"], [4, "k8b"]], zoom: 3 },
+  { src: 297.9, d: 2, m: 9, ev: [[1, "v9"]] },
+  { src: 304.5, d: 5, m: 10, ev: [[2, "v10"], [2.5, "k10"]] },
+  { d: 8, m: 10, ev: [[0, "e1"], [0.5, "e2"], [1, "e3"], [2, "e4"], [4, "e5"]] },
+  { d: 8, m: 11, ev: [[0, "f1"], [0.5, "f2"], [1, "f3"], [2, "f4"], [3, "f5"], [4, "f6"]] },
+].map((s) => ({ ...s, d: s.d * TEMPS, ev: s.ev.map(([o, id]) => [o * TEMPS, id]), zoom: s.zoom != null ? s.zoom * TEMPS : undefined }));
 const TROUVE = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1];
 
 const CX = 752,
@@ -208,12 +214,13 @@ const FIN = SEGS.at(-1).t0; // la carte multijoueur remplace la piste
 for (const id of ["piste", ...TROUVE.map((_, i) => `v${i + 1}`)])
   vie[id][1] = FIN;
 const TOTAL = Math.round(at * FPS);
-// buzz de la TV à chaque manche trouvée, roulement de la finale (coup à 3,5 s) calé sur le score
+// buzz de la TV à chaque manche trouvée, roulement de la finale (coup à 3,5 s) calé sur le score.
+// Musique ramenée vers -14 LUFS, sons du jeu dessous (mesures dans promo/CREDITS-musique.md).
 const SFX = [
   ...TROUVE.flatMap((ok, i) =>
-    ok ? [["buzz", vie[`v${i + 1}`][0], 0.5]] : [],
+    ok ? [["buzz", vie[`v${i + 1}`][0], 0.35]] : [],
   ),
-  ["drumroll", SEGS.at(-2).t0 - 3.5, 1.6],
+  ["drumroll", SEGS.at(-2).t0 - 3.5, 0.4], // le coup final fait la crête : au-dessus de 0,4 on dépasse -1 dBTP
 ];
 const POSE = 3; // images de « pose » : la pièce arrive de travers, puis se cale
 const graine = (id) =>
@@ -307,18 +314,25 @@ if (essai > 0) {
     String(FPS),
     "-i",
     `${OUT}/_images/%05d.jpg`,
+    "-ss",
+    "0.149",
+    "-t",
+    String(TOTAL / FPS),
+    "-i",
+    MUSIQUE,
     ...SFX.flatMap(([f]) => ["-i", `${SONS}/${f}.ogg`]),
     "-filter_complex",
-    SFX.map(
-      ([, t, v], i) =>
-        `[${i + 1}:a]adelay=${Math.round(t * 1000)}:all=1,volume=${v}[a${i}]`,
-    ).join(";") +
-      `;${SFX.map((_, i) => `[a${i}]`).join("")}amix=inputs=${SFX.length}:normalize=0,apad[son]`,
+    // ffmpeg de Remotion sans afade : fondu d'entrée de 20 ms (pas de clic) et fondu de sortie sur les 3 derniers temps
+    `[1:a]volume=eval=frame:volume='0.6*min(1,t/0.02)*min(1,max(0,(${TOTAL / FPS}-t)/${FONDU}))'[mus];` +
+      SFX.map(
+        ([, t, v], i) =>
+          `[${i + 2}:a]adelay=${Math.round(t * 1000)}:all=1,volume=${v}[a${i}]`,
+      ).join(";") +
+      `;[mus]${SFX.map((_, i) => `[a${i}]`).join("")}amix=inputs=${SFX.length + 1}:normalize=0:duration=first[son]`,
     "-map",
     "0:v",
     "-map",
     "[son]",
-    "-shortest",
     "-c:a",
     "aac",
     "-b:a",
@@ -333,7 +347,7 @@ if (essai > 0) {
     "colorprim=bt709:transfer=bt709:colormatrix=bt709:range=tv",
     "-movflags",
     "+faststart",
-    `${OUT}/feuille-de-match-v2.mp4`,
+    `${OUT}/feuille-de-match-v3.mp4`,
   ]);
   rmSync(`${OUT}/_images`, { recursive: true });
   rmSync(`${OUT}/_partie.html`);
