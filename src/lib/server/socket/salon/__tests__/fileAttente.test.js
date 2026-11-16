@@ -78,6 +78,14 @@ describe("file d'attente d'un salon gratuit plein", () => {
     const quatorze = attente("quatorze");
     await quatorze.attend("salon_waiting");
     expect(regie.de("salon_pro_required")).toHaveLength(2);
+    // L'organisateur voit qui attend, la TV seulement combien
+    await vi.waitFor(() => {
+      expect(regie.de("salon_queue").at(-1)).toEqual({
+        count: 2,
+        names: ["treize", "quatorze"],
+      });
+      expect(tv.de("salon_queue").at(-1)).toEqual({ count: 2 });
+    });
     expect(salonRooms[h.code].waiting.map((w) => w.username)).toEqual([
       "treize",
       "quatorze",
@@ -92,6 +100,13 @@ describe("file d'attente d'un salon gratuit plein", () => {
     const entree = await treize.attend("salon_joined");
     expect(entree.username).toBe("treize");
     expect(quatorze.de("salon_joined")).toEqual([]);
+    await vi.waitFor(() =>
+      expect(regie.de("salon_queue").at(-1)).toEqual({
+        count: 1,
+        names: ["quatorze"],
+      }),
+    );
+    expect(tv.de("salon_queue").at(-1)).toEqual({ count: 1 });
 
     regie.socket.emit("salon_start");
     await tv.attend("salon_round_start");
@@ -101,5 +116,11 @@ describe("file d'attente d'un salon gratuit plein", () => {
     expect(quatorze.de("salon_round_start")).toEqual([]);
     expect(quatorze.recus.map((r) => r.event)).toEqual(["salon_waiting"]);
     expect(JSON.stringify(quatorze.recus)).not.toMatch(SECRETS);
+    // Les téléphones ne voient jamais la file ni le pseudo d'un autre en file
+    for (const j of [...joueurs, treize, quatorze])
+      expect(j.de("salon_queue")).toEqual([]);
+    for (const j of [...joueurs, treize])
+      expect(JSON.stringify(j.recus)).not.toMatch(/quatorze/);
+    expect(JSON.stringify(quatorze.recus)).not.toMatch(/treize/);
   });
 });

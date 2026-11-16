@@ -211,3 +211,49 @@ describe("avant la partie : choix d'équipe", () => {
     expect(p.choosingTeam).toBe(false);
   });
 });
+
+describe("« Une autre ! » : rien ne part hors ligne", () => {
+  const joueur = (connected = true) => {
+    const p = new SalonPlayer(null);
+    p.socket = { connected, emit: vi.fn() };
+    return p;
+  };
+
+  it("en ligne : la bascule part au serveur, dans les deux sens", () => {
+    const p = joueur();
+    p.toggleEncore();
+    expect(p.encore).toBe(true);
+    expect(p.socket.emit).toHaveBeenLastCalledWith("salon_encore", {
+      on: true,
+    });
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).toHaveBeenLastCalledWith("salon_encore", {
+      on: false,
+    });
+  });
+
+  it("hors ligne : rien n'est envoyé ni coché, le joueur est prévenu", () => {
+    const p = joueur(false);
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+    expect(p.feedback?.msg).toBe("Pas reçu, réessaie");
+  });
+
+  it("pendant le décompte de la partie suivante : ignoré", () => {
+    const p = joueur();
+    p.startSec = 4;
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+  });
+
+  it("décompte fini mais manche 1 pas encore là : toujours ignoré", () => {
+    const p = joueur();
+    p.replaying = true;
+    p.toggleEncore();
+    expect(p.encore).toBe(false);
+    expect(p.socket.emit).not.toHaveBeenCalled();
+  });
+});

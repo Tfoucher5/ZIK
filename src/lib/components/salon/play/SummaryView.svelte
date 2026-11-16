@@ -3,30 +3,24 @@
   import { onMount } from 'svelte';
   import { flip } from 'svelte/animate';
   import { podium } from './salonPlayer.svelte.js';
-  import { storyData } from './podiumStory.js';
-  import StoryShare from './StoryShare.svelte';
 
+  /** Fin de manche : la réponse, puis le classement qui bouge. */
   let {
-    phase = 'summary',
     roundEnd = null,
-    finalRanking = null,
     ranking = null,
     username = '',
     teams = null,
-    night = null,
     myTeam = null,
     round = 0,
     total = 10,
-    onLeave,
   } = $props();
 
-  let rows = $derived(podium(phase === 'gameover' ? finalRanking : (roundEnd?.ranking || ranking)));
+  let rows = $derived(podium(roundEnd?.ranking || ranking));
   // Classement d'avant la manche : on l'affiche d'abord, puis les lignes
   // glissent vers leur nouvelle place et les points montent
   let settled = $state(false);
-  let before = $derived(phase === 'summary' && !settled);
   let shown = $derived(
-    before && rows.every(p => p.prevRank)
+    !settled && rows.every(p => p.prevRank)
       ? [...rows].sort((a, b) => a.prevRank - b.prevRank)
       : rows
   );
@@ -34,18 +28,9 @@
     const t = setTimeout(() => (settled = true), 900);
     return () => clearTimeout(t);
   });
-  let myPos = $derived(finalRanking?.me?.rank ?? 0);
-  let story = $derived(phase === 'gameover' ? storyData({ finalRanking, teams, username, myTeam, round }) : null);
-  let teamPos = $derived((teams?.findIndex(t => t.id === myTeam) ?? -1) + 1);
-  let soiree = $derived(night?.games > 1 ? night : null);
-  let nightPos = $derived(
-    soiree?.teams
-      ? soiree.teams.findIndex(t => t.id === myTeam) + 1
-      : (soiree?.ranking.me?.rank ?? 0)
-  );
 </script>
 
-{#if phase === 'summary' && roundEnd}
+{#if roundEnd}
   <div class="sp-answer">
     {#if roundEnd.cover}<img src={roundEnd.cover} alt="">{/if}
     <div>
@@ -65,21 +50,6 @@
       {/if}
     </div>
   </div>
-{:else if phase === 'gameover'}
-  <div>
-    <p class="sx-kicker">Partie terminée</p>
-    {#if teams}
-      <div class="sp-big">{teamPos === 1 ? 'Ton équipe gagne !' : teamPos > 0 ? `Ton équipe finit ${teamPos}e` : 'Fin de partie'}</div>
-    {:else}
-      <div class="sp-big">{myPos === 1 ? 'Tu gagnes !' : myPos > 0 ? `${myPos}e sur ${finalRanking.count}` : 'Fin de partie'}</div>
-    {/if}
-    {#if nightPos > 0}
-      <p class="sp-night">
-        Soirée ({soiree.games} parties) : {soiree.teams ? 'ton équipe est' : 'tu es'}
-        à la <b>{nightPos === 1 ? '1re' : `${nightPos}e`} place</b>{#if !soiree.teams}&nbsp;sur {soiree.ranking.count}{/if}
-      </p>
-    {/if}
-  </div>
 {/if}
 
 {#if teams}
@@ -98,30 +68,19 @@
   {#each shown as p (p.username)}
     {@const moved = settled && p.prevRank ? p.prevRank - p.rank : 0}
     <li class:me={p.username === username} animate:flip={{ duration: 600 }}>
-      <span class="r">{String(before && p.prevRank ? p.prevRank : p.rank).padStart(2, '0')}</span>
+      <span class="r">{String(!settled && p.prevRank ? p.prevRank : p.rank).padStart(2, '0')}</span>
       <span class="n">
         {p.username}
         {#if p.left}<em>a quitté</em>{/if}
         {#if moved > 0}<em class="up">▲{moved}</em>{:else if moved < 0}<em class="down">▼{-moved}</em>{/if}
       </span>
       <span class="p">
-        {before ? p.score - (p.delta ?? 0) : p.score}
-        {#if phase === 'summary' && settled && p.delta > 0}<small>+{p.delta}</small>{/if}
+        {settled ? p.score : p.score - (p.delta ?? 0)}
+        {#if settled && p.delta > 0}<small>+{p.delta}</small>{/if}
       </span>
     </li>
   {/each}
 </ol>
-
-{#if phase === 'gameover'}
-  {#if story}<StoryShare data={story} />{/if}
-  <div class="salon-host-cta">
-    <p>Ça t'a plu ? Avec un compte gratuit, importe <b>tes</b> playlists Deezer et organise ta propre soirée.</p>
-    <a href="/?auth=register&ref=salon-invite" class="sx-btn sx-btn-primary">Créer mon compte</a>
-    <a href="/salon?ref=invite" class="salon-join-link">Ou organiser une soirée sans compte</a>
-    <a href="/zikle" class="salon-join-link">Et demain : devine la chanson du jour sur Zikle</a>
-  </div>
-  <button class="salon-join-link" onclick={onLeave}>Rejoindre une autre soirée</button>
-{/if}
 
 <style>
   .sp-list em {
@@ -136,32 +95,5 @@
   .sp-list small { animation: sum-in 0.4s ease; }
   @keyframes sum-in {
     from { opacity: 0; transform: translateY(4px); }
-  }
-  .sp-night {
-    margin-top: 8px;
-    font-size: 0.92rem;
-    color: var(--mid);
-  }
-  .sp-night b {
-    color: var(--accent);
-  }
-  .salon-host-cta {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 18px;
-    border: 2px solid var(--text);
-    border-radius: 3px;
-  }
-  .salon-host-cta p {
-    font-size: 0.92rem;
-    color: var(--mid);
-    line-height: 1.5;
-  }
-  .salon-host-cta b {
-    color: var(--text);
-  }
-  .salon-host-cta .salon-join-link {
-    text-align: center;
   }
 </style>

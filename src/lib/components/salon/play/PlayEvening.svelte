@@ -1,6 +1,9 @@
 <script>
-  /** Téléphone pendant l'entracte ou le podium final de la soirée. */
-  let { intermission = null, finale = null, myTeam = null } = $props();
+  import { FINALE_WINNER_MS } from '$lib/data/salonOptions.js';
+  import PlayTop from './PlayTop.svelte';
+
+  /** Téléphone pendant l'entracte ou le podium de la soirée. */
+  let { intermission = null, finale = null, myTeam = null, username = '', code = '' } = $props();
 
   let reprise = $derived(
     intermission?.until
@@ -14,21 +17,37 @@
           : (finale.ranking.me?.rank ?? 0))
       : 0
   );
+  // La place n'arrive qu'une fois le vainqueur montré sur la TV
+  const open = $derived(!!finale);
+  let shown = $state(false);
+  $effect(() => {
+    shown = false;
+    if (!open) return;
+    const t = setTimeout(() => (shown = true), FINALE_WINNER_MS);
+    return () => clearTimeout(t);
+  });
+  const medal = $derived(['var(--gold)', 'var(--silver)', 'var(--bronze)'][place - 1] ?? 'var(--accent)');
+  const games = $derived(finale ? `Fin de la soirée · ${finale.games} partie${finale.games > 1 ? 's' : ''}` : '');
 </script>
 
-<div class="sp-evening" class:fin={finale}>
-  {#if finale}
-    <p class="sx-kicker">Fin de la soirée · {finale.games} partie{finale.games > 1 ? 's' : ''}</p>
-    <div class="sp-big">Regarde la TV !</div>
-    {#if place > 0}
-      <div class="sp-place" style="--medal:{['#f6c945', '#d4dbe3', '#d58a4e'][place - 1] ?? 'var(--mid)'}">{place}<sup>{place === 1 ? 're' : 'e'}</sup></div>
-      <p>{finale.teams ? 'Ton équipe termine' : 'Tu termines'} à la {place === 1 ? '1re' : `${place}e`} place de la soirée.</p>
+<div class="sp-evening" class:aplat={shown && place > 0} style:--mc={medal}>
+  <PlayTop {username} {code} />
+  <div class="c" aria-live="polite">
+    {#if finale && shown && place > 0}
+      <p class="k">{games}</p>
+      <div class="place">{place}<span class="e">{place === 1 ? 're' : 'e'}</span></div>
+      <p class="hint">{finale.teams ? 'Ton équipe termine' : 'Tu termines'} à la {place === 1 ? '1re' : `${place}e`} place de la soirée.</p>
+    {:else if finale}
+      <p class="k">{games}</p>
+      <h1 class="h">Regarde la TV&nbsp;!</h1>
+      {#if place > 0}<p class="hint">Ta place arrive juste après le podium.</p>{/if}
+    {:else}
+      <p class="k">Entracte</p>
+      <h1 class="h">{reprise ? `Reprise vers ${reprise}` : 'On reprend très vite'}</h1>
+      <p class="hint">Garde cette page ouverte : la partie suivante arrivera ici.</p>
     {/if}
-  {:else}
-    <p class="sx-kicker">Entracte</p>
-    <div class="sp-big">{reprise ? `Reprise vers ${reprise}` : 'On reprend très vite'}</div>
-    <p>Garde cette page ouverte : la partie suivante arrivera ici.</p>
-  {/if}
+  </div>
+  {#if finale && shown && place > 0}<p class="h bas">Regarde la TV&nbsp;!</p>{/if}
 </div>
 
 <style>
@@ -38,28 +57,77 @@
     z-index: 80;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 12px;
-    padding: 24px;
-    background: var(--bg);
+    gap: 16px;
+    padding: calc(16px + env(safe-area-inset-top)) 20px calc(18px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, #140c1b, #07070b);
+    color: var(--text);
+    overflow-y: auto;
+  }
+  .aplat {
+    background: var(--mc);
+    color: #000;
+  }
+  .c {
+    flex: 1;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 14px;
     text-align: center;
   }
-  .sp-evening p { color: var(--mid); line-height: 1.5; }
-  .sp-evening.fin {
-    background: radial-gradient(ellipse 90% 50% at 50% 100%, rgb(var(--accent-rgb) / 0.2), transparent 70%), #050506;
-    color: #fff;
+  .k {
+    font-family: var(--s-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mid);
   }
-  .sp-place {
+  .aplat .k {
+    color: inherit;
+    opacity: 0.75;
+  }
+  .h {
+    margin: 0;
     font-family: var(--s-cond);
     font-weight: 900;
-    font-size: 7rem;
-    line-height: 1;
-    color: var(--medal);
-    text-shadow: 0 0 30px color-mix(in srgb, var(--medal) 50%, transparent);
-    animation: sp-place 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+    font-size: clamp(2.8rem, 16vw, 4rem);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    text-wrap: balance;
   }
-  .sp-place sup { font-size: 0.35em; }
-  @keyframes sp-place {
-    from { opacity: 0; transform: scale(0.5); }
+  .bas {
+    text-align: center;
+    font-size: 2.75rem;
+    padding-bottom: 12px;
+  }
+  .hint {
+    max-width: 17em;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--mid);
+  }
+  .aplat .hint {
+    color: #000;
+    font-weight: 600;
+    font-size: 19px;
+  }
+  .place {
+    font-family: var(--s-cond);
+    font-weight: 900;
+    font-size: min(260px, 62vw);
+    line-height: 0.8;
+    animation: titre 0.7s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .e {
+    font-size: 0.3em;
+    vertical-align: top;
+    margin-left: 0.04em;
+  }
+  @keyframes titre {
+    from { opacity: 0; transform: translateY(30px) scale(0.8); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .place { animation: none; }
   }
 </style>

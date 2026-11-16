@@ -93,6 +93,7 @@ export function listenHost(h, socket) {
   });
   socket.on("salon_volume", ({ volume }) => h.applyVolume(volume, false));
   socket.on("salon_controls", ({ count }) => (h.controls = count));
+  socket.on("salon_queue", ({ count }) => (h.waiting = count));
   socket.on("salon_paused", ({ paused }) => {
     h.paused = paused;
     if (paused) chrono.stop();
