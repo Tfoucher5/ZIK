@@ -33,6 +33,9 @@ export function scheduleDeparture(
   player._dcTimer = setTimeout(() => {
     const s = salonRooms[salon.code];
     if (s?.players[username] !== player) return;
+    // Partie lancée pendant les 30 s du lobby : délai de grâce d'une partie
+    if (delay === LOBBY_RECONNECT_GRACE && s.game.phase !== "lobby")
+      return scheduleDeparture(s, username, io);
     departPlayer(s, username);
     broadcastRoster(salon.code, io);
     admitWaiting(s, io);

@@ -189,6 +189,24 @@ describe("file d'attente des refusés", () => {
     }
   });
 
+  it("coupure au lobby, partie lancée avant 30 s : place gardée", async () => {
+    vi.useFakeTimers();
+    try {
+      const a = await arrive("w1", "Ana", { wait: true });
+      await coupe(joueurs[0]);
+      vi.advanceTimersByTime(10_000);
+      Object.assign(salon().game, { phase: "round", currentRound: 1 });
+      vi.advanceTimersByTime(21_000);
+      expect(salon().players.J1).toBeDefined();
+      expect(a.de("salon_joined")).toEqual([]);
+      vi.advanceTimersByTime(10 * 60 * 1000);
+      expect(salon().players.J1).toBeUndefined();
+      expect(a.de("salon_joined")).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("en file ailleurs : quitte la file avant d'entrer, jamais admis deux fois", async () => {
     const a = await arrive("w1", "Ana", { wait: true });
     const A = salon();
