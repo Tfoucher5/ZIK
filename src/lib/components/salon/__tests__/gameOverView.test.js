@@ -1,9 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   awards,
+  endResult,
   gameOverShown,
   gameOverView,
+  isReplay,
   qrBigShown,
+  tvAlone,
 } from "../host/gameOverView.js";
 
 const j = (username, score, found = 0, first = 0, extra = {}) => ({
@@ -147,7 +150,10 @@ describe("priorité des écrans de fin", () => {
   const fin = { phase: "gameover", gameOver: { scores: [] } };
   it("fin de partie seule", () => {
     expect(gameOverShown(fin)).toBe(true);
-    expect(gameOverShown({ ...fin, gameOver: null })).toBe(false);
+    // TV rechargée en fin de partie : pas de résultat reçu, la fin reste affichée
+    expect(gameOverShown({ ...fin, gameOver: null })).toBe(true);
+    // Relance demandée : la phase reste gameover pendant le décompte
+    expect(gameOverShown({ ...fin, relaunching: true })).toBe(false);
     expect(gameOverShown({ ...fin, phase: "round" })).toBe(false);
   });
   it("l'entracte, le QR et les pannes passent devant", () => {
@@ -165,5 +171,57 @@ describe("priorité des écrans de fin", () => {
     expect(qrBigShown({ qrBig: true, finale: {} })).toBe(false);
     expect(qrBigShown({ qrBig: true, connLost: true })).toBe(false);
     expect(gameOverShown({ ...fin, qrBig: true, finale: {} })).toBe(true);
+  });
+});
+
+describe("TV rechargée en fin de partie", () => {
+  it("refait le résultat avec la liste des joueurs, sans prix", () => {
+    const h = {
+      gameOver: null,
+      players: [
+        { username: "Sam", score: 900 },
+        { username: "Léa", score: 1500 },
+        { username: "Tom", score: 400, left: true },
+        { username: "Noé", score: 300 },
+      ],
+      teams: null,
+      night: null,
+    };
+    const v = gameOverView(endResult(h), h.players);
+    expect(v.podium.map((p) => p.name)).toEqual(["Léa", "Sam", "Tom"]);
+    expect(v.podium[2].tag).toBe("Parti");
+    expect(v.list.rows.map((r) => r.name)).toEqual(["Noé"]);
+    expect(v.encore.of).toBe(3);
+  });
+
+  it("garde les équipes et la soirée", () => {
+    const teams = [{ id: 1, name: "Bleue", score: 900, members: ["Sam"] }];
+    const night = { games: 2, players: [{ username: "Sam", score: 2000 }] };
+    const r = endResult({ gameOver: null, players: [], teams, night });
+    expect(r.teams).toBe(teams);
+    expect(r.night).toBe(night);
+  });
+
+  it("le résultat reçu passe avant", () => {
+    const gameOver = { scores: [] };
+    expect(endResult({ gameOver, players: [{ username: "A" }] })).toBe(
+      gameOver,
+    );
+  });
+});
+
+describe("TV seule et relance", () => {
+  it("commandes sur la TV tant qu'aucune régie n'est connectée", () => {
+    expect(tvAlone({ controls: null })).toBe(true);
+    expect(tvAlone({ controls: 0 })).toBe(true);
+    expect(tvAlone({ controls: 1 })).toBe(false);
+    expect(tvAlone({ controls: 2 })).toBe(false);
+  });
+
+  it("un décompte après une partie, c'est « On remet ça. »", () => {
+    expect(isReplay("gameover")).toBe(true);
+    expect(isReplay("summary")).toBe(true);
+    expect(isReplay("starting")).toBe(false);
+    expect(isReplay("lobby")).toBe(false);
   });
 });

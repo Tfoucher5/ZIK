@@ -33,7 +33,7 @@
 
 <div class="pz">
   <h1 class="pt">{title}</h1>
-  <div class="sh-eqz vif pe" class:off={step >= 3} aria-hidden="true">
+  <div class="sh-eqz pe" class:vif={step < 3} class:off={step >= 3} aria-hidden="true">
     {#each bars as style, i (i)}<i {style}></i>{/each}
   </div>
   <ol class="pod n{cols.length}">

@@ -92,9 +92,25 @@ const calm = (h) => !h.restarting && !h.restored && !h.connLost;
 
 // Priorité de la TV : podium de soirée > QR en grand > entracte > fin de partie
 export const qrBigShown = (h) => !!h.qrBig && !h.finale && calm(h);
+// Pendant une relance (décompte « On remet ça. »), la phase reste gameover
 export const gameOverShown = (h) =>
   h.phase === "gameover" &&
-  !!h.gameOver &&
+  !h.relaunching &&
   !h.intermission &&
   !qrBigShown(h) &&
   calm(h);
+
+// TV rechargée en fin de partie : le serveur ne renvoie pas le résultat, on
+// le refait avec la liste des joueurs (sans les prix, faute de statistiques)
+export const endResult = (h) =>
+  h.gameOver ?? {
+    scores: [...(h.players ?? [])].sort((a, b) => b.score - a.score),
+    teams: h.teams,
+    night: h.night,
+  };
+
+// Commandes sur la TV seulement si aucune régie n'est connectée (null : pas encore su)
+export const tvAlone = (h) => !h.controls;
+
+// Un décompte de lancement reçu après une partie = on rejoue
+export const isReplay = (phase) => phase === "gameover" || phase === "summary";

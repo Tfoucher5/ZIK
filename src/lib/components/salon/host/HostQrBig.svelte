@@ -6,13 +6,17 @@
    */
   import { salonPlayUrl } from '$lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
+  import CodeTiles from './CodeTiles.svelte';
 
   let { code, onClose = null } = $props();
+
+  // Le focus suit l'écran qui s'ouvre (clavier de la TV seule, lecteur d'écran)
+  const focus = (node) => (node.querySelector('button') ?? node).focus();
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && onClose?.()} />
 
-<section class="qg sh-tv" aria-label="Rejoindre la partie">
+<section class="qg sh-tv" aria-label="Rejoindre la partie" tabindex="-1" use:focus>
   {#if onClose}
     <button class="qr" type="button" onclick={onClose} aria-label="Refermer le QR">
       <QrCode text={salonPlayUrl(code)} />
@@ -24,9 +28,7 @@
     <p class="k"><i></i>Pour rejoindre la partie</p>
     <h1>Scannez<br />pour jouer</h1>
     <p class="u">ou tapez ce code sur <b>zik-music.fr</b></p>
-    <div class="code" aria-label="Code {code}">
-      {#each code.split('') as ch, i (i)}<b>{ch}</b>{/each}
-    </div>
+    <div class="cm"><CodeTiles {code} size="5.4em" /></div>
   </div>
 </section>
 
@@ -89,22 +91,8 @@
     color: var(--text);
     font-weight: 600;
   }
-  .code {
-    display: flex;
-    gap: 0.16em;
-    margin-top: 0.25em;
-    font-family: var(--s-mono);
-    font-weight: 700;
-    font-size: 5.4em;
-  }
-  .code b {
-    display: grid;
-    place-items: center;
-    width: 1.22em;
-    height: 1.5em;
-    border-radius: 0.14em;
-    background: rgb(255 255 255 / 0.09);
-    border-bottom: 0.06em solid rgb(255 255 255 / 0.45);
+  .cm {
+    margin-top: 1.35em;
   }
   @keyframes monte {
     from {

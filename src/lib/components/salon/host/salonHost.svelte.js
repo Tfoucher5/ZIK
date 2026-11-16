@@ -56,6 +56,10 @@ export class SalonHost {
   finale = $state(null);
   // QR en grand (régie ou TV seule), renvoyé par le serveur
   qrBig = $state(false);
+  // Relance demandée (salon_restarted) : la phase reste gameover jusqu'à la manche 1
+  relaunching = $state(false);
+  // Le podium de la partie a déjà été révélé : pas de deuxième fois au remontage
+  overRevealed = false;
   // Intro éclair : la musique est coupée, une reprise après un buzz raté ne la relance pas
   flashCut = false;
   paused = $state(false);
