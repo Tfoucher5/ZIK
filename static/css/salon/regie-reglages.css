@@ -1,0 +1,156 @@
+/* ── Régie ZIK Soirée : onglet Réglages, comme à la création ──────────── */
+
+.rg-seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.rg-seg button {
+  flex: 1 0 auto;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.25s,
+    color 0.25s;
+}
+.rg-seg [aria-checked="true"] {
+  background: var(--text);
+  color: #000;
+}
+.rg-seg .verrou:not([aria-checked="true"]) {
+  color: var(--muted);
+}
+.rg-seg:has(button:disabled) {
+  opacity: 0.5;
+}
+
+.rg-plus {
+  border-bottom: 1px solid var(--line-2);
+}
+.rg-plus summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 10px 0;
+  list-style: none;
+  cursor: pointer;
+}
+.rg-plus summary::-webkit-details-marker {
+  display: none;
+}
+.rg-plus summary .n {
+  align-self: flex-start;
+  padding-top: 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+.rg-plus summary b {
+  display: block;
+  font-family: var(--titre);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.rg-plus summary small {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.rg-plus summary::after {
+  content: "+";
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  font-size: 20px;
+  transition:
+    transform 0.35s var(--out),
+    background 0.25s,
+    color 0.25s;
+}
+.rg-plus[open] summary::after {
+  transform: rotate(45deg);
+  background: #fff;
+  color: #000;
+}
+
+.rg-reg {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.rg-plus > .rg-reg:first-of-type {
+  border-top: 0;
+  padding-top: 2px;
+}
+.rg-reg > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.rg-reg > span .pro-tag {
+  margin: 0;
+}
+.rg-reg > small {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  color: var(--muted);
+}
+.rg-reg.fil {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+}
+.rg-reg.fil .rg-seg button {
+  min-width: 62px;
+  padding: 0 14px;
+}
+.rg-fige {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-align: right;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rg-fige b {
+  display: block;
+  font-family: var(--corps);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-plus summary::after {
+    transition: none;
+  }
+}

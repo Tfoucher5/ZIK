@@ -21,7 +21,7 @@ vi.mock("../../../services/music/trackIssues.js", () => ({
 
 const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
-const { endRound } = await import("../rounds.js");
+const { endRound, finishGame } = await import("../rounds.js");
 const { CODE, CLE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
 
@@ -92,6 +92,42 @@ describe("signaler un titre depuis la régie", () => {
     expect(m.signalements).toEqual([]);
     regie.handlers.salon_report_video({ reason: "x", round: 3 });
     expect(m.signalements[0][0]).toBe("t3");
+  });
+
+  it("titre remplacé : noté dans l'historique, annoncé à la régie seule", () => {
+    salonRooms[CODE].settings.manualNext = true;
+    Object.assign(game().currentTrack, { title: "T", artist: "A" });
+    game().replaced = "France Gall - Ella, elle l'a";
+    endRound(CODE, "Temps écoulé !", h.io);
+    expect(game().history[2]).toMatchObject({
+      answer: "A - T",
+      replaced: "France Gall - Ella, elle l'a",
+    });
+    expect(game().replaced).toBeNull();
+    const envois = h.emissions.filter((e) =>
+      JSON.stringify(e.payload ?? {}).includes("Ella"),
+    );
+    expect(envois).toEqual([
+      {
+        cibles: [`salon:ctrl:${CODE}`],
+        event: "salon_replaced",
+        payload: { round: 3, replaced: "France Gall - Ella, elle l'a" },
+      },
+    ]);
+  });
+
+  it("fin de partie : le titre remplacé ne part ni à la TV ni aux téléphones", () => {
+    game().history[1].replaced = "France Gall - Ella, elle l'a";
+    finishGame(CODE, h.io);
+    const fuites = h.emissions.filter(
+      (e) =>
+        e.cibles.some((c) => !c.startsWith("salon:ctrl:")) &&
+        JSON.stringify(e.payload ?? {}).includes("Ella"),
+    );
+    expect(fuites).toEqual([]);
+    const fin = h.emissions.find((e) => e.event === "salon_game_over");
+    expect(fin.payload.history).toEqual([{ answer: "A" }, { answer: "B" }]);
+    expect(game().history[1].replaced).toBe("France Gall - Ella, elle l'a");
   });
 
   it("manche inconnue ou titre en cours hors manche : rien n'est signalé", () => {

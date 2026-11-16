@@ -8,6 +8,9 @@ export const SALON_INTERMISSIONS = [0, 5, 10, 15, 20, 30];
 export const START_COUNTDOWN_S = 5;
 // Annonce plein écran d'une manche spéciale, avant que la musique démarre
 export const SPECIAL_INTRO_MS = 4000;
+// Podium de la soirée : la TV montre le vainqueur à ce moment, le téléphone
+// donne alors sa place (pas avant, sinon il gâche le suspense)
+export const FINALE_WINNER_MS = 8700;
 // Manches spéciales tirées au hasard (ZIK Pro)
 export const SPECIALS = {
   double: { label: "Points doubles", hint: "Chaque bonne réponse vaut double" },

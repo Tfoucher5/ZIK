@@ -11,21 +11,3 @@ export function playSound(src, volume = 1) {
   a.play().catch(() => {});
   return a;
 }
-
-// Suite d'une séquence : à la fin du son, ou après `ms` s'il n'a pas pu jouer
-export function afterSound(audio, ms, fn) {
-  let done = false;
-  const go = () => {
-    if (done) return;
-    done = true;
-    clearTimeout(t);
-    fn();
-  };
-  const t = setTimeout(go, ms);
-  audio.addEventListener("ended", go, { once: true });
-  return () => {
-    done = true;
-    clearTimeout(t);
-    audio.pause();
-  };
-}

@@ -25,6 +25,15 @@ const row = (p, rank, tags, team) => ({
   color: team && p.team != null ? teamColor(p.team) : null,
 });
 
+const teamRow = (t, i) => ({
+  key: "t" + t.id,
+  rank: i + 1,
+  name: t.name,
+  score: t.score,
+  color: teamColor(t.id),
+  avg: true,
+});
+
 function cap(rows, max) {
   return rows.length > max
     ? { rows: rows.slice(0, max), more: rows.length - max }
@@ -37,14 +46,7 @@ export function gameOverView(over, players = [], max = 7) {
   const tags = awards(scores, teams);
 
   const podium = teams
-    ? over.teams.slice(0, 3).map((t, i) => ({
-        key: "t" + t.id,
-        rank: i + 1,
-        name: t.name,
-        score: t.score,
-        color: teamColor(t.id),
-        avg: true,
-      }))
+    ? over.teams.slice(0, 3).map(teamRow)
     : scores
         .slice(0, 3)
         .map((p, i) => ({ ...row(p, i + 1, tags), color: null }));
@@ -84,6 +86,19 @@ export function gameOverView(over, players = [], max = 7) {
     podium,
     list,
     encore: { n: here.filter((p) => p.encore).length, of: here.length },
+  };
+}
+
+// Podium de la soirée : équipes ou joueurs (médailles sur le podium, couleur
+// d'équipe pour la suite), un joueur parti marqué « Parti »
+export function finaleView(finale) {
+  const teams = !!finale?.teams?.length;
+  const ranked = teams
+    ? finale.teams.map(teamRow)
+    : (finale?.players ?? []).map((p, i) => row(p, i + 1, {}, true));
+  return {
+    podium: ranked.slice(0, 3).map((e) => (teams ? e : { ...e, color: null })),
+    rest: ranked.slice(3),
   };
 }
 
