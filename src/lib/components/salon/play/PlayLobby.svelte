@@ -1,6 +1,7 @@
 <script>
   import { teamColor } from '$lib/data/salonOptions.js';
   import TeamPick from './TeamPick.svelte';
+  import TeamBand from './TeamBand.svelte';
   /** Avant la partie : choix d'équipe, puis attente avec son équipe et le mode de réponse. */
   let { p } = $props();
 
@@ -23,10 +24,9 @@
 {:else}
   <div class="sp-wait" style:--tc={p.team ? teamColor(p.myTeam) : null}>
     {#if p.team}
-      <div class="sp-band">
-        <span>Tu joues pour <b>{p.team.name}</b></span>
-        {#if p.phase === 'lobby'}<button onclick={() => (p.teamOpen = true)}>Changer</button>{/if}
-      </div>
+      <TeamBand name={p.team.name} color={teamColor(p.myTeam)}>
+        {#if p.phase === 'lobby'}<button class="sp-change" onclick={() => (p.teamOpen = true)}>Changer</button>{/if}
+      </TeamBand>
     {/if}
     <p class="sx-kicker sp-ok"><b>●</b> {p.connLost ? 'Reconnexion…' : 'Connecté'} · {p.username}</p>
     <div>
@@ -62,31 +62,7 @@
     flex-direction: column;
     gap: 18px;
   }
-  .sp-band {
-    margin: -22px -16px 0;
-    padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--tc);
-    color: #000;
-    font-family: var(--s-cond);
-    font-weight: 800;
-    font-size: 1.5rem;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-  .sp-band span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .sp-band b {
-    font-weight: 900;
-  }
-  .sp-band button {
+  .sp-change {
     margin-left: auto;
     min-height: 44px;
     padding: 0 4px;

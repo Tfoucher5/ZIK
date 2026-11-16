@@ -84,6 +84,10 @@ export class SalonPlayer {
   // « Changer » d'équipe : la liste revient en plein écran
   teamOpen = $state(false);
   paused = $state(false);
+  // « Une autre ! » demandé par ce joueur à la fin de la partie
+  encore = $state(false);
+  // Partie suivante lancée, manche 1 pas encore arrivée
+  replaying = $state(false);
 
   socket = null;
   revealTimer = null; // délai avant de passer au résumé
@@ -122,12 +126,8 @@ export class SalonPlayer {
     this.guess = "";
   };
 
-  #notReceived = () =>
-    this.showFeedback({
-      type: "miss",
-      correct: false,
-      msg: "Pas reçu, retape",
-    });
+  #notReceived = (msg = "Pas reçu, retape") =>
+    this.showFeedback({ type: "miss", correct: false, msg });
 
   // Verrouillé seulement quand le serveur a reçu la réponse : hors ligne le tap
   // n'est pas envoyé, et sans accusé la case est rendue
@@ -149,6 +149,14 @@ export class SalonPlayer {
           this.#notReceived();
         }
       });
+  };
+
+  // Hors ligne ou pendant le décompte, rien ne part : le serveur refuserait
+  toggleEncore = () => {
+    if (this.startSec > 0 || this.replaying) return;
+    if (!this.socket?.connected) return this.#notReceived("Pas reçu, réessaie");
+    this.encore = !this.encore;
+    this.socket.emit("salon_encore", { on: this.encore });
   };
 
   buzz = () => {
