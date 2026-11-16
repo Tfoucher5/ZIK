@@ -3,6 +3,7 @@ import { isPro } from "../../services/pro.js";
 import { note } from "./journal.js";
 import { staff } from "./players.js";
 import { saveSnapshot } from "./snapshot.js";
+import { admitWaiting } from "./queue.js";
 
 // Passage d'un salon vivant en ZIK Pro (paiement, accès offert, reprise).
 // Appelé aussi depuis les routes HTTP : ne s'appuie que sur globalThis.
@@ -12,6 +13,8 @@ export function grantPro(salon, io) {
   salon.pro = true;
   note(salon, "Salon passé en ZIK Pro");
   if (io) staff(salon.code, io).emit("salon_pro", { pro: true });
+  // Plus de limite : les joueurs en file d'attente entrent
+  admitWaiting(salon, io);
   saveSnapshot(salon);
   return true;
 }

@@ -20,6 +20,8 @@ const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
 const { kickPlayer } = await import("../players.js");
 const { admitWaiting } = await import("../queue.js");
+const { proForHost } = await import("../pro.js");
+const { supportGiftPro } = await import("../admin.js");
 const { CODE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
 
@@ -140,6 +142,25 @@ describe("file d'attente des refusés", () => {
     salon().waiting[0].leftAt = Date.now() - 11 * 60 * 1000;
     kickPlayer(salon(), "J1", h.io);
     expect(b.de("salon_joined")).toHaveLength(1);
+    expect(salon().waiting).toBeUndefined();
+  });
+
+  it("paiement : le salon passe Pro, toute la file connectée entre", async () => {
+    salon().hostUserId = "u1";
+    const a = await arrive("w1", "Ana", { wait: true });
+    const b = await arrive("w2", "Bob", { wait: true });
+    expect(proForHost("u1", h.io)).toBe(1);
+    expect(a.de("salon_joined")).toHaveLength(1);
+    expect(b.de("salon_joined")).toHaveLength(1);
+    expect(Object.keys(salon().players)).toHaveLength(14);
+    expect(salon().waiting).toBeUndefined();
+  });
+
+  it("Pro offert par le support : la file entre", async () => {
+    const a = await arrive("w1", "Ana", { wait: true });
+    supportGiftPro(CODE);
+    expect(salon().proGift).toBe(true);
+    expect(a.de("salon_joined")).toHaveLength(1);
     expect(salon().waiting).toBeUndefined();
   });
 
