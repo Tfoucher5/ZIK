@@ -21,7 +21,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : #489 fusionnée puis annulée : scénario salon rouge 2 fois sur le staging (le 2e téléphone clique sur « Rejoindre » sans effet). Le scénario relancé après l'annulation dit si les dépendances sont en cause ; Dependabot vise maintenant develop
+- **Prochaine étape** : #489 (svelte 5.57.3, vite 8.3.5, kit 2.70.4, nodemailer 10.6.0) annulée par #491 : scénario salon rouge 2 fois avec, vert sans (le 2e téléphone clique sur « Rejoindre » sans effet). Remonter une dépendance à la fois (svelte seul d'abord) avec le scénario salon sur une branche `chore/e2e-*` avant fusion ; nodemailer seul est sans risque pour le salon (failles modérées à corriger)
 
 ## Refonte de l'accueil
 
