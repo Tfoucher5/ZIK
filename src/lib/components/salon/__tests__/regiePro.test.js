@@ -132,6 +132,30 @@ describe("régie : offre, paiement en cours, activé", () => {
     expect(r.offre.entres).toBe(null);
   });
 
+  it("régie gratuite endormie, payée ailleurs : la carte s'affiche au réveil", () => {
+    const { r, h } = regie();
+    h.salon_control_joined({ pro: false, settings: {}, players: [] });
+    h.salon_control_joined({ pro: true, settings: {}, players: [] });
+    expect(r.offre.entres).toEqual({ count: 0, names: [] });
+  });
+
+  it("déjà Pro, reconnexion : pas de nouvelle carte", () => {
+    const { r, h } = regie();
+    h.salon_control_joined({ pro: true, settings: {}, players: [] });
+    h.salon_control_joined({ pro: true, settings: {}, players: [] });
+    expect(r.offre.entres).toBe(null);
+  });
+
+  it("salon_pro à faux : pas de carte, le minuteur s'arrête avec la régie", () => {
+    const { r, h } = regie();
+    r.offre.buy("night");
+    h.salon_pro({ pro: false });
+    expect(r.offre.entres).toBe(null);
+    expect(r.offre.paiement).toBe(true);
+    r.offre.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("salon_pro avant la file vide : la carte garde les noms entrés", () => {
     const { r, h } = regie();
     h.salon_queue({ count: 3, names: FILE });

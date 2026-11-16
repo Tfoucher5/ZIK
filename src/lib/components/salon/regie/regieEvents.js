@@ -15,10 +15,11 @@ export function listenRegie(r, socket) {
     if (resumeIn == null) setTimeout(() => (r.restored = null), 4000);
   });
   socket.on("salon_control_joined", (d) => {
+    const dormait = r.ready && !r.pro;
     r.restarting = false;
     r.ready = true;
     r.pro = d.pro;
-    r.offre.onJoined(d.pro);
+    r.offre.onJoined(d.pro, dormait);
     r.error = "";
     r.settings = d.settings;
     r.reclaims = d.reclaims ?? [];
@@ -178,7 +179,7 @@ export function listenRegie(r, socket) {
   socket.on("salon_pro", ({ pro }) => {
     r.pro = pro;
     r.upsell = null;
-    r.offre.onPro();
+    r.offre.onPro(pro);
   });
   socket.on("salon_closed", () => {
     forgetSalon(r.code);

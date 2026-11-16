@@ -1,6 +1,7 @@
 <script>
   import { teamColor } from '$lib/data/salonOptions.js';
   import { prepChecks, videsTexte } from './prep.js';
+  import { textesFile } from './regiePro.svelte.js';
 
   /**
    * Avant la partie : effectif, quatre contrôles en mots, équipes.
@@ -18,7 +19,7 @@
   {#if attente}<p class="rg-k"><b class="rp-plein" aria-hidden="true">●</b>Complet</p>{/if}
   <h2 class="rp-titre">
     {p.joueurs} joueur{p.joueurs > 1 ? 's' : ''}
-    <span>{attente ? `${attente} attend${attente > 1 ? 'ent' : ''} à l'entrée` : p.equipes ? `${p.equipes.length} équipes` : 'Chacun pour soi'}</span>
+    <span>{attente ? textesFile([], attente).sousTitre : p.equipes ? `${p.equipes.length} équipes` : 'Chacun pour soi'}</span>
   </h2>
 
   {@render children?.()}

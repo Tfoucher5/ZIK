@@ -52,25 +52,28 @@ export class RegiePro {
   };
 
   // salon_pro part avant la file vide : les noms sont encore là
-  onPro = () => {
+  onPro = (pro) => {
+    if (!pro) return;
     this.entres = { count: this.count, names: this.names };
     this.#stop();
   };
 
-  // Régie rouverte ou reconnectée : un paiement lancé d'ici a pu aboutir entre-temps
-  onJoined = (pro) => {
+  // Régie rouverte ou reconnectée : passée en Pro entre-temps (paiement lancé
+  // d'ici, ou d'ailleurs pendant que cette régie, gratuite, dormait)
+  onJoined = (pro, dormait = false) => {
     let at = 0;
     try {
       at = Number(localStorage.getItem(cle(this.#r.code))) || 0;
     } catch {
       /* stockage bloqué : pas de paiement en cours à reprendre */
     }
-    if (!at) return;
     if (pro) {
-      this.entres ??= { count: 0, names: [] };
-      this.#stop();
-    } else this.#wait(at);
+      if (at || dormait) this.entres ??= { count: 0, names: [] };
+      if (at) this.#stop();
+    } else if (at) this.#wait(at);
   };
+
+  destroy = () => clearTimeout(this.#timer);
 
   // Sans noopener : /pro ferme son onglet pour revenir ici. La clé n'est jamais dans l'URL.
   buy = (plan) => {

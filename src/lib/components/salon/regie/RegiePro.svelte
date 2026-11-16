@@ -10,7 +10,8 @@
    */
   let { o, pro, players = [], replie = false } = $props();
 
-  const [soiree, mensuel, annuel] = PLANS;
+  const plan = (id) => PLANS.find((p) => p.id === id);
+  const [soiree, mensuel, annuel] = ['night', 'monthly', 'yearly'].map(plan);
   const etat = $derived(o.entres ? 'actif' : pro ? null : o.paiement ? 'encours' : o.count ? 'offre' : null);
   const t = $derived(textesFile(o.names, o.count));
   const te = $derived(o.entres && textesFile(o.entres.names, o.entres.count));
@@ -72,8 +73,8 @@
   </details>
 {:else}
   <div class="ro-bloc" class:replie>
-  {#if !replie && (attente || neufs.length)}
-    <div class="ro-places" class:ouvert={etat === 'actif'} role="img"
+  {#if !replie && (attente || o.entres?.count)}
+    <div class="ro-places" role="img"
       aria-label={etat === 'actif' ? `${presents.length} joueurs, plus de limite` : `${presents.length} places prises, ${t.sousTitre}`}>
       {#each dedans.slice(0, 24) as p (p.username)}<i style="--tc:{p.team != null ? teamColor(p.team) : 'var(--text)'}"></i>{/each}
       {#if attente}
@@ -81,8 +82,8 @@
         {#each o.names as n, i (i)}<i class="att">{initiale(n)}</i>{/each}
         {#if attente > o.names.length}<i class="att plus">+&nbsp;{attente - o.names.length}</i>{/if}
       {/if}
-      {#each neufs.slice(0, 3) as p (p.username)}<i class="neuf">{initiale(p.username)}</i>{/each}
-      {#if neufs.length > 3}<i class="neuf plus">+&nbsp;{neufs.length - 3}</i>{/if}
+      {#each neufs as p (p.username)}<i class="neuf">{initiale(p.username)}</i>{/each}
+      {#if etat === 'actif' && o.entres.count > neufs.length}<i class="neuf plus">+&nbsp;{o.entres.count - neufs.length}</i>{/if}
     </div>
   {/if}
   {@render carte()}
@@ -126,7 +127,7 @@
   .ro-t strong small { margin-left: 6px; font-family: var(--corps); font-weight: 500; font-size: 14px; color: var(--muted); }
   .ro h2 { margin: 0; font-family: var(--titre); font-weight: 900; font-size: 34px; line-height: 0.92; text-transform: uppercase; }
   .ro > p:not(.rg-k) { margin: 0; font-size: 16px; line-height: 1.4; color: var(--soft); }
-  .ro > p b { color: var(--text); font-weight: 600; }
+  .ro > p:not(.rg-k) b { color: var(--text); font-weight: 600; }
   .ro > small { font-size: 14px; line-height: 1.35; color: var(--muted); text-align: center; }
   .ro-i { color: var(--bleu); }
 

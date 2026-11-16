@@ -227,5 +227,6 @@ export class SalonRegie {
     this.socket?.disconnect();
     this.stopCountdowns?.();
     this.stopWatch?.();
+    this.offre.destroy();
   }
 }
