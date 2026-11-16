@@ -6,6 +6,7 @@ import { cleanupNow } from "./timers.js";
 import { safe } from "../safe.js";
 import { note } from "./journal.js";
 import { dropReclaimOf } from "./reclaim.js";
+import { admitWaiting, leaveQueue, unqueue } from "./queue.js";
 
 // Large : un PC de bar qui se met en veille ou un onglet rechargé ne doit pas
 // fermer la soirée
@@ -14,7 +15,7 @@ const HOST_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 // pendant l'entracte sans que la soirée soit perdue
 const HOST_IDLE_GRACE = 2 * 60 * 60 * 1000; // 2 h
 // Un téléphone verrouillé le temps d'un passage au comptoir garde sa place
-const PLAYER_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
+export const PLAYER_RECONNECT_GRACE = 10 * 60 * 1000; // 10 min
 export const CONTROL_LEAVE_DELAY = 5000;
 
 // Joueur hors ligne : sa place l'attend le temps du délai de grâce
@@ -28,13 +29,20 @@ export function scheduleDeparture(salon, username, io) {
     if (s?.players[username] !== player) return;
     departPlayer(s, username);
     broadcastRoster(salon.code, io);
+    admitWaiting(s, io);
   }, PLAYER_RECONNECT_GRACE);
 }
 
 // Départs : écran TV, régie, joueurs
 export function registerLeave(socket, io) {
+  // Le téléphone ne veut plus attendre une place
+  safe(socket, "salon_queue_leave", {}, () =>
+    unqueue(salonRooms[socket.salonWait], socket),
+  );
+
   safe(socket, "disconnect", {}, () => {
     dropReclaimOf(socket, io);
+    leaveQueue(socket);
     const code = socket.salonCode;
     if (!code) return;
     const salon = salonRooms[code];
@@ -77,6 +85,7 @@ export function registerLeave(socket, io) {
       if (salon.game.phase === "lobby") {
         departPlayer(salon, username);
         broadcastRoster(code, io);
+        admitWaiting(salon, io);
         return;
       }
 

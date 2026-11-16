@@ -6,6 +6,7 @@ import { checkEveryoneDone } from "./rounds.js";
 import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
 import { saveSnapshot } from "./snapshot.js";
+import { admitWaiting } from "./queue.js";
 import {
   emitSplit,
   phoneNight,
@@ -255,5 +256,6 @@ export function kickPlayer(salon, username, io) {
   }
   broadcastRoster(salon.code, io);
   checkEveryoneDone(salon.code, io);
+  admitWaiting(salon, io);
   return true;
 }
