@@ -3,6 +3,7 @@
 // dans salon.departed, et retrouvent leurs points s'ils reviennent.
 
 import { note } from "./journal.js";
+import { qcmPoints } from "./specials.js";
 
 export const departed = (salon) => Object.values(salon.departed ?? {});
 
@@ -11,6 +12,17 @@ export function departPlayer(salon, username) {
   delete salon.players[username];
   const inGame = !["lobby", "gameover"].includes(salon.game.phase);
   if (!inGame && !p.night) return;
+  // QCM : la fin de manche ne note que salon.players, sa réponse juste est notée ici
+  const game = salon.game;
+  if (
+    game.phase === "round" &&
+    salon.settings.answerMode === "multiple" &&
+    p._fullFoundCounted &&
+    p._choiceIndex === game.correctChoiceIndex
+  ) {
+    p.score += qcmPoints(salon, p);
+    p.stats.found++;
+  }
   // Lobby : un téléphone rechargé revient aussitôt, pas la peine de le noter
   note(salon, `${username} est parti`);
   (salon.departed ??= {})[p.token] = {

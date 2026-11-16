@@ -1,13 +1,7 @@
 import { calcSpeedBonus } from "../../services/music/playlist.js";
 import { cleanString } from "../../services/music/trackText.js";
 import { salonRooms } from "../../state.js";
-import {
-  calcQcmPoints,
-  closeMsg,
-  gradeGuess,
-  markFound,
-  partName,
-} from "../scoring.js";
+import { closeMsg, gradeGuess, markFound, partName } from "../scoring.js";
 import {
   broadcastRoster,
   broadcastScores,
@@ -15,7 +9,7 @@ import {
   staff,
 } from "./players.js";
 import { checkEveryoneDone } from "./rounds.js";
-import { roundMult } from "./specials.js";
+import { qcmPoints, roundMult } from "./specials.js";
 import { int, safe, str } from "../safe.js";
 // Téléphones des joueurs : équipe et réponses
 export function registerAnswers(socket, io) {
@@ -170,8 +164,7 @@ export function scoreQcmRound(salon, io) {
     let points = 0;
     // Réseau coupé après avoir répondu : la réponse enregistrée compte quand même
     if (correct) {
-      const max = game.timerMax ?? salon.settings.roundDuration;
-      points = calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(game);
+      points = qcmPoints(salon, p);
       p.score += points;
       p.foundArtist = true;
       p.foundTitle = true;

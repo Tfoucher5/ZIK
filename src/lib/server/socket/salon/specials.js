@@ -1,4 +1,5 @@
 import { SPECIALS } from "../../../data/salonOptions.js";
+import { calcQcmPoints } from "../scoring.js";
 
 const KINDS = Object.keys(SPECIALS);
 
@@ -14,3 +15,8 @@ export function drawSpecial(salon) {
 }
 
 export const roundMult = (game) => (game.special === "double" ? 2 : 1);
+
+export function qcmPoints(salon, p) {
+  const max = salon.game.timerMax ?? salon.settings.roundDuration;
+  return calcQcmPoints(p._choiceTimeTaken ?? max, max) * roundMult(salon.game);
+}

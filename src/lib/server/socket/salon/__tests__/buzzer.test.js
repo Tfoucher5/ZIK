@@ -19,6 +19,7 @@ vi.mock("../session.js", () => ({
 const { salonRooms } = await import("../../../state.js");
 const { registerBuzzer } = await import("../buzzer.js");
 const { registerEvening } = await import("../evening.js");
+const { departPlayer } = await import("../departed.js");
 const { addPlayer, broadcastRoster } = await import("../players.js");
 const { drawSpecial, roundMult } = await import("../specials.js");
 
@@ -111,6 +112,16 @@ describe("mode buzzer", () => {
     expect(salon.players.Bob.score).toBeGreaterThan(800);
     expect(salon.game.phase).toBe("summary");
     expect(salon.game.firstFinder).toBe("Bob");
+  });
+
+  it("bonne réponse d'un joueur parti pendant le jugement : points gardés", () => {
+    const salon = salonDeTest();
+    const { token } = salon.players.Bob;
+    joueur("Bob")("salon_buzz");
+    departPlayer(salon, "Bob");
+    regie()("salon_buzz_judge", { correct: true });
+    expect(salon.departed[token].score).toBeGreaterThan(800);
+    expect(salon.game.phase).toBe("summary");
   });
 
   it("tout le monde s'est trompé : fin de manche", () => {
