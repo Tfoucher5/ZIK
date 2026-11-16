@@ -1,6 +1,11 @@
 /* /soiree : sections, en-têtes, sections épinglées et fonds (DESIGN.md v2).
    Le fond de chaque section est un dégradé fixe (data-bg), pas de WebGL. */
 
+/* Sans défilement doux : celui que lance le navigateur vers l'ancre au
+   chargement continue après le recalage de replacer() et dépasse la cible */
+html:has(.sv) {
+  scroll-behavior: auto;
+}
 .sv {
   background: var(--bg);
 }
