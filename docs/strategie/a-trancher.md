@@ -95,3 +95,12 @@ Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plu
 - **Options** : valider · retoucher · refuser
 - **Recommandation** : la regarder écran par écran ; points ouverts : créer une soirée depuis un téléphone (l'onglet devient la TV), bloc SEO de /salon à replacer, « Prépare la TV » au tutoiement, « tapez le code sur zik-music.fr » au lieu de l'adresse /salon/play
 - **Lien** : https://claude.ai/artifact/8kDW3iEd9fTamoxy6A4Fn2
+
+## Release v3.32 : tes deux tests avant la mise en prod
+
+- **Chantier** : Release (fiabilité + pages refaites)
+- **Depuis** : 16/11
+- **Question** : Tout est sur le staging et la recette automatique est verte (32 tests, pages refaites en 390/1440/1920, ancres, digicode, régie). Il manque deux tests qu'un humain doit faire : 1) un achat en mode test Stripe sur le staging (/pro → Soirée 24 h → carte de test 4242 4242 4242 4242 → page merci → le salon passe Pro) ; 2) une vraie soirée sur le staging avec plusieurs téléphones dont un iPhone (scroll des vidéos, coupure de réseau, reprise). Tu les fais quand, ou je fais le 1 moi-même avec Claude in Chrome sur le staging ?
+- **Options** : je fais les deux · Claude fait l'achat test, je fais la soirée · on attend
+- **Recommandation** : Claude fait l'achat test (carte de test Stripe, staging uniquement), tu fais la soirée avec 2-3 téléphones dont ton iPhone
+- **Lien** : https://github.com/Tfoucher5/ZIK/pull/428
