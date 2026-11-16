@@ -8,7 +8,7 @@ export const NEWS = [
     date: "2026-11-16",
     version: "3.33.0",
     tag: "Nouveauté",
-    title: "Une soirée plus simple à préparer et à rejoindre",
+    title: "Des soirées plus simples, de la création au podium",
     summary:
       "ZIK Soirée : création refaite, « Prépare la TV » avant d'afficher le code, et un lobby lisible de loin.",
     items: [
@@ -17,6 +17,9 @@ export const NEWS = [
       "Le lobby de la TV se lit de loin, même avec beaucoup de joueurs : le code en grand, les derniers arrivés et le compte des autres.",
       "Sur le téléphone, le code lu dans le QR s'affiche en tuiles, il ne reste que le pseudo à taper. Le choix d'équipe prend tout l'écran.",
       "La régie affiche une liste de vérifications avant la partie (TV, son, musique, joueurs) et un seul bouton pour lancer.",
+      "Fin de partie refaite sur la TV : le podium monte place par place, le classement à côté, et le QR reste à l'écran pour ceux qui arrivent. La régie peut l'afficher en grand.",
+      "Sur le téléphone, ta place en grand, les écarts avec les autres, et un bouton « Une autre ! » pour dire à l'hôte qu'on veut rejouer. La story à partager est refaite.",
+      "La régie est refaite : onglets Direct, Joueurs et Réglages plus clairs, et « Lancer la partie suivante » en un geste.",
       "Soirée gratuite complète : les joueurs en plus attendent sur leur téléphone, leur pseudo est gardé, et ils entrent tout seuls dès qu'une place se libère.",
     ],
     proItems: [
