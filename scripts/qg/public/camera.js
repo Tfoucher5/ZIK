@@ -106,6 +106,7 @@ export class Camera {
   voler(cadre, y, recul = 1) {
     this.y = y;
     const d = this.cadrer(cadre, false) * recul;
+    this.c.maxDistance = Math.max(this.c.maxDistance, d * 1.3);
     const [x0, x1, z0, z1] = cadre;
     this.vol = {
       cible: new THREE.Vector3((x0 + x1) / 2, y, (z0 + z1) / 2 + 0.5),
@@ -139,7 +140,11 @@ export class Camera {
       const recul = this.camera.position.clone().sub(this.c.target);
       recul.setLength(d + (this.vol.distance - d) * k);
       this.camera.position.copy(this.c.target).add(recul);
-      if (this.c.target.distanceTo(this.vol.cible) < 0.05) this.vol = null;
+      if (
+        this.c.target.distanceTo(this.vol.cible) < 0.05 &&
+        Math.abs(this.distance() - this.vol.distance) < 0.5
+      )
+        this.vol = null;
     }
     this.c.update();
     if (this.bornes && !this.vol) {

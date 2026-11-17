@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { toile } from "./meubles.js";
 import { avancer, position, voitures } from "./ville-plan.js";
 
-export const RUE = -36;
+// La rue est au niveau du hall (RDC), juste sous sa dalle.
+export const RUE = -0.05;
 export const RAYON = 250;
 export const vif = (c, k) => new THREE.Color(c).multiplyScalar(k);
 const M = new THREE.Matrix4();

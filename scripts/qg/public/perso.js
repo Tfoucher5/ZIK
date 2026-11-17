@@ -4,7 +4,6 @@ import { construire } from "./perso-corps.js";
 import { tenue } from "./perso-tenue.js";
 
 const VITESSE = 1.4;
-const hasard = (t) => t[Math.floor(Math.random() * t.length)];
 const vers = (a, b, k) => a + (b - a) * k;
 
 export class Perso {
@@ -18,7 +17,6 @@ export class Perso {
       assis: false,
       actif: false,
     });
-    this.pause = 3 + Math.random() * 10;
     this.phase = Math.random() * 6;
     this.g = new THREE.Group();
     scene.add(this.g);
@@ -62,16 +60,6 @@ export class Perso {
     this.actif = actif;
     this.lab.element.classList.toggle("repos", !actif);
     this.act.textContent = actif ? texte : "";
-  }
-
-  // Au repos : alterne entre son poste et une pause libre (cuisine, salon, cabine, toilettes…).
-  flaner(dt, pauses) {
-    this.pause -= dt;
-    if (this.pause > 0 || this.chemin.length) return;
-    this.pause = 10 + Math.random() * 20;
-    if (this.but === this.siege && pauses.length && Math.random() < 0.5)
-      this.aller(hasard(pauses));
-    else this.aller(this.siege);
   }
 
   // Avance d'un pas vers le prochain point du chemin ; vrai si le perso marche.

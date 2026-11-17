@@ -44,6 +44,18 @@ const RENFORTS = [
   { nom: "Jules", l: 1 },
 ];
 
+// Couleur du badge de chaque pôle.
+export const COULEURS = {
+  ceo: "#fbbf24",
+  argent: "#F4E04D",
+  operations: "#FF8C42",
+  produit: "#8C7BFF",
+  tech: "#5BC0EB",
+  marketing: "#FF4F9A",
+  board: "#c026d3",
+  renforts: "#94A3B8",
+};
+
 // Un agent hors de la table ou une copie reçoit un prénom stable tiré de son identifiant.
 export function fiche(id, role) {
   if (EQUIPE[id]) return EQUIPE[id];
