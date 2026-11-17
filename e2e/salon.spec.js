@@ -99,14 +99,20 @@ test("soirée complète jusqu'au podium", async ({ browser, request }) => {
       // La reconnexion renvoie le même titre : la réponse dévoilée le reste
       await regie.context().setOffline(true);
       await expect(regie.getByText("Connexion perdue.")).toBeVisible();
-      const ws = regie.waitForEvent("websocket", { timeout: 30_000 });
+      let rejoint = null;
+      const surWs = (ws) => {
+        rejoint = ws.waitForEvent("framereceived", {
+          predicate: (f) => String(f.payload).includes("salon_control_joined"),
+          timeout: 30_000,
+        });
+      };
+      regie.on("websocket", surWs);
       await regie.context().setOffline(false);
-      await (
-        await ws
-      ).waitForEvent("framereceived", {
-        predicate: (f) => String(f.payload).includes("salon_control_joined"),
-        timeout: 30_000,
-      });
+      await expect(regie.getByText("Connexion perdue.")).toBeHidden();
+      regie.off("websocket", surWs);
+      // Serveur local (branche chore/e2e-*) : le mode hors ligne ne coupe pas un
+      // WebSocket vers localhost, aucune nouvelle connexion n'est ouverte
+      if (rejoint) await rejoint;
       // La trame est vue par Playwright avant que la page la traite
       await regie.waitForTimeout(1000);
       await expect(titreRegie).not.toHaveAttribute(

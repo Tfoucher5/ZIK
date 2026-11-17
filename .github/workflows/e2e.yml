@@ -19,6 +19,8 @@ jobs:
   salon:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      LOCAL: ${{ startsWith(github.ref_name, 'chore/e2e-') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,15 +29,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      # Valeurs factices comme dans ci.yml : le build ne voit jamais les secrets
+      - name: Build de la branche
+        if: env.LOCAL == 'true'
+        run: npm run build
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_ANON_KEY: ci
+          SUPABASE_SERVICE_KEY: ci
       - name: Serveur de la branche
-        if: startsWith(github.ref_name, 'chore/e2e-')
+        if: env.LOCAL == 'true'
         env:
           SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
           ORIGIN: http://localhost:3000
         run: |
-          npm run build
           nohup node server.js > "$RUNNER_TEMP/serveur.log" 2>&1 &
           for i in $(seq 60); do curl -sf http://localhost:3000/healthz && exit 0; sleep 1; done
           cat "$RUNNER_TEMP/serveur.log"; exit 1
@@ -46,7 +55,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
-          E2E_URL: ${{ startsWith(github.ref_name, 'chore/e2e-') && 'http://localhost:3000' || '' }}
+          E2E_URL: ${{ env.LOCAL == 'true' && 'http://localhost:3000' || '' }}
         run: npx playwright test
       - uses: actions/upload-artifact@v4
         if: failure()
