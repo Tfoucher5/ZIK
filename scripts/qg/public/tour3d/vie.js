@@ -9,15 +9,15 @@ import { versLocal } from "./repere.js";
 // Ces métiers restent à leur poste ; les autres se réunissent dans la salle du pôle dès qu'ils sont deux.
 const AU_POSTE = ["dev", "test-writer", "reviewer", "recette", "incident"];
 const RENFORTS = ["wrecking-crew", "funk-brothers"];
-const debout = (p) => ({
+export const debout = (p) => ({
   place: new THREE.Vector3(p.x, 0, p.z),
   angle: 0,
   debout: true,
 });
 // Sur le parvis, devant le tambour du hall et devant le café public.
-const PARVIS = debout(versLocal(-1.6, 12.6));
+export const PARVIS = debout(versLocal(-1.6, 12.6));
 const TERRASSE = debout(versLocal(5, 27));
-const DEHORS = { niveau: "n0", but: PARVIS, dehors: true };
+export const DEHORS = { niveau: "n0", but: PARVIS, dehors: true };
 
 // La vie de la tour : chacun à son poste, en réunion ou dans sa journée, d'étage en étage par les ascenseurs.
 export class Vie {
@@ -92,7 +92,7 @@ export class Vie {
     if (!p) return;
     p.retire = true;
     p.g.parent?.remove(p.g);
-    p.lab.element.remove();
+    p.lab?.element.remove();
     this.persos.delete(id);
   }
 
@@ -116,7 +116,6 @@ export class Vie {
   cible(p, h) {
     if (p.actif) return p.reunion ?? p.poste;
     const c = creneau(h, p.id);
-    if (c === "maison") return DEHORS;
     const l = c !== "poste" && lieu(c, p.id, h);
     if (!l) return p.poste;
     const ici = this.s.interieurs[l.niveau].lieux[l.piece]?.sieges;
@@ -168,7 +167,7 @@ export class Vie {
     const enSeance = new Set(seance);
     const poles = {};
     for (const [id, p] of this.persos) {
-      if (p.visiteur) continue;
+      if (p.visiteur || p.pnj) continue;
       const texte = activite.get(id);
       p.etat(texte != null, texte ?? "");
       p.reunion = null;
@@ -194,7 +193,8 @@ export class Vie {
   tick() {
     const h = this.s.heure();
     for (const p of this.persos.values())
-      if (!p.visiteur) this.avancer(p, this.cible(p, h));
+      if (!p.visiteur && !p.pnj) this.avancer(p, this.cible(p, h));
+    this.foule?.tick(h);
   }
 
   // Passants du café public : ils entrent par la rue, s'assoient, repartent, sans passer les portiques.
@@ -245,7 +245,9 @@ export class Vie {
       this.visiteur(this.s.heure());
     }
     for (const p of this.persos.values()) {
-      p.animer(dt, t);
+      // Hors du niveau regardé, un perso avance sans bouger les membres.
+      if (p.g.visible && p.g.parent?.visible && this.vu(p)) p.animer(dt, t);
+      else p.marcher(dt);
       if (p.arrive && !p.chemin.length) {
         const fin = p.arrive;
         p.arrive = null;
@@ -254,15 +256,18 @@ export class Vie {
     }
   }
 
-  // Étiquettes des agents absents, en voyage ou hors du niveau regardé : masquées.
+  vu(p) {
+    return this.choix === "ville" || p.niveau === this.choix;
+  }
+
+  // Étiquettes des agents absents, en voyage ou hors du niveau regardé : masquées. Ombres sur ce niveau seul.
   etiquettes(choix) {
-    for (const p of this.persos.values())
-      if (
-        !p.g.visible ||
-        !p.g.parent?.visible ||
-        (choix !== "ville" && p.niveau !== choix)
-      )
+    this.choix = choix;
+    for (const p of this.persos.values()) {
+      p.ombrer(p.niveau === choix);
+      if (p.lab && (!p.g.visible || !p.g.parent?.visible || !this.vu(p)))
         p.lab.element.style.display = "none";
+    }
   }
 
   presents() {

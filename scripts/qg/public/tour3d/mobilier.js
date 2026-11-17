@@ -1,6 +1,7 @@
 // Un meuble du plan → un objet 3D. Les rectangles ont leur grand côté sur l'axe x local.
 import { MAT, boite, cylindre, chaise } from "../meubles.js";
 import { versLocal } from "./repere.js";
+import { rotation } from "./sens.js";
 import {
   M,
   groupe,
@@ -58,7 +59,7 @@ const SALON = {
   canape: (g, l, p) => {
     const m = mat("#59606e", { roughness: 1 });
     boite(g, l, 0.42, p, m, 0, 0.21, 0);
-    boite(g, l, 0.5, 0.22, m, 0, 0.62, -p / 2 + 0.11);
+    boite(g, l, 0.5, 0.22, m, 0, 0.62, p / 2 - 0.11);
     for (const s of [-1, 1])
       boite(g, 0.2, 0.25, p, m, s * (l / 2 - 0.1), 0.55, 0);
     const n = Math.max(1, Math.floor(l / 0.8));
@@ -71,7 +72,7 @@ const SALON = {
         mat("#6b7382", { roughness: 1 }),
         -l / 2 + (i + 0.5) * (l / n),
         0.47,
-        0.08,
+        -0.08,
       );
   },
   bar: (g, l, p) => {
@@ -230,7 +231,7 @@ export function meuble3d(parent, m, c) {
   }
   if (m.w === undefined) {
     const p = versLocal(m.x, m.y);
-    const g = groupe(parent, p.x, p.z);
+    const g = groupe(parent, p.x, p.z, rotation(m, c.piece));
     return (PONCTUELS[m.type] ?? ((g) => inconnu(g, m.type)))(
       g,
       m.r ?? 0.3,
@@ -240,7 +241,7 @@ export function meuble3d(parent, m, c) {
   }
   const p = versLocal(m.x + m.w / 2, m.y + m.h / 2);
   const hz = m.w >= m.h;
-  const g = groupe(parent, p.x, p.z, hz ? 0 : Math.PI / 2);
+  const g = groupe(parent, p.x, p.z, rotation(m, c.piece));
   const [l, q] = hz ? [m.w, m.h] : [m.h, m.w];
   return (RECTS[m.type] ?? ((g) => inconnu(g, m.type, l, q)))(g, l, q, c, m);
 }

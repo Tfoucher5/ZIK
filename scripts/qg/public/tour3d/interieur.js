@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { MAT, plante, solForme, titre } from "../meubles.js";
 import { ZIK } from "../deco.js";
 import { lieux } from "../tour/plan.js";
-import { versLocal } from "./repere.js";
+import { CENTRE, versLocal } from "./repere.js";
 import {
   airePoly,
   bureaux,
@@ -68,6 +68,7 @@ export function interieur(groupe, niveau) {
   const anime = (f) => fonctions.push(f);
   const lu = lireNiveau(niveau);
   const ecrans = {};
+  const tousEcrans = [];
 
   cloisons(groupe, niveau, h, anime);
 
@@ -91,10 +92,11 @@ export function interieur(groupe, niveau) {
     const c = { piece: p, zik: ecranZik(p), hauteur: h, anime };
     for (const m of p.mobilier) {
       if (niveau.id === "toit" && TOIT_STRUCTURE.has(m.type)) continue;
-      const postes = bureaux(m);
+      const postes = bureaux(m, p);
       if (!postes.length || m.type === "comptoir") meuble3d(groupe, m, c);
       for (const b of postes) {
         const ecran = bureau3d(groupe, b, c.zik ? ZIK.magenta : NEUTRE);
+        tousEcrans.push({ x: b.x + CENTRE.x, y: b.z + CENTRE.y, ecran });
         if (lu.postes[b.occupant]?.piece === p.id) ecrans[b.occupant] = ecran;
       }
     }
@@ -131,6 +133,7 @@ export function interieur(groupe, niveau) {
     pauses,
     lieux: salles,
     lampes,
+    ecrans: tousEcrans,
     animer: (dt, t) => fonctions.forEach((f) => f(dt, t)),
   };
 }

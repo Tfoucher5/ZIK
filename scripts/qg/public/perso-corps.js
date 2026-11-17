@@ -56,6 +56,10 @@ const G = {
   cercle: new THREE.TorusGeometry(0.135, 0.012, 6, 24),
   pointe: new THREE.ConeGeometry(0.018, 0.06, 4),
   aura: new THREE.CircleGeometry(0.75, 40),
+  tablier: new THREE.BoxGeometry(0.3, 0.7, 0.02),
+  gilet: new THREE.CylinderGeometry(0.208, 0.168, 0.42, 10),
+  chariot: new THREE.BoxGeometry(0.42, 0.5, 0.34),
+  seau: cyl(0.22, 0.12, 0.1),
 };
 const V = new THREE.Shape([
   new THREE.Vector2(-0.075, 0),
@@ -109,11 +113,14 @@ function tete(buste, t) {
   const p = pivot(buste, 0, 0.64);
   const crane = piece(p, G.tete, peau, 0, 0.16);
   crane.scale.y = 1.1;
-  for (const s of [-1, 1]) {
-    piece(p, G.oeil, YEUX, s * 0.052, 0.18, 0.135);
-    piece(p, G.oreille, peau, s * 0.148, 0.15, 0).scale.z = 0.6;
+  // Les PNJ, vus de loin et en nombre, n'ont ni yeux, ni oreilles, ni nez : moins d'objets à dessiner.
+  if (t.rang !== "pnj") {
+    for (const s of [-1, 1]) {
+      piece(p, G.oeil, YEUX, s * 0.052, 0.18, 0.135);
+      piece(p, G.oreille, peau, s * 0.148, 0.15, 0).scale.z = 0.6;
+    }
+    piece(p, G.nez, peau, 0, 0.14, 0.152).rotation.x = Math.PI / 2;
   }
-  piece(p, G.nez, peau, 0, 0.14, 0.152).rotation.x = Math.PI / 2;
   piece(p, G.coupe, cheveu, 0, 0.17, -0.012).rotation.x = -0.32;
   if (t.longs) {
     piece(p, G.longs, cheveu, 0, 0.05, -0.1);
@@ -168,7 +175,11 @@ function tenueBuste(buste, t, badge) {
     if (t.rang === "fondateur") piece(buste, G.pochette, OR, -0.1, 0.42, 0.12);
     return;
   }
-  piece(buste, G.badge, mat(badge, 0.5), 0.09, 0.3, 0.115);
+  if (t.rang !== "pnj")
+    piece(buste, G.badge, mat(badge, 0.5), 0.09, 0.3, 0.115);
+  if (t.tablier) piece(buste, G.tablier, mat(t.tablier), 0, 0.15, 0.125);
+  if (t.gilet)
+    piece(buste, G.gilet, mat(t.gilet, 0.5), 0, 0.33, 0).scale.z = 0.66;
   if (t.style === "sweat")
     piece(buste, G.capuche, mat(t.haut), 0, 0.55, -0.1).scale.set(
       1.25,
@@ -192,6 +203,10 @@ export function construire(t, badge, id) {
   const tt = tete(buste, t);
   const [bg, bd] = [-1, 1].map((s) => bras(buste, t, s));
   const [jg, jd] = [-1, 1].map((s) => jambe(racine, t, s));
+  if (t.chariot) {
+    piece(racine, G.chariot, mat("#94a3b8", 0.5), 0, 0.3, 0.55);
+    piece(racine, G.seau, mat("#facc15", 0.5), 0, 0.66, 0.55);
+  }
   racine.traverse((o) => (o.userData.id = id));
   let aura = null;
   if (t.rang === "fondateur") {

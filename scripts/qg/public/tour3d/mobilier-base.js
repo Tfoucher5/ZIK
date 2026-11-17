@@ -1,3 +1,11 @@
+// Convention de sens du mobilier 3D (vérifiée sur meubles.js) :
+// - Angle = rotation.y de three. Un objet tourné de a envoie son +z local vers (sin a, cos a) dans le plan (x est, z = y du plan, sud).
+// - Personnage : il regarde son +z local ; une place { angle } le fait regarder vers (sin angle, cos angle).
+// - Siège (chaise(…, angle) de meubles.js, fauteuil, canapé, rang de sièges) : dossier en +z local, l'usager regarde le -z local,
+//   donc vers (-sin a, -cos a) ; une chaise vers +z (sud) prend a = π, et le personnage assis prend a + π.
+// - Meuble servi (poste, bureau3d, régie, borne, comptoir, bar, scène) : l'usager ou le public est côté +z local et regarde -z ;
+//   les écrans (moniteur, ecran) s'ouvrent vers +z, vers lui. Exception : tapis de course et rameur, l'usager regarde +x local.
+// - Rectangle du plan : grand côté sur x local, rotation 0 ou π à plat, ±π/2 debout, choisie par sens.js selon la pièce.
 import * as THREE from "three";
 import { MAT, boite, cylindre, ecran } from "../meubles.js";
 

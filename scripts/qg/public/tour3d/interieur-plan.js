@@ -1,6 +1,7 @@
 // Lecture du plan pour les intérieurs 3D, sans three : sols, murs percés des portes, postes, sièges.
 import { TRAME, lieux } from "../tour/plan.js";
 import { versLocal } from "./repere.js";
+import { rotation, versPlan } from "./sens.js";
 
 const SOLS = [
   ["gazon", /arbres|jardin|atrium/],
@@ -102,7 +103,7 @@ function bureau(occupant, x, y, l, p, nord, sorte) {
   };
 }
 
-export function bureaux(m) {
+export function bureaux(m, piece) {
   if (m.type === "ilot")
     return Array.from({ length: m.n * 2 }, (_, k) => {
       const i = k % m.n;
@@ -119,8 +120,12 @@ export function bureaux(m) {
     });
   if (m.type === "poste")
     return [bureau(m.occupant, m.x, m.y, m.w, m.h, m.a !== 180, "poste")];
-  if (m.type === "banque" || (m.type === "comptoir" && m.occupant))
-    return [bureau(m.occupant, m.x, m.y, m.w, m.h, true, m.type)];
+  // Agent de la banque face à la pièce, barman du côté opposé aux tabourets.
+  if (m.type === "banque" || (m.type === "comptoir" && m.occupant)) {
+    const t = rotation(m, piece);
+    const nord = m.type === "banque" ? t === Math.PI : t === 0;
+    return [bureau(m.occupant, m.x, m.y, m.w, m.h, nord, m.type)];
+  }
   return [];
 }
 
@@ -132,8 +137,8 @@ const siege = (x, y, cx, cy, debout = false) => {
   return { x: p.x, z: p.z, angle: vers(cx - x, cy - y), debout };
 };
 
-// Sièges et places d'usage d'un meuble, en coordonnées locales, tournés vers ce qu'on regarde.
-export function sieges(m) {
+// Sièges et places d'usage d'un meuble, en coordonnées locales, tournés vers ce qu'on regarde (sens.js).
+export function sieges(m, piece) {
   const { type, x, y, w, h, r } = m;
   const cx = x + (w ?? 0) / 2;
   const cy = y + (h ?? 0) / 2;
@@ -171,50 +176,44 @@ export function sieges(m) {
       );
     });
   }
-  if (type === "canape" || (type === "banc" && w)) {
-    const hz = w >= h;
-    const n = Math.max(1, Math.floor((hz ? w : h) / 0.8));
-    return le(n, (i) => {
-      const c = (i + 0.5) * ((hz ? w : h) / n);
-      return hz
-        ? siege(x + c, y + h * 0.6, x + c, y + h + 1)
-        : siege(x + w * 0.6, y + c, x + w + 1, y + c);
-    });
+  const t = rotation(m, piece);
+  if (type === "chaise") {
+    const p = local(x, y);
+    return [{ x: p.x, z: p.z, angle: t + Math.PI, debout: false }];
   }
-  if (type === "chaise") return [siege(x, y, x, y + 1)];
-  if (type === "comptoir" || type === "bar") {
-    const hz = w >= h;
-    const n = m.n ?? Math.max(1, Math.floor((hz ? w : h) / 0.8));
-    return le(n, (i) => {
-      const c = (i + 0.5) * ((hz ? w : h) / n);
-      return hz
-        ? siege(x + c, y + h + 0.4, x + c, y, !m.n)
-        : siege(x + w + 0.4, y + c, x, y + c, !m.n);
-    });
-  }
-  if (["tapis-de-course", "tapis", "borne"].includes(type))
-    return [siege(cx, cy, cx, y - 1, true)];
+  if (w === undefined) return [];
+  // Usager en (lx, lz) local : il regarde le -z local, ou le +x local sur un appareil de sport.
+  const [l, q] = w >= h ? [w, h] : [h, w];
+  const pose = (lx, lz, debout = false, versX = false) => {
+    const p = local(...versPlan(cx, cy, t, lx, lz));
+    const angle = versX ? Math.atan2(Math.cos(t), -Math.sin(t)) : t + Math.PI;
+    return { x: p.x, z: p.z, angle, debout };
+  };
+  const rang = (pas, lz, debout = false) => {
+    const n = m.n ?? Math.max(1, Math.floor(l / pas));
+    return le(n, (i) => pose(-l / 2 + (i + 0.5) * (l / n), lz, debout));
+  };
+  const autour = (lx, lz) => {
+    const [px, py] = versPlan(cx, cy, t, lx, lz);
+    return siege(px, py, cx, cy, true);
+  };
+  if (type === "canape" || type === "banc") return rang(0.8, -q * 0.1);
+  if (type === "rang-de-sieges") return rang(0.55, 0);
+  if (type === "comptoir" || type === "bar")
+    return rang(0.8, q / 2 + 0.4, !m.n);
+  if (type === "borne") return [pose(0, q / 2 + 0.4, true)];
+  if (type === "tapis-de-course" || type === "tapis")
+    return [pose(0, 0, true, true)];
   if (
     ["rameur", "banc-de-musculation", "nacelle", "table-de-massage"].includes(
       type,
     )
   )
-    return [siege(cx, cy, cx, y - 1)];
-  if (["baby-foot", "billard", "ping-pong"].includes(type))
-    return w >= h
-      ? [siege(x - 0.4, cy, cx, cy, true), siege(x + w + 0.4, cy, cx, cy, true)]
-      : [
-          siege(cx, y - 0.4, cx, cy, true),
-          siege(cx, y + h + 0.4, cx, cy, true),
-        ];
-  if (type === "rang-de-sieges") {
-    const n = Math.max(1, Math.floor(Math.max(w, h) / 0.55));
-    return le(n, (i) =>
-      w >= h
-        ? siege(x + (i + 0.5) * (w / n), cy, x + (i + 0.5) * (w / n), cy - 1)
-        : siege(cx, y + (i + 0.5) * (h / n), cx - 1, y + (i + 0.5) * (h / n)),
-    );
-  }
+    return [pose(0, 0, false, true)];
+  if (type === "baby-foot")
+    return [autour(0, -q / 2 - 0.4), autour(0, q / 2 + 0.4)];
+  if (type === "billard" || type === "ping-pong")
+    return [autour(-l / 2 - 0.4, 0), autour(l / 2 + 0.4, 0)];
   return [];
 }
 
@@ -226,11 +225,11 @@ export function lireNiveau(niveau) {
   const salles = {};
   for (const p of pieces) {
     const [cx, cy] = centrePoly(p.poly);
-    const assis = p.mobilier.flatMap(sieges);
+    const assis = p.mobilier.flatMap((m) => sieges(m, p));
     salles[p.id] = { centre: local(cx, cy), sieges: assis };
     if (!p.reunion && !p.occupants.length)
       pauses.push(...assis.map((s) => ({ ...s, piece: p.id })));
-    for (const b of p.mobilier.flatMap(bureaux))
+    for (const b of p.mobilier.flatMap((m) => bureaux(m, p)))
       if (estAgent(b.occupant)) postes[b.occupant] = { ...b, piece: p.id };
   }
   return { postes, pauses, salles };
