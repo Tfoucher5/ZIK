@@ -26,6 +26,13 @@ export class Perso {
     this.g.add(this.j.racine);
     if (this.j.aura) this.g.add(this.j.aura);
     this.cliquables = this.j.cliquables;
+    this.ombre = true;
+    this.lab = null;
+    if (!f.pnj) this.etiquette(f, t, badge);
+    this.poser();
+  }
+
+  etiquette(f, t, badge) {
     const rang = { fondateur: " fondateur", chef: " chef" }[t.rang] ?? "";
     this.lab = etiquette("", badge, `etiquette repos${rang}`);
     this.lab.element.innerHTML = `<div class="nom"><b></b> <span></span></div><div class="act"></div>`;
@@ -34,7 +41,13 @@ export class Perso {
     this.act = this.lab.element.querySelector(".act");
     this.lab.position.y = 2.05 * t.taille;
     this.g.add(this.lab);
-    this.poser();
+  }
+
+  // Ombres portées seulement sur l'étage regardé.
+  ombrer(oui) {
+    if (this.ombre === oui) return;
+    this.ombre = oui;
+    this.g.traverse((o) => o.isMesh && (o.castShadow = oui));
   }
 
   poser() {

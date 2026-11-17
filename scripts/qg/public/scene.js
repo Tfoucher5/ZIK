@@ -10,9 +10,15 @@ import { NIVEAUX, TRAME } from "./tour/plan.js";
 import { interieur } from "./tour3d/interieur.js";
 import { fenetresAllumees, heureDuPc, soleil } from "./tour3d/lumiere.js";
 import { structure } from "./tour3d/structure.js";
+import { Foule } from "./tour3d/pnj-foule.js";
 import { Vie } from "./tour3d/vie.js";
 import { ville } from "./ville.js";
 
+const URL_ = new URLSearchParams(location.search);
+const FORCE = {
+  heure: Number.parseFloat(URL_.get("heure")),
+  jour: Number.parseInt(URL_.get("jour"), 10),
+};
 const [L, P] = [TRAME.largeur / 2, TRAME.profondeur / 2];
 const EMPRISE = [
   [-L, -P],
@@ -70,6 +76,7 @@ export class Scene3D {
     });
     this.ville = ville(this.scene, { contour: EMPRISE, hauteurTour: 38 });
     this.vie = new Vie(this);
+    this.vie.foule = new Foule(this.vie);
     this.vie.ajouter("theo", undefined, undefined, "#ffffff");
     this.vie.ajouter("accueil", undefined, undefined, "#ff00ff");
     this.vie.ajouter("ceo", undefined, undefined, COULEURS.ceo);
@@ -88,7 +95,7 @@ export class Scene3D {
         this.camera,
       );
       const visibles = [...this.vie.persos.values()].filter(
-        (p) => !p.visiteur && p.g.visible && p.g.parent?.visible,
+        (p) => !p.visiteur && !p.pnj && p.g.visible && p.g.parent?.visible,
       );
       const id = rayon.intersectObjects(
         visibles.flatMap((x) => x.cliquables),
@@ -108,8 +115,15 @@ export class Scene3D {
     this.rendu.setAnimationLoop(() => this.image());
   }
 
+  // `?heure=11` et `?jour=6` (0 dimanche … 6 samedi) forcent le moment, pour vérifier une journée à toute heure.
   heure() {
-    return heureDuPc();
+    return Number.isFinite(FORCE.heure) ? FORCE.heure : heureDuPc();
+  }
+
+  jour() {
+    return FORCE.jour >= 0 && FORCE.jour <= 6
+      ? FORCE.jour
+      : new Date().getDay();
   }
 
   // La scène occupe son conteneur, pas l'écran : le tableau de bord peut l'entourer ou se masquer.

@@ -6,9 +6,21 @@ import { niveau } from "../public/tour/plan.js";
 const AGENTS = ["dev", "seo", "ux", "analyste", "recette", "avocat", "ceo"];
 
 describe("creneau", () => {
-  it("tout le monde est chez soi à 5 h, sauf Théo", () => {
-    for (const id of AGENTS) expect(creneau(5, id)).toBe("maison");
-    expect(creneau(5, "theo")).not.toBe("maison");
+  it("l'équipe ne quitte jamais la tour : un lieu du plan ou son poste à toute heure", () => {
+    for (const id of [...AGENTS, "theo", "accueil"])
+      for (let h = 0; h < 24; h += 0.25) {
+        const c = creneau(h, id);
+        expect(c === "poste" || lieu(c, id, h)).toBeTruthy();
+      }
+  });
+
+  it("la nuit, au salon, à la sieste ou à son poste, pas tous au même endroit", () => {
+    const ids = [...AGENTS, "ux", "dev", "da", "seo", "motion", "community"];
+    const ou3h = ids.map((id) => {
+      const c = creneau(3, id);
+      return c === "poste" ? `poste:${id}` : lieu(c, id, 3).piece;
+    });
+    expect(new Set(ou3h).size).toBeGreaterThan(2);
   });
 
   it("déjeune une heure entre 12 h et 14 h", () => {
@@ -20,18 +32,18 @@ describe("creneau", () => {
     }
   });
 
-  it("arrive avant 9 h 15 et part entre 18 h et 23 h", () => {
+  it("café au réveil, soirée après 20 h, nuit après 23 h", () => {
     for (const id of AGENTS) {
-      expect(creneau(9.25, id)).not.toBe("maison");
-      expect(creneau(23.5, id)).toBe("maison");
-      expect(creneau(16, id)).not.toBe("maison");
+      expect(creneau(7.75, id)).toBe("cafe");
+      expect(creneau(20.5, id)).toBe("soiree");
+      expect(["nuit", "poste"]).toContain(creneau(23.5, id));
     }
   });
 
   it("Nora tient l'accueil de 8 h à 20 h", () => {
-    expect(creneau(7.9, "accueil")).toBe("maison");
+    expect(creneau(7.9, "accueil")).not.toBe("poste");
     expect(creneau(10, "accueil")).toBe("poste");
-    expect(creneau(20, "accueil")).toBe("maison");
+    expect(creneau(20, "accueil")).toBe("soiree");
   });
 });
 
@@ -41,7 +53,7 @@ describe("lieu", () => {
     expect(LIEUX.dejeuner).toContain(l.piece);
     expect(l.niveau).toBe("n1");
     expect(lieu("poste", "dev", 10)).toBeNull();
-    expect(lieu("maison", "dev", 22)).toBeNull();
+    expect(LIEUX.nuit).toContain(lieu("nuit", "dev", 3).piece);
   });
 
   it("garde Théo au penthouse", () => {

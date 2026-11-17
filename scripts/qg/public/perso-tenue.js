@@ -39,8 +39,43 @@ export function tirage(graine) {
   return (t, sel = 0) => t[((h >>> 0) + sel * 7919) % t.length];
 }
 
+// Tenue de métier des PNJ : haut, bas, et tablier, gilet ou chariot. Les autres sont en civil.
+const METIERS = {
+  cuisinier: { haut: "#f8fafc", bas: "#1f2937", tablier: "#e5e7eb" },
+  serveur: { haut: "#111827", bas: "#111827", tablier: "#7c2d12" },
+  barista: { haut: "#3f2a1d", tablier: "#a16207" },
+  vigile: { haut: "#111827", bas: "#111827", gilet: "#f97316" },
+  veilleur: { haut: "#111827", bas: "#111827", gilet: "#f97316" },
+  coach: { style: "tshirt", haut: "#dc2626", bas: "#111111" },
+  sportif: { style: "tshirt", bas: "#1f2937" },
+  entretien: { haut: "#2563eb", bas: "#1e3a8a", chariot: true },
+  menage: { haut: "#2563eb", bas: "#1e3a8a", chariot: true },
+  livreur: { haut: "#78350f", bas: "#44403c", gilet: "#facc15" },
+  reception: { haut: "#1e293b", bas: "#1e293b" },
+  assistante: { haut: "#334155", bas: "#1c1f26" },
+};
+
+function tenuePnj(f, id) {
+  const pick = tirage(id);
+  return {
+    rang: "pnj",
+    peau: pick(PEAUX, 2),
+    cheveux: pick(CHEVEUX, 3),
+    longs: pick([true, false], 4),
+    lunettes: pick([true, false, false, false], 8),
+    style: pick(["sweat", "tshirt"], 5),
+    haut: pick(HAUTS, 1),
+    bas: pick(BAS, 4),
+    chaussures: pick(BASKETS, 6),
+    taille: 0.94 + pick([0, 0.03, 0.06, 0.09], 9),
+    ...(METIERS[f.pnj] && { style: "uniforme" }),
+    ...METIERS[f.pnj],
+  };
+}
+
 // La hiérarchie se lit sur la tenue : costume noir pour le fondateur, costume et cravate du pôle pour la direction.
 export function tenue(f, id, couleur) {
+  if (f.pnj) return tenuePnj(f, id);
   const pick = tirage(f.nom + id);
   const role = String(f.role ?? "").toLowerCase();
   const rang =
