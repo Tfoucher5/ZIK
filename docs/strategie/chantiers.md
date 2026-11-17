@@ -33,7 +33,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : scénario salon sur le code d'une branche `chore/e2e-*` (17/11), puis nodemailer, svelte, vite une à une, scénario vert avant chaque PR
+- **Prochaine étape** : scénario salon sur le code d'une branche `chore/e2e-*` (PR en brouillon du 17/11) : 35/36 verts en local, la soirée complète bloque après une coupure réseau simulée (vers localhost, le mode hors ligne ne coupe pas un WebSocket ouvert). À régler, puis nodemailer, svelte, vite une à une
 
 ## Statut micro-entreprise
 
