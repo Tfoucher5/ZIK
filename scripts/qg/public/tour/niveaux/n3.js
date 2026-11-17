@@ -148,7 +148,7 @@ export default {
       petit: true,
       qui: "pôle Technique",
       pourquoi: "Dans le prolongement du plateau, vitrée sur le palier.",
-      mobilier: [table(30.4, 2.9, 4, 1.3), ecran(35.7, 1.2, 35.7, 4.4)],
+      mobilier: [table(30.4, 2.4, 4, 1.3), ecran(35.7, 1.2, 35.7, 4.4)],
     },
     {
       id: "marshall",
@@ -190,13 +190,13 @@ export default {
       sous: ["4 cabines téléphone"],
       poly: rect(0, 7.2, 7.2, 12.6),
       acces: "employes",
-      etiquette: [3.4, 10.9],
+      etiquette: [3.6, 8.9],
       qui: "tout le monde",
       pourquoi:
         "Au bout de l'étage, derrière le mur d'eau : le plus loin du passage.",
       mobilier: repete(4, (i) => [
-        objet("cabine", 0.6 + i * 1.6, 7.6, 1.4, 1.5),
-        chaise(1.3 + i * 1.6, 8.3),
+        objet("cabine", 0.6 + i * 1.6, 10.7, 1.4, 1.5),
+        chaise(1.3 + i * 1.6, 11.5),
       ]).flat(),
     },
     {
@@ -257,8 +257,8 @@ export default {
         "Sur le palier, face à l'atrium : premier regard en sortant de l'ascenseur.",
       mobilier: [
         objet("comptoir", 22.2, 7.7, 3.6, 0.7, 0.1),
-        ronde(23, 10, 0.4, 3),
-        ronde(25.6, 15.6, 0.4, 3),
+        ronde(24.6, 11.2, 0.4, 3),
+        ronde(24.6, 14.4, 0.4, 3),
         canape(22.2, 16.6, 3, 0.9),
       ],
     },

@@ -13,6 +13,7 @@ import {
 } from "./mobilier-base.js";
 import { LOISIRS, POINTS_LOISIRS, TRACES_LOISIRS } from "./mobilier-loisirs.js";
 import { LIGNES, POINTS, TECHNIQUE, TRACES } from "./mobilier-technique.js";
+import { penthouse3d } from "./penthouse3d.js";
 
 function plateau(g, l, p, m = MAT.chene, h = 0.74) {
   boite(g, l, 0.05, p, m, 0, h, 0);
@@ -213,6 +214,7 @@ function inconnu(g, type, l = 0.6, p = 0.6) {
 
 // c : { piece, zik (écrans ZIK), hauteur (sous plafond), anime(fn) }.
 export function meuble3d(parent, m, c) {
+  if (m.type.startsWith("p-")) return penthouse3d(parent, m, c);
   if (m.d) {
     const f = CHEMINS[m.type];
     return f ? f(parent, m.d, c) : inconnu(groupe(parent, 0, 0), m.type);

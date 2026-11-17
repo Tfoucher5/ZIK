@@ -10,9 +10,11 @@ import {
   centrePoly,
   ecranZik,
   lireNiveau,
+  massifs,
   solDe,
 } from "./interieur-plan.js";
 import { cloisons } from "./cloisons.js";
+import { deco3d } from "./deco3d.js";
 import { NEUTRE, bureau3d, mat } from "./mobilier-base.js";
 import { meuble3d } from "./mobilier.js";
 
@@ -38,30 +40,6 @@ const sousPlafond = (niveau) =>
   Number.parseFloat(String(niveau.sousPlafond ?? "").replace(",", ".")) ||
   niveau.h - 0.8;
 
-// Atrium boisé : des massifs le long des bords des pièces plantées.
-function massifs(g, poly) {
-  for (let i = 0; i < poly.length; i++) {
-    const [x1, y1] = poly[i];
-    const [x2, y2] = poly[(i + 1) % poly.length];
-    const l = Math.hypot(x2 - x1, y2 - y1);
-    const [cx, cy] = centrePoly(poly);
-    for (let d = 1; d < l - 0.5; d += 1.8) {
-      const px = x1 + ((x2 - x1) * d) / l;
-      const py = y1 + ((y2 - y1) * d) / l;
-      const k = 0.7 / Math.hypot(cx - px, cy - py);
-      const p = versLocal(px + (cx - px) * k, py + (cy - py) * k);
-      plante(
-        g,
-        SANS_GRILLE,
-        p.x,
-        p.z,
-        0.8 + (i % 3) * 0.3,
-        Math.round(d) % 2 === 0,
-      );
-    }
-  }
-}
-
 export function interieur(groupe, niveau) {
   const h = sousPlafond(niveau);
   const fonctions = [];
@@ -71,6 +49,7 @@ export function interieur(groupe, niveau) {
   const tousEcrans = [];
 
   cloisons(groupe, niveau, h, anime);
+  deco3d(groupe, niveau);
 
   for (const p of lieux(niveau)) {
     if (FAIT_PAR_STRUCTURE.has(p.id)) continue;
@@ -82,7 +61,11 @@ export function interieur(groupe, niveau) {
       });
       solForme(groupe, contour, SOLS[sol], 0.005);
     }
-    if (sol === "gazon") massifs(groupe, p.poly);
+    if (sol === "gazon")
+      for (const { x, y, t, grande } of massifs(p.poly)) {
+        const q = versLocal(x, y);
+        plante(groupe, SANS_GRILLE, q.x, q.z, t, grande);
+      }
 
     const [ex, ey] = p.etiquette ?? centrePoly(p.poly);
     const e = versLocal(ex, ey);

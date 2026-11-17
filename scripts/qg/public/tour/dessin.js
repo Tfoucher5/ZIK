@@ -1,6 +1,7 @@
 // Plan d'un niveau en SVG, dessiné uniquement à partir de plan.js.
 import { E2, NIVEAUX, NOYAU, TRAME, VIDES, lieux } from "./plan.js";
 import { trait } from "./trait.js";
+import { decoPlan } from "./deco-trait.js";
 
 const W = TRAME.largeur;
 const H = TRAME.profondeur;
@@ -223,6 +224,7 @@ export function dessinerPlan(n) {
   e2(t, n);
   for (const p of lieux(n)) p.mobilier.forEach(t.meuble);
   n.abords.forEach(t.meuble);
+  decoPlan(t, n);
   for (const d of n.portes) {
     const { x, y, l, axe, sens, type } = d;
     const [c, e] = axe === "h" ? [x + l, y] : [x, y + l];

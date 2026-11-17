@@ -217,6 +217,29 @@ export function sieges(m, piece) {
   return [];
 }
 
+// Atrium boisé : massifs le long des bords d'une pièce plantée, en coordonnées du plan.
+export function massifs(poly) {
+  const [cx, cy] = centrePoly(poly);
+  const out = [];
+  for (let i = 0; i < poly.length; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % poly.length];
+    const l = Math.hypot(x2 - x1, y2 - y1);
+    for (let d = 1; d < l - 0.5; d += 1.8) {
+      const px = x1 + ((x2 - x1) * d) / l;
+      const py = y1 + ((y2 - y1) * d) / l;
+      const k = 0.7 / Math.hypot(cx - px, cy - py);
+      out.push({
+        x: px + (cx - px) * k,
+        y: py + (cy - py) * k,
+        t: 0.8 + (i % 3) * 0.3,
+        grande: Math.round(d) % 2 === 0,
+      });
+    }
+  }
+  return out;
+}
+
 // Données d'intérieur d'un niveau, sans three : ce que interieur.js construit et renvoie.
 export function lireNiveau(niveau) {
   const pieces = lieux(niveau);

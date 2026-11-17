@@ -136,28 +136,25 @@ function ossature(liste, seg, y0, y1) {
   );
 }
 
-// Façades du niveau. Renvoie le groupe de la façade sud au-dessus de l'allège (masqué en coupe).
-export function facade(g, n, mats) {
+// Façades du niveau, dans un groupe de murs abaissé d'un bloc quand le niveau est ouvert en coupe (structure.js).
+export function facade(parent, n, mats) {
   const H = n.h - DALLE;
-  const sudHaut = new THREE.Group();
-  g.add(sudHaut);
-  const bas = [];
-  const sud = [];
+  const g = new THREE.Group();
+  g.userData.mur = { niveau: n.id, hauteur: H };
+  parent.add(g);
+  const meneaux = [];
   for (const f of facades(n)) {
     const seg = [f.x1, f.y1, f.x2, f.y2];
     if (f.type === "porteur") {
       panneau(g, seg, 0, H, MAT.beton, 0.3);
       continue;
     }
-    const haut = f.cote === "sud" ? sudHaut : g;
     panneau(g, seg, 0, ALLEGE, mats.allege, 0.06);
-    panneau(haut, seg, ALLEGE, H, mats.vitrage, 0.03);
-    ossature(bas, seg, 0, ALLEGE);
-    ossature(f.cote === "sud" ? sud : bas, seg, ALLEGE, H);
+    panneau(g, seg, ALLEGE, H, mats.vitrage, 0.03);
+    ossature(meneaux, seg, 0, ALLEGE);
+    ossature(meneaux, seg, ALLEGE, H);
   }
-  instances(g, bas, mats.meneau);
-  instances(sudHaut, sud, mats.meneau);
-  return sudHaut;
+  instances(g, meneaux, mats.meneau);
 }
 
 const bois = std("#7a5236", { roughness: 0.85, side: THREE.DoubleSide });

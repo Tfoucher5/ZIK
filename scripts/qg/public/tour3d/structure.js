@@ -7,6 +7,7 @@ import { versLocal } from "./repere.js";
 import {
   DALLE,
   dalle,
+  echelleMur,
   emprise,
   etatCoupe,
   gamme,
@@ -52,7 +53,6 @@ const cylindre = new THREE.CylinderGeometry(0.5, 0.5, 1, 12);
 
 export function structure(scene) {
   const groupes = {};
-  const sudHaut = {};
   const mats = {};
   NIVEAUX.forEach((n, i) => {
     const g = new THREE.Group();
@@ -71,7 +71,7 @@ export function structure(scene) {
       }),
       m.poteau,
     );
-    if (n.facade !== false) sudHaut[n.id] = facade(g, n, m);
+    if (n.facade !== false) facade(g, n, m);
     toits(g, n, i, m);
     if (i === NIVEAUX.length - 1) {
       const couverture = new THREE.Group();
@@ -107,7 +107,8 @@ export function structure(scene) {
       const e = etatCoupe(choix);
       for (const [id, g] of Object.entries(groupes)) {
         g.visible = e[id].visible;
-        if (sudHaut[id]) sudHaut[id].visible = !e[id].ouvert;
+        for (const c of g.children)
+          if (c.userData.mur) c.scale.y = echelleMur(choix, c.userData.mur);
       }
       n.limite(plafondCoupe(choix));
     },

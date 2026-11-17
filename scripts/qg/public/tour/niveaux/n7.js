@@ -1,23 +1,19 @@
 import {
-  arbre,
   canape,
-  chaise,
-  comptoir,
   ecran,
   escalier,
+  ligne,
   mur,
   objet,
   porte,
   poste,
   rect,
-  ronde,
   table,
-  trace,
 } from "../outils.js";
 
-const disques = [];
-for (let x = 29.5; x < 35.8; x += 0.85)
-  disques.push({ type: "disque-or", x, y: 6.75, r: 0.3 });
+// Penthouse : types p-* construits par tour3d/penthouse3d*.js. Marbre noir veiné d'or sous chaque pièce.
+const marbre = (x1, y1, x2, y2) => objet("p-marbre", x1, y1, x2 - x1, y2 - y1);
+const point = (type, x, y, r) => ({ type, x, y, r });
 
 export default {
   id: "n7",
@@ -69,13 +65,25 @@ export default {
       qui: "Théo, invités",
       pourquoi:
         "Sur la face nord du noyau, 6,40 m de haut, vue depuis la terrasse.",
-      mobilier: [...disques, canape(30.6, 1, 3, 0.9)],
+      mobilier: [
+        marbre(28.8, 0, 36, 7.2),
+        ligne("p-mur-albums", 35.7, 7.08, 29.1, 7.08),
+        canape(30.6, 1, 3, 0.9),
+        objet("p-tapis", 30.4, 2.3, 3.4, 2.4),
+        point("p-lustre-disques", 31.2, 3.6, 1.3),
+        point("p-micro-or", 34, 3.4, 0.55),
+        objet("p-juke-box", 29, 5, 0.7, 1),
+        objet("p-cabine-dj", 34.3, 0.3, 1.5, 0.7),
+        objet("p-bac-vinyles", 29.05, 1.1, 0.6, 1.3),
+        ligne("p-affiches", 35.92, 3.75, 35.92, 5.45),
+        point("p-plante", 35.3, 6.4, 0.45),
+      ],
     },
     {
       id: "rough-trade",
       nom: "Rough Trade",
-      usage: "Bibliothèque, vinyles",
-      sous: ["bibliothèque, vinyles"],
+      usage: "Salle d'écoute et cinéma privé, vinyles",
+      sous: ["écoute, cinéma, vinyles"],
       poly: rect(36, 0, 43.2, 7.2),
       acces: "fondateur",
       etiquette: [39.6, 4.9],
@@ -83,11 +91,13 @@ export default {
       pourquoi: "Angle nord-est, le plus calme de la tour.",
       mobilier: [
         objet("etagere", 36.6, 0.5, 6, 0.5),
-        objet("etagere", 36.6, 6.3, 6, 0.5),
-        objet("etagere", 42.4, 1.4, 0.5, 4.6),
-        ronde(39, 3.2, 0.4),
-        canape(40, 2.6, 0.9, 1.6),
-        canape(37.2, 2.6, 0.9, 1.6),
+        objet("etagere", 38.2, 6.3, 4.4, 0.5),
+        ecran(42.95, 6, 42.95, 1.4),
+        objet("p-enceinte", 42.2, 1.1, 0.4, 0.45),
+        objet("p-enceinte", 42.2, 5.65, 0.4, 0.45),
+        objet("p-tapis", 37.6, 1.6, 4, 4),
+        canape(38.2, 2.3, 0.9, 2.6),
+        canape(40.2, 2.3, 0.9, 2.6),
       ],
     },
     {
@@ -99,7 +109,10 @@ export default {
       etiquette: null,
       qui: "Théo",
       pourquoi: "Relie le nord et le sud du penthouse le long du noyau.",
-      mobilier: [],
+      mobilier: [
+        marbre(36, 7.2, 37.5, 14.4),
+        ligne("p-disques-or", 36.05, 14.1, 36.05, 7.6),
+      ],
     },
     {
       id: "montreux",
@@ -127,11 +140,17 @@ export default {
       pourquoi:
         "Angle sud-est : limite, chantiers et décisions à trancher sur le mur ; le pupitre du chef d'orchestre.",
       mobilier: [
+        marbre(36, 14.4, 43.2, 25.2),
         ecran(37.2, 14.75, 42.6, 14.75),
         ecran(37.2, 15, 42.6, 15),
         poste(38.4, 19.4, 3, "theo", 180, 1.1),
         canape(37.6, 23.6, 3, 0.9),
         canape(41.6, 21.6, 0.9, 2.8),
+        objet("p-mezzanine", 41.5, 17.6, 1.7, 7.6),
+        point("p-escalier-helico", 42.35, 16.6, 0.85),
+        ligne("p-mur-eau", 36.12, 24.9, 36.12, 20.3),
+        point("p-lustre-anneaux", 39.6, 20.6, 1.5),
+        point("p-plante", 37, 15.9, 0.45),
       ],
     },
     {
@@ -145,12 +164,16 @@ export default {
       qui: "Théo, invités",
       pourquoi:
         "Au débouché de l'ascenseur privé : on n'entre pas directement dans le bureau.",
-      mobilier: [canape(29.2, 19.9, 1.8, 0.5)],
+      mobilier: [
+        marbre(28.8, 18, 36, 20.6),
+        canape(29.2, 19.9, 1.8, 0.5),
+        ligne("p-affiches", 31.6, 18.08, 34, 18.08),
+      ],
     },
     {
       id: "bains-douches",
       nom: "Les Bains Douches",
-      usage: "Salon bar, piano",
+      usage: "Salon bar, piano à queue, cheminée",
       sous: ["salon bar"],
       poly: rect(28.8, 20.6, 36, 25.2),
       acces: "fondateur",
@@ -159,16 +182,14 @@ export default {
       qui: "Théo, invités",
       pourquoi: "Au sud-ouest, ouvert sur la terrasse.",
       mobilier: [
-        comptoir(29.4, 22, 3, 0.6, 3),
+        marbre(28.8, 20.6, 36, 25.2),
+        objet("p-bar-onyx", 29, 20.75, 2.2, 0.7),
+        objet("p-cave-vins", 33.3, 20.7, 2.5, 0.5),
+        objet("p-tapis", 31.8, 22, 3.4, 2.4),
+        point("p-cheminee", 33.4, 22.9, 0.5),
         canape(33.2, 23.9, 2.4, 0.9),
         canape(34.9, 21.4, 0.8, 2.2),
-        trace("piano", [
-          ["M", 29.4, 24.9],
-          ["h", 1.6],
-          ["q", 0.6, -0.6, 0, -1.2],
-          ["h", -1.6],
-          ["z"],
-        ]),
+        objet("p-piano", 29.2, 22.4, 1.5, 1.9),
       ],
     },
   ],
@@ -176,7 +197,7 @@ export default {
     {
       id: "stairway",
       nom: "Stairway to Heaven",
-      usage: "Terrasse privée, 180 m²",
+      usage: "Terrasse privée, piscine à débordement, 180 m²",
       sous: ["terrasse privée"],
       poly: rect(21.6, 0, 28.8, 25.2),
       acces: "fondateur",
@@ -186,17 +207,22 @@ export default {
       pourquoi:
         "Plein ouest ; un portillon de secours descend vers Central Park.",
       mobilier: [
+        objet("p-piscine", 21.8, 4.4, 2.8, 11),
+        ...[5.4, 7.8, 10.2, 12.6].map((y) =>
+          objet("p-transat", 25.1, y, 1.9, 0.7),
+        ),
         ...[
-          [23.2, 2],
-          [27, 5.4],
-          [23.4, 23.4],
-        ].map(([x, y]) => arbre(x, y, 1.1)),
-        canape(22.4, 10, 0.9, 3.4),
-        canape(23.8, 14, 3, 0.9),
-        { type: "table-basse", x: 25.2, y: 11.6, r: 0.6 },
-        { type: "disque-or", x: 25.2, y: 11.6, r: 0.25 },
-        objet("bar", 22.4, 17.4, 3.4, 0.7, 0.1),
-        ...[23, 24, 25].map((x) => chaise(x, 18.5)),
+          [22.4, 1.8],
+          [27.6, 1.6],
+          [27.9, 13.6],
+          [22.6, 24.2],
+          [28, 24.4],
+        ].map(([x, y]) => point("p-palmier", x, y, 0.8)),
+        point("p-brasero", 25.2, 17.4, 0.5),
+        canape(22.3, 16.3, 0.9, 2.2),
+        canape(27.3, 16.3, 0.9, 2.2),
+        canape(24.1, 18.9, 2.2, 0.9),
+        objet("bar", 25.4, 22.4, 2.6, 0.7, 0.1),
         escalier(21.9, 20.4, 1.1, 2.2),
       ],
     },
