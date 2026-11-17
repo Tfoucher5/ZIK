@@ -9,7 +9,7 @@ config({ quiet: true });
 
 // Staging ou local seulement, jamais la prod (même garde-fou que le test de charge)
 const baseURL = assertCibleAutorisee(
-  process.env.E2E_URL ?? DEV_URL,
+  process.env.E2E_URL || DEV_URL,
   process.env.SUPABASE_URL ?? "",
 );
 

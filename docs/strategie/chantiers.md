@@ -29,6 +29,12 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Produit puis Technique
 - **Prochaine étape** : un seul magenta sur la TV sans régie, « Et le grand gagnant est… » sans genre, nom de la soirée sur la story, paramètres avancés de soirée (idée de Théo)
 
+## Dépendances à jour
+
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : scénario salon sur le code d'une branche `chore/e2e-*` (PR en brouillon du 17/11) : 35/36 verts en local, la soirée complète bloque après une coupure réseau simulée (vers localhost, le mode hors ligne ne coupe pas un WebSocket ouvert). À régler, puis nodemailer, svelte, vite une à une
+
 ## Statut micro-entreprise
 
 - **Statut** : à faire
