@@ -22,7 +22,7 @@ import {
 
 const NEONS = [ZIK.neon, "#22d3ee", ZIK.or];
 
-function fenetres(l, h, cols, rangs, r, eteints, hall = false) {
+function fenetres(l, h, cols, rangs, r, eteints) {
   const t = toile(l, h, (c) => {
     c.fillStyle = "#0b0b14";
     c.fillRect(0, 0, l, h);
@@ -31,7 +31,7 @@ function fenetres(l, h, cols, rangs, r, eteints, hall = false) {
     for (let j = 0; j < rangs; j++) {
       const noir = r() < eteints;
       for (let i = 0; i < cols; i++) {
-        const allume = hall && j === rangs - 1 ? true : !noir && r() < 0.55;
+        const allume = !noir && r() < 0.55;
         const teinte = r();
         c.fillStyle = !allume
           ? "#171726"
@@ -51,38 +51,6 @@ function fenetres(l, h, cols, rangs, r, eteints, hall = false) {
   });
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return t;
-}
-
-// Fût de la tour sous le plateau, jusqu'à la rue, avec des arêtes néon.
-function fut(groupe, contour, r) {
-  const g = new THREE.ExtrudeGeometry(
-    new THREE.Shape(contour.map(([x, z]) => new THREE.Vector2(x, z))),
-    { depth: -RUE - 0.3, bevelEnabled: false },
-  );
-  g.rotateX(Math.PI / 2);
-  g.translate(0, -0.3, 0);
-  const tex = fenetres(512, 512, 20, 12, r, 0.15, true);
-  tex.repeat.set(1 / 14, 1 / 16);
-  tex.offset.y = 1 - 1 / 16;
-  groupe.add(
-    new THREE.Mesh(g, [
-      new THREE.MeshLambertMaterial({ color: "#121219" }),
-      new THREE.MeshLambertMaterial({
-        color: "#2a2a36",
-        map: tex,
-        emissive: "#ffffff",
-        emissiveMap: tex,
-        emissiveIntensity: 0.5,
-      }),
-    ]),
-  );
-  const aretes = instances(
-    groupe,
-    new THREE.BoxGeometry(0.18, -RUE, 0.18),
-    new THREE.MeshBasicMaterial({ color: vif(ZIK.neon, 3) }),
-    contour.length,
-  );
-  contour.forEach(([x, z], i) => poser(aretes, i, [x, RUE / 2, z]));
 }
 
 function sol(groupe, voies) {
@@ -142,6 +110,10 @@ function sol(groupe, voies) {
     poser(tetes, i, [x, RUE + 5, z]);
     poser(flaques, i, [x, RUE + 0.2, z]);
   });
+  return (allumes) => {
+    tetes.material.color.copy(vif("#ffcf8a", allumes ? 5 : 0.4));
+    flaques.visible = allumes;
+  };
 }
 
 // Façades : la texture de fenêtres est collée en unités du monde, quelle que soit la taille de la tour.
@@ -216,7 +188,8 @@ function tours(groupe, liste, centre, r) {
   return feu;
 }
 
-export function ville(scene, { contour, hauteurTour = 12.6 }) {
+// La ville autour de la ZIK TOWER (contour : emprise au sol), rue au niveau du hall.
+export function ville(scene, { contour, hauteurTour }) {
   const groupe = new THREE.Group();
   scene.add(groupe);
   const r = alea(42);
@@ -228,12 +201,13 @@ export function ville(scene, { contour, hauteurTour = 12.6 }) {
     rayon: RAYON,
     plafond: hauteurTour - RUE,
   });
-  fut(groupe, contour, r);
-  sol(groupe, voies);
+  const lampes = sol(groupe, voies);
   const feu = tours(groupe, liste, plateau.centre, r);
   const rouler = trafic(groupe, voies);
   ciel(groupe, r);
   return {
+    groupe,
+    lampes,
     animer(dt, t) {
       rouler(dt);
       feu.color.setRGB(Math.sin(t * 2.5) > 0.4 ? 4 : 0.15, 0, 0);

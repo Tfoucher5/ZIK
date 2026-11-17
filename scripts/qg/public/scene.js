@@ -1,25 +1,30 @@
 import * as THREE from "three";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { Camera } from "./camera.js";
-import { Grille } from "./chemins.js";
-import { COULEURS, plan } from "./plan.js";
-import { contour } from "./batiment.js";
-import { direction } from "./direction.js";
-import { ETAGES, VILLE, cadrage, visibles } from "./etages.js";
-import { deplacer } from "./mouvements.js";
-import { fiche } from "./noms.js";
-import { penthouse } from "./penthouse.js";
-import { Perso } from "./perso.js";
-import { animerPortes, oublierPortes } from "./portes.js";
+import { animerPortes } from "./portes.js";
+import { VILLE, cadrage } from "./etages.js";
+import { COULEURS } from "./noms.js";
 import { Recrutement } from "./recrutement.js";
 import { creerRendu } from "./rendu.js";
+import { NIVEAUX, TRAME } from "./tour/plan.js";
+import { interieur } from "./tour3d/interieur.js";
+import { fenetresAllumees, heureDuPc, soleil } from "./tour3d/lumiere.js";
+import { structure } from "./tour3d/structure.js";
+import { Vie } from "./tour3d/vie.js";
 import { ville } from "./ville.js";
+
+const [L, P] = [TRAME.largeur / 2, TRAME.profondeur / 2];
+const EMPRISE = [
+  [-L, -P],
+  [L, -P],
+  [L, P],
+  [-L, P],
+];
 
 export class Scene3D {
   constructor(conteneur, surClic) {
     this.conteneur = conteneur;
-    this.persos = new Map();
-    this.choix = 0;
+    this.choix = VILLE;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
     this.rendu = new THREE.WebGLRenderer({ antialias: true });
@@ -42,13 +47,36 @@ export class Scene3D {
     this.vue = new Camera(this.camera, this.rendu.domElement);
     this.ciel = new THREE.HemisphereLight("#dbe8ff", "#3a3328", 1);
     this.soleil = new THREE.DirectionalLight("#fff1dc", 2);
-    this.soleil.position.set(10, 26, 14);
     this.soleil.castShadow = true;
     this.soleil.shadow.mapSize.set(2048, 2048);
     this.soleil.shadow.bias = -0.0005;
-    this.scene.add(this.ciel, this.soleil);
-    this.ambiance();
-    setInterval(() => this.ambiance(), 60000);
+    Object.assign(this.soleil.shadow.camera, {
+      left: -32,
+      right: 32,
+      top: 32,
+      bottom: -32,
+      far: 160,
+    });
+    this.scene.add(this.ciel, this.soleil, this.soleil.target);
+
+    this.tour = structure(this.scene);
+    this.interieurs = Object.fromEntries(
+      NIVEAUX.map((n) => [n.id, interieur(this.tour.groupes[n.id], n)]),
+    );
+    this.noms = NIVEAUX.map((n) => {
+      const liste = [];
+      this.tour.groupes[n.id].traverse((o) => o.isCSS2DObject && liste.push(o));
+      return [n.id, liste];
+    });
+    this.ville = ville(this.scene, { contour: EMPRISE, hauteurTour: 38 });
+    this.vie = new Vie(this);
+    this.vie.ajouter("theo", undefined, undefined, "#ffffff");
+    this.vie.ajouter("accueil", undefined, undefined, "#ff00ff");
+    this.vie.ajouter("ceo", undefined, undefined, COULEURS.ceo);
+    for (const id of ["tech", "operations", "argent", "produit", "marketing"])
+      this.vie.ajouter(id, undefined, undefined, COULEURS[id]);
+    this.lumiere();
+
     const rayon = new THREE.Raycaster();
     this.rendu.domElement.addEventListener("click", (e) => {
       const r = this.rendu.domElement.getBoundingClientRect();
@@ -59,8 +87,8 @@ export class Scene3D {
         ),
         this.camera,
       );
-      const visibles = [...this.persos.values()].filter(
-        (p) => p.g.parent?.visible,
+      const visibles = [...this.vie.persos.values()].filter(
+        (p) => !p.visiteur && p.g.visible && p.g.parent?.visible,
       );
       const id = rayon.intersectObjects(
         visibles.flatMap((x) => x.cliquables),
@@ -69,9 +97,19 @@ export class Scene3D {
     });
     new ResizeObserver(() => this.taille()).observe(conteneur);
     this.taille();
-    this.equipe = new Recrutement(this);
+    const c = cadrage(VILLE);
+    this.vue.y = c.y;
+    this.vue.cadrer(c.bornes);
+    this.vue.voler(c.bornes, c.y, c.recul);
+    this.tour.coupe(VILLE);
+    this.equipe = new Recrutement(this.vie);
     this.horloge = new THREE.Clock();
+    this.prochaineLumiere = 0;
     this.rendu.setAnimationLoop(() => this.image());
+  }
+
+  heure() {
+    return heureDuPc();
   }
 
   // La scène occupe son conteneur, pas l'écran : le tableau de bord peut l'entourer ou se masquer.
@@ -86,14 +124,21 @@ export class Scene3D {
     if (this.vue.cadre) this.vue.cadrer(this.vue.cadre, false);
   }
 
-  // Jour ou nuit selon l'heure du PC.
-  ambiance() {
-    const h = new Date().getHours() + new Date().getMinutes() / 60;
-    const jour = h > 7.5 && h < 18.5;
-    this.ciel.intensity = jour ? 1.1 : 0.55;
-    this.soleil.intensity = jour ? 2.2 : 0.5;
-    this.soleil.color.set(jour ? "#fff1dc" : "#9fb4ff");
-    this.post.nuit(!jour);
+  // Soleil, ciel, fenêtres et lampadaires à l'heure du PC.
+  lumiere() {
+    const h = this.heure();
+    const s = soleil(h);
+    this.soleil.position.set(s.position.x, s.position.y, s.position.z);
+    this.soleil.position.multiplyScalar(60).add(new THREE.Vector3(0, 14, 0));
+    this.soleil.target.position.set(0, 14, 0);
+    this.soleil.color.set(s.couleur);
+    this.soleil.intensity = s.intensite;
+    this.ciel.intensity = s.ciel;
+    this.post.nuit(s.nuit);
+    this.ville.lampes(s.nuit > 0.5);
+    const presents = this.vie.presents();
+    for (const n of NIVEAUX)
+      this.tour.fenetres(n.id, fenetresAllumees(h, presents[n.id] ?? 0));
   }
 
   // Ancienne entrée : l'organigramme du CLAUDE.md, gardé en repli tant que /agents n'existe pas.
@@ -101,137 +146,43 @@ export class Scene3D {
     this.equipe.repli(org);
   }
 
-  // Monte la tour pour une disposition du Plateau (place des pôles, bord ouest) ; l'ancienne est retirée.
-  monter(disposition, limites) {
-    this.vider();
-    const premier = !this.d;
-    this.groupes = ETAGES.map((e) => {
-      const g = new THREE.Group();
-      g.position.y = e.y;
-      this.scene.add(g);
-      return g;
-    });
-    const [bas, milieu, haut] = this.groupes;
-    this.grille = new Grille(...limites);
-    this.d = plan(bas, this.grille, disposition);
-    this.ville = ville(this.scene, { contour: contour(disposition.ouest) });
-    const grilleDir = new Grille(...ETAGES[1].bornes);
-    this.dir = direction(milieu, grilleDir);
-    const grillePent = new Grille(...ETAGES[2].bornes);
-    this.pent = penthouse(haut, grillePent);
-    if (this.dernier) this.pent.maj(this.dernier);
-    this.niveaux = {
-      plateau: { groupe: bas, grille: this.grille, ...this.d },
-      direction: { groupe: milieu, grille: grilleDir, ...this.dir },
-      penthouse: { groupe: haut, grille: grillePent, ...this.pent },
-    };
-    const r = Math.max(26, 4 - disposition.ouest);
-    Object.assign(this.soleil.shadow.camera, {
-      left: -r,
-      right: r,
-      top: 18,
-      bottom: -18,
-      far: 90,
-    });
-    this.soleil.shadow.camera.updateProjectionMatrix();
-    this.bornes = [limites[0], limites[1], limites[2], limites[3]];
-    this.couper();
-    this.vue.cadrer(cadrage(this.choix, this.bornes).bornes, premier);
-    this.perso("theo", undefined, "#ffffff", this.pent.theo, null, "penthouse");
-    this.perso("accueil", undefined, "#ff00ff", this.d.accueil).fixe = true;
-    this.perso("ceo", undefined, COULEURS.ceo, this.dir.ceo, null, "direction");
-    for (const [id, s] of Object.entries(this.dir.chefs))
-      this.perso(id, undefined, COULEURS[id], s, null, "direction");
-  }
-
-  couper() {
-    const vis = visibles(this.choix);
-    this.groupes?.forEach((g, i) => (g.visible = vis[i]));
-  }
-
-  // Ascenseur : 0 Plateau, 1 Direction, 2 Penthouse, "ville" toute la tour.
+  // Ascenseur du QG : un id de niveau ou « ville » (toute la tour).
   voir(choix) {
     this.choix = choix;
-    this.couper();
-    if (!this.bornes) return;
-    const c = cadrage(choix, this.bornes);
+    this.tour.coupe(choix);
+    this.ville.groupe.visible = choix !== "ss";
+    const c = cadrage(choix);
     this.vue.voler(c.bornes, c.y, c.recul);
   }
 
-  // Données du tableau de bord affichées dans le penthouse.
-  donnees(d) {
-    this.dernier = d;
-    this.pent?.maj(d);
-  }
-
-  vider() {
-    if (!this.d) return;
-    oublierPortes();
-    this.scene.traverse((o) => o.element?.remove());
-    for (const o of [...this.scene.children]) {
-      if (o === this.ciel || o === this.soleil || o.userData.garder) continue;
-      o.traverse((x) => x.geometry?.dispose());
-      this.scene.remove(o);
-    }
-    this.persos.clear();
-  }
-
-  // role et nom remplacent ceux de noms.js quand /agents les donne.
-  perso(id, role, couleur, siege, nom, niveau = "plateau") {
-    const base = fiche(id, role ?? id);
-    const f = { ...base, ...(nom && { nom }), ...(role && { role }) };
-    const n = this.niveaux[niveau];
-    const p = new Perso(n.groupe, n.grille, id, f, couleur, siege);
-    p.niveau = niveau;
-    this.persos.set(id, p);
-    return p;
-  }
-
-  retirer(id) {
-    const p = this.persos.get(id);
-    if (!p) return;
-    p.g.parent?.remove(p.g);
-    p.lab.element.remove();
-    this.persos.delete(id);
-  }
-
   maj(activite, nb, seance) {
-    if (this.d) deplacer(this, activite, nb, seance);
+    this.vie.maj(activite, seance);
   }
 
   image() {
     const dt = Math.min(this.horloge.getDelta(), 0.25);
     const t = this.horloge.elapsedTime;
-    this.vue.maj(dt);
-    this.ville?.animer(dt, t);
-    if (this.d) {
-      const prises = new Set([...this.persos.values()].map((p) => p.but));
-      for (const [id, p] of this.persos) {
-        if (p.arrivee > 0) p.arrivee -= dt;
-        if (!p.actif && !p.temporaire && !p.fixe)
-          p.flaner(
-            dt,
-            this.niveaux[p.niveau].pauses.filter((x) => !prises.has(x)),
-          );
-        p.animer(dt, t);
-        if (p.depart && !p.chemin.length) this.retirer(id);
-      }
-      animerPortes(
-        dt,
-        [...this.persos.values()].map((p) =>
-          p.g.position.clone().setY(p.g.parent?.position.y ?? 0),
-        ),
-      );
-      for (const s of Object.values(this.d.services)) s.salle.tele.animer(dt);
-      this.dir.board.tele.animer(dt);
-      this.pent.animer(dt, t);
+    this.prochaineLumiere -= dt;
+    if (this.prochaineLumiere < 0) {
+      this.prochaineLumiere = 5;
+      this.lumiere();
     }
+    this.vue.maj(dt);
+    this.ville.animer(dt, t);
+    this.tour.animer(dt, t);
+    for (const i of Object.values(this.interieurs)) i.animer(dt, t);
+    this.vie.animer(dt, t);
+    animerPortes(
+      dt,
+      [...this.vie.persos.values()]
+        .filter((p) => p.g.visible)
+        .map((p) => p.g.position.clone().setY(p.g.parent?.position.y ?? 0)),
+    );
     this.post.render();
     this.etiquettes.render(this.scene, this.camera);
-    for (const [i, g] of (this.groupes ?? []).entries())
-      if (!g.visible || this.choix === VILLE || i !== this.choix)
-        g.traverse((o) => {
-          if (o.isCSS2DObject) o.element.style.display = "none";
-        });
+    this.vie.etiquettes(this.choix);
+    for (const [id, liste] of this.noms)
+      if (id !== this.choix)
+        for (const o of liste) o.element.style.display = "none";
   }
 }

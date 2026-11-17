@@ -94,13 +94,17 @@ export function creerRendu(renderer, scene, camera) {
     taille(l, h) {
       composer.setSize(l, h);
     },
-    nuit(oui) {
-      const a = AMBIANCES[oui ? "nuit" : "crepuscule"];
-      for (const k of ["haut", "horizon", "bas"]) ciel.u[k].value.set(a[k]);
-      scene.fog.color.set(a.brume);
-      scene.fog.density = a.densite;
-      bloom.strength = a.bloom;
-      renderer.toneMappingExposure = a.exposition;
+    // k : 0 jour, 1 nuit, un vrai ou faux vaut 1 ou 0 ; entre les deux, les ambiances se mélangent.
+    nuit(k) {
+      const [j, n] = [AMBIANCES.crepuscule, AMBIANCES.nuit];
+      const t = Number(k);
+      const m = (c) => new THREE.Color(j[c]).lerp(new THREE.Color(n[c]), t);
+      for (const c of ["haut", "horizon", "bas"]) ciel.u[c].value.copy(m(c));
+      scene.fog.color.copy(m("brume"));
+      const mix = (c) => j[c] + (n[c] - j[c]) * t;
+      scene.fog.density = mix("densite");
+      bloom.strength = mix("bloom");
+      renderer.toneMappingExposure = mix("exposition");
     },
   };
 }

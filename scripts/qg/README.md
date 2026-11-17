@@ -1,6 +1,6 @@
 # QG : l'équipe d'agents en direct
 
-Tableau de bord local : l'étage des bureaux de ZIK en 3D au centre (chaque agent est un personnage avec son prénom, liste dans `public/noms.js`), et autour, tout ce qu'il faut pour suivre et répondre sans passer par le terminal.
+Tableau de bord local : la ZIK TOWER en 3D au centre (chaque agent est un personnage avec son prénom, liste dans `public/noms.js`), et autour, tout ce qu'il faut pour suivre et répondre sans passer par le terminal.
 
 ## Lancer
 
@@ -24,6 +24,16 @@ Options : `--port 5000`, `--filtre ZIK` (dossiers de projet suivis, `ZIK` par d�
 - Une pièce : `id`, `nom`, `usage`, `poly`, `acces` (`public`, `employes`, `pole:<chef>`, `direction`, `fondateur`, `service`), `mobilier` (types de `tour/outils.js`) ; `occupants` est déduit des postes. Les salles de réunion (`reunion: true`) portent un nom de festival (`FESTIVALS`), les autres un nom tiré de la musique.
 - Une porte : position, largeur, axe, sens, et `entre` (les deux lieux qu'elle relie, `rue` ou `service` pour dehors). Une porte entre un lieu public et un lieu qui ne l'est pas a un `controle` (portiques, badge, accueil, issue).
 - `__tests__/plan-tour.test.js` garde la cohérence : emprise, chevauchements, portes qui relient ce qu'elles annoncent, noyau, arrêts des ascenseurs, un poste par agent de `noms.js`, festivals uniques, café public isolé du reste. Lancer `npx vitest run scripts/qg` après chaque changement de plan.
+
+## La ZIK TOWER en 3D
+
+La scène (`scene.js`) monte la tour depuis le plan, posée au sol de la ville (rue au niveau du hall) : `tour3d/structure.js` (dalles, façades, noyau, ascenseurs, coupe), `tour3d/interieur.js` (mobilier, postes, places de pause) pour chaque niveau, `ville.js` autour. Repère : `tour3d/repere.js`.
+
+- **Ascenseur du QG** (en bas à droite) : un bouton par niveau, du toit (T) au sous-sol (-1), et « Ville » (vue de départ, toute la tour). Touches : `0` RDC, `1` à `7` les étages, `-` sous-sol, `T` toit, `V` ville. La caméra vole vers le niveau et la tour est coupée au-dessus.
+- **Accès** (`tour3d/acces.js`) : une grille de chemins par niveau et par jeu de droits, construite depuis le plan (pièces permises, murs, portes permises ouvertes, rue autour du RDC). Droits : tout le monde `employes` (et le café public), son pôle `pole:<id>`, `direction` pour les chefs, Claire, Victor et Gérard, tout pour Théo ; les passants n'ont que `public`. Une porte ne s'ouvre que si l'agent a le droit des deux côtés : un passant ne franchit jamais les portiques, un employé n'entre pas au penthouse.
+- **Ascenseurs** : changer de niveau, c'est marcher au palier, appeler la cabine, y disparaître et réapparaître au palier d'arrivée. A1 et A2 pour tous, l'ascenseur privé pour la direction et Théo (correspondance au N6 ou au RDC si besoin), jamais le monte-charge.
+- **Agenda** (`tour3d/agenda.js`, `tour3d/vie.js`, heure du PC) : un agent qui travaille (flux) est à son poste, ou en réunion dans la salle de son pôle dès qu'ils sont deux (board à Woodstock). Au repos : arrivée par le hall entre 8 h et 9 h, café, déjeuner au restaurant (Motown, Stax) entre 12 h et 14 h, pauses au sport, en salle de jeux, à l'atrium ou en terrasse, départ entre 18 h et 20 h (un sur six reste jusqu'à 23 h). Théo vit au penthouse, Nora tient l'accueil de 8 h à 20 h. Des passants entrent au Cavern Club, s'assoient et repartent.
+- **Lumière** (`tour3d/lumiere.js`) : soleil à l'heure réelle (aube rosée, jour, coucher doré, nuit bleue), ciel et brume mêlés en continu, fenêtres allumées de 8 h à 20 h ou dès que quelqu'un est là, lampadaires la nuit.
 
 ## Le tableau de bord
 

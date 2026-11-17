@@ -1,19 +1,12 @@
-// Les trois étages de la tour, sans dépendance à three.js. Le Plateau suit la disposition des pôles.
-export const ETAGES = [
-  { id: "plateau", nom: "Plateau", y: 0 },
-  { id: "direction", nom: "Direction", y: 4.2, bornes: [-13, 22, -11, 7] },
-  { id: "penthouse", nom: "Penthouse", y: 8.4, bornes: [0, 22, -11, 5] },
-];
+// Où la caméra se pose pour un niveau de la tour ou pour la ville, sans dépendance à three.js.
+import { TRAME, niveau } from "./tour/plan.js";
 
 export const VILLE = "ville";
 
-// Coupe de la tour : l'étage choisi et ceux du dessous restent visibles ; la ville montre tout.
-export const visibles = (choix) =>
-  ETAGES.map((_, i) => choix === VILLE || i <= choix);
-
-// Où la caméra se pose pour un choix : hauteur du sol, bornes [xmin, xmax, zmin, zmax], recul.
-export function cadrage(choix, plateau) {
-  if (choix === VILLE) return { y: ETAGES[1].y, bornes: plateau, recul: 1.5 };
-  const e = ETAGES[choix];
-  return { y: e.y, bornes: e.bornes ?? plateau, recul: 1 };
+// Hauteur du sol regardé, bornes [xmin, xmax, zmin, zmax] autour de la tour, recul.
+export function cadrage(choix) {
+  const [l, p] = [TRAME.largeur / 2 + 2, TRAME.profondeur / 2 + 2];
+  const bornes = [-l, l, -p, p];
+  if (choix === VILLE) return { y: 16, bornes, recul: 2.6 };
+  return { y: niveau(choix).z, bornes, recul: 1 };
 }
