@@ -29,6 +29,12 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Produit puis Technique
 - **Prochaine étape** : un seul magenta sur la TV sans régie, « Et le grand gagnant est… » sans genre, nom de la soirée sur la story, paramètres avancés de soirée (idée de Théo)
 
+## Dépendances à jour
+
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : scénario salon sur le code d'une branche `chore/e2e-*` (17/11), puis nodemailer, svelte, vite une à une, scénario vert avant chaque PR
+
 ## Statut micro-entreprise
 
 - **Statut** : à faire

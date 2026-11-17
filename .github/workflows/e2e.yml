@@ -2,7 +2,9 @@ name: Scénario salon
 
 # Soirée complète dans de vrais navigateurs, sur le staging uniquement (garde-fou
 # dans playwright.config.js). Une branche release/* part de develop, déjà
-# déployé sur [DEV] : le scénario teste exactement ce qui part en prod
+# déployé sur [DEV] : le scénario teste exactement ce qui part en prod.
+# Une branche chore/e2e-* n'est pas déployée : son code est construit et lancé
+# ici, branché sur la base de staging, pour la tester avant la fusion
 on:
   workflow_dispatch:
   push:
@@ -25,17 +27,32 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Serveur de la branche
+        if: startsWith(github.ref_name, 'chore/e2e-')
+        env:
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
+          ORIGIN: http://localhost:3000
+        run: |
+          npm run build
+          nohup node server.js > "$RUNNER_TEMP/serveur.log" 2>&1 &
+          for i in $(seq 60); do curl -sf http://localhost:3000/healthz && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/serveur.log"; exit 1
       - name: Scénario
-        # Secrets sur cette étape seule : npm ci exécute des scripts d'installation
+        # Secrets jamais sur npm ci : il exécute des scripts d'installation
         env:
           # Jamais secrets.SUPABASE_URL ni SUPABASE_SERVICE_KEY : ce sont ceux de la prod
           SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}
+          E2E_URL: ${{ startsWith(github.ref_name, 'chore/e2e-') && 'http://localhost:3000' || '' }}
         run: npx playwright test
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: rapport-playwright
-          path: playwright-report/
+          path: |
+            playwright-report/
+            ${{ runner.temp }}/serveur.log
           retention-days: 7
