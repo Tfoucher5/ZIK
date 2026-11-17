@@ -51,6 +51,6 @@
   </p>
 
   <DocTip warn label="Respect du droit d'auteur :">
-    Les playlists ZIK utilisent des extraits de 30 secondes conformément aux accords de licence musicale. Ne publiez pas de playlists à des fins commerciales sans autorisation.
+    Les playlists ZIK diffusent de courts extraits via les lecteurs et API des plateformes, les droits restent à leurs ayants droit. Ne publiez pas de playlists à des fins commerciales sans autorisation.
   </DocTip>
 </section>
