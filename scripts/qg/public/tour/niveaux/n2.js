@@ -85,7 +85,7 @@ export default {
       pourquoi: "Façade nord, au calme.",
       mobilier: [
         objet("table-de-massage", 4.4, 1.4, 2, 0.9, 0.2),
-        objet("banc", 6.9, 3.2, 1.2, 1.6),
+        objet("banc", 5.2, 3.2, 1.2, 1.6),
       ],
     },
     {
@@ -102,7 +102,7 @@ export default {
         objet(
           "tapis",
           10 + (k % 5) * 2.2,
-          0.8 + Math.floor(k / 5) * 2.3,
+          0.6 + Math.floor(k / 5) * 2.1,
           0.7,
           1.8,
           0.1,
@@ -125,7 +125,7 @@ export default {
           objet("nacelle", 22.6 + i * 2.2, 0.8, 1, 2.1, 0.45),
         ),
         ...repete(4, (i) =>
-          objet("nacelle", 24.8 + i * 2.2, 3.3, 1, 2.1, 0.45),
+          objet("nacelle", 26.6 + i * 2.2, 3.3, 1, 2.1, 0.45),
         ),
       ],
     },
@@ -203,7 +203,7 @@ export default {
       qui: "tout le monde, Malik pour tester",
       pourquoi:
         "Boîte acoustique dans la salle de jeux : on y essaie les playlists du vendredi.",
-      mobilier: [canape(16, 10.4, 4.6, 0.9), ecran(16.4, 7.6, 20.6, 7.6)],
+      mobilier: [canape(16, 9.9, 4.6, 0.9), ecran(16.4, 7.6, 20.6, 7.6)],
     },
     {
       id: "beale-street",

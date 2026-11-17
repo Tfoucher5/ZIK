@@ -15,8 +15,8 @@ import {
 const gradins = [];
 for (let x = 16.2; x < 28.6; x += 1.05)
   gradins.push(
-    objet("rang-de-sieges", x, 0.8, 0.5, 2.5, 0.1),
-    objet("rang-de-sieges", x, 3.9, 0.5, 2.5, 0.1),
+    objet("rang-de-sieges", x, 0.7, 0.5, 2.4, 0.1),
+    objet("rang-de-sieges", x, 3.7, 0.5, 2.4, 0.1),
   );
 
 const couplet = (id, nom, x, pourquoi) => ({
@@ -48,7 +48,6 @@ export default {
     mur("porteur", 14.4, 0, 14.4, 7.2),
     mur("porteur", 14.4, 7.2, 32.4, 7.2),
     mur("porteur", 32.4, 0, 32.4, 7.2),
-    mur("cloison", 32.4, 7.2, 36, 7.2),
     mur("cloison", 36, 7.2, 43.2, 7.2),
     mur("vitrage", 37.5, 7.2, 37.5, 18),
     mur("cloison", 37.5, 18, 43.2, 18),
@@ -146,7 +145,7 @@ export default {
       pourquoi:
         "À l'est, côté monte-charge : les plateaux montent sans croiser les invités.",
       mobilier: [8.2, 10.2, 12.2, 14.2].map((y) =>
-        objet("chariot", 38.4, y, 4, 1.2),
+        objet("chariot", 38.6, y, 4, 1.2),
       ),
     },
     {
@@ -161,7 +160,7 @@ export default {
       pourquoi:
         "Sur le palier : on sort de l'ascenseur, on prend un verre, on entre en salle.",
       mobilier: [
-        objet("bar", 22.2, 7.9, 3.6, 0.7, 0.1),
+        objet("bar", 24.8, 7.9, 2.8, 0.7, 0.1),
         ronde(23, 15.6, 0.4),
         ronde(25.4, 16.4, 0.4),
       ],
@@ -180,7 +179,7 @@ export default {
       mobilier: [
         ...[
           [15.6, 8.6],
-          [15.8, 16.4],
+          [15.5, 16],
           [20.2, 8.8],
           [20.4, 16.2],
         ].map(([x, y]) => arbre(x, y, 0.9)),

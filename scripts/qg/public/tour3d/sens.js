@@ -5,11 +5,12 @@ const VISES = {
   regie: ["scene", "ecran"],
   console: ["scene", "ecran"],
   chaise: ["table", "ronde", "grande-table", "poste", "ilot"],
+  projecteur: ["ecran"],
   banque: [],
   banc: [],
 };
 // Usager côté salle : le +z local se tourne vers le public (les rangs pour une scène) ou le centre de la pièce.
-const COTE_SALLE = new Set(["scene", "borne", "bar", "comptoir"]);
+const COTE_SALLE = new Set(["scene", "borne", "bar", "comptoir", "cabine"]);
 
 export const milieu = (m) =>
   "x1" in m
@@ -63,7 +64,7 @@ export function rotation(m, piece) {
   const debout = rect && m.w < m.h;
   const base = debout ? Math.PI / 2 : 0;
   const c = piece && cible(m, piece);
-  if (!c || (!rect && m.type !== "chaise")) return base;
+  if (!c || (!rect && !VISES[m.type]?.length)) return base;
   const [x, y] = milieu(m);
   const [dx, dy] = [c.point[0] - x, c.point[1] - y];
   if (!rect) return Math.atan2(-dx, -dy);

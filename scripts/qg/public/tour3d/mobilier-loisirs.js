@@ -216,11 +216,11 @@ export const POINTS_LOISIRS = {
     b.position.y = r;
     g.add(b);
   },
-  projecteur: (g, r) => {
+  // Le groupe est tourné par sens.js : la face lumineuse (-z local) vise l'écran du plateau.
+  projecteur: (g) => {
     pied(g, 0, 0, 1.6);
-    const s = boite(g, 0.6, 0.6, 0.3, MAT.noir, 0, 1.8, 0);
-    s.rotation.y = r ?? 0;
-    boite(g, 0.56, 0.56, 0.02, lueur("#fffaf0", 2), 0, 1.8, 0.16);
+    boite(g, 0.6, 0.6, 0.3, MAT.noir, 0, 1.8, 0);
+    boite(g, 0.56, 0.56, 0.02, lueur("#fffaf0", 2), 0, 1.8, -0.16);
   },
   "disque-or": (g, r) => {
     boite(g, r * 2.6, r * 2.6, 0.05, MAT.noir, 0, 1.6, 0);
@@ -229,20 +229,6 @@ export const POINTS_LOISIRS = {
 };
 
 export const TRACES_LOISIRS = {
-  piano: (parent, d) => {
-    const pts = d.filter((s) => s[0] === "M");
-    const a = versLocal(pts[0][1], pts[0][2]);
-    const g = groupe(parent, a.x + 0.8, a.z - 0.6);
-    boite(g, 1.6, 0.3, 1.2, MAT.noir, 0, 0.85, 0);
-    boite(g, 1.6, 0.05, 0.25, MAT.blanc, 0, 0.98, 0.6);
-    for (const [x, z] of [
-      [-0.7, 0.45],
-      [0.7, 0.45],
-      [0, -0.5],
-    ])
-      pied(g, x, z, 0.7);
-    boite(g, 0.8, 0.5, 0.35, MAT.noir, 0, 0.25, 1.05);
-  },
   "rail-camera": (parent, d) => {
     const [[, x1, y1], [, kx, ky, x2, y2]] = d;
     const a = versLocal(x1, y1);

@@ -10,6 +10,88 @@ export const nomAgent = (id) =>
       ? id.slice(8)
       : (EQUIPE[id]?.nom ?? id);
 
+// Mobilier du penthouse (types p-*), d'après les primitives de trait().
+export function dessinsPenthouse({ L, R, Ci, P, texte }) {
+  const rangee = (pas, cl) => (m) => {
+    L(m.x1, m.y1, m.x2, m.y2, cl);
+    const l = Math.hypot(m.x2 - m.x1, m.y2 - m.y1);
+    const [ux, uy] = [(m.x2 - m.x1) / l, (m.y2 - m.y1) / l];
+    for (let d = pas / 2; d < l; d += pas)
+      Ci(m.x1 + ux * d, m.y1 + uy * d, 0.08, "orf");
+  };
+  const plante = ({ x, y, r }) => (
+    Ci(x, y, r, "arb"),
+    Ci(x, y, r * 0.5, "arb2"),
+    Ci(x, y, 0.1, "pot")
+  );
+  return {
+    "p-marbre": ({ x, y, w, h }) => R(x, y, w, h, "gris"),
+    "p-tapis": ({ x, y, w, h }) => (
+      R(x, y, w, h, "fin"),
+      R(x + 0.15, y + 0.15, w - 0.3, h - 0.3, "arb2")
+    ),
+    "p-mur-albums": rangee(1.1, "orl"),
+    "p-disques-or": rangee(0.95, "orl"),
+    "p-affiches": rangee(1, "mob"),
+    "p-mur-eau": (m) => (
+      L(m.x1, m.y1, m.x2, m.y2, "mob"),
+      L(m.x1 + 0.15, m.y1, m.x2 + 0.15, m.y2, "tir")
+    ),
+    "p-juke-box": ({ x, y, w, h }) => R(x, y, w, h, "orl", 0.25),
+    "p-cabine-dj": ({ x, y, w, h }) => (
+      R(x, y, w, h, "mob"),
+      Ci(x + w * 0.25, y + h / 2, 0.18, "mob"),
+      Ci(x + w * 0.75, y + h / 2, 0.18, "mob")
+    ),
+    "p-bac-vinyles": ({ x, y, w, h }) => {
+      R(x, y, w, h, "mob");
+      for (let k = 0.2; k < h; k += 0.2) L(x, y + k, x + w, y + k, "fin");
+    },
+    "p-enceinte": ({ x, y, w, h }) => (
+      R(x, y, w, h, "mob"),
+      Ci(x + w / 2, y + h / 2, 0.1, "mob")
+    ),
+    "p-micro-or": ({ x, y, r }) => (Ci(x, y, r, "orl"), Ci(x, y, 0.2, "orf")),
+    "p-lustre-disques": ({ x, y, r }) => (
+      Ci(x, y, r, "arb2"),
+      Ci(x, y, r * 0.5, "arb2")
+    ),
+    "p-lustre-anneaux": ({ x, y, r }) =>
+      [1, 0.72, 0.45].forEach((k) => Ci(x, y, r * k, "arb2")),
+    "p-mezzanine": ({ x, y, w, h }) => (
+      R(x, y, w, h, "tir"),
+      texte(x + w / 2, y + h / 2, "mezzanine", "us")
+    ),
+    "p-escalier-helico": ({ x, y, r }) => {
+      Ci(x, y, r, "fin");
+      Ci(x, y, 0.1, "pot");
+      for (let a = 0; a < 6.28; a += 0.4)
+        L(x, y, x + Math.cos(a) * r, y + Math.sin(a) * r, "mob");
+    },
+    "p-bar-onyx": ({ x, y, w, h }) => R(x, y, w, h, "orl", 0.1),
+    "p-cave-vins": ({ x, y, w, h }) => (
+      R(x, y, w, h, "mob"),
+      L(x, y + h / 2, x + w, y + h / 2, "fin")
+    ),
+    "p-cheminee": ({ x, y, r }) => (Ci(x, y, r, "mob"), Ci(x, y, r / 2, "orf")),
+    "p-piano": ({ x, y, w, h }) =>
+      P(
+        `<path d="M${f(x)} ${f(y + h)}h${f(w)}v${f(-h * 0.5)}q0 ${f(-h * 0.5)} ${f(-w / 2)} ${f(-h * 0.5)}t${f(-w / 2)} ${f(h * 0.5)}z" class="mob"/>`,
+      ),
+    "p-piscine": ({ x, y, w, h }) => (
+      R(x, y, w, h, "fin"),
+      R(x + 0.2, y + 0.2, w - 0.4, h - 0.4, "tir")
+    ),
+    "p-transat": ({ x, y, w, h }) => (
+      R(x, y, w, h, "mob", 0.1),
+      L(x + w * 0.7, y, x + w * 0.7, y + h, "mob")
+    ),
+    "p-brasero": ({ x, y, r }) => (Ci(x, y, r, "mob"), Ci(x, y, r / 2, "orf")),
+    "p-palmier": plante,
+    "p-plante": plante,
+  };
+}
+
 export function trait() {
   const o = [];
   const lab = [];
@@ -90,9 +172,12 @@ export function trait() {
     L(x, y + h, x + w, y, cl)
   );
 
+  const penthouse = dessinsPenthouse({ L, R, Ci, P, texte });
+
   // Un meuble du plan, d'après son type (outils.js).
   function meuble(m) {
     const { type, x, y, w, h, r } = m;
+    if (penthouse[type]) return penthouse[type](m);
     if ("x1" in m)
       return L(m.x1, m.y1, m.x2, m.y2, type === "ecran" ? "ecr" : "mob");
     if (type === "table") return tab(x, y, w, h);

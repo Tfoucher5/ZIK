@@ -167,7 +167,7 @@ export function mursNoyau(id) {
 export const dessertes = () =>
   Object.fromEntries(NOYAU.ascenseurs.map((a) => [a.id, [...a.dessert]]));
 
-// choix : id de niveau ou "ville". visible : groupe affiché ; ouvert : façade sud abaissée à l'allège.
+// choix : id de niveau ou "ville". visible : groupe affiché ; ouvert : murs du niveau abaissés (echelleMur).
 export function etatCoupe(choix) {
   const k = choix === "ville" ? NIVEAUX.length - 1 : indice(choix);
   if (k < 0) throw new Error(`niveau inconnu : ${choix}`);
@@ -178,6 +178,13 @@ export function etatCoupe(choix) {
     ]),
   );
 }
+
+export const MUR_BAS = 1.1;
+
+// Échelle verticale d'un groupe de murs ({ niveau, hauteur }) : bas au niveau ouvert, entier ailleurs.
+// Les murs du noyau (ascenseur.js) ne sont pas des groupes de murs : ils gardent leur hauteur.
+export const echelleMur = (choix, { niveau, hauteur }) =>
+  etatCoupe(choix)[niveau].ouvert ? MUR_BAS / hauteur : 1;
 
 // Altitude au-dessus de laquelle rien ne s'affiche pour un choix de coupe.
 export const plafondCoupe = (choix) => {

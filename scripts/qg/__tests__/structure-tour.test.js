@@ -3,7 +3,9 @@ import { NIVEAUX, NOYAU, TRAME, niveau } from "../public/tour/plan.js";
 import {
   acroteres,
   dalle,
+  MUR_BAS,
   dessertes,
+  echelleMur,
   etatCoupe,
   facades,
   gamme,
@@ -154,6 +156,28 @@ describe("coupe", () => {
     expect(ids(e, "visible")).toEqual(["ss", "n0", "n1", "n2", "n3"]);
     expect(ids(e, "ouvert")).toEqual(["n3"]);
     expect(plafondCoupe("n3")).toBeCloseTo(14.6, 1);
+  });
+
+  it("abaisse à 1,10 m les murs du seul niveau choisi, tout remonte en vue ville", () => {
+    const mur = (id) => ({ niveau: id, hauteur: niveau(id).h - 0.8 });
+    expect(echelleMur("n4", mur("n4")) * mur("n4").hauteur).toBeCloseTo(
+      MUR_BAS,
+      5,
+    );
+    expect(echelleMur("n4", mur("n3"))).toBe(1);
+    for (const n of NIVEAUX) expect(echelleMur("ville", mur(n.id))).toBe(1);
+  });
+
+  it("laisse le noyau hors des murs abaissés : aucun mur d'étage sur son contour ou dedans", () => {
+    const [x1, y1, x2, y2] = NOYAU.rect;
+    const dans = (x, y) =>
+      x > x1 - 0.01 && x < x2 + 0.01 && y > y1 - 0.01 && y < y2 + 0.01;
+    for (const n of NIVEAUX)
+      for (const m of n.murs)
+        expect(
+          dans(m.x1, m.y1) && dans(m.x2, m.y2),
+          `${n.id} ${m.type} (${m.x1}, ${m.y1})`,
+        ).toBe(false);
   });
 
   it("refuse un niveau inconnu", () => {

@@ -135,10 +135,14 @@ function ouverture(g, p, h, anime, x0) {
   if (p.controle === "issue") boite(milieu, 0.36, 0.14, 0.2, sortie, 0, 2.3, 0);
 }
 
-export function cloisons(g, niveau, h, anime) {
+// Tout dans un groupe de murs, abaissé d'un bloc quand le niveau est ouvert en coupe (structure.js) ; garde-corps à part.
+export function cloisons(parent, niveau, h, anime) {
+  const g = groupe(parent, 0, 0);
+  g.userData.mur = { niveau: niveau.id, hauteur: h };
   for (const m of niveau.murs ?? []) {
     if (IGNORES.has(m.type) || enFacade(m, niveau.x0)) continue;
-    for (const t of troncons(m, niveau.portes ?? [])) paroi(g, t, m.type, h);
+    const ou = m.type === "garde-corps" ? parent : g;
+    for (const t of troncons(m, niveau.portes ?? [])) paroi(ou, t, m.type, h);
   }
   for (const p of niveau.portes ?? []) ouverture(g, p, h, anime, niveau.x0);
 }

@@ -98,8 +98,8 @@ export default {
       mobilier: [
         objet("lineaire", 22.4, 2.2, 12.6, 0.8, 0.1),
         objet("lineaire", 22.4, 4.4, 5.2, 0.8, 0.1),
-        objet("caisse", 33, 4.6, 0.8, 1.4),
-        objet("caisse", 34.4, 4.6, 0.8, 1.4),
+        objet("caisse", 33, 4.4, 0.8, 1.4),
+        objet("caisse", 34.4, 4.4, 0.8, 1.4),
       ],
     },
     {
@@ -181,7 +181,7 @@ export default {
       etiquette: [21.6, 22.5],
       qui: "tout le monde, le midi",
       pourquoi: "Plein sud, porte sur la loggia : la grande salle des midis.",
-      mobilier: rangs(8.6, 34, [20.6, 23.2]),
+      mobilier: rangs(8.8, 34, [20.6, 23.2]),
     },
     {
       id: "cafe-del-mar",

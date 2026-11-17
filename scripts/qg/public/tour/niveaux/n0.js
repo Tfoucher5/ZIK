@@ -122,8 +122,8 @@ export default {
       mobilier: [
         banque(9.6, 9.3, 4, 0.9, "accueil"),
         ecran(8.4, 7.55, 15.6, 7.55),
-        canape(3.4, 15, 2.6, 0.9),
-        canape(3.4, 16.6, 2.6, 0.9),
+        canape(0.6, 15, 2.6, 0.9),
+        canape(0.6, 16.6, 2.6, 0.9),
         ronde(7, 16.2, 0.5),
         arbre(2, 9.4, 0.9),
         arbre(12.6, 16.2, 0.9),
