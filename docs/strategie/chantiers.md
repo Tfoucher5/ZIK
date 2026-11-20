@@ -33,7 +33,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : nodemailer 10.6.0 (18/11), svelte 5.57.3 (19/11), puis vite et mailparser, une PR chacune avec le scénario salon vert sur le staging
+- **Prochaine étape** : nodemailer 10.6.0 (18/11), svelte 5.57.3 (19/11, scénario vert), vite 8.3.8 (20/11, scénario salon relancé après déploiement sur le staging, revert si rouge), puis mailparser
 
 ## Statut micro-entreprise
 
