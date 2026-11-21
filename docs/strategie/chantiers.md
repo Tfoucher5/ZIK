@@ -33,7 +33,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : nodemailer 10.6.0 (18/11), svelte 5.57.3 (19/11, scénario vert), vite 8.3.8 (20/11) annulé ; scénario rouge expliqué le 21/11 (clic sur « Rejoindre » avant l'hydratation dans les tests, pas un bug du jeu), tests corrigés (PR `chore/e2e-hydratation`) ; ensuite retenter vite 8.3.8 seul, puis mailparser
+- **Prochaine étape** : nodemailer 10.6.0 (18/11), svelte 5.57.3 (19/11, scénario vert), vite 8.3.8 (20/11) annulé ; cause probable trouvée le 21/11 (clic sur « Rejoindre » parti avant l'hydratation dans les tests), tests corrigés (#551, scénario vert) ; scénario à relancer 2 ou 3 fois avant de retenter vite 8.3.8 seul, puis mailparser
 
 ## Statut micro-entreprise
 
