@@ -22,6 +22,8 @@ test("coupure signalée, place rendue par l'hôte à un autre navigateur", async
   const ctx = await browser.newContext(devices["iPhone 13"]);
   const tel = await ctx.newPage();
   await tel.goto(`/salon/play?code=${code}`);
+  // Tuiles posées au montage : page hydratée, le clic n'est plus perdu
+  await expect(tel.locator(".sp-tuiles")).toBeVisible();
   await tel.getByPlaceholder("Ex. : Julie").fill("Julie");
   await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
   await expect(tel.getByPlaceholder("Ex. : Julie")).toBeHidden();
@@ -41,6 +43,8 @@ test("coupure signalée, place rendue par l'hôte à un autre navigateur", async
     await browser.newContext(devices["iPhone 13"])
   ).newPage();
   await autre.goto(`/salon/play?code=${code}`);
+  // Tuiles posées au montage : page hydratée, le clic n'est plus perdu
+  await expect(autre.locator(".sp-tuiles")).toBeVisible();
   await autre.getByPlaceholder("Ex. : Julie").fill("Julie");
   await autre.getByRole("button", { name: "Rejoindre", exact: true }).click();
   await autre
@@ -77,6 +81,8 @@ test("QCM : tap pendant une coupure jamais verrouillé à tort, réponse compté
   const ctx = await browser.newContext(devices["iPhone 13"]);
   const tel = await ctx.newPage();
   await tel.goto(`/salon/play?code=${code}`);
+  // Tuiles posées au montage : page hydratée, le clic n'est plus perdu
+  await expect(tel.locator(".sp-tuiles")).toBeVisible();
   await tel.getByPlaceholder("Ex. : Julie").fill("Julie");
   await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
   await expect(tel.getByPlaceholder("Ex. : Julie")).toBeHidden();
