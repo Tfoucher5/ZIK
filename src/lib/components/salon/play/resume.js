@@ -62,11 +62,15 @@ export function takeAutoResume(code, storage, now = Date.now()) {
   }
 }
 
-// « Rejoindre » touché avant que la page soit prête (réseau lent) : le
-// formulaire part dans l'adresse et la page rejoint seule au chargement
-export function pendingJoin(search) {
+// Adresse /salon/play?code=…&pseudo=… : code du QR, et formulaire envoyé avant
+// que la page soit prête (réseau lent), lus par le serveur pour le premier rendu
+export function joinParams(search) {
   const q = new URLSearchParams(search);
-  const code = (q.get("code") || "").toUpperCase();
-  const pseudo = (q.get("pseudo") || "").trim().slice(0, 20);
-  return /^[A-Z0-9]{6}$/.test(code) && pseudo ? { code, pseudo } : null;
+  return {
+    code: (q.get("code") || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 6),
+    pseudo: (q.get("pseudo") || "").trim().slice(0, 20),
+  };
 }

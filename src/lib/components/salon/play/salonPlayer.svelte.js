@@ -180,6 +180,18 @@ export class SalonPlayer {
     }
   };
 
+  // Formulaire envoyé avant que la page soit prête : on rejoint au chargement,
+  // sauf si ce téléphone a sa place ici sous un autre pseudo (carte de reprise)
+  joinPending = (pseudo) => {
+    this.joining = false;
+    if (!pseudo) return;
+    if (this.resume?.code === this.codeInput && this.resume.username !== pseudo)
+      return;
+    this.resume = null;
+    this.usernameInput = pseudo;
+    this.connectAndJoin();
+  };
+
   forgetResume = () => {
     try {
       forgetResume(localStorage, this.resume.code);

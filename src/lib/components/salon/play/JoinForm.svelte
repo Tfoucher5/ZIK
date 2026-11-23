@@ -28,8 +28,7 @@
   // Sans JavaScript encore chargé, le formulaire part en GET et la page rejoint au chargement
   function submit(e) {
     e.preventDefault();
-    if (!usernameInput.trim() && document.activeElement?.classList.contains('sp-code-input')) document.getElementById('sp-username')?.focus();
-    else onJoin();
+    onJoin();
   }
 </script>
 
@@ -85,6 +84,7 @@
       autocomplete="off"
       spellcheck="false"
       oninput={e => { codeInput = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
+      onkeydown={e => { if (e.key === 'Enter' && !usernameInput.trim()) { e.preventDefault(); document.getElementById('sp-username')?.focus(); } }}
     >
   </label>
   <QrScanner onCode={(code) => { codeInput = code; document.getElementById('sp-username')?.focus(); }} />

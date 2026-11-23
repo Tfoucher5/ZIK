@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   forgetResume,
   markAutoResume,
-  pendingJoin,
+  joinParams,
   readResume,
   takeAutoResume,
 } from "../resume.js";
@@ -106,25 +106,25 @@ describe("reprise sans appui après une relance automatique", () => {
   });
 });
 
-describe("pendingJoin", () => {
-  it("rejoint avec le code et le pseudo envoyés avant le chargement", () => {
-    expect(pendingJoin("?code=abc123&pseudo=%20Julie%20")).toEqual({
+describe("joinParams", () => {
+  it("lit le code et le pseudo envoyés avant le chargement", () => {
+    expect(joinParams("?code=abc123&pseudo=%20Julie%20")).toEqual({
       code: "ABC123",
       pseudo: "Julie",
     });
   });
 
-  it("ignore une adresse incomplète ou fausse", () => {
-    expect(pendingJoin("?code=ABC123")).toBeNull();
-    expect(pendingJoin("?code=ABC123&pseudo=%20")).toBeNull();
-    expect(pendingJoin("?code=AB&pseudo=Julie")).toBeNull();
-    expect(pendingJoin("?code=ABC12!&pseudo=Julie")).toBeNull();
-    expect(pendingJoin("")).toBeNull();
+  it("nettoie un code faux et garde le pseudo", () => {
+    expect(joinParams("?code=ab-1&pseudo=Julie")).toEqual({
+      code: "AB1",
+      pseudo: "Julie",
+    });
+    expect(joinParams("")).toEqual({ code: "", pseudo: "" });
   });
 
-  it("coupe le pseudo à 20 caractères comme le champ", () => {
-    expect(
-      pendingJoin("?code=ABC123&pseudo=" + "a".repeat(40)).pseudo,
-    ).toHaveLength(20);
+  it("coupe le code à 6 et le pseudo à 20 caractères comme les champs", () => {
+    const r = joinParams("?code=ABCDEFGH&pseudo=" + "a".repeat(40));
+    expect(r.code).toBe("ABCDEF");
+    expect(r.pseudo).toHaveLength(20);
   });
 });
