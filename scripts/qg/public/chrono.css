@@ -1,0 +1,90 @@
+/* Chronologie des 30 dernières minutes : une piste par instance. */
+.chrono {
+  overflow-x: auto;
+}
+.chrono-in {
+  display: grid;
+  gap: 4px;
+  min-width: 640px;
+  padding: 10px 14px 12px;
+}
+.axe,
+.piste {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+.axe .ech {
+  position: relative;
+  height: 16px;
+}
+.axe .ech span {
+  position: absolute;
+  transform: translateX(-50%);
+  font: 400 11px var(--mono);
+  color: var(--faint);
+  white-space: nowrap;
+}
+.axe .ech span:first-child {
+  transform: none;
+}
+.axe .ech span:last-child {
+  transform: translateX(-100%);
+}
+.piste .qui {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 12px var(--mono);
+  color: var(--faint);
+}
+.piste.active .qui {
+  color: var(--text);
+}
+.barres {
+  position: relative;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.barres i {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  background: var(--c);
+  transition:
+    left 0.9s linear,
+    width 0.9s linear;
+}
+.piste:not(.active) .barres i {
+  opacity: 0.5;
+}
+.piste.active .barres::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 2px;
+  background: var(--accent);
+}
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 0 14px 12px;
+}
+.legende span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.legende i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--c);
+}

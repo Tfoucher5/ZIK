@@ -1,111 +1,64 @@
-/* Tableau de bord : une grille de blocs, deux colonnes sur grand écran. */
-.grille {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
-  gap: 12px;
-  padding: 16px 20px 20px;
-}
-.bloc {
-  padding: 14px 16px;
-  background: var(--verre);
-  border: 1px solid var(--bord);
-  border-radius: 12px;
-}
-.bloc h2 {
-  margin: 0 0 10px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--doux);
-}
-.bloc p {
-  margin: 4px 0;
-}
-.bloc .note,
-.bloc .vide {
-  color: var(--doux);
-  font-size: 12px;
-}
-.bloc .alerte {
-  color: var(--rouge);
-  font-weight: 600;
-}
-.chantiers,
-.flux {
-  max-height: 60vh;
-  overflow: auto;
-}
-.jauge + .jauge {
-  margin-top: 12px;
-}
-.jauge .tete {
+/* Flux en direct filtrable et chantiers. */
+.filtres {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
 }
-.jauge strong {
-  font-size: 20px;
+.filtres button {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--sans);
+  cursor: pointer;
+}
+.filtres button[aria-pressed="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+.flux {
+  max-height: 460px;
+  margin: 0;
+  padding: 4px 0;
+  overflow: auto;
+  list-style: none;
+}
+.flux li {
+  display: grid;
+  grid-template-columns: 42px 16px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 6px 14px;
+  animation: arrive 0.3s ease-out;
+}
+.flux time {
+  font: 400 12px var(--mono);
+  color: var(--faint);
   font-variant-numeric: tabular-nums;
 }
-.piste {
-  height: 8px;
-  margin: 4px 0;
-  border-radius: 999px;
-  background: var(--bord);
-  overflow: hidden;
+.flux svg {
+  margin-top: 2px;
+  color: var(--fam);
 }
-.piste i {
-  display: block;
-  height: 100%;
-  background: var(--vif);
-}
-.jauge[data-niveau="orange"] .piste i {
-  background: var(--alerte);
-}
-.jauge[data-niveau="rouge"] .piste i {
-  background: var(--rouge);
-}
-.jauge small {
-  color: var(--doux);
-}
-.equipe,
-.chantiers ul,
-.flux ol {
-  list-style: none;
+.flux p {
   margin: 0;
-  padding: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-.equipe {
-  max-height: 34vh;
-  overflow: auto;
+.flux p b {
+  font-weight: 600;
 }
-.equipe li {
-  padding: 8px 0;
-  border-top: 1px solid var(--bord);
+.flux p span {
+  color: var(--muted);
 }
-.equipe li:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-.equipe .tete {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.equipe b {
-  color: var(--vif);
-}
-.equipe b span {
-  color: var(--doux);
-  font-weight: 400;
-}
-.equipe time,
-.equipe small {
-  color: var(--doux);
-  font-size: 12px;
-}
-.equipe small {
-  display: block;
+
+.chantiers {
+  padding: 8px 14px 12px;
 }
 .groupe + .groupe {
   margin-top: 10px;
@@ -113,42 +66,35 @@
 .groupe h3,
 .groupe summary {
   margin: 0 0 4px;
-  font-size: 13px;
-  color: var(--doux);
-  cursor: default;
+  font: 500 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .groupe summary {
   cursor: pointer;
 }
+.chantiers ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 .chantiers li {
   padding: 6px 0 6px 12px;
-  border-left: 3px solid var(--bord);
+  border-left: 2px solid var(--line);
   margin-bottom: 4px;
 }
 .chantiers li[data-etat="en-cours"] {
-  border-left-color: var(--vif);
+  border-left-color: var(--accent);
 }
 .chantiers li[data-etat="fait"] {
   opacity: 0.6;
 }
+.chantiers li b {
+  font-weight: 500;
+}
 .chantiers li small {
   display: block;
-  color: var(--doux);
+  color: var(--muted);
   font-size: 12px;
-}
-.flux li {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--bord);
-  font-size: 13px;
-  animation: entree 0.4s ease-out;
-}
-.flux time {
-  color: var(--doux);
-  font-variant-numeric: tabular-nums;
-}
-.flux b {
-  color: var(--vif);
 }
