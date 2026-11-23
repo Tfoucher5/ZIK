@@ -60,6 +60,12 @@ export function refDe(code, now) {
   return `${code || "—"} · ${hh}:${mm}`;
 }
 
+// Repli quand l'écran de relance a lui-même planté, lu devant la salle
+export const TEXTES_SECOURS = [
+  "On retourne le disque.",
+  "La soirée reprend toute seule.",
+];
+
 // L'écran de relance a lui-même planté : rechargement toutes les 30 s, sans
 // autre dépendance que le navigateur
 export function creerSecours(relance, deps = {}) {

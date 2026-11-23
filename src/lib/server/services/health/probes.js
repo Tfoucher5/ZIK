@@ -6,7 +6,7 @@ import { getStripe, WEBHOOK_EVENTS } from "../../stripe.js";
 import { grade } from "./levels.js";
 import { mediaMissesSince } from "./mediaMisses.js";
 import { countSince } from "./opsEvents.js";
-import { PREFIXE_ECRAN } from "./clientCrash.js";
+import { estEcranSalon } from "./clientCrash.js";
 import { TIMEOUT_MS, httpProbe, signal, timed } from "./httpProbe.js";
 import { WIKIDATA_UA, wikidataSearchUrl } from "../music/wikidata.js";
 
@@ -34,6 +34,7 @@ export const LABELS = {
   eventLoop: "Réactivité du serveur",
   memory: "Mémoire du serveur",
   errors: "Erreurs serveur",
+  screens: "Écrans du salon",
   media: "Titres sans musique en salon",
   snapshots: "Sauvegarde des soirées",
   load: "Salons ouverts",
@@ -247,13 +248,23 @@ export function makeProbes({
     },
     async errors() {
       const since = Date.now() - FIVE_MIN;
-      const serveur = (e) =>
-        e.level === "error" && !e.msg.startsWith(PREFIXE_ECRAN);
+      const serveur = (e) => e.level === "error" && !estEcranSalon(e);
       const n = log.filter((e) => serveur(e) && e.ts > since).length;
       return {
         result: grade(n, 10, 30),
         value: n,
         detail: n ? log.find(serveur)?.msg.split("\n")[0] : null,
+      };
+    },
+    // Une TV en boucle de relance envoie un plantage par minute environ :
+    // 3 en 5 min, c'est un écran coincé ; 10, plusieurs soirées touchées
+    async screens() {
+      const since = Date.now() - FIVE_MIN;
+      const recents = log.filter((e) => estEcranSalon(e) && e.ts > since);
+      return {
+        result: grade(recents.length, 3, 10),
+        value: recents.length,
+        detail: recents[0]?.msg.split("\n")[0] ?? null,
       };
     },
     async media() {

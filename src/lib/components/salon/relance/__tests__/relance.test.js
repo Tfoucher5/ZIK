@@ -175,11 +175,34 @@ describe("Relance", () => {
     a.ouvrir();
     await vi.advanceTimersByTimeAsync(3000);
     expect(a.reload).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(2);
     await vi.advanceTimersByTimeAsync(59900);
     expect(a.reload).toHaveBeenCalledOnce();
     await vi.advanceTimersByTimeAsync(400);
     expect(a.reload).toHaveBeenCalledTimes(2);
     expect(a.healthzCalls()).toHaveLength(2);
+  });
+
+  it("rechargement sans effet : pause, le bouton relance", async () => {
+    const a = appareil();
+    const r = a.ouvrir();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect([r.mode, r.sec]).toEqual(["auto", 0]);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect([r.mode, r.sec]).toEqual(["pause", null]);
+    r.maintenant();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(a.reload).toHaveBeenCalledTimes(2);
+  });
+
+  it("horloge qui recule : le bouton relance quand même", async () => {
+    const a = appareil();
+    const r = a.ouvrir();
+    await vi.advanceTimersByTimeAsync(6000);
+    vi.setSystemTime(Date.now() - 3600000);
+    r.maintenant();
+    await vi.advanceTimersByTimeAsync(3100);
+    expect(a.reload).toHaveBeenCalledTimes(2);
   });
 
   it("destroy arrête tout", async () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "svelte/server";
 import SalonRelance from "../SalonRelance.svelte";
-import { REPLI_MS, creerSecours } from "../relance.js";
+import { REPLI_MS, TEXTES_SECOURS, creerSecours } from "../relance.js";
 
 describe("SalonRelance rendu serveur, vraie Relance", () => {
   it.each(["host", "regie", "play"])(
@@ -12,9 +12,14 @@ describe("SalonRelance rendu serveur, vraie Relance", () => {
         props: { ecran, code: "K7M2QX", version: "3.34.0", error: null },
       });
       expect((body.match(/role="status"/g) ?? []).length).toBe(1);
-      expect(body).not.toContain("recharge");
     },
   );
+
+  it("repli : deux phrases calmes, aucun mot interdit devant la salle", () => {
+    expect(TEXTES_SECOURS).toHaveLength(2);
+    for (const t of TEXTES_SECOURS)
+      expect(t).not.toMatch(/recharge|erreur|serveur|bug|500/i);
+  });
 });
 
 describe("creerSecours", () => {

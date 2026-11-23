@@ -4,8 +4,13 @@ import { validate, str, int, optional } from "../../socket/safe.js";
 const ECRANS = new Set(["host", "regie", "play"]);
 const CODE = /^[A-Z0-9]{4,12}$/;
 const TROP = "Trop de signalements, réessaie dans un instant.";
-// Plantage d'un navigateur : dans ops.errors, hors de la sonde « Erreurs serveur »
+// Plantage d'un navigateur : dans ops.errors, compté par la sonde « Écrans du
+// salon » et non par « Erreurs serveur »
 export const PREFIXE_ECRAN = "[ecran-salon]";
+export const estEcranSalon = (e) =>
+  e?.level === "error" &&
+  typeof e.msg === "string" &&
+  e.msg.startsWith(PREFIXE_ECRAN);
 
 const SCHEMA = {
   ecran: (v) => (ECRANS.has(v) ? v : undefined),

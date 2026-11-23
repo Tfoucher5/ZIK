@@ -6,8 +6,9 @@
 
   let { children } = $props();
 
-  // Hors des trois écrans (404 sous /salon) : le téléphone, l'écran le plus
-  // sobre, sans média ni action de régie
+  // Ce layout ne couvre que host, regie et play (un 404 sous /salon passe par
+  // le layout racine) ; si screenOf ne reconnaît pas l'adresse quand même : le
+  // téléphone, l'écran le plus sobre, sans média ni action de régie
   const ecran = $derived(screenOf(page.url.pathname) ?? 'play');
   const code = $derived((page.url.searchParams.get('code') ?? '').toUpperCase().slice(0, 12));
 </script>

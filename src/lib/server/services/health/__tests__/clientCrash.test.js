@@ -3,7 +3,8 @@ import { recordClientCrash } from "../clientCrash.js";
 import { sendCrash } from "../../../../components/salon/relance/journal.js";
 
 vi.mock("../../../config.js", () => ({ getAdminClient: () => ({}) }));
-const { makeProbes } = await import("../probes.js");
+const { makeProbes, LABELS } = await import("../probes.js");
+const { GROUPS } = await import("../status.js");
 
 const nominal = {
   ecran: "host",
@@ -161,20 +162,49 @@ describe("recordClientCrash", () => {
   });
 });
 
-describe("sonde « Erreurs serveur »", () => {
-  it("ne compte pas les plantages des écrans du salon, gardés dans le journal", async () => {
+describe("sondes « Erreurs serveur » et « Écrans du salon »", () => {
+  const journal = (n) => {
     const log = [];
     errSpy.mockImplementation((msg) =>
       log.unshift({ ts: Date.now(), level: "error", msg }),
     );
-    for (let i = 0; i < 12; i++) noter(nominal);
+    for (let i = 0; i < n; i++) noter(nominal);
     console.error("panne serveur");
-    expect(log).toHaveLength(13);
-    const r = await makeProbes({ loop: {}, log, env: {} }).errors();
-    expect(r).toMatchObject({
+    return makeProbes({ loop: {}, log, env: {} });
+  };
+
+  it("les plantages d'écran ne comptent pas comme erreurs serveur", async () => {
+    expect(await journal(12).errors()).toMatchObject({
       result: "ok",
       value: 1,
       detail: "panne serveur",
     });
+  });
+
+  it.each([
+    [0, "ok"],
+    [2, "ok"],
+    [3, "warn"],
+    [9, "warn"],
+    [10, "fail"],
+  ])("%i plantages d'écran en 5 min : %s", async (n, result) => {
+    const r = await journal(n).screens();
+    expect(r).toMatchObject({ result, value: n });
+    expect(r.detail).toBe(
+      n
+        ? "[ecran-salon] host ABC234 essai 2 : Cannot read properties of undefined"
+        : null,
+    );
+  });
+
+  it("au-delà de 5 min : oublié", async () => {
+    const p = journal(10);
+    vi.setSystemTime(t + 5 * 60_000 + 1);
+    expect(await p.screens()).toMatchObject({ result: "ok", value: 0 });
+  });
+
+  it("admin seulement : ni dans /statut, libellé pour l'admin", () => {
+    expect(GROUPS.flatMap((g) => g.probes)).not.toContain("screens");
+    expect(LABELS.screens).toBe("Écrans du salon");
   });
 });

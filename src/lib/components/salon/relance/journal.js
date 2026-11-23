@@ -18,18 +18,23 @@ const texte = (v) => {
 
 const echappe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// Mots entiers seulement : un pseudo de 2 lettres ne hache pas la pile
+// Secrets longs (clé de régie, jetons) masqués partout, même collés à un mot ;
+// pseudo court en mot entier seulement, pour ne pas hacher la pile. Pas de
+// lookbehind : il lève avant Safari 16.4 et plus rien ne serait journalisé.
 export function redact(text, secrets = []) {
   let out = texte(text).replace(/\?[^\s)'":]*/g, "");
-  for (const s of secrets)
-    if (typeof s === "string" && s.length >= 2)
+  for (const s of secrets) {
+    if (typeof s !== "string" || s.length < 2) continue;
+    if (s.length >= 12) out = out.split(s).join("…");
+    else
       out = out.replace(
         new RegExp(
-          `(?<![\\p{L}\\p{N}_])${echappe(s)}(?![\\p{L}\\p{N}_])`,
+          `(^|[^\\p{L}\\p{N}_])${echappe(s)}(?![\\p{L}\\p{N}_])`,
           "gu",
         ),
-        "…",
+        "$1…",
       );
+  }
   return out;
 }
 

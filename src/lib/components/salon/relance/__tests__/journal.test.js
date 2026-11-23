@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
 import { knownSecrets, noteCrash, redact, sendCrash } from "../journal.js";
 import { handleError } from "../../../../../hooks.client.js";
 
@@ -30,6 +31,17 @@ describe("journal des plantages : rien de personnel", () => {
     const regie = local({ zik_salon_key_ABC123: "cle-de-regie-42" });
     const t = redact("boum cle-de-regie-42 ici", knownSecrets(regie, ""));
     expect(t).toBe("boum … ici");
+  });
+
+  it("secret long masqué même collé à un mot", () => {
+    const cle = "cle-de-regie-42";
+    expect(redact(`k key_${cle}x`, [cle])).toBe("k key_…x");
+    expect(redact("Ana_x Ana", ["Ana"])).toBe("Ana_x …");
+  });
+
+  it("aucun lookbehind (lève avant Safari 16.4)", () => {
+    const src = readFileSync(new URL("../journal.js", import.meta.url), "utf8");
+    expect(src).not.toContain("(?<");
   });
 
   it("mots entiers seulement : un pseudo court ne hache pas la pile", () => {

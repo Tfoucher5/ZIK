@@ -202,6 +202,7 @@ export class Relance {
     try {
       const now = this.#d.now();
       if (!bouton && this.#cache()) return;
+      this.#derniere = Math.min(this.#derniere, now);
       if (now - this.#derniere < ECART_MIN_MS) {
         this.#cible = this.#derniere + ECART_MIN_MS;
         return;
@@ -249,18 +250,24 @@ export class Relance {
         /* rechargement */
       }
     }
-    // Navigation qui n'a pas lieu (navigateur figé, rechargement bloqué) : nouvel essai lent
-    this.#reprendreDans(SANS_NAVIGATION_MS);
+    // Toujours là 3 s après : rechargement sans effet (navigateur figé ou
+    // bloqué), pause avec le bouton, nouvel essai 60 s après le précédent
+    this.#reprendreDans(ECART_MIN_MS, () => {
+      this.mode = "pause";
+      this.sec = null;
+      this.#cible = now + SANS_NAVIGATION_MS;
+    });
     this.#d.reload();
   }
 
-  #reprendreDans(ms) {
+  #reprendreDans(ms, alors) {
     this.#fini = true;
     for (const t of this.#timeouts) this.#d.timers.clearTimeout(t);
     this.#timeouts = [
       this.#d.timers.setTimeout(() => {
         this.#fini = false;
         this.#cible = this.#d.now();
+        alors?.();
         this.#tictac();
       }, ms),
     ];

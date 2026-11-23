@@ -35,6 +35,24 @@ describe("compteur d'essais", () => {
     }
   });
 
+  it("stockage qui ignore l'écriture sans lever : 30 s", () => {
+    const muet = { ...stockage(), setItem() {} };
+    const r = appareil({ storage: muet }).ouvrir();
+    expect(r.essai).toBeGreaterThanOrEqual(3);
+    expect(r.sec).toBe(30);
+  });
+
+  it("horloge qui recule : relance quand même au bout de 3 s", async () => {
+    const a = appareil();
+    a.ouvrir().maintenant();
+    await vi.advanceTimersByTimeAsync(0);
+    vi.setSystemTime(Date.now() - 3600000);
+    const r = a.ouvrir();
+    expect(r.sec).toBe(3);
+    await vi.advanceTimersByTimeAsync(3100);
+    expect(a.reload).toHaveBeenCalledTimes(2);
+  });
+
   it("stockage qui marche : l'essai est écrit dès l'ouverture", () => {
     const a = appareil();
     a.ouvrir();
