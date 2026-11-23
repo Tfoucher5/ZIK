@@ -11,50 +11,38 @@ Ce qui est en cours et ce qui reste à faire, affiché dans le QG (bloc « Chant
 
 Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
-## Création et avant-partie
+## Release v3.33.0
 
-- **Statut** : en cours
-- **Équipe** : Technique puis Opérations
-- **Prochaine étape** : création, TV, téléphone, régie et son testé fusionnés (#509, #510, #511, #513, #517) ; scénarios e2e adaptés et nouveautés en cours, puis recette staging
-
-## Fin de partie et Rejouer
-
-- **Statut** : en cours
-- **Équipe** : Technique
-- **Prochaine étape** : serveur (#514) et story 9:16 (#515) fusionnés ; TV fin de partie, entracte TV, téléphone et régie en code ; podium de soirée ensuite
-
-## Onglets de la régie
-
-- **Statut** : en cours
-- **Équipe** : Technique
-- **Prochaine étape** : maquette validée par Théo, code en cours avec la régie de fin de partie
-
-## Passage Pro en pleine soirée
-
-- **Statut** : en cours
-- **Équipe** : Technique puis Produit
-- **Prochaine étape** : serveur fusionné (salon Pro au paiement #504, file d'attente #505) ; maquette du bouton de paiement en régie et de l'écran d'attente téléphone à faire
+- **Statut** : fait
+- **Équipe** : Opérations
+- **Prochaine étape** : en prod le 16/11 (avant-partie, fin de partie, régie, ZIK Pro en pleine soirée) ; vraie soirée testée par Théo le 16/11 (OK, une attente de son à la 10e manche) ; restent iPhone, 13e joueur puis Soirée 24 h en test Stripe, QR à 5 m
 
 ## Promo
 
 - **Statut** : en cours
 - **Équipe** : Marketing
-- **Prochaine étape** : carrousel programmé le 19/11 à 18 h ; Feuille de match prête pour le 22/11 à 18 h (Théo clique « Programmer » dans TikTok Studio)
+- **Prochaine étape** : carrousel programmé le 19/11 à 18 h ; Feuille de match en brouillon TikTok (date 22/11 18 h), Théo la programme depuis Brouillons
 
-## QG
+## Retouches après tests réels
 
-- **Statut** : fait
+- **Statut** : à faire
+- **Équipe** : Produit puis Technique
+- **Prochaine étape** : un seul magenta sur la TV sans régie, « Et le grand gagnant est… » sans genre, nom de la soirée sur la story, paramètres avancés de soirée (idée de Théo)
+
+## Montées de dépendances
+
+- **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : bureaux en vrais espaces d'équipe (#494)
-
-## Release v3.32.0
-
-- **Statut** : fait
-- **Équipe** : Opérations
-- **Prochaine étape** : en prod le 16/11 ; achat test Stripe et soirée multi-téléphones par Théo quand il veut
+- **Prochaine étape** : nodemailer 10.6.0 (18/11), svelte 5.57.3 (19/11, scénario vert), vite 8.3.8 (20/11) annulé ; cause probable trouvée le 21/11 (clic sur « Rejoindre » parti avant l'hydratation dans les tests), tests corrigés (#551), scénario vert 3 fois de suite (21 et 22/11) ; vite 8.3.8 seul retenté le 22/11 (#552), scénario vert sur le staging, gardé ; mailparser 3.14.5 le 23/11 (failles de la lecture du courrier de prospection) ; restent stripe 23 (argent, avec Théo) et @sveltejs/kit 3 (version majeure, à planifier)
 
 ## Statut micro-entreprise
 
 - **Statut** : à faire
 - **Équipe** : Théo
 - **Prochaine étape** : reporté par Théo (voir « À trancher »)
+
+## QG « La Tour »
+
+- **Statut** : fait
+- **Équipe** : Technique
+- **Prochaine étape** : tour de nuit à 3 étages (Plateau, Direction, Penthouse de Théo), ville, ascenseur 1 · 2 · 3 · Ville ; retours de Théo à prendre

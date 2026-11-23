@@ -57,6 +57,8 @@ test("révélation d'une manche sans vidéo", async ({ browser, request }) => {
   await regie.goto(`/salon/regie?code=${code}&key=${key}`);
   const tel = await (await browser.newContext(devices["iPhone 13"])).newPage();
   await tel.goto(`/salon/play?code=${code}`);
+  // Tuiles posées au montage : page hydratée, le clic n'est plus perdu
+  await expect(tel.locator(".sp-tuiles")).toBeVisible();
   await tel.getByPlaceholder("Ex. : Julie").fill("Alice");
   await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
   // Deux équipes : le choix prend tout l'écran, puis l'attente dans son équipe

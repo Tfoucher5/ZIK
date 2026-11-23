@@ -36,10 +36,14 @@ export function porte(scene, x, z, angle, l, mat, sens = 1) {
   return pivot;
 }
 
+// positions : en coordonnées du monde ; une porte ne s'ouvre que pour quelqu'un de son étage.
 export function animerPortes(dt, positions) {
   for (const p of PORTES) {
+    const y = p.pivot.parent?.position.y ?? 0;
     const proche = positions.some(
-      (q) => Math.hypot(q.x - p.centre.x, q.z - p.centre.z) < 1.3,
+      (q) =>
+        Math.abs(q.y - y) < 1.5 &&
+        Math.hypot(q.x - p.centre.x, q.z - p.centre.z) < 1.3,
     );
     const but = proche ? p.ouvert : p.ferme;
     p.pivot.rotation.y += (but - p.pivot.rotation.y) * Math.min(1, dt * 6);

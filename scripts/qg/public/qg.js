@@ -1,4 +1,5 @@
 import { majTableau, heure } from "./tableau.js";
+import { NIVEAUX } from "./tour/plan.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -118,6 +119,44 @@ function rafraichir() {
   majTableau(etat, org);
   en3D((s) => s.maj(a, nb, enSeance));
   fiche();
+}
+
+// Ascenseur : un bouton par niveau, du toit au sous-sol, et « Ville » pour toute la tour.
+// Touches : 0 RDC, 1 à 7 les étages, - sous-sol, T toit, V ville.
+const TOUCHES = {
+  Minus: "ss",
+  NumpadSubtract: "ss",
+  KeyT: "toit",
+  KeyV: "ville",
+};
+const panneau = $("ascenseur");
+const choix = [...NIVEAUX].reverse().map((n) => [n.id, n.bouton]);
+choix.push(["ville", "Ville"]);
+const boutons = choix.map(([id, texte]) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = texte;
+  b.dataset.niveau = id;
+  b.addEventListener("click", () => etage(id));
+  return b;
+});
+function etage(id) {
+  en3D((s) => s.voir(id));
+  for (const b of boutons)
+    b.setAttribute("aria-pressed", String(b.dataset.niveau === id));
+}
+if (scene) {
+  panneau.replaceChildren(...boutons);
+  panneau.hidden = false;
+  etage("ville");
+  addEventListener("keydown", (e) => {
+    const k = /^(Digit|Numpad)([0-7])$/.exec(e.code);
+    const id = k ? (k[2] === "0" ? "n0" : `n${k[2]}`) : TOUCHES[e.code];
+    if (!id || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest?.("input, textarea, select, [contenteditable]"))
+      return;
+    etage(id);
+  });
 }
 
 // Réglages d'affichage gardés dans le navigateur ; « Masquer » cache tout le tableau de bord.

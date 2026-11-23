@@ -1,44 +1,10 @@
 import * as THREE from "three";
 import { etiquette } from "./meubles.js";
+import { construire } from "./perso-corps.js";
+import { tenue } from "./perso-tenue.js";
 
-const PEAUX = [
-  "#f1c7a5",
-  "#d9a37e",
-  "#a86f4c",
-  "#6e4a33",
-  "#f5d6bd",
-  "#c68863",
-];
-const CHEVEUX = [
-  "#2b1d14",
-  "#5a3a22",
-  "#c9a063",
-  "#111111",
-  "#8a6a4a",
-  "#a0522d",
-];
-const HAUTS = [
-  "#e2e8f0",
-  "#1e293b",
-  "#f59e0b",
-  "#0ea5e9",
-  "#a3e635",
-  "#f472b6",
-  "#64748b",
-  "#fef3c7",
-  "#7c3aed",
-  "#14b8a6",
-];
-const BAS = ["#232a3a", "#3b3f46", "#2f3b52", "#4a3b2f", "#1d1f24", "#5b6b8a"];
 const VITESSE = 1.4;
-const hasard = (t) => t[Math.floor(Math.random() * t.length)];
-
-// Tirage stable : une même personne garde le même look d'une ouverture à l'autre.
-function tirage(graine) {
-  let h = 2166136261;
-  for (const c of graine) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  return (t, sel = 0) => t[((h >>> 0) + sel * 7919) % t.length];
-}
+const vers = (a, b, k) => a + (b - a) * k;
 
 export class Perso {
   constructor(scene, grille, id, f, badge, siege) {
@@ -51,88 +17,37 @@ export class Perso {
       assis: false,
       actif: false,
     });
-    this.pause = 3 + Math.random() * 10;
     this.phase = Math.random() * 6;
     this.g = new THREE.Group();
     scene.add(this.g);
-    const pick = tirage(f.nom + id);
-    const m = (c) =>
-      new THREE.MeshStandardMaterial({ color: c, roughness: 0.65 });
-    const haut = m(f.haut ?? pick(HAUTS, 1));
-    const peau = m(pick(PEAUX, 2));
-    const cheveu = m(pick(CHEVEUX, 3));
-    const corps = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.22, 0.46, 4, 12),
-      haut,
-    );
-    corps.position.y = 1.08;
-    corps.scale.z = 0.72;
-    const tete = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), peau);
-    tete.position.y = 1.6;
-    const coupe = new THREE.Mesh(
-      new THREE.SphereGeometry(0.16, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-      cheveu,
-    );
-    coupe.position.set(0, 1.62, -0.015);
-    const pieces = [corps, tete, coupe];
-    if (f.f) {
-      const longs = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 0.32, 0.12),
-        cheveu,
-      );
-      longs.position.set(0, 1.5, -0.1);
-      pieces.push(longs);
-    }
-    if (f.l) {
-      const lunettes = new THREE.Mesh(
-        new THREE.BoxGeometry(0.24, 0.05, 0.02),
-        m("#111"),
-      );
-      lunettes.position.set(0, 1.62, 0.145);
-      pieces.push(lunettes);
-    }
-    const carte = new THREE.Mesh(
-      new THREE.BoxGeometry(0.07, 0.1, 0.01),
-      m(badge),
-    );
-    carte.position.set(0.1, 1.15, 0.165);
-    pieces.push(carte);
-    this.jambes = [-0.1, 0.1].map((x) =>
-      this.membre(x, 0.72, 0.13, 0.72, m(pick(BAS, 4)), 0.15),
-    );
-    this.bras = [-0.28, 0.28].map((x) =>
-      this.membre(x, 1.34, 0.09, 0.54, haut, 0.1, peau),
-    );
-    for (const o of pieces) {
-      o.castShadow = true;
-      o.userData.id = id;
-      this.g.add(o);
-    }
-    this.cliquables = [corps, tete];
-    this.lab = etiquette("", badge, "etiquette repos");
+    const t = tenue(f, id, badge);
+    this.taille = t.taille;
+    this.j = construire(t, badge, id);
+    this.g.add(this.j.racine);
+    if (this.j.aura) this.g.add(this.j.aura);
+    this.cliquables = this.j.cliquables;
+    this.ombre = true;
+    this.lab = null;
+    if (!f.pnj) this.etiquette(f, t, badge);
+    this.poser();
+  }
+
+  etiquette(f, t, badge) {
+    const rang = { fondateur: " fondateur", chef: " chef" }[t.rang] ?? "";
+    this.lab = etiquette("", badge, `etiquette repos${rang}`);
     this.lab.element.innerHTML = `<div class="nom"><b></b> <span></span></div><div class="act"></div>`;
     this.lab.element.querySelector("b").textContent = f.nom;
     this.lab.element.querySelector("span").textContent = f.role ?? "";
     this.act = this.lab.element.querySelector(".act");
-    this.lab.position.y = 2.05;
+    this.lab.position.y = 2.05 * t.taille;
     this.g.add(this.lab);
-    this.poser();
   }
 
-  membre(x, y, l, h, mat, p, main) {
-    const pivot = new THREE.Group();
-    pivot.position.set(x, y, 0);
-    const b = new THREE.Mesh(new THREE.BoxGeometry(l, h, p), mat);
-    b.position.y = -h / 2;
-    b.castShadow = true;
-    pivot.add(b);
-    if (main) {
-      const mn = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), main);
-      mn.position.y = -h - 0.03;
-      pivot.add(mn);
-    }
-    this.g.add(pivot);
-    return pivot;
+  // Ombres portées seulement sur l'étage regardé.
+  ombrer(oui) {
+    if (this.ombre === oui) return;
+    this.ombre = oui;
+    this.g.traverse((o) => o.isMesh && (o.castShadow = oui));
   }
 
   poser() {
@@ -160,55 +75,97 @@ export class Perso {
     this.act.textContent = actif ? texte : "";
   }
 
-  // Au repos : alterne entre son poste et une pause libre (cuisine, salon, cabine, toilettes…).
-  flaner(dt, pauses) {
-    this.pause -= dt;
-    if (this.pause > 0 || this.chemin.length) return;
-    this.pause = 10 + Math.random() * 20;
-    if (this.but === this.siege && pauses.length && Math.random() < 0.5)
-      this.aller(hasard(pauses));
-    else this.aller(this.siege);
+  // Avance d'un pas vers le prochain point du chemin ; vrai si le perso marche.
+  marcher(dt) {
+    const pas = this.chemin[0];
+    if (!pas) return false;
+    const pos = this.g.position;
+    const d = new THREE.Vector3(pas.x - pos.x, 0, pas.z - pos.z);
+    const l = d.length();
+    if (l < 0.05) {
+      this.chemin.shift();
+      if (!this.chemin.length) this.poser();
+      return this.chemin.length > 0;
+    }
+    d.normalize().multiplyScalar(Math.min(l, VITESSE * dt));
+    pos.x += d.x;
+    pos.z += d.z;
+    const cible = Math.atan2(d.x, d.z);
+    const r = this.g.rotation;
+    r.y +=
+      Math.atan2(Math.sin(cible - r.y), Math.cos(cible - r.y)) *
+      Math.min(1, dt * 10);
+    return true;
+  }
+
+  pose(t, marche) {
+    const p = this.phase;
+    const o = {
+      y: 0,
+      buste: 0,
+      teteX: Math.sin(t * 0.9 + p * 2) * 0.04,
+      teteY: Math.sin(t * 0.37 + p) * Math.sin(t * 0.11 + p) * 0.5,
+      hanche: [0, 0],
+      genou: [0, 0],
+      epaule: [0.04, 0.04],
+      coude: [-0.12, -0.12],
+    };
+    if (marche) {
+      const s = Math.sin(t * 9 + p);
+      const c = Math.cos(t * 9 + p);
+      o.y = Math.abs(c) * 0.035;
+      o.buste = 0.06;
+      o.teteY = 0;
+      o.hanche = [s * 0.55, -s * 0.55];
+      o.genou = [0.1 + Math.max(0, -c) * 0.8, 0.1 + Math.max(0, c) * 0.8];
+      o.epaule = [-s * 0.5, s * 0.5];
+      o.coude = [-0.35, -0.35];
+    } else if (this.assis) {
+      o.y = 0.53 - 0.72 * this.taille;
+      o.hanche = [-1.4, -1.4];
+      o.genou = [1.25, 1.25];
+      if (this.actif) {
+        const a = Math.sin(t * 17 + p) * 0.06;
+        const b = Math.sin(t * 19 + p + 1.3) * 0.06;
+        o.buste = 0.14;
+        o.teteX = 0.12 + Math.sin(t * 0.7 + p) * 0.03;
+        o.teteY = Math.sin(t * 0.31 + p) * 0.12;
+        o.epaule = [-0.95 + a, -0.95 + b];
+        o.coude = [-0.75 + Math.sin(t * 23 + p) * 0.1, -0.75 - b];
+      } else {
+        o.buste = -0.06;
+        o.epaule = [-0.45, -0.45];
+        o.coude = [-1, -1];
+      }
+    } else if (this.actif) {
+      const g = Math.sin(t * 2.5 + p) * 0.5;
+      o.teteX += Math.max(0, Math.sin(t * 3 + p)) * 0.12;
+      o.epaule = [-0.2 - Math.max(g, 0) * 1.4, -0.1 + Math.min(g, 0) * 0.6];
+      o.coude = [-0.5 - Math.max(g, 0) * 0.7, -0.4];
+    }
+    return o;
   }
 
   animer(dt, t) {
-    const jambe = (a, b = -a) =>
-      this.jambes.forEach((j, i) => (j.rotation.x = i ? b : a));
-    const bras = (a, b = a) =>
-      this.bras.forEach((p, i) => (p.rotation.x = i ? b : a));
-    const pas = this.chemin[0];
-    if (pas) {
-      const d = pas.clone().sub(this.g.position.clone().setY(0));
-      const l = d.length();
-      if (l < 0.05) {
-        this.chemin.shift();
-        if (!this.chemin.length) this.poser();
-      } else {
-        this.g.position
-          .setY(0)
-          .addScaledVector(d.normalize(), Math.min(l, VITESSE * dt));
-        const cible = Math.atan2(d.x, d.z);
-        const ecart = Math.atan2(
-          Math.sin(cible - this.g.rotation.y),
-          Math.cos(cible - this.g.rotation.y),
-        );
-        this.g.rotation.y += ecart * Math.min(1, dt * 10);
-        const s = Math.sin(t * 9 + this.phase);
-        jambe(s * 0.55);
-        bras(-s * 0.5, s * 0.5);
-        this.g.position.y = Math.abs(s) * 0.04;
-        return;
-      }
+    const marche = this.marcher(dt);
+    const o = this.pose(t, marche);
+    const k = Math.min(1, dt * (marche ? 20 : 7));
+    const j = this.j;
+    const x = (n, v) => (n.rotation.x = vers(n.rotation.x, v, k));
+    this.g.position.y = vers(this.g.position.y, o.y, k);
+    x(j.buste, o.buste);
+    x(j.tete, o.teteX);
+    j.tete.rotation.y = vers(j.tete.rotation.y, o.teteY, k);
+    for (const i of [0, 1]) {
+      x(j.hanches[i], o.hanche[i]);
+      x(j.genoux[i], o.genou[i]);
+      x(j.epaules[i], o.epaule[i]);
+      x(j.coudes[i], o.coude[i]);
     }
-    if (this.assis) {
-      this.g.position.y = -0.24;
-      jambe(-Math.PI / 2, -Math.PI / 2);
-      const frappe = this.actif ? Math.sin(t * 16 + this.phase) * 0.1 : 0;
-      bras(-1.15 + frappe, -1.15 - frappe);
-    } else {
-      this.g.position.y = 0;
-      jambe(0);
-      const geste = this.actif ? Math.sin(t * 2.5 + this.phase) * 0.5 : 0;
-      bras(-0.15 - Math.max(geste, 0) * 1.6, -0.1 + Math.min(geste, 0) * 0.4);
+    j.buste.scale.y = 1 + Math.sin(t * 1.7 + this.phase) * 0.012;
+    if (j.aura) {
+      j.aura.position.y = 0.015 - this.g.position.y;
+      j.aura.scale.setScalar(1 + Math.sin(t * 2) * 0.06);
     }
   }
 }

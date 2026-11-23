@@ -50,6 +50,8 @@ test("13e joueur en file, entre quand une place se libère", async ({
       await browser.newContext(devices["iPhone 13"])
     ).newPage();
     await tel.goto(`/salon/play?code=${code}`);
+    // Tuiles posées au montage : page hydratée, le clic n'est plus perdu
+    await expect(tel.locator(".sp-tuiles")).toBeVisible();
     await tel.getByPlaceholder("Ex. : Julie").fill("Zoé");
     await tel.getByRole("button", { name: "Rejoindre", exact: true }).click();
     await expect(

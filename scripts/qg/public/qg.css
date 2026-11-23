@@ -60,6 +60,7 @@ body {
   border-radius: 999px;
   padding: 6px 14px;
   cursor: pointer;
+  text-decoration: none;
 }
 .bouton:hover,
 .bouton:focus-visible {
@@ -173,4 +174,36 @@ body {
   .zone {
     font-size: 10px;
   }
+}
+.ascenseur {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: var(--verre);
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+.ascenseur[hidden] {
+  display: none;
+}
+.ascenseur button {
+  min-width: 44px;
+  min-height: 30px;
+  background: transparent;
+  color: var(--texte);
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ascenseur button[aria-pressed="true"] {
+  border-color: var(--vif);
+  color: var(--vif);
 }
