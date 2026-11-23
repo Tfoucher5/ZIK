@@ -17,6 +17,12 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Technique puis Opérations
 - **Prochaine étape** : « musique muette sur la TV » (19/11) corrigé et en prod en v3.34.0 (#571, TV rechargée reprend le titre en cours, pause tenue) ; scénario « TV rechargée » ajouté au staging ; « changement de playlist au podium » (21/11, Rom) : pas de bug serveur, la vraie gêne est une playlist de 3 titres pour 5 manches (voir chantier suivant) ; réponse à Rom à envoyer par Théo
 
+## Rejoindre sur réseau lent
+
+- **Statut** : fait
+- **Équipe** : Technique
+- **Prochaine étape** : #584 fusionné le 23/11 : « Rejoindre » touché avant le chargement de la page n'est plus perdu (aucun changement visible) ; part à la prochaine release
+
 ## Playlist trop courte pour la partie
 
 - **Statut** : à faire
