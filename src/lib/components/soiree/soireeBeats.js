@@ -73,7 +73,7 @@ export const PINS = {
       {
         b: "Buzzer",
         pro: true,
-        t: "Le premier qui buzze répond à voix haute, l'animateur valide depuis la régie.",
+        t: "Qui buzze le plus vite répond à voix haute, l'animateur valide depuis la régie.",
       },
     ],
   },
@@ -125,7 +125,7 @@ export const PINS = {
     title: "Le final de la soirée",
     beats: [
       { t: "La 3e place, puis la 2e. Toute la salle regarde la TV." },
-      { t: "« Et le grand gagnant est… » Roulement de tambour." },
+      { t: "« Et la victoire revient à… » Roulement de tambour." },
       {
         t: "Le vainqueur, les places 4 à 10, et chaque joueur voit sa place de la soirée sur son téléphone. Le buzz et le tambour se coupent si besoin.",
       },
