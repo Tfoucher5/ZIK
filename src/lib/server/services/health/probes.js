@@ -257,10 +257,14 @@ export function makeProbes({
       };
     },
     // Une TV en boucle de relance envoie un plantage par minute environ :
-    // 3 en 5 min, c'est un écran coincé ; 10, plusieurs soirées touchées
+    // 3 en 5 min, c'est un écran coincé ; 10, plusieurs soirées touchées.
+    // Seuls comptent les salons ouverts : la route d'envoi est publique
     async screens() {
       const since = Date.now() - FIVE_MIN;
-      const recents = log.filter((e) => estEcranSalon(e) && e.ts > since);
+      const ouvert = (e) => Object.hasOwn(rooms, e.msg.split(" ", 3)[2]);
+      const recents = log.filter(
+        (e) => estEcranSalon(e) && e.ts > since && ouvert(e),
+      );
       return {
         result: grade(recents.length, 3, 10),
         value: recents.length,

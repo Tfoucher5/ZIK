@@ -163,14 +163,14 @@ describe("recordClientCrash", () => {
 });
 
 describe("sondes « Erreurs serveur » et « Écrans du salon »", () => {
-  const journal = (n) => {
+  const journal = (n, rooms = { ABC234: {} }) => {
     const log = [];
     errSpy.mockImplementation((msg) =>
       log.unshift({ ts: Date.now(), level: "error", msg }),
     );
     for (let i = 0; i < n; i++) noter(nominal);
     console.error("panne serveur");
-    return makeProbes({ loop: {}, log, env: {} });
+    return makeProbes({ loop: {}, log, env: {}, rooms });
   };
 
   it("les plantages d'écran ne comptent pas comme erreurs serveur", async () => {
@@ -195,6 +195,13 @@ describe("sondes « Erreurs serveur » et « Écrans du salon »", () => {
         ? "[ecran-salon] host ABC234 essai 2 : Cannot read properties of undefined"
         : null,
     );
+  });
+
+  it("salon fermé ou inconnu : ne compte pas (route publique)", async () => {
+    expect(await journal(12, {}).screens()).toMatchObject({
+      result: "ok",
+      value: 0,
+    });
   });
 
   it("au-delà de 5 min : oublié", async () => {
