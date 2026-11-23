@@ -198,3 +198,58 @@ describe("hoteAutorise", () => {
     expect(hoteAutorise(undefined, 4747)).toBe(false);
   });
 });
+
+describe("Suivi pour la console", () => {
+  const outil = (id, name, input, extra = {}) =>
+    ligne({
+      type: "assistant",
+      ...extra,
+      message: {
+        id,
+        model: "claude-opus-5-5",
+        usage,
+        content: [{ type: "tool_use", id, name, input }],
+      },
+    });
+
+  it("garde les traces de chaque instance, sa branche et la clé d'instance dans le flux", () => {
+    const s = new Suivi();
+    s.meta("a1", "s1", { agentType: "dev", description: "Onglets" });
+    s.ligne(
+      outil(
+        "x1",
+        "Edit",
+        { file_path: "a/Regie.svelte" },
+        {
+          agentId: "a1",
+          gitBranch: "feature/onglets",
+        },
+      ),
+      "a1",
+    );
+    s.ligne(outil("x2", "Read", { file_path: "a/plan.md" }));
+    const etat = s.instantane(T0 + 1000);
+    expect(etat.agents[0]).toMatchObject({
+      branche: "feature/onglets",
+      traces: [{ t: T0, quoi: "Modifie Regie.svelte" }],
+    });
+    expect(etat.sessions[0].traces).toEqual([{ t: T0, quoi: "Lit plan.md" }]);
+    expect(etat.flux.map((e) => e.cle).sort()).toEqual(["a1", "s1"]);
+  });
+
+  it("ne renvoie que les traces des 30 dernières minutes", () => {
+    const s = new Suivi();
+    s.ligne(outil("x1", "Read", { file_path: "a.js" }));
+    expect(s.instantane(T0 + 29 * 60e3).sessions[0].traces).toHaveLength(1);
+    expect(s.instantane(T0 + 31 * 60e3).sessions[0].traces).toEqual([]);
+  });
+
+  it("compte les PR fusionnées depuis minuit", () => {
+    const s = new Suivi();
+    s.ligne(outil("x1", "Bash", { command: "gh pr merge 12 --squash" }));
+    expect(s.instantane(T0 + 1000).prFusionnees).toBe(1);
+    const lendemain = new Date(T0);
+    lendemain.setDate(lendemain.getDate() + 1);
+    expect(s.instantane(lendemain.getTime()).prFusionnees).toBe(0);
+  });
+});

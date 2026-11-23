@@ -1,18 +1,21 @@
+import { majEquipe } from "./equipe.js";
+import { majChrono } from "./chrono.js";
 import { majTableau } from "./tableau.js";
-import { majBureaux } from "./bureaux.js";
 
-const liaison = document.getElementById("liaison");
+const $ = (id) => document.getElementById(id);
 const flux = new EventSource("/flux");
-flux.onopen = () => {
-  liaison.textContent = "en direct";
-  liaison.className = "liaison ok";
-};
+flux.onopen = () => $("live").classList.add("ok");
 flux.onerror = () => {
-  liaison.textContent = "serveur arrêté ?";
-  liaison.className = "liaison";
+  $("live").classList.remove("ok");
+  $("horloge").textContent = "serveur arrêté ?";
 };
+let n = 0;
 flux.onmessage = (e) => {
   const etat = JSON.parse(e.data);
-  majBureaux(etat);
-  majTableau(etat);
+  $("horloge").textContent = new Date(etat.maintenant).toLocaleTimeString(
+    "fr-FR",
+  );
+  const instances = majEquipe(etat);
+  majTableau(etat, instances);
+  if (n++ % 2 === 0) majChrono(etat, instances);
 };

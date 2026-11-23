@@ -59,10 +59,13 @@ export class Suivi {
     this.horaires = [];
     this.atteinte = null;
     this.flux = [];
+    this.fusions = [];
   }
 
-  evenement(t, qui, quoi, cible) {
-    this.flux.unshift(cible ? { t, qui, quoi, cible } : { t, qui, quoi });
+  evenement(t, qui, quoi, cible, cle) {
+    const e = { t, qui, quoi, cle };
+    if (cible) e.cible = cible;
+    this.flux.unshift(e);
     // Les fichiers sont lus l'un après l'autre : on retrie par heure avant de couper.
     if (this.flux.length > 160) {
       this.flux.sort((a, b) => b.t - a.t);
@@ -80,6 +83,7 @@ export class Suivi {
         skill: null,
         derniere: 0,
         activite: "",
+        traces: [],
       };
       this.sessions.set(id, s);
     }
@@ -101,6 +105,8 @@ export class Suivi {
         derniere: 0,
         fini: false,
         activite: "",
+        branche: "",
+        traces: [],
       };
       this.agents.set(agentId, a);
     }
@@ -124,6 +130,7 @@ export class Suivi {
     const s = this.session(o.sessionId, o);
     const porteur = agentId ? this.agent(agentId, o.sessionId) : s;
     if (agentId && !porteur.debut) porteur.debut = t;
+    if (agentId && o.gitBranch) porteur.branche = o.gitBranch;
     porteur.derniere = Math.max(porteur.derniere, t);
     if (!agentId) s.derniere = Math.max(s.derniere, t);
     const m = o.message;
@@ -142,6 +149,10 @@ export class Suivi {
     for (const b of m.content) {
       if (b.type === "tool_use") {
         porteur.activite = phrase(b.name, b.input);
+        porteur.traces.push({ t, quoi: porteur.activite });
+        if (porteur.traces.length > 150) porteur.traces.splice(0, 50);
+        if (porteur.activite === "Fusionne une PR") this.fusions.push(t);
+        const cle = agentId ?? o.sessionId;
         const qui = agentId
           ? porteur.type
           : s.skill
@@ -158,9 +169,9 @@ export class Suivi {
             t,
             fini: false,
           });
-          this.evenement(t, qui, description, type);
+          this.evenement(t, qui, description, type, cle);
         } else {
-          this.evenement(t, qui, porteur.activite);
+          this.evenement(t, qui, porteur.activite, null, cle);
         }
       } else if (b.type === "tool_result" && this.lances.has(b.tool_use_id)) {
         const l = this.lances.get(b.tool_use_id);
@@ -171,7 +182,7 @@ export class Suivi {
           a.description ||= l.description;
           if (r.status === "completed") {
             a.fini = true;
-            this.evenement(t, a.type, "A terminé");
+            this.evenement(t, a.type, "A terminé", null, r.agentId);
           }
         }
         l.fini = r?.status !== "async_launched";
@@ -181,8 +192,14 @@ export class Suivi {
 
   instantane(maintenant = Date.now()) {
     const actifSi = (d, ms) => maintenant - d < ms;
+    // Traces des 30 dernières minutes seulement : la chronologie n'en montre pas plus.
+    const recentes = (x) =>
+      actifSi(x.derniere, 30 * 60e3)
+        ? x.traces.filter((tr) => actifSi(tr.t, 30 * 60e3))
+        : [];
     const agents = [...this.agents.values()].map((a) => ({
       ...a,
+      traces: recentes(a),
       actif: !a.fini && actifSi(a.derniere || a.debut, 10 * 60e3),
     }));
     const lancesEnAttente = [...this.lances.values()].filter(
@@ -192,10 +209,17 @@ export class Suivi {
         !agents.some((a) => a.actif && a.type === l.type),
     );
     const sessions = [...this.sessions.values()]
-      .map((s) => ({ ...s, actif: actifSi(s.derniere, 45e3) }))
+      .map((s) => ({
+        ...s,
+        traces: recentes(s),
+        actif: actifSi(s.derniere, 45e3),
+      }))
       .sort((a, b) => b.derniere - a.derniere);
+    const minuit = new Date(maintenant).setHours(0, 0, 0, 0);
     return {
       maintenant,
+      prFusionnees: this.fusions.filter((t) => t >= minuit && t <= maintenant)
+        .length,
       limite: fenetreEstimee(this.horaires, this.atteinte, maintenant),
       sessions: sessions.slice(0, 12),
       agents: agents.sort((a, b) => b.derniere - a.derniere).slice(0, 200),

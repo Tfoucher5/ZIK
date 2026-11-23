@@ -1,6 +1,6 @@
 # QG : l'équipe d'agents en direct
 
-Tableau de bord local sur une seule page : les bureaux (un personnage par agent, qui bouge et dit ce qu'il fait quand il travaille, dort sinon), limite d'utilisation, qui fait quoi, chantiers, flux en direct et décisions à trancher, sans passer par le terminal.
+Console de pilotage locale sur une seule page : qui travaille (une carte par instance d'agent), ce que chacun fait, la chronologie des 30 dernières minutes, le flux en direct, les chantiers et les décisions à trancher, sans passer par le terminal.
 
 ## Lancer
 
@@ -19,10 +19,11 @@ Options : `--port 5000`, `--filtre ZIK` (dossiers de projet suivis, `ZIK` par d�
 ## Le tableau de bord
 
 - **À trancher** (bouton orange, badge = décisions sans réponse) : ouvre une fenêtre plein écran. Chaque décision de `docs/strategie/a-trancher.md` avec ses champs, des boutons rapides pour ses options et une zone de réponse libre. Les brouillons restent dans le navigateur. « Copier toutes mes réponses » donne un texte prêt à coller dans le terminal (`- titre → réponse`). « Envoyer » les ajoute, datées, dans `scripts/qg/boite/reponses.jsonl` (ignoré par git), que la session lancée par `/qg` surveille ; la décision affiche « envoyé, en attente de Claude » jusqu'à ce qu'elle soit retirée du fichier. Le champ `- **Lien** :` est cliquable s'il est une adresse http ou un chemin local (`C:\…`, `docs/…`) : il s'ouvre dans un nouvel onglet par `/voir` (vidéo dans le lecteur du navigateur, Markdown lisible).
-- **Limite d'utilisation** : fenêtres de 5 h et de la semaine, pourcentage et heure de remise à zéro, lus dans `boite/limites.json` écrit par la barre d'état (ci-dessous). Sans elle : estimation d'après les journaux (début de la fenêtre de 5 h, heure de reprise des messages « limit · resets 9:50pm »).
-- **Qui fait quoi** : sessions et agents au travail, avec type d'agent, tâche (description du lancement) et depuis combien de temps.
-- **Chantiers** : en cours, reste à faire, fait, lus dans `docs/strategie/chantiers.md` (tenu à jour par la session CEO).
-- **En direct** : une ligne par action, en français (« Lit reclaim.js », « Lance les tests », « Ouvre une PR »), avec l'agent et l'heure. Jamais la commande brute.
+- **Indicateurs** (en haut) : instances au travail, dev en parallèle (plafond 4), fenêtres de 5 h et de la semaine (pourcentage et remise à zéro lus dans `boite/limites.json` écrit par la barre d'état ; sans elle, estimation d'après les journaux), PR fusionnées depuis minuit.
+- **Équipe** : une ligne par agent du `CLAUDE.md` (un agent inconnu, comme Explore, a sa ligne le temps de sa mission), rôles au travail en haut. Une carte par instance, numérotée (`dev #1`, `dev #2`…) : branche, durée, action en cours avec son icône, tâche du lancement, bande des dernières actions colorées par famille. Une carte arrive et part en fondu.
+- **Chronologie** : une piste par instance sur 30 minutes, un segment par action coloré par famille (lit, écrit, tests, vérifie, git et PR, web, base, prod, question, réfléchit). Une attente de plus de 3 minutes n'est pas dessinée. Familles et segments : `public/familles.js`.
+- **En direct** : une ligne par action, en français (« Lit reclaim.js », « Lance les tests », « Ouvre une PR »), avec l'instance et l'heure, filtrable (code, tests, git et PR, questions). Jamais la commande brute.
+- **Chantiers** : en cours, reste à faire, fait, lus dans `docs/strategie/chantiers.md`.
 
 ## Barre d'état (limite exacte)
 
@@ -38,13 +39,13 @@ Les journaux que Claude Code écrit déjà sur le PC (`~/.claude/projects/`, ou 
 
 ## Routes
 
-| Route             | Réponse                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------- |
-| `GET /flux`       | flux SSE, chaque seconde : `{ maintenant, limite, sessions, agents, enAttente, flux }`         |
-| `GET /a-trancher` | décisions, avec `envoye` (date) et `reponse` si Théo a déjà répondu                            |
-| `GET /chantiers`  | `[{ titre, statut, etat, equipe, "prochaine etape" }]`, `etat` : `en-cours`, `a-faire`, `fait` |
-| `GET /limites`    | contenu de `boite/limites.json` ou `null`                                                      |
-| `POST /reponses`  | `{ reponses: [{ titre, reponse }] }` → ajouté à `boite/reponses.jsonl`                         |
-| `GET /voir?f=…`   | fichier à relire (voir ci-dessous), 403 hors des dossiers autorisés                            |
+| Route             | Réponse                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /flux`       | flux SSE, chaque seconde : `{ maintenant, limite, prFusionnees, sessions, agents, enAttente, flux }, sessions et agents avec `traces` (30 dernières minutes)` |
+| `GET /a-trancher` | décisions, avec `envoye` (date) et `reponse` si Théo a déjà répondu                                                                                           |
+| `GET /chantiers`  | `[{ titre, statut, etat, equipe, "prochaine etape" }]`, `etat` : `en-cours`, `a-faire`, `fait`                                                                |
+| `GET /limites`    | contenu de `boite/limites.json` ou `null`                                                                                                                     |
+| `POST /reponses`  | `{ reponses: [{ titre, reponse }] }` → ajouté à `boite/reponses.jsonl`                                                                                        |
+| `GET /voir?f=…`   | fichier à relire (voir ci-dessous), 403 hors des dossiers autorisés                                                                                           |
 
 `GET /voir?f=<chemin>` : chemin absolu ou relatif au dépôt (`docs/…`). Servi seulement depuis la machine (`127.0.0.1`) et si le chemin réel (liens résolus) est sous le dépôt, `~/Documents/GitHub/ZIK-memes` ou `<temp>/claude/` ; `..` et chemins réseau refusés. Types : `.mp4`, `.webm` (lecteur du navigateur, avance rapide par `Range`), `.png`, `.jpg`, `.gif`, `.webp`, `.svg`, `.txt`, `.html`, `.md` (texte lisible sur fond sombre) ; autre extension → 415. HTML, SVG et Markdown sont isolés (`CSP sandbox`) : une maquette ne peut pas envoyer de réponses au QG. Une maquette qui charge des fichiers voisins (CSS, images en relatif) ne les trouve pas : la garder autonome.
