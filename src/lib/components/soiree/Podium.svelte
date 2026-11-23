@@ -3,7 +3,7 @@
 
   // [classe, pseudo, apparition, fin du compteur, points, départ du compteur, hauteur]
   const PLACES = [['p2', 'Karim', 0.34, 0.46, 88, 0, 62], ['p1', 'Léa', 0.78, 0.9, 93, 89, 80], ['p3', 'Zoé', 0.14, 0.26, 79, 0, 46]];
-  const TITRES = ['Le podium de la soirée', 'Et le grand gagnant est…', 'Léa'];
+  const TITRES = ['Le podium de la soirée', 'Et la victoire revient à…', 'Léa'];
 
   export function render(p) {
     const t = stage(p, [0.56, 0.78]);

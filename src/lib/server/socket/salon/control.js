@@ -145,6 +145,7 @@ export function registerControl(socket, io) {
     salon.game.currentRound = 0;
     salon.game.history = [];
     salon.game.historyMedia = [];
+    salon.game.lastRoundEnd = null;
     salon.game.replaced = null;
     resetStats(salon);
     broadcastRoster(code, io);
@@ -274,6 +275,7 @@ export function registerControl(socket, io) {
     salon.game.currentRound = 0;
     salon.game.history = [];
     salon.game.historyMedia = [];
+    salon.game.lastRoundEnd = null;
     salon.game.replaced = null;
     salon.game.firstFinder = null;
     salon.game.currentTrack = null;

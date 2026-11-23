@@ -5,70 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>QG ZIK</title>
     <link rel="stylesheet" href="/qg.css" />
-    <link rel="stylesheet" href="/reglages.css" />
+    <link rel="stylesheet" href="/equipe.css" />
+    <link rel="stylesheet" href="/chrono.css" />
     <link rel="stylesheet" href="/tableau.css" />
     <link rel="stylesheet" href="/trancher.css" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
-        }
-      }
-    </script>
   </head>
   <body>
-    <div id="scene"></div>
-    <header class="barre">
-      <h1>QG <span>ZIK</span></h1>
-      <span id="liaison" class="liaison">connexion…</span>
-      <button type="button" id="ouvrir-trancher" class="bouton-trancher vide">
-        À trancher <span class="badge">–</span>
-      </button>
-      <a class="bouton" href="/plans.html" target="_blank" rel="noopener"
-        >Plans</a
-      >
-      <button type="button" id="masquer" class="bouton" aria-pressed="false">
-        Masquer le tableau de bord
-      </button>
-      <details class="reglages">
-        <summary>⚙ Réglages</summary>
-        <div class="menu">
-          <label
-            ><input type="checkbox" data-bascule="sans-pieces" checked /> Noms
-            des salles et espaces</label
-          >
-          <label
-            ><input type="checkbox" data-bascule="sans-agents" checked /> Noms
-            des agents</label
-          >
-          <label
-            ><input type="checkbox" data-bascule="sans-activite" checked /> Ce
-            que font les agents</label
-          >
+    <svg width="0" height="0" class="sprite" aria-hidden="true">
+      <symbol id="i-lit" viewBox="0 0 24 24">
+        <path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2z" />
+        <path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z" />
+      </symbol>
+      <symbol id="i-ecrit" viewBox="0 0 24 24">
+        <path d="m8 7-5 5 5 5" />
+        <path d="m16 7 5 5-5 5" />
+        <path d="m14 4-4 16" />
+      </symbol>
+      <symbol id="i-tests" viewBox="0 0 24 24">
+        <path d="M9 3h6" />
+        <path
+          d="M10 3v6L4.5 18.5A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.8-2.5L14 9V3"
+        />
+        <path d="M7 15h10" />
+      </symbol>
+      <symbol id="i-build" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"
+        />
+      </symbol>
+      <symbol id="i-git" viewBox="0 0 24 24">
+        <circle cx="6" cy="6" r="2.5" />
+        <circle cx="6" cy="18" r="2.5" />
+        <circle cx="18" cy="8" r="2.5" />
+        <path d="M6 8.5v7" />
+        <path d="M18 10.5c0 4-6 3-11 5.5" />
+      </symbol>
+      <symbol id="i-web" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18" />
+        <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18" />
+      </symbol>
+      <symbol id="i-base" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="5" rx="8" ry="3" />
+        <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+        <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+      </symbol>
+      <symbol id="i-prod" viewBox="0 0 24 24">
+        <path d="M3 12h4l3-8 4 16 3-8h4" />
+      </symbol>
+      <symbol id="i-question" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14" />
+        <path d="M12 17.5h.01" />
+      </symbol>
+      <symbol id="i-pense" viewBox="0 0 24 24">
+        <circle cx="6" cy="12" r="1.2" />
+        <circle cx="12" cy="12" r="1.2" />
+        <circle cx="18" cy="12" r="1.2" />
+      </symbol>
+    </svg>
+    <div class="app">
+      <header class="barre">
+        <div class="marque">QG <span>ZIK</span></div>
+        <span class="live" id="live"
+          ><i class="point"></i><span id="horloge">connexion…</span></span
+        >
+        <span class="espace"></span>
+        <button type="button" id="ouvrir-trancher" class="bouton-trancher vide">
+          À trancher <span class="badge">–</span>
+        </button>
+      </header>
+
+      <section class="panel kpis" aria-label="Indicateurs">
+        <div class="kpi">
+          <span class="etiq">Au travail</span
+          ><strong
+            ><span class="chiffre" id="k-actifs">0</span>
+            <small>instances</small></strong
+          ><small id="k-detail">–</small>
         </div>
-      </details>
-    </header>
-    <aside class="colonne gauche panneau-ui">
-      <section class="bloc">
-        <h2>Limite d'utilisation</h2>
-        <div id="limite"><p class="vide">En attente des journaux…</p></div>
+        <div class="kpi">
+          <span class="etiq">En parallèle</span
+          ><strong
+            ><span class="chiffre" id="k-dev">0</span>
+            <small>dev</small></strong
+          ><small>plafond 4</small>
+        </div>
+        <div class="kpi">
+          <span class="etiq">Fenêtre 5 h</span
+          ><strong><span id="k-5">–</span> %</strong>
+          <div class="jauge" id="g-5"><i></i></div>
+          <small id="r-5"></small>
+        </div>
+        <div class="kpi">
+          <span class="etiq">Semaine</span
+          ><strong><span id="k-7">–</span> %</strong>
+          <div class="jauge" id="g-7"><i></i></div>
+          <small id="r-7"></small>
+        </div>
+        <div class="kpi">
+          <span class="etiq">Aujourd'hui</span
+          ><strong
+            ><span class="chiffre" id="k-pr">0</span>
+            <small>PR fusionnées</small></strong
+          ><small>d'après les journaux</small>
+        </div>
       </section>
-      <section class="bloc">
-        <h2>Qui fait quoi</h2>
-        <ul id="equipe" class="equipe"></ul>
-      </section>
-      <section class="bloc chantiers">
-        <h2>Chantiers</h2>
-        <div id="chantiers"></div>
-      </section>
-    </aside>
-    <aside class="colonne droite panneau-ui">
-      <section class="bloc flux">
-        <h2>En direct</h2>
-        <ol id="flux"></ol>
-      </section>
-    </aside>
+
+      <div class="corps">
+        <div class="colonne">
+          <section class="panel" aria-labelledby="t-equipe">
+            <header>
+              <h2 id="t-equipe">Équipe</h2>
+              <span class="etiq">une carte par instance</span>
+            </header>
+            <div class="roles" id="roles"></div>
+          </section>
+          <section class="panel" aria-labelledby="t-chrono">
+            <header>
+              <h2 id="t-chrono">Chronologie</h2>
+              <span class="etiq">30 dernières minutes</span>
+            </header>
+            <div class="chrono"><div class="chrono-in" id="chrono"></div></div>
+            <div class="legende" id="legende"></div>
+          </section>
+        </div>
+        <div class="colonne">
+          <section class="panel" aria-labelledby="t-flux">
+            <header>
+              <h2 id="t-flux">En direct</h2>
+              <span class="etiq" id="n-flux">0 actions</span>
+            </header>
+            <div class="filtres" id="filtres"></div>
+            <ol class="flux" id="flux"></ol>
+          </section>
+          <section class="panel" aria-labelledby="t-chantiers">
+            <header>
+              <h2 id="t-chantiers">Chantiers</h2>
+              <span class="etiq">chantiers.md</span>
+            </header>
+            <div class="chantiers" id="chantiers"></div>
+          </section>
+        </div>
+      </div>
+    </div>
     <dialog id="trancher" class="trancher" aria-labelledby="trancher-titre">
       <header>
         <h2 id="trancher-titre">À trancher</h2>
@@ -87,9 +168,6 @@
       </header>
       <div class="liste"></div>
     </dialog>
-    <nav id="ascenseur" class="ascenseur" aria-label="Ascenseur" hidden></nav>
-    <div id="board" class="board" hidden>Board en séance</div>
-    <div id="fiche" class="fiche" hidden></div>
     <script type="module" src="/qg.js"></script>
     <script type="module" src="/trancher.js"></script>
   </body>

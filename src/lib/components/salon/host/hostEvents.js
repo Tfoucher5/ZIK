@@ -48,6 +48,19 @@ export function listenHost(h, socket) {
     h.round = data.currentRound || 0;
     h.total = h.settings.maxRounds || 10;
     h.chat.update(data.support);
+    // TV rechargée (F5, relance) : la musique ou la révélation en cours. Une
+    // simple reconnexion du socket ne recoupe pas ce qui joue déjà.
+    if (data.phase !== "summary") h.roundEnd = null;
+    else if (data.roundEnd && !h.roundEnd) {
+      h.roundEnd = data.roundEnd;
+      setTimeout(() => h.hostCenter?.revealVideo(), 200);
+    }
+    const media = data.media?.videoId ?? data.media?.audioUrl;
+    if (media && media !== h.mediaId && !h.flashCut) {
+      h.mediaId = media;
+      h.hostCenter?.loadMedia(data.media);
+      if (data.paused) h.hostCenter?.pauseVideo();
+    }
   });
 
   socket.on("salon_night", ({ night }) => {
@@ -64,6 +77,7 @@ export function listenHost(h, socket) {
   });
   // Vidéo bloquée par YouTube pendant la manche : l'extrait audio prend le relais
   socket.on("salon_use_audio", ({ audioUrl }) => {
+    h.mediaId = audioUrl;
     h.hostCenter?.useAudio(audioUrl);
   });
   socket.on("salon_media_check", (check) => {
@@ -122,6 +136,7 @@ export function listenHost(h, socket) {
 
   socket.on("salon_round_end", () => chrono.stop());
   socket.on("salon_round_start", (data) => {
+    h.mediaId = data.videoId ?? data.audioUrl;
     h.restored = null;
     h.phase = "round";
     h.relaunching = false;

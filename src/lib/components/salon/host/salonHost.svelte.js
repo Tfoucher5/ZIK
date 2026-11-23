@@ -62,6 +62,8 @@ export class SalonHost {
   overRevealed = false;
   // Intro éclair : la musique est coupée, une reprise après un buzz raté ne la relance pas
   flashCut = false;
+  // Titre que joue le lecteur : une reconnexion du socket ne le relance pas
+  mediaId = null;
   paused = $state(false);
   settings = $state({});
   choices = $state(null);

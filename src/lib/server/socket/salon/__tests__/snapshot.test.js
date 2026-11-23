@@ -206,6 +206,7 @@ describe("instantané d'un salon", () => {
       salon.game.history.push({ answer: "x", replaced: "y" });
       salon.game.historyMedia = [{ trackId: "t0", videoId: "v0", start: 20 }];
       salon.game.replaced = "z";
+      salon.game.lastRoundEnd = { answer: "x", cover: "c.jpg", scores: [] };
       const revu = revive(salon);
       nettoie(salon);
       expect(revu.game).toMatchObject({
@@ -214,6 +215,7 @@ describe("instantané d'un salon", () => {
         currentRound: 2,
         historyMedia: [{ trackId: "t0", videoId: "v0", start: 20 }],
         replaced: "z",
+        lastRoundEnd: { answer: "x", cover: "c.jpg", scores: [] },
       });
       expect(revu.game.history.at(-1)).toEqual({ answer: "x", replaced: "y" });
       expect(revu.players.Ana.score).toBe(450);

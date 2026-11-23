@@ -31,3 +31,33 @@ export function forgetResume(storage, code) {
   storage.removeItem("zik_salon_player_" + code);
   storage.removeItem("salon_user");
 }
+
+// Après une relance automatique (écran de relance), le téléphone rejoint sans
+// appui : marqueur de session lié au code, lu une seule fois
+const AUTO_KEY = "salon_auto_resume";
+const AUTO_MS = 2 * 60 * 1000;
+
+export function markAutoResume(code, storage, now = Date.now()) {
+  try {
+    (storage ?? sessionStorage).setItem(
+      AUTO_KEY,
+      JSON.stringify({ code, at: now }),
+    );
+  } catch {
+    /* stockage indisponible : carte « Re-bonjour » */
+  }
+}
+
+export function takeAutoResume(code, storage, now = Date.now()) {
+  try {
+    const s = storage ?? sessionStorage;
+    const raw = s.getItem(AUTO_KEY);
+    if (!raw) return false;
+    s.removeItem(AUTO_KEY);
+    const m = JSON.parse(raw);
+    const age = now - m?.at;
+    return !!code && m?.code === code && age >= 0 && age < AUTO_MS;
+  } catch {
+    return false;
+  }
+}
