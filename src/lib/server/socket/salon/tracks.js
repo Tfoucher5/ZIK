@@ -183,7 +183,9 @@ export function currentTrackInfo(salon) {
 // Média de la manche pour une TV qui revient (F5, relance) : repris là où la salle l'entend
 export function resumeMedia(game) {
   const v = game.currentVideo;
-  if (game.phase !== "round" || !v?.id) return null;
+  // Panne vidéo : le titre en échec ne repart pas. Intro éclair lancée : la musique est déjà coupée.
+  if (game.phase !== "round" || !v?.id || game.videoOutage) return null;
+  if (game.special === "flash" && game.timerActive) return null;
   if (v.audio) return { audioUrl: v.id };
   const left = game.paused ? game.remainingMs : game.endsAt - Date.now();
   const played =

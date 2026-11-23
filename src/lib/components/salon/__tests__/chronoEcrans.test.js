@@ -197,7 +197,29 @@ describe("TV qui se reconnecte en pleine manche", () => {
     }
   });
 
-  it("pendant la révélation, retrouve la réponse et montre la vidéo", () => {
+  it("une simple reconnexion du socket ne recoupe pas la musique ni l'intro éclair coupée", () => {
+    const h = ECRANS[0].etat();
+    h.hostCenter = { loadMedia: vi.fn(), pauseVideo: vi.fn() };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    h.socket.recoit("salon_round_start", {
+      round: 1,
+      total: 10,
+      videoId: "vid123",
+    });
+    h.hostCenter.loadMedia.mockClear();
+    const media = { videoId: "vid123", startSeconds: 52 };
+    h.socket.recoit("salon_host_joined", { ...base, media });
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+    h.flashCut = true;
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      media: { videoId: "autre", startSeconds: 0 },
+    });
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+  });
+
+  it("pendant la révélation, retrouve la réponse et relance la révélation une seule fois", () => {
     vi.useFakeTimers();
     const h = ECRANS[0].etat();
     h.hostCenter = { loadMedia: vi.fn(), revealVideo: vi.fn() };
@@ -213,6 +235,13 @@ describe("TV qui se reconnecte en pleine manche", () => {
     expect(h.roundEnd).toEqual(roundEnd);
     expect(h.hostCenter.revealVideo).toHaveBeenCalled();
     expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      phase: "summary",
+      roundEnd,
+    });
+    vi.advanceTimersByTime(250);
+    expect(h.hostCenter.revealVideo).toHaveBeenCalledOnce();
     vi.useRealTimers();
   });
 });
