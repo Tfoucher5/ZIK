@@ -67,7 +67,9 @@ describe("à faire", () => {
     rows.games = () => ({ data: [{ limit_hits: 2 }, { limit_hits: 3 }] });
     const now = Date.now();
     globalThis.__zik_errorLog = [
-      { ts: now, level: "error" },
+      { ts: now, level: "error", msg: "panne" },
+      { ts: now, level: "error", msg: "[ecran-salon] host - essai 1 : a" },
+      { ts: now, level: "error", msg: "[ecran-salon] play - essai 2 : b" },
       { ts: now, level: "warn" },
       { ts: now - 2 * 86400000, level: "error" },
     ];
@@ -81,6 +83,7 @@ describe("à faire", () => {
       "issues",
       "reports",
       "errors",
+      "screens",
       "limit",
     ]);
     const label = Object.fromEntries(items.map((i) => [i.key, i.label]));
@@ -88,6 +91,7 @@ describe("à faire", () => {
     expect(label.past_due).toBe("2 abonnés Pro en échec de paiement");
     expect(label.replies).toBe("1 prospect intéressé attend ta réponse");
     expect(label.errors).toBe("1 erreur serveur depuis 24 h");
+    expect(label.screens).toBe("2 plantages d'écran du salon depuis 24 h");
     expect(items.find((i) => i.key === "limit").n).toBe(5);
   });
 
