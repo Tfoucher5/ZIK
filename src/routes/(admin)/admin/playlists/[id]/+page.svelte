@@ -102,14 +102,15 @@
 
   const inPlaylist = $derived(new Set(tracks.map((t) => t.track?.id)));
 
+  // Actions de /admin/playlists : sans navigate: false, kit 3 renvoie sur la liste
   const keep = () => async ({ update }) => {
-    await update({ reset: false });
+    await update({ reset: false, navigate: false });
   };
   const closing = (close) => () => {
     busy = true;
     return async ({ result, update }) => {
       busy = false;
-      await update({ reset: false });
+      await update({ reset: false, navigate: false });
       if (result.type === 'success' && result.data?.success) close();
     };
   };

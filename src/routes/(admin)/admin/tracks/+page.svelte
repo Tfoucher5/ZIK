@@ -37,7 +37,7 @@
     else p.delete(key);
     if (key !== 'page') p.delete('page');
     p.delete('open');
-    goto(`?${p}`, { keepFocus: true, noScroll: key !== 'page' });
+    goto(`?${p}`, { reset: key === 'page' });
   }
 
   function onSearch(e) {

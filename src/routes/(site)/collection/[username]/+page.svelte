@@ -1,8 +1,8 @@
 <script>
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import CollectionView from '$lib/components/card/CollectionView.svelte';
 
-  const username = $derived($page.params.username);
+  const username = $derived(page.params.username);
 </script>
 
 <svelte:head>

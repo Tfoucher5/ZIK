@@ -17,7 +17,7 @@
   function go(params) {
     const p = new SvelteURLSearchParams(page.url.searchParams);
     for (const [k, v] of Object.entries(params)) v ? p.set(k, v) : p.delete(k);
-    goto(`?${p}`, { keepFocus: true, noScroll: true });
+    goto(`?${p}`, { reset: false });
   }
 
   let search = $state(page.url.searchParams.get('q') ?? '');

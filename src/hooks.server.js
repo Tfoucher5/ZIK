@@ -141,12 +141,9 @@ export async function handle({ event, resolve }) {
   return response;
 }
 
-// Les 404 (robots qui sondent /.git, /wp-admin…) ne sont pas des erreurs
-// serveur : sans ça ils remplissent le journal d'erreurs de l'admin
-export function handleError({ error, event, status }) {
-  if (status === 404) return;
-  console.error(
-    `[${status}] ${event.request.method} ${event.url.pathname}\n`,
-    error,
-  );
+// Seules les exceptions du code sont des erreurs serveur : les 404 des robots
+// (/.git, /wp-admin…) et les error(4xx) rempliraient le journal de l'admin
+export function handleError({ kind, error, event }) {
+  if (kind !== "unknown") return;
+  console.error(`[500] ${event.request.method} ${event.url.pathname}\n`, error);
 }

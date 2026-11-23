@@ -41,7 +41,7 @@
     if (value && value !== 'all') p.set(key, value);
     else p.delete(key);
     if (key !== 'page') p.delete('page');
-    goto(`?${p}`, { keepFocus: true, noScroll: key !== 'page' });
+    goto(`?${p}`, { reset: key === 'page' });
   }
 
   function onSearch(e) {
