@@ -19,11 +19,11 @@ Chiffres visés : **soirées réussies** (TV plus claire pour l'organisateur seu
 
 TV au lobby, aucune régie connectée (`tvAlone(h)`, `host/gameOverView.js`), trois magentas forts en même temps :
 
-| # | Élément | Où |
-| - | ------- | -- |
-| 1 | « Soirée » du logo « ZIK Soirée » en haut à gauche | `static/css/salon/tv-stage.css` l. 27-29 (`.sh-brand span`), `HostTopBar.svelte` l. 69 |
-| 2 | « téléphones. » du titre « Sortez vos téléphones. » | `static/css/salon/tv-lobby.css` l. 54-57 (`.lb h1 em`), `HostLobby.svelte` l. 32 |
-| 3 | Bouton « Lancer la partie » (fond magenta) | `src/routes/(site)/salon/host/+page.svelte` l. 77-83 (`.sx-btn-primary`, seulement si `tvAlone`) |
+| #   | Élément                                             | Où                                                                                               |
+| --- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1   | « Soirée » du logo « ZIK Soirée » en haut à gauche  | `static/css/salon/tv-stage.css` l. 27-29 (`.sh-brand span`), `HostTopBar.svelte` l. 69           |
+| 2   | « téléphones. » du titre « Sortez vos téléphones. » | `static/css/salon/tv-lobby.css` l. 54-57 (`.lb h1 em`), `HostLobby.svelte` l. 32                 |
+| 3   | Bouton « Lancer la partie » (fond magenta)          | `src/routes/(site)/salon/host/+page.svelte` l. 77-83 (`.sx-btn-primary`, seulement si `tvAlone`) |
 
 Deux petits en plus : le curseur de volume (`tv-stage.css` l. 93, `accent-color`) et les trois points de « Vérification de la musique » (`.sx-dots`, `MediaCheck` affiché sur la TV seulement sans régie, `HostLobby.svelte` l. 37).
 
@@ -38,13 +38,13 @@ Deux petits en plus : le curseur de volume (`tv-stage.css` l. 93, `accent-color`
 
 ### Ce que deviennent les autres
 
-| Élément | Avant | Après |
-| ------- | ----- | ----- |
-| « Soirée » du logo | magenta | gris clair `var(--soft)` (#D6D7E4), sur toutes les phases de la TV. Le logo n'est pas une action |
-| « téléphones. » | magenta | blanc `var(--text)` **sans régie** ; magenta **avec régie** (inchangé) |
-| « Lancer la partie » | magenta | inchangé |
-| Curseur de volume | magenta | blanc `var(--text)`, sur toutes les phases |
-| Points de « Vérification de la musique » (lobby TV) | magenta | gris `var(--mid)` |
+| Élément                                             | Avant   | Après                                                                                            |
+| --------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| « Soirée » du logo                                  | magenta | gris clair `var(--soft)` (#D6D7E4), sur toutes les phases de la TV. Le logo n'est pas une action |
+| « téléphones. »                                     | magenta | blanc `var(--text)` **sans régie** ; magenta **avec régie** (inchangé)                           |
+| « Lancer la partie »                                | magenta | inchangé                                                                                         |
+| Curseur de volume                                   | magenta | blanc `var(--text)`, sur toutes les phases                                                       |
+| Points de « Vérification de la musique » (lobby TV) | magenta | gris `var(--mid)`                                                                                |
 
 Contraste : `#D6D7E4` sur `#050507` ≈ 14:1, au-dessus du 7:1 de la TV.
 
@@ -97,28 +97,28 @@ Le reste de l'image ne bouge pas.
 
 ## États
 
-| Cas | Ce qui se passe |
-| --- | --------------- |
-| Pas de nom | Story identique à aujourd'hui (date seule) |
-| Nom de 30 signes | Une ligne, taille réduite jusqu'à 48 px |
-| Nom fait d'espaces | Traité comme vide |
-| Nom avec emoji ou caractère rare | Dessiné par la police du système, pas bloqué |
-| Ancienne préparation mémorisée sans nom ou avec une valeur invalide | Champ vide |
-| Téléphone qui rejoint ou se reconnecte | Reçoit le nom avec les autres réglages (`salon_joined`) |
-| Redémarrage du serveur | Le nom revient avec l'instantané (il est dans `settings`) |
-| Soirée ZIK Pro en plusieurs parties | Le même nom sur la story de chaque partie |
-| TV sans régie, 0 joueur | Bouton désactivé « En attente de joueurs » (magenta atténué), titre blanc |
-| Régie qui se connecte en plein lobby | « téléphones. » repasse en magenta, le bouton de la TV disparaît (comportement actuel de `tvAlone`) |
+| Cas                                                                 | Ce qui se passe                                                                                     |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Pas de nom                                                          | Story identique à aujourd'hui (date seule)                                                          |
+| Nom de 30 signes                                                    | Une ligne, taille réduite jusqu'à 48 px                                                             |
+| Nom fait d'espaces                                                  | Traité comme vide                                                                                   |
+| Nom avec emoji ou caractère rare                                    | Dessiné par la police du système, pas bloqué                                                        |
+| Ancienne préparation mémorisée sans nom ou avec une valeur invalide | Champ vide                                                                                          |
+| Téléphone qui rejoint ou se reconnecte                              | Reçoit le nom avec les autres réglages (`salon_joined`)                                             |
+| Redémarrage du serveur                                              | Le nom revient avec l'instantané (il est dans `settings`)                                           |
+| Soirée ZIK Pro en plusieurs parties                                 | Le même nom sur la story de chaque partie                                                           |
+| TV sans régie, 0 joueur                                             | Bouton désactivé « En attente de joueurs » (magenta atténué), titre blanc                           |
+| Régie qui se connecte en plein lobby                                | « téléphones. » repasse en magenta, le bouton de la TV disparaît (comportement actuel de `tvAlone`) |
 
 ## Textes exacts
 
-| Où | Texte |
-| -- | ----- |
-| Libellé du champ | Nom de la soirée *facultatif* |
-| Exemple dans le champ (placeholder) | Ex. : Quiz du jeudi |
-| Aide sous le champ | Il s'affiche sur l'image que les joueurs partagent en fin de partie. Sans nom, la date. |
-| Résumé de « Plus de réglages » | le nom en tête, puis le résumé actuel : « Quiz du jeudi · 30 s pour répondre · suite automatique · réponse affichée 7 s » |
-| Story | nom en majuscules (« QUIZ DU JEUDI »), puis la date (« 23 NOVEMBRE 2026 ») |
+| Où                                  | Texte                                                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Libellé du champ                    | Nom de la soirée _facultatif_                                                                                             |
+| Exemple dans le champ (placeholder) | Ex. : Quiz du jeudi                                                                                                       |
+| Aide sous le champ                  | Il s'affiche sur l'image que les joueurs partagent en fin de partie. Sans nom, la date.                                   |
+| Résumé de « Plus de réglages »      | le nom en tête, puis le résumé actuel : « Quiz du jeudi · 30 s pour répondre · suite automatique · réponse affichée 7 s » |
+| Story                               | nom en majuscules (« QUIZ DU JEUDI »), puis la date (« 23 NOVEMBRE 2026 »)                                                |
 
 ## Critères de recette
 
