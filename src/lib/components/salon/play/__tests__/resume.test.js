@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   forgetResume,
   markAutoResume,
+  joinParams,
   readResume,
   takeAutoResume,
 } from "../resume.js";
@@ -102,5 +103,28 @@ describe("reprise sans appui après une relance automatique", () => {
     expect(takeAutoResume("ABC123", bloque, NOW)).toBe(false);
     expect(() => markAutoResume("ABC123", undefined, NOW)).not.toThrow();
     expect(takeAutoResume("ABC123", undefined, NOW)).toBe(false);
+  });
+});
+
+describe("joinParams", () => {
+  it("lit le code et le pseudo envoyés avant le chargement", () => {
+    expect(joinParams("?code=abc123&pseudo=%20Julie%20")).toEqual({
+      code: "ABC123",
+      pseudo: "Julie",
+    });
+  });
+
+  it("nettoie un code faux et garde le pseudo", () => {
+    expect(joinParams("?code=ab-1&pseudo=Julie")).toEqual({
+      code: "AB1",
+      pseudo: "Julie",
+    });
+    expect(joinParams("")).toEqual({ code: "", pseudo: "" });
+  });
+
+  it("coupe le code à 6 et le pseudo à 20 caractères comme les champs", () => {
+    const r = joinParams("?code=ABCDEFGH&pseudo=" + "a".repeat(40));
+    expect(r.code).toBe("ABCDEF");
+    expect(r.pseudo).toHaveLength(20);
   });
 });

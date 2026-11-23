@@ -61,3 +61,16 @@ export function takeAutoResume(code, storage, now = Date.now()) {
     return false;
   }
 }
+
+// Adresse /salon/play?code=…&pseudo=… : code du QR, et formulaire envoyé avant
+// que la page soit prête (réseau lent), lus par le serveur pour le premier rendu
+export function joinParams(search) {
+  const q = new URLSearchParams(search);
+  return {
+    code: (q.get("code") || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 6),
+    pseudo: (q.get("pseudo") || "").trim().slice(0, 20),
+  };
+}

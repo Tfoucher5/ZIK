@@ -24,6 +24,12 @@
     editCode = true;
     setTimeout(() => document.querySelector('.sp-code-input')?.focus());
   }
+
+  // Sans JavaScript encore chargé, le formulaire part en GET et la page rejoint au chargement
+  function submit(e) {
+    e.preventDefault();
+    onJoin();
+  }
 </script>
 
 <main class="sp sp-join">
@@ -55,11 +61,13 @@
     <p class="sx-kicker"><b>●</b> ZIK Soirée</p>
     <h1>Entre dans<br><em>la partie.</em></h1>
   </div>
+  <form class="sp-join-form" method="get" onsubmit={submit}>
   {#if tiles}
   <div class="sp-code-tiles">
     <span class="sx-kicker">Code</span>
     <span class="sp-tuiles" role="img" aria-label="Code {codeInput}">{#each [...codeInput] as c, i (i)}<b>{c}</b>{/each}</span>
-    <button class="salon-join-link" onclick={changeCode}>Changer</button>
+    <input type="hidden" name="code" value={codeInput}>
+    <button type="button" class="salon-join-link" onclick={changeCode}>Changer</button>
   </div>
   {:else}
   <label class="sp-field">
@@ -67,6 +75,7 @@
     <input
       class="sp-code-input"
       type="text"
+      name="code"
       bind:value={codeInput}
       placeholder="······"
       autocapitalize="characters"
@@ -75,7 +84,7 @@
       autocomplete="off"
       spellcheck="false"
       oninput={e => { codeInput = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }}
-      onkeydown={e => { if (e.key === 'Enter') { if (usernameInput.trim()) onJoin(); else document.getElementById('sp-username')?.focus(); } }}
+      onkeydown={e => { if (e.key === 'Enter' && !usernameInput.trim()) { e.preventDefault(); document.getElementById('sp-username')?.focus(); } }}
     >
   </label>
   <QrScanner onCode={(code) => { codeInput = code; document.getElementById('sp-username')?.focus(); }} />
@@ -85,24 +94,28 @@
     <input
       type="text"
       id="sp-username"
+      name="pseudo"
       bind:value={usernameInput}
       placeholder="Ex. : Julie"
       enterkeyhint="go"
       maxlength="20"
       autocomplete="off"
-      onkeydown={e => { if (e.key === 'Enter') onJoin(); }}
     >
   </label>
   {#if joinError}<p class="sp-error">{joinError}</p>{/if}
-  <button class="sx-btn sx-btn-primary sx-btn-lg" onclick={onJoin} disabled={joining}>
+  <button type="submit" class="sx-btn sx-btn-primary sx-btn-lg" disabled={joining}>
     {joining ? 'Connexion…' : 'Rejoindre'}
   </button>
+  </form>
   <p class="sp-hint">Sans appli, sans compte.</p>
   <ol class="sp-frise" style="--p:.33"><li class="on">Pseudo</li><li>Équipe</li><li>La TV</li></ol>
 {/if}
 </main>
 
 <style>
+  .sp-join-form {
+    display: contents;
+  }
   .sp-resume {
     margin: 0;
     color: var(--mid);
