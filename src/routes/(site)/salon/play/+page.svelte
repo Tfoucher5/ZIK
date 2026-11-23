@@ -13,7 +13,8 @@
   import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
   import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
   import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
-  import { takeAutoResume } from '$lib/components/salon/play/resume.js';
+  import { takeAutoResume, pendingJoin } from '$lib/components/salon/play/resume.js';
+  import { replaceState } from '$app/navigation';
   import { createSupabaseClient } from '$lib/client/supabase.js';
 
   let { data } = $props();
@@ -34,7 +35,14 @@
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code')?.toUpperCase() || '';
     p.checkResume(code);
-    if (p.resume && takeAutoResume(p.resume.code)) p.connectAndJoin();
+    const pending = pendingJoin(window.location.search);
+    if (pending) {
+      p.resume = null;
+      p.codeInput = pending.code;
+      p.usernameInput = pending.pseudo;
+      replaceState(`?code=${pending.code}`, {});
+      p.connectAndJoin();
+    } else if (p.resume && takeAutoResume(p.resume.code)) p.connectAndJoin();
     codeKnown = /^[A-Z0-9]{6}$/.test(code);
     if (code) document.getElementById('sp-username')?.focus();
   });

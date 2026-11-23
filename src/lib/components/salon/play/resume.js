@@ -61,3 +61,12 @@ export function takeAutoResume(code, storage, now = Date.now()) {
     return false;
   }
 }
+
+// « Rejoindre » touché avant que la page soit prête (réseau lent) : le
+// formulaire part dans l'adresse et la page rejoint seule au chargement
+export function pendingJoin(search) {
+  const q = new URLSearchParams(search);
+  const code = (q.get("code") || "").toUpperCase();
+  const pseudo = (q.get("pseudo") || "").trim().slice(0, 20);
+  return /^[A-Z0-9]{6}$/.test(code) && pseudo ? { code, pseudo } : null;
+}

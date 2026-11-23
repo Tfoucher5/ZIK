@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   forgetResume,
   markAutoResume,
+  pendingJoin,
   readResume,
   takeAutoResume,
 } from "../resume.js";
@@ -102,5 +103,28 @@ describe("reprise sans appui après une relance automatique", () => {
     expect(takeAutoResume("ABC123", bloque, NOW)).toBe(false);
     expect(() => markAutoResume("ABC123", undefined, NOW)).not.toThrow();
     expect(takeAutoResume("ABC123", undefined, NOW)).toBe(false);
+  });
+});
+
+describe("pendingJoin", () => {
+  it("rejoint avec le code et le pseudo envoyés avant le chargement", () => {
+    expect(pendingJoin("?code=abc123&pseudo=%20Julie%20")).toEqual({
+      code: "ABC123",
+      pseudo: "Julie",
+    });
+  });
+
+  it("ignore une adresse incomplète ou fausse", () => {
+    expect(pendingJoin("?code=ABC123")).toBeNull();
+    expect(pendingJoin("?code=ABC123&pseudo=%20")).toBeNull();
+    expect(pendingJoin("?code=AB&pseudo=Julie")).toBeNull();
+    expect(pendingJoin("?code=ABC12!&pseudo=Julie")).toBeNull();
+    expect(pendingJoin("")).toBeNull();
+  });
+
+  it("coupe le pseudo à 20 caractères comme le champ", () => {
+    expect(
+      pendingJoin("?code=ABC123&pseudo=" + "a".repeat(40)).pseudo,
+    ).toHaveLength(20);
   });
 });
