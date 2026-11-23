@@ -56,7 +56,7 @@
       step={v.step}
       soiree
       drum={v.drum}
-      title={v.drum ? 'Et le grand gagnant est…' : 'Le podium de la soirée'}
+      title={v.drum ? 'Et la victoire revient à…' : 'Le podium de la soirée'}
     />
   </div>
 
