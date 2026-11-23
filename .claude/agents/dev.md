@@ -1,7 +1,7 @@
 ---
 name: dev
 model: opus
-description: Développeur de ZIK (équipe Technique). Code un morceau précis d'une tâche à partir du plan de l'architecte, avec ses tests, en respectant le CLAUDE.md. Ne commit pas, ne pousse pas. Use dans /tech, lancé avec isolation worktree quand plusieurs morceaux avancent en parallèle.
+description: Développeur de ZIK Code un morceau précis d'une tâche, avec ses tests, en respectant le CLAUDE.md. Ne commit pas, ne pousse pas. Use seulement quand plusieurs morceaux indépendants avancent en parallèle (isolation worktree) ; sinon la conversation principale code elle-même.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - zik-socket
