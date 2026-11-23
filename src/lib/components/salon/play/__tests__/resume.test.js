@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { forgetResume, readResume } from "../resume.js";
+import {
+  forgetResume,
+  markAutoResume,
+  readResume,
+  takeAutoResume,
+} from "../resume.js";
 
 const H = 60 * 60 * 1000;
 const NOW = 100 * H;
@@ -51,5 +56,51 @@ describe("« Ce n'est pas moi »", () => {
       username: "",
       resume: null,
     });
+  });
+});
+
+describe("reprise sans appui après une relance automatique", () => {
+  const session = () => {
+    const v = {};
+    return {
+      v,
+      getItem: (k) => v[k] ?? null,
+      setItem: (k, x) => (v[k] = String(x)),
+      removeItem: (k) => delete v[k],
+    };
+  };
+
+  it("vaut une seule fois, pour ce salon", () => {
+    const s = session();
+    markAutoResume("ABC123", s, NOW);
+    expect(takeAutoResume("ABC123", s, NOW + 1000)).toBe(true);
+    expect(takeAutoResume("ABC123", s, NOW + 1000)).toBe(false);
+  });
+
+  it("ignore un marqueur expiré, d'un autre salon, illisible ou absent", () => {
+    const s = session();
+    markAutoResume("ABC123", s, NOW);
+    expect(takeAutoResume("ABC123", s, NOW + 2 * 60 * 1000)).toBe(false);
+    markAutoResume("ABC123", s, NOW);
+    expect(takeAutoResume("ZZZ999", s, NOW)).toBe(false);
+    expect(s.v.salon_auto_resume).toBeUndefined();
+    expect(takeAutoResume("ABC123", s, NOW)).toBe(false);
+    s.v.salon_auto_resume = "{pas du json";
+    expect(takeAutoResume("ABC123", s, NOW)).toBe(false);
+  });
+
+  it("stockage bloqué ou absent : rien ne lève, carte « Re-bonjour »", () => {
+    const bloque = {
+      getItem() {
+        throw new Error("SecurityError");
+      },
+      setItem() {
+        throw new Error("SecurityError");
+      },
+    };
+    expect(() => markAutoResume("ABC123", bloque, NOW)).not.toThrow();
+    expect(takeAutoResume("ABC123", bloque, NOW)).toBe(false);
+    expect(() => markAutoResume("ABC123", undefined, NOW)).not.toThrow();
+    expect(takeAutoResume("ABC123", undefined, NOW)).toBe(false);
   });
 });
