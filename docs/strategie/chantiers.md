@@ -27,7 +27,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : à faire
 - **Équipe** : Opérations
-- **Prochaine étape** : embarque SvelteKit 3, écran de relance, stripe 23 et la reprise de la TV ; recette sur le staging (scénario salon, TV rechargée, F5 en pause), `/security-review`, puis mise en prod quand aucun salon n'a de joueur
+- **Prochaine étape** : embarque SvelteKit 3, l'écran de relance « On retourne le disque » et la reprise de la TV ; recette sur le staging (scénario salon, TV rechargée, F5 en pause), `/security-review`, puis mise en prod quand aucun salon n'a de joueur
 
 ## Promo
 
