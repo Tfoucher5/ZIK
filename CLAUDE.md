@@ -79,34 +79,28 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 | `/release`                 | vérifications, version, notes, PR `develop` → `master` prête pour Théo                    | Claude quand `develop` a de quoi livrer, ou Théo     |
 | `/hotfix <bug>`            | branche depuis `master`, test qui reproduit, correctif minimal, report dans `develop`     | Claude dès qu'un bug prod est établi, ou Théo        |
 | `/incident <symptôme>`     | agent `incident` : enquête prod en lecture seule, rapport                                 | Claude dès qu'un problème prod est signalé, ou Théo  |
-| `/idees [axe]`             | agent `idees` : brainstorm produit classé par impact et effort, rangé dans `docs/idees/`  | Théo, ou Claude quand le plan est presque terminé    |
+| `/idees [axe]`             | agent `produit` : brainstorm classé par impact et effort, rangé dans `docs/idees/`        | Théo, ou Claude quand le plan est presque terminé    |
+| `/etat`                    | agent `chiffres` : indicateurs de la semaine dans `docs/strategie/etat.md`, le lundi      | Claude le lundi, ou Théo                             |
 | `/qg`                      | lance le QG s'il ne tourne pas, ouvre le navigateur, surveille les réponses de Théo       | Théo                                                 |
 
 Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (temps réel, salon, partie), `zik-supabase` (base, migrations, services), `zik-ui` (`.svelte`, CSS).
 
-Agents (dans `.claude/agents/`, contexte séparé) : `reviewer` (lecture seule), `test-writer`, `incident` (lecture seule, aucune action prod), `idees` (lecture seule, web autorisé).
+Agents (dans `.claude/agents/`, contexte séparé). La conversation principale code, organise et décide ; elle lance un agent seulement pour un regard indépendant, un travail en parallèle ou un savoir-faire à part :
 
-Modèle de chaque agent dans son en-tête (`model:`) : **fable** (effort élevé) pour ce qui protège la prod et demande le plus d'expertise (`architecte`, `reviewer`, `incident`, `da`) ; **opus** pour le code, le design, le texte et le board (`dev`, `ui`, `ux`, `animation`, `motion`, `community`, `redaction`, `idees`, `chef-*` hors projet, `avocat`) ; **sonnet** pour les tâches cadrées (`test-writer`, `analyste`, `chef-projet`, `recette`, `support`, `seo`, `contenu`, `prospection`, `offres`, `client-pro`). Les skills suivent le modèle de la conversation.
+| Agent         | Rôle                                                                                       | Modèle |
+| ------------- | ------------------------------------------------------------------------------------------ | ------ |
+| `reviewer`    | relecture du diff contre ce fichier, verdict fusionnable / bloqué (lecture seule)          | fable  |
+| `incident`    | enquête prod, chronologie et cause probable (lecture seule, aucune action prod)            | fable  |
+| `test-writer` | tests manquants du diff                                                                    | sonnet |
+| `dev`         | un morceau de code en worktree, seulement quand plusieurs morceaux avancent en parallèle   | opus   |
+| `recette`     | vérification en vrai sur le staging : Playwright, desktop et 390 px, TV et régie           | sonnet |
+| `produit`     | porte concept (fiche + maquette), parcours, visuel, animations, fun d'une partie, textes   | opus   |
+| `marketing`   | SEO, promo (scripts pour `zik-montage`), prospection, support ; ne publie ni n'envoie rien | opus   |
+| `chiffres`    | indicateurs de la semaine, offres et prix (lecture seule, ne change jamais un prix)        | sonnet |
 
-**Mode entreprise** (demande de Théo, 15/11) : ZIK avance comme une vraie boîte, toutes les équipes en même temps. À chaque demande ou reprise, la conversation principale (le CEO) découpe le travail en **chantiers parallèles** indépendants et lance une équipe par chantier en arrière-plan : produit (fiche et maquette), une ou plusieurs équipes de dev (agents `dev` en worktrees séparés, une branche et une PR par chantier, jamais deux équipes sur les mêmes fichiers), opérations (recette, release), marketing (la promo avance chaque semaine, même pendant un chantier produit), argent. Le CEO n'attend pas une équipe pour en lancer une autre, relit chaque rendu, renvoie ce qui ne va pas et rend compte à Théo par chantier. Il recrute un agent (fichier dans `.claude/agents/`) dès qu'un savoir-faire manque.
+Circuit d'une tâche : `/demarrer`, l'agent `produit` si ça se voit (puis Théo valide), code, `/tests`, `/relire`, `/terminer`, recette sur le staging, `/release`. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal des décisions), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `/qg` (voir `scripts/qg/README.md`). Toute question qui attend Théo est ajoutée dans `docs/strategie/a-trancher.md` (visible dans le QG, bouton « À trancher », où il répond) et retirée dès qu'il a tranché (la décision va dans `decisions.md`). `docs/strategie/chantiers.md` (en cours, reste à faire, affiché dans le QG) est tenu à jour à chaque lancement, rendu ou fusion d'un chantier.
 
-### L'entreprise d'agents
-
-Un agent ne peut pas lancer d'agent : les **chefs sont des skills** suivis par la conversation principale, qui lance leur équipe (agents) en parallèle. Chaque chef a aussi une fiche `chef-*` pour siéger au board. Théo reste fondateur : argent, nouvelle page ou nouveau mode de jeu, données de prod, validation finale.
-
-| Chef                     | Skill         | Équipe (agents)                                               |
-| ------------------------ | ------------- | ------------------------------------------------------------- |
-| CEO                      | `/ceo`        | les chefs ci-dessous ; `/ceo semaine` le lundi, `/etat`       |
-| Argent (CFO)             | `/argent`     | `analyste`, `offres`                                          |
-| Opérations (COO)         | `/operations` | `chef-projet`, `recette`, `support` ; `suite` chaque jour     |
-| Produit & design (CPO)   | `/produit`    | `da`, `motion`, `idees`, `ux`, `ui`, `redaction`, `animation` |
-| Technique (CTO)          | `/tech`       | `architecte`, `dev`, `test-writer`, `reviewer`, `incident`    |
-| Marketing & ventes (CMO) | `/marketing`  | `community`, `seo`, `contenu`, `prospection`                  |
-| Board                    | `/board`      | `chef-*`, `avocat`, `client-pro`                              |
-
-Circuit d'une tâche : `/produit` cadre (fiche et maquette, puis Théo valide si ça se voit), `/tech` code jusqu'à la PR, `/operations` fait la recette et la release, `/marketing` annonce, `/argent` mesure. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal du board), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `/qg` (voir `scripts/qg/README.md`). Toute question qui attend Théo est ajoutée dans `docs/strategie/a-trancher.md` (visible dans le QG, bouton « À trancher », où il répond) et retirée dès qu'il a tranché (la décision va dans `decisions.md`). `docs/strategie/chantiers.md` (en cours, reste à faire, affiché dans le QG) est tenu à jour par la session CEO à chaque lancement, rendu ou fusion d'un chantier.
-
-Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
+Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel et répété de l'application le justifie : en français, dans le style des existants, ajouté aux tableaux ci-dessus, seulement si aucun agent existant ne couvre le besoin, par une PR `chore/` vers `develop`. Une nouvelle fonctionnalité du site hors plan reste proposée à Théo d'abord.
 
 ## Base de données (Supabase)
 

@@ -83,7 +83,7 @@ Correctifs, fiabilité, tests, performances, sécurité, SEO technique, dette, t
 
 ### La porte concept
 
-Tout ce qui se voit (nouvel écran, parcours modifié, nouveau visuel, texte important) passe par **`/produit cadrer`**, qui rend :
+Tout ce qui se voit (nouvel écran, parcours modifié, nouveau visuel, texte important) passe par l'agent `produit`, qui rend :
 
 1. une fiche (objectif, chiffre visé, parcours, états, textes, critères de recette) dans `docs/specs/` ;
 2. une **maquette** publiée en page privée (Artifact), lisible sur téléphone.
@@ -92,24 +92,22 @@ Le travail s'arrête là. Théo valide, corrige ou refuse. La fiche porte alors 
 
 ### Qui décide quoi
 
-| Sujet                                                     | Décide              |
-| --------------------------------------------------------- | ------------------- |
-| Vision, priorités du trimestre, concept de ce qui se voit | Théo                |
-| Argent, prix, offres, Stripe live                         | Théo                |
-| Nouvelle page, nouveau mode de jeu, données de prod       | Théo                |
-| Ordre des tâches dans le plan, priorités de la semaine    | CEO (`/ceo`)        |
-| Comment c'est codé, découpage, tests                      | CTO (`/tech`)       |
-| Feu vert de mise en prod (porte du `CLAUDE.md`)           | COO (`/operations`) |
-| Avis sur une grosse décision                              | Board (`/board`)    |
+| Sujet                                                     | Décide |
+| --------------------------------------------------------- | ------ |
+| Vision, priorités du trimestre, concept de ce qui se voit | Théo   |
+| Argent, prix, offres, Stripe live                         | Théo   |
+| Nouvelle page, nouveau mode de jeu, données de prod       | Théo   |
+| Ordre des tâches dans le plan, priorités de la semaine    | Claude |
+| Comment c'est codé, découpage, tests                      | Claude |
+| Feu vert de mise en prod (porte du `CLAUDE.md`)           | Claude |
 
 ### Le rythme
 
-| Quand             | Quoi                                                                |
-| ----------------- | ------------------------------------------------------------------- |
-| Chaque jour ouvré | `/operations suite` : une tâche du plan, du code jusqu'à la recette |
-| Lundi             | `/ceo semaine` : chiffres, 3 priorités liées aux trois chiffres     |
-| Chaque release    | recette avec la grille ci-dessus, Théo prévenu avec quoi tester     |
-| Une fois par mois | `/board` sur la direction : les trois chiffres avancent-ils ?       |
+| Quand             | Quoi                                                            |
+| ----------------- | --------------------------------------------------------------- |
+| Chaque jour ouvré | une tâche du plan, de `/demarrer` jusqu'à la recette            |
+| Lundi             | `/etat` : chiffres, 3 priorités liées aux trois chiffres        |
+| Chaque release    | recette avec la grille ci-dessus, Théo prévenu avec quoi tester |
 
 ## Les étapes jusqu'en mai 2027
 
@@ -117,4 +115,4 @@ Le travail s'arrête là. Théo valide, corrige ou refuse. La fiche porte alors 
 2. **Expérience** (v3.33) : le fun, les textes, la charte, le gérant sur téléphone. Chaque morceau passe par la porte concept.
 3. **Croissance** : faire venir les groupes (SEO soirée, partage de fin de partie) et signer des pros (prospection, Pass 24 h visible).
 
-Les cibles chiffrées de chaque étape sont fixées avec Théo au premier `/ceo semaine` qui suit, à partir de `etat.md`.
+Les cibles chiffrées de chaque étape sont fixées avec Théo au premier `/etat` qui suit, à partir de `etat.md`.
