@@ -1,6 +1,7 @@
 import { getAdminClient } from "../../config.js";
 import { getMaintenance } from "../../maintenance.js";
 import { openSupportCount } from "../../socket/salon/support.js";
+import { estEcranSalon } from "../health/clientCrash.js";
 
 const DAY = 24 * 3600_000;
 
@@ -73,9 +74,11 @@ export async function getTodo() {
       getMaintenance(),
     ]);
 
-  const errors = (globalThis.__zik_errorLog ?? []).filter(
+  const jour = (globalThis.__zik_errorLog ?? []).filter(
     (e) => e.ts >= Date.now() - DAY && e.level === "error",
-  ).length;
+  );
+  const screens = jour.filter(estEcranSalon).length;
+  const errors = jour.length - screens;
 
   const calls = openSupportCount();
 
@@ -133,6 +136,14 @@ export async function getTodo() {
       tone: "warn",
       n: errors,
       label: `${errors} erreur${errors > 1 ? "s" : ""} serveur depuis 24 h`,
+      action: "Voir",
+      href: "/admin/errors",
+    },
+    screens && {
+      key: "screens",
+      tone: "warn",
+      n: screens,
+      label: `${screens} plantage${screens > 1 ? "s" : ""} d'écran du salon depuis 24 h`,
       action: "Voir",
       href: "/admin/errors",
     },
