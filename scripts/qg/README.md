@@ -1,6 +1,6 @@
 # QG : l'équipe d'agents en direct
 
-Tableau de bord local sur une seule page : limite d'utilisation, qui fait quoi, chantiers, flux en direct et décisions à trancher, sans passer par le terminal.
+Tableau de bord local sur une seule page : les bureaux (un personnage par agent, qui bouge et dit ce qu'il fait quand il travaille, dort sinon), limite d'utilisation, qui fait quoi, chantiers, flux en direct et décisions à trancher, sans passer par le terminal.
 
 ## Lancer
 
