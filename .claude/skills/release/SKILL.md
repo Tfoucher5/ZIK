@@ -27,7 +27,8 @@ Tu vas jusqu'à la prod : PR verte, fusion, vérification du déploiement. Théo
 3. **Version.** Une `feat` dans la liste = version mineure ; seulement `fix`, `perf`, `chore`, `docs` = correctif. Incrémente-la partout où elle apparaît (`package.json` et les pages qui l'affichent : cherche l'ancienne version avec Grep).
 4. **Notes.** Rédige les notes de release : d'abord ce qui change pour les joueurs et les clients Pro, puis le technique. Ajoute une entrée dans `src/lib/data/news.js` seulement si l'expérience change pour eux.
 5. **Branche de release** `release/vX.Y.Z` depuis `develop` avec le bump de version et les notes, puis PR vers `master` (`gh pr create --base master --title "release vX.Y.Z"`). CI verte, workflow « Scénario salon » compris (lancé par le push de la branche de release).
-6. **Fusion.** Juste avant, ouvre `/admin/salons` en prod avec Claude in Chrome : si un salon a au moins un joueur connecté (pas « hors ligne »), attends et réessaie plus tard. Sinon `gh pr merge --merge` (merge commit, jamais squash). Vérifie aussi les réglages de dashboard que la release exige (ex : Exposed schemas) et fais-les avant la fusion.
-7. **Après le merge**, sans attendre : déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK, report `master` → `develop` en merge commit. Pas de surveillance prolongée.
+6. **Sécurité.** Lance `/security-review` sur le diff `master...develop`. Un point bloquant = correctif dans `develop` avant la release.
+7. **Fusion.** Juste avant, ouvre `/admin/salons` en prod avec Claude in Chrome : si un salon a au moins un joueur connecté (pas « hors ligne »), attends et réessaie plus tard. Sinon `gh pr merge --merge` (merge commit, jamais squash). Vérifie aussi les réglages de dashboard que la release exige (ex : Exposed schemas) et fais-les avant la fusion.
+8. **Après le merge**, sans attendre : déploiement `[PROD]` en `SUCCESS` (piège SKIPPED), `/healthz` OK, report `master` → `develop` en merge commit. Pas de surveillance prolongée.
 
 Message à Théo après la mise en prod : version, contenu, état de chaque vérification, ce qu'il peut tester en prod.

@@ -47,8 +47,9 @@ Plan en cours : `docs/audit/2026-11-02-audit.md` (audit complet) et `docs/audit/
 - **Porte de mise en prod** (Claude fusionne la PR vers `master` seulement si tout est vrai) :
   1. Définition de terminé tenue pour chaque PR embarquée, CI verte sur `develop` et sur la PR
   2. Contenu déployé sur `[DEV]` et vérifié en vrai par Claude : déploiement réussi, sondes vertes, scénario Playwright du salon vert, contrôle visuel desktop et mobile (390 px) des écrans touchés
-  3. Aucun salon avec un joueur connecté : Claude ouvre `/admin/salons` en prod avec Claude in Chrome juste avant de fusionner (un salon resté ouvert sans joueur connecté ne bloque pas). N'importe quel jour, n'importe quelle heure. Sinon il réessaie plus tard
-  4. Après la fusion, sans attendre : Claude prévient Théo (version, contenu, quoi tester), vérifie que le déploiement `[PROD]` est en `SUCCESS` (piège SKIPPED) et que `/healthz` répond, reporte `master` dans `develop`, puis passe à la tâche suivante. Un souci remonté plus tard = `/incident`, puis `/hotfix` ou revert
+  3. `/security-review` sur le diff `master...develop` sans point bloquant
+  4. Aucun salon avec un joueur connecté : Claude ouvre `/admin/salons` en prod avec Claude in Chrome juste avant de fusionner (un salon resté ouvert sans joueur connecté ne bloque pas). N'importe quel jour, n'importe quelle heure. Sinon il réessaie plus tard
+  5. Après la fusion, sans attendre : Claude prévient Théo (version, contenu, quoi tester), vérifie que le déploiement `[PROD]` est en `SUCCESS` (piège SKIPPED) et que `/healthz` répond, reporte `master` dans `develop`, puis passe à la tâche suivante. Un souci remonté plus tard = `/incident`, puis `/hotfix` ou revert
 
 ## Définition de « terminé »
 
@@ -85,18 +86,20 @@ Commandes (dans `.claude/skills/`), dans l'ordre d'une tâche :
 
 Règles chargées automatiquement selon les fichiers touchés : `zik-socket` (temps réel, salon, partie), `zik-supabase` (base, migrations, services), `zik-ui` (`.svelte`, CSS).
 
-Agents (dans `.claude/agents/`, contexte séparé). La conversation principale code, organise et décide ; elle lance un agent seulement pour un regard indépendant, un travail en parallèle ou un savoir-faire à part :
+Agents (dans `.claude/agents/`, contexte séparé). Plusieurs instances d'un même agent peuvent tourner en même temps, jusqu'au plafond de la colonne « Instances » ; chacune a sa carte dans le QG. La conversation principale code, organise et décide ; elle lance un agent seulement pour un regard indépendant, un travail en parallèle ou un savoir-faire à part :
 
-| Agent         | Rôle                                                                                       | Modèle |
-| ------------- | ------------------------------------------------------------------------------------------ | ------ |
-| `reviewer`    | relecture du diff contre ce fichier, verdict fusionnable / bloqué (lecture seule)          | fable  |
-| `incident`    | enquête prod, chronologie et cause probable (lecture seule, aucune action prod)            | fable  |
-| `test-writer` | tests manquants du diff                                                                    | sonnet |
-| `dev`         | un morceau de code en worktree, seulement quand plusieurs morceaux avancent en parallèle   | opus   |
-| `recette`     | vérification en vrai sur le staging : Playwright, desktop et 390 px, TV et régie           | sonnet |
-| `produit`     | porte concept (fiche + maquette), parcours, visuel, animations, fun d'une partie, textes   | opus   |
-| `marketing`   | SEO, promo (scripts pour `zik-montage`), prospection, support ; ne publie ni n'envoie rien | opus   |
-| `chiffres`    | indicateurs de la semaine, offres et prix (lecture seule, ne change jamais un prix)        | sonnet |
+| Agent         | Rôle                                                                                                         | Modèle | Instances |
+| ------------- | ------------------------------------------------------------------------------------------------------------ | ------ | --------- |
+| `reviewer`    | relecture du diff contre ce fichier, verdict fusionnable / bloqué (lecture seule)                            | fable  | 1 par PR  |
+| `incident`    | enquête prod, chronologie et cause probable (lecture seule, aucune action prod)                              | fable  | 1         |
+| `test-writer` | tests manquants du diff                                                                                      | sonnet | 2         |
+| `dev`         | un morceau de code en worktree, une branche chacun, seulement quand plusieurs morceaux avancent en parallèle | opus   | 4         |
+| `recette`     | vérification en vrai sur le staging : Playwright, desktop et 390 px, TV et régie                             | sonnet | 1         |
+| `produit`     | porte concept (fiche + maquette), parcours, visuel, animations, fun d'une partie, textes                     | opus   | 2         |
+| `marketing`   | SEO, promo (scripts pour `zik-montage`), prospection ; ne publie ni n'envoie rien                            | opus   | 1         |
+| `support`     | signalements, réponses aux joueurs et clients Pro (sans envoyer), bug vers `/incident`                       | sonnet | 1         |
+| `chiffres`    | indicateurs de la semaine, offres et prix (lecture seule, ne change jamais un prix)                          | sonnet | 1         |
+| `juridique`   | CGU, CGV, RGPD, droits musicaux : prépare et cite ses sources, Théo décide (lecture seule)                   | opus   | 1         |
 
 Circuit d'une tâche : `/demarrer`, l'agent `produit` si ça se voit (puis Théo valide), code, `/tests`, `/relire`, `/terminer`, recette sur le staging, `/release`. Second cerveau : ce fichier, `docs/strategie/vision.md` (direction, grille de qualité, qui décide quoi), `docs/strategie/etat.md` (chiffres, `/etat`), `docs/strategie/decisions.md` (journal des décisions), le plan, `docs/idees/`, la mémoire du projet. Suivi en direct sur le PC : `/qg` (voir `scripts/qg/README.md`). Toute question qui attend Théo est ajoutée dans `docs/strategie/a-trancher.md` (visible dans le QG, bouton « À trancher », où il répond) et retirée dès qu'il a tranché (la décision va dans `decisions.md`). `docs/strategie/chantiers.md` (en cours, reste à faire, affiché dans le QG) est tenu à jour à chaque lancement, rendu ou fusion d'un chantier.
 
