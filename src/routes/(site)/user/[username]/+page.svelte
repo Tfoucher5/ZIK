@@ -1,6 +1,6 @@
 <script>
   import { onMount, getContext } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import ProfileView from '$lib/components/profile/ProfileView.svelte';
   import ReportModal from '$lib/components/report/ReportModal.svelte';
@@ -17,7 +17,7 @@
   let notFound = $state(false);
   let reportOpen = $state(false);
 
-  const username     = $derived($page.params.username);
+  const username     = $derived(page.params.username);
   const isOwnProfile = $derived(user?.profile?.username === profile?.username);
 
   onMount(async () => {

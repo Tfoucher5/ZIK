@@ -52,7 +52,7 @@
 
     if (isLogin) {
       const next = page.url.searchParams.get('next') ?? '';
-      await goto(next.startsWith('/admin') ? next : '/admin', { replaceState: true, invalidateAll: true });
+      await goto(next.startsWith('/admin') ? next : '/admin', { replace: true, refreshAll: true });
     }
     ready = true;
 

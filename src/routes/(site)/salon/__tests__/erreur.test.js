@@ -4,6 +4,7 @@ import { render } from "svelte/server";
 const etat = vi.hoisted(() => ({ page: {} }));
 vi.mock("$app/state", () => etat);
 vi.mock("$app/environment", () => ({ version: "3.34.0" }));
+vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 
 const { default: Erreur } = await import("../+error.svelte");
 
