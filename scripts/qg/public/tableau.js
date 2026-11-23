@@ -1,5 +1,4 @@
-// Tableau de bord autour des bureaux : limite d'utilisation, qui fait quoi, chantiers, flux en direct.
-import { EQUIPE, fiche } from "./noms.js";
+// Tableau de bord : limite d'utilisation, qui fait quoi, chantiers, flux en direct.
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, texte, classe) => {
@@ -8,7 +7,7 @@ const el = (tag, texte, classe) => {
   if (classe) n.className = classe;
   return n;
 };
-export const heure = (t) =>
+const heure = (t) =>
   new Date(t).toLocaleTimeString("fr-FR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -33,18 +32,7 @@ const lire = async (url) => {
   }
 };
 
-let org = { chefs: [] };
-let annuaire = new Map();
 let limites = null;
-
-// Prénom d'un auteur du flux : « /tech » = la session principale sous un skill (son chef, sinon Claire, la CEO).
-function personne(id) {
-  if (id?.startsWith("/")) {
-    const skill = id.slice(1);
-    id = org.chefs.some((c) => c.id === skill) ? skill : "ceo";
-  }
-  return annuaire.get(id) ?? EQUIPE[id] ?? fiche(id ?? "?", id);
-}
 
 function jauge(nom, fenetre, maintenant) {
   const fini = !fenetre.resets_at || fenetre.resets_at * 1000 <= maintenant;
@@ -115,7 +103,7 @@ function majEquipe(etat) {
     ...etat.sessions
       .filter((s) => s.actif)
       .map((s) => ({
-        p: personne(s.skill ? `/${s.skill.split(":").pop()}` : "ceo"),
+        p: s.skill ? `Claude · /${s.skill.split(":").pop()}` : "Claude",
         tache: `${s.projet} · ${s.branche}`,
         detail: s.activite,
         t: null,
@@ -123,13 +111,13 @@ function majEquipe(etat) {
     ...etat.agents
       .filter((a) => a.actif)
       .map((a) => ({
-        p: personne(a.type),
+        p: a.type,
         tache: a.description,
         detail: a.activite,
         t: a.debut,
       })),
     ...etat.enAttente.map((l) => ({
-      p: personne(l.type),
+      p: l.type,
       tache: l.description,
       detail: "Arrive…",
       t: l.t,
@@ -140,9 +128,7 @@ function majEquipe(etat) {
       ? lignes.map(({ p, tache, detail, t }) => {
           const li = el("li");
           const tete = el("div", null, "tete");
-          const qui = el("b", p.nom);
-          if (p.role) qui.append(el("span", ` · ${p.role}`));
-          tete.append(qui);
+          tete.append(el("b", p));
           if (t) tete.append(el("time", duree(m - t)));
           li.append(tete, el("p", tache || "—"));
           if (detail) li.append(el("small", detail));
@@ -194,40 +180,27 @@ function majFlux(etat) {
   $("flux").replaceChildren(
     ...etat.flux.map((e) => {
       const li = el("li");
-      const quoi = e.cible
-        ? `Lance ${personne(e.cible).nom} : ${e.quoi}`
-        : e.quoi;
-      li.append(
-        el("time", heure(e.t)),
-        el("b", personne(e.qui).nom),
-        el("span", quoi),
-      );
+      const quoi = e.cible ? `Lance ${e.cible} : ${e.quoi}` : e.quoi;
+      li.append(el("time", heure(e.t)), el("b", e.qui), el("span", quoi));
       return li;
     }),
   );
 }
 
 let dernier = null;
-export function majTableau(etat, organigramme) {
-  org = organigramme;
+export function majTableau(etat) {
   dernier = etat;
   majLimite(etat);
   majEquipe(etat);
   majFlux(etat);
 }
 
-async function majAnnuaire() {
-  const agents = await lire("/agents");
-  if (agents) annuaire = new Map(agents.map((a) => [a.id, a]));
-}
 async function majLimites() {
   limites = await lire("/limites");
   if (dernier) majLimite(dernier);
 }
 
-majAnnuaire();
 majLimites();
 majChantiers();
-setInterval(majAnnuaire, 60e3);
 setInterval(majLimites, 15e3);
 setInterval(majChantiers, 10e3);

@@ -21,7 +21,7 @@ Chefs, skills et équipes : tableau « L'entreprise d'agents » du `CLAUDE.md` (
 
 ## Mode entreprise : tout le monde travaille en même temps
 
-À chaque demande, liste les chantiers ouverts (produit, dev, opérations, promo, argent) et lance **en parallèle, en arrière-plan**, une équipe par chantier indépendant. Plusieurs équipes de dev peuvent avancer ensemble : agents `dev` en worktrees, un chantier = une branche = une PR, jamais les mêmes fichiers. La promo (`community`, `contenu`, `seo`) avance chaque semaine quoi qu'il arrive. Un savoir-faire manque : recrute un agent (fichier `.claude/agents/`, nom dans `scripts/qg/public/noms.js`, ligne dans le tableau du `CLAUDE.md`). Relis chaque rendu avant de le transmettre ; ce qui se voit passe toujours par la porte concept.
+À chaque demande, liste les chantiers ouverts (produit, dev, opérations, promo, argent) et lance **en parallèle, en arrière-plan**, une équipe par chantier indépendant. Plusieurs équipes de dev peuvent avancer ensemble : agents `dev` en worktrees, un chantier = une branche = une PR, jamais les mêmes fichiers. La promo (`community`, `contenu`, `seo`) avance chaque semaine quoi qu'il arrive. Un savoir-faire manque : recrute un agent (fichier `.claude/agents/`, ligne dans le tableau du `CLAUDE.md`). Relis chaque rendu avant de le transmettre ; ce qui se voit passe toujours par la porte concept.
 
 ## Second cerveau, à lire avant de décider
 

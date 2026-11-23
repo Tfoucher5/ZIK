@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   Suivi,
-  lireOrganigramme,
   hoteAutorise,
   limiteAtteinte,
   fenetreEstimee,
@@ -187,34 +186,6 @@ describe("fenetreEstimee", () => {
       atteinte: "cinq",
     });
     expect(fenetreEstimee([T0], atteinte, T0 + 3 * H).atteinte).toBeNull();
-  });
-});
-
-describe("lireOrganigramme", () => {
-  it("lit chefs, équipes et board dans le tableau du CLAUDE.md", () => {
-    const md = [
-      "### L'entreprise d'agents",
-      "| Chef | Skill | Équipe |",
-      "| --- | --- | --- |",
-      "| CEO | `/ceo` | les chefs |",
-      "| Opérations (COO) | `/operations` | `chef-projet`, `recette` ; `suite` chaque jour |",
-      "| Board | `/board` | `chef-*`, `avocat` |",
-      "## Suite",
-      "| X | `/hors` | `rien` |",
-    ].join("\n");
-    expect(lireOrganigramme(md)).toEqual({
-      chefs: [
-        { id: "ceo", nom: "CEO", skill: "ceo", equipe: [] },
-        {
-          id: "operations",
-          nom: "Opérations (COO)",
-          skill: "operations",
-          equipe: ["chef-projet", "recette"],
-        },
-      ],
-      board: ["chef-*", "avocat"],
-    });
-    expect(lireOrganigramme("rien")).toEqual({ chefs: [], board: [] });
   });
 });
 
