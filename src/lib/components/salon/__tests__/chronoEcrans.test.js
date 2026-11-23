@@ -182,6 +182,39 @@ describe("TV qui se reconnecte en pleine manche", () => {
     expect(h).toMatchObject({ timerStarted: true, timerMax: 45, timerVal: 30 });
     vi.useRealTimers();
   });
+
+  // Incident du 19/11 : la musique restait muette jusqu'à la manche suivante
+  it("relance la musique reçue, et la coupe si le salon est en pause", () => {
+    for (const paused of [false, true]) {
+      const h = ECRANS[0].etat();
+      h.hostCenter = { loadMedia: vi.fn(), pauseVideo: vi.fn() };
+      h.socket = fauxSocket();
+      listenHost(h, h.socket);
+      const media = { videoId: "vid123", startSeconds: 52 };
+      h.socket.recoit("salon_host_joined", { ...base, paused, media });
+      expect(h.hostCenter.loadMedia).toHaveBeenCalledWith(media);
+      expect(h.hostCenter.pauseVideo).toHaveBeenCalledTimes(paused ? 1 : 0);
+    }
+  });
+
+  it("pendant la révélation, retrouve la réponse et montre la vidéo", () => {
+    vi.useFakeTimers();
+    const h = ECRANS[0].etat();
+    h.hostCenter = { loadMedia: vi.fn(), revealVideo: vi.fn() };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    const roundEnd = { answer: "A - T", cover: "c.jpg" };
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      phase: "summary",
+      roundEnd,
+    });
+    vi.advanceTimersByTime(250);
+    expect(h.roundEnd).toEqual(roundEnd);
+    expect(h.hostCenter.revealVideo).toHaveBeenCalled();
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
 });
 
 describe("TV pendant un redémarrage du serveur", () => {

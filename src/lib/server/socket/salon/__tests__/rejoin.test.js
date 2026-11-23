@@ -290,3 +290,119 @@ describe("chrono donné à la reconnexion", () => {
       expect(recu[id].endsAt, id).toBeNull();
   });
 });
+
+// Incident du 19/11 : TV rechargée en pleine soirée, musique muette jusqu'à la manche suivante
+describe("TV qui revient en pleine manche", () => {
+  let h;
+
+  beforeEach(() => {
+    for (const k of Object.keys(salonRooms)) delete salonRooms[k];
+    db.reply = () => ({ data: null, error: null });
+    salonDeTest();
+    Object.assign(salonRooms[CODE].game, {
+      phase: "round",
+      currentRound: 3,
+      currentTrack: { id: "t1", title: "T", artist: "A" },
+      currentVideo: { id: "vid123", start: 40, audio: false },
+      timerActive: true,
+      timerMax: 30,
+      endsAt: Date.now() + 18_000,
+    });
+    salonRooms[CODE].players.Ana = {
+      username: "Ana",
+      token: "jeton-ana",
+      score: 0,
+      team: null,
+      stats: { found: 0, first: 0 },
+      foundFeats: [],
+      foundExtras: [],
+    };
+    h = makeIo();
+    registerSalon(h.io);
+  });
+
+  async function rejoint(evt, payload, attendu) {
+    const s = makeSocket(evt, h.rooms);
+    const msgs = [];
+    s.emit = (event, p) => msgs.push({ event, p });
+    h.connecte(s);
+    await s.handlers[evt](payload);
+    return msgs.find((m) => m.event === attendu)?.p;
+  }
+
+  it("la TV reçoit la vidéo en cours, calée sur le temps déjà joué", async () => {
+    const tv = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: CLE },
+      "salon_host_joined",
+    );
+    expect(tv.media.videoId).toBe("vid123");
+    // 12 s jouées sur 30 : la vidéo reprend vers 40 + 12
+    expect(tv.media.startSeconds).toBeGreaterThanOrEqual(51);
+    expect(tv.media.startSeconds).toBeLessThanOrEqual(52);
+    expect(tv.roundEnd).toBeNull();
+  });
+
+  it("musique en train de charger (chrono pas lancé) : reprise au début de l'extrait", async () => {
+    Object.assign(salonRooms[CODE].game, { timerActive: false, endsAt: 0 });
+    const tv = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: CLE },
+      "salon_host_joined",
+    );
+    expect(tv.media).toEqual({ videoId: "vid123", startSeconds: 40 });
+  });
+
+  it("en pause : reprise au point de la pause", async () => {
+    Object.assign(salonRooms[CODE].game, { paused: true, remainingMs: 25_000 });
+    const tv = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: CLE },
+      "salon_host_joined",
+    );
+    expect(tv.media.startSeconds).toBe(45);
+  });
+
+  it("extrait audio sans vidéo : la TV reçoit l'extrait", async () => {
+    salonRooms[CODE].game.currentVideo = {
+      id: "https://cdn/extrait.mp3",
+      start: 0,
+      audio: true,
+    };
+    const tv = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: CLE },
+      "salon_host_joined",
+    );
+    expect(tv.media).toEqual({ audioUrl: "https://cdn/extrait.mp3" });
+  });
+
+  it("pendant la révélation, la TV retrouve la réponse ; pas de média", async () => {
+    Object.assign(salonRooms[CODE].game, {
+      phase: "summary",
+      lastRoundEnd: { answer: "A - T", cover: "c.jpg", scores: [] },
+    });
+    const tv = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: CLE },
+      "salon_host_joined",
+    );
+    expect(tv.media).toBeNull();
+    expect(tv.roundEnd).toMatchObject({ answer: "A - T", cover: "c.jpg" });
+  });
+
+  it("le téléphone et une TV sans clé ne reçoivent ni le média ni la réponse", async () => {
+    const tel = await rejoint(
+      "salon_join_player",
+      { code: CODE, username: "Ana", token: "jeton-ana" },
+      "salon_joined",
+    );
+    expect(JSON.stringify(tel)).not.toMatch(/vid123/);
+    const intrus = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: "mauvaise" },
+      "salon_host_joined",
+    );
+    expect(intrus).toBeUndefined();
+  });
+});

@@ -48,6 +48,13 @@ export function listenHost(h, socket) {
     h.round = data.currentRound || 0;
     h.total = h.settings.maxRounds || 10;
     h.chat.update(data.support);
+    // TV revenue en pleine manche : la musique reprend là où la salle l'entend
+    h.roundEnd = data.roundEnd ?? null;
+    if (data.roundEnd) setTimeout(() => h.hostCenter?.revealVideo(), 200);
+    if (data.media) {
+      h.hostCenter?.loadMedia(data.media);
+      if (data.paused) h.hostCenter?.pauseVideo();
+    }
   });
 
   socket.on("salon_night", ({ night }) => {
