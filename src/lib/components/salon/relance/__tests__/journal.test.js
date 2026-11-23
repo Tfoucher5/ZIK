@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { knownSecrets, noteCrash, redact, sendCrash } from "../journal.js";
 import { handleError } from "../../../../../hooks.client.js";
 
@@ -24,6 +24,20 @@ describe("journal des plantages : rien de personnel", () => {
     );
     expect(t).not.toMatch(/Ana|jeton-secret|cle-regie|\?/);
     expect(t).toContain("/salon/regie:12:3");
+  });
+
+  it("masque aussi les clés de régie gardées par le navigateur", () => {
+    const regie = local({ zik_salon_key_ABC123: "cle-de-regie-42" });
+    const t = redact("boum cle-de-regie-42 ici", knownSecrets(regie, ""));
+    expect(t).toBe("boum … ici");
+  });
+
+  it("mots entiers seulement : un pseudo court ne hache pas la pile", () => {
+    const pile = "TypeError: at render (app.js:1:2) Al";
+    expect(redact(pile, ["at", "Al"])).toBe(
+      "TypeError: … render (app.js:1:2) …",
+    );
+    expect(redact("Éa Éaux a.b a.bc", ["Éa", "a.b"])).toBe("… Éaux … a.bc");
   });
 
   it("stockage ou adresse illisibles : on continue", () => {
@@ -55,6 +69,21 @@ describe("journal des plantages : rien de personnel", () => {
     expect(b.pile).toHaveLength(1500);
   });
 
+  it.each([
+    ["vide", ""],
+    ["absent", undefined],
+    ["minuscule", "abc123"],
+    ["nombre", 1234],
+    ["trop court", "AB"],
+  ])("code %s : non envoyé", (_, code) => {
+    const fetch = vi.fn(() => Promise.resolve({}));
+    sendCrash(
+      { ecran: "host", code, error: new Error(String(code)) },
+      { fetch },
+    );
+    expect(envoi(fetch)).not.toHaveProperty("code");
+  });
+
   it("fetch qui lève ou rejette : rien ne remonte", async () => {
     const lance = vi.fn(() => {
       throw new Error("hors ligne");
@@ -71,6 +100,19 @@ describe("journal des plantages : rien de personnel", () => {
 
 describe("hooks.client : handleError", () => {
   const ev = (pathname) => ({ url: new URL("https://zik" + pathname) });
+  let console_;
+  beforeEach(() => {
+    console_ = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => console_.mockRestore());
+
+  it("écrit toujours l'erreur en console, comme SvelteKit par défaut", () => {
+    const e = new Error("partout");
+    handleError({ error: e, event: ev("/") });
+    handleError({ error: e, event: ev("/salon/host") });
+    expect(console_).toHaveBeenCalledTimes(2);
+    expect(console_).toHaveBeenCalledWith(e);
+  });
 
   it("note l'exception brute d'un écran du salon (kit 2 et kit 3)", () => {
     const brute = new Error("brute");

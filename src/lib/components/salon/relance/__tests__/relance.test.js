@@ -1,64 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Relance } from "../relance.svelte.js";
+import { appareil, stockage } from "./appareil.js";
 import { takeAutoResume } from "../../play/resume.js";
-
-const stockage = (v = {}) => ({
-  v,
-  getItem: (k) => v[k] ?? null,
-  setItem: (k, x) => (v[k] = String(x)),
-  removeItem: (k) => delete v[k],
-});
-const bloque = {
-  getItem() {
-    throw new Error("SecurityError");
-  },
-  setItem() {
-    throw new Error("SecurityError");
-  },
-};
-
-let n = 0;
-// Un appareil : stockage de session et horloge partagés entre rechargements
-function appareil({ ecran = "host", local = stockage(), storage } = {}) {
-  const code = "C" + String(++n).padStart(5, "0");
-  const doc = Object.assign(new EventTarget(), { visibilityState: "visible" });
-  const win = new EventTarget();
-  const nav = { onLine: true };
-  const a = {
-    code,
-    doc,
-    win,
-    nav,
-    healthz: () => Promise.resolve({ status: 200 }),
-    reload: vi.fn(),
-    storage: storage ?? stockage(),
-    fetch: vi.fn((url) =>
-      url === "/healthz" ? a.healthz() : Promise.resolve({ ok: true }),
-    ),
-    ouvrir(opts = {}) {
-      const r = new Relance({
-        ecran,
-        code,
-        error: new Error("plantage"),
-        version: "3.34.0",
-        ...opts,
-        deps: {
-          reload: a.reload,
-          fetch: a.fetch,
-          storage: a.storage,
-          local,
-          doc,
-          win,
-          nav,
-        },
-      });
-      r.start();
-      return r;
-    },
-    healthzCalls: () => a.fetch.mock.calls.filter(([u]) => u === "/healthz"),
-  };
-  return a;
-}
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -95,11 +38,6 @@ describe("Relance", () => {
     await vi.advanceTimersByTimeAsync(3000);
     vi.setSystemTime(Date.now() + 121000);
     expect(a.ouvrir().essai).toBe(1);
-  });
-
-  it("stockage qui lève : 30 s d'emblée", () => {
-    const r = appareil({ storage: bloque }).ouvrir();
-    expect([r.essai, r.sec]).toEqual([3, 30]);
   });
 
   it("le bouton relance tout de suite et compte comme un essai", async () => {
@@ -230,6 +168,18 @@ describe("Relance", () => {
     expect(a.reload).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(300);
     expect(a.reload).toHaveBeenCalledOnce();
+  });
+
+  it("rechargement sans navigation : nouvel essai à 60 s", async () => {
+    const a = appareil();
+    a.ouvrir();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(a.reload).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(59900);
+    expect(a.reload).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(a.reload).toHaveBeenCalledTimes(2);
+    expect(a.healthzCalls()).toHaveLength(2);
   });
 
   it("destroy arrête tout", async () => {

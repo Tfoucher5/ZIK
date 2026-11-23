@@ -2,6 +2,7 @@
 // pseudo, clé de régie ni jeton du joueur
 let noted = null;
 let lastSent = null;
+const CODE = /^[A-Z0-9]{4,12}$/;
 
 export function noteCrash(error) {
   noted = error;
@@ -15,10 +16,20 @@ const texte = (v) => {
   }
 };
 
+const echappe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Mots entiers seulement : un pseudo de 2 lettres ne hache pas la pile
 export function redact(text, secrets = []) {
   let out = texte(text).replace(/\?[^\s)'":]*/g, "");
   for (const s of secrets)
-    if (typeof s === "string" && s.length >= 2) out = out.split(s).join("…");
+    if (typeof s === "string" && s.length >= 2)
+      out = out.replace(
+        new RegExp(
+          `(?<![\\p{L}\\p{N}_])${echappe(s)}(?![\\p{L}\\p{N}_])`,
+          "gu",
+        ),
+        "…",
+      );
   return out;
 }
 
@@ -30,7 +41,8 @@ export function knownSecrets(local, search) {
     out.push(s.getItem("salon_user"));
     for (let i = 0; i < s.length; i++) {
       const k = s.key(i);
-      if (k?.startsWith("zik_salon_player_")) out.push(s.getItem(k));
+      if (k?.startsWith("zik_salon_player_") || k?.startsWith("zik_salon_key_"))
+        out.push(s.getItem(k));
     }
   } catch {
     /* stockage indisponible */
@@ -53,7 +65,7 @@ export function sendCrash({ ecran, code, essai, version, error }, deps = {}) {
     const secrets = knownSecrets(deps.local, deps.search);
     const body = {
       ecran,
-      code: texte(code).slice(0, 12),
+      ...(typeof code === "string" && CODE.test(code) && { code }),
       essai,
       message: redact(err?.message ?? err, secrets).slice(0, 300),
       pile: redact(err?.stack, secrets).slice(0, 1500),

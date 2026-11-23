@@ -6,6 +6,8 @@ export const ECART_MIN_MS = 3000;
 export const HEALTHZ_MS = 4000;
 export const RESEAU_MS = 5000;
 export const REMONTAGE_MS = 5000;
+export const SANS_NAVIGATION_MS = 60000;
+export const REPLI_MS = 30000;
 
 export function screenOf(pathname) {
   const m = /^\/salon\/(host|regie|play)\/?$/.exec(String(pathname ?? ""));
@@ -56,4 +58,38 @@ export function refDe(code, now) {
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
   return `${code || "—"} · ${hh}:${mm}`;
+}
+
+// L'écran de relance a lui-même planté : rechargement toutes les 30 s, sans
+// autre dépendance que le navigateur
+export function creerSecours(relance, deps = {}) {
+  const timers = deps.timers ?? globalThis;
+  const essaie = (fn) => {
+    try {
+      fn();
+    } catch {
+      /* rien de plus à tenter */
+    }
+  };
+  let repli = null;
+  return {
+    declencher() {
+      essaie(() => relance.destroy());
+      essaie(() => {
+        repli ??= timers.setInterval(
+          () =>
+            essaie(() => {
+              const nav = deps.nav ?? navigator;
+              if (nav.onLine !== false) (deps.location ?? location).reload();
+            }),
+          REPLI_MS,
+        );
+      });
+    },
+    arreter() {
+      essaie(() => timers.clearInterval(repli));
+      essaie(() => relance.destroy());
+      repli = null;
+    },
+  };
 }

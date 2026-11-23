@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { recordClientCrash } from "../clientCrash.js";
+import { sendCrash } from "../../../../components/salon/relance/journal.js";
+
+vi.mock("../../../config.js", () => ({ getAdminClient: () => ({}) }));
+const { makeProbes } = await import("../probes.js");
 
 const nominal = {
   ecran: "host",
@@ -128,12 +132,49 @@ describe("recordClientCrash", () => {
     expect(noter(nominal, from)).toBe(true);
   });
 
-  it("60 par minute au total, puis 429 ; les invalides ne comptent pas", () => {
+  it("20 par minute au total, puis 429 ; les invalides ne comptent pas", () => {
     noter(null);
-    for (let i = 0; i < 60; i++) expect(noter(nominal)).toBe(true);
+    for (let i = 0; i < 20; i++) expect(noter(nominal)).toBe(true);
     expect(() => noter(nominal)).toThrow(
       expect.objectContaining({ status: 429 }),
     );
-    expect(errSpy).toHaveBeenCalledTimes(60);
+    expect(errSpy).toHaveBeenCalledTimes(20);
+  });
+
+  it.each([
+    ["avec code", "ABC234", "ABC234"],
+    ["code vide", "", "-"],
+    ["code hors format", "abc", "-"],
+  ])("bout à bout depuis sendCrash (%s), sans réseau", (_, code, ecrit) => {
+    const fetch = vi.fn(() => Promise.resolve({}));
+    const error = new Error(`boum ${code}`);
+    error.stack = "TypeError: boum\n    at a (app.js:1:2)";
+    sendCrash(
+      { ecran: "regie", code, essai: 3, version: "3.34.0", error },
+      { fetch, local: { getItem: () => null, length: 0 }, search: "" },
+    );
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(noter(body)).toBe(true);
+    expect(errSpy.mock.calls[0][0].split("\n")[0]).toBe(
+      `[ecran-salon] regie ${ecrit} essai 3 : boum ${code}`.trim(),
+    );
+  });
+});
+
+describe("sonde « Erreurs serveur »", () => {
+  it("ne compte pas les plantages des écrans du salon, gardés dans le journal", async () => {
+    const log = [];
+    errSpy.mockImplementation((msg) =>
+      log.unshift({ ts: Date.now(), level: "error", msg }),
+    );
+    for (let i = 0; i < 12; i++) noter(nominal);
+    console.error("panne serveur");
+    expect(log).toHaveLength(13);
+    const r = await makeProbes({ loop: {}, log, env: {} }).errors();
+    expect(r).toMatchObject({
+      result: "ok",
+      value: 1,
+      detail: "panne serveur",
+    });
   });
 });

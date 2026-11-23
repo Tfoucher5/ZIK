@@ -4,6 +4,8 @@ import { validate, str, int, optional } from "../../socket/safe.js";
 const ECRANS = new Set(["host", "regie", "play"]);
 const CODE = /^[A-Z0-9]{4,12}$/;
 const TROP = "Trop de signalements, réessaie dans un instant.";
+// Plantage d'un navigateur : dans ops.errors, hors de la sonde « Erreurs serveur »
+export const PREFIXE_ECRAN = "[ecran-salon]";
 
 const SCHEMA = {
   ecran: (v) => (ECRANS.has(v) ? v : undefined),
@@ -36,10 +38,10 @@ export function recordClientCrash(payload, { ip, userAgent }) {
   checkRateLimit(`crash:${ip}`, 6, 60_000, TROP);
   const d = validate(SCHEMA, payload);
   if (!d) return false;
-  checkRateLimit("crash:*", 60, 60_000, TROP);
+  checkRateLimit("crash:*", 20, 60_000, TROP);
 
   const lignes = [
-    `[ecran-salon] ${d.ecran} ${d.code ?? "-"} essai ${d.essai} : ${uneLigne(d.message, 300)}`,
+    `${PREFIXE_ECRAN} ${d.ecran} ${d.code ?? "-"} essai ${d.essai} : ${uneLigne(d.message, 300)}`,
   ];
   if (d.pile) lignes.push(pileIndentee(d.pile));
   if (d.version) lignes.push(`    version : ${uneLigne(d.version, 40)}`);

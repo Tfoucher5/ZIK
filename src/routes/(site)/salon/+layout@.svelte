@@ -6,7 +6,9 @@
 
   let { children } = $props();
 
-  const ecran = $derived(screenOf(page.url.pathname));
+  // Hors des trois écrans (404 sous /salon) : le téléphone, l'écran le plus
+  // sobre, sans média ni action de régie
+  const ecran = $derived(screenOf(page.url.pathname) ?? 'play');
   const code = $derived((page.url.searchParams.get('code') ?? '').toUpperCase().slice(0, 12));
 </script>
 
@@ -15,14 +17,10 @@
 </svelte:head>
 
 <div class="v2">
-  {#if ecran}
-    <svelte:boundary>
-      {@render children()}
-      {#snippet failed(error, reset)}
-        <SalonRelance {ecran} {code} {version} {error} onRemount={reset} />
-      {/snippet}
-    </svelte:boundary>
-  {:else}
+  <svelte:boundary>
     {@render children()}
-  {/if}
+    {#snippet failed(error, reset)}
+      <SalonRelance {ecran} {code} {version} {error} onRemount={reset} />
+    {/snippet}
+  </svelte:boundary>
 </div>

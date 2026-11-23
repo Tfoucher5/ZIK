@@ -1,19 +1,17 @@
 import {
   ECART_MIN_MS,
   REMONTAGE_MS,
+  REPLI_MS,
   RESEAU_MS,
-  delaiDe,
-  nextAttempt,
+  SANS_NAVIGATION_MS,
   refDe,
   zikAnswers,
 } from "./relance.js";
 import { sendCrash } from "./journal.js";
+import { compterEssai, noterRelance } from "./compteur.js";
 import { markAutoResume, readResume } from "../play/resume.js";
 
-const REPLI_MS = 30000;
 const NOMS = { host: "TV", regie: "de régie", play: "de téléphone" };
-// Survit au remontage (même page) ; le stockage de session survit au rechargement
-const memoire = {};
 
 function depsParDefaut() {
   return {
@@ -82,13 +80,16 @@ export class Relance {
       const now = this.#d.now();
       this.ref = refDe(this.code, now);
       this.#joueOuPas();
-      const { essai, delai, precedente } = this.#lire(now);
+      const { essai, delai, precedente } = compterEssai(
+        this.#d,
+        this.#cle,
+        now,
+      );
       this.essai = essai;
       this.#derniere = precedente;
       this.#cible = now + delai * 1000;
       this.mode = essai > 3 ? "pause" : "auto";
       this.sec = this.mode === "auto" ? delai : null;
-      this.#ecrire({ essai, at: now });
       sendCrash(
         {
           ecran: this.ecran,
@@ -161,29 +162,6 @@ export class Relance {
     }
   }
 
-  #lire(now) {
-    const mem = memoire[this.#cle] ?? null;
-    let saved;
-    try {
-      saved = JSON.parse(this.#d.storage.getItem(this.#cle) ?? "null") ?? mem;
-    } catch {
-      // Stockage indisponible : jamais de boucle rapide
-      const n = nextAttempt(mem, now);
-      const essai = Math.max(3, n.essai);
-      return { essai, delai: delaiDe(essai), precedente: mem?.at ?? -Infinity };
-    }
-    return { ...nextAttempt(saved, now), precedente: saved?.at ?? -Infinity };
-  }
-
-  #ecrire(v) {
-    memoire[this.#cle] = v;
-    try {
-      this.#d.storage.setItem(this.#cle, JSON.stringify(v));
-    } catch {
-      /* mémoire seule */
-    }
-  }
-
   #ecouter() {
     const on = (cible, ev, fn) => {
       cible.addEventListener(ev, fn);
@@ -251,7 +229,7 @@ export class Relance {
   #relancer() {
     const now = this.#d.now();
     this.#derniere = now;
-    this.#ecrire({ essai: this.essai, at: now });
+    noterRelance(this.#d, this.#cle, { essai: this.essai, at: now });
     if (this.ecran === "play" && this.joue) {
       try {
         const { code } = readResume(this.#d.local, this.code).resume;
@@ -262,25 +240,30 @@ export class Relance {
     }
     if (this.essai === 1 && this.#onRemount && !this.#remonte) {
       this.#remonte = true;
-      this.#fini = true;
       // Encore là 5 s après le remontage : on recharge
-      this.#timeouts.push(
-        this.#d.timers.setTimeout(() => {
-          this.#fini = false;
-          this.#cible = this.#d.now();
-          this.#tictac();
-        }, REMONTAGE_MS),
-      );
+      this.#reprendreDans(REMONTAGE_MS);
       try {
         this.#onRemount();
         return;
       } catch {
-        this.#fini = false;
+        /* rechargement */
       }
     }
-    this.#fini = true;
-    this.#arreter();
+    // Navigation qui n'a pas lieu (navigateur figé, rechargement bloqué) : nouvel essai lent
+    this.#reprendreDans(SANS_NAVIGATION_MS);
     this.#d.reload();
+  }
+
+  #reprendreDans(ms) {
+    this.#fini = true;
+    for (const t of this.#timeouts) this.#d.timers.clearTimeout(t);
+    this.#timeouts = [
+      this.#d.timers.setTimeout(() => {
+        this.#fini = false;
+        this.#cible = this.#d.now();
+        this.#tictac();
+      }, ms),
+    ];
   }
 
   #repli() {

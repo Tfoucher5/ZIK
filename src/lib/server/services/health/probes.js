@@ -6,6 +6,7 @@ import { getStripe, WEBHOOK_EVENTS } from "../../stripe.js";
 import { grade } from "./levels.js";
 import { mediaMissesSince } from "./mediaMisses.js";
 import { countSince } from "./opsEvents.js";
+import { PREFIXE_ECRAN } from "./clientCrash.js";
 import { TIMEOUT_MS, httpProbe, signal, timed } from "./httpProbe.js";
 import { WIKIDATA_UA, wikidataSearchUrl } from "../music/wikidata.js";
 
@@ -246,13 +247,13 @@ export function makeProbes({
     },
     async errors() {
       const since = Date.now() - FIVE_MIN;
-      const n = log.filter((e) => e.level === "error" && e.ts > since).length;
+      const serveur = (e) =>
+        e.level === "error" && !e.msg.startsWith(PREFIXE_ECRAN);
+      const n = log.filter((e) => serveur(e) && e.ts > since).length;
       return {
         result: grade(n, 10, 30),
         value: n,
-        detail: n
-          ? log.find((e) => e.level === "error")?.msg.split("\n")[0]
-          : null,
+        detail: n ? log.find(serveur)?.msg.split("\n")[0] : null,
       };
     },
     async media() {
