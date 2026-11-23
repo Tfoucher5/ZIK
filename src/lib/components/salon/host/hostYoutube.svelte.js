@@ -119,6 +119,8 @@ export class HostYoutube {
       }
       return;
     }
+    // Lecture lancée seule (autoplay) alors qu'une pause est demandée : on la retient
+    if (state === 1 && this.#hold) return this.pauseVideo();
     if (state === 1 /* PLAYING */) {
       this.#applyVolume(this.#yt[slot]);
       this.#startMediaGuard();

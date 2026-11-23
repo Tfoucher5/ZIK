@@ -38,17 +38,23 @@ describe("lecteur de la TV : la pause tient", () => {
     delete globalThis.window;
   });
 
-  it("TV rechargée pendant une pause : le lecteur créé ne joue pas tout seul", () => {
-    const yt = new HostYoutube();
+  it("TV rechargée pendant une pause : la lecture automatique est aussitôt retenue", () => {
+    const pret = vi.fn();
+    const yt = new HostYoutube(pret);
     yt.init();
     yt.loadVideo("vid123", 52);
     yt.pauseVideo();
     expect(lecteurs).toHaveLength(1);
-    expect(lecteurs[0].opts.playerVars.autoplay).toBe(1);
     lecteurs[0].pret();
     expect(lecteurs[0].playVideo).not.toHaveBeenCalled();
+    // YouTube démarre seul (autoplay) : le lecteur se remet en pause, pas de chrono
+    lecteurs[0].opts.events.onStateChange({ data: 1 });
+    expect(lecteurs[0].pauseVideo).toHaveBeenCalled();
+    expect(pret).not.toHaveBeenCalled();
     yt.resumeVideo();
     expect(lecteurs[0].playVideo).toHaveBeenCalledOnce();
+    lecteurs[0].opts.events.onStateChange({ data: 1 });
+    expect(pret).toHaveBeenCalledOnce();
   });
 
   it("lecteur déjà là : la relance prévue 400 ms après le chargement ne passe pas outre la pause", () => {

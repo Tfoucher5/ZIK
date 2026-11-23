@@ -197,6 +197,25 @@ describe("TV qui se reconnecte en pleine manche", () => {
     }
   });
 
+  it("après un repli sur l'extrait audio, une reconnexion ne le relance pas de zéro", () => {
+    const h = ECRANS[0].etat();
+    h.hostCenter = { loadMedia: vi.fn(), useAudio: vi.fn() };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    h.socket.recoit("salon_round_start", {
+      round: 1,
+      total: 10,
+      videoId: "vid",
+    });
+    h.socket.recoit("salon_use_audio", { audioUrl: "https://cdn/x.mp3" });
+    h.hostCenter.loadMedia.mockClear();
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      media: { audioUrl: "https://cdn/x.mp3" },
+    });
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+  });
+
   it("une simple reconnexion du socket ne recoupe pas la musique ni l'intro éclair coupée", () => {
     const h = ECRANS[0].etat();
     h.hostCenter = { loadMedia: vi.fn(), pauseVideo: vi.fn() };

@@ -77,6 +77,7 @@ export function listenHost(h, socket) {
   });
   // Vidéo bloquée par YouTube pendant la manche : l'extrait audio prend le relais
   socket.on("salon_use_audio", ({ audioUrl }) => {
+    h.mediaId = audioUrl;
     h.hostCenter?.useAudio(audioUrl);
   });
   socket.on("salon_media_check", (check) => {
