@@ -38,7 +38,7 @@
   let timer;
   function onSearch() {
     clearTimeout(timer);
-    timer = setTimeout(() => goto(href({ q: search.trim() }), { reset: false, replace: true }), 300);
+    timer = setTimeout(() => goto(href({ q: search.trim() }), { keepFocus: true, noScroll: true, replaceState: true }), 300);
   }
   $effect(() => () => clearTimeout(timer));
 
@@ -66,7 +66,7 @@
       </label>
       <label class="sort">
         <span class="a-sr">Trier par</span>
-        <select class="a-select" value={data.sort} onchange={(e) => goto(href({ sort: e.currentTarget.value }), { reset: false })}>
+        <select class="a-select" value={data.sort} onchange={(e) => goto(href({ sort: e.currentTarget.value }), { noScroll: true })}>
           {#each SORTS as [k, label] (k)}<option value={k}>{label}</option>{/each}
         </select>
       </label>

@@ -1,7 +1,5 @@
-import adapter from "@sveltejs/adapter-node";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { Server } from "socket.io";
-import { withMinifiedCss } from "./scripts/minify-css.mjs";
 
 /** @type {import('vite').Plugin} */
 const webSocketServer = {
@@ -28,12 +26,16 @@ const webSocketServer = {
 
 /** @type {import('vite').UserConfig} */
 export default {
-  plugins: [
-    sveltekit({
-      adapter: withMinifiedCss(adapter({ out: "build" })),
-      alias: { $lib: "src/lib" },
-    }),
-    webSocketServer,
-  ],
-  build: { target: "es2020" },
+  plugins: [sveltekit(), webSocketServer],
+  build: {
+    target: "es2020",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/@supabase")) return "supabase";
+          if (id.includes("node_modules/socket.io-client")) return "socketio";
+        },
+      },
+    },
+  },
 };

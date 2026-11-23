@@ -31,7 +31,8 @@ export class CardsAdmin {
     return s ? `?${s}` : page.url.pathname;
   };
 
-  go = (changes) => goto(this.href(changes), { reset: false });
+  go = (changes) =>
+    goto(this.href(changes), { keepFocus: true, noScroll: true });
 
   ask = (action, fields, title, text) => {
     this.confirm = { action, fields, title, text };

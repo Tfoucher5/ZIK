@@ -3,12 +3,9 @@
   "version": "3.33.1",
   "description": "Blind Test Multijoueur",
   "type": "module",
-  "engines": {
-    "node": "^22.17"
-  },
   "scripts": {
     "dev": "vite dev",
-    "build": "node scripts/ensure-ytdlp.mjs && vite build",
+    "build": "node scripts/ensure-ytdlp.mjs && vite build && node scripts/minify-css.mjs",
     "start": "node server.js",
     "preview": "vite preview",
     "lint": "eslint . && prettier --check .",
@@ -18,8 +15,8 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@supabase/supabase-js": "^2.118.0",
-    "@sveltejs/adapter-node": "^6.0.5",
-    "@sveltejs/kit": "^3.4.0",
+    "@sveltejs/adapter-node": "^5.5.8",
+    "@sveltejs/kit": "^2.70.4",
     "compression": "^1.8.1",
     "dotenv": "^17.4.1",
     "gsap": "3.15.1",
@@ -47,5 +44,10 @@
     "prettier": "^3.8.1",
     "vite": "^8.3.8",
     "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "@sveltejs/kit": {
+      "cookie": "^0.7.2"
+    }
   }
 }

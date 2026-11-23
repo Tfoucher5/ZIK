@@ -1,6 +1,6 @@
 <script>
   import { getContext, untrack } from 'svelte';
-  import { page } from '$app/state';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import CardViewer from './CardViewer.svelte';
   import { STEP, autoMore, decadeOf, filterCards, groupCards } from './collection/collection.js';
@@ -20,7 +20,7 @@
   let shown = $state(STEP);
 
   // État de la page gardé dans l'adresse : lien partageable, bouton retour fiable
-  const params = $derived(page.url.searchParams);
+  const params = $derived($page.url.searchParams);
   const view = $derived(params.get('vue') || 'toutes');
   const q = $derived(params.get('q') || '');
   const rarity = $derived(params.get('rarete') || '');
@@ -32,13 +32,13 @@
   const setState = $derived(params.get('etat') || '');
 
   function setParam(changes) {
-    const url = new URL(page.url);
+    const url = new URL($page.url);
     for (const [k, v] of Object.entries(changes)) {
       if (v === '' || v == null || v === false) url.searchParams.delete(k);
       else url.searchParams.set(k, v === true ? '1' : v);
     }
     shown = STEP;
-    goto(url, { replace: !('set' in changes), reset: false });
+    goto(url, { replaceState: !('set' in changes), keepFocus: true, noScroll: true });
   }
 
   $effect(() => {
