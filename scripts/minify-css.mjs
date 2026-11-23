@@ -1,28 +1,26 @@
-// Minifie les CSS copiés depuis static/css (et ses sous-dossiers) vers build/client/css après le build,
-// et régénère leurs .br/.gz (la précompression adapter a tourné avant, sur les non-minifiés).
+// Minifie les CSS copiés depuis static/css (et ses sous-dossiers) dans la sortie client,
+// juste avant l'adapter : il les mesure et les précompresse (.br/.gz) ensuite
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import { transform } from "esbuild";
-import { gzipSync, brotliCompressSync, constants } from "zlib";
 
-const dir = "build/client/css";
-if (!existsSync(dir)) {
-  console.error("build/client/css introuvable — lancer après vite build");
-  process.exit(1);
-}
-
-for (const f of readdirSync(dir, { recursive: true }).filter((n) =>
-  n.endsWith(".css"),
-)) {
-  const p = join(dir, f);
-  const src = readFileSync(p, "utf8");
-  const { code } = await transform(src, { loader: "css", minify: true });
-  writeFileSync(p, code);
-  const buf = Buffer.from(code);
-  const br = brotliCompressSync(buf, {
-    params: { [constants.BROTLI_PARAM_QUALITY]: 11 },
-  });
-  writeFileSync(`${p}.gz`, gzipSync(buf, { level: 9 }));
-  writeFileSync(`${p}.br`, br);
-  console.log(`${f}: ${src.length} → ${code.length} o (br: ${br.length} o)`);
+export function withMinifiedCss(adapter) {
+  return {
+    ...adapter,
+    async adapt(builder) {
+      const dir = join(builder.config.outDir, "output/client/css");
+      if (existsSync(dir))
+        for (const f of readdirSync(dir, { recursive: true }).filter((n) =>
+          n.endsWith(".css"),
+        )) {
+          const p = join(dir, f);
+          const { code } = await transform(readFileSync(p, "utf8"), {
+            loader: "css",
+            minify: true,
+          });
+          writeFileSync(p, code);
+        }
+      return adapter.adapt(builder);
+    },
+  };
 }
