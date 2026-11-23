@@ -5,6 +5,18 @@
 
 export const NEWS = [
   {
+    date: "2026-11-23",
+    version: "3.34.0",
+    tag: "Amélioration",
+    title: "Des écrans de soirée qui se relèvent tout seuls",
+    summary:
+      "ZIK Soirée : une TV rechargée en pleine manche retrouve la musique, et un écran qui a un souci se remet seul dans la partie.",
+    items: [
+      "Une TV rechargée ou relancée en pleine manche retrouve la musique là où la salle l'entend, ou la réponse si elle était affichée. Pendant une pause, elle attend la reprise.",
+      "Si la TV, la régie ou un téléphone rencontre un problème, l'écran se remet seul dans la partie en quelques secondes : le disque se retourne, et ça repart.",
+    ],
+  },
+  {
     date: "2026-11-16",
     version: "3.33.0",
     tag: "Nouveauté",
