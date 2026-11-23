@@ -180,6 +180,24 @@ export function currentTrackInfo(salon) {
   };
 }
 
+// Média de la manche pour une TV qui revient (F5, relance) : repris là où la salle l'entend
+export function resumeMedia(game) {
+  const v = game.currentVideo;
+  // Panne vidéo : le titre en échec ne repart pas. Intro éclair lancée : la musique est déjà coupée.
+  if (game.phase !== "round" || !v?.id || game.videoOutage) return null;
+  if (game.special === "flash" && game.timerActive) return null;
+  if (v.audio) return { audioUrl: v.id };
+  const left = game.paused ? game.remainingMs : game.endsAt - Date.now();
+  const played =
+    game.timerActive && Number.isFinite(left)
+      ? Math.max(0, (game.timerMax ?? 0) * 1000 - left)
+      : 0;
+  return {
+    videoId: v.id,
+    startSeconds: (v.start ?? 0) + Math.floor(played / 1000),
+  };
+}
+
 // Ce que la régie signale d'un titre : la vidéo exacte qui passait
 export const mediaOf = (track, video) => ({
   trackId: track.id,

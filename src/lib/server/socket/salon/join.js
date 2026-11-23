@@ -13,7 +13,7 @@ import {
 import { nameTaken } from "./departed.js";
 import { reconnectView } from "./phoneView.js";
 import { restoreSalon, resumeAfterRestart } from "./snapshot.js";
-import { currentTrackInfo } from "./tracks.js";
+import { currentTrackInfo, resumeMedia } from "./tracks.js";
 import { announceNextVideo, prepareSession } from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
@@ -85,6 +85,9 @@ export function registerJoin(socket, io) {
       timerMax: salon.game.timerMax ?? salon.settings.roundDuration,
       ...timerClock(salon.game),
       support: supportView(salon),
+      // TV revenue (F5, relance) : la manche en cours ou sa révélation
+      media: resumeMedia(salon.game),
+      roundEnd: salon.game.phase === "summary" ? salon.game.lastRoundEnd : null,
     });
     sendNotice(socket);
     sendBreak(socket, salon.game);

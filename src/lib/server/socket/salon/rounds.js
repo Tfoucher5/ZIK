@@ -10,7 +10,7 @@ import { scoreQcmRound } from "./answers.js";
 import { drawSpecial } from "./specials.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
 import { OUTAGE_AFTER, holdForVideos, clearOutage } from "./outage.js";
-import { currentTrackInfo } from "./tracks.js";
+import { currentTrackInfo, mediaOf } from "./tracks.js";
 import { resolveMedia } from "./media.js";
 import {
   drawSpareTrack,
@@ -24,7 +24,6 @@ import {
   standings,
 } from "./players.js";
 import { emitGameOver, emitRoundEnd } from "./phoneView.js";
-import { mediaOf } from "./tracks.js";
 import { note } from "./journal.js";
 import { armNext, clearPause, scheduleCleanup, startTimer } from "./timers.js";
 
@@ -150,6 +149,7 @@ export function endRound(code, reason, io) {
     track,
     game.currentVideo,
   );
+  game.lastRoundEnd = roundSummary;
   emitRoundEnd(io, code, roundSummary, salon.players, game.history);
   scheduleCleanup(code);
   saveSnapshot(salon);

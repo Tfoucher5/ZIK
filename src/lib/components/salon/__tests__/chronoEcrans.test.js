@@ -182,6 +182,87 @@ describe("TV qui se reconnecte en pleine manche", () => {
     expect(h).toMatchObject({ timerStarted: true, timerMax: 45, timerVal: 30 });
     vi.useRealTimers();
   });
+
+  // Incident du 19/11 : la musique restait muette jusqu'à la manche suivante
+  it("relance la musique reçue, et la coupe si le salon est en pause", () => {
+    for (const paused of [false, true]) {
+      const h = ECRANS[0].etat();
+      h.hostCenter = { loadMedia: vi.fn(), pauseVideo: vi.fn() };
+      h.socket = fauxSocket();
+      listenHost(h, h.socket);
+      const media = { videoId: "vid123", startSeconds: 52 };
+      h.socket.recoit("salon_host_joined", { ...base, paused, media });
+      expect(h.hostCenter.loadMedia).toHaveBeenCalledWith(media);
+      expect(h.hostCenter.pauseVideo).toHaveBeenCalledTimes(paused ? 1 : 0);
+    }
+  });
+
+  it("après un repli sur l'extrait audio, une reconnexion ne le relance pas de zéro", () => {
+    const h = ECRANS[0].etat();
+    h.hostCenter = { loadMedia: vi.fn(), useAudio: vi.fn() };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    h.socket.recoit("salon_round_start", {
+      round: 1,
+      total: 10,
+      videoId: "vid",
+    });
+    h.socket.recoit("salon_use_audio", { audioUrl: "https://cdn/x.mp3" });
+    h.hostCenter.loadMedia.mockClear();
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      media: { audioUrl: "https://cdn/x.mp3" },
+    });
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+  });
+
+  it("une simple reconnexion du socket ne recoupe pas la musique ni l'intro éclair coupée", () => {
+    const h = ECRANS[0].etat();
+    h.hostCenter = { loadMedia: vi.fn(), pauseVideo: vi.fn() };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    h.socket.recoit("salon_round_start", {
+      round: 1,
+      total: 10,
+      videoId: "vid123",
+    });
+    h.hostCenter.loadMedia.mockClear();
+    const media = { videoId: "vid123", startSeconds: 52 };
+    h.socket.recoit("salon_host_joined", { ...base, media });
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+    h.flashCut = true;
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      media: { videoId: "autre", startSeconds: 0 },
+    });
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+  });
+
+  it("pendant la révélation, retrouve la réponse et relance la révélation une seule fois", () => {
+    vi.useFakeTimers();
+    const h = ECRANS[0].etat();
+    h.hostCenter = { loadMedia: vi.fn(), revealVideo: vi.fn() };
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+    const roundEnd = { answer: "A - T", cover: "c.jpg" };
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      phase: "summary",
+      roundEnd,
+    });
+    vi.advanceTimersByTime(250);
+    expect(h.roundEnd).toEqual(roundEnd);
+    expect(h.hostCenter.revealVideo).toHaveBeenCalled();
+    expect(h.hostCenter.loadMedia).not.toHaveBeenCalled();
+    h.socket.recoit("salon_host_joined", {
+      ...base,
+      phase: "summary",
+      roundEnd,
+    });
+    vi.advanceTimersByTime(250);
+    expect(h.hostCenter.revealVideo).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
 });
 
 describe("TV pendant un redémarrage du serveur", () => {

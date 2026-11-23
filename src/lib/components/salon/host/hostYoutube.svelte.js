@@ -18,6 +18,8 @@ const FAKE_META = {
 export class HostYoutube {
   active = $state(0);
   #ready = false;
+  // Pause demandée (salon en pause, buzz) : aucune relance automatique tant qu'elle tient
+  #hold = false;
   #yt = [null, null];
   #preload = null; // { videoId, startSeconds, slot, go }
   #activePlaying = false;
@@ -84,7 +86,7 @@ export class HostYoutube {
       videoId,
       // mute d'office pour le préchargement : pas un instant du titre suivant à voix haute
       playerVars: {
-        autoplay: 1,
+        autoplay: slot === this.active && this.#hold ? 0 : 1,
         mute: slot === this.active ? 0 : 1,
         controls: 1,
         enablejsapi: 1,
@@ -96,7 +98,7 @@ export class HostYoutube {
         onReady: (e) => {
           if (slot === this.active) this.#applyVolume(e.target);
           else e.target.mute();
-          e.target.playVideo();
+          if (!(slot === this.active && this.#hold)) e.target.playVideo();
         },
         onStateChange: (e) => this.#onState(slot, e.data),
         onError: () => this.#onError(slot),
@@ -117,6 +119,8 @@ export class HostYoutube {
       }
       return;
     }
+    // Lecture lancée seule (autoplay) alors qu'une pause est demandée : on la retient
+    if (state === 1 && this.#hold) return this.pauseVideo();
     if (state === 1 /* PLAYING */) {
       this.#applyVolume(this.#yt[slot]);
       this.#startMediaGuard();
@@ -180,6 +184,7 @@ export class HostYoutube {
   }
 
   loadVideo(videoId, startSeconds) {
+    this.#hold = false;
     this.#videoId = videoId;
     this.#currentStartSecs = startSeconds;
     this.#activePlaying = false;
@@ -218,7 +223,8 @@ export class HostYoutube {
       p.loadVideoById({ videoId, startSeconds, suggestedQuality: "medium" });
       setTimeout(() => {
         try {
-          p.playVideo();
+          if (this.#hold) p.pauseVideo();
+          else p.playVideo();
         } catch {
           /* YT pas prêt */
         }
@@ -252,6 +258,7 @@ export class HostYoutube {
   }
 
   pauseVideo() {
+    this.#hold = true;
     try {
       this.#yt[this.active]?.pauseVideo();
     } catch {
@@ -260,6 +267,7 @@ export class HostYoutube {
   }
 
   resumeVideo() {
+    this.#hold = false;
     try {
       this.#yt[this.active]?.playVideo();
     } catch {
@@ -268,6 +276,7 @@ export class HostYoutube {
   }
 
   revealVideo() {
+    this.#hold = false;
     const p = this.#yt[this.active];
     if (!p) return;
     try {
