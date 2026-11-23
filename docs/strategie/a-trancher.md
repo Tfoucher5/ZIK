@@ -15,6 +15,15 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
+## Retouches TV et story après la soirée du 16/11
+
+- **Chantier** : Produit (retouches après tests réels)
+- **Depuis** : 23/11
+- **Question** : On valide la maquette des deux retouches ?
+- **Options** : (1) TV au lobby : un seul magenta, sur « Lancer la partie » sans régie (sur « téléphones. » avec régie) ; « Soirée » du logo en gris clair. (2) Story : champ facultatif « Nom de la soirée » (30 signes, dans « Plus de réglages » à la création), affiché en grand sur la story, la date en dessous ; sans nom, rien ne change
+- **Recommandation** : valider les deux. Le nom n'apparaît que sur la story des téléphones, ni sur la TV ni dans l'historique
+- **Lien** : https://claude.ai/artifact/GyTsB9S3gGdPACY8HxzeEJ
+
 ## Playlist trop courte pour la partie
 
 - **Chantier** : Produit (signalement de Rom, client Pro, 21/11)
