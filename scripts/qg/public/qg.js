@@ -1,4 +1,5 @@
 import { majTableau } from "./tableau.js";
+import { majBureaux } from "./bureaux.js";
 
 const liaison = document.getElementById("liaison");
 const flux = new EventSource("/flux");
@@ -10,4 +11,8 @@ flux.onerror = () => {
   liaison.textContent = "serveur arrêté ?";
   liaison.className = "liaison";
 };
-flux.onmessage = (e) => majTableau(JSON.parse(e.data));
+flux.onmessage = (e) => {
+  const etat = JSON.parse(e.data);
+  majBureaux(etat);
+  majTableau(etat);
+};
