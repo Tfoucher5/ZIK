@@ -13,9 +13,8 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Suivi, lireOrganigramme, hoteAutorise } from "./journaux.mjs";
+import { Suivi, hoteAutorise } from "./journaux.mjs";
 import { lireATrancher, lireChantiers } from "./trancher.mjs";
-import { lireAgents } from "./agents.mjs";
 import { ajouterReponses, lireReponses, lireLimites } from "./boite.mjs";
 import { servirVoir } from "./voir.mjs";
 
@@ -126,13 +125,6 @@ function balayer() {
   }
 }
 
-function organigramme() {
-  const claudeMd = join(DEPOT, "CLAUDE.md");
-  return existsSync(claudeMd)
-    ? lireOrganigramme(readFileSync(claudeMd, "utf8"))
-    : { chefs: [], board: [] };
-}
-
 const doc = (nom) => {
   const chemin = join(DEPOT, "docs", "strategie", nom);
   return existsSync(chemin) ? readFileSync(chemin, "utf8") : "";
@@ -148,9 +140,8 @@ const json = (res, donnees) => {
 const TYPES = { html: "text/html", js: "text/javascript", css: "text/css" };
 const fichier = (url) => {
   const nom = url === "/" ? "index.html" : url.slice(1);
-  return /^(tour\/(niveaux\/)?|tour3d\/)?[a-z0-9-]+\.(html|js|css)$/.test(
-    nom,
-  ) && existsSync(join(ici, "public", nom))
+  return /^[a-z0-9-]+\.(html|js|css)$/.test(nom) &&
+    existsSync(join(ici, "public", nom))
     ? nom
     : null;
 };
@@ -176,13 +167,6 @@ createServer((req, res) => {
       res,
       new URL(req.url, "http://l").searchParams.get("f"),
       VOIR,
-    );
-  } else if (url === "/organigramme") {
-    json(res, organigramme());
-  } else if (url === "/agents") {
-    lireAgents(DEPOT, organigramme()).then(
-      (a) => json(res, a),
-      () => res.writeHead(500).end(),
     );
   } else if (url === "/a-trancher") {
     const envoyees = lireReponses(BOITE);

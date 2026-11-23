@@ -146,7 +146,7 @@ export class Suivi {
           ? porteur.type
           : s.skill
             ? `/${s.skill.split(":").pop()}`
-            : "ceo";
+            : "Claude";
         if (b.name === "Skill" && !agentId) s.skill = b.input?.skill ?? s.skill;
         if ((b.name === "Agent" || b.name === "Task") && !agentId) {
           const type = b.input?.subagent_type ?? "general-purpose";
@@ -207,25 +207,4 @@ export class Suivi {
       flux: [...this.flux].sort((a, b) => b.t - a.t).slice(0, 50),
     };
   }
-}
-
-export function lireOrganigramme(claudeMd) {
-  const debut = claudeMd.indexOf("### L'entreprise d'agents");
-  if (debut < 0) return { chefs: [], board: [] };
-  const chefs = [];
-  let board = [];
-  for (const ligne of claudeMd.slice(debut).split("\n")) {
-    if (ligne.startsWith("## ")) break;
-    const cols = ligne.split("|").map((c) => c.trim());
-    if (cols.length < 5 || !cols[2].startsWith("`/")) continue;
-    const skill = cols[2].replace(/[`/]/g, "");
-    const equipe = [...cols[3].split(";")[0].matchAll(/`([\w*-]+)`/g)].map(
-      (m) => m[1],
-    );
-    if (skill === "board") board = equipe;
-    else if (skill === "ceo")
-      chefs.unshift({ id: "ceo", nom: cols[1], skill, equipe: [] });
-    else chefs.push({ id: skill, nom: cols[1], skill, equipe });
-  }
-  return { chefs, board };
 }

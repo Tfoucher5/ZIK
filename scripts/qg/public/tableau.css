@@ -1,27 +1,15 @@
-/* Tableau de bord : deux colonnes de part et d'autre des bureaux, la 3D reste au centre. */
-.colonne {
-  position: fixed;
-  top: 64px;
-  bottom: 16px;
-  z-index: 2;
-  width: 380px;
-  display: flex;
-  flex-direction: column;
+/* Tableau de bord : une grille de blocs, deux colonnes sur grand écran. */
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 12px;
-}
-.colonne.gauche {
-  left: 16px;
-}
-.colonne.droite {
-  right: 16px;
+  padding: 16px 20px 20px;
 }
 .bloc {
   padding: 14px 16px;
   background: var(--verre);
   border: 1px solid var(--bord);
   border-radius: 12px;
-  backdrop-filter: blur(8px);
-  min-height: 0;
 }
 .bloc h2 {
   margin: 0 0 10px;
@@ -45,7 +33,7 @@
 }
 .chantiers,
 .flux {
-  flex: 1;
+  max-height: 60vh;
   overflow: auto;
 }
 .jauge + .jauge {
@@ -163,20 +151,4 @@
 }
 .flux b {
   color: var(--vif);
-}
-@media (max-width: 1100px) {
-  .colonne {
-    width: 300px;
-  }
-}
-@media (max-width: 900px) {
-  .colonne.gauche {
-    display: none;
-  }
-  .colonne.droite {
-    top: auto;
-    height: 30vh;
-    left: 16px;
-    width: auto;
-  }
 }
