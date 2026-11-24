@@ -11,7 +11,7 @@ import { drawSpecial } from "./specials.js";
 import { SPECIAL_INTRO_MS } from "../../../data/salonOptions.js";
 import { OUTAGE_AFTER, holdForVideos, clearOutage } from "./outage.js";
 import { currentTrackInfo, mediaOf } from "./tracks.js";
-import { resolveMedia } from "./media.js";
+import { resolveMedia, sourceCut } from "./media.js";
 import {
   drawSpareTrack,
   prefetchNextVideo,
@@ -263,8 +263,8 @@ export async function startNextRound(code, io) {
     if (stale()) return;
     console.error(`Salon skip "${track.title}":`, err.message);
     note(salon, `Titre injouable passé : ${track.artist} - ${track.title}`);
-    // En panne, les titres ne sont pas en cause : pas de faux signalements
-    if (!game.videoOutage)
+    // En panne ou source coupée, les titres ne sont pas en cause
+    if (!game.videoOutage && !sourceCut())
       reportTrackIssue(
         track.id,
         "video",

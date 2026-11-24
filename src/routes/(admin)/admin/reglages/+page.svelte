@@ -139,6 +139,17 @@
       {#if form?.videoError}<p class="a-err">{form.videoError}</p>{/if}
     </form>
 
+    <h2 class="a-h2">Sources du son</h2>
+    <form method="POST" action="?/sources" class="a-card grid" use:enhance={submit('sources')}>
+      <p class="a-muted small">Soirées seulement. À ne couper qu'en cas de problème avec une source. Sans YouTube, la TV joue l'extrait Deezer. Sans Deezer, elle ne joue que les vidéos. Les deux coupées, les soirées n'ont plus de son. Les parties en cours changent au titre suivant.</p>
+      {#if !data.sources.youtube || !data.sources.deezer}<p class="a-err">{data.sources.youtube || data.sources.deezer ? 'Une source du son est coupée.' : "Les deux sources sont coupées : les soirées n'ont plus de son."}</p>{/if}
+      <label class="a-check"><input type="checkbox" name="youtube" checked={data.sources.youtube} /> Vidéos YouTube (TV des soirées)</label>
+      <label class="a-check"><input type="checkbox" name="deezer" checked={data.sources.deezer} /> Extraits Deezer (TV des soirées)</label>
+      <button class="a-btn primary" type="submit" disabled={busy === 'sources'}>{busy === 'sources' ? 'Enregistrement…' : 'Enregistrer'}</button>
+      {#if form?.sourcesSaved}<p class="a-ok">Enregistré.</p>{/if}
+      {#if form?.sourcesError}<p class="a-err">{form.sourcesError}</p>{/if}
+    </form>
+
     <h2 class="a-h2">Maintenance</h2>
     <form method="POST" action="?/notice" class="a-card grid" use:enhance={submit('notice')}>
       <p class="a-muted small">Un bandeau tout de suite sur la TV, la régie et les téléphones de tous les salons, et sur /statut. Il reste jusqu'à ce que tu le retires, même après un redémarrage. La partie continue.</p>
