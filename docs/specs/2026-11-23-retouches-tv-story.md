@@ -1,6 +1,6 @@
 # Retouches après la soirée du 16/11 : un seul magenta sur la TV, nom de la soirée sur la story — fiche de cadrage
 
-Statut : **à valider par Théo** (porte concept : ça se voit sur la TV, la création et l'image partagée).
+Statut : **validée par Théo le 24/11** (porte concept : ça se voit sur la TV, la création et l'image partagée).
 
 Chantier : « Retouches après tests réels » (`docs/strategie/chantiers.md`).
 
