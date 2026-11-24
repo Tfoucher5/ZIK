@@ -14,7 +14,7 @@
    *
    * @type {{
    *   settings: any, phase: string, round: number, pro: boolean, mediaCheck: any,
-   *   playlistNames: string[], manches?: { t: number, m: number, court: boolean },
+   *   playlistNames: string[], jouables?: { t: number, m: number, court: boolean },
    *   onSet: (patch: any) => void,
    *   onSound: (patch: any) => void,
    *   onRenameTeam: (team: number, name: string) => void,
@@ -24,10 +24,10 @@
    *   children?: import('svelte').Snippet,
    * }}
    */
-  let { settings, phase, round, pro, mediaCheck, playlistNames = [], manches = null, onSet, onSound, onRenameTeam, onUpsell, onOpenPlaylists, onClose, children } = $props();
+  let { settings, phase, round, pro, mediaCheck, playlistNames = [], jouables = null, onSet, onSound, onRenameTeam, onUpsell, onOpenPlaylists, onClose, children } = $props();
 
   const idle = $derived(phase === 'lobby' || phase === 'gameover');
-  const r = $derived(resumeReglages(settings, playlistNames, manches?.court ? manches.t : null));
+  const r = $derived(resumeReglages(settings, playlistNames, jouables?.court ? jouables.t : null));
   const nbEquipes = $derived(settings.teams?.length ?? 0);
   const reste = $derived(Math.max(0, (settings.rounds ?? settings.maxRounds ?? 0) - round));
   const PLUS = SALON_TEAMS.filter((n) => n > FREE_MAX_TEAMS);
@@ -56,7 +56,7 @@
 
 {#snippet ligne(n, titre, sous, corps)}
   <details class="rg-plus" open={ouvert(n)}>
-    <summary><span class="n">{n}</span><span><b>{titre}</b><small class:ts-court={n === '02' && manches?.court}>{sous}</small></span></summary>
+    <summary><span class="n">{n}</span><span><b>{titre}</b><small class:ts-court={n === '02' && jouables?.court}>{sous}</small></span></summary>
     {@render corps()}
   </details>
 {/snippet}
@@ -83,9 +83,9 @@
 
     {#snippet manches()}
       <div class="rg-reg"><span>Manches</span>{@render seg('Manches', SALON_ROUNDS, settings.maxRounds, (n) => onSet({ maxRounds: n }), '', () => false, (n) => !idle && n < round)}</div>
-      {#if idle && manches?.court}
+      {#if idle && jouables?.court}
         <div class="rg-reg ts-alerte" role="status">
-          <p><b>Ta sélection a {manches.t} titres :</b> la partie fera {manches.t} manches.</p>
+          <p><b>Ta sélection a {jouables.t} titres :</b> la partie fera {jouables.t} manches.</p>
           <button class="rg-em" type="button" onclick={onOpenPlaylists}>Ajouter une playlist</button>
         </div>
       {/if}

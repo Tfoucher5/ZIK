@@ -122,7 +122,7 @@
           </TabPlayers>
         {:else}
           <TabSettings
-            settings={r.settings} phase={r.phase} round={r.round} pro={r.pro} mediaCheck={r.mediaCheck} {playlistNames} manches={r.manches}
+            settings={r.settings} phase={r.phase} round={r.round} pro={r.pro} mediaCheck={r.mediaCheck} {playlistNames} jouables={r.manches}
             onSet={r.setSetting}
             onSound={(patch) => r.send('salon_update_settings', patch)}
             onRenameTeam={(team, name) => r.send('salon_rename_team', { team, name })}
