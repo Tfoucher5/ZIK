@@ -1,6 +1,6 @@
 <script>
-  import InfoTip from '$lib/components/ui/InfoTip.svelte';
-  import { SPECIALS } from '$lib/data/salonOptions.js';
+  import InfoTip from '#lib/components/ui/InfoTip.svelte';
+  import { SPECIALS } from '#lib/data/salonOptions.js';
 </script>
 
 <InfoTip label="Les manches spéciales">

@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import Modal from '$lib/components/ui/Modal.svelte';
+  import Modal from '#lib/components/ui/Modal.svelte';
 
   /** @type {{ open: boolean, onClose: () => void, onConfirm: (name: string) => void }} */
   let { open, onClose, onConfirm } = $props();

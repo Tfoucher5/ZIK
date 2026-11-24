@@ -1,5 +1,5 @@
 <script>
-  import CardTray from '$lib/components/card/CardTray.svelte';
+  import CardTray from '#lib/components/card/CardTray.svelte';
 
   // Classement de la room, avec le menu ⋯ de chaque joueur
   let { players, username, isGuest, canAddFriends, cardsInPlay, roundsSeen, roundTotal, cardsOff, onAddFriend, onReport } = $props();

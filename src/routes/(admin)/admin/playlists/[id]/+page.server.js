@@ -1,14 +1,14 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { error, redirect } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
 import {
   forgetPlaylists,
   loadAnswerTypes,
-} from "$lib/server/services/admin/contenu.js";
+} from "#lib/server/services/admin/contenu.js";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

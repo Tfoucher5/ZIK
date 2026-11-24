@@ -1,18 +1,18 @@
 import { json } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
-import { playlistCache } from "$lib/server/state.js";
-import { MIN_ROUNDS, MIN_TRACKS } from "$lib/server/socket/game/cards.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { playlistCache } from "#lib/server/state.js";
+import { MIN_ROUNDS, MIN_TRACKS } from "#lib/server/socket/game/cards.js";
 import {
   requireAuth,
   userClient,
   checkRateLimit,
-} from "$lib/server/middleware/auth.js";
+} from "#lib/server/middleware/auth.js";
 import {
   ROOM_PLAYLISTS_SELECT,
   roomPlaylists,
   onlineCount,
   withCovers,
-} from "$lib/server/services/rooms/roomList.js";
+} from "#lib/server/services/rooms/roomList.js";
 
 export async function GET() {
   const { data, error } = await getAdminClient()

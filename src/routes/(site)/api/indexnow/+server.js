@@ -1,4 +1,4 @@
-import { supabase } from "$lib/server/config.js";
+import { supabase } from "#lib/server/config.js";
 
 const BASE = "https://www.zik-music.fr";
 const INDEXNOW_KEY = "451a21245e3d4ea399e073c32dceb1c0";

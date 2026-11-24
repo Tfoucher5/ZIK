@@ -1,9 +1,9 @@
 <script>
-  import { dicebear } from '$lib/shared/utils.js';
+  import { dicebear } from '#lib/shared/utils.js';
   import { page } from '$app/state';
-  import NotificationsMenu from '$lib/components/layout/NotificationsMenu.svelte';
-  import ThemeMenu from '$lib/components/layout/ThemeMenu.svelte';
-  import { universOf } from '$lib/components/layout/univers.js';
+  import NotificationsMenu from '#lib/components/layout/NotificationsMenu.svelte';
+  import ThemeMenu from '#lib/components/layout/ThemeMenu.svelte';
+  import { universOf } from '#lib/components/layout/univers.js';
 
   /** @type {{ user: any, onLogin: () => void, onRegister: () => void, onLogout: () => void }} */
   let { user, onLogin, onRegister, onLogout } = $props();

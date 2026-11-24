@@ -1,6 +1,6 @@
 <script>
-  import { pct } from '$lib/shared/admin/stats-utils.js';
-  import { RARITIES } from '$lib/components/card/rarity.js';
+  import { pct } from '#lib/shared/admin/stats-utils.js';
+  import { RARITIES } from '#lib/components/card/rarity.js';
   import { nf, plural } from './cardsAdmin.svelte.js';
 
   /** Répartition du catalogue par rareté, catalogue et chez les joueurs. */

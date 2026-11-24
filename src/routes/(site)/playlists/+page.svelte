@@ -1,19 +1,19 @@
 <script>
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
   import { onMount, getContext } from 'svelte';
-  import PlaylistHeader from '$lib/components/playlist/PlaylistHeader.svelte';
-  import PlaylistNav from '$lib/components/playlist/PlaylistNav.svelte';
-  import PlaylistTracks from '$lib/components/playlist/PlaylistTracks.svelte';
-  import AddPanel from '$lib/components/playlist/AddPanel.svelte';
-  import PlaylistFormModal from '$lib/components/playlist/PlaylistFormModal.svelte';
-  import RoomLaunchModal from '$lib/components/playlist/launch/RoomLaunchModal.svelte';
-  import AnswersModal from '$lib/components/playlist/AnswersModal.svelte';
-  import WorkSuggestModal from '$lib/components/playlist/WorkSuggestModal.svelte';
-  import { PlaylistStore } from '$lib/components/playlist/playlistStore.svelte.js';
-  import { handleSpotifyCallback } from '$lib/components/playlist/spotify.js';
-  import { player } from '$lib/components/playlist/previewPlayer.svelte.js';
-  import { toast } from '$lib/client/toast.svelte.js';
-  import { breadcrumb } from '$lib/shared/seo.js';
+  import PlaylistHeader from '#lib/components/playlist/PlaylistHeader.svelte';
+  import PlaylistNav from '#lib/components/playlist/PlaylistNav.svelte';
+  import PlaylistTracks from '#lib/components/playlist/PlaylistTracks.svelte';
+  import AddPanel from '#lib/components/playlist/AddPanel.svelte';
+  import PlaylistFormModal from '#lib/components/playlist/PlaylistFormModal.svelte';
+  import RoomLaunchModal from '#lib/components/playlist/launch/RoomLaunchModal.svelte';
+  import AnswersModal from '#lib/components/playlist/AnswersModal.svelte';
+  import WorkSuggestModal from '#lib/components/playlist/WorkSuggestModal.svelte';
+  import { PlaylistStore } from '#lib/components/playlist/playlistStore.svelte.js';
+  import { handleSpotifyCallback } from '#lib/components/playlist/spotify.js';
+  import { player } from '#lib/components/playlist/previewPlayer.svelte.js';
+  import { toast } from '#lib/client/toast.svelte.js';
+  import { breadcrumb } from '#lib/shared/seo.js';
 
   const breadcrumbJsonLd = breadcrumb([{ name: 'Playlists', path: '/playlists' }]);
   const playlistsJsonLd = JSON.stringify({

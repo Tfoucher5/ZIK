@@ -1,10 +1,10 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { isUuid } from "$lib/shared/utils.js";
-import { getAdminUserDetail } from "$lib/server/services/admin/userDetail.js";
+import { isUuid } from "#lib/shared/utils.js";
+import { getAdminUserDetail } from "#lib/server/services/admin/userDetail.js";
 import {
   BAN_DURATIONS,
   banUser,
@@ -17,7 +17,7 @@ import {
   deleteUserAccount,
   deleteFollow,
   deleteFriendship,
-} from "$lib/server/services/admin/userActions.js";
+} from "#lib/server/services/admin/userActions.js";
 
 function assertUuid(id) {
   if (!isUuid(id)) throw error(400, "ID invalide");

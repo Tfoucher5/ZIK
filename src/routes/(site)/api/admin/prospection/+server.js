@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { requireAdminToken } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { requireAdminToken } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
 
 const STATUSES = [
   "new",

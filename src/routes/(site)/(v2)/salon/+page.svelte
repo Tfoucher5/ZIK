@@ -1,20 +1,20 @@
 <script>
   import { getContext, onMount, untrack } from 'svelte';
   import { page } from '$app/state';
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import PlaylistPicker from '$lib/components/salon/playlists/PlaylistPicker.svelte';
-  import { rememberSignupRef } from '$lib/client/signupRef.js';
-  import ProUpsell from '$lib/components/salon/setup/ProUpsell.svelte';
-  import SetupHero from '$lib/components/salon/setup/SetupHero.svelte';
-  import ResumeSalon from '$lib/components/salon/setup/ResumeSalon.svelte';
-  import SetupBlock from '$lib/components/salon/setup/SetupBlock.svelte';
-  import SetupSheet from '$lib/components/salon/setup/SetupSheet.svelte';
-  import SetupPro from '$lib/components/salon/setup/SetupPro.svelte';
-  import SetupBar from '$lib/components/salon/setup/SetupBar.svelte';
-  import SalonSeo from '$lib/components/salon/setup/SalonSeo.svelte';
-  import { SalonSetup } from '$lib/components/salon/setup/salonSetup.svelte.js';
-  import { salonJsonLd } from '$lib/components/salon/setup/salonSetupSeo.js';
-  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import PlaylistPicker from '#lib/components/salon/playlists/PlaylistPicker.svelte';
+  import { rememberSignupRef } from '#lib/client/signupRef.js';
+  import ProUpsell from '#lib/components/salon/setup/ProUpsell.svelte';
+  import SetupHero from '#lib/components/salon/setup/SetupHero.svelte';
+  import ResumeSalon from '#lib/components/salon/setup/ResumeSalon.svelte';
+  import SetupBlock from '#lib/components/salon/setup/SetupBlock.svelte';
+  import SetupSheet from '#lib/components/salon/setup/SetupSheet.svelte';
+  import SetupPro from '#lib/components/salon/setup/SetupPro.svelte';
+  import SetupBar from '#lib/components/salon/setup/SetupBar.svelte';
+  import SalonSeo from '#lib/components/salon/setup/SalonSeo.svelte';
+  import { SalonSetup } from '#lib/components/salon/setup/salonSetup.svelte.js';
+  import { salonJsonLd } from '#lib/components/salon/setup/salonSetupSeo.js';
+  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '#lib/data/proPlans.js';
 
   const zik = getContext('zik');
   const s = new SalonSetup(zik, page.url.searchParams);

@@ -1,7 +1,7 @@
 <script>
-  import CardViewer from '$lib/components/card/CardViewer.svelte';
-  import RarityShowcase from '$lib/components/card/RarityShowcase.svelte';
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
+  import CardViewer from '#lib/components/card/CardViewer.svelte';
+  import RarityShowcase from '#lib/components/card/RarityShowcase.svelte';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
 
   let { data } = $props();
 

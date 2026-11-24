@@ -14,7 +14,7 @@ Tu codes un morceau de ZIK. Tu as reçu un plan : tu t'y tiens. Si le plan est f
 
 ## Règles
 
-- Lis le `CLAUDE.md` : organisation du code, imports (`$lib` dans `.svelte`, relatifs dans `src/lib/*.js`), 300 lignes max par fichier, Svelte 5 runes.
+- Lis le `CLAUDE.md` : organisation du code, imports (`#lib` dans `.svelte`, relatifs dans `src/lib/*.js`), 300 lignes max par fichier, Svelte 5 runes.
 - Lis chaque fichier avant de le modifier. Réutilise l'existant, supprime ce qui devient inutile, pas de code « pour plus tard », pas de commentaire évident.
 - Un code nouveau ou corrigé a son test Vitest. Un bug corrigé a le test qui l'aurait attrapé.
 - Pas de `git commit`, `git push`, migration appliquée ou appel réseau réel : la conversation principale s'en charge.

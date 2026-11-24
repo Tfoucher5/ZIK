@@ -1,5 +1,5 @@
 <script>
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '#lib/data/proPlans.js';
   import DemoPlayers from './DemoPlayers.svelte';
   import DemoBuzzer from './DemoBuzzer.svelte';
   import DemoSpecials from './DemoSpecials.svelte';

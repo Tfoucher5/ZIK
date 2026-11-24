@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte";
-  import ZikleGame from "$lib/components/zikle/ZikleGame.svelte";
-  import ZikleStage from "$lib/components/zikle/ZikleStage.svelte";
+  import ZikleGame from "#lib/components/zikle/ZikleGame.svelte";
+  import ZikleStage from "#lib/components/zikle/ZikleStage.svelte";
 
   let { data } = $props();
 

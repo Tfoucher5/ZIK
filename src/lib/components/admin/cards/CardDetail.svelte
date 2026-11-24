@@ -1,7 +1,7 @@
 <script>
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { RARITIES } from '$lib/components/card/rarity.js';
-  import { SET_KINDS, popularity } from '$lib/shared/admin/cartes.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { RARITIES } from '#lib/components/card/rarity.js';
+  import { SET_KINDS, popularity } from '#lib/shared/admin/cartes.js';
   import CorrectCardForm from './CorrectCardForm.svelte';
   import { nf } from './cardsAdmin.svelte.js';
 

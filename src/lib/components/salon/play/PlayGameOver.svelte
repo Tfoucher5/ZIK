@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   import { podium } from './salonPlayer.svelte.js';
   import { endView, nb } from './endView.js';
   import { storyData } from './podiumStory.js';

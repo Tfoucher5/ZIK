@@ -1,5 +1,5 @@
 <script>
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '#lib/data/proPlans.js';
   import TvRows from './TvRows.svelte';
   import { playersAt, clock, PLAYERS_CYCLE } from './demos.js';
 

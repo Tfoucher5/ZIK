@@ -1,6 +1,6 @@
 <script>
     import { reveal } from './reveal.js';
-    import { experiences } from '$lib/data/portfolio.js';
+    import { experiences } from '#lib/data/portfolio.js';
     import ExperienceCard from './ExperienceCard.svelte';
 </script>
 

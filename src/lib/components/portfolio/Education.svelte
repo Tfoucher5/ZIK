@@ -1,6 +1,6 @@
 <script>
     import { reveal } from './reveal.js';
-    import { education } from '$lib/data/portfolio.js';
+    import { education } from '#lib/data/portfolio.js';
 
     let expanded = {};
 

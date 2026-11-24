@@ -1,8 +1,8 @@
 <!-- Scène 1 : la porte du bar (ZIK Soirée). La lumière derrière le verre bat au tempo tant qu'on est dehors -->
 <script>
-  import Film from '$lib/components/accueil/Film.svelte';
-  import Hero from '$lib/components/accueil/Hero.svelte';
-  import { PORTE, glassSpot } from '$lib/components/accueil/scenes.js';
+  import Film from '#lib/components/accueil/Film.svelte';
+  import Hero from '#lib/components/accueil/Hero.svelte';
+  import { PORTE, glassSpot } from '#lib/components/accueil/scenes.js';
 
   let { son } = $props();
 

@@ -1,5 +1,5 @@
-import { ytdlAudioCache, audioKeyFor } from "$lib/server/audio/ytdlCache.js";
-import { refreshPreview } from "$lib/server/socket/game/audio.js";
+import { ytdlAudioCache, audioKeyFor } from "#lib/server/audio/ytdlCache.js";
+import { refreshPreview } from "#lib/server/socket/game/audio.js";
 
 export async function GET({ url, request }) {
   const videoId = audioKeyFor(url.searchParams.get("v"));

@@ -1,9 +1,9 @@
 <script>
   import { getContext, onMount } from 'svelte';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import HistoryBar from '$lib/components/statut/HistoryBar.svelte';
-  import IncidentList from '$lib/components/statut/IncidentList.svelte';
-  import { LEVEL_TEXT } from '$lib/shared/health/levels.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import HistoryBar from '#lib/components/statut/HistoryBar.svelte';
+  import IncidentList from '#lib/components/statut/IncidentList.svelte';
+  import { LEVEL_TEXT } from '#lib/shared/health/levels.js';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');

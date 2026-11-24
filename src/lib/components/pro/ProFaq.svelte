@@ -1,5 +1,5 @@
 <script>
-  import Faq from '$lib/components/ui/Faq.svelte';
+  import Faq from '#lib/components/ui/Faq.svelte';
   import { FAQ } from './proContent.js';
 </script>
 

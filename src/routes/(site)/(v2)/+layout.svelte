@@ -1,6 +1,6 @@
 <script>
   import { version } from '$app/environment';
-  import TopBand from '$lib/components/layout/TopBand.svelte';
+  import TopBand from '#lib/components/layout/TopBand.svelte';
 
   let { children } = $props();
 

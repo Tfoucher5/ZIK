@@ -1,10 +1,10 @@
-import { getAdminClient } from "$lib/server/config.js";
-import { refreshExpiredPreviews } from "$lib/server/services/music/playlist.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { refreshExpiredPreviews } from "#lib/server/services/music/playlist.js";
 import {
   refreshZiklePool,
   getOrCreateDailySong,
   getDayNumber,
-} from "$lib/server/services/zikle.js";
+} from "#lib/server/services/zikle.js";
 
 export async function load() {
   const sb = getAdminClient();

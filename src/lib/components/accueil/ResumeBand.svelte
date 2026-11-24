@@ -2,7 +2,7 @@
      sur ce navigateur, celui de la TV : on rouvre l'écran TV -->
 <script>
   import { onMount } from 'svelte';
-  import { openLastSalon } from '$lib/client/salonClient.js';
+  import { openLastSalon } from '#lib/client/salonClient.js';
 
   let code = $state(null);
   onMount(async () => (code = await openLastSalon()));

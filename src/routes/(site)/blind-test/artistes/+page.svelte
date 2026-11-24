@@ -1,7 +1,7 @@
 <script>
   import { version } from '$app/environment';
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import { breadcrumb } from '$lib/shared/seo.js';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import { breadcrumb } from '#lib/shared/seo.js';
 
   let { data } = $props();
 

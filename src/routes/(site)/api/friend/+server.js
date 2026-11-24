@@ -1,10 +1,10 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
+import { supabase } from "#lib/server/config.js";
+import { verifyToken, userClient } from "#lib/server/middleware/auth.js";
 import {
   createNotification,
   deleteNotifications,
-} from "$lib/server/services/notify/notifications.js";
+} from "#lib/server/services/notify/notifications.js";
 
 const ACTIONS = new Set(["request", "accept", "remove"]);
 

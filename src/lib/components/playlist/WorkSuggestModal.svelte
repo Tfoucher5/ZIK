@@ -1,6 +1,6 @@
 <script>
-  import { toast } from '$lib/client/toast.svelte.js';
-  import { WORK_ANSWER_TYPES as TYPES } from '$lib/shared/playlist/work.js';
+  import { toast } from '#lib/client/toast.svelte.js';
+  import { WORK_ANSWER_TYPES as TYPES } from '#lib/shared/playlist/work.js';
 
   // Films, séries… proposés pour les titres qui n'en ont pas : rien n'est
   // enregistré sans validation, chaque nom se corrige avant

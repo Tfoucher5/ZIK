@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
 
   /** Ajout d'un titre du catalogue à la playlist, avec recherche au fil de la frappe. */
   let { open = $bindable(), inPlaylist, keep } = $props();

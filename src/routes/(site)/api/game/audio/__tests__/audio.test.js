@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const m = vi.hoisted(() => ({ refresh: vi.fn() }));
 
-vi.mock("$lib/server/socket/game/audio.js", () => ({
+vi.mock("#lib/server/socket/game/audio.js", () => ({
   refreshPreview: m.refresh,
 }));
 
 const { GET } = await import("../+server.js");
 const { ytdlAudioCache, audioUrlFor } =
-  await import("$lib/server/audio/ytdlCache.js");
+  await import("#lib/server/audio/ytdlCache.js");
 
 const CLE = "prev_test";
 const entree = (extra = {}) => ({

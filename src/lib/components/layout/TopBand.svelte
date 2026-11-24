@@ -1,10 +1,10 @@
 <!-- En-tête des pages refaites : le bandeau de la TV ZIK (logo · rubriques · CODE ▢▢▢▢▢▢) -->
 <script>
   import { page } from '$app/state';
-  import AccountMenu from '$lib/components/layout/AccountMenu.svelte';
-  import CodeDialog from '$lib/components/layout/CodeDialog.svelte';
-  import SoundButton from '$lib/components/layout/SoundButton.svelte';
-  import { band } from '$lib/components/layout/topBand.svelte.js';
+  import AccountMenu from '#lib/components/layout/AccountMenu.svelte';
+  import CodeDialog from '#lib/components/layout/CodeDialog.svelte';
+  import SoundButton from '#lib/components/layout/SoundButton.svelte';
+  import { band } from '#lib/components/layout/topBand.svelte.js';
 
   const LIENS = [
     ['/soiree', 'ZIK Soirée'],

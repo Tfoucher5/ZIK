@@ -1,10 +1,10 @@
-import { supabase } from "$lib/server/config.js";
+import { supabase } from "#lib/server/config.js";
 import {
   buildTrack,
   refreshExpiredPreviews,
-} from "$lib/server/services/music/playlist.js";
-import { createCustomRoom } from "$lib/server/services/rooms/customRoom.js";
-import { slugify } from "$lib/shared/slug.js";
+} from "#lib/server/services/music/playlist.js";
+import { createCustomRoom } from "#lib/server/services/rooms/customRoom.js";
+import { slugify } from "#lib/shared/slug.js";
 
 /* Pages /blind-test/artiste/<slug> : une page par artiste assez présent dans
    le catalogue pour une vraie partie. Le seuil de fans Deezer écarte les

@@ -1,7 +1,7 @@
 <!-- Questions puis appel final -->
 <script>
-  import Faq from '$lib/components/ui/Faq.svelte';
-  import { CREER, FAQ } from '$lib/components/soiree/soireeContent.js';
+  import Faq from '#lib/components/ui/Faq.svelte';
+  import { CREER, FAQ } from '#lib/components/soiree/soireeContent.js';
 </script>
 
 <section id="faq" class="faq" data-bg="calme" aria-labelledby="faq-t">

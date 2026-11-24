@@ -3,10 +3,10 @@
   import { page } from '$app/state';
   import { getContext } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import TrackList from '$lib/components/admin/tracks/TrackList.svelte';
-  import TrackSheet from '$lib/components/admin/tracks/TrackSheet.svelte';
-  import { pct } from '$lib/shared/admin/stats-utils.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import TrackList from '#lib/components/admin/tracks/TrackList.svelte';
+  import TrackSheet from '#lib/components/admin/tracks/TrackSheet.svelte';
+  import { pct } from '#lib/shared/admin/stats-utils.js';
 
   let { data, form } = $props();
   const adminCtx = getContext('adminToken');

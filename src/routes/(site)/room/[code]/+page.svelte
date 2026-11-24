@@ -1,8 +1,8 @@
 <script>
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import RoomJoinCard from '$lib/components/rooms/RoomJoinCard.svelte';
-  import RoomHero from '$lib/components/rooms/RoomHero.svelte';
-  import RoomInfo from '$lib/components/rooms/RoomInfo.svelte';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import RoomJoinCard from '#lib/components/rooms/RoomJoinCard.svelte';
+  import RoomHero from '#lib/components/rooms/RoomHero.svelte';
+  import RoomInfo from '#lib/components/rooms/RoomInfo.svelte';
 
   let { data } = $props();
   const { room, trackCount, artists, leaderboard } = data;

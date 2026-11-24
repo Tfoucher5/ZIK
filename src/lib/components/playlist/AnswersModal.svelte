@@ -1,7 +1,7 @@
 <script>
-  import { toast } from '$lib/client/toast.svelte.js';
-  import { coverThumb } from '$lib/shared/playlist/input.js';
-  import { WORK_ANSWER_TYPES } from '$lib/shared/playlist/work.js';
+  import { toast } from '#lib/client/toast.svelte.js';
+  import { coverThumb } from '#lib/shared/playlist/input.js';
+  import { WORK_ANSWER_TYPES } from '#lib/shared/playlist/work.js';
 
   let { track, store, onClose } = $props();
 

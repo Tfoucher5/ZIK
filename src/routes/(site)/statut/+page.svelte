@@ -1,11 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import { invalidateAll } from '$app/navigation';
-  import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
-  import StatusTiles from '$lib/components/statut/StatusTiles.svelte';
-  import StatusGroup from '$lib/components/statut/StatusGroup.svelte';
-  import IncidentList from '$lib/components/statut/IncidentList.svelte';
-  import { worst } from '$lib/shared/health/levels.js';
+  import NoticeBanner from '#lib/components/ui/NoticeBanner.svelte';
+  import StatusTiles from '#lib/components/statut/StatusTiles.svelte';
+  import StatusGroup from '#lib/components/statut/StatusGroup.svelte';
+  import IncidentList from '#lib/components/statut/IncidentList.svelte';
+  import { worst } from '#lib/shared/health/levels.js';
 
   let { data } = $props();
   const s = $derived(data.status);

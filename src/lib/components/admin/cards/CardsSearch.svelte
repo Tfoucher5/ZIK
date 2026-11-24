@@ -1,5 +1,5 @@
 <script>
-  import { RARITIES, RARITY_ORDER } from '$lib/components/card/rarity.js';
+  import { RARITIES, RARITY_ORDER } from '#lib/components/card/rarity.js';
 
   /** Recherche d'une carte par numéro, titre, artiste ou rareté. */
   let { c, results, rarity, cardNumber, card } = $props();

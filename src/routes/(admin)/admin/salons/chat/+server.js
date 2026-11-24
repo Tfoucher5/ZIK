@@ -1,12 +1,12 @@
 import { json } from "@sveltejs/kit";
-import { salonRooms } from "$lib/server/state.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { requireAdmin } from "$lib/server/middleware/adminActions.js";
+import { salonRooms } from "#lib/server/state.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
+import { requireAdmin } from "#lib/server/middleware/adminActions.js";
 import {
   supportView,
   markAdminJoined,
   sendSupportMessage,
-} from "$lib/server/socket/salon/support.js";
+} from "#lib/server/socket/salon/support.js";
 
 // Chat de support de la fiche salon.
 

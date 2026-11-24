@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { ytsQuery } from "$lib/server/socket/game/audio.js";
-import { requireAdminToken } from "$lib/server/middleware/auth.js";
+import { ytsQuery } from "#lib/server/socket/game/audio.js";
+import { requireAdminToken } from "#lib/server/middleware/auth.js";
 
 // Vidéos YouTube candidates pour un titre, avec de quoi les regarder dans
 // l'admin. N'écrit rien : l'épinglage reste un geste explicite.

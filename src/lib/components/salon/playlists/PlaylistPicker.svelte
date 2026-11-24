@@ -1,7 +1,7 @@
 <script>
   import SleeveArt from './SleeveArt.svelte';
-  import LoadMore from '$lib/components/ui/LoadMore.svelte';
-  import { fuzzyFilter } from '$lib/shared/fuzzy.js';
+  import LoadMore from '#lib/components/ui/LoadMore.svelte';
+  import { fuzzyFilter } from '#lib/shared/fuzzy.js';
 
   let { playlists = [], selectedIds = $bindable([]), onLogin = null } = $props();
 

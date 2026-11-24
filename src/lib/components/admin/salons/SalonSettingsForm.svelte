@@ -1,7 +1,7 @@
 <script>
   import { untrack } from 'svelte';
   import { enhance } from '$app/forms';
-  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '$lib/data/salonOptions.js';
+  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '#lib/data/salonOptions.js';
 
   /** Réglages du salon en direct, appliqués comme depuis la régie. */
   let { s, busy, submit } = $props();

@@ -2,18 +2,18 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { error } from "@sveltejs/kit";
 
 // Stripe, base et compte simulés : rien ne sort
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
     schema: () => ({ rpc: async () => ({ data: null, error: null }) }),
   }),
 }));
 const create = vi.hoisted(() => vi.fn(async () => ({ url: "https://pay" })));
-vi.mock("$lib/server/stripe.js", async (orig) => ({
+vi.mock("#lib/server/stripe.js", async (orig) => ({
   ...(await orig()),
   getStripe: () => ({ checkout: { sessions: { create } } }),
 }));
-vi.mock("$lib/server/middleware/auth.js", async (orig) => ({
+vi.mock("#lib/server/middleware/auth.js", async (orig) => ({
   ...(await orig()),
   checkRateLimit: () => {},
   requireAuth: async (request) => {
@@ -22,13 +22,13 @@ vi.mock("$lib/server/middleware/auth.js", async (orig) => ({
   },
 }));
 const getProRow = vi.hoisted(() => vi.fn());
-vi.mock("$lib/server/services/pro.js", async (orig) => ({
+vi.mock("#lib/server/services/pro.js", async (orig) => ({
   ...(await orig()),
   getProRow,
 }));
 
 const { POST } = await import("../+server.js");
-const { salonRooms, setIO } = await import("$lib/server/state.js");
+const { salonRooms, setIO } = await import("#lib/server/state.js");
 
 const ACTIF = {
   status: "active",

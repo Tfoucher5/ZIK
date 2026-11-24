@@ -1,6 +1,6 @@
 <script>
   import { flushSync } from 'svelte';
-  import { PLANS, TESTED_LABEL } from '$lib/data/proPlans.js';
+  import { PLANS, TESTED_LABEL } from '#lib/data/proPlans.js';
   import ProPlanStatus from './ProPlanStatus.svelte';
   import ProConfirm from './ProConfirm.svelte';
   import ProFromRegie from './ProFromRegie.svelte';

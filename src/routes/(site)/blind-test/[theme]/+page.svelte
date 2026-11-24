@@ -1,6 +1,6 @@
 <script>
   import { version } from '$app/environment';
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
   let { data } = $props();
 
   const SITE = 'https://www.zik-music.fr';

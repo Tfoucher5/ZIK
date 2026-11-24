@@ -2,7 +2,7 @@ import { error } from "@sveltejs/kit";
 import {
   findArtist,
   artistPage,
-} from "$lib/server/services/music/artistPages.js";
+} from "#lib/server/services/music/artistPages.js";
 
 export async function load({ params, setHeaders }) {
   const artist = await findArtist(params.slug);

@@ -1,5 +1,5 @@
 <script>
-  import { toastState } from '$lib/client/toast.svelte.js';
+  import { toastState } from '#lib/client/toast.svelte.js';
 </script>
 
 {#if toastState.msg}

@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { makeCache } from "$lib/server/cache.js";
+import { supabase } from "#lib/server/config.js";
+import { makeCache } from "#lib/server/cache.js";
 
 const VALID_MODES = ["classique", "qcm"];
 const VALID_ROOMS = ["officielles", "toutes"];

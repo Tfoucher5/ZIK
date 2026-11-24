@@ -1,7 +1,7 @@
 <script>
   import { enhance } from '$app/forms';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { avatarOf } from '$lib/shared/admin/players.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { avatarOf } from '#lib/shared/admin/players.js';
 
   /** Amis, abonnements et abonnés du joueur, avec suppression en deux clics. */
   let { data, submit, busy } = $props();

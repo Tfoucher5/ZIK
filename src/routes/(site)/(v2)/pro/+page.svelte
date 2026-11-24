@@ -1,15 +1,15 @@
 <script>
   import { getContext } from 'svelte';
   import { version } from '$app/environment';
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import ProHero from '$lib/components/pro/ProHero.svelte';
-  import ProOffers from '$lib/components/pro/ProOffers.svelte';
-  import ProCompare from '$lib/components/pro/ProCompare.svelte';
-  import ProDemos from '$lib/components/pro/ProDemos.svelte';
-  import ProPay from '$lib/components/pro/ProPay.svelte';
-  import ProFaq from '$lib/components/pro/ProFaq.svelte';
-  import { ProCheckout } from '$lib/components/pro/proCheckout.svelte.js';
-  import { PAGE_JSON_LD, FAQ_JSON_LD, DESCRIPTION } from '$lib/components/pro/proContent.js';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import ProHero from '#lib/components/pro/ProHero.svelte';
+  import ProOffers from '#lib/components/pro/ProOffers.svelte';
+  import ProCompare from '#lib/components/pro/ProCompare.svelte';
+  import ProDemos from '#lib/components/pro/ProDemos.svelte';
+  import ProPay from '#lib/components/pro/ProPay.svelte';
+  import ProFaq from '#lib/components/pro/ProFaq.svelte';
+  import { ProCheckout } from '#lib/components/pro/proCheckout.svelte.js';
+  import { PAGE_JSON_LD, FAQ_JSON_LD, DESCRIPTION } from '#lib/components/pro/proContent.js';
 
   const checkout = new ProCheckout(getContext('zik'));
 </script>

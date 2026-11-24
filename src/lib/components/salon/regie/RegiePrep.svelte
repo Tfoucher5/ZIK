@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   import { prepChecks, videsTexte } from './prep.js';
   import { textesFile } from './regiePro.svelte.js';
 

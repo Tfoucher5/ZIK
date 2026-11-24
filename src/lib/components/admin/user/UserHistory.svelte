@@ -1,5 +1,5 @@
 <script>
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
 
   /** Dernières parties en ligne et parties de ZIK Soirée (animées ou jouées). */
   let { data } = $props();

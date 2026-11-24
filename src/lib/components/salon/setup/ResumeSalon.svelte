@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { openLastSalon, forgetSalon } from '$lib/client/salonClient.js';
+  import { openLastSalon, forgetSalon } from '#lib/client/salonClient.js';
 
   /** Hôte qui a fermé l'onglet de sa TV ou de sa régie : il retrouve sa soirée. */
   let code = $state(null);

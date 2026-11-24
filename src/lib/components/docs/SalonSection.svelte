@@ -1,5 +1,5 @@
 <script>
-  import { TESTED_PLAYERS } from '$lib/data/proPlans.js';
+  import { TESTED_PLAYERS } from '#lib/data/proPlans.js';
   import DocTable from './DocTable.svelte';
   import { salonSettings, qcmShapes } from './tables.js';
   import DocTip from './DocTip.svelte';

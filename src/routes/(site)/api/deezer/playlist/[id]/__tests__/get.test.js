@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dz = vi.hoisted(() => ({ fetch: vi.fn() }));
-vi.mock("$lib/server/services/music/deezerClient.js", () => ({
+vi.mock("#lib/server/services/music/deezerClient.js", () => ({
   deezerFetch: dz.fetch,
 }));
-vi.mock("$lib/server/middleware/auth.js", () => ({ checkRateLimit() {} }));
+vi.mock("#lib/server/middleware/auth.js", () => ({ checkRateLimit() {} }));
 
 const { GET } = await import("../+server.js");
 

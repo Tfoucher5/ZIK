@@ -23,6 +23,12 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Technique
 - **Prochaine étape** : #584 fusionné le 23/11 : « Rejoindre » touché avant le chargement de la page n'est plus perdu (aucun changement visible) ; part à la prochaine release
 
+## Imports `#lib` (SvelteKit 3)
+
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : PR `chore/imports-lib` du 24/11 : `$lib` (option `alias` dépréciée par kit 3) remplacé par `#lib` dans 416 fichiers, aucun changement visible ; après fusion, scénario salon relancé sur le staging
+
 ## Playlist trop courte pour la partie
 
 - **Statut** : à faire

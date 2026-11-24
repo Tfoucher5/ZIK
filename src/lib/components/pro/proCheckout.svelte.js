@@ -5,8 +5,8 @@ import {
   goToStripe,
   attachSalonTo,
   salonKey,
-} from "$lib/client/salonClient.js";
-import { PLANS } from "$lib/data/proPlans.js";
+} from "#lib/client/salonClient.js";
+import { PLANS } from "#lib/data/proPlans.js";
 import {
   readIntent,
   saveIntent,

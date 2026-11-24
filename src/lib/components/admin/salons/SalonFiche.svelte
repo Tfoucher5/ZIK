@@ -1,6 +1,6 @@
 <script>
   import { untrack } from 'svelte';
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '#lib/data/proPlans.js';
   import SalonChatPanel from './SalonChatPanel.svelte';
   import SalonTools from './SalonTools.svelte';
   import SalonRoster from './SalonRoster.svelte';

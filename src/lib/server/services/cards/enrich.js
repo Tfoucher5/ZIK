@@ -14,7 +14,7 @@ import { findVersions } from "./versions.js";
 // Enrichissement des cartes (spec docs/specs/cartes.md, section 6.4) : pour
 // chaque titre du catalogue, retrouver la version originale sur Deezer,
 // son album et son artiste, puis créer ou rattacher sa carte.
-// Importé aussi par scripts/cards-backfill.mjs : pas d'alias $lib ici.
+// Importé aussi par scripts/cards-backfill.mjs : imports relatifs.
 
 const RECHECK_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 

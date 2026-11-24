@@ -5,9 +5,9 @@
    * échapper aux conteneurs qui coupent les débordements (content-visibility).
    */
   import { getContext, tick } from 'svelte';
-  import ReportModal from '$lib/components/report/ReportModal.svelte';
+  import ReportModal from '#lib/components/report/ReportModal.svelte';
   import { fetchPlayerId, fetchSocial, sendFollow, sendFriend } from './social.js';
-  import { toast } from '$lib/client/toast.svelte.js';
+  import { toast } from '#lib/client/toast.svelte.js';
 
   /** @type {{ username: string, userId?: string|null }} */
   let { username, userId = null } = $props();

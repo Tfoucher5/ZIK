@@ -1,5 +1,5 @@
 <script>
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '#lib/data/proPlans.js';
   import { phaseLabel } from './phase.js';
   import { since } from './since.js';
 

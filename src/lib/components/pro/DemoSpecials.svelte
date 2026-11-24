@@ -1,5 +1,5 @@
 <script>
-  import { SPECIALS } from '$lib/data/salonOptions.js';
+  import { SPECIALS } from '#lib/data/salonOptions.js';
   import { specialsAt, clock, SPECIALS_CYCLE } from './demos.js';
 
   const CARDS = [

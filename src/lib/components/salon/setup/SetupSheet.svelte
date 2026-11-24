@@ -1,8 +1,8 @@
 <script>
   import SetupBlock from './SetupBlock.svelte';
-  import { radioGroup } from '$lib/components/ui/radioGroup.js';
-  import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
-  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '$lib/data/salonOptions.js';
+  import { radioGroup } from '#lib/components/ui/radioGroup.js';
+  import { FREE_MAX_TEAMS } from '#lib/data/proPlans.js';
+  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS } from '#lib/data/salonOptions.js';
 
   /** @type {{ s: import('./salonSetup.svelte.js').SalonSetup }} */
   let { s } = $props();

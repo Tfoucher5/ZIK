@@ -1,23 +1,23 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
-import { getMaintenance, setMaintenance } from "$lib/server/maintenance.js";
-import { publishSalonNotice } from "$lib/server/services/admin/salonNotice.js";
-import { getSalonNotice } from "$lib/server/state.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { getMaintenance, setMaintenance } from "#lib/server/maintenance.js";
+import { publishSalonNotice } from "#lib/server/services/admin/salonNotice.js";
+import { getSalonNotice } from "#lib/server/state.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
 import {
   getVideoSettings,
   clearVideoSettingsCache,
-} from "$lib/server/services/music/trackIssues.js";
-import { broadcastNotification } from "$lib/server/services/notify/notifications.js";
-import { ADMIN_ALERTS } from "$lib/server/services/admin/alerts.js";
+} from "#lib/server/services/music/trackIssues.js";
+import { broadcastNotification } from "#lib/server/services/notify/notifications.js";
+import { ADMIN_ALERTS } from "#lib/server/services/admin/alerts.js";
 import {
   ready as pushReady,
   deliver,
-} from "$lib/server/services/notify/push.js";
+} from "#lib/server/services/notify/push.js";
 
 export const actions = adminActions({
   alerts: async ({ request, locals }) => {

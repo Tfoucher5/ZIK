@@ -1,5 +1,5 @@
-import { adminLoad } from "$lib/server/middleware/adminActions.js";
-import { getJournal } from "$lib/server/services/admin/board.js";
+import { adminLoad } from "#lib/server/middleware/adminActions.js";
+import { getJournal } from "#lib/server/services/admin/board.js";
 
 async function chargerPage({ url }) {
   const days = url.searchParams.get("j") === "30" ? 30 : 7;

@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
 
   /** Quelqu'un a buzzé : son nom en grand, et de quoi valider depuis l'écran si on n'a pas la régie sous la main. */
   let { buzzer, onJudge } = $props();

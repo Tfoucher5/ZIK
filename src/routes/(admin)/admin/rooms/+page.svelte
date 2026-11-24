@@ -1,10 +1,10 @@
 <script>
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import BarChart from '$lib/components/admin/BarChart.svelte';
-  import RoomAdminDetail from '$lib/components/admin/rooms/RoomAdminDetail.svelte';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { fuzzyFilter } from '$lib/shared/fuzzy.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import BarChart from '#lib/components/admin/BarChart.svelte';
+  import RoomAdminDetail from '#lib/components/admin/rooms/RoomAdminDetail.svelte';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { fuzzyFilter } from '#lib/shared/fuzzy.js';
 
   let { data } = $props();
 

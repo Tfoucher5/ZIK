@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   import { flip } from 'svelte/animate';
 
   let { players = [], teams = null, night = null, phase = 'lobby', answerMode = 'free', deltas = {} } = $props();

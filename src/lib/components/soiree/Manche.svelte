@@ -1,5 +1,5 @@
 <script module>
-  import { seg, stage, typed } from '$lib/components/soiree/soireePins.js';
+  import { seg, stage, typed } from '#lib/components/soiree/soireePins.js';
 
   // [pseudo, score, artiste trouvé à, titre trouvé à] (2 = jamais)
   const P = [['Karim', 21, 0.12, 0.2], ['Léa', 19, 0.3, 0.56], ['Zoé', 18, 0.24, 0.4], ['Hugo', 14, 0.44, 0.62], ['Inès', 12, 0.5, 0.7], ['Malik', 9, 0.64, 2], ['Sarah', 7, 0.72, 0.8], ['Tom', 5, 0.82, 2]];
@@ -24,9 +24,9 @@
 </script>
 
 <script>
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import { PINS } from '$lib/components/soiree/soireeBeats.js';
-  import { pad } from '$lib/components/soiree/soireePins.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import { PINS } from '#lib/components/soiree/soireeBeats.js';
+  import { pad } from '#lib/components/soiree/soireePins.js';
 
   let p = $state(0.6);
   const s = $derived(render(p));

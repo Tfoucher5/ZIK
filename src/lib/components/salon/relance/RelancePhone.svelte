@@ -1,7 +1,7 @@
 <script>
-  import Disque from '$lib/components/salon/relance/Disque.svelte';
-  import Annonce from '$lib/components/salon/relance/Annonce.svelte';
-  import { GARDE, etatDe, textePhone } from '$lib/components/salon/relance/textes.js';
+  import Disque from '#lib/components/salon/relance/Disque.svelte';
+  import Annonce from '#lib/components/salon/relance/Annonce.svelte';
+  import { GARDE, etatDe, textePhone } from '#lib/components/salon/relance/textes.js';
 
   let { relance } = $props();
 

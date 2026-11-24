@@ -3,10 +3,10 @@ import {
   maintenanceHtml,
   readAdminToken,
   ADMIN_COOKIE,
-} from "$lib/server/maintenance.js";
-import { getAdminClient } from "$lib/server/config.js";
-import { isTrackableVisit, buildVisitRow } from "$lib/server/visitSource.js";
-import { dropOverriddenMeta } from "$lib/server/defaultMeta.js";
+} from "#lib/server/maintenance.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { isTrackableVisit, buildVisitRow } from "#lib/server/visitSource.js";
+import { dropOverriddenMeta } from "#lib/server/defaultMeta.js";
 import { version } from "$app/environment";
 
 const ADMIN_LOGIN = "/admin/connexion";

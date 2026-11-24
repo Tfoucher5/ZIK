@@ -1,6 +1,6 @@
 <script>
-  import Card from '$lib/components/card/Card.svelte';
-  import { RARITIES, RARITY_ORDER } from '$lib/components/card/rarity.js';
+  import Card from '#lib/components/card/Card.svelte';
+  import { RARITIES, RARITY_ORDER } from '#lib/components/card/rarity.js';
 
   /** Aperçu de la collection sur le profil : raretés et cartes les plus rares. */
   let { username, sb } = $props();

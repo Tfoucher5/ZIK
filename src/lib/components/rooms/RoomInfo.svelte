@@ -1,5 +1,5 @@
 <script>
-  import { modeRules } from '$lib/shared/rooms/room-content.js';
+  import { modeRules } from '#lib/shared/rooms/room-content.js';
 
   /** Fiche d'une room : règles du mode, réglages, artistes et classement de la semaine. */
   let { room, trackCount, artists, leaderboard } = $props();

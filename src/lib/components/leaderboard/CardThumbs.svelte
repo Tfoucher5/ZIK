@@ -1,6 +1,6 @@
 <script>
-  import { RARITIES } from '$lib/components/card/rarity.js';
-  import { openCard } from '$lib/components/card/cardViewer.svelte.js';
+  import { RARITIES } from '#lib/components/card/rarity.js';
+  import { openCard } from '#lib/components/card/cardViewer.svelte.js';
 
   /** Pochettes des cartes les plus rares d'un joueur, ouvertes dans la visionneuse. */
   let { cards = [] } = $props();

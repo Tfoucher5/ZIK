@@ -1,9 +1,9 @@
 <!-- Digicode du bandeau : un seul champ pour les deux codes, soirée ou room en ligne -->
 <script>
   import { goto } from '$app/navigation';
-  import GuestModal from '$lib/components/auth/GuestModal.svelte';
-  import { HomeState } from '$lib/components/home/home.svelte.js';
-  import { cleanCode, joinCode, CODE_AIDE } from '$lib/components/accueil/code.js';
+  import GuestModal from '#lib/components/auth/GuestModal.svelte';
+  import { HomeState } from '#lib/components/home/home.svelte.js';
+  import { cleanCode, joinCode, CODE_AIDE } from '#lib/components/accueil/code.js';
 
   let { open = $bindable(false) } = $props();
 

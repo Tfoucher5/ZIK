@@ -1,6 +1,6 @@
 <!-- Dernier appel avant le pied de page -->
 <script>
-  import { band } from '$lib/components/layout/topBand.svelte.js';
+  import { band } from '#lib/components/layout/topBand.svelte.js';
 </script>
 
 <section class="final" aria-labelledby="t-final">
