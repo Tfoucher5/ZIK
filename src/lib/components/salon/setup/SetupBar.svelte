@@ -20,7 +20,7 @@
 </div>
 
 <style>
-  .court { color: var(--warn); }
+  .recap b.court { color: var(--warn); }
   .bar {
     position: sticky;
     bottom: 0;

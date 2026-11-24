@@ -85,7 +85,7 @@
       <div class="rg-reg"><span>Manches</span>{@render seg('Manches', SALON_ROUNDS, settings.maxRounds, (n) => onSet({ maxRounds: n }), '', () => false, (n) => !idle && n < round)}</div>
       {#if idle && jouables?.court}
         <div class="rg-reg ts-alerte" role="status">
-          <p><b>Ta sélection a {jouables.t} titres :</b> la partie fera {jouables.t} manches.</p>
+          <p><b>Ta sélection a {jouables.t} titre{jouables.t > 1 ? 's' : ''} :</b> la partie fera {jouables.t} manche{jouables.t > 1 ? 's' : ''}.</p>
           <button class="rg-em" type="button" onclick={onOpenPlaylists}>Ajouter une playlist</button>
         </div>
       {/if}

@@ -48,7 +48,8 @@ export function manchesJouables(settings, mc) {
   const m = settings?.maxRounds ?? 0;
   const fini = mc?.total && mc.video + mc.audio + mc.missing >= mc.total;
   const perdus = fini ? Math.max(0, mc.missing - (mc.spares ?? 0)) : 0;
-  const t = Math.max(0, (settings?.rounds ?? m) - perdus);
+  // Le serveur a déjà retiré les introuvables du total : perdus sert au message
+  const t = settings?.rounds ?? m;
   return { t, m, perdus, court: t < m };
 }
 
@@ -64,11 +65,11 @@ function musiqueCheck(m, j) {
       `${done} / ${m.total}`,
     );
   if (j?.court) {
-    const suite = `La partie fera ${j.t} manches. Pour en jouer ${j.m}, ajoute une playlist.`;
+    const suite = `La partie fera ${j.t} manche${s(j.t)}. Pour en jouer ${j.m}, ajoute une playlist.`;
     return check(
       "musique",
       "non",
-      `${j.t} titres pour ${j.m} manches`,
+      `${j.t} titre${s(j.t)} pour ${j.m} manches`,
       j.perdus
         ? `${j.perdus} titre${s(j.perdus)} introuvable${s(j.perdus)}, sans titre de réserve. ${suite}`
         : suite,

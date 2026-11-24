@@ -130,4 +130,50 @@ describe("les manches suivent les titres", () => {
     expect(roundsTotal(s)).toBe(2);
     expect(envois.some((e) => e.ev === "salon_short")).toBe(false);
   });
+
+  it("introuvable en dernier, sans réserve : total juste dès la 1re manche (relecture)", async () => {
+    const a = t("a");
+    const b = t("b");
+    const ko = t("KO");
+    const s = salon([a, b, ko], [ko, b, a], 5);
+    s.game.mediaCheck = {
+      total: 3,
+      video: 2,
+      audio: 0,
+      missing: 1,
+      spares: 0,
+      dead: ["KO"],
+    };
+    expect(roundsTotal(s)).toBe(2);
+    for (let i = 0; i < 3; i++) {
+      await startNextRound(CODE, io);
+      clearTimeout(s.game.musicReadyTimer);
+    }
+    await vi.waitFor(() => expect(s.game.phase).toBe("gameover"));
+    expect(new Set(debuts())).toEqual(new Set([2]));
+    expect(s.game.currentRound).toBe(2);
+  });
+
+  it("introuvable avec réserve : le total ne baisse pas", () => {
+    const [a, b, ko, spare] = [t("a"), t("b"), t("KO"), t("spare")];
+    const s = salon([a, b, ko, spare], [ko, b, a], 3);
+    s.game.mediaCheck = { dead: ["KO"] };
+    expect(roundsTotal(s)).toBe(3);
+  });
+
+  it("toutes les phases : décompte, réponse affichée, podium avec la pile de revanche", () => {
+    const full = Array.from({ length: 8 }, (_, i) => t("t" + i));
+    const s = salon(full, full.slice(0, 3), 5, "starting");
+    expect(roundsTotal(s)).toBe(3);
+    s.game.phase = "summary";
+    s.game.currentRound = 2;
+    s.game.played = full.slice(3, 5);
+    expect(roundsTotal(s)).toBe(5);
+    // Podium : currentRound vaut encore la dernière manche, la pile est celle de la revanche
+    s.game.phase = "gameover";
+    s.game.currentRound = 5;
+    s.game.played = [];
+    s.game.sessionPlaylist = full.slice(0, 5);
+    expect(roundsTotal(s)).toBe(5);
+  });
 });

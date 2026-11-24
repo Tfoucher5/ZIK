@@ -81,7 +81,7 @@ export function resumeReglages(settings, playlistNames, t = null) {
     musique: playlistNames.join(", ") || "Sélection en cours",
     manches: [
       t != null && t < settings.maxRounds
-        ? `${t} manches (${t} titres)`
+        ? `${t} manche${t > 1 ? "s" : ""} (${t} titre${t > 1 ? "s" : ""})`
         : `${settings.maxRounds} manches`,
       `${settings.roundDuration} s`,
       settings.manualNext ? "suite quand tu cliques" : "suite automatique",

@@ -60,6 +60,7 @@ export function listenRegie(r, socket) {
     if (paused) chrono.stop();
   });
   socket.on("salon_game_starting", () => {
+    r.short = null;
     r.phase = "starting";
     r.history = [];
   });
@@ -145,6 +146,7 @@ export function listenRegie(r, socket) {
     );
   });
   socket.on("salon_game_over", (d) => {
+    r.short = null;
     r.phase = "gameover";
     r.teams = d.teams;
     r.night = d.night;
@@ -155,6 +157,7 @@ export function listenRegie(r, socket) {
   });
   // Le serveur enchaîne toujours sur le lancement (décompte ou non)
   socket.on("salon_restarted", ({ players }) => {
+    r.short = null;
     r.mergeRoster(players);
     r.history = [];
     r.phase = "starting";

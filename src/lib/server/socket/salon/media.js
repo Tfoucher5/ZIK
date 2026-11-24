@@ -85,6 +85,8 @@ export async function checkSession(salon, io) {
     audio: 0,
     missing: 0,
     spares,
+    // Titres introuvables (ids) : le vrai total en tient compte dès le lobby
+    dead: [],
   };
   game.mediaCheck = check;
   const send = () => {
@@ -101,7 +103,10 @@ export async function checkSession(salon, io) {
         check.video++;
       } catch {
         if (await previewUrl(track)) check.audio++;
-        else check.missing++;
+        else {
+          check.missing++;
+          check.dead.push(track.id ?? null);
+        }
       }
       send();
     }

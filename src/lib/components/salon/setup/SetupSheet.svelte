@@ -12,7 +12,8 @@
     ['free', 'Texte libre', 'Pour les connaisseurs'],
     ['buzzer', 'Buzzer', "L'animateur valide à voix haute"],
   ];
-  const court = $derived(s.manchesJouees < s.maxRounds);
+  // Sous 3 titres, le serveur refuse la soirée : son message suffit
+  const court = $derived(s.manchesJouees < s.maxRounds && s.totalTracks >= 3);
   const MORE_TEAMS = SALON_TEAMS.filter((n) => n > FREE_MAX_TEAMS);
 
   const pickMode = (m) => (m === 'buzzer' ? s.proOnly('buzzer', () => (s.answerMode = m)) : (s.answerMode = m));

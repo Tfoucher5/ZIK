@@ -38,8 +38,8 @@ describe("manches jouables avant le lancement", () => {
     });
   });
 
-  it("introuvables sans réserve : le total baisse et la régie le dit", () => {
-    const s = { maxRounds: 10, rounds: 10 };
+  it("introuvables sans réserve : total déjà baissé par le serveur, la régie le dit", () => {
+    const s = { maxRounds: 10, rounds: 8 };
     expect(manchesJouables(s, fini(10, 3, 1)).t).toBe(8);
     expect(musique(s, fini(10, 3, 1)).detail).toBe(
       "2 titres introuvables, sans titre de réserve. La partie fera 8 manches. Pour en jouer 10, ajoute une playlist.",
@@ -62,6 +62,18 @@ describe("manches jouables avant le lancement", () => {
     const s = { maxRounds: 10, rounds: 10 };
     expect(manchesJouables(s, fini(10)).court).toBe(false);
     expect(musique(s, fini(10)).titre).toBe("Musique prête");
+  });
+
+  it("en partie après un titre tombé : pas de double soustraction (relecture)", () => {
+    expect(manchesJouables({ maxRounds: 5, rounds: 2 }, fini(3, 1, 0)).t).toBe(
+      2,
+    );
+  });
+
+  it("une seule manche : singulier", () => {
+    expect(musique({ maxRounds: 5, rounds: 1 }, fini(1)).titre).toBe(
+      "1 titre pour 5 manches",
+    );
   });
 
   it("ancien serveur sans `rounds` : le choix de l'organisateur", () => {
