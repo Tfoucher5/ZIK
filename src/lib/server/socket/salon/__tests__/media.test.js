@@ -87,6 +87,7 @@ describe("média d'un titre", () => {
       video: 1,
       audio: 1,
       missing: 1,
+      spares: 0,
     });
   });
 });

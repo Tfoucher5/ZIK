@@ -55,6 +55,13 @@ export class SalonSetup {
       .reduce((s, p) => s + (p.trackCount || 0), 0),
   );
 
+  // Pas plus de manches que de titres : la partie fera ce nombre-là
+  manchesJouees = $derived(
+    this.selectedIds.length
+      ? Math.min(this.maxRounds, this.totalTracks)
+      : this.maxRounds,
+  );
+
   #defaults = this.settings();
   // Dernière préparation lue au montage ; la part réservée à Pro attend fetchPro
   #saved = null;

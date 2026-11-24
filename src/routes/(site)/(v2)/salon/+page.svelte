@@ -62,7 +62,7 @@
 
     <div class="cr-set">
       <ResumeSalon />
-      <SetupBlock n="01" title="La musique" aide={s.selectedIds.length ? `${s.selectedIds.length} au programme` : ''}>
+      <SetupBlock n="01" id="bloc-musique" title="La musique" aide={s.selectedIds.length ? `${s.selectedIds.length} au programme` : ''}>
         {#if s.playlistsState === 'error'}
           <p class="cr-err" role="alert">Les playlists n'ont pas pu être chargées. <button type="button" onclick={() => s.load()}>Réessayer</button></p>
         {:else if s.playlistsState === 'loading'}
@@ -80,7 +80,7 @@
   </div>
 
   <SetupBar
-    selectedCount={s.selectedIds.length} totalTracks={s.totalTracks} maxRounds={s.maxRounds} error={s.error} creating={s.creating}
+    selectedCount={s.selectedIds.length} totalTracks={s.totalTracks} maxRounds={s.manchesJouees} court={s.manchesJouees < s.maxRounds} error={s.error} creating={s.creating}
     loading={s.playlistsState === 'loading'}
     onCreate={() => s.create()}
   />

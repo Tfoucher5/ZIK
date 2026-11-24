@@ -6,6 +6,7 @@ import { nextRound, pauseGame, resumeGame, revealRound } from "./timers.js";
 import { applySettings } from "./rooms.js";
 import { supportView } from "./support.js";
 import { departed } from "./departed.js";
+import { roundsTotal } from "./session.js";
 
 // Dépannage à distance depuis /admin/salons : mêmes fonctions que la régie.
 
@@ -41,6 +42,7 @@ export function salonLiveState(code) {
     paused: !!g.paused,
     round: g.currentRound,
     maxRounds: s.maxRounds,
+    rounds: roundsTotal(salon),
     timer: g.timerActive ? g.timerValue : null,
     screens,
     controls,

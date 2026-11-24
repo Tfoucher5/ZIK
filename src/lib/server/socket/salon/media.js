@@ -77,7 +77,15 @@ export async function resolveMedia(salon, track) {
 export async function checkSession(salon, io) {
   const game = salon.game;
   const tracks = [...game.sessionPlaylist].reverse();
-  const check = { total: tracks.length, video: 0, audio: 0, missing: 0 };
+  // spares : titres hors de la pile, de quoi remplacer un introuvable
+  const spares = Math.max(0, (game.fullPlaylist?.length ?? 0) - tracks.length);
+  const check = {
+    total: tracks.length,
+    video: 0,
+    audio: 0,
+    missing: 0,
+    spares,
+  };
   game.mediaCheck = check;
   const send = () => {
     if (game.mediaCheck === check)

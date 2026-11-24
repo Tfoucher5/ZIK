@@ -96,7 +96,7 @@
           >
             {#snippet haut()}
               {#if prep}
-                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} {attente}>
+                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} settings={r.settings} onPlaylists={r.openPlaylists} {attente}>
                   <RegiePro o={r.offre} pro={r.pro} players={r.players} />
                 </RegiePrep>
               {:else if r.phase === 'gameover'}
@@ -122,7 +122,7 @@
           </TabPlayers>
         {:else}
           <TabSettings
-            settings={r.settings} phase={r.phase} round={r.round} pro={r.pro} mediaCheck={r.mediaCheck} {playlistNames}
+            settings={r.settings} phase={r.phase} round={r.round} pro={r.pro} mediaCheck={r.mediaCheck} {playlistNames} manches={r.manches}
             onSet={r.setSetting}
             onSound={(patch) => r.send('salon_update_settings', patch)}
             onRenameTeam={(team, name) => r.send('salon_rename_team', { team, name })}
@@ -146,7 +146,7 @@
     {:else}
       <RegieActions
         phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} countStart={r.settings.countStart !== false}
-        buzzer={r.buzzer} note={r.etat.note} {attente}
+        buzzer={r.buzzer} note={r.etat.note} {attente} court={r.manches.court ? r.manches.t : null} short={r.short}
         onAction={(ev) => r.send(ev)}
         onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
         onGate={r.gate}

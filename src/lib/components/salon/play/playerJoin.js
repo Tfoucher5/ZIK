@@ -63,7 +63,7 @@ function onJoined(p, data, c, u) {
   p.username = data.username;
   p.code = c;
   p.answerMode = data.settings?.answerMode || "free";
-  p.total = data.settings?.maxRounds || 10;
+  p.total = data.settings?.rounds ?? (data.settings?.maxRounds || 10);
   p.title = data.settings?.title ?? null;
   p.joining = false;
   p.error = "";
@@ -99,7 +99,7 @@ function onJoined(p, data, c, u) {
     p.buzzLocked = !!data.buzzLocked;
     // Le serveur fait foi : une réponse tapée hors ligne n'est jamais partie
     if ("chosenIndex" in data) p.chosenIndex = data.chosenIndex;
-    p.total = data.settings?.maxRounds ?? p.total;
+    p.total = data.settings?.rounds ?? data.settings?.maxRounds ?? p.total;
     p.myScore = data.score ?? p.myScore;
     p.foundArtist = data.foundArtist ?? p.foundArtist;
     p.foundTitle = data.foundTitle ?? p.foundTitle;
