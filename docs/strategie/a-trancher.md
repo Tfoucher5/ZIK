@@ -15,6 +15,15 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
+## Fiche « Ta sono » (l'animateur lance la musique, ZIK fait le jeu)
+
+- **Chantier** : ZIK Soirée / fiabilité
+- **Depuis** : 24/11
+- **Question** : valides-tu la fiche et la maquette ? Source par défaut en ZIK Pro : (A) son de ZIK, ta sono en secours, ou (B) ta sono par défaut ? Mode ouvert à tous ou réservé à ZIK Pro ? Nom affiché : « Ta sono », « Ton son », « Musique de la régie » ?
+- **Options** : A ou B ; tous ou Pro ; un des trois noms
+- **Recommandation** : maquette validée, A, ouvert à tous (c'est d'abord le secours de la panne), « Ta sono »
+- **Lien** : `docs/specs/2026-11-24-musique-de-la-regie.md`, maquette https://claude.ai/artifact/G5Ke3AkYH75AbwKG4o1wWq
+
 ## Statut de vente et TVA
 
 - **Chantier** : Argent / légal
