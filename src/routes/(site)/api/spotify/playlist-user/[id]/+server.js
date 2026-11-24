@@ -3,11 +3,15 @@ import {
   getSpotifyToken,
   normalizeSpotifyItem,
 } from "#lib/server/services/music/spotify.js";
-import { checkRateLimit } from "#lib/server/middleware/auth.js";
+import {
+  checkRateLimit,
+  requireAdminToken,
+} from "#lib/server/middleware/auth.js";
 
 export async function GET({ params, request }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   checkRateLimit(ip, 10, 60_000);
+  await requireAdminToken(request.headers.get("authorization")?.slice(7));
 
   const userToken = request.headers.get("x-spotify-token");
   const plId = params.id;

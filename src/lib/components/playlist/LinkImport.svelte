@@ -28,7 +28,8 @@
     }
     const url = source === 'spotify' ? `/api/spotify/playlist-user/${id}` : `/api/deezer/playlist/${id}`;
     const ctrl = new AbortController();
-    fetch(url, { headers, signal: ctrl.signal })
+    (source === 'spotify' ? store.token().then((t) => { headers.Authorization = `Bearer ${t}`; }) : Promise.resolve())
+      .then(() => fetch(url, { headers, signal: ctrl.signal }))
       .then(async (r) => {
         const data = await r.json();
         if (r.status === 401 && source === 'spotify') { clearSpotifyToken(); needsLogin = true; return; }

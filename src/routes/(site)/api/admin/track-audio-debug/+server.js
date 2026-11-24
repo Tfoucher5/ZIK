@@ -7,7 +7,7 @@ import {
   deezerPreviewMatch,
   iTunesPreviewMatch,
 } from "#lib/server/services/music/deezer.js";
-import { YTDLP_BIN, getYtAudioUrl } from "#lib/server/audio/ytdlAudio.js";
+import { YTDLP_BIN } from "#lib/server/audio/ytdlAudio.js";
 import { validPreviewUrl, ytsSearch } from "#lib/server/socket/game/audio.js";
 
 const execFileAsync = promisify(execFile);
@@ -104,16 +104,6 @@ export async function POST({ url, request }) {
     previewUrl && !stillValid ? "preview_url expirée" : null,
   );
 
-  let version;
-  try {
-    const { stdout } = await execFileAsync(YTDLP_BIN, ["--version"]);
-    version = stdout.trim();
-  } catch (e) {
-    version = `indisponible (${e.message})`;
-  }
-
-  // getYtAudioUrl attend un identifiant de vidéo : on passe d'abord par
-  // ytsSearch. Le jeu ne passe plus par là : il joue les extraits ci-dessous.
   // Une vidéo épinglée court-circuite la recherche.
   const epingle = track.youtube_id || null;
   const video = epingle
@@ -129,36 +119,6 @@ export async function POST({ url, request }) {
         : "aucune vidéo trouvée",
     video?.id ? null : "ytsSearch ne renvoie rien",
   );
-
-  if (!video?.id) {
-    steps.ytdlp = step(false, `yt-dlp ${version}`, "aucune vidéo à extraire");
-    steps.proxy = step(false, "non testé", "étape précédente KO");
-  } else {
-    try {
-      const entry = await getYtAudioUrl(video.id);
-      const client = new URL(entry.url).searchParams.get("c") ?? "—";
-      steps.ytdlp = step(
-        true,
-        `yt-dlp ${version}, client ${client}, url ${entry.url.slice(0, 60)}…`,
-      );
-      const head = await fetch(entry.url, {
-        headers: { Range: "bytes=0-1000" },
-        signal: AbortSignal.timeout(10000),
-      }).catch(() => null);
-      steps.proxy = step(
-        Boolean(head && head.status < 400),
-        `statut upstream ${head?.status ?? "injoignable"}`,
-        head && head.status >= 400 ? `HTTP ${head.status}` : null,
-      );
-    } catch (e) {
-      steps.ytdlp = step(false, `yt-dlp ${version}`, e.message);
-      steps.proxy = step(
-        false,
-        "non testé — yt-dlp a échoué",
-        "étape précédente KO",
-      );
-    }
-  }
 
   const dz = await deezerPreviewMatch(track.artist, track.title).catch(
     () => null,

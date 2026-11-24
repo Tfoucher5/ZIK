@@ -68,7 +68,7 @@ export function userClient(token) {
 
 // ─── Admin helpers ────────────────────────────────────────────────────────────
 
-// Endpoints /api/admin : l'admin s'authentifie par un token en query string.
+// L'admin s'authentifie par un token (query string des /api/admin, ou en-tête Authorization).
 export async function requireAdminToken(token) {
   if (!token) throw error(403, "Token manquant");
 
