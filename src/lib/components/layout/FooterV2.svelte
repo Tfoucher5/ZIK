@@ -81,7 +81,7 @@
     <StatusPill />
     <div class="bas">
       <a class="logo" href="/" aria-label="ZIK, accueil">ZIK<i aria-hidden="true"></i></a>
-      <span>Le blind test qui fait la soirée · zik-music.fr · v3.34.0</span>
+      <span>Le blind test qui fait la soirée · zik-music.fr · v3.35.0</span>
     </div>
   </div>
 </footer>

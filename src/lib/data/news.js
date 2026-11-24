@@ -5,6 +5,20 @@
 
 export const NEWS = [
   {
+    date: "2026-11-24",
+    version: "3.35.0",
+    tag: "Nouveauté",
+    title: "Le nom de ta soirée sur la story, et plus de partie coupée net",
+    summary:
+      "ZIK Soirée : donne un nom à ta soirée pour la story des joueurs, et la partie fait toujours le nombre de manches annoncé.",
+    items: [
+      "Donne un nom à ta soirée (« Quiz du jeudi ») dans « Plus de réglages » : il s'affiche en grand sur l'image que les joueurs partagent en fin de partie.",
+      "Si ta sélection a moins de titres que de manches choisies, la partie fait le vrai nombre de manches et l'annonce partout : plus de « 3 / 5 » qui s'arrête net. Une alerte te le dit à la création et dans la régie, avec un bouton pour ajouter une playlist.",
+      "Sur la TV sans régie, un seul bouton ressort : « Lancer la partie ».",
+      "Sur un réseau lent, toucher « Rejoindre » avant que la page soit prête fait quand même entrer le joueur.",
+    ],
+  },
+  {
     date: "2026-11-23",
     version: "3.34.0",
     tag: "Amélioration",
