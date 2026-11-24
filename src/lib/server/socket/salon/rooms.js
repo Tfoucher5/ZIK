@@ -4,7 +4,7 @@ import { userClient } from "../../middleware/auth.js";
 import { salonRooms, getIO } from "../../state.js";
 import { isPro } from "../../services/pro.js";
 import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
-import { makeTeams } from "./teams.js";
+import { makeTeams, cleanTitle } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
 import { prefetchNextVideo, prepareSession } from "./session.js";
 import { broadcastRoster, teamLimit } from "./players.js";
@@ -63,6 +63,7 @@ export async function createSalonRoom({
     teams: makeTeams(
       pro ? settings.teamCount : Math.min(settings.teamCount, FREE_MAX_TEAMS),
     ),
+    title: cleanTitle(settings.title),
   };
   // Clé de la régie : seul celui qui a créé le salon peut le piloter
   const adminKey = randomBytes(9).toString("base64url");

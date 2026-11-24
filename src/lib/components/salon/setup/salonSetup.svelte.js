@@ -18,6 +18,7 @@ const KEYS = [
   "showAnswerDuration",
   "teamCount",
   "specials",
+  "title",
 ];
 
 // Sans défaut : seules les playlists demandées (?playlist=) ou celles de la dernière préparation sont cochées
@@ -35,6 +36,7 @@ export class SalonSetup {
   showAnswerDuration = $state(7);
   teamCount = $state(0);
   specials = $state(false);
+  title = $state("");
 
   proRow = $state(null);
   pro = $derived(proActive(this.proRow));

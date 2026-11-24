@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { makeTeams, teamStandings, cleanTeamName } from "../teams.js";
+import {
+  makeTeams,
+  teamStandings,
+  cleanTeamName,
+  cleanTitle,
+} from "../teams.js";
 
 const p = (username, team, score = 0) => ({ username, team, score });
 
@@ -72,5 +77,39 @@ describe("teamStandings", () => {
 describe("cleanTeamName", () => {
   it("coupe les noms trop longs", () => {
     expect(cleanTeamName("  " + "x".repeat(40))).toHaveLength(24);
+  });
+
+  it("emoji à cheval sur le 24e signe : pas de demi-paire (instantané jsonb)", () => {
+    const n = cleanTeamName("x".repeat(23) + "🎉🎉");
+    expect(n).toBe("x".repeat(23) + "🎉");
+    expect(n.isWellFormed()).toBe(true);
+  });
+});
+
+describe("cleanTitle", () => {
+  it("texte nettoyé : espaces réduits, 30 signes, vide = pas de nom", () => {
+    expect(cleanTitle("  Quiz   du\njeudi ")).toBe("Quiz du jeudi");
+    expect(cleanTitle("x".repeat(10_000))).toBe("x".repeat(30));
+    expect(cleanTitle("   ")).toBeNull();
+    expect(cleanTitle("")).toBeNull();
+  });
+
+  it("entrées hostiles : nombre, objet, liste, null → pas de nom, sans erreur", () => {
+    for (const v of [42, { toString: () => "x" }, ["a"], null, undefined, true])
+      expect(cleanTitle(v)).toBeNull();
+  });
+
+  it("caractère nul ou demi-paire : retirés, l'instantané jsonb ne casse pas", () => {
+    expect(cleanTitle("a\u0000b")).toBe("a b");
+    expect(cleanTitle("ok \ud83c")).toBe("ok \ufffd");
+    expect(cleanTitle("\u0000\u0007")).toBeNull();
+  });
+
+  it("emoji composé (ZWJ) gardé entier quand il tient", () => {
+    expect(cleanTitle("Famille 👨‍👩‍👧")).toBe("Famille 👨‍👩‍👧");
+  });
+
+  it("les deux moitiés d'un emoji ne sont jamais séparées", () => {
+    expect(cleanTitle("a".repeat(29) + "🎉🎉")).toBe("a".repeat(29) + "🎉");
   });
 });

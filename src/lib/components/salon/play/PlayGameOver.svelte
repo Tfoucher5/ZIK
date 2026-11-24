@@ -16,7 +16,7 @@
   const rows = $derived(podium(p.finalRanking));
   const me = $derived(p.finalRanking?.me);
   const story = $derived(
-    storyData({ finalRanking: p.finalRanking, teams: p.teams, username: p.username, myTeam: p.myTeam, round: p.round }),
+    storyData({ finalRanking: p.finalRanking, teams: p.teams, username: p.username, myTeam: p.myTeam, round: p.round, title: p.title }),
   );
   const asked = $derived(Math.max(p.roster.encore ?? 0, p.encore ? 1 : 0));
 </script>

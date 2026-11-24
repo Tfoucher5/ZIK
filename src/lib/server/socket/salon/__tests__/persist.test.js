@@ -31,7 +31,8 @@ vi.mock("../../../config.js", () => ({
   }),
 }));
 
-const { recordSalonGameEnd } = await import("../persist.js");
+const { recordSalonGameStart, recordSalonGameEnd } =
+  await import("../persist.js");
 const { addPlayer } = await import("../players.js");
 const { departPlayer } = await import("../departed.js");
 
@@ -66,5 +67,22 @@ describe("fin de partie en base", () => {
       }),
     ]);
     expect(updates[0].player_count).toBe(2);
+  });
+
+  it("le nom de la soirée n'est jamais écrit en base", async () => {
+    inserts.length = updates.length = 0;
+    const salon = {
+      code: "PERS2",
+      settings: { teams: null, maxRounds: 10, title: "Quiz du jeudi" },
+      players: {},
+      game: { phase: "round" },
+    };
+    addPlayer(salon, "Ana", "s1").score = 100;
+    await recordSalonGameStart(salon);
+    salon.game.dbGameId = "g2";
+    recordSalonGameEnd(salon);
+    expect(inserts.length).toBe(2);
+    expect(updates.length).toBe(1);
+    expect(JSON.stringify([inserts, updates])).not.toContain("Quiz");
   });
 });

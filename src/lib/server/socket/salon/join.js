@@ -274,6 +274,7 @@ export function joinPlayer(
     settings: {
       answerMode: salon.settings.answerMode,
       maxRounds: salon.settings.maxRounds,
+      title: salon.settings.title,
     },
     team: player.team,
     ...phoneLists(salon, username),

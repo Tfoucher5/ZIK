@@ -64,6 +64,7 @@ function onJoined(p, data, c, u) {
   p.code = c;
   p.answerMode = data.settings?.answerMode || "free";
   p.total = data.settings?.maxRounds || 10;
+  p.title = data.settings?.title ?? null;
   p.joining = false;
   p.error = "";
   p.token = data.token;

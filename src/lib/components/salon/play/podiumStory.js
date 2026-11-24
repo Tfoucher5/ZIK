@@ -25,6 +25,7 @@ export function storyData({
   username,
   myTeam,
   round,
+  title = null,
   now = new Date(),
 }) {
   const me = finalRanking?.me;
@@ -33,6 +34,7 @@ export function storyData({
     rank,
     color: MEDAL[rank - 1] ?? ACCENT,
     date: dateFr(now),
+    title: title || null,
   });
   if (i >= 0) {
     const t = teams[i];
@@ -113,7 +115,8 @@ function background(ctx) {
   ctx.restore();
 }
 
-function header(ctx, date) {
+// Avec un nom de soirée : le nom à la place de la date, la date en petit dessous
+function header(ctx, date, title) {
   ctx.fillStyle = "#fafafa";
   setFont(ctx, 900, 120, COND);
   const m = ctx.measureText("ZIK");
@@ -127,8 +130,18 @@ function header(ctx, date) {
   ctx.arc(X0 + m.width + 12 + r, base - r, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#fafafa";
-  setFont(ctx, 800, 66, COND);
-  line(ctx, date.toUpperCase(), X0, 188 + 120 + 22, 66, 1);
+  const top = 188 + 120 + 22;
+  if (!title) {
+    setFont(ctx, 800, 66, COND);
+    line(ctx, date.toUpperCase(), X0, top, 66, 1);
+    return;
+  }
+  const name = title.toLocaleUpperCase("fr");
+  const s = fitFont(ctx, name, X1 - X0, 66, 800, 0);
+  const y = line(ctx, name, X0, top, s, 1, X1 - X0);
+  ctx.fillStyle = "#a3a6ba";
+  setFont(ctx, 500, 32, MONO, 0.14);
+  line(ctx, date.toUpperCase(), X0, y + 16, 32, 1, X1 - X0);
 }
 
 // Barres muettes : 26 px pleins, 8 px de vide, depuis le bas
@@ -143,7 +156,7 @@ function fitFont(ctx, text, max, size, weight, spacing) {
   let s = size;
   setFont(ctx, weight, s, COND, spacing);
   while (ctx.measureText(text).width > max && s > 48) {
-    s -= 4;
+    s = Math.max(48, s - 4);
     setFont(ctx, weight, s, COND, spacing);
   }
   return s;
@@ -215,7 +228,7 @@ export async function drawStory(canvas, d) {
   canvas.height = STORY_H;
   const ctx = canvas.getContext("2d");
   // Polices du site chargées avant de dessiner, accents du pseudo compris
-  const sample = `${d.name}${d.unit}${d.date}ÉÈ0123456789`;
+  const sample = `${d.name}${d.unit}${d.date}${d.title ?? ""}ÉÈ0123456789`;
   await Promise.all(
     [
       `900 100px ${COND}`,
@@ -226,7 +239,7 @@ export async function drawStory(canvas, d) {
   );
 
   background(ctx);
-  header(ctx, d.date);
+  header(ctx, d.date, d.title);
 
   const { n, at } = storySteps(d.rank, d.count);
   let x = (n - 1) * 68 + COL >= STORY_W ? 0 : X0;

@@ -51,9 +51,15 @@
   letter-spacing: -0.015em;
   text-transform: uppercase;
 }
+/* Un seul magenta : « Lancer la partie » sans régie, « téléphones. » avec */
 .lb h1 em {
   font-style: normal;
+}
+.lb h1 em.accent {
   color: var(--accent);
+}
+.lb .sx-dots i {
+  background: var(--mid);
 }
 .lb .lb-code {
   display: flex;

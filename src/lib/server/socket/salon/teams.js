@@ -40,10 +40,25 @@ export function makeTeams(count, existantes = null) {
   }));
 }
 
+// Texte libre sûr pour l'instantané (jsonb refuse \u0000 et les demi-paires) :
+// sans caractère de contrôle, espaces réduits, coupé par point de code. Le
+// ZWJ (\p{Cf}) reste pour les emoji composés.
+function cleanText(v, max) {
+  const t = v
+    .slice(0, 200)
+    .toWellFormed()
+    .replace(/\p{Cc}/gu, " ");
+  return [...t.replace(/\s+/g, " ").trim()].slice(0, max).join("").trim();
+}
+
 export function cleanTeamName(name) {
-  return String(name ?? "")
-    .trim()
-    .slice(0, 24);
+  return cleanText(String(name ?? ""), 24);
+}
+
+// Nom de la soirée, dessiné sur la story des téléphones : texte seul, 30 signes, null si vide
+export function cleanTitle(title) {
+  if (typeof title !== "string") return null;
+  return cleanText(title, 30) || null;
 }
 
 // Répartition à tour de rôle, dans l'ordre d'arrivée

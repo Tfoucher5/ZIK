@@ -16,7 +16,7 @@
 
   const pickMode = (m) => (m === 'buzzer' ? s.proOnly('buzzer', () => (s.answerMode = m)) : (s.answerMode = m));
   const resume = $derived(
-    [`${s.roundDuration} s pour répondre`, s.manualNext ? 'suite quand tu cliques' : 'suite automatique',
+    [s.title.trim(), `${s.roundDuration} s pour répondre`, s.manualNext ? 'suite quand tu cliques' : 'suite automatique',
       !s.manualNext && `réponse affichée ${s.showAnswerDuration} s`, s.specials && 'manches spéciales']
       .filter(Boolean).join(' · ')
   );
@@ -63,6 +63,11 @@
 
 <details class="plus">
   <summary><span><b>Plus de réglages</b><small>{resume}</small></span></summary>
+  <label class="reg">
+    <span>Nom de la soirée <i>facultatif</i></span>
+    <input class="nom" type="text" maxlength="30" autocomplete="off" placeholder="Ex. : Quiz du jeudi" bind:value={s.title}>
+    <small>Il s'affiche sur l'image que les joueurs partagent en fin de partie. Sans nom, la date.</small>
+  </label>
   <div class="reg"><span>Temps pour répondre</span>{@render seg('Temps pour répondre', SALON_DURATIONS, s.roundDuration, (v) => (s.roundDuration = v), ' s')}</div>
   <div class="reg">
     <span>Manche suivante</span>
@@ -138,7 +143,7 @@
   .plus-eq { display: grid; gap: 8px; }
   .plus-eq > p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 15px; color: var(--muted); }
   .autre { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
-  .autre input {
+  .autre input, .nom {
     width: 80px;
     min-height: 44px;
     padding: 0 12px;
@@ -173,6 +178,8 @@
   .reg { display: grid; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line); }
   .reg > span { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
   .reg > small { font-size: 14px; color: var(--muted); }
+  .reg i { font-size: 13px; }
+  .nom { width: 100%; max-width: 420px; padding: 0 18px; }
 
   @media (min-width: 900px) {
     .choix { grid-template-columns: repeat(3, minmax(0, 1fr)); }

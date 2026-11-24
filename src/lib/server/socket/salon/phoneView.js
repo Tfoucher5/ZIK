@@ -118,6 +118,7 @@ export function reconnectView(salon, player) {
     settings: {
       answerMode: salon.settings.answerMode,
       maxRounds: salon.settings.maxRounds,
+      title: salon.settings.title,
     },
     phase: salon.game.phase,
     paused: salon.game.paused,

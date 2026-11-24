@@ -149,6 +149,16 @@ describe("réglages repris selon l'offre de l'hôte", () => {
       answerMode: "multiple",
     });
   });
+
+  it("nom de la soirée : repris s'il fait 30 signes au plus, sinon champ vide", () => {
+    const d = { ...defaults, title: "" };
+    expect(setupFor({ title: "Quiz du jeudi" }, false, d).title).toBe(
+      "Quiz du jeudi",
+    );
+    for (const title of [42, { a: 1 }, null, "x".repeat(31)])
+      expect(setupFor({ title }, true, d).title).toBe("");
+    expect(setupFor({}, false, d).title).toBe("");
+  });
 });
 
 describe("Stripe qui ne répond pas", () => {
