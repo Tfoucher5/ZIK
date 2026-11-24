@@ -34,6 +34,7 @@ export function salonEnManche() {
       maxRounds: 4,
       roundDuration: 30,
       teams: [{ id: 0, name: "R" }],
+      title: "Quiz du jeudi",
     },
     players: {},
     banned: new Set(["troll", "jeton-banni"]),

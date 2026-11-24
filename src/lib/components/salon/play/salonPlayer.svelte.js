@@ -27,13 +27,13 @@ export class SalonPlayer {
   admitted = $state(false);
   // Jeton du joueur, gardé en mémoire : le stockage peut être bloqué (navigation privée)
   token = null;
-  // Code de la soirée visée par la dernière tentative de jonction
-  joinCode = "";
+  joinCode = ""; // code visé par la dernière tentative de jonction
 
   // Partie
   joined = $state(false);
   username = $state("");
   code = $state("");
+  title = $state(null); // nom de la soirée, dessiné sur la story
   answerMode = $state("free");
   phase = $state("lobby");
   round = $state(0);

@@ -25,7 +25,7 @@
   text-decoration: none;
 }
 .sh-brand span {
-  color: var(--accent);
+  color: var(--soft, #d6d7e4);
 }
 .sh-join {
   display: flex;
@@ -90,7 +90,7 @@
 }
 .sh-vol input {
   width: 90px;
-  accent-color: var(--accent);
+  accent-color: var(--text);
 }
 
 .sh-progress {

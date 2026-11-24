@@ -28,8 +28,27 @@ describe("story : ma colonne", () => {
       team: null,
       color: ACCENT,
       date: "12 novembre 2026",
+      title: null,
       line: "Inès, à la 5e place sur 8",
     });
+  });
+
+  it("nom de la soirée : gardé avec la date, absent s'il est vide", () => {
+    const avec = {
+      finalRanking,
+      username: "Inès",
+      now,
+      title: "Quiz du jeudi",
+    };
+    expect(storyData(avec)).toMatchObject({
+      title: "Quiz du jeudi",
+      date: "12 novembre 2026",
+    });
+    expect(storyData({ ...avec, title: "" }).title).toBeNull();
+    const teams = [{ id: 0, name: "Rouge", score: 10 }];
+    expect(storyData({ ...avec, teams, myTeam: 0 }).title).toBe(
+      "Quiz du jeudi",
+    );
   });
 
   it("à la 1re place : en or, un seul titre au singulier", () => {

@@ -9,6 +9,7 @@
   import QrCode from '../QrCode.svelte';
   import MediaCheck from '../regie/MediaCheck.svelte';
   import { lobbyView } from './lobbyView.js';
+  import { tvAlone } from './gameOverView.js';
 
   let { h } = $props();
 
@@ -29,7 +30,7 @@
   <!-- Plus de 4 équipes : le héros se resserre pour laisser deux rangées d'équipes -->
   <div class="lb-hero" class:compact={v.teams?.length > 4}>
     <div class="lb-left">
-      <h1>Sortez vos <br><em>téléphones.</em></h1>
+      <h1>Sortez vos <br><em class:accent={!tvAlone(h)}>téléphones.</em></h1>
       <div class="lb-code" aria-label="Code {h.code}">
         {#each h.code.split('') as ch, i (i)}<b>{ch}</b>{/each}
       </div>

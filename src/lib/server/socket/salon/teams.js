@@ -46,6 +46,13 @@ export function cleanTeamName(name) {
     .slice(0, 24);
 }
 
+// Nom de la soirée, dessiné sur la story des téléphones : texte seul, 30 signes, null si vide
+export function cleanTitle(title) {
+  if (typeof title !== "string") return null;
+  const t = [...title.replace(/\s+/g, " ").trim()].slice(0, 30).join("").trim();
+  return t || null;
+}
+
 // Répartition à tour de rôle, dans l'ordre d'arrivée
 
 export function teamStandings(teams, players) {
