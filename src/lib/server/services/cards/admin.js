@@ -1,6 +1,6 @@
 // Contrôle du catalogue de cartes et révocation (spec docs/specs/cartes.md,
 // garde-fou G12). Utilisé par /admin/cards et par les scripts de maintenance :
-// pas d'alias #lib ici.
+// imports relatifs.
 import { enrichTrack } from "./enrich.js";
 import { deezerFetch } from "../music/deezerClient.js";
 

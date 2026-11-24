@@ -159,7 +159,7 @@ Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel 
   - `src/lib/shared/` : logique pure utilisée côté client et serveur, par domaine
   - `src/lib/data/` : contenus statiques (nouveautés, thèmes, offres Pro…)
   - `src/lib/server/services/<domaine>/` (`admin/`, `music/`, `notify/`, `rooms/`, `cards/`, `health/`) : accès BDD et logique métier. Les `+server.js` et `+page.server.js` restent fins (lecture des paramètres, appel du service, réponse)
-- **Imports** : `#lib/…` (sous-chemins `imports` de `package.json`, `$lib` n'existe plus depuis SvelteKit 3) dans les `.svelte` et les routes. Les `.js` de `src/lib` importent en relatif
+- **Imports** : `#lib/…` (sous-chemins `imports` de `package.json`, `$lib` n'existe plus depuis SvelteKit 3) dans les `.svelte` et les routes. Les `.js` de `src/lib` importent en relatif : `server.js` et `scripts/` les chargent avec Node pur
 - **Pas de duplication** : chercher un composant, un utilitaire ou une variable CSS existants avant d'en créer (ex : couleurs de rareté `--rc` dans `static/css/cards.css`)
 - Toujours lire un fichier avant de le modifier
 
