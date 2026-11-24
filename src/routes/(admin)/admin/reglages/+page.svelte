@@ -149,6 +149,13 @@
       {#if form?.sourcesSaved}<p class="a-ok">Enregistré.</p>{/if}
       {#if form?.sourcesError}<p class="a-err">{form.sourcesError}</p>{/if}
     </form>
+    <form method="POST" action="?/deezerIds" class="a-card grid" use:enhance={submit('deezerIds')}>
+      <p class="a-muted small">Cherche l'identifiant Deezer des titres qui n'en ont pas, 200 par clic (environ une minute). Un titre dont l'artiste ou le titre ne correspond pas exactement reste sans identifiant.</p>
+      <p>{data.deezerLeft === null ? 'Titres à vérifier : inconnu.' : `Titres à vérifier : ${data.deezerLeft}`}</p>
+      <button class="a-btn" type="submit" disabled={busy === 'deezerIds' || data.deezerLeft === 0}>{busy === 'deezerIds' ? 'Recherche…' : 'Compléter les identifiants Deezer'}</button>
+      {#if form?.deezerIds}<p class="a-ok">Vérifiés : {form.deezerIds.checked}, trouvés : {form.deezerIds.found}{form.deezerIds.failed ? `, ${form.deezerIds.failed} à reprendre` : ''}.</p>{/if}
+      {#if form?.deezerIdsError}<p class="a-err">{form.deezerIdsError}</p>{/if}
+    </form>
 
     <h2 class="a-h2">Maintenance</h2>
     <form method="POST" action="?/notice" class="a-card grid" use:enhance={submit('notice')}>

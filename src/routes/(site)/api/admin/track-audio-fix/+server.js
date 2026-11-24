@@ -42,6 +42,12 @@ export async function POST({ url, request }) {
       : null;
   }
   if (externalId) patch.external_id = externalId;
+  // Le choix de l'admin remplace l'identifiant Deezer complété : sans id
+  // Deezer (extrait iTunes), l'extrait choisi n'est plus masqué par l'ancien
+  if (previewUrl || externalId) {
+    patch.deezer_id = /^\d+$/.test(externalId ?? "") ? externalId : null;
+    patch.deezer_checked_at = new Date().toISOString();
+  }
   if (youtubeStart !== undefined)
     patch.youtube_start =
       Number.isInteger(youtubeStart) && youtubeStart >= 0 ? youtubeStart : null;
