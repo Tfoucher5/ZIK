@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '$lib/client/theme.js';
+  import { THEMES, DEFAULT_THEME, getTheme, setTheme } from '#lib/client/theme.js';
 
   /** @type {{ open: boolean, onToggle: (e: MouseEvent) => void }} */
   let { open = false, onToggle } = $props();

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const h = vi.hoisted(() => ({ dz: vi.fn(), token: vi.fn() }));
-vi.mock("$lib/server/config.js", async () =>
+vi.mock("#lib/server/config.js", async () =>
   (await import("../../__tests__/fakeQuery.js")).fakeClients(h),
 );
 vi.mock("../deezerClient.js", () => ({ deezerFetch: h.dz }));

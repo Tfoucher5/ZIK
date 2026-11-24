@@ -1,5 +1,5 @@
 <script>
-  import { KIT } from '$lib/components/soiree/soireeContent.js';
+  import { KIT } from '#lib/components/soiree/soireeContent.js';
 
   const ICONES = {
     son: ['M4 9v6h4l5 4V5L8 9z', 'M16.5 8.5a5 5 0 0 1 0 7M19.5 5.5a9 9 0 0 1 0 13'],

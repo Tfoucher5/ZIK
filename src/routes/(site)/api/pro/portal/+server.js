@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
-import { requireAuth } from "$lib/server/middleware/auth.js";
-import { getStripe } from "$lib/server/stripe.js";
-import { getProRow } from "$lib/server/services/pro.js";
+import { requireAuth } from "#lib/server/middleware/auth.js";
+import { getStripe } from "#lib/server/stripe.js";
+import { getProRow } from "#lib/server/services/pro.js";
 
 // Espace client Stripe : factures, carte bancaire, résiliation
 export async function POST({ request, url }) {

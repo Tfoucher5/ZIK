@@ -1,7 +1,7 @@
 <script>
-  import { PLANS } from '$lib/data/proPlans.js';
-  import Captcha from '$lib/components/auth/Captcha.svelte';
-  import { captchaOn } from '$lib/components/auth/authForm.svelte.js';
+  import { PLANS } from '#lib/data/proPlans.js';
+  import Captcha from '#lib/components/auth/Captcha.svelte';
+  import { captchaOn } from '#lib/components/auth/authForm.svelte.js';
   import { resendSignup } from './intent.js';
 
   let { checkout } = $props();

@@ -16,6 +16,8 @@ import {
   drawSpareTrack,
   prefetchNextVideo,
   prepareSession,
+  roundsTotal,
+  shortOfTracks,
 } from "./session.js";
 import {
   nightView,
@@ -30,11 +32,9 @@ import { armNext, clearPause, scheduleCleanup, startTimer } from "./timers.js";
 export function checkEveryoneDone(code, io) {
   const salon = salonRooms[code];
   if (!salon || salon.game.phase !== "round") return;
-  // Only count connected players — disconnected ones can't answer
+  // Joueurs connectés : QCM, tous ont répondu ; libre, tous ont tout trouvé
   const players = Object.values(salon.players).filter((p) => !p._disconnected);
   if (players.length === 0) return;
-  // In QCM mode: done when everyone has answered (right or wrong)
-  // In free mode: done when everyone has found all elements
   const mode = salon.settings.answerMode;
   const allDone =
     mode === "buzzer"
@@ -230,7 +230,7 @@ export async function startNextRound(code, io) {
     // Les téléphones ne reçoivent jamais le média ni la réponse
     const publicData = {
       round: game.currentRound,
-      total: salon.settings.maxRounds,
+      total: roundsTotal(salon),
       choices,
       special: game.special,
       featCount: track.featArtists?.length || 0,
@@ -294,6 +294,6 @@ export function skipTrack(code, io) {
   game.skipStreak = (game.skipStreak ?? 0) + 1;
   if (game.skipStreak >= OUTAGE_AFTER)
     return holdForVideos(salon, io, () => startNextRound(code, io));
-  drawSpareTrack(game, game.currentTrack);
+  if (!drawSpareTrack(game, game.currentTrack)) shortOfTracks(salon, io);
   startNextRound(code, io);
 }

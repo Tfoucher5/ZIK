@@ -1,9 +1,9 @@
 import { error, json } from "@sveltejs/kit";
-import { checkRateLimit } from "$lib/server/middleware/auth.js";
+import { checkRateLimit } from "#lib/server/middleware/auth.js";
 import {
   findArtist,
   startArtistRoom,
-} from "$lib/server/services/music/artistPages.js";
+} from "#lib/server/services/music/artistPages.js";
 
 export async function POST({ params, request }) {
   checkRateLimit(

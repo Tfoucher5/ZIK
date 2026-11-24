@@ -1,6 +1,6 @@
 <!-- Texte de fond : l'immeuble en coupe, deux paliers, chacun son repère d'étage, une vignette du film et ses liens en bandeau TV -->
 <script>
-  import { UNIVERS } from '$lib/components/accueil/guide.js';
+  import { UNIVERS } from '#lib/components/accueil/guide.js';
 </script>
 
 <section class="guide" aria-labelledby="t-guide">

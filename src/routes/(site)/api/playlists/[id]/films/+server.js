@@ -1,13 +1,13 @@
 import { json } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
-import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { requireAuth, checkRateLimit } from "#lib/server/middleware/auth.js";
 import {
   canEditPlaylist,
   saveWorks,
   suggestWorks,
-} from "$lib/server/services/music/workSuggest.js";
-import { forgetPlaylists } from "$lib/server/services/admin/contenu.js";
-import { WORK_ANSWER_TYPES } from "$lib/shared/playlist/work.js";
+} from "#lib/server/services/music/workSuggest.js";
+import { forgetPlaylists } from "#lib/server/services/admin/contenu.js";
+import { WORK_ANSWER_TYPES } from "#lib/shared/playlist/work.js";
 
 const TYPE_IDS = new Set(WORK_ANSWER_TYPES.map((t) => t.id));
 const UUID = /^[0-9a-f-]{36}$/i;

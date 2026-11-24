@@ -1,7 +1,7 @@
 import {
   getOrCreateWeeklyChallenge,
   getWeeklyChallengeFullRanking,
-} from "$lib/server/services/weeklyChallenge.js";
+} from "#lib/server/services/weeklyChallenge.js";
 
 export async function load() {
   const challenge = await getOrCreateWeeklyChallenge();

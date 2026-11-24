@@ -270,9 +270,10 @@ export function registerControl(socket, io) {
       p._fullFoundCounted = false;
     }
 
-    // Au podium, les titres de la revanche sont déjà tirés et préchargés
-    if (salon.game.phase === "summary") prepareSession(code, io);
+    // Remis à zéro avant le tirage : le total annoncé est celui de la revanche.
+    // Au podium, les titres de la revanche sont déjà tirés et préchargés.
     salon.game.currentRound = 0;
+    if (salon.game.phase === "summary") prepareSession(code, io);
     salon.game.history = [];
     salon.game.historyMedia = [];
     salon.game.lastRoundEnd = null;

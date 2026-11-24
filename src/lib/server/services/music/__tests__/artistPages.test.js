@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const h = vi.hoisted(() => ({ refresh: vi.fn(), room: vi.fn() }));
-vi.mock("$lib/server/config.js", async () => ({
+vi.mock("#lib/server/config.js", async () => ({
   supabase: (await import("../../__tests__/fakeQuery.js")).fakeClients(h)
     .supabase,
 }));
-vi.mock("$lib/server/services/music/playlist.js", async () => ({
+vi.mock("#lib/server/services/music/playlist.js", async () => ({
   ...(await import("../playlist.js")),
   refreshExpiredPreviews: h.refresh,
 }));
-vi.mock("$lib/server/services/rooms/customRoom.js", () => ({
+vi.mock("#lib/server/services/rooms/customRoom.js", () => ({
   createCustomRoom: h.room,
 }));
 

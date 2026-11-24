@@ -1,5 +1,5 @@
 <script>
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
   import TrackCover from './TrackCover.svelte';
   import TrackFlags from './TrackFlags.svelte';
 

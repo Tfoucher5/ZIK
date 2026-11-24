@@ -1,12 +1,12 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { error } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { escapeIlike } from "$lib/shared/zikle/shared.js";
-import { forgetPlaylists } from "$lib/server/services/admin/contenu.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
+import { escapeIlike } from "#lib/shared/zikle/shared.js";
+import { forgetPlaylists } from "#lib/server/services/admin/contenu.js";
 
 const SORTS = {
   tracks: ["track_count", false],

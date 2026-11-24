@@ -1,6 +1,6 @@
 <script>
-  import Modal from '$lib/components/ui/Modal.svelte';
-  import Card from '$lib/components/card/Card.svelte';
+  import Modal from '#lib/components/ui/Modal.svelte';
+  import Card from '#lib/components/card/Card.svelte';
 
   // Départ en pleine partie : on dit ce que deviennent les cartes du joueur
   //   lose : cartes en jeu, pas encore sécurisées (perdues en partant)

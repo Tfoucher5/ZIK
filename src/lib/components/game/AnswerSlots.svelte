@@ -1,5 +1,5 @@
 <script>
-  import { isWork } from '$lib/shared/playlist/work.js';
+  import { isWork } from '#lib/shared/playlist/work.js';
 
   // Cases à trouver : l'œuvre d'abord (film, série…), puis artiste, feats,
   // autres réponses, titre

@@ -60,6 +60,7 @@ export function listenRegie(r, socket) {
     if (paused) chrono.stop();
   });
   socket.on("salon_game_starting", () => {
+    r.short = null;
     r.phase = "starting";
     r.history = [];
   });
@@ -91,6 +92,7 @@ export function listenRegie(r, socket) {
     r.videoOutage = null;
     r.phase = "round";
     r.round = d.round;
+    if (d.total) r.settings = { ...r.settings, rounds: d.total };
     r.track = d.hostInfo;
     r.timerOn = false;
     r.timerVal = 0;
@@ -126,7 +128,12 @@ export function listenRegie(r, socket) {
     r.applyScores(scores);
     if (teams) r.teams = teams;
   });
+  socket.on("salon_short", ({ rounds }) => {
+    r.settings = { ...r.settings, rounds };
+    r.short = rounds;
+  });
   socket.on("salon_round_end", (d) => {
+    r.short = null;
     r.phase = "summary";
     r.timerOn = false;
     r.teams = d.teams;
@@ -139,6 +146,7 @@ export function listenRegie(r, socket) {
     );
   });
   socket.on("salon_game_over", (d) => {
+    r.short = null;
     r.phase = "gameover";
     r.teams = d.teams;
     r.night = d.night;
@@ -149,6 +157,7 @@ export function listenRegie(r, socket) {
   });
   // Le serveur enchaîne toujours sur le lancement (décompte ou non)
   socket.on("salon_restarted", ({ players }) => {
+    r.short = null;
     r.mergeRoster(players);
     r.history = [];
     r.phase = "starting";

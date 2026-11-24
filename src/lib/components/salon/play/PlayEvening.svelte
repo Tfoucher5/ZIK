@@ -1,5 +1,5 @@
 <script>
-  import { FINALE_WINNER_MS } from '$lib/data/salonOptions.js';
+  import { FINALE_WINNER_MS } from '#lib/data/salonOptions.js';
   import PlayTop from './PlayTop.svelte';
 
   /** Téléphone pendant l'entracte ou le podium de la soirée. */

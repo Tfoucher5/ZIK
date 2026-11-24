@@ -1,9 +1,9 @@
 <script>
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { toast } from '$lib/client/toast.svelte.js';
-  import { push, enablePush, disablePush } from '$lib/client/push.svelte.js';
-  import { notifPrefs, NOTIF_CATEGORIES } from '$lib/components/notify/notifPrefs.svelte.js';
+  import { toast } from '#lib/client/toast.svelte.js';
+  import { push, enablePush, disablePush } from '#lib/client/push.svelte.js';
+  import { notifPrefs, NOTIF_CATEGORIES } from '#lib/components/notify/notifPrefs.svelte.js';
 
   /** Réglages des notifications : cet appareil, puis chaque catégorie dans un menu dépliant. */
   let { getToken } = $props();

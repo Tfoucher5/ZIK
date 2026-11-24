@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { createClient } from '@supabase/supabase-js';
-  import AdminNav from '$lib/components/admin/AdminNav.svelte';
+  import AdminNav from '#lib/components/admin/AdminNav.svelte';
 
   let { data, children } = $props();
 

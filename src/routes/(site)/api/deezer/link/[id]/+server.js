@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { checkRateLimit } from "$lib/server/middleware/auth.js";
+import { checkRateLimit } from "#lib/server/middleware/auth.js";
 
 // Lien court link.deezer.com/s/<id> -> lien deezer.com qu'il redirige
 export async function GET({ request, params }) {

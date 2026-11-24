@@ -1,7 +1,7 @@
 <script>
   import { tick, untrack } from 'svelte';
   import { enhance } from '$app/forms';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
   import { clock, since } from './since.js';
 
   /** Chat en direct avec l'organisateur du salon, rafraîchi toutes les 2 s. */

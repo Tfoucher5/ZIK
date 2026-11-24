@@ -1,5 +1,5 @@
 <script module>
-  import { seg, stage } from '$lib/components/soiree/soireePins.js';
+  import { seg, stage } from '#lib/components/soiree/soireePins.js';
 
   // Points de chaque partie, cumulés partie après partie (93 = total du vainqueur)
   const G = [['Léa', [34, 28, 31]], ['Karim', [30, 33, 25]], ['Zoé', [27, 22, 30]], ['Hugo', [20, 25, 21]]];
@@ -23,9 +23,9 @@
 </script>
 
 <script>
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import Qr from '$lib/components/soiree/Qr.svelte';
-  import { PINS } from '$lib/components/soiree/soireeBeats.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import Qr from '#lib/components/soiree/Qr.svelte';
+  import { PINS } from '#lib/components/soiree/soireeBeats.js';
 
   const ETAPES = ['Partie 1', 'Entracte', 'Partie 2', 'Partie 3'];
 

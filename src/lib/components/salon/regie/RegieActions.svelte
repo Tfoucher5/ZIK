@@ -7,12 +7,13 @@
    * @type {{
    *   phase: string, paused: boolean, pro: boolean, joueurs: number, countStart?: boolean,
    *   buzzer?: { username: string }|null, note?: string, attente?: number,
+   *   court?: number|null, short?: number|null,
    *   onAction: (evenement: string) => void,
    *   onGate: (feature: string, fn: () => void) => void,
    *   onJudge: (correct: boolean) => void,
    * }}
    */
-  let { phase, paused, pro, joueurs, countStart = true, buzzer = null, note = '', attente = 0, onAction, onGate, onJudge } = $props();
+  let { phase, paused, pro, joueurs, countStart = true, buzzer = null, note = '', attente = 0, court = null, short = null, onAction, onGate, onJudge } = $props();
 
   let menuOuvert = $state(false);
   let confirmeFin = $state(false);
@@ -35,11 +36,14 @@
       {joueurs ? 'Lancer la partie' : 'En attente de joueurs'}
     </button>
     {#if joueurs && attente}<p>Tu peux lancer à {joueurs} : ceux qui attendent entrent si une place se libère.</p>
+    {:else if court}<p><b class="ra-court">{court} manche{court > 1 ? 's' : ''} seulement :</b> ta sélection n'a que {court} titre{court > 1 ? 's' : ''}.</p>
     {:else if joueurs && countStart}<p>La TV lance un décompte de 5 secondes.</p>{/if}
   </footer>
 {:else}
   <footer class="rg-bar jeu">
-    <p>{note}</p>
+    <!-- Visible aussi sur une régie téléphone, où la note est masquée -->
+    {#if short}<div class="ra-short" role="status"><b class="ra-court">Un titre ne passe pas</b> et il n'y a plus de titre en réserve : la partie fera {short} manche{short > 1 ? 's' : ''}.</div>
+    {:else}<p>{note}</p>{/if}
     <div class="ra-acts">
       {#if buzzer && phase === 'round'}
         <button class="rg-btn on" onclick={() => onJudge(true)}>Bonne réponse</button>
@@ -75,6 +79,8 @@
 {/if}
 
 <style>
+  .ra-court { color: var(--warn); }
+  .ra-short { font-size: 0.94rem; line-height: 1.4; }
   .jeu > p { display: none; }
 
   .ra-acts { display: grid; grid-template-columns: 1fr 1fr 60px; gap: 8px; }

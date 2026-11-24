@@ -32,6 +32,19 @@ const salon = (choix) => ({
   },
 });
 
+describe("reprise d'un téléphone : réglages", () => {
+  it("le nom de la soirée revient avec les réglages, pour la story", () => {
+    const s = salon(null);
+    s.settings.title = "Quiz du jeudi";
+    expect(reconnectView(s, s.players.Bob).settings).toEqual({
+      answerMode: "multiple",
+      maxRounds: 5,
+      rounds: 2,
+      title: "Quiz du jeudi",
+    });
+  });
+});
+
 describe("reprise d'un téléphone en QCM", () => {
   it("renvoie le choix enregistré par le serveur pour la manche", () => {
     const s = salon(2);

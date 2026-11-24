@@ -31,7 +31,6 @@ export default {
   plugins: [
     sveltekit({
       adapter: withMinifiedCss(adapter({ out: "build" })),
-      alias: { $lib: "src/lib" },
     }),
     webSocketServer,
   ],

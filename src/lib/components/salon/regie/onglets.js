@@ -72,14 +72,17 @@ export function etatManche(e) {
   };
 }
 
-/** Résumé de chaque ligne des Réglages, comme à la création. */
-export function resumeReglages(settings, playlistNames) {
+/** Résumé de chaque ligne des Réglages, comme à la création. `t` : manches
+ * jouables quand la sélection a moins de titres que de manches choisies. */
+export function resumeReglages(settings, playlistNames, t = null) {
   const teams = settings.teams ?? [];
   const noms = teams.map((t) => t.name);
   return {
     musique: playlistNames.join(", ") || "Sélection en cours",
     manches: [
-      `${settings.maxRounds} manches`,
+      t != null && t < settings.maxRounds
+        ? `${t} manche${t > 1 ? "s" : ""} (${t} titre${t > 1 ? "s" : ""})`
+        : `${settings.maxRounds} manches`,
       `${settings.roundDuration} s`,
       settings.manualNext ? "suite quand tu cliques" : "suite automatique",
     ].join(" · "),

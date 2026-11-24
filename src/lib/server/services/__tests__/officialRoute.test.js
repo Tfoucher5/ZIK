@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => ({ user: null }));
-vi.mock("$lib/server/config.js", async () => {
+vi.mock("#lib/server/config.js", async () => {
   const { fakeClients } = await import("./fakeQuery.js");
   return fakeClients(h);
 });
-vi.mock("$lib/server/middleware/auth.js", () => ({
+vi.mock("#lib/server/middleware/auth.js", () => ({
   verifyToken: async () => h.user,
 }));
 

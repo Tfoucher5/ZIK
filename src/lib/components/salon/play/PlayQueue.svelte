@@ -1,5 +1,5 @@
 <script>
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS } from '#lib/data/proPlans.js';
   import { quitQueue } from './playerJoin.js';
   /** Soirée complète : le téléphone attend à l'entrée et entre seul dès qu'une place se libère. Aucun rang, aucun prix. */
   let { p } = $props();

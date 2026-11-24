@@ -1,5 +1,5 @@
 <script>
-  import Card from '$lib/components/card/Card.svelte';
+  import Card from '#lib/components/card/Card.svelte';
 
   /** Éventail de cartes : la plus rare au centre, devant. */
   let { cards } = $props();

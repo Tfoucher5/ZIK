@@ -1,6 +1,6 @@
 # Playlist trop courte : les manches suivent les titres — fiche de cadrage
 
-Statut : **à valider par Théo** (porte concept : ça se voit sur la création, la régie et le compteur TV).
+Statut : **validée par Théo le 24/11** (porte concept : ça se voit sur la création, la régie et le compteur TV).
 
 Maquette (hors dépôt) : `C:\Users\Teamr\AppData\Local\Temp\claude\c23315e6417d4b11\4bf816a1-7c19-48ef-b732-f7835b9c5024\scratchpad\maquette-playlist\index.html`, captures `capture-390.png` et `capture-1440.png` dans le même dossier. Cinq écrans : création, régie avant la partie, régie Réglages, régie en partie, TV.
 

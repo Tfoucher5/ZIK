@@ -1,6 +1,6 @@
 <!-- En bas : ZIK Soirée, et ses chiffres lus dans l'offre -->
 <script>
-  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS, PLANS, TESTED_PLAYERS } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS, PLANS, TESTED_PLAYERS } from '#lib/data/proPlans.js';
 
   const SOIREE = PLANS.find((p) => p.id === 'night').price.replace(' ', ' ');
 </script>

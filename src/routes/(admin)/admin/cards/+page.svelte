@@ -1,15 +1,15 @@
 <script>
   import { enhance } from '$app/forms';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import CardsTodo from '$lib/components/admin/cards/CardsTodo.svelte';
-  import CardsGrants from '$lib/components/admin/cards/CardsGrants.svelte';
-  import CardsRarities from '$lib/components/admin/cards/CardsRarities.svelte';
-  import CardsSearch from '$lib/components/admin/cards/CardsSearch.svelte';
-  import CardsWatch from '$lib/components/admin/cards/CardsWatch.svelte';
-  import CardDetail from '$lib/components/admin/cards/CardDetail.svelte';
-  import CorrectCardForm from '$lib/components/admin/cards/CorrectCardForm.svelte';
-  import { CardsAdmin, nf } from '$lib/components/admin/cards/cardsAdmin.svelte.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import CardsTodo from '#lib/components/admin/cards/CardsTodo.svelte';
+  import CardsGrants from '#lib/components/admin/cards/CardsGrants.svelte';
+  import CardsRarities from '#lib/components/admin/cards/CardsRarities.svelte';
+  import CardsSearch from '#lib/components/admin/cards/CardsSearch.svelte';
+  import CardsWatch from '#lib/components/admin/cards/CardsWatch.svelte';
+  import CardDetail from '#lib/components/admin/cards/CardDetail.svelte';
+  import CorrectCardForm from '#lib/components/admin/cards/CorrectCardForm.svelte';
+  import { CardsAdmin, nf } from '#lib/components/admin/cards/cardsAdmin.svelte.js';
 
   let { data, form } = $props();
 

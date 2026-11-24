@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import { pct } from '$lib/shared/admin/stats-utils.js';
+  import { pct } from '#lib/shared/admin/stats-utils.js';
   import { nf, plural } from './cardsAdmin.svelte.js';
 
   /** Duos de joueurs à surveiller et contrôle du catalogue de cartes. */

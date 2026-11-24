@@ -1,6 +1,6 @@
 import { error, json } from "@sveltejs/kit";
-import { verifyToken, logAdminAction } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js"; // pour vérifier le rôle
+import { verifyToken, logAdminAction } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js"; // pour vérifier le rôle
 import {
   adminPauseRoom,
   adminResumeRoom,
@@ -12,7 +12,7 @@ import {
   adminAnnounce,
   adminCloseRoom,
   adminSendChat,
-} from "$lib/server/socket/game/index.js";
+} from "#lib/server/socket/game/index.js";
 
 const ALLOWED_ACTIONS = [
   "pause",

@@ -1,17 +1,17 @@
 import { json } from "@sveltejs/kit";
-import { getStripe } from "$lib/server/stripe.js";
+import { getStripe } from "#lib/server/stripe.js";
 import {
   getProRow,
   isProActive,
   activateNight,
   syncSubscription,
-} from "$lib/server/services/pro.js";
-import { sendMail, ADMIN_EMAIL } from "$lib/server/mail/send.js";
-import { proWelcome, proSaleAlert } from "$lib/server/mail/proPurchase.js";
-import { alertAdminsSafe } from "$lib/server/services/admin/alerts.js";
-import { PLAN_LABELS } from "$lib/shared/admin/players.js";
-import { noteEvent } from "$lib/server/services/health/opsEvents.js";
-import { proForHost } from "$lib/server/socket/salon/pro.js";
+} from "#lib/server/services/pro.js";
+import { sendMail, ADMIN_EMAIL } from "#lib/server/mail/send.js";
+import { proWelcome, proSaleAlert } from "#lib/server/mail/proPurchase.js";
+import { alertAdminsSafe } from "#lib/server/services/admin/alerts.js";
+import { PLAN_LABELS } from "#lib/shared/admin/players.js";
+import { noteEvent } from "#lib/server/services/health/opsEvents.js";
+import { proForHost } from "#lib/server/socket/salon/pro.js";
 
 // Salons en cours de l'acheteur, seulement si l'accès est vraiment ouvert en
 // base ; une panne côté salon ne fait jamais échouer le webhook

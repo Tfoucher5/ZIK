@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import ProspectReply from '$lib/components/admin/prospection/ProspectReply.svelte';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import ProspectReply from '#lib/components/admin/prospection/ProspectReply.svelte';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');

@@ -1,23 +1,29 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
-  import { onMount, onDestroy } from 'svelte';
-  import JoinForm from '$lib/components/salon/play/JoinForm.svelte';
-  import RoundPlay from '$lib/components/salon/play/RoundPlay.svelte';
-  import SummaryView from '$lib/components/salon/play/SummaryView.svelte';
-  import FeedbackOverlay from '$lib/components/salon/play/FeedbackOverlay.svelte';
-  import PlayLobby from '$lib/components/salon/play/PlayLobby.svelte';
-  import PlayBoard from '$lib/components/salon/play/PlayBoard.svelte';
-  import PlayEvening from '$lib/components/salon/play/PlayEvening.svelte';
-  import PlayGameOver from '$lib/components/salon/play/PlayGameOver.svelte';
-  import PlayQueue from '$lib/components/salon/play/PlayQueue.svelte';
-  import NoticeBanner from '$lib/components/ui/NoticeBanner.svelte';
-  import BigCountdown from '$lib/components/salon/BigCountdown.svelte';
-  import { SalonPlayer } from '$lib/components/salon/play/salonPlayer.svelte.js';
-  import { takeAutoResume } from '$lib/components/salon/play/resume.js';
-  import { createSupabaseClient } from '$lib/client/supabase.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
+  import { onMount, onDestroy, untrack } from 'svelte';
+  import JoinForm from '#lib/components/salon/play/JoinForm.svelte';
+  import RoundPlay from '#lib/components/salon/play/RoundPlay.svelte';
+  import SummaryView from '#lib/components/salon/play/SummaryView.svelte';
+  import FeedbackOverlay from '#lib/components/salon/play/FeedbackOverlay.svelte';
+  import PlayLobby from '#lib/components/salon/play/PlayLobby.svelte';
+  import PlayBoard from '#lib/components/salon/play/PlayBoard.svelte';
+  import PlayEvening from '#lib/components/salon/play/PlayEvening.svelte';
+  import PlayGameOver from '#lib/components/salon/play/PlayGameOver.svelte';
+  import PlayQueue from '#lib/components/salon/play/PlayQueue.svelte';
+  import NoticeBanner from '#lib/components/ui/NoticeBanner.svelte';
+  import BigCountdown from '#lib/components/salon/BigCountdown.svelte';
+  import { SalonPlayer } from '#lib/components/salon/play/salonPlayer.svelte.js';
+  import { takeAutoResume } from '#lib/components/salon/play/resume.js';
+  import { goto } from '$app/navigation';
+  import { createSupabaseClient } from '#lib/client/supabase.js';
 
   let { data } = $props();
   const p = new SalonPlayer(createSupabaseClient(data.env.supabaseUrl, data.env.supabaseAnonKey));
+  // Premier rendu serveur : tuiles du QR, et « Connexion… » si le formulaire est déjà parti
+  const { code, pseudo } = untrack(() => data.join);
+  p.codeInput = code;
+  p.usernameInput = pseudo;
+  p.joining = !!pseudo;
 
   function hue(name) {
     let h = 0;
@@ -25,18 +31,18 @@
     return h;
   }
 
-  let codeKnown = $state(false);
+  const codeKnown = /^[A-Z0-9]{6}$/.test(code);
   const lobby = $derived(p.phase === 'lobby' || p.phase === 'starting');
   // Décompte reçu après une partie : on rejoue avec les mêmes joueurs
   const replay = $derived(p.phase === 'gameover' || p.phase === 'summary');
 
   onMount(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code')?.toUpperCase() || '';
     p.checkResume(code);
-    if (p.resume && takeAutoResume(p.resume.code)) p.connectAndJoin();
-    codeKnown = /^[A-Z0-9]{6}$/.test(code);
-    if (code) document.getElementById('sp-username')?.focus();
+    if (pseudo) {
+      goto(code ? `?code=${code}` : '?', { state: {}, shallow: true, replace: true }).catch(() => {});
+      p.joinPending(pseudo);
+    } else if (p.resume && takeAutoResume(p.resume.code)) p.connectAndJoin();
+    else if (code) document.getElementById('sp-username')?.focus();
   });
 
   onDestroy(() => p.destroy());

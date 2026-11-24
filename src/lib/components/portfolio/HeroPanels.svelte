@@ -1,5 +1,5 @@
 <script>
-    import { metrics } from '$lib/data/portfolio.js';
+    import { metrics } from '#lib/data/portfolio.js';
 
     let countersStarted = false;
     let displayValues = $state(metrics.map(() => 0));

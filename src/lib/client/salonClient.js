@@ -84,6 +84,8 @@ export function setupFor(saved, pro, defaults) {
   const s = { ...defaults, ...saved };
   for (const [key, values] of Object.entries(ALLOWED))
     if (!values.includes(s[key])) s[key] = defaults[key];
+  if (typeof s.title !== "string" || s.title.length > 30)
+    s.title = defaults.title;
   if (!pro) {
     if (s.answerMode === "buzzer") s.answerMode = defaults.answerMode;
     s.specials = defaults.specials;

@@ -1,5 +1,5 @@
 <script>
-  import { PLANS, PRO_FEATURES, PRO_COMING } from '$lib/data/proPlans.js';
+  import { PLANS, PRO_FEATURES, PRO_COMING } from '#lib/data/proPlans.js';
 
   // `code` : ouvert depuis une régie, /pro reconnaît la soirée. Rien n'y est promis qui n'existe pas encore.
   let { feature = null, code = '', onClose } = $props();

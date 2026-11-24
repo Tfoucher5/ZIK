@@ -1,4 +1,4 @@
-import { supabase } from "$lib/server/config.js";
+import { supabase } from "#lib/server/config.js";
 
 export async function load() {
   const { data: eloTop20 } = await supabase

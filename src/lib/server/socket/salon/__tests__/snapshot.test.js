@@ -71,6 +71,8 @@ describe("instantané d'un salon", () => {
     expect(data.game._break).toBeUndefined();
     expect(data.players.Ana._dcTimer).toBeUndefined();
     expect(data.banned).toEqual(["troll", "jeton-banni"]);
+    // Nom de la soirée : revient avec les réglages après un redémarrage
+    expect(data.settings.title).toBe("Quiz du jeudi");
     expect(Object.values(data.departed)[0]).toMatchObject({
       username: "Zoe",
       score: 80,
@@ -175,6 +177,7 @@ describe("instantané d'un salon", () => {
     const salon = salonEnManche();
     const revu = reviveSalon(viaBase(salon), null);
     nettoie(salon);
+    expect(revu.settings.title).toBe("Quiz du jeudi");
     const g = revu.game;
     expect(g.fullPlaylist.map((t) => t.id).sort()).toEqual([
       "t0",

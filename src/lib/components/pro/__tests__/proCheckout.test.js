@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const goToStripe = vi.hoisted(() => vi.fn());
 const attachSalonTo = vi.hoisted(() => vi.fn());
-vi.mock("$lib/client/salonClient.js", async (orig) => ({
+vi.mock("#lib/client/salonClient.js", async (orig) => ({
   ...(await orig()),
   goToStripe,
   attachSalonTo,

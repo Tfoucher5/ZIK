@@ -1,9 +1,9 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import { goto } from '$app/navigation';
-  import AuthField from '$lib/components/auth/AuthField.svelte';
-  import AuthAlert from '$lib/components/auth/AuthAlert.svelte';
-  import AuthButton from '$lib/components/auth/AuthButton.svelte';
+  import AuthField from '#lib/components/auth/AuthField.svelte';
+  import AuthAlert from '#lib/components/auth/AuthAlert.svelte';
+  import AuthButton from '#lib/components/auth/AuthButton.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;

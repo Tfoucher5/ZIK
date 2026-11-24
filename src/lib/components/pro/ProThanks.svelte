@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import { fetchPro, proActive } from '$lib/client/salonClient.js';
+  import { fetchPro, proActive } from '#lib/client/salonClient.js';
   import { thanksPhase, STATUS, planLabel, endTitle, REGIE, regieLine } from './thanks.js';
   import { thanksRegie, forgetIntent, backToRegie } from './intent.js';
 

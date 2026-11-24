@@ -1,7 +1,7 @@
 <script>
-  import Modal from '$lib/components/ui/Modal.svelte';
-  import { toast } from '$lib/client/toast.svelte.js';
-  import { fuzzyFilter } from '$lib/shared/fuzzy.js';
+  import Modal from '#lib/components/ui/Modal.svelte';
+  import { toast } from '#lib/client/toast.svelte.js';
+  import { fuzzyFilter } from '#lib/shared/fuzzy.js';
 
   let { open = false, onClose = () => {}, sb, viewerId = null, targetId, targetName = '' } = $props();
 

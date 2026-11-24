@@ -1,11 +1,11 @@
 <script>
   import { getContext } from 'svelte';
-  import { dicebear } from '$lib/shared/utils.js';
-  import { RARITIES } from '$lib/components/card/rarity.js';
-  import { notifState, markAllRead, dismissNotif } from '$lib/client/notifications.svelte.js';
-  import { push, enablePush } from '$lib/client/push.svelte.js';
-  import { toast } from '$lib/client/toast.svelte.js';
-  import { sendFriend } from '$lib/components/player/social.js';
+  import { dicebear } from '#lib/shared/utils.js';
+  import { RARITIES } from '#lib/components/card/rarity.js';
+  import { notifState, markAllRead, dismissNotif } from '#lib/client/notifications.svelte.js';
+  import { push, enablePush } from '#lib/client/push.svelte.js';
+  import { toast } from '#lib/client/toast.svelte.js';
+  import { sendFriend } from '#lib/components/player/social.js';
 
   const ctx = getContext('zik');
   const sb = ctx.sb;

@@ -14,7 +14,12 @@ import { nameTaken } from "./departed.js";
 import { reconnectView } from "./phoneView.js";
 import { restoreSalon, resumeAfterRestart } from "./snapshot.js";
 import { currentTrackInfo, resumeMedia } from "./tracks.js";
-import { announceNextVideo, prepareSession } from "./session.js";
+import {
+  announceNextVideo,
+  prepareSession,
+  roundsTotal,
+  settingsView,
+} from "./session.js";
 import { supportView } from "./support.js";
 import { eveningView } from "./evening.js";
 import { note } from "./journal.js";
@@ -72,7 +77,7 @@ export function registerJoin(socket, io) {
 
     socket.emit("salon_host_joined", {
       pro: salon.pro,
-      settings: salon.settings,
+      settings: settingsView(salon),
       players: getPlayerList(salon),
       teams: standings(salon),
       night: nightView(salon),
@@ -124,7 +129,7 @@ export function registerJoin(socket, io) {
     const game = salon.game;
     socket.emit("salon_control_joined", {
       pro: salon.pro,
-      settings: salon.settings,
+      settings: settingsView(salon),
       players: getPlayerList(salon),
       teams: standings(salon),
       night: nightView(salon),
@@ -274,6 +279,8 @@ export function joinPlayer(
     settings: {
       answerMode: salon.settings.answerMode,
       maxRounds: salon.settings.maxRounds,
+      title: salon.settings.title,
+      rounds: roundsTotal(salon),
     },
     team: player.team,
     ...phoneLists(salon, username),

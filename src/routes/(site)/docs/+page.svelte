@@ -1,23 +1,23 @@
 <script>
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import DocSidebar from '$lib/components/docs/DocSidebar.svelte';
-  import DocHeader from '$lib/components/docs/DocHeader.svelte';
-  import DecouverteSection from '$lib/components/docs/DecouverteSection.svelte';
-  import RejoindreSection from '$lib/components/docs/RejoindreSection.svelte';
-  import JouerSection from '$lib/components/docs/JouerSection.svelte';
-  import PointsSection from '$lib/components/docs/PointsSection.svelte';
-  import ZikleSection from '$lib/components/docs/ZikleSection.svelte';
-  import SalonSection from '$lib/components/docs/SalonSection.svelte';
-  import QcmSection from '$lib/components/docs/QcmSection.svelte';
-  import PlaylistsSection from '$lib/components/docs/PlaylistsSection.svelte';
-  import RoomsSection from '$lib/components/docs/RoomsSection.svelte';
-  import CompteSection from '$lib/components/docs/CompteSection.svelte';
-  import SuccesSection from '$lib/components/docs/SuccesSection.svelte';
-  import CartesSection from '$lib/components/docs/CartesSection.svelte';
-  import AmisSection from '$lib/components/docs/AmisSection.svelte';
-  import ClassementSection from '$lib/components/docs/ClassementSection.svelte';
-  import FaqSection from '$lib/components/docs/FaqSection.svelte';
-  import { jsonLdPage, jsonLdFaq } from '$lib/components/docs/jsonld.js';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import DocSidebar from '#lib/components/docs/DocSidebar.svelte';
+  import DocHeader from '#lib/components/docs/DocHeader.svelte';
+  import DecouverteSection from '#lib/components/docs/DecouverteSection.svelte';
+  import RejoindreSection from '#lib/components/docs/RejoindreSection.svelte';
+  import JouerSection from '#lib/components/docs/JouerSection.svelte';
+  import PointsSection from '#lib/components/docs/PointsSection.svelte';
+  import ZikleSection from '#lib/components/docs/ZikleSection.svelte';
+  import SalonSection from '#lib/components/docs/SalonSection.svelte';
+  import QcmSection from '#lib/components/docs/QcmSection.svelte';
+  import PlaylistsSection from '#lib/components/docs/PlaylistsSection.svelte';
+  import RoomsSection from '#lib/components/docs/RoomsSection.svelte';
+  import CompteSection from '#lib/components/docs/CompteSection.svelte';
+  import SuccesSection from '#lib/components/docs/SuccesSection.svelte';
+  import CartesSection from '#lib/components/docs/CartesSection.svelte';
+  import AmisSection from '#lib/components/docs/AmisSection.svelte';
+  import ClassementSection from '#lib/components/docs/ClassementSection.svelte';
+  import FaqSection from '#lib/components/docs/FaqSection.svelte';
+  import { jsonLdPage, jsonLdFaq } from '#lib/components/docs/jsonld.js';
 </script>
 
 <svelte:head>

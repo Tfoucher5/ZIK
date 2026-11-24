@@ -1,18 +1,18 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
-import { getAdminClient } from "$lib/server/config.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
+} from "#lib/server/middleware/adminActions.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
 import {
   auditCatalog,
   correctCard,
   deleteCards,
   revokeGrants,
-} from "$lib/server/services/cards/admin.js";
-import { cardsAdminBoard } from "$lib/server/services/cards/adminBoard.js";
-import { RARITY_ORDER } from "$lib/components/card/rarity.js";
-import { GRANT_STATUSES } from "$lib/shared/admin/cartes.js";
+} from "#lib/server/services/cards/admin.js";
+import { cardsAdminBoard } from "#lib/server/services/cards/adminBoard.js";
+import { RARITY_ORDER } from "#lib/components/card/rarity.js";
+import { GRANT_STATUSES } from "#lib/shared/admin/cartes.js";
 
 const STATUSES = Object.keys(GRANT_STATUSES);
 

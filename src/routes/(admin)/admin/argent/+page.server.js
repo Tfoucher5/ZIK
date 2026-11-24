@@ -1,17 +1,17 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
-import { getAdminClient } from "$lib/server/config.js";
-import { getStripe } from "$lib/server/stripe.js";
+} from "#lib/server/middleware/adminActions.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { getStripe } from "#lib/server/stripe.js";
 import { fail } from "@sveltejs/kit";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
 import {
   campaign,
   proMailingStatus,
   sendProMailing,
   sendProMailingTest,
-} from "$lib/server/services/admin/proMailing.js";
+} from "#lib/server/services/admin/proMailing.js";
 
 const TTL = 5 * 60_000;
 let cache = null;

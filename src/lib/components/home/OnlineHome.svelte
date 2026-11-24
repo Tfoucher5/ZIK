@@ -1,6 +1,6 @@
 <script>
   import { onMount, untrack } from 'svelte';
-  import GuestModal from '$lib/components/auth/GuestModal.svelte';
+  import GuestModal from '#lib/components/auth/GuestModal.svelte';
   import HeroSection from './HeroSection.svelte';
   import TodayStrip from './TodayStrip.svelte';
   import RoomsWall from './RoomsWall.svelte';

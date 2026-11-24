@@ -1,7 +1,7 @@
 <script>
   import { enhance } from '$app/forms';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { SIGNAL_REASONS, signalDetail } from '$lib/shared/admin/cartes.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { SIGNAL_REASONS, signalDetail } from '#lib/shared/admin/cartes.js';
 
   /** Cartes signalées par les joueurs et gains suspects, à traiter. */
   let { c, reports, signals, todo } = $props();

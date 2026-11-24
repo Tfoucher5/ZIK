@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
-import { supabase, getAdminClient } from "$lib/server/config.js";
-import { verifyToken } from "$lib/server/middleware/auth.js";
-import { playlistCache } from "$lib/server/state.js";
+import { supabase, getAdminClient } from "#lib/server/config.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
+import { playlistCache } from "#lib/server/state.js";
 
 export async function POST({ params, request }) {
   const token = request.headers.get("authorization")?.slice(7);

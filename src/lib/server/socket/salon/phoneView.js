@@ -5,6 +5,7 @@
 
 import { phoneLists, staff } from "./players.js";
 import { timerClock } from "./timers.js";
+import { roundsTotal } from "./session.js";
 
 const RECENT = 30;
 
@@ -118,6 +119,8 @@ export function reconnectView(salon, player) {
     settings: {
       answerMode: salon.settings.answerMode,
       maxRounds: salon.settings.maxRounds,
+      title: salon.settings.title,
+      rounds: roundsTotal(salon),
     },
     phase: salon.game.phase,
     paused: salon.game.paused,

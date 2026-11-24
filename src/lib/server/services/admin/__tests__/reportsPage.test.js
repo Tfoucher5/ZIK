@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const h = vi.hoisted(() => ({ rooms: {} }));
-vi.mock("$lib/server/config.js", async () => {
+vi.mock("#lib/server/config.js", async () => {
   const { fakeClients } = await import("../../__tests__/fakeQuery.js");
   return fakeClients(h);
 });
-vi.mock("$lib/server/middleware/auth.js", () => ({
+vi.mock("#lib/server/middleware/auth.js", () => ({
   logAdminAction: vi.fn(),
 }));
-vi.mock("$lib/server/state.js", () => ({ salonRooms: h.rooms }));
+vi.mock("#lib/server/state.js", () => ({ salonRooms: h.rooms }));
 
 const page =
   await import("../../../../../routes/(admin)/admin/reports/+page.server.js");

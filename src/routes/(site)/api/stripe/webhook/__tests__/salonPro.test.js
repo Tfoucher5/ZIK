@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 // Stripe, base et mails simulés : rien ne sort
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
     schema: () => ({ rpc: async () => ({ data: null, error: null }) }),
   }),
 }));
-vi.mock("$lib/server/stripe.js", () => ({
+vi.mock("#lib/server/stripe.js", () => ({
   getStripe: () => ({
     webhooks: { constructEvent: (body) => JSON.parse(body) },
     subscriptions: { retrieve: async (id) => ({ id }) },
@@ -19,21 +19,21 @@ const pro = vi.hoisted(() => ({
   syncSubscription: vi.fn(),
   isPro: vi.fn(),
 }));
-vi.mock("$lib/server/services/pro.js", async (orig) => ({
+vi.mock("#lib/server/services/pro.js", async (orig) => ({
   ...(await orig()),
   ...pro,
 }));
-vi.mock("$lib/server/mail/send.js", () => ({
+vi.mock("#lib/server/mail/send.js", () => ({
   sendMail: vi.fn(async () => {}),
   ADMIN_EMAIL: "admin@test",
 }));
-vi.mock("$lib/server/services/admin/alerts.js", () => ({
+vi.mock("#lib/server/services/admin/alerts.js", () => ({
   alertAdminsSafe: vi.fn(),
 }));
 
 const { POST } = await import("../+server.js");
-const { salonRooms, setIO } = await import("$lib/server/state.js");
-const { sendMail } = await import("$lib/server/mail/send.js");
+const { salonRooms, setIO } = await import("#lib/server/state.js");
+const { sendMail } = await import("#lib/server/mail/send.js");
 
 const ACTIF = { status: "active", current_period_end: "2099-01-01T00:00:00Z" };
 

@@ -1,5 +1,5 @@
 <script>
-  import { PRIX_SOIREE } from '$lib/data/proPlans.js';
+  import { PRIX_SOIREE } from '#lib/data/proPlans.js';
 
   const ITEMS = [
     {

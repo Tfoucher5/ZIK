@@ -7,15 +7,15 @@ const h = vi.hoisted(() => ({
   suggest: vi.fn(),
   forget: vi.fn(),
 }));
-vi.mock("$lib/server/config.js", () => ({ getAdminClient: () => ({}) }));
-vi.mock("$lib/server/middleware/auth.js", () => ({
+vi.mock("#lib/server/config.js", () => ({ getAdminClient: () => ({}) }));
+vi.mock("#lib/server/middleware/auth.js", () => ({
   requireAuth: async () => ({ user: h.user }),
   checkRateLimit: () => {},
 }));
-vi.mock("$lib/server/services/admin/contenu.js", () => ({
+vi.mock("#lib/server/services/admin/contenu.js", () => ({
   forgetPlaylists: h.forget,
 }));
-vi.mock("$lib/server/services/music/workSuggest.js", () => ({
+vi.mock("#lib/server/services/music/workSuggest.js", () => ({
   canEditPlaylist: async () => h.can,
   saveWorks: h.save,
   suggestWorks: h.suggest,

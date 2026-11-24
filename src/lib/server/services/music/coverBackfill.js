@@ -1,4 +1,4 @@
-import { getAdminClient } from "$lib/server/config.js";
+import { getAdminClient } from "#lib/server/config.js";
 import { getSpotifyToken } from "./spotify.js";
 import { deezerFetch } from "./deezerClient.js";
 

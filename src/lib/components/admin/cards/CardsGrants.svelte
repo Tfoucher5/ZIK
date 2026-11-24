@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/state';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { GRANT_STATUSES, seconds } from '$lib/shared/admin/cartes.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { GRANT_STATUSES, seconds } from '#lib/shared/admin/cartes.js';
   import { plural } from './cardsAdmin.svelte.js';
 
   /** Journal des derniers gains de cartes, filtrable par joueur et par statut. */

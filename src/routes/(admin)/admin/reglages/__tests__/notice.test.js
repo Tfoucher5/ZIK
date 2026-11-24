@@ -5,14 +5,14 @@ const m = vi.hoisted(() => ({
   log: vi.fn(),
 }));
 
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));
-vi.mock("$lib/server/services/admin/salonNotice.js", () => ({
+vi.mock("#lib/server/services/admin/salonNotice.js", () => ({
   publishSalonNotice: m.publish,
 }));
-vi.mock("$lib/server/middleware/auth.js", () => ({ logAdminAction: m.log }));
+vi.mock("#lib/server/middleware/auth.js", () => ({ logAdminAction: m.log }));
 
 const { actions } = await import("../+page.server.js");
 

@@ -1,7 +1,7 @@
 <script>
   import DemoRound from './DemoRound.svelte';
   import SalonDemo from './SalonDemo.svelte';
-  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
+  import NotifyPrompt from '#lib/components/notify/NotifyPrompt.svelte';
 
   /** @type {{ tour: import('./tour.svelte.js').Tour, guest: boolean, top: number, left: number, w: number, h: number, onShow: () => void, onQuit: () => void, onCta: (href: string) => void, onSignup: () => void }} */
   let { tour, guest, top, left, w = $bindable(), h = $bindable(), onShow, onQuit, onCta, onSignup } = $props();

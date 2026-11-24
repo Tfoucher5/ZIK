@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { requireAuth } from "$lib/server/middleware/auth.js";
+import { supabase } from "#lib/server/config.js";
+import { requireAuth } from "#lib/server/middleware/auth.js";
 
 export async function GET({ request }) {
   const { user } = await requireAuth(request);

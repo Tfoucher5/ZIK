@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const m = vi.hoisted(() => ({ verify: vi.fn(), deleteUser: vi.fn() }));
 
-vi.mock("$lib/server/middleware/auth.js", () => ({ verifyToken: m.verify }));
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/middleware/auth.js", () => ({ verifyToken: m.verify }));
+vi.mock("#lib/server/config.js", () => ({
   getAdminClient: () => ({ auth: { admin: { deleteUser: m.deleteUser } } }),
 }));
 

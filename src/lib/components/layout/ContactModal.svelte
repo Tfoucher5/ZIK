@@ -1,7 +1,7 @@
 <script>
-  import Modal from '$lib/components/ui/Modal.svelte';
-  import { MIN_REPORT_MESSAGE } from '$lib/shared/reports/bug-report.js';
-  import { collectReportContext } from '$lib/shared/reports/context.js';
+  import Modal from '#lib/components/ui/Modal.svelte';
+  import { MIN_REPORT_MESSAGE } from '#lib/shared/reports/bug-report.js';
+  import { collectReportContext } from '#lib/shared/reports/context.js';
 
   let { open = $bindable(false), userId = null } = $props();
 

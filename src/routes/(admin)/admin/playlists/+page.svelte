@@ -3,13 +3,13 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import PlaylistTile from '$lib/components/admin/playlist/PlaylistTile.svelte';
-  import PlaylistFlags from '$lib/components/admin/playlist/PlaylistFlags.svelte';
-  import PlaylistEditForm from '$lib/components/admin/playlist/PlaylistEditForm.svelte';
-  import TopPlaylists from '$lib/components/admin/playlist/TopPlaylists.svelte';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import PlaylistTile from '#lib/components/admin/playlist/PlaylistTile.svelte';
+  import PlaylistFlags from '#lib/components/admin/playlist/PlaylistFlags.svelte';
+  import PlaylistEditForm from '#lib/components/admin/playlist/PlaylistEditForm.svelte';
+  import TopPlaylists from '#lib/components/admin/playlist/TopPlaylists.svelte';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
 
   let { data, form } = $props();
 

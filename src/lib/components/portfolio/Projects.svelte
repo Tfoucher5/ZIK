@@ -1,6 +1,6 @@
 <script>
     import { reveal } from './reveal.js';
-    import { projects } from '$lib/data/portfolio.js';
+    import { projects } from '#lib/data/portfolio.js';
     import ProjectModal from './ProjectModal.svelte';
     import { tilt } from './tilt.js';
 

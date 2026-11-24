@@ -1,7 +1,7 @@
 <script>
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { ACTION_LABELS } from '$lib/shared/admin/players.js';
-  import { subjectLabel } from '$lib/shared/admin/reports.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { ACTION_LABELS } from '#lib/shared/admin/players.js';
+  import { subjectLabel } from '#lib/shared/admin/reports.js';
   import { BANS, date } from './userAdmin.js';
 
   /** Messages envoyés ou reçus par le joueur et actions de l'admin sur son compte. */

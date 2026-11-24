@@ -3,8 +3,8 @@
    * Commandes de fin de partie quand la TV est seule (aucune régie) : partie suivante,
    * playlist, réglages de la suivante, et fermeture de la soirée après confirmation.
    */
-  import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
-  import { SALON_ROUNDS, SALON_TEAMS } from '$lib/data/salonOptions.js';
+  import { FREE_MAX_TEAMS } from '#lib/data/proPlans.js';
+  import { SALON_ROUNDS, SALON_TEAMS } from '#lib/data/salonOptions.js';
 
   let { h, night = false } = $props();
 

@@ -5,7 +5,7 @@
    * (`calm`, remonté à la page pour cacher le curseur) ; QR, manche, aide et régie restent.
    */
   import { onDestroy } from 'svelte';
-  import { salonPlayUrl } from '$lib/client/salonClient.js';
+  import { salonPlayUrl } from '#lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
   import HostSounds from './HostSounds.svelte';
   import { IDLE_MS, barCalm, calmable, isLive } from './hostCalm.js';

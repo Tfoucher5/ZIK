@@ -1,6 +1,6 @@
 <script>
     import { reveal } from './reveal.js';
-    import { passions } from '$lib/data/portfolio.js';
+    import { passions } from '#lib/data/portfolio.js';
 </script>
 
 <section class="section">

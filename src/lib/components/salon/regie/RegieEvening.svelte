@@ -1,5 +1,5 @@
 <script>
-  import { SALON_INTERMISSIONS } from '$lib/data/salonOptions.js';
+  import { SALON_INTERMISSIONS } from '#lib/data/salonOptions.js';
 
   /**
    * La soirée entre deux parties, en lignes : entracte (rien ne repart tout

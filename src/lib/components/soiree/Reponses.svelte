@@ -1,5 +1,5 @@
 <script module>
-  import { seg, stage, typed } from '$lib/components/soiree/soireePins.js';
+  import { seg, stage, typed } from '#lib/components/soiree/soireePins.js';
 
   export function render(p) {
     const m = stage(p, [0.34, 0.67]);
@@ -27,8 +27,8 @@
 </script>
 
 <script>
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import { PINS } from '$lib/components/soiree/soireeBeats.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import { PINS } from '#lib/components/soiree/soireeBeats.js';
 
   const MODES = ['Texte libre', '4 choix', 'Buzzer'];
   const CHOIX = ['Daft Punk · One More Time', 'Justice · D.A.N.C.E.', 'Cassius · 1999', 'Air · Sexy Boy'];

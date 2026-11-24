@@ -1,23 +1,23 @@
 <script>
-  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
-  import { dicebear } from '$lib/shared/utils.js';
+  import NotifyPrompt from '#lib/components/notify/NotifyPrompt.svelte';
+  import { dicebear } from '#lib/shared/utils.js';
   import {
     fmtScore, fmtSince, pct,
     xpForNextLevel, xpPercent,
     buildCurve, buildItinerary, rangOrdinal, rangDetail,
-  } from '$lib/shared/profile/stats.js';
-  import AchievementsPanel from '$lib/components/achievements/AchievementsPanel.svelte';
-  import InviteModal from '$lib/components/profile/InviteModal.svelte';
-  import ProfileSummary from '$lib/components/profile/ProfileSummary.svelte';
-  import ProfileSection from '$lib/components/profile/ProfileSection.svelte';
-  import SectionHistory from '$lib/components/profile/SectionHistory.svelte';
-  import SectionSoirees from '$lib/components/profile/SectionSoirees.svelte';
-  import SectionFriends from '$lib/components/profile/SectionFriends.svelte';
-  import SectionBestScores from '$lib/components/profile/SectionBestScores.svelte';
-  import SectionCards from '$lib/components/profile/SectionCards.svelte';
-  import CardViewer from '$lib/components/card/CardViewer.svelte';
-  import SectionPerformances from '$lib/components/profile/SectionPerformances.svelte';
-  import ProfileHeader from '$lib/components/profile/ProfileHeader.svelte';
+  } from '#lib/shared/profile/stats.js';
+  import AchievementsPanel from '#lib/components/achievements/AchievementsPanel.svelte';
+  import InviteModal from '#lib/components/profile/InviteModal.svelte';
+  import ProfileSummary from '#lib/components/profile/ProfileSummary.svelte';
+  import ProfileSection from '#lib/components/profile/ProfileSection.svelte';
+  import SectionHistory from '#lib/components/profile/SectionHistory.svelte';
+  import SectionSoirees from '#lib/components/profile/SectionSoirees.svelte';
+  import SectionFriends from '#lib/components/profile/SectionFriends.svelte';
+  import SectionBestScores from '#lib/components/profile/SectionBestScores.svelte';
+  import SectionCards from '#lib/components/profile/SectionCards.svelte';
+  import CardViewer from '#lib/components/card/CardViewer.svelte';
+  import SectionPerformances from '#lib/components/profile/SectionPerformances.svelte';
+  import ProfileHeader from '#lib/components/profile/ProfileHeader.svelte';
   import { ProfileSocial } from './profileSocial.svelte.js';
 
   let { profile, stats, sb, userId, viewerId = null, editable = false, onEdit = () => {}, onReport = null } = $props();

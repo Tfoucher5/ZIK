@@ -1,5 +1,5 @@
 <script>
-  import LegalPage from '$lib/components/legal/LegalPage.svelte';
+  import LegalPage from '#lib/components/legal/LegalPage.svelte';
 </script>
 
 <svelte:head>

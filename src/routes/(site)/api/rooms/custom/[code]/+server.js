@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { customRooms } from "$lib/server/state.js";
+import { customRooms } from "#lib/server/state.js";
 
 export function GET({ params }) {
   const room = customRooms[params.code.toUpperCase()];

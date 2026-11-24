@@ -1,7 +1,7 @@
 <!-- Une scène de l'immeuble : film calé sur le scroll, légendes, flash et son -->
 <script>
-  import ScrubVideo from '$lib/components/ui/ScrubVideo.svelte';
-  import { media, flashAt, ambiance, createDing } from '$lib/components/accueil/scenes.js';
+  import ScrubVideo from '#lib/components/ui/ScrubVideo.svelte';
+  import { media, flashAt, ambiance, createDing } from '#lib/components/accueil/scenes.js';
 
   /**
    * @type {{

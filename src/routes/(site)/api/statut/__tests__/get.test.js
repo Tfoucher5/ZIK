@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));

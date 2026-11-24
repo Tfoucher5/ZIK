@@ -1,8 +1,8 @@
 import { json } from "@sveltejs/kit";
-import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
-import { getStripe, priceFor } from "$lib/server/stripe.js";
-import { getProRow, isProActive } from "$lib/server/services/pro.js";
-import { attachSalon, proForHost } from "$lib/server/socket/salon/pro.js";
+import { requireAuth, checkRateLimit } from "#lib/server/middleware/auth.js";
+import { getStripe, priceFor } from "#lib/server/stripe.js";
+import { getProRow, isProActive } from "#lib/server/services/pro.js";
+import { attachSalon, proForHost } from "#lib/server/socket/salon/pro.js";
 
 const TROP = "Trop de demandes, réessayez dans un instant.";
 

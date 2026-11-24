@@ -1,11 +1,11 @@
 <script>
   import { getContext } from 'svelte';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import PulsePanel from '$lib/components/admin/stats/PulsePanel.svelte';
-  import AudienceStats from '$lib/components/admin/stats/AudienceStats.svelte';
-  import TrafficStats from '$lib/components/admin/stats/TrafficStats.svelte';
-  import { INFO } from '$lib/components/admin/stats/metrics.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import PulsePanel from '#lib/components/admin/stats/PulsePanel.svelte';
+  import AudienceStats from '#lib/components/admin/stats/AudienceStats.svelte';
+  import TrafficStats from '#lib/components/admin/stats/TrafficStats.svelte';
+  import { INFO } from '#lib/components/admin/stats/metrics.js';
 
   const adminCtx = getContext('adminToken');
   const token = $derived(adminCtx?.token ?? '');

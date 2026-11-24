@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import VideoQueue from '$lib/components/admin/videoQueue/VideoQueue.svelte';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import VideoQueue from '#lib/components/admin/videoQueue/VideoQueue.svelte';
 
   const adminCtx = getContext('adminToken');
 </script>

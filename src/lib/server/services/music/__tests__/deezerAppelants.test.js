@@ -6,7 +6,7 @@ vi.mock("../deezerClient.js", () => ({ deezerFetch: dz.fetch }));
 vi.mock("../../cards/maintenance.js", () => ({ enqueueCardEnrichment() {} }));
 vi.mock("../../cards/enrich.js", () => ({ enrichTrack: vi.fn() }));
 const maj = vi.hoisted(() => []);
-vi.mock("$lib/server/config.js", () => {
+vi.mock("#lib/server/config.js", () => {
   const chaine = {
     select: () => chaine,
     in: () => chaine,

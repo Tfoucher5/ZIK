@@ -2,6 +2,14 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 24/11/2026 — Réponses de Théo depuis le QG en ligne
+
+**Décision de Théo** :
+
+- **Playlist trop courte** : « je valide les maquettes » (https://claude.ai/artifact/SFLPkkzpALduC8in64kTJm). Les manches suivent les titres, alerte orange à la création et dans la régie, rien n'est bloqué. Code : #589.
+- **Retouches TV et story** : « je valide les maquettes » (https://claude.ai/artifact/GyTsB9S3gGdPACY8HxzeEJ). Un seul magenta sur la TV sans régie, « Nom de la soirée » facultatif sur la story. Code : #588.
+- **Stripe 23.2.0** : « oui mais attention de pas avoir de version instable ou non fiable ». Sortie le 19/11 et elle change la version d'API Stripe (`2026-11-18.endive`) : on reste sur 23.1.0. Critère d'arrêt : reprise après le 03/12 si aucun correctif 23.2.x n'est sorti entre-temps, notes relues, Checkout, portail et webhooks vérifiés en mode test.
+
 ## 17/11/2026 — Plans de la ZIK TOWER validés
 
 **Décision de Théo** : plans validés (« c'est pas mal, j'ai hâte de voir ça »). Le QG devient la ZIK TOWER, tout l'immeuble à ZIK. Le plan (`scripts/qg/public/tour/plan.js`, page `/plans.html`) est la source de vérité : la 3D se construit depuis lui et toute modif de structure ou de salle y est reportée. Salles de réunion = festivals, autres pièces = monde de la musique. Café du RDC ouvert au public sans accès au reste. Agents qui vivent (ascenseurs, balades là où ils ont le droit), lumière jour/nuit en temps réel, chaque pièce utile.

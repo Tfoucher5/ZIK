@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const room = vi.hoisted(() => ({ create: vi.fn(() => "ABCD") }));
-vi.mock("$lib/server/services/rooms/customRoom.js", () => ({
+vi.mock("#lib/server/services/rooms/customRoom.js", () => ({
   createCustomRoom: room.create,
 }));
-vi.mock("$lib/server/middleware/auth.js", () => ({ checkRateLimit() {} }));
+vi.mock("#lib/server/middleware/auth.js", () => ({ checkRateLimit() {} }));
 
 const { POST } = await import("../+server.js");
 

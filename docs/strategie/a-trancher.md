@@ -15,15 +15,6 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
-## Playlist trop courte pour la partie
-
-- **Chantier** : Produit (signalement de Rom, client Pro, 21/11)
-- **Depuis** : 23/11
-- **Question** : Une soirée avec moins de titres que de manches (3 titres pour 5 manches) s'arrête net à la manche 3, devant la salle. On valide la maquette ?
-- **Options** : les manches suivent les titres (la partie fait le vrai nombre, « 3 / 3 », alerte orange à la création et dans la régie avec « Ajouter une playlist ») ; avertir seulement ; bloquer le lancement
-- **Recommandation** : les manches suivent les titres. Rien n'est bloqué, le choix de l'organisateur revient seul quand il ajoute une playlist, la TV affiche le vrai compte
-- **Lien** : https://claude.ai/artifact/SFLPkkzpALduC8in64kTJm
-
 ## Statut de vente et TVA
 
 - **Chantier** : Argent / légal

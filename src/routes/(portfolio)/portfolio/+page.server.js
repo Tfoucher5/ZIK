@@ -1,5 +1,5 @@
 import { fail } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
+import { supabase } from "#lib/server/config.js";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

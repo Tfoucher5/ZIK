@@ -153,6 +153,8 @@ describe("dépannage d'un salon depuis l'admin", () => {
       pro: false,
       phase: "round",
       round: 3,
+      // Pile vide : la partie s'arrête à la manche en cours, comme le dit la régie
+      rounds: 3,
       timer: 18,
       screens: 0,
       controls: 1,

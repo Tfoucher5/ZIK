@@ -1,5 +1,5 @@
 <script>
-  import { SPECIALS } from '$lib/data/salonOptions.js';
+  import { SPECIALS } from '#lib/data/salonOptions.js';
   import { onMount, onDestroy } from 'svelte';
   import HostBuzz from './HostBuzz.svelte';
   import HostIntermission from './HostIntermission.svelte';

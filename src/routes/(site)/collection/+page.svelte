@@ -1,6 +1,6 @@
 <script>
   import { getContext } from 'svelte';
-  import CollectionView from '$lib/components/card/CollectionView.svelte';
+  import CollectionView from '#lib/components/card/CollectionView.svelte';
 
   const _ctx = getContext('zik');
   const username = $derived(_ctx.user?.profile?.username);

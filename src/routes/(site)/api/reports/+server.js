@@ -1,16 +1,16 @@
 import { json } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
+import { getAdminClient } from "#lib/server/config.js";
 import {
   sanitizeReportTracks,
   sanitizeReportContext,
   asUuidOrNull,
   MIN_REPORT_MESSAGE,
-} from "$lib/shared/reports/bug-report.js";
-import { reportTrackIssue } from "$lib/server/services/music/trackIssues.js";
-import { roomGames } from "$lib/server/state.js";
-import { salonLiveState } from "$lib/server/socket/salon/admin.js";
-import { NEWS } from "$lib/data/news.js";
-import { alertAdminsSafe } from "$lib/server/services/admin/alerts.js";
+} from "#lib/shared/reports/bug-report.js";
+import { reportTrackIssue } from "#lib/server/services/music/trackIssues.js";
+import { roomGames } from "#lib/server/state.js";
+import { salonLiveState } from "#lib/server/socket/salon/admin.js";
+import { NEWS } from "#lib/data/news.js";
+import { alertAdminsSafe } from "#lib/server/services/admin/alerts.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;

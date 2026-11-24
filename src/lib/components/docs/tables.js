@@ -1,4 +1,4 @@
-import { RARITIES, RARITY_ORDER } from "$lib/components/card/rarity.js";
+import { RARITIES, RARITY_ORDER } from "#lib/components/card/rarity.js";
 
 const kahootRows = (midLabel) => [
   ["Immédiatement (t = 0s)", "1 000 pts"],

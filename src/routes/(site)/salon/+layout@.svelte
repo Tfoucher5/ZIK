@@ -1,8 +1,8 @@
 <script>
   import { version } from '$app/environment';
   import { page } from '$app/state';
-  import SalonRelance from '$lib/components/salon/relance/SalonRelance.svelte';
-  import { screenOf } from '$lib/components/salon/relance/relance.js';
+  import SalonRelance from '#lib/components/salon/relance/SalonRelance.svelte';
+  import { screenOf } from '#lib/components/salon/relance/relance.js';
 
   let { children } = $props();
 

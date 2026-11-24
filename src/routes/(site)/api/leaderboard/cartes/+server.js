@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { cardsLeaderboardPage } from "$lib/server/services/cards/leaderboard.js";
-import { makeCache } from "$lib/server/cache.js";
+import { cardsLeaderboardPage } from "#lib/server/services/cards/leaderboard.js";
+import { makeCache } from "#lib/server/cache.js";
 
 const cache = makeCache(60_000);
 

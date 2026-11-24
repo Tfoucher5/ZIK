@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   /**
    * Classement de la soirée (ZIK Pro) : le cumul des parties terminées. Replié
    * sur une ligne, déplié par « Voir ».

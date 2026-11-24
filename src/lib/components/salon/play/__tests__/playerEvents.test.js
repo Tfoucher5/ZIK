@@ -172,3 +172,18 @@ describe("téléphone : « Une autre ! »", () => {
     expect(p).toMatchObject({ phase: "round", replaying: false });
   });
 });
+
+describe("téléphone : vrai nombre de manches (3 titres pour 5 manches)", () => {
+  it("les réglages donnent le total joué, pas le choix de l'organisateur", () => {
+    const handlers = {};
+    const socket = { on: (evt, fn) => (handlers[evt] = fn) };
+    const p = {};
+    listenPlayer(p, socket, "ABCDEF", "Ana");
+    handlers.salon_settings({
+      settings: { maxRounds: 5, rounds: 3, answerMode: "free" },
+    });
+    expect(p.total).toBe(3);
+    handlers.salon_settings({ settings: { maxRounds: 5, answerMode: "free" } });
+    expect(p.total).toBe(5);
+  });
+});

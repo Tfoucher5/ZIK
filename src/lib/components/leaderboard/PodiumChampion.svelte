@@ -2,7 +2,7 @@
   import CardFan from './CardFan.svelte';
   import DiamondDisc from './DiamondDisc.svelte';
   import RarityBar from './RarityBar.svelte';
-  import PlayerActions from '$lib/components/player/PlayerActions.svelte';
+  import PlayerActions from '#lib/components/player/PlayerActions.svelte';
 
   /** N°1 du classement : disque de diamant, ou ses plus belles cartes sur l'onglet Cartes. */
   let { lb, p } = $props();

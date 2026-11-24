@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import { ago, pct } from '$lib/shared/admin/stats-utils.js';
+  import { ago, pct } from '#lib/shared/admin/stats-utils.js';
 
   /** Onglet Infos de la fiche : statistiques, playlists qui l'utilisent, modification et suppression. */
   let { detail, form, busy, saved, afterEdit, afterDelete } = $props();

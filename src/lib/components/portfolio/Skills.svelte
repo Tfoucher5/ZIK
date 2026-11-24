@@ -1,6 +1,6 @@
 <script>
     import { reveal } from './reveal.js';
-    import { skills, qualities } from '$lib/data/portfolio.js';
+    import { skills, qualities } from '#lib/data/portfolio.js';
 </script>
 
 <section id="competences" class="section">

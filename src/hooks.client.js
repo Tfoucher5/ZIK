@@ -1,5 +1,5 @@
-import { noteCrash } from "$lib/components/salon/relance/journal.js";
-import { screenOf } from "$lib/components/salon/relance/relance.js";
+import { noteCrash } from "#lib/components/salon/relance/journal.js";
+import { screenOf } from "#lib/components/salon/relance/relance.js";
 
 // Garde l'exception brute d'un écran du salon pour le journal de l'écran de
 // relance, et l'écrit en console comme le fait SvelteKit par défaut.

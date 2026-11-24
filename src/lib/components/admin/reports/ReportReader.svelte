@@ -1,8 +1,8 @@
 <script>
   import { enhance } from '$app/forms';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { avatarOf } from '$lib/shared/admin/players.js';
-  import { REPORT_TYPES, subjectLabel, contextRows, isSalon } from '$lib/shared/admin/reports.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { avatarOf } from '#lib/shared/admin/players.js';
+  import { REPORT_TYPES, subjectLabel, contextRows, isSalon } from '#lib/shared/admin/reports.js';
 
   /** Un message reçu : qui, quoi, contexte, titres concernés, réponse et traitement. */
   let { r, busy, submit } = $props();

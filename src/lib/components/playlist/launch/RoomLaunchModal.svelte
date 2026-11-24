@@ -1,5 +1,5 @@
 <script>
-  import { toast } from '$lib/client/toast.svelte.js';
+  import { toast } from '#lib/client/toast.svelte.js';
   import EphDialog from './EphDialog.svelte';
   import LaunchCreated from './LaunchCreated.svelte';
   import LaunchSettings from './LaunchSettings.svelte';

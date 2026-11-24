@@ -39,7 +39,21 @@ function sonCheck(ok) {
   );
 }
 
-function musiqueCheck(m) {
+/**
+ * Manches que la partie fera vraiment (fiche du 23/11) : pas plus que de
+ * titres, moins les introuvables qu'aucune réserve ne remplace.
+ * @returns {{ t: number, m: number, perdus: number, court: boolean }}
+ */
+export function manchesJouables(settings, mc) {
+  const m = settings?.maxRounds ?? 0;
+  const fini = mc?.total && mc.video + mc.audio + mc.missing >= mc.total;
+  const perdus = fini ? Math.max(0, mc.missing - (mc.spares ?? 0)) : 0;
+  // Le serveur a déjà retiré les introuvables du total : perdus sert au message
+  const t = settings?.rounds ?? m;
+  return { t, m, perdus, court: t < m };
+}
+
+function musiqueCheck(m, j) {
   if (!m?.total)
     return check("musique", "attente", "Vérification de la musique");
   const done = m.video + m.audio + m.missing;
@@ -50,6 +64,17 @@ function musiqueCheck(m) {
       "Vérification de la musique",
       `${done} / ${m.total}`,
     );
+  if (j?.court) {
+    const suite = `La partie fera ${j.t} manche${s(j.t)}. Pour en jouer ${j.m}, ajoute une playlist.`;
+    return check(
+      "musique",
+      "non",
+      `${j.t} titre${s(j.t)} pour ${j.m} manches`,
+      j.perdus
+        ? `${j.perdus} titre${s(j.perdus)} introuvable${s(j.perdus)}, sans titre de réserve. ${suite}`
+        : suite,
+    );
+  }
   if (m.video < m.total / 2)
     return check(
       "musique",
@@ -72,9 +97,16 @@ function musiqueCheck(m) {
 
 /**
  * @param {{ screens: number|null, tvSound: boolean|null, mediaCheck: any,
- *   players: any[], teams: { id: number, name: string }[]|null }} etat
+ *   players: any[], teams: { id: number, name: string }[]|null, settings?: any }} etat
  */
-export function prepChecks({ screens, tvSound, mediaCheck, players, teams }) {
+export function prepChecks({
+  screens,
+  tvSound,
+  mediaCheck,
+  players,
+  teams,
+  settings,
+}) {
   const presents = players.filter((p) => !p.left);
   const joueurs = presents.length;
   const equipes =
@@ -89,7 +121,7 @@ export function prepChecks({ screens, tvSound, mediaCheck, players, teams }) {
       tvCheck(screens),
       // Sans TV, le test du son d'une TV fermée ne vaut plus
       sonCheck(screens === 0 ? null : tvSound),
-      musiqueCheck(mediaCheck),
+      musiqueCheck(mediaCheck, manchesJouables(settings, mediaCheck)),
       joueurs
         ? check(
             "joueurs",

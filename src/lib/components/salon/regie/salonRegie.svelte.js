@@ -5,6 +5,7 @@ import { loadSalonPlaylists } from "../../../data/salonPlaylists.js";
 import { listenRegie } from "./regieEvents.js";
 import { RegiePro } from "./regiePro.svelte.js";
 import { etatManche } from "./onglets.js";
+import { manchesJouables } from "./prep.js";
 import {
   takeSalonKeyFromUrl,
   patchSalonPlaylists,
@@ -27,6 +28,8 @@ export class SalonRegie {
   night = $state(null);
   buzzer = $state(null);
   videoOutage = $state(null);
+  // Titre injouable sans réserve : nouveau total, dit jusqu'à la fin de la manche
+  short = $state(null);
   adminNotice = $state("");
   // Le serveur redémarre (déploiement) : reprise automatique à la reconnexion
   restarting = $state(false);
@@ -75,12 +78,13 @@ export class SalonRegie {
   answered = $derived(
     this.players.filter((p) => p.answeredThisRound || p.foundThisRound).length,
   );
+  manches = $derived(manchesJouables(this.settings, this.mediaCheck));
   etat = $derived(
     etatManche({
       phase: this.phase,
       paused: this.paused,
       round: this.round,
-      maxRounds: this.settings.maxRounds ?? 0,
+      maxRounds: this.settings.rounds ?? this.settings.maxRounds ?? 0,
       timerVal: this.timerVal,
       timerMax: this.timerMax,
       timerOn: this.timerOn,

@@ -2,7 +2,7 @@
   import CardThumbs from './CardThumbs.svelte';
   import RarityBar from './RarityBar.svelte';
   import { plural } from './leaderboard.svelte.js';
-  import PlayerActions from '$lib/components/player/PlayerActions.svelte';
+  import PlayerActions from '#lib/components/player/PlayerActions.svelte';
 
   /** Une ligne du classement à partir du 4e. */
   let { lb, p, rank } = $props();

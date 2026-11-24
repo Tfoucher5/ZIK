@@ -105,6 +105,51 @@ describe("dessin de la story", () => {
     }
   });
 
+  it("sans nom de soirée : la date seule, comme avant", async () => {
+    const ctx = fakeCtx();
+    const now = new Date(2026, 10, 23);
+    await drawStory(
+      fakeCanvas(ctx),
+      storyData({ finalRanking, username: "Léa", now }),
+    );
+    const date = ctx.texts.find((t) => t.text === "23 NOVEMBRE 2026");
+    expect(date.font).toMatch(/^800 66px /);
+  });
+
+  it("avec un nom : le nom en majuscules, puis la date en petit dessous", async () => {
+    const ctx = fakeCtx();
+    const now = new Date(2026, 10, 23);
+    const d = storyData({
+      finalRanking,
+      username: "Léa",
+      now,
+      title: "Quiz du jeudi",
+    });
+    await drawStory(fakeCanvas(ctx), d);
+    const texts = ctx.texts.map((t) => t.text);
+    const i = texts.indexOf("QUIZ DU JEUDI");
+    expect(ctx.texts[i].font).toMatch(/^800 66px /);
+    expect(texts[i + 1]).toBe("23 NOVEMBRE 2026");
+    expect(ctx.texts[i + 1].font).toMatch(/^500 32px /);
+  });
+
+  it("nom trop long : réduit de 4 en 4 jusqu'à 48 px, puis tenu dans x 70–930", async () => {
+    for (const [title, size] of [
+      ["M".repeat(30), 54],
+      ["M".repeat(60), 48],
+    ]) {
+      const ctx = fakeCtx();
+      await drawStory(
+        fakeCanvas(ctx),
+        storyData({ finalRanking, username: "Léa", title }),
+      );
+      const t = ctx.texts.find((x) => x.text === title);
+      expect(t.font).toMatch(new RegExp(`^800 ${size}px `));
+      expect(t.x).toBe(70);
+      expect(t.x + t.max).toBeLessThanOrEqual(930);
+    }
+  });
+
   it("aucun autre pseudo que le mien n'est dessiné", async () => {
     const ctx = fakeCtx();
     await drawStory(

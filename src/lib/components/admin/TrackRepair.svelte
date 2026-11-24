@@ -1,6 +1,6 @@
 <script>
-  import VideoFixer from '$lib/components/admin/VideoFixer.svelte';
-  import TrackAudioDebugger from '$lib/components/admin/audio/TrackAudioDebugger.svelte';
+  import VideoFixer from '#lib/components/admin/VideoFixer.svelte';
+  import TrackAudioDebugger from '#lib/components/admin/audio/TrackAudioDebugger.svelte';
 
   let { track, token } = $props();
   let tab = $state('video');

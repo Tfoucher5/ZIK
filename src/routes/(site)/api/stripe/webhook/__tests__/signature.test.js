@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));
-vi.mock("$lib/server/stripe.js", () => ({
+vi.mock("#lib/server/stripe.js", () => ({
   getStripe: () => ({
     webhooks: {
       constructEvent: () => {
@@ -16,7 +16,7 @@ vi.mock("$lib/server/stripe.js", () => ({
 
 const { POST } = await import("../+server.js");
 const { countSince, resetOpsEvents } =
-  await import("$lib/server/services/health/opsEvents.js");
+  await import("#lib/server/services/health/opsEvents.js");
 
 describe("webhook Stripe : signature refusée", () => {
   beforeEach(resetOpsEvents);

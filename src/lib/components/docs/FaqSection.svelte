@@ -1,5 +1,5 @@
 <script>
-  import { FREE_MAX_PLAYERS, TESTED_LABEL } from '$lib/data/proPlans.js';
+  import { FREE_MAX_PLAYERS, TESTED_LABEL } from '#lib/data/proPlans.js';
 </script>
 
 <section>
