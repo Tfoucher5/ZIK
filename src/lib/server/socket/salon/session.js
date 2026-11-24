@@ -96,6 +96,9 @@ export function drawSpareTrack(game, failed) {
 // régie le dit, la TV et les téléphones voient le compteur à la manche suivante
 export function shortOfTracks(salon, io) {
   const rounds = roundsTotal(salon);
-  note(salon, `Plus de titre en réserve : la partie fera ${rounds} manches.`);
+  note(
+    salon,
+    `Plus de titre en réserve : la partie fera ${rounds} manche${rounds > 1 ? "s" : ""}.`,
+  );
   io.to(`salon:ctrl:${salon.code}`).emit("salon_short", { rounds });
 }

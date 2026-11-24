@@ -39,3 +39,15 @@ it("régie : titre injouable sans réserve, total baissé et phrase jusqu'à la 
   handlers.salon_round_end({ answer: "A - b", scores: [], teams: null });
   expect(r.short).toBeNull();
 });
+
+it.each([
+  ["salon_game_starting", undefined],
+  ["salon_game_over", { teams: null, night: null }],
+  ["salon_restarted", { players: [] }],
+])("régie : la phrase du titre tombé s'efface sur %s", (evt, data) => {
+  const { r, handlers } = regie();
+  r.mergeRoster = vi.fn();
+  handlers.salon_short({ rounds: 2 });
+  handlers[evt](data);
+  expect(r.short).toBeNull();
+});
