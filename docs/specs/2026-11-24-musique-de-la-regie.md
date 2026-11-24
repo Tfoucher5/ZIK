@@ -1,161 +1,121 @@
-# Ta sono : l'organisateur lance la musique, ZIK fait le jeu — fiche de cadrage
+# Le son des soirées : l'extrait sur la TV, « Votre sono » en secours — fiche de cadrage
 
-Statut : **à valider par Théo** (concept, parcours, textes, question 1).
+Statut : **à valider par Théo** (deux changements, textes, questions en fin de fiche).
 
-Maquette (hors dépôt) : `C:\Users\Teamr\AppData\Local\Temp\claude\c23315e6417d4b11\4bf816a1-7c19-48ef-b732-f7835b9c5024\scratchpad\maquette-sono\index.html`, captures `capture-390.png` et `capture-1440.png` dans le même dossier. Cinq états, régie 390 px et TV 1920 × 1080 côte à côte : lancement, manche en cours, révélation, bascule depuis la panne, avertissement « écran de la salle ».
+Remplace la fiche « Ta sono » (mode de jeu refusé le 24/11 : « ça enlève l'idée de simplifier l'organisation »). Il n'y a plus de choix ni de réglage : l'organisateur ne touche à rien tant que le son de ZIK répond.
+
+Maquette (hors dépôt) : `C:\Users\Teamr\AppData\Local\Temp\claude\c23315e6417d4b11\4bf816a1-7c19-48ef-b732-f7835b9c5024\scratchpad\maquette-repli\index.html`, captures `capture-390.png` et `capture-1440.png` dans le même dossier.
 
 ## Problème
 
-1. **Quand le son de ZIK ne répond pas, la salle attend.** Après 4 titres injouables d'affilée, `outage.js` met la partie en attente et réessaie toutes les 10 à 60 s. La TV affiche « Petite pause technique », la régie « La musique ne répond pas… Si ça dure, appelle un admin » (`src/routes/(site)/salon/regie/+page.svelte`, ligne 66). L'organisateur n'a rien à faire, donc rien à tenter : sa soirée dépend de nous. Cas réel : incident du 30/10.
-2. **Beaucoup d'organisateurs ont déjà leur son.** Un bar a sa sono et ses comptes Spotify ou Deezer, un animateur sa propre playlist. Aujourd'hui ZIK impose son lecteur, sur la TV.
+1. **YouTube peut tomber en pleine soirée.** Le 30/10, la recherche vidéo ne répondait plus chez un client Pro : les parties se terminaient en quelques secondes (mémoire « Incident salon 30/10 »). Depuis, le serveur passe sur l'extrait quand la vidéo manque (`salon/media.js`, `resolveMedia`), mais la vidéo reste le premier choix et la TV charge un lecteur YouTube devant la salle.
+2. **Quand plus aucun son ne répond, la salle attend sans rien pouvoir faire.** Après 4 titres injouables d'affilée, `outage.js` met la partie en attente. La régie dit « Si ça dure, appelle un admin » (`src/routes/(site)/salon/regie/+page.svelte`, ligne 68). L'organisateur a souvent une sono et un téléphone avec Spotify ou Deezer à côté de lui, sans pouvoir s'en servir.
 
-## Objectif
+Chiffre visé : **soirées réussies**. Suivi dans `etat.md` : parties passées en « Votre sono », et temps entre le début de la panne et « C'est parti » (journal du salon, `note()`).
 
-Une soirée ne s'arrête jamais faute de son : l'organisateur peut lancer lui-même chaque titre sur sa sono, en un geste, pendant que ZIK garde le chrono, les réponses, les points et la révélation. Pour les pros, c'est aussi une liberté : leur son, leur matériel, notre jeu.
+## Changement 1 : la TV joue l'extrait, plus la vidéo
 
-Chiffre visé : **soirées réussies** (une panne de son ne coupe plus une partie). Suivi dans `etat.md` : parties terminées en mode « Ta sono », dont celles passées depuis la panne, et temps entre le début de la panne et la bascule (journal du salon, `note()`).
+**Ce qui change.** En ZIK Soirée, la TV joue l'extrait audio de 30 s de chaque titre au lieu de la vidéo cachée. À la révélation, elle affiche la pochette en grand (`AudioReveal`, déjà utilisé quand la vidéo manque). L'organisateur n'a rien à régler, rien ne change pour les joueurs. Le jeu en ligne ne change pas.
 
-## L'idée : tu passes les disques, ZIK fait le jeu
+**Pourquoi.** Une seule source de son par soirée, déjà en place et déjà testée en secours. Écran plus sobre : plus de vidéo, donc plus de pub ni de logo possible devant la salle. Moins de choses à charger sur la TV.
 
-Un DJ a toujours le disque suivant prêt dans le bac. La régie devient ce bac : elle montre le titre à lancer maintenant, puis le suivant à préparer pendant la révélation. Un seul geste lance la manche : **« C'est parti »**, quand le son joue. Le chrono part à ce moment, pas avant. La TV ne montre que « Écoutez bien… » : la réponse n'existe que sur la régie, jusqu'à la révélation, où la TV pose la pochette comme aujourd'hui sans vidéo.
+**Titre sans extrait.** Comme aujourd'hui : la vérification du lobby (`checkSession`) le compte en « introuvable », il est remplacé par un titre de réserve, et le lobby annonce le vrai nombre de manches.
 
-## Deux sources de son
+**Manche plus longue que l'extrait** (durée réglable de 15 à 60 s, `rooms.js`, ligne 202). Proposition : **l'extrait recommence au début**, sans rien d'autre. C'est déjà le comportement de la TV (`hostAudio.js`, ligne 18, `loop = true`), donc rien à coder ni à tester de neuf. À la révélation, l'extrait repart du début (`restart()`, déjà là). Refusé : limiter la durée à 30 s (change un réglage que les organisateurs ont déjà choisi) et couper le son à 30 s (un silence en pleine manche fait croire à une panne).
 
-| Source     | Qui joue le titre                   | Quand le chrono démarre                                  |
-| ---------- | ----------------------------------- | -------------------------------------------------------- |
-| Son de ZIK | la TV (aujourd'hui, rien ne change) | quand la TV signale que la musique joue, ou 12 s au plus |
-| Ta sono    | l'organisateur, sur son matériel    | quand l'organisateur touche « C'est parti » sur la régie |
+**Lobby, régie.** Le bilan de vérification (`MediaCheck.svelte`) ne parle plus de vidéos :
 
-Le choix se fait dans la régie : avant la partie (Réglages, ligne 01 « La musique », et la liste de vérification de l'onglet Direct), et en pleine partie depuis l'encart de panne. Il demande une régie ouverte : sans régie, une soirée TV seule garde le mode panne d'aujourd'hui. La page de création ne change pas.
+| Cas                     | Texte                                          |
+| ----------------------- | ---------------------------------------------- |
+| En cours                | Vérification de la musique : 6 / 10 (inchangé) |
+| Tout est là             | ✓ Musique prête : 10 titres sur 10 (inchangé)  |
+| Titres remplacés        | ✓ 8 titres prêts · 2 remplacés automatiquement |
+| Alerte « peu de clips » | supprimée (n'a plus de sens)                   |
 
-## Parcours
+## Changement 2 : le bouton de secours « Votre sono »
 
-### A. Préparer avant la partie (facultatif)
+**Invisible en temps normal.** Il n'existe que dans la régie, et seulement quand la partie est en panne de son (`game.videoOutage`). Sans régie ouverte, la panne reste celle d'aujourd'hui.
 
-1. Régie, onglet Réglages, ligne 01 « La musique » : segment **Le son : Son de ZIK · Ta sono**.
-2. Choisir « Ta sono » ouvre l'avertissement (voir E). Confirmé, la liste de vérification de Direct remplace la ligne « Son testé » par **« Le son : ta sono »** avec le bouton **« Copier la liste »**.
-3. « Copier la liste » copie les titres dans l'ordre de la partie, un par ligne : `Manche 1 · Michael Jackson – Billie Jean`. L'organisateur la colle dans sa recherche Spotify, Deezer, ou prépare sa playlist.
+### Parcours
 
-### B. Une manche en mode « Ta sono »
+1. **Panne.** Le son de ZIK ne répond plus (même seuil qu'aujourd'hui, 4 titres d'affilée). La partie attend, la TV affiche « Petite pause technique » (inchangé). Dans la régie, l'encart actuel devient : **« Le son de ZIK ne répond pas. »**, une phrase d'aide et un bouton magenta **« Passer sur ma sono »**. ZIK continue de réessayer seul tant que personne n'appuie.
+2. **Un appui, sans confirmation** (la salle attend déjà). La panne s'efface sur la TV et les téléphones. La manche en attente repart en « Votre sono » : décompte 3, 2, 1, puis la régie affiche **« Lance ce titre »**, la pochette, le titre et l'artiste en clair, et le bouton **« C'est parti »**. Au-dessus, une fois, le bandeau d'avertissement (voir plus bas). La TV affiche « La musique arrive » (inchangé), sans jouer de son.
+3. **« C'est parti ».** L'animateur a lancé le titre sur sa sono, il appuie. Le chrono part sur la TV et les téléphones. La régie repasse au titre brouillé habituel (`RegieAnswer`). Pause et Révéler comme aujourd'hui.
+4. **Révélation.** Pochette sur la TV, comme au changement 1. La régie ajoute **« Prochain titre : Take On Me – a-ha. Prépare-le. »** (à la dernière manche : « C'était le dernier titre. Le podium arrive. »).
+5. **Manches suivantes** : retour à l'étape 2 (« Lance ce titre »), jusqu'au retour au son de ZIK.
 
-1. **Lancement.** La manche commence (décompte 3, 2, 1 inchangé). La régie affiche en clair : « Manche 3 : lance » + titre + artiste, avec la pochette. Action magenta pleine largeur : **« C'est parti »**. Action secondaire : « Passer ce titre » (titre introuvable : un titre de réserve le remplace, la manche n'est pas consommée). Ligne « Sur la TV : La musique arrive ». TV et téléphones : leur écran d'attente actuel.
-2. **Manche en cours.** L'organisateur touche « C'est parti » : chrono lancé sur la TV et les téléphones, choix affichés. La régie repasse au titre brouillé de `RegieAnswer` (« Afficher la réponse »), comme aujourd'hui. Barre : Pause, Révéler.
-3. **Révélation.** Comme aujourd'hui côté TV, avec la pochette (`AudioReveal`). La régie ajoute l'encart **« Prochain titre : … Prépare-le. »** À la dernière manche : « C'était le dernier titre. Le podium arrive. »
-4. Manche suivante : retour à l'étape 1.
+### Retour au son de ZIK
 
-### C. Basculer depuis la panne
+- **À la main, toujours possible.** Une ligne en haut de la régie : « Le son : ma sono » et le lien **« Revenir au son de ZIK »**. Le retour vaut pour la manche suivante (la sono joue peut-être déjà).
+- **Quand le son de ZIK répond de nouveau** : proposé, pas automatique. À chaque manche en « Votre sono », le serveur vérifie l'extrait du titre suivant (déjà fait par `previewUrl`, avec cache). S'il répond, la ligne du haut devient verte : **« Le son de ZIK répond de nouveau. »** avec le bouton **« Revenir au son de ZIK »**. Refusé, le retour automatique : l'animateur a souvent déjà lancé le titre suivant sur sa sono, la salle entendrait deux musiques à la fois.
+- Si le son de ZIK retombe après le retour, la panne revient et le bouton aussi.
 
-1. Le son de ZIK ne répond pas (même seuil qu'aujourd'hui : 4 titres d'affilée). La partie se met en attente, comme aujourd'hui.
-2. L'encart de la régie devient : **« Le son de ZIK ne répond pas. Passe sur ta sono. »** et un bouton magenta **« Passer sur ta sono »**. ZIK continue de réessayer en fond tant que l'organisateur n'a rien touché.
-3. Un appui, sans confirmation supplémentaire (la salle attend déjà) : la panne s'efface, la manche en attente repart tout de suite en mode « Ta sono » (étape B1). L'avertissement E s'affiche une fois, en bandeau, pas en fenêtre.
-4. **Retour.** En mode « Ta sono », la régie garde une ligne discrète : « Le son : ta sono » et **« Revenir au son de ZIK »**. Le retour s'applique à la manche suivante. Si le son de ZIK ne répond toujours pas, la panne revient et on propose de nouveau la sono.
+### Ce qui ne casse jamais la soirée
 
-### D. Ce qui ne bloque jamais la soirée
+- **Pas de chrono automatique** en « Votre sono » : le son vient de l'animateur. Après 45 s sans « C'est parti », la phrase de la barre passe en orange : « La salle attend. Lance le titre ou passe-le. »
+- **« Passer ce titre »** (bouton secondaire) : l'animateur ne trouve pas le titre. Un titre de réserve le remplace, la manche n'est pas perdue, aucun signalement de titre n'est créé.
+- **Régie absente plus de 60 s** (téléphone en veille) pendant « Votre sono » : la partie revient seule au son de ZIK. S'il est toujours en panne, la partie attend comme aujourd'hui, et le bouton revient avec la régie. Au retour, un bandeau dit ce qui s'est passé.
+- **Pause** : la note rappelle « Le chrono est arrêté. Baisse ta sono toi-même. »
+- **Buzzer** : la note dit « Coupe le son : {pseudo} répond à voix haute. »
+- **Intro éclair** (musique coupée à 5 s, `salonOptions.js`, ligne 18) : jamais tirée en « Votre sono », la régie ne peut pas couper la sono. Points doubles et Sprint restent.
+- **Redémarrage du serveur** : « Votre sono » est gardé dans l'instantané, la manche reprend à « Lance ce titre ».
 
-- Pas de délai automatique sur « C'est parti » : l'organisateur est là, le son vient de lui. Si la salle attend plus de 45 s, la phrase de la barre passe en orange : « La salle attend. Lance le titre ou passe-le. »
-- **Régie absente** (téléphone en veille, batterie) plus de 60 s pendant une manche en mode « Ta sono » : la partie repasse seule sur le son de ZIK et le note dans le journal. Si le son de ZIK était en panne, la partie attend comme aujourd'hui. Au retour de la régie, un bandeau dit ce qui s'est passé.
-- Une seule régie connectée suffit ; si deux régies sont ouvertes, « C'est parti » de l'une vaut pour les deux.
-- Pause : arrête le chrono de ZIK. La barre rappelle « Baisse ta sono toi-même. »
-- Buzzer : quand un joueur buzze, la note dit « Coupe le son : Léa répond à voix haute. »
-- Manche spéciale « Intro éclair » (musique coupée à 5 s) : jamais tirée en mode « Ta sono ». « Points doubles » et « Sprint » restent.
+### Le piège de l'écran de la salle
 
-### E. Le piège de l'écran de la salle
-
-En mode « Ta sono », la régie affiche la réponse en clair avant la manche. Si elle est ouverte sur l'ordinateur branché à la TV, toute la salle la voit.
-
-- **Au premier passage en « Ta sono »** (Réglages) : fenêtre « Le titre à lancer s'affiche ici en clair. » avec deux choix : « Ma régie est sur mon téléphone » (confirme) et « Annuler ».
-- **Depuis la panne** : même phrase, en bandeau orange au-dessus du titre, sans bloquer la bascule.
-- **TV ouverte dans le même navigateur** (détectée entre onglets, `BroadcastChannel`, sans serveur) : bandeau permanent « La TV est ouverte sur cet ordinateur. Ce que tu vois ici est peut-être sur l'écran de la salle. » et le titre reste brouillé jusqu'à un appui sur « Afficher ». Intuition : même navigateur = même machine dans la quasi-totalité des cas ; à mesurer en recette.
+En « Votre sono », la régie affiche la réponse en clair avant la manche. Si elle est ouverte sur l'ordinateur branché à la TV, toute la salle la voit. Un seul filet, simple : au passage en « Votre sono », un bandeau orange au-dessus du titre, **« Le titre s'affiche ici en clair. Si cette régie est sur l'écran de la salle, tout le monde le voit. »**, fermé par « Compris ». Il ne bloque pas la manche. Refusé : la fenêtre de confirmation et la détection de la TV dans le même navigateur (de la mécanique pour un cas rare, en pleine panne).
 
 ## Textes
 
-### Régie (tu, sobre)
+### Régie (tu)
 
-| Où                               | Texte                                                                                                             |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Réglages, segment                | Le son : **Son de ZIK** · **Ta sono**                                                                             |
-| Réglages, aide sous le segment   | Ta sono : tu lances chaque titre sur ton matériel, ZIK garde le chrono, les réponses et les points.               |
-| Liste de vérification            | **Le son : ta sono.** Prépare tes titres avant de lancer. Bouton : Copier la liste                                |
-| Après la copie                   | Liste copiée : 10 titres dans l'ordre.                                                                            |
-| Lancement, étiquette             | À lancer · Manche 3 / 10                                                                                          |
-| Lancement, titre                 | Lance ce titre                                                                                                    |
-| Lancement, aide                  | Le chrono démarre quand tu touches « C'est parti ».                                                               |
-| Lancement, ligne TV              | Sur la TV : « La musique arrive »                                                                                 |
-| Boutons                          | C'est parti · Passer ce titre                                                                                     |
-| Attente longue                   | La salle attend. Lance le titre ou passe-le.                                                                      |
-| Titre passé                      | Titre passé. Celui-ci le remplace : …                                                                             |
-| En cours, note de la barre       | Révéler affiche la réponse sur la TV sans attendre la fin du chrono. (inchangée)                                  |
-| Pause, note                      | Le chrono est arrêté. Baisse ta sono toi-même.                                                                    |
-| Buzzer, note                     | Coupe le son : {pseudo} répond à voix haute.                                                                      |
-| Révélation, encart               | **Prochain titre :** Take On Me – a-ha. Prépare-le.                                                               |
-| Révélation, dernière manche      | C'était le dernier titre. Le podium arrive.                                                                       |
-| Panne, encart                    | **Le son de ZIK ne répond pas.** Passe sur ta sono : tu lances les titres, ZIK garde le chrono et les points.     |
-| Panne, bouton                    | Passer sur ta sono                                                                                                |
-| Panne, ligne discrète            | Sinon, ZIK réessaie tout seul (prochain essai dans 20 s).                                                         |
-| Ligne permanente en mode sono    | Le son : ta sono · Revenir au son de ZIK                                                                          |
-| Retour demandé                   | Le son de ZIK reprend à la manche suivante.                                                                       |
-| Régie revenue après bascule auto | Ta régie ne répondait plus : la partie est repassée sur le son de ZIK.                                            |
-| Avertissement, titre             | Le titre à lancer s'affiche ici en clair.                                                                         |
-| Avertissement, texte             | Si cette régie est sur l'écran de la salle, tout le monde verra la réponse. Ouvre-la sur ton téléphone.           |
-| Avertissement, boutons           | Ma régie est sur mon téléphone · Annuler                                                                          |
-| TV dans le même navigateur       | La TV est ouverte sur cet ordinateur. Ce que tu vois ici est peut-être sur l'écran de la salle. Bouton : Afficher |
+| Où                          | Texte                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Panne, titre de l'encart    | Le son de ZIK ne répond pas.                                                                                  |
+| Panne, aide                 | Lance les titres sur ta sono : ZIK garde le chrono, les réponses et les points.                               |
+| Panne, bouton               | Passer sur ma sono                                                                                            |
+| Panne, ligne discrète       | Sinon, ZIK réessaie tout seul (prochain essai dans 20 s).                                                     |
+| Bandeau d'avertissement     | Le titre s'affiche ici en clair. Si cette régie est sur l'écran de la salle, tout le monde le voit. · Compris |
+| Ligne du haut               | Le son : ma sono · Revenir au son de ZIK                                                                      |
+| Ligne du haut, son revenu   | Le son de ZIK répond de nouveau. · Revenir au son de ZIK                                                      |
+| Retour demandé              | Le son de ZIK reprend à la manche suivante.                                                                   |
+| Lancement, étiquette        | À lancer · Manche 3 / 10                                                                                      |
+| Lancement, titre            | Lance ce titre                                                                                                |
+| Lancement, note de la barre | Le chrono démarre quand tu appuies sur « C'est parti ».                                                       |
+| Attente longue              | La salle attend. Lance le titre ou passe-le.                                                                  |
+| Boutons                     | C'est parti · Passer ce titre                                                                                 |
+| Titre passé                 | Titre passé. À lancer à la place : …                                                                          |
+| Révélation                  | Prochain titre : Take On Me – a-ha. Prépare-le.                                                               |
+| Dernière manche             | C'était le dernier titre. Le podium arrive.                                                                   |
+| Pause                       | Le chrono est arrêté. Baisse ta sono toi-même.                                                                |
+| Buzzer                      | Coupe le son : {pseudo} répond à voix haute.                                                                  |
+| Régie revenue               | Ta régie ne répondait plus : la partie est revenue au son de ZIK.                                             |
 
-### TV (vous pluriel, festive)
+### TV et téléphones
 
-| Moment                | Texte                                                                            |
-| --------------------- | -------------------------------------------------------------------------------- |
-| Avant « C'est parti » | Manche 3 / 10 · La musique arrive (inchangé)                                     |
-| Pendant la manche     | Manche 3 / 10 · chrono · **Écoutez bien…** · choix et réponses comme aujourd'hui |
-| Révélation            | pochette, titre, artiste, le plus rapide (inchangé, chemin sans vidéo)           |
-
-Aucun mot sur la source du son : la salle ne voit pas la différence.
-
-### Téléphone
-
-« La musique arrive sur la TV… » devient « La musique arrive… » pour les deux sources (le son ne vient plus forcément de la TV). Rien d'autre ne change : jamais le titre, jamais le média.
-
-## États à prévoir
-
-| État                               | Régie                                                   | TV                           |
-| ---------------------------------- | ------------------------------------------------------- | ---------------------------- |
-| Chargement de la régie             | « Connexion à la soirée… » (inchangé)                   | inchangé                     |
-| Régie reconnectée en pleine manche | reprend l'étape en cours (titre à lancer ou chrono)     | inchangé                     |
-| Serveur redémarré (instantané)     | source gardée, manche rejouée depuis « Lance ce titre » | « La musique arrive »        |
-| Pochette absente                   | titre et artiste sans image                             | égaliseur seul (déjà le cas) |
-| Liste vide (fin de pile)           | « Copier la liste » masqué                              | —                            |
-| Copie refusée par le navigateur    | la liste s'affiche dans une zone sélectionnable         | —                            |
-| Hors ligne                         | bandeau « Connexion perdue » actuel                     | inchangé                     |
-
-## Ce qui ne change pas
-
-- Le son de ZIK reste la source par défaut des soirées de groupe, avec la même détection de panne.
-- Règles de jeu, points, bonus de rapidité, révélation, podium, classement de soirée.
-- Les téléphones ne reçoivent jamais la réponse ni le média, dans les deux modes.
+- TV : aucun texte nouveau. La salle ne voit pas d'où vient le son.
+- Téléphone : « La musique arrive sur la TV… » (`RoundPlay.svelte`, ligne 51) devient « La musique arrive… » (en « Votre sono », elle ne vient pas de la TV). Jamais le titre ni le média, dans tous les cas.
 
 ## À vérifier par `/tech` avant le code
 
-1. **Source dans les réglages** : un champ `settings.musicSource` (`"zik"` ou `"sono"`), modifié par `salon_update_settings` (schéma à étendre), sérialisé avec les réglages dans l'instantané (test d'instantané à compléter).
-2. **« C'est parti »** : `salon_music_ready` n'accepte aujourd'hui que le rôle `screen` (`control.js`, ligne 161). En mode sono, l'accepter de la régie seulement, et ne pas armer `musicReadyTimer` (`rounds.js`, ligne 256, et `resumeGame` dans `timers.js`).
-3. **Pas de média vers la TV en mode sono** : `roundData` sans `videoId` ni `audioUrl`. Vérifier que `loadMedia` sans média n'appelle pas `onVideoError` (sinon `skipTrack` et fausse panne), et que la révélation prend le chemin `AudioReveal`.
-4. **Titre à lancer et suivant** : `hostInfo` part déjà à `salon:ctrl` seulement ; y ajouter le titre suivant. La liste pour « Copier la liste » part aussi à `salon:ctrl` seulement, jamais dans `salon_settings` (envoyé à tous).
-5. **« Passer ce titre »** : nouveau handler via `safe()`, régie seulement, manche non consommée (`drawSpareTrack`), sans `skipStreak`, sans signalement de titre (`reportTrackIssue`).
-6. **Bascule depuis la panne** : `clearOutage` puis relance immédiate de la manche en attente, en annulant `outageTimer`. Entrées hostiles : bascule hors panne, hors partie, depuis un téléphone.
-7. **Régie absente 60 s** : brancher sur `_ctrlLeaveTimer` (`leave.js`) le retour au son de ZIK.
-8. **Intro éclair** exclue du tirage en mode sono (`specials.js`).
+1. **Extrait d'abord** : `resolveMedia` et `checkSession` cherchent l'extrait seulement (plus `findVideo` en salon). Le lecteur YouTube de la TV n'a plus de raison d'être chargé en salon : le retirer ou le laisser inerte, au choix le plus sûr.
+2. **« Votre sono »** : un champ d'état de partie sérialisable (instantané et son test). En « Votre sono », `roundData` part sans média, et la TV ne doit pas prendre cette absence pour une erreur (sinon titre sauté et fausse panne).
+3. **« C'est parti »** : `salon_music_ready` n'accepte que la TV (`control.js`, ligne 161). En « Votre sono », l'accepter de la régie seulement, et ne pas armer `musicReadyTimer` (`rounds.js`, ligne 256).
+4. **Nouveaux handlers** (passer sur ma sono, revenir, passer ce titre) via `safe()`, régie seulement, avec entrées hostiles : hors panne, hors partie, depuis un téléphone.
+5. **Titre à lancer et suivant** : seulement dans `hostInfo` (vers `salon:ctrl`), jamais vers la TV ni les téléphones.
+6. **Régie absente 60 s** : brancher sur `_ctrlLeaveTimer` (`leave.js`, ligne 67).
 
 ## Critères de recette
 
-- Staging, 1 TV, 1 régie au téléphone, 4 téléphones : partie de 5 manches en « Ta sono ». Le chrono ne part qu'au « C'est parti » ; la TV et les téléphones n'affichent jamais titre, artiste ni pochette avant la révélation ; la TV ne joue aucun titre.
-- « Copier la liste » colle les titres dans l'ordre réel des manches. Un « Passer ce titre » : le remplaçant s'affiche, le total de manches ne baisse pas tant qu'il reste des réserves.
-- Panne simulée (source vidéo coupée) : l'encart propose la sono ; un appui relance la manche en moins de 2 s ; « Revenir au son de ZIK » reprend à la manche suivante ; panne toujours là : l'encart revient.
-- Régie fermée 60 s en mode sono : la partie repasse sur le son de ZIK, la régie le dit à son retour.
-- TV et régie dans le même navigateur : bandeau affiché, titre brouillé jusqu'à « Afficher ».
-- Redémarrage du serveur en pleine manche sono : la source est gardée, la manche repart à « Lance ce titre ».
-- Régie 390 px : « C'est parti » dans la moitié basse, 60 px de haut, aucun défilement pour le lancer. TV 1920 × 1080 : un seul magenta, rien sous 28 px.
+- Staging, 1 TV, 1 régie au téléphone, 4 téléphones, manches de 60 s : la TV joue l'extrait, il reprend au début après 30 s sans coupure de partie ; révélation avec pochette ; aucune vidéo chargée par la TV.
+- Lobby : sur 5 playlists du catalogue et 1 playlist importée de YouTube, noter la part de titres avec extrait. Sous 90 %, on en reparle avant la release.
+- Panne simulée (source du son coupée dans admin › Réglages) : le bouton « Passer sur ma sono » apparaît, et seulement à ce moment. Un appui : la manche repart en moins de 2 s, le chrono ne part qu'au « C'est parti ».
+- TV et téléphones n'affichent jamais titre, artiste ni pochette avant la révélation, dans les deux modes.
+- Son de ZIK rallumé : la régie le propose, rien ne bascule seul. « Revenir au son de ZIK » reprend à la manche suivante.
+- Régie fermée 60 s en « Votre sono » : la partie revient au son de ZIK, la régie le dit à son retour.
+- Redémarrage du serveur en « Votre sono » : la manche reprend à « Lance ce titre ».
+- Régie 390 px : « C'est parti » dans la moitié basse, 60 px de haut au moins, sans défilement.
 
 ## Questions pour Théo
 
-1. **Source par défaut en ZIK Pro** : (A) son de ZIK, la sono en secours et proposée dans la liste de vérification ; ou (B) ta sono par défaut, le son de ZIK en secours. Recommandation : A (intuition : lancer une soirée en 2 minutes reste plus simple sans rien préparer ; un bar qui préfère sa sono le choisit une fois, le réglage est gardé).
-2. « Ta sono » est-il ouvert à tous (groupes compris) ou réservé à ZIK Pro ? Recommandation : à tous, puisque c'est d'abord le filet de la panne.
-3. Le nom affiché : « Ta sono » (proposé), « Ton son », « Musique de la régie » ?
-4. Les textes et le seuil de 60 s de régie absente : validés, à corriger ?
+1. **Les mots du bouton.** La régie tutoie : je propose « Passer sur ma sono » et « Le son : ma sono » plutôt que « Votre sono » (qui vouvoierait au milieu d'une régie en « tu »). D'accord ?
+2. **Retour au son de ZIK** : proposé par la régie quand il répond de nouveau, jamais automatique (risque de deux musiques à la fois). D'accord ?
