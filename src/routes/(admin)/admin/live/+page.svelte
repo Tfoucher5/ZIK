@@ -1,9 +1,9 @@
 <script>
   import { getContext } from 'svelte';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import LiveRoomDetail from '$lib/components/admin/live/LiveRoomDetail.svelte';
-  import { stateOf } from '$lib/components/admin/live/liveRooms.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import LiveRoomDetail from '#lib/components/admin/live/LiveRoomDetail.svelte';
+  import { stateOf } from '#lib/components/admin/live/liveRooms.js';
 
   let { data } = $props();
 

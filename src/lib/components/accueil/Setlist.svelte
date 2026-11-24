@@ -1,7 +1,7 @@
 <!-- « Tu viens pour quoi ? » : trois entrées, trois lignes de setlist -->
 <script>
-  import { band } from '$lib/components/layout/topBand.svelte.js';
-  import { FREE_MAX_PLAYERS } from '$lib/data/proPlans.js';
+  import { band } from '#lib/components/layout/topBand.svelte.js';
+  import { FREE_MAX_PLAYERS } from '#lib/data/proPlans.js';
 
   const PISTES = [
     ['/salon', 'Créer une soirée', "Une TV, un code à l'écran, et la première musique part en deux minutes.", `Gratuit jusqu'à ${FREE_MAX_PLAYERS} joueurs`],

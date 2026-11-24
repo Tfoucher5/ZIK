@@ -1,8 +1,8 @@
 <script>
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import TrackAnswers from '$lib/components/admin/TrackAnswers.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import TrackAnswers from '#lib/components/admin/TrackAnswers.svelte';
 
   /** Noms affichés et réponses acceptées d'un titre, propres à cette playlist. */
   let { open = $bindable(), editing, playlistName, types, token, busy, closing } = $props();

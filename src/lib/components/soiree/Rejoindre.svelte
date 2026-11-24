@@ -1,5 +1,5 @@
 <script module>
-  import { seg, stage, BLEU, ROSE } from '$lib/components/soiree/soireePins.js';
+  import { seg, stage, BLEU, ROSE } from '#lib/components/soiree/soireePins.js';
 
   // [pseudo, équipe (0 rouge, 1 bleue), arrivée]
   const ARR = [['Karim', 0, 0.08], ['Zoé', 1, 0.16], ['Léa', 0, 0.3], ['Hugo', 1, 0.44], ['Inès', 0, 0.56], ['Malik', 1, 0.68], ['Sarah', 0, 0.78], ['Tom', 1, 0.88]];
@@ -27,10 +27,10 @@
 </script>
 
 <script>
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import Qr from '$lib/components/soiree/Qr.svelte';
-  import { PINS } from '$lib/components/soiree/soireeBeats.js';
-  import { pad } from '$lib/components/soiree/soireePins.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import Qr from '#lib/components/soiree/Qr.svelte';
+  import { PINS } from '#lib/components/soiree/soireeBeats.js';
+  import { pad } from '#lib/components/soiree/soireePins.js';
 
   let p = $state(1);
   const s = $derived(render(p));

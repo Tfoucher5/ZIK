@@ -1,11 +1,11 @@
 <script>
   import { untrack } from 'svelte';
   import { page } from '$app/state';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import VideoFixer from '$lib/components/admin/VideoFixer.svelte';
-  import TrackAnswers from '$lib/components/admin/TrackAnswers.svelte';
-  import TrackAudioDebugger from '$lib/components/admin/audio/TrackAudioDebugger.svelte';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import VideoFixer from '#lib/components/admin/VideoFixer.svelte';
+  import TrackAnswers from '#lib/components/admin/TrackAnswers.svelte';
+  import TrackAudioDebugger from '#lib/components/admin/audio/TrackAudioDebugger.svelte';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
   import TrackCover from './TrackCover.svelte';
   import TrackFlags from './TrackFlags.svelte';
   import TrackInfos from './TrackInfos.svelte';

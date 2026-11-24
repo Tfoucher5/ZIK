@@ -1,6 +1,6 @@
 <script>
-  import { dicebear } from '$lib/shared/utils.js';
-  import NotifyPrompt from '$lib/components/notify/NotifyPrompt.svelte';
+  import { dicebear } from '#lib/shared/utils.js';
+  import NotifyPrompt from '#lib/components/notify/NotifyPrompt.svelte';
 
   /**
    * Liste d'amis, avec la présence en direct et les demandes reçues.

@@ -1,5 +1,5 @@
 <script>
-  import CardTray from '$lib/components/card/CardTray.svelte';
+  import CardTray from '#lib/components/card/CardTray.svelte';
 
   let {
     roomLabel, roundInfo, cardsInPlay, roundsSeen, roundTotal,

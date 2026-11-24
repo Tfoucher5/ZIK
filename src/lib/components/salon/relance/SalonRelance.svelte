@@ -1,10 +1,10 @@
 <script>
   import { onMount, untrack } from 'svelte';
-  import { Relance } from '$lib/components/salon/relance/relance.svelte.js';
-  import { TEXTES_SECOURS, creerSecours } from '$lib/components/salon/relance/relance.js';
-  import RelanceTv from '$lib/components/salon/relance/RelanceTv.svelte';
-  import RelanceRegie from '$lib/components/salon/relance/RelanceRegie.svelte';
-  import RelancePhone from '$lib/components/salon/relance/RelancePhone.svelte';
+  import { Relance } from '#lib/components/salon/relance/relance.svelte.js';
+  import { TEXTES_SECOURS, creerSecours } from '#lib/components/salon/relance/relance.js';
+  import RelanceTv from '#lib/components/salon/relance/RelanceTv.svelte';
+  import RelanceRegie from '#lib/components/salon/relance/RelanceRegie.svelte';
+  import RelancePhone from '#lib/components/salon/relance/RelancePhone.svelte';
 
   let { ecran, code, version, error, onRemount } = $props();
 

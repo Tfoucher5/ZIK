@@ -5,7 +5,7 @@
    *
    * @type {{ track: any, phase: string, answerMode: string }}
    */
-  import { texteReponse } from '$lib/components/salon/regie/reponse.js';
+  import { texteReponse } from '#lib/components/salon/regie/reponse.js';
 
   let { track, phase, answerMode } = $props();
 

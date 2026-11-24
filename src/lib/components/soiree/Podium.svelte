@@ -1,5 +1,5 @@
 <script module>
-  import { ease, seg, stage } from '$lib/components/soiree/soireePins.js';
+  import { ease, seg, stage } from '#lib/components/soiree/soireePins.js';
 
   // [classe, pseudo, apparition, fin du compteur, points, départ du compteur, hauteur]
   const PLACES = [['p2', 'Karim', 0.34, 0.46, 88, 0, 62], ['p1', 'Léa', 0.78, 0.9, 93, 89, 80], ['p3', 'Zoé', 0.14, 0.26, 79, 0, 46]];
@@ -20,9 +20,9 @@
 
 <script>
   import { getContext } from 'svelte';
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import { PINS } from '$lib/components/soiree/soireeBeats.js';
-  import { launchConfetti } from '$lib/components/game/confetti.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import { PINS } from '#lib/components/soiree/soireeBeats.js';
+  import { launchConfetti } from '#lib/components/game/confetti.js';
 
   const RESTE = [['Hugo', 66], ['Inès', 58], ['Sarah', 51], ['Malik', 47], ['Tom', 40], ['Nina', 33], ['Yanis', 29]];
   const pins = getContext('soiree-pins');

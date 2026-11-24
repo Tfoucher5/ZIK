@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { supabase, getAdminClient } from "$lib/server/config.js";
+import { supabase, getAdminClient } from "#lib/server/config.js";
 
 const VALID_MODES = ["classique", "qcm", "elo", "cartes"];
 const VALID_ROOMS = ["officielles", "toutes"];

@@ -1,6 +1,6 @@
 <script>
-  import { PLANS } from '$lib/data/proPlans.js';
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { PLANS } from '#lib/data/proPlans.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   import { textesFile } from './regiePro.svelte.js';
 
   /**

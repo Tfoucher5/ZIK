@@ -1,14 +1,14 @@
 import { error, json } from "@sveltejs/kit";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { verifyToken } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
 import {
   deezerPreviewMatch,
   iTunesPreviewMatch,
-} from "$lib/server/services/music/deezer.js";
-import { YTDLP_BIN, getYtAudioUrl } from "$lib/server/audio/ytdlAudio.js";
-import { validPreviewUrl, ytsSearch } from "$lib/server/socket/game/audio.js";
+} from "#lib/server/services/music/deezer.js";
+import { YTDLP_BIN, getYtAudioUrl } from "#lib/server/audio/ytdlAudio.js";
+import { validPreviewUrl, ytsSearch } from "#lib/server/socket/game/audio.js";
 
 const execFileAsync = promisify(execFile);
 

@@ -4,8 +4,8 @@
    * équipe ou en vrac. Pensé pour une salle pleine : derniers arrivés
    * seulement, le reste en « et N autres » (lobbyView).
    */
-  import { teamColor } from '$lib/data/salonOptions.js';
-  import { salonPlayUrl } from '$lib/client/salonClient.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
+  import { salonPlayUrl } from '#lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
   import MediaCheck from '../regie/MediaCheck.svelte';
   import { lobbyView } from './lobbyView.js';

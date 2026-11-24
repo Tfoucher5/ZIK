@@ -1,11 +1,11 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { makeCache } from "$lib/server/cache.js";
+import { supabase } from "#lib/server/config.js";
+import { makeCache } from "#lib/server/cache.js";
 import {
   coversByPlaylist,
   onlineCount,
   totalOnline,
-} from "$lib/server/services/rooms/roomList.js";
+} from "#lib/server/services/rooms/roomList.js";
 
 const cache = makeCache(30_000);
 

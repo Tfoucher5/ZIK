@@ -1,5 +1,5 @@
 <script>
-  import { scrub } from '$lib/components/ui/scrub.js';
+  import { scrub } from '#lib/components/ui/scrub.js';
 
   /**
    * @type {{

@@ -1,4 +1,4 @@
-import { BUG_MOTIFS } from "$lib/shared/reports/bug-report.js";
+import { BUG_MOTIFS } from "#lib/shared/reports/bug-report.js";
 
 export const REPORT_TYPES = {
   bug: "Bug",

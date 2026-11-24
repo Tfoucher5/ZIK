@@ -1,5 +1,5 @@
 <script>
-  import { RARITIES, RARITY_ORDER } from '$lib/components/card/rarity.js';
+  import { RARITIES, RARITY_ORDER } from '#lib/components/card/rarity.js';
 
   /** Répartition des cartes d'un joueur par rareté, de Commune à Mythique. */
   let { byRarity = {}, legend = false } = $props();

@@ -1,5 +1,5 @@
-import { getAdminClient } from "$lib/server/config.js";
-import { playlistCache, dbRooms } from "$lib/server/state.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { playlistCache, dbRooms } from "#lib/server/state.js";
 
 // Vide le cache des rooms qui jouent ces playlists : la prochaine partie relit la base.
 export async function forgetPlaylists(playlistIds) {

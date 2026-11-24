@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { GITHUB_URL } from '$lib/data/portfolio.js';
+    import { GITHUB_URL } from '#lib/data/portfolio.js';
 
     let scrollProgress = 0;
     let activeSection = 'top';

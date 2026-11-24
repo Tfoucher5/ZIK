@@ -2,11 +2,11 @@ import { json } from "@sveltejs/kit";
 import {
   createSalonRoom,
   changeSalonPlaylists,
-} from "$lib/server/socket/salon/index.js";
-import { salonRooms, getIO } from "$lib/server/state.js";
-import { restoreSalon } from "$lib/server/socket/salon/snapshot.js";
-import { verifyToken } from "$lib/server/middleware/auth.js";
-import { isUuid } from "$lib/shared/utils.js";
+} from "#lib/server/socket/salon/index.js";
+import { salonRooms, getIO } from "#lib/server/state.js";
+import { restoreSalon } from "#lib/server/socket/salon/snapshot.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
+import { isUuid } from "#lib/shared/utils.js";
 
 // Un salon sans compte ne lit que les playlists publiques (client anonyme,
 // RLS). Plafond pour qu'un script ne remplisse pas la mémoire de salons.

@@ -1,11 +1,11 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { fetchAllRows } from "$lib/server/services/admin/paginate.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
+import { fetchAllRows } from "#lib/server/services/admin/paginate.js";
 
 const TYPES = ["one_time", "tiered"];
 const RARITIES = ["common", "rare", "epic", "legendary"];

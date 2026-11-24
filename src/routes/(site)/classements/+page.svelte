@@ -1,16 +1,16 @@
 <script>
   import { onMount, getContext, untrack } from 'svelte';
-  import LoadMore from '$lib/components/ui/LoadMore.svelte';
-  import EmptyState from '$lib/components/ui/EmptyState.svelte';
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import CardViewer from '$lib/components/card/CardViewer.svelte';
-  import LeaderboardToolbar from '$lib/components/leaderboard/LeaderboardToolbar.svelte';
-  import PodiumChampion from '$lib/components/leaderboard/PodiumChampion.svelte';
-  import PodiumRunnerUp from '$lib/components/leaderboard/PodiumRunnerUp.svelte';
-  import LeaderboardRow from '$lib/components/leaderboard/LeaderboardRow.svelte';
-  import PlayerBar from '$lib/components/leaderboard/PlayerBar.svelte';
-  import { Leaderboard } from '$lib/components/leaderboard/leaderboard.svelte.js';
-  import { breadcrumb } from '$lib/shared/seo.js';
+  import LoadMore from '#lib/components/ui/LoadMore.svelte';
+  import EmptyState from '#lib/components/ui/EmptyState.svelte';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import CardViewer from '#lib/components/card/CardViewer.svelte';
+  import LeaderboardToolbar from '#lib/components/leaderboard/LeaderboardToolbar.svelte';
+  import PodiumChampion from '#lib/components/leaderboard/PodiumChampion.svelte';
+  import PodiumRunnerUp from '#lib/components/leaderboard/PodiumRunnerUp.svelte';
+  import LeaderboardRow from '#lib/components/leaderboard/LeaderboardRow.svelte';
+  import PlayerBar from '#lib/components/leaderboard/PlayerBar.svelte';
+  import { Leaderboard } from '#lib/components/leaderboard/leaderboard.svelte.js';
+  import { breadcrumb } from '#lib/shared/seo.js';
 
   const breadcrumbJsonLd = breadcrumb([{ name: 'Classements', path: '/classements' }]);
 

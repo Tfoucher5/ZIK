@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
+import { supabase } from "#lib/server/config.js";
 
 function buildModeStats(rows, roomMap) {
   // Best scores par room officielle

@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { requireAuth } from "$lib/server/middleware/auth.js";
-import { isOnline, currentRoomOf } from "$lib/server/socket/presence.js";
+import { requireAuth } from "#lib/server/middleware/auth.js";
+import { isOnline, currentRoomOf } from "#lib/server/socket/presence.js";
 
 export async function GET({ url, request }) {
   await requireAuth(request);

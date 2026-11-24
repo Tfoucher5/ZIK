@@ -1,8 +1,8 @@
 <!-- Compte facultatif : « Connexion » ou avatar + notifications + menu -->
 <script>
   import { getContext } from 'svelte';
-  import { dicebear } from '$lib/shared/utils.js';
-  import NotificationsMenu from '$lib/components/layout/NotificationsMenu.svelte';
+  import { dicebear } from '#lib/shared/utils.js';
+  import NotificationsMenu from '#lib/components/layout/NotificationsMenu.svelte';
 
   const ctx = getContext('zik');
   const user = $derived(ctx.user);

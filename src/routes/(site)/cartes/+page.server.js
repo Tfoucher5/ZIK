@@ -1,7 +1,7 @@
-import { getAdminClient } from "$lib/server/config.js";
-import { catalogTotals } from "$lib/server/services/cards/collection.js";
-import { CARD_SELECT, toCardView } from "$lib/components/card/cardView.js";
-import { RARITY_ORDER } from "$lib/components/card/rarity.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { catalogTotals } from "#lib/server/services/cards/collection.js";
+import { CARD_SELECT, toCardView } from "#lib/components/card/cardView.js";
+import { RARITY_ORDER } from "#lib/components/card/rarity.js";
 
 // Page publique des cartes : une carte en exemple par rareté, la plus écoutée
 // de sa catégorie, et le nombre de cartes du catalogue.

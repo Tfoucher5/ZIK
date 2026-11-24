@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { GITHUB_URL, LINKEDIN_URL, VERSION } from '$lib/data/portfolio.js';
+    import { GITHUB_URL, LINKEDIN_URL, VERSION } from '#lib/data/portfolio.js';
     import HeroPanels from './HeroPanels.svelte';
     import { reveal } from './reveal.js';
 

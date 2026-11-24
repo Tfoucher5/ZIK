@@ -1,5 +1,5 @@
 <script>
-  import LineChart from '$lib/components/admin/LineChart.svelte';
+  import LineChart from '#lib/components/admin/LineChart.svelte';
   import { dayLabel } from './metrics.js';
 
   /** Audience : joueurs actifs, qui joue chaque semaine et rétention des inscrits. */

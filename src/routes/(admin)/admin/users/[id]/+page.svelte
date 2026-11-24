@@ -1,13 +1,13 @@
 <script>
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import UserHistory from '$lib/components/admin/user/UserHistory.svelte';
-  import UserSocial from '$lib/components/admin/user/UserSocial.svelte';
-  import UserLog from '$lib/components/admin/user/UserLog.svelte';
-  import UserSide from '$lib/components/admin/user/UserSide.svelte';
-  import UserActionSheet from '$lib/components/admin/user/UserActionSheet.svelte';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { avatarOf, lastSeen } from '$lib/shared/admin/players.js';
-  import { date } from '$lib/components/admin/user/userAdmin.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import UserHistory from '#lib/components/admin/user/UserHistory.svelte';
+  import UserSocial from '#lib/components/admin/user/UserSocial.svelte';
+  import UserLog from '#lib/components/admin/user/UserLog.svelte';
+  import UserSide from '#lib/components/admin/user/UserSide.svelte';
+  import UserActionSheet from '#lib/components/admin/user/UserActionSheet.svelte';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { avatarOf, lastSeen } from '#lib/shared/admin/players.js';
+  import { date } from '#lib/components/admin/user/userAdmin.js';
 
   let { data, form } = $props();
 

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 
 const dz = vi.hoisted(() => ({ fetch: vi.fn() }));
-vi.mock("$lib/server/services/music/deezerClient.js", () => ({
+vi.mock("#lib/server/services/music/deezerClient.js", () => ({
   deezerFetch: dz.fetch,
 }));
-vi.mock("$lib/server/middleware/auth.js", () => ({
+vi.mock("#lib/server/middleware/auth.js", () => ({
   verifyToken: async () => ({ id: "u" }),
 }));
-vi.mock("$lib/server/config.js", () => {
+vi.mock("#lib/server/config.js", () => {
   const q = {
     select: () => q,
     eq: () => q,

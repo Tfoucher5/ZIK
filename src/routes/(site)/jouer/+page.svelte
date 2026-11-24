@@ -1,7 +1,7 @@
 <script>
-  import JsonLd from '$lib/components/ui/JsonLd.svelte';
-  import OnlineHome from '$lib/components/home/OnlineHome.svelte';
-  import { gameJsonLd, gameFaqJsonLd } from '$lib/components/home/seo.js';
+  import JsonLd from '#lib/components/ui/JsonLd.svelte';
+  import OnlineHome from '#lib/components/home/OnlineHome.svelte';
+  import { gameJsonLd, gameFaqJsonLd } from '#lib/components/home/seo.js';
 
   let { data } = $props();
 </script>

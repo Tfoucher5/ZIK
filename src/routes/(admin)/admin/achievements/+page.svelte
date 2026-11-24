@@ -1,10 +1,10 @@
 <script>
   import { enhance } from '$app/forms';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import AchievementForm from '$lib/components/admin/achievements/AchievementForm.svelte';
-  import { CATEGORIES, RARITIES, LEVELS } from '$lib/components/admin/achievements/labels.js';
-  import { ago, pct } from '$lib/shared/admin/stats-utils.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import AchievementForm from '#lib/components/admin/achievements/AchievementForm.svelte';
+  import { CATEGORIES, RARITIES, LEVELS } from '#lib/components/admin/achievements/labels.js';
+  import { ago, pct } from '#lib/shared/admin/stats-utils.js';
 
   let { data, form } = $props();
 

@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { getWeeklyChallengeState } from "$lib/server/services/weeklyChallenge.js";
-import { makeCache } from "$lib/server/cache.js";
+import { getWeeklyChallengeState } from "#lib/server/services/weeklyChallenge.js";
+import { makeCache } from "#lib/server/cache.js";
 
 const cache = makeCache(60_000);
 

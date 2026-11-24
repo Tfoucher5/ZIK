@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import VideoFixer from '$lib/components/admin/VideoFixer.svelte';
+  import VideoFixer from '#lib/components/admin/VideoFixer.svelte';
   import ConfirmSubmit from './ConfirmSubmit.svelte';
 
   /** Pause, passage de titre, Pro offert et vidéo du titre en cours. */

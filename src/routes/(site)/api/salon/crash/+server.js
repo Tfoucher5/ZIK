@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { recordClientCrash } from "$lib/server/services/health/clientCrash.js";
+import { recordClientCrash } from "#lib/server/services/health/clientCrash.js";
 
 export async function POST({ request }) {
   const payload = await request.json().catch(() => null);

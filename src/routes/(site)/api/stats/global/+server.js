@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { makeCache } from "$lib/server/cache.js";
+import { supabase } from "#lib/server/config.js";
+import { makeCache } from "#lib/server/cache.js";
 
 const cache = makeCache(60_000);
 

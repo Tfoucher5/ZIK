@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 
 const svc = vi.hoisted(() => ({ find: vi.fn(), start: vi.fn() }));
-vi.mock("$lib/server/services/music/artistPages.js", () => ({
+vi.mock("#lib/server/services/music/artistPages.js", () => ({
   findArtist: svc.find,
   startArtistRoom: svc.start,
 }));
-vi.mock("$lib/server/middleware/auth.js", () => ({ checkRateLimit() {} }));
+vi.mock("#lib/server/middleware/auth.js", () => ({ checkRateLimit() {} }));
 
 const { POST } = await import("../+server.js");
 const lancer = () =>

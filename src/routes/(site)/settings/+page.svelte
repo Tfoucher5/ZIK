@@ -1,15 +1,15 @@
 <script>
   import { getContext } from 'svelte';
-  import { onboarding } from '$lib/components/onboarding/onboarding.svelte.js';
-  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
-  import AppearanceSettings from '$lib/components/settings/AppearanceSettings.svelte';
-  import VolumeSetting from '$lib/components/settings/VolumeSetting.svelte';
-  import PrivacySetting from '$lib/components/settings/PrivacySetting.svelte';
-  import NotificationSettings from '$lib/components/settings/NotificationSettings.svelte';
-  import ProSetting from '$lib/components/settings/ProSetting.svelte';
-  import DiscordSetting from '$lib/components/settings/DiscordSetting.svelte';
-  import DangerZone from '$lib/components/settings/DangerZone.svelte';
-  import DeleteAccountModal from '$lib/components/settings/DeleteAccountModal.svelte';
+  import { onboarding } from '#lib/components/onboarding/onboarding.svelte.js';
+  import SettingsSection from '#lib/components/settings/SettingsSection.svelte';
+  import AppearanceSettings from '#lib/components/settings/AppearanceSettings.svelte';
+  import VolumeSetting from '#lib/components/settings/VolumeSetting.svelte';
+  import PrivacySetting from '#lib/components/settings/PrivacySetting.svelte';
+  import NotificationSettings from '#lib/components/settings/NotificationSettings.svelte';
+  import ProSetting from '#lib/components/settings/ProSetting.svelte';
+  import DiscordSetting from '#lib/components/settings/DiscordSetting.svelte';
+  import DangerZone from '#lib/components/settings/DangerZone.svelte';
+  import DeleteAccountModal from '#lib/components/settings/DeleteAccountModal.svelte';
 
   const _ctx = getContext('zik');
   const sb = _ctx.sb;

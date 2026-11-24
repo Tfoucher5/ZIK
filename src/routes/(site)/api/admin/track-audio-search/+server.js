@@ -1,7 +1,7 @@
 import { error, json } from "@sveltejs/kit";
-import { verifyToken } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
-import { deezerFetch } from "$lib/server/services/music/deezerClient.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { deezerFetch } from "#lib/server/services/music/deezerClient.js";
 
 async function checkAdmin(token) {
   if (!token) throw error(403, "Token manquant");

@@ -2,8 +2,8 @@ import { json } from "@sveltejs/kit";
 import {
   requireAdminToken,
   logAdminAction,
-} from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
+} from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
 
 const SELECT =
   "id, kind, source, note, context, count, status, created_at, updated_at, resolved_at, track:track_id(id, artist, title, cover_url, youtube_id, youtube_start, preview_url)";

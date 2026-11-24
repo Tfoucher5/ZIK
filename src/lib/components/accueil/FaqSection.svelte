@@ -1,7 +1,7 @@
 <!-- Questions fréquentes : les mêmes que dans les données structurées (faqJsonLd) -->
 <script>
-  import Faq from '$lib/components/ui/Faq.svelte';
-  import { FAQ } from '$lib/components/accueil/guide.js';
+  import Faq from '#lib/components/ui/Faq.svelte';
+  import { FAQ } from '#lib/components/accueil/guide.js';
 </script>
 
 <section class="collee" aria-labelledby="t-faq">

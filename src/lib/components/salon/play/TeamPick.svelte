@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   /** Choix d'équipe plein écran : les boutons remplissent l'écran, la liste défile au-delà. */
   let { p } = $props();
 </script>

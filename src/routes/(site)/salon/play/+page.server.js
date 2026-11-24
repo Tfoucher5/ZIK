@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { joinParams } from "$lib/components/salon/play/resume.js";
+import { joinParams } from "#lib/components/salon/play/resume.js";
 
 /** @type {import('./$types').PageServerLoad} */
 export function load({ url }) {

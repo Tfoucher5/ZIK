@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
-import { buildTrack } from "$lib/server/services/music/playlist.js";
-import { createCustomRoom } from "$lib/server/services/rooms/customRoom.js";
-import { checkRateLimit } from "$lib/server/middleware/auth.js";
+import { buildTrack } from "#lib/server/services/music/playlist.js";
+import { createCustomRoom } from "#lib/server/services/rooms/customRoom.js";
+import { checkRateLimit } from "#lib/server/middleware/auth.js";
 
 const REFUS = "Il faut un nom et au moins 3 titres avec artiste et titre.";
 const MAX_TITRES = 500;

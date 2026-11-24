@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte";
-  import NotifyPrompt from "$lib/components/notify/NotifyPrompt.svelte";
+  import NotifyPrompt from "#lib/components/notify/NotifyPrompt.svelte";
   import { ZikleSession } from "./session.svelte.js";
   import ZikleHeader from "./ZikleHeader.svelte";
   import ZikleRows from "./ZikleRows.svelte";

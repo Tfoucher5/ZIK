@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
-import { getCardByNumber } from "$lib/server/services/cards/page.js";
-import { buildMusicCardSvg } from "$lib/server/og/musicCard.js";
-import { svgToPng } from "$lib/server/og/render.js";
+import { getCardByNumber } from "#lib/server/services/cards/page.js";
+import { buildMusicCardSvg } from "#lib/server/og/musicCard.js";
+import { svgToPng } from "#lib/server/og/render.js";
 
 // Image de partage d'une carte. La rareté est figée et les données bougent peu :
 // une journée de cache suffit.

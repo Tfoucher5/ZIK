@@ -8,7 +8,7 @@
 
 <script>
   import { getContext } from 'svelte';
-  import { FRISE } from '$lib/components/soiree/soireeContent.js';
+  import { FRISE } from '#lib/components/soiree/soireeContent.js';
 
   const pins = getContext('soiree-pins');
   let p = $state(1);

@@ -1,5 +1,5 @@
 <script>
-  import { salonPlayUrl } from '$lib/client/salonClient.js';
+  import { salonPlayUrl } from '#lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
   import CodeTiles from './CodeTiles.svelte';
 

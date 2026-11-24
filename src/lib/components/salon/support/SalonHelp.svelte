@@ -1,6 +1,6 @@
 <script>
-  import { MIN_REPORT_MESSAGE } from '$lib/shared/reports/bug-report.js';
-  import { collectReportContext } from '$lib/shared/reports/context.js';
+  import { MIN_REPORT_MESSAGE } from '#lib/shared/reports/bug-report.js';
+  import { collectReportContext } from '#lib/shared/reports/context.js';
   import SupportChat from './SupportChat.svelte';
 
   /**

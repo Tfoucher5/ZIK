@@ -1,9 +1,9 @@
 import { json } from "@sveltejs/kit";
-import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
+import { requireAuth, checkRateLimit } from "#lib/server/middleware/auth.js";
 import {
   saveSubscription,
   deleteSubscription,
-} from "$lib/server/services/notify/push.js";
+} from "#lib/server/services/notify/push.js";
 
 const validSub = (s) =>
   typeof s?.endpoint === "string" &&

@@ -1,6 +1,6 @@
 <!-- Haut de page, posé sur l'affiche de la porte : h1 en texte (LCP), les deux entrées de l'immeuble -->
 <script>
-  import ResumeBand from '$lib/components/accueil/ResumeBand.svelte';
+  import ResumeBand from '#lib/components/accueil/ResumeBand.svelte';
 
   let { on } = $props();
 </script>

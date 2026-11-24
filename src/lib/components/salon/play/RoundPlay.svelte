@@ -1,6 +1,6 @@
 <script>
-  import { SPECIALS } from '$lib/data/salonOptions.js';
-  import { isWork } from '$lib/shared/playlist/work.js';
+  import { SPECIALS } from '#lib/data/salonOptions.js';
+  import { isWork } from '#lib/shared/playlist/work.js';
 
   let {
     round = 0, total = 10,

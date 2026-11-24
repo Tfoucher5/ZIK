@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
 
   /** En-tête d'une playlist : identité, chiffres et actions rapides. */
   let { playlist, trackCount, plays, counts, keep, onEdit, onDelete } = $props();

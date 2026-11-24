@@ -1,7 +1,7 @@
 <!-- Hero : la vidéo du bar avance avec le scroll, les légendes se relaient -->
 <script>
-  import ScrubVideo from '$lib/components/ui/ScrubVideo.svelte';
-  import { CAPTIONS, CREER, HERO } from '$lib/components/soiree/soireeContent.js';
+  import ScrubVideo from '#lib/components/ui/ScrubVideo.svelte';
+  import { CAPTIONS, CREER, HERO } from '#lib/components/soiree/soireeContent.js';
 
   const M = '/media/soiree/bar-';
   let p = $state(0);

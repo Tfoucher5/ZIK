@@ -5,7 +5,7 @@
    * places suivantes. Séquence et instants dans finaleSteps.js.
    */
   import { untrack } from 'svelte';
-  import { launchConfetti } from '$lib/components/game/confetti.js';
+  import { launchConfetti } from '#lib/components/game/confetti.js';
   import { playSound, SOUNDS } from './sounds.js';
   import HostPodium from './HostPodium.svelte';
   import HostWinnerFlood from './HostWinnerFlood.svelte';

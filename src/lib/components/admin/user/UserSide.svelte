@@ -1,5 +1,5 @@
 <script>
-  import { PLAN_LABELS } from '$lib/shared/admin/players.js';
+  import { PLAN_LABELS } from '#lib/shared/admin/players.js';
   import { date } from './userAdmin.js';
 
   /** Colonne latérale : accès ZIK Pro et gestion du compte. */

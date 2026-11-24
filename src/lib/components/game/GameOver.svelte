@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import Card from '$lib/components/card/Card.svelte';
+  import Card from '#lib/components/card/Card.svelte';
   import { launchConfetti } from './confetti.js';
 
   // Fin de partie : le disque d'or se dévoile, puis les crédits du 3e au 1er

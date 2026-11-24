@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const m = vi.hoisted(() => ({ create: vi.fn(), change: vi.fn() }));
 
-vi.mock("$lib/server/socket/salon/index.js", () => ({
+vi.mock("#lib/server/socket/salon/index.js", () => ({
   createSalonRoom: m.create,
   changeSalonPlaylists: m.change,
 }));
-vi.mock("$lib/server/socket/salon/snapshot.js", () => ({
+vi.mock("#lib/server/socket/salon/snapshot.js", () => ({
   restoreSalon: async () => null,
 }));
-vi.mock("$lib/server/middleware/auth.js", () => ({
+vi.mock("#lib/server/middleware/auth.js", () => ({
   verifyToken: async () => null,
 }));
 

@@ -1,10 +1,10 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { todayParis } from "$lib/server/services/zikle.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
+import { todayParis } from "#lib/server/services/zikle.js";
 import {
   AUTO_TARGETS,
   CHALLENGE_TYPES,
@@ -17,7 +17,7 @@ import {
   scheduleWeeklyChallenge,
   suggestTarget,
   updateActiveWeeklyChallenge,
-} from "$lib/server/services/weeklyChallenge.js";
+} from "#lib/server/services/weeklyChallenge.js";
 
 function readChallenge(form) {
   const type = String(form.get("type") || "");

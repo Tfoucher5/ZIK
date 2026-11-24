@@ -1,5 +1,5 @@
 <script>
-  import { fmtDate } from '$lib/shared/profile/stats.js';
+  import { fmtDate } from '#lib/shared/profile/stats.js';
 
   let { sb, userId } = $props();
   let soirees = $state(null);

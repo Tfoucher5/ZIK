@@ -1,6 +1,6 @@
 <script>
-  import { OFFRES, OFFRES_NOTE } from '$lib/components/soiree/soireeContent.js';
-  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
+  import { OFFRES, OFFRES_NOTE } from '#lib/components/soiree/soireeContent.js';
+  import { FREE_MAX_PLAYERS, FREE_MAX_TEAMS } from '#lib/data/proPlans.js';
 
   const FILTRES = [['all', 'Tout voir'], ['once', 'Une soirée'], ['often', 'Chaque semaine']];
   let filtre = $state('all');

@@ -1,8 +1,8 @@
 <script>
   import { goto } from '$app/navigation';
-  import Card from '$lib/components/card/Card.svelte';
-  import CardDrop from '$lib/components/card/CardDrop.svelte';
-  import { isWork } from '$lib/shared/playlist/work.js';
+  import Card from '#lib/components/card/Card.svelte';
+  import CardDrop from '#lib/components/card/CardDrop.svelte';
+  import { isWork } from '#lib/shared/playlist/work.js';
 
   // Écran plein de fin de manche : la réponse, la carte éventuelle, qui a trouvé
   let { coverSrc, roundCard, roundInfo, slots, finder, reason, roundsSeen, roundTotal } = $props();

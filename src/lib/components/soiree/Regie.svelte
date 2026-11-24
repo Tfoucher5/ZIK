@@ -1,5 +1,5 @@
 <script module>
-  import { ease, seg, stage } from '$lib/components/soiree/soireePins.js';
+  import { ease, seg, stage } from '#lib/components/soiree/soireePins.js';
 
   // [pseudo, points, a répondu à] (-1 = décroche, 2 = jamais)
   const PL = [['Léa', 22, 0.04], ['Karim', 21, 0.1], ['Zoé', 20, 0.16], ['Hugo', 17, -1], ['Inès', 14, 2], ['Sarah', 10, 2]];
@@ -24,8 +24,8 @@
 </script>
 
 <script>
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import { PINS } from '$lib/components/soiree/soireeBeats.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import { PINS } from '#lib/components/soiree/soireeBeats.js';
 
   let p = $state(0.6);
   const s = $derived(render(p));

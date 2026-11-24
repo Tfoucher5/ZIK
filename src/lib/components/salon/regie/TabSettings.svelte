@@ -1,9 +1,9 @@
 <script>
   import CloseEvening from './CloseEvening.svelte';
   import MediaCheck from './MediaCheck.svelte';
-  import { radioGroup } from '$lib/components/ui/radioGroup.js';
-  import { FREE_MAX_TEAMS } from '$lib/data/proPlans.js';
-  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS, teamColor } from '$lib/data/salonOptions.js';
+  import { radioGroup } from '#lib/components/ui/radioGroup.js';
+  import { FREE_MAX_TEAMS } from '#lib/data/proPlans.js';
+  import { SALON_ROUNDS, SALON_DURATIONS, SALON_REVEALS, SALON_TEAMS, teamColor } from '#lib/data/salonOptions.js';
   import { resumeReglages } from './onglets.js';
   import { ecranLarge } from './large.svelte.js';
 

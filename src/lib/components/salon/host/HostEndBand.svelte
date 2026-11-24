@@ -4,7 +4,7 @@
    * avec sa jauge dès qu'un joueur en redemande ; le code et le QR pour les retardataires.
    * TV seule (`onQr`) : un clic sur le QR l'affiche en grand.
    */
-  import { salonPlayUrl } from '$lib/client/salonClient.js';
+  import { salonPlayUrl } from '#lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
   import CodeTiles from './CodeTiles.svelte';
 

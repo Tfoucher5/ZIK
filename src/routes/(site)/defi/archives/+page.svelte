@@ -1,6 +1,6 @@
 <script>
-  import { dicebear } from '$lib/shared/utils.js';
-  import ChallengeIcon from '$lib/components/ui/ChallengeIcon.svelte';
+  import { dicebear } from '#lib/shared/utils.js';
+  import ChallengeIcon from '#lib/components/ui/ChallengeIcon.svelte';
 
   let { data } = $props();
   const weeks = data.weeks ?? [];

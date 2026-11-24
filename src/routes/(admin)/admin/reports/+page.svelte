@@ -1,11 +1,11 @@
 <script>
   import { untrack } from 'svelte';
   import { page } from '$app/state';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import ReportReader from '$lib/components/admin/reports/ReportReader.svelte';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
-  import { subjectLabel, isTrack, isSalon } from '$lib/shared/admin/reports.js';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import ReportReader from '#lib/components/admin/reports/ReportReader.svelte';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
+  import { subjectLabel, isTrack, isSalon } from '#lib/shared/admin/reports.js';
 
   let { data, form } = $props();
 

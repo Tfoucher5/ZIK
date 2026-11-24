@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   import TeamPick from './TeamPick.svelte';
   import TeamBand from './TeamBand.svelte';
   /** Avant la partie : choix d'équipe, puis attente avec son équipe et le mode de réponse. */

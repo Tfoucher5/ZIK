@@ -1,6 +1,6 @@
 <script>
   import HistoryBar from './HistoryBar.svelte';
-  import { LEVEL_TEXT } from '$lib/shared/health/levels.js';
+  import { LEVEL_TEXT } from '#lib/shared/health/levels.js';
 
   /** Un grand service de /statut : son état, sa frise et le détail de ses sondes. */
   let { group, days, checked, historyAvailable } = $props();

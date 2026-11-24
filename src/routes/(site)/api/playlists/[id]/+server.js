@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { verifyToken, userClient } from "$lib/server/middleware/auth.js";
+import { verifyToken, userClient } from "#lib/server/middleware/auth.js";
 
 export async function DELETE({ params, request }) {
   const token = request.headers.get("authorization")?.slice(7);

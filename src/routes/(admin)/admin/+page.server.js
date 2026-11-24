@@ -1,10 +1,10 @@
-import { adminLoad } from "$lib/server/middleware/adminActions.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { adminLoad } from "#lib/server/middleware/adminActions.js";
+import { getAdminClient } from "#lib/server/config.js";
 import {
   getTodo,
   getJournal,
   liveCounts,
-} from "$lib/server/services/admin/board.js";
+} from "#lib/server/services/admin/board.js";
 
 async function chargerPage() {
   const [{ items }, journal, pro] = await Promise.all([

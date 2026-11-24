@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
   import { BANS, date } from './userAdmin.js';
 
   /** Fenêtre des actions sur le compte : Pro, pseudo, stats, rôle, bannissement, suppression. */

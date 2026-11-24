@@ -1,5 +1,5 @@
 <script module>
-  import { ease, seg } from '$lib/components/soiree/soireePins.js';
+  import { ease, seg } from '#lib/components/soiree/soireePins.js';
 
   /** Trois cartons qui claquent l'un après l'autre, avec le décompte de l'annonce. */
   export function render(p) {
@@ -19,8 +19,8 @@
 </script>
 
 <script>
-  import Pin from '$lib/components/soiree/Pin.svelte';
-  import { CARTONS, PINS } from '$lib/components/soiree/soireeBeats.js';
+  import Pin from '#lib/components/soiree/Pin.svelte';
+  import { CARTONS, PINS } from '#lib/components/soiree/soireeBeats.js';
 
   let p = $state(0.2);
   const s = $derived(render(p));

@@ -1,5 +1,5 @@
 <script>
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
 
   /** Réponse d'un prospect : résumé, réponse suggérée, message d'origine et suivi. */
   let { r, c, place, onToggle } = $props();

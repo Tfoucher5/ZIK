@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { supabase } from "$lib/server/config.js";
-import { verifyToken } from "$lib/server/middleware/auth.js";
+import { supabase } from "#lib/server/config.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
 
 const EMPTY = {
   followers: 0,

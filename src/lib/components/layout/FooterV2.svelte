@@ -1,5 +1,5 @@
 <script>
-  import StatusPill from '$lib/components/layout/StatusPill.svelte';
+  import StatusPill from '#lib/components/layout/StatusPill.svelte';
 
   let { onContact } = $props();
 

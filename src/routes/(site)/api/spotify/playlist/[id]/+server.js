@@ -2,8 +2,8 @@ import { json } from "@sveltejs/kit";
 import {
   getSpotifyToken,
   normalizeSpotifyItem,
-} from "$lib/server/services/music/spotify.js";
-import { checkRateLimit } from "$lib/server/middleware/auth.js";
+} from "#lib/server/services/music/spotify.js";
+import { checkRateLimit } from "#lib/server/middleware/auth.js";
 
 export async function GET({ params, request }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";

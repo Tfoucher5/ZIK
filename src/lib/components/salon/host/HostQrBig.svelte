@@ -4,7 +4,7 @@
    * jusqu'à ce que l'hôte le referme ou lance la partie. TV seule (`onClose`) :
    * Échap ou un clic sur le QR le referme.
    */
-  import { salonPlayUrl } from '$lib/client/salonClient.js';
+  import { salonPlayUrl } from '#lib/client/salonClient.js';
   import QrCode from '../QrCode.svelte';
   import CodeTiles from './CodeTiles.svelte';
 

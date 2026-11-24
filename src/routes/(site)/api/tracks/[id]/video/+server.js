@@ -1,9 +1,9 @@
 import { json } from "@sveltejs/kit";
-import { requireAuth, checkRateLimit } from "$lib/server/middleware/auth.js";
+import { requireAuth, checkRateLimit } from "#lib/server/middleware/auth.js";
 import {
   checkVideo,
   pinVideoIfEmpty,
-} from "$lib/server/services/music/trackVideo.js";
+} from "#lib/server/services/music/trackVideo.js";
 
 // POST /api/tracks/:id/video  { youtube_id }
 // Fixe la vidéo d'un titre du catalogue, seulement s'il n'en a pas encore.

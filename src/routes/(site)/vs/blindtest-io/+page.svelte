@@ -1,5 +1,5 @@
 <script>
-  import VsPage from '$lib/components/vs/VsPage.svelte';
+  import VsPage from '#lib/components/vs/VsPage.svelte';
 </script>
 
 <VsPage

@@ -1,5 +1,5 @@
 <script>
-  import BarChart from '$lib/components/admin/BarChart.svelte';
+  import BarChart from '#lib/components/admin/BarChart.svelte';
 
   /** Pouls de ZIK : étoile polaire, 7 derniers jours, objectifs et Zikle du jour. */
   let { days, token, onExplain } = $props();

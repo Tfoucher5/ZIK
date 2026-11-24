@@ -1,6 +1,6 @@
 <script>
   import { enhance } from '$app/forms';
-  import { ago } from '$lib/shared/admin/stats-utils.js';
+  import { ago } from '#lib/shared/admin/stats-utils.js';
 
   /** Gestion d'une room : chiffres, visibilité, réglages et suppression. */
   let { room, msg, busy, submit, onDeleted } = $props();

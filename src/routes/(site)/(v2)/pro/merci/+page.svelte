@@ -1,5 +1,5 @@
 <script>
-  import ProThanks from '$lib/components/pro/ProThanks.svelte';
+  import ProThanks from '#lib/components/pro/ProThanks.svelte';
 </script>
 
 <svelte:head>

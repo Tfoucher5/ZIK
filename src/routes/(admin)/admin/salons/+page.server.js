@@ -1,11 +1,11 @@
 import {
   adminActions,
   adminLoad,
-} from "$lib/server/middleware/adminActions.js";
+} from "#lib/server/middleware/adminActions.js";
 import { fail } from "@sveltejs/kit";
-import { getAdminClient } from "$lib/server/config.js";
-import { logAdminAction } from "$lib/server/middleware/auth.js";
-import { salonRooms } from "$lib/server/state.js";
+import { getAdminClient } from "#lib/server/config.js";
+import { logAdminAction } from "#lib/server/middleware/auth.js";
+import { salonRooms } from "#lib/server/state.js";
 import {
   salonLiveState,
   supportPause,
@@ -14,8 +14,8 @@ import {
   supportKick,
   supportGiftPro,
   supportSettings,
-} from "$lib/server/socket/salon/admin.js";
-import { closeSupport } from "$lib/server/socket/salon/support.js";
+} from "#lib/server/socket/salon/admin.js";
+import { closeSupport } from "#lib/server/socket/salon/support.js";
 
 const DAY = 24 * 3600_000;
 

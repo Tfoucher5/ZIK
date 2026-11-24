@@ -1,7 +1,7 @@
 import {
   adminGetRoomsSnapshot,
   adminGetChatHistory,
-} from "$lib/server/socket/game/index.js";
+} from "#lib/server/socket/game/index.js";
 
 const SSE_HEADERS = {
   "Content-Type": "text/event-stream",

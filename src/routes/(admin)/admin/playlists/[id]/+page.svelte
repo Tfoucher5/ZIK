@@ -1,17 +1,17 @@
 <script>
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
-  import WorkSuggestModal from '$lib/components/playlist/WorkSuggestModal.svelte';
-  import PageHeader from '$lib/components/admin/PageHeader.svelte';
-  import Sheet from '$lib/components/admin/Sheet.svelte';
-  import TrackRepair from '$lib/components/admin/TrackRepair.svelte';
-  import PlaylistHero from '$lib/components/admin/playlist/PlaylistHero.svelte';
-  import PlaylistTrackRow from '$lib/components/admin/playlist/PlaylistTrackRow.svelte';
-  import PlaylistAddSheet from '$lib/components/admin/playlist/PlaylistAddSheet.svelte';
-  import PlaylistTrackEdit from '$lib/components/admin/playlist/PlaylistTrackEdit.svelte';
-  import PlaylistEditForm from '$lib/components/admin/playlist/PlaylistEditForm.svelte';
+  import WorkSuggestModal from '#lib/components/playlist/WorkSuggestModal.svelte';
+  import PageHeader from '#lib/components/admin/PageHeader.svelte';
+  import Sheet from '#lib/components/admin/Sheet.svelte';
+  import TrackRepair from '#lib/components/admin/TrackRepair.svelte';
+  import PlaylistHero from '#lib/components/admin/playlist/PlaylistHero.svelte';
+  import PlaylistTrackRow from '#lib/components/admin/playlist/PlaylistTrackRow.svelte';
+  import PlaylistAddSheet from '#lib/components/admin/playlist/PlaylistAddSheet.svelte';
+  import PlaylistTrackEdit from '#lib/components/admin/playlist/PlaylistTrackEdit.svelte';
+  import PlaylistEditForm from '#lib/components/admin/playlist/PlaylistEditForm.svelte';
   import { getContext } from 'svelte';
-  import { fuzzyFilter } from '$lib/shared/fuzzy.js';
+  import { fuzzyFilter } from '#lib/shared/fuzzy.js';
 
   let { data, form } = $props();
   const adminCtx = getContext('adminToken');

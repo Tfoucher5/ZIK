@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Fausse base : un seul salon a un instantané
 const db = vi.hoisted(() => ({ lectures: 0, instantane: null }));
-vi.mock("$lib/server/config.js", () => ({
+vi.mock("#lib/server/config.js", () => ({
   supabase: {},
   getAdminClient: () => ({
     schema: (s) =>
@@ -25,8 +25,8 @@ vi.mock("$lib/server/config.js", () => ({
   }),
 }));
 
-const { salonRooms } = await import("$lib/server/state.js");
-const { serializeSalon } = await import("$lib/server/socket/salon/snapshot.js");
+const { salonRooms } = await import("#lib/server/state.js");
+const { serializeSalon } = await import("#lib/server/socket/salon/snapshot.js");
 const { GET, _missesByIp } = await import("../+server.js");
 
 const appel = (code, ip = "1.1.1.1", reelle) =>

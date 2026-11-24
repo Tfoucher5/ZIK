@@ -1,5 +1,5 @@
 <script>
-  import { teamColor } from '$lib/data/salonOptions.js';
+  import { teamColor } from '#lib/data/salonOptions.js';
   import { statutJoueur } from './onglets.js';
   import { ecranLarge } from './large.svelte.js';
   /**

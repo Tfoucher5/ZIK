@@ -1,5 +1,5 @@
 <script>
-  import LineChart from '$lib/components/admin/LineChart.svelte';
+  import LineChart from '#lib/components/admin/LineChart.svelte';
   import { MEDIUM, dayLabel } from './metrics.js';
 
   /** D'où viennent les visiteurs : visites, canaux, sources et pages d'arrivée. */

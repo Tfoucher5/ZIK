@@ -1,6 +1,6 @@
 import { error, json } from "@sveltejs/kit";
-import { verifyToken } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
 
 async function checkAdmin(token) {
   if (!token) throw error(403, "Token manquant");

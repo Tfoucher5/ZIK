@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { verifyToken } from "$lib/server/middleware/auth.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { verifyToken } from "#lib/server/middleware/auth.js";
+import { getAdminClient } from "#lib/server/config.js";
 
 // Le profil, ses playlists et leurs titres partent en cascade depuis auth.users.
 export async function DELETE({ request }) {

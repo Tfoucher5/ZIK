@@ -1,5 +1,5 @@
-import { adminLoad } from "$lib/server/middleware/adminActions.js";
-import { getAdminClient } from "$lib/server/config.js";
+import { adminLoad } from "#lib/server/middleware/adminActions.js";
+import { getAdminClient } from "#lib/server/config.js";
 
 const PAGE_SIZE = 40;
 const SORTS = {

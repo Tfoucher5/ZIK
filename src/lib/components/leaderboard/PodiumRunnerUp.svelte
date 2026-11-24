@@ -1,7 +1,7 @@
 <script>
   import CardThumbs from './CardThumbs.svelte';
   import RarityBar from './RarityBar.svelte';
-  import PlayerActions from '$lib/components/player/PlayerActions.svelte';
+  import PlayerActions from '#lib/components/player/PlayerActions.svelte';
 
   /** 2e (disque de platine) ou 3e (disque d'or) du classement. */
   let { lb, p, rank } = $props();
