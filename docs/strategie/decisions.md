@@ -2,6 +2,14 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 24/11/2026 — Son des soirées : fiabilité d'abord
+
+**Décision de Théo** :
+
+- **Mode « Ta sono » refusé** : « ça enlève l'idée de simplifier l'organisation ». ZIK garde le son, tout reste clé en main.
+- **Validé** : « tant qu'on casse pas le fonctionnement et que tout fonctionne toujours on peut faire ça ». Interrupteurs des sources du son dans l'admin (fait, #596), TV qui joue l'extrait plutôt que la vidéo, et un repli sur la sono de l'organisateur seulement en cas de panne (« ça peut être pratique pour les organisateurs »). Fiche et maquette du repli et de la TV à valider avant le code.
+- **Critère d'arrêt** : la TV sans vidéo ne part pas tant qu'au moins 90 % des titres n'ont pas un extrait sûr ; tout retour d'une soirée cassée la remet en question.
+
 ## 24/11/2026 — Réponses de Théo depuis le QG en ligne
 
 **Décision de Théo** :

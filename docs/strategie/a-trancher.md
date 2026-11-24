@@ -15,14 +15,14 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
-## Fiche « Ta sono » (l'animateur lance la musique, ZIK fait le jeu)
+## Fiche « TV sans vidéo YouTube et repli sur ma sono »
 
 - **Chantier** : ZIK Soirée / fiabilité
-- **Depuis** : 24/11
-- **Question** : valides-tu la fiche et la maquette ? Source par défaut en ZIK Pro : (A) son de ZIK, ta sono en secours, ou (B) ta sono par défaut ? Mode ouvert à tous ou réservé à ZIK Pro ? Nom affiché : « Ta sono », « Ton son », « Musique de la régie » ?
-- **Options** : A ou B ; tous ou Pro ; un des trois noms
-- **Recommandation** : maquette validée, A, ouvert à tous (c'est d'abord le secours de la panne), « Ta sono »
-- **Lien** : `docs/specs/2026-11-24-musique-de-la-regie.md`, maquette https://claude.ai/artifact/G5Ke3AkYH75AbwKG4o1wWq
+- **Depuis** : 24/11 (le mode « Ta sono » a été refusé par Théo : il complique l'organisation ; on garde le repli)
+- **Question** : valides-tu la maquette ? « Passer sur ma sono » au tutoiement comme le reste de la régie ? Retour au son de ZIK proposé par la régie, jamais automatique ? Avant de retirer la vidéo, compléter les identifiants Deezer du catalogue en prod (36 % des titres des playlists officielles n'en ont pas, mesuré sur le staging) ?
+- **Options** : oui / non pour chaque point
+- **Recommandation** : oui aux quatre ; la TV sans vidéo ne part qu'une fois au moins 90 % des titres avec un extrait sûr
+- **Lien** : `docs/specs/2026-11-24-musique-de-la-regie.md`, maquette https://claude.ai/artifact/ETZHspB9GR17cSjHgNZQDG
 
 ## Statut de vente et TVA
 
