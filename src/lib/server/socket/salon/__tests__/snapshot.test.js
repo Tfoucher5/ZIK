@@ -177,6 +177,7 @@ describe("instantané d'un salon", () => {
     const salon = salonEnManche();
     const revu = reviveSalon(viaBase(salon), null);
     nettoie(salon);
+    expect(revu.settings.title).toBe("Quiz du jeudi");
     const g = revu.game;
     expect(g.fullPlaylist.map((t) => t.id).sort()).toEqual([
       "t0",
