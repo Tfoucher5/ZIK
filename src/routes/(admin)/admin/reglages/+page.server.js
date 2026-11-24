@@ -13,6 +13,10 @@ import {
   clearVideoSettingsCache,
 } from "#lib/server/services/music/trackIssues.js";
 import { getSources, setSources } from "#lib/server/services/music/sources.js";
+import {
+  fillDeezerIds,
+  remaining as deezerIdsLeft,
+} from "#lib/server/services/music/deezerIds.js";
 import { broadcastNotification } from "#lib/server/services/notify/notifications.js";
 import { ADMIN_ALERTS } from "#lib/server/services/admin/alerts.js";
 import {
@@ -121,6 +125,17 @@ export const actions = adminActions({
     return { sourcesSaved: true };
   },
 
+  deezerIds: async ({ locals }) => {
+    try {
+      const result = await fillDeezerIds();
+      await logAdminAction(locals.adminId, "deezer_ids", null, "site", result);
+      return { deezerIds: result };
+    } catch (e) {
+      console.error("[deezer_ids]", e.message);
+      return fail(500, { deezerIdsError: "Lot interrompu, réessaie." });
+    }
+  },
+
   video: async ({ request, locals }) => {
     const form = await request.formData();
     const exclude = String(form.get("exclude") || "")
@@ -185,11 +200,12 @@ export const actions = adminActions({
 
 async function chargerPage({ locals }) {
   const sb = getAdminClient();
-  const [maintenance, video, sources, profileRes, devicesRes] =
+  const [maintenance, video, sources, deezerLeft, profileRes, devicesRes] =
     await Promise.all([
       getMaintenance(),
       getVideoSettings(),
       getSources(),
+      deezerIdsLeft().catch(() => null),
       sb
         .from("profiles")
         .select("notif_prefs")
@@ -208,6 +224,7 @@ async function chargerPage({ locals }) {
     notice: getSalonNotice(),
     video,
     sources,
+    deezerLeft,
     alerts: {
       ready: pushReady(),
       kinds: Object.entries(ADMIN_ALERTS).map(([key, label]) => ({

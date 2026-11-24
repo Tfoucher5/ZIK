@@ -15,15 +15,6 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
-## Fiche « TV sans vidéo YouTube et repli sur ma sono »
-
-- **Chantier** : ZIK Soirée / fiabilité
-- **Depuis** : 24/11 (le mode « Ta sono » a été refusé par Théo : il complique l'organisation ; on garde le repli)
-- **Question** : valides-tu la maquette ? « Passer sur ma sono » au tutoiement comme le reste de la régie ? Retour au son de ZIK proposé par la régie, jamais automatique ? Avant de retirer la vidéo, compléter les identifiants Deezer du catalogue en prod (36 % des titres des playlists officielles n'en ont pas, mesuré sur le staging) ?
-- **Options** : oui / non pour chaque point
-- **Recommandation** : oui aux quatre ; la TV sans vidéo ne part qu'une fois au moins 90 % des titres avec un extrait sûr
-- **Lien** : `docs/specs/2026-11-24-musique-de-la-regie.md`, maquette https://claude.ai/artifact/ETZHspB9GR17cSjHgNZQDG
-
 ## Statut de vente et TVA
 
 - **Chantier** : Argent / légal

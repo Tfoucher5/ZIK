@@ -2,6 +2,10 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 24/11/2026 — TV sans vidéo et repli sur ma sono : fiche validée
+
+**Décision de Théo** (QG, 18:15) : « oui » aux quatre points de la fiche (`docs/specs/2026-11-24-musique-de-la-regie.md`, maquette https://claude.ai/artifact/ETZHspB9GR17cSjHgNZQDG) : maquette validée, « Passer sur ma sono » au tutoiement, retour au son de ZIK proposé par la régie et jamais automatique, identifiants Deezer du catalogue complétés en prod après un test sur le staging. Critère inchangé : la TV sans vidéo ne part qu'à 90 % de titres avec un extrait sûr.
+
 ## 24/11/2026 — Son des soirées : fiabilité d'abord
 
 **Décision de Théo** :

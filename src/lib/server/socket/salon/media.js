@@ -6,6 +6,7 @@ import { validPreviewUrl } from "../game/audio.js";
 import { knownVideo } from "./tracks.js";
 import { staff } from "./players.js";
 import { sources } from "../../services/music/sources.js";
+import { deezerIdOf } from "../../../shared/playlist/deezerId.js";
 
 // Ce que la TV joue pour un titre. Le 30/10, YouTube ne répondait plus et les
 // parties s'arrêtaient : le serveur n'appelle plus YouTube en partie, et sans
@@ -33,10 +34,8 @@ const NO_PREVIEW_TTL_MS = 30 * 1000;
 const PREVIEW_WAIT_MS = 5000;
 
 async function fetchPreview(track) {
-  // Seuls les titres importés de Deezer ont un id numérique Deezer
-  const byId = /^\d+$/.test(track.external_id ?? "")
-    ? await fetchDeezerTrackPreview(track.external_id)
-    : null;
+  const id = deezerIdOf(track);
+  const byId = id ? await fetchDeezerTrackPreview(id) : null;
   return (
     byId ||
     validPreviewUrl(track.preview_url) ||

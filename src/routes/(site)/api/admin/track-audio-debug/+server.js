@@ -9,6 +9,7 @@ import {
 } from "#lib/server/services/music/deezer.js";
 import { YTDLP_BIN } from "#lib/server/audio/ytdlAudio.js";
 import { validPreviewUrl, ytsSearch } from "#lib/server/socket/game/audio.js";
+import { deezerIdOf } from "#lib/shared/playlist/deezerId.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -85,14 +86,15 @@ export async function POST({ url, request }) {
     .schema("catalog")
     .from("tracks")
     .select(
-      "id, artist, title, preview_url, preview_expires_at, external_id, youtube_id, source",
+      "id, artist, title, preview_url, preview_expires_at, external_id, deezer_id, youtube_id, source",
     )
     .eq("id", trackId)
     .single();
   if (!track) return json({ error: "Titre introuvable" }, { status: 404 });
 
   const previewUrl = overridePreviewUrl || track.preview_url;
-  const externalId = overrideExternalId || track.external_id;
+  const externalId =
+    overrideExternalId || deezerIdOf(track) || track.external_id;
   const steps = {};
 
   const stillValid = validPreviewUrl(previewUrl);

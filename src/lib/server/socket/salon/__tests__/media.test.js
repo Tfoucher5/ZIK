@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const m = vi.hoisted(() => ({ byName: vi.fn() }));
+const m = vi.hoisted(() => ({ byName: vi.fn(), byId: vi.fn() }));
 
 vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));
 vi.mock("../../../services/music/deezer.js", () => ({
-  fetchDeezerTrackPreview: async () => null,
+  fetchDeezerTrackPreview: m.byId,
   deezerPreviewMatch: m.byName,
 }));
 vi.mock("../../game/audio.js", () => ({
@@ -31,7 +31,10 @@ const salon = () => ({
 });
 
 describe("média d'un titre", () => {
-  beforeEach(() => m.byName.mockReset().mockResolvedValue(null));
+  beforeEach(() => {
+    m.byName.mockReset().mockResolvedValue(null);
+    m.byId.mockReset().mockResolvedValue(null);
+  });
 
   it("vidéo épinglée : jouée telle quelle", async () => {
     const res = await resolveMedia(salon(), {
@@ -53,6 +56,19 @@ describe("média d'un titre", () => {
     m.byName.mockResolvedValue("https://cdn/extrait.mp3");
     const res = await resolveMedia(salon(), { artist: "A", title: "T" });
     expect(res).toEqual({ audio: "https://cdn/extrait.mp3", safeStart: 0 });
+  });
+
+  it("identifiant Deezer complété : extrait par id, sans recherche par nom", async () => {
+    m.byId.mockResolvedValue("https://cdn/par-id.mp3");
+    const res = await resolveMedia(salon(), {
+      artist: "A",
+      title: "T",
+      external_id: "spotify:abc",
+      deezer_id: "42",
+    });
+    expect(res).toEqual({ audio: "https://cdn/par-id.mp3", safeStart: 0 });
+    expect(m.byId).toHaveBeenCalledWith("42");
+    expect(m.byName).not.toHaveBeenCalled();
   });
 
   it("ni vidéo ni extrait : erreur, pour que la partie attende", async () => {
