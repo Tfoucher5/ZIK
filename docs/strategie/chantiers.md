@@ -17,12 +17,6 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Technique puis Opérations
 - **Prochaine étape** : « musique muette sur la TV » (19/11) corrigé et en prod en v3.34.0 (#571, TV rechargée reprend le titre en cours, pause tenue) ; scénario « TV rechargée » ajouté au staging ; « changement de playlist au podium » (21/11, Rom) : pas de bug serveur, la vraie gêne est une playlist de 3 titres pour 5 manches (voir chantier suivant) ; réponse à Rom à envoyer par Théo
 
-## Rejoindre sur réseau lent
-
-- **Statut** : fait
-- **Équipe** : Technique
-- **Prochaine étape** : #584 fusionné le 23/11 : « Rejoindre » touché avant le chargement de la page n'est plus perdu (aucun changement visible) ; part à la prochaine release
-
 ## Imports `#lib` (SvelteKit 3)
 
 - **Statut** : fait
@@ -31,15 +25,15 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 ## Playlist trop courte pour la partie
 
-- **Statut** : en cours
-- **Équipe** : Technique puis Opérations
-- **Prochaine étape** : maquette validée le 24/11 ; code en relecture (#589), puis recette sur le staging avec une playlist de 3 titres
+- **Statut** : fait
+- **Équipe** : Technique
+- **Prochaine étape** : en prod en v3.35.0 (24/11) : les manches suivent les titres, alertes à la création et dans la régie ; état « court » non vu en vrai (aucune playlist de moins de 20 titres sur le staging), couvert par les tests ; réponse à Rom à envoyer par Théo
 
-## Release v3.34.0
+## Release v3.35.0
 
 - **Statut** : fait
 - **Équipe** : Opérations
-- **Prochaine étape** : en prod le 23/11 à 21 h 25 (SvelteKit 3, écran de relance, TV rechargée qui reprend la musique, textes du podium neutres) ; scénario salon 37/37 sur le staging, revue de sécurité sans faille ; à tester par Théo : F5 de la TV en pleine manche, pendant une pause et pendant la révélation
+- **Prochaine étape** : en prod le 24/11 à 12 h 50 (nom de la soirée, les manches suivent les titres, un seul magenta sur la TV, Rejoindre sur réseau lent, imports #lib) ; scénario salon 38/38, revue de sécurité sans faille
 
 ## Promo
 
@@ -51,7 +45,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Produit puis Technique
-- **Prochaine étape** : textes du podium neutres (v3.34.0) ; un seul magenta sur la TV sans régie et nom de la soirée sur la story fusionnés (#588), recette sur le staging à faire ; paramètres avancés de soirée (idée de Théo) à cadrer
+- **Prochaine étape** : un seul magenta sur la TV sans régie et nom de la soirée sur la story en prod (v3.35.0), story à voir sur un vrai iPhone ; paramètres avancés de soirée (idée de Théo) à cadrer
 
 ## Statut micro-entreprise
 
