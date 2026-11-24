@@ -31,9 +31,9 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 ## Playlist trop courte pour la partie
 
-- **Statut** : à faire
-- **Équipe** : Produit puis Technique
-- **Prochaine étape** : fiche et maquette prêtes, à valider par Théo (« À trancher »)
+- **Statut** : en cours
+- **Équipe** : Technique puis Opérations
+- **Prochaine étape** : maquette validée le 24/11 ; code en relecture (#589), puis recette sur le staging avec une playlist de 3 titres
 
 ## Release v3.34.0
 
@@ -49,9 +49,9 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 ## Retouches après tests réels
 
-- **Statut** : à faire
+- **Statut** : en cours
 - **Équipe** : Produit puis Technique
-- **Prochaine étape** : textes du podium neutres faits (v3.34.0) ; magenta de la TV sans régie et nom de la soirée sur la story : fiche et maquette à valider par Théo (« À trancher ») ; paramètres avancés de soirée (idée de Théo) à cadrer
+- **Prochaine étape** : textes du podium neutres (v3.34.0) ; un seul magenta sur la TV sans régie et nom de la soirée sur la story fusionnés (#588), recette sur le staging à faire ; paramètres avancés de soirée (idée de Théo) à cadrer
 
 ## Statut micro-entreprise
 
