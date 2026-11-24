@@ -139,6 +139,24 @@
       {#if form?.videoError}<p class="a-err">{form.videoError}</p>{/if}
     </form>
 
+    <h2 class="a-h2">Sources du son</h2>
+    <form method="POST" action="?/sources" class="a-card grid" use:enhance={submit('sources')}>
+      <p class="a-muted small">Soirées seulement. À ne couper qu'en cas de problème avec une source. Sans YouTube, la TV joue l'extrait Deezer. Sans Deezer, elle ne joue que les vidéos. Les deux coupées, les soirées n'ont plus de son. Les parties en cours changent au titre suivant.</p>
+      {#if !data.sources.youtube || !data.sources.deezer}<p class="a-err">{data.sources.youtube || data.sources.deezer ? 'Une source du son est coupée.' : "Les deux sources sont coupées : les soirées n'ont plus de son."}</p>{/if}
+      <label class="a-check"><input type="checkbox" name="youtube" checked={data.sources.youtube} /> Vidéos YouTube (TV des soirées)</label>
+      <label class="a-check"><input type="checkbox" name="deezer" checked={data.sources.deezer} /> Extraits Deezer (TV des soirées)</label>
+      <button class="a-btn primary" type="submit" disabled={busy === 'sources'}>{busy === 'sources' ? 'Enregistrement…' : 'Enregistrer'}</button>
+      {#if form?.sourcesSaved}<p class="a-ok">Enregistré.</p>{/if}
+      {#if form?.sourcesError}<p class="a-err">{form.sourcesError}</p>{/if}
+    </form>
+    <form method="POST" action="?/deezerIds" class="a-card grid" use:enhance={submit('deezerIds')}>
+      <p class="a-muted small">Cherche l'identifiant Deezer des titres qui n'en ont pas, 200 par clic (environ une minute). Un titre dont l'artiste ou le titre ne correspond pas exactement reste sans identifiant.</p>
+      <p>{data.deezerLeft === null ? 'Titres à vérifier : inconnu.' : `Titres à vérifier : ${data.deezerLeft}`}</p>
+      <button class="a-btn" type="submit" disabled={busy === 'deezerIds' || data.deezerLeft === 0}>{busy === 'deezerIds' ? 'Recherche…' : 'Compléter les identifiants Deezer'}</button>
+      {#if form?.deezerIds}<p class="a-ok">Vérifiés : {form.deezerIds.checked}, trouvés : {form.deezerIds.found}{form.deezerIds.failed ? `, ${form.deezerIds.failed} à reprendre` : ''}.</p>{/if}
+      {#if form?.deezerIdsError}<p class="a-err">{form.deezerIdsError}</p>{/if}
+    </form>
+
     <h2 class="a-h2">Maintenance</h2>
     <form method="POST" action="?/notice" class="a-card grid" use:enhance={submit('notice')}>
       <p class="a-muted small">Un bandeau tout de suite sur la TV, la régie et les téléphones de tous les salons, et sur /statut. Il reste jusqu'à ce que tu le retires, même après un redémarrage. La partie continue.</p>

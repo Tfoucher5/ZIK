@@ -5,12 +5,18 @@ import {
 import { validPreviewUrl } from "../game/audio.js";
 import { knownVideo } from "./tracks.js";
 import { staff } from "./players.js";
+import { sources } from "../../services/music/sources.js";
+import { deezerIdOf } from "../../../shared/playlist/deezerId.js";
 
 // Ce que la TV joue pour un titre. Le 30/10, YouTube ne répondait plus et les
 // parties s'arrêtaient : le serveur n'appelle plus YouTube en partie, et sans
 // vidéo connue on joue l'extrait Deezer plutôt que de sauter le titre.
 
+// Une source coupée par l'admin : un titre sans média n'est pas en cause
+export const sourceCut = () => !sources().youtube || !sources().deezer;
+
 export async function findVideo(salon, track) {
+  if (!sources().youtube) throw new Error("YouTube coupé");
   const known = salon.game.videos?.get(track);
   if (known) return known;
   const found = await knownVideo(track, salon.settings.roundDuration);
@@ -28,10 +34,8 @@ const NO_PREVIEW_TTL_MS = 30 * 1000;
 const PREVIEW_WAIT_MS = 5000;
 
 async function fetchPreview(track) {
-  // Seuls les titres importés de Deezer ont un id numérique Deezer
-  const byId = /^\d+$/.test(track.external_id ?? "")
-    ? await fetchDeezerTrackPreview(track.external_id)
-    : null;
+  const id = deezerIdOf(track);
+  const byId = id ? await fetchDeezerTrackPreview(id) : null;
   return (
     byId ||
     validPreviewUrl(track.preview_url) ||
@@ -41,6 +45,7 @@ async function fetchPreview(track) {
 
 // Lien d'extrait frais : ceux de Deezer expirent, celui en base peut être périmé
 export async function previewUrl(track) {
+  if (!sources().deezer) return null;
   const hit = previews.get(track);
   if (hit && hit.exp > Date.now() && (!hit.url || validPreviewUrl(hit.url)))
     return hit.url;

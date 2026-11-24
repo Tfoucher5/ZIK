@@ -22,6 +22,7 @@ import { startVideoResolver } from "./src/lib/server/services/music/videoResolve
 import { autoUpdateYtDlp } from "./src/lib/server/audio/ytdlpUpdate.js";
 import { announceLatestNews } from "./src/lib/server/services/notify/notifications.js";
 import { loadSalonNotice } from "./src/lib/server/services/admin/salonNotice.js";
+import { getSources } from "./src/lib/server/services/music/sources.js";
 import {
   startHealthMonitor,
   healthz,
@@ -105,4 +106,5 @@ server.listen(PORT, () => {
   announceLatestNews().catch((e) => console.error("[news]", e.message));
   purgeSnapshots();
   loadSalonNotice();
+  getSources();
 });

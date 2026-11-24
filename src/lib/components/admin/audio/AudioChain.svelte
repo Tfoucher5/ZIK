@@ -7,8 +7,6 @@
   const ETAPES = [
     ['catalogue', 'Catalogue'],
     ['recherche', 'Recherche YouTube'],
-    ['ytdlp', 'Extraction yt-dlp'],
-    ['proxy', 'Flux audio'],
     ['deezer', 'Deezer'],
     ['itunes', 'iTunes'],
   ];

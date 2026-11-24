@@ -73,6 +73,15 @@ describe("buildTrackFromRow", () => {
     expect(t.external_id).toBe("dz-77");
   });
 
+  it("reprend l'identifiant Deezer complété, absent = null", () => {
+    expect(buildTrackFromRow(row).deezer_id).toBeNull();
+    const t = buildTrackFromRow({
+      ...row,
+      tracks: { ...row.tracks, deezer_id: "42" },
+    });
+    expect(t.deezer_id).toBe("42");
+  });
+
   it("laisse custom_artist primer sans perdre l'identifiant", () => {
     const t = buildTrackFromRow({ ...row, custom_artist: "Ninho & Niska" });
     expect(t.artist).toBe("Ninho & Niska");

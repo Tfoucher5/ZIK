@@ -2,6 +2,18 @@
 
 Décisions du board (`/board`) et de Théo, la plus récente en haut. Chaque entrée garde son critère d'arrêt pour qu'on sache quand revenir dessus.
 
+## 24/11/2026 — TV sans vidéo et repli sur ma sono : fiche validée
+
+**Décision de Théo** (QG, 18:15) : « oui » aux quatre points de la fiche (`docs/specs/2026-11-24-musique-de-la-regie.md`, maquette https://claude.ai/artifact/ETZHspB9GR17cSjHgNZQDG) : maquette validée, « Passer sur ma sono » au tutoiement, retour au son de ZIK proposé par la régie et jamais automatique, identifiants Deezer du catalogue complétés en prod après un test sur le staging. Critère inchangé : la TV sans vidéo ne part qu'à 90 % de titres avec un extrait sûr.
+
+## 24/11/2026 — Son des soirées : fiabilité d'abord
+
+**Décision de Théo** :
+
+- **Mode « Ta sono » refusé** : « ça enlève l'idée de simplifier l'organisation ». ZIK garde le son, tout reste clé en main.
+- **Validé** : « tant qu'on casse pas le fonctionnement et que tout fonctionne toujours on peut faire ça ». Interrupteurs des sources du son dans l'admin (fait, #596), TV qui joue l'extrait plutôt que la vidéo, et un repli sur la sono de l'organisateur seulement en cas de panne (« ça peut être pratique pour les organisateurs »). Fiche et maquette du repli et de la TV à valider avant le code.
+- **Critère d'arrêt** : la TV sans vidéo ne part pas tant qu'au moins 90 % des titres n'ont pas un extrait sûr ; tout retour d'une soirée cassée la remet en question.
+
 ## 24/11/2026 — Réponses de Théo depuis le QG en ligne
 
 **Décision de Théo** :

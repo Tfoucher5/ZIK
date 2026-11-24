@@ -10,6 +10,7 @@ import {
   iTunesPreviewMatch,
 } from "../../services/music/deezer.js";
 import { pickAutoIndex } from "../../../shared/youtube.js";
+import { deezerIdOf } from "../../../shared/playlist/deezerId.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -130,10 +131,7 @@ export async function getPreview(track) {
   const query = {
     artist: track.mainArtist || track.artist,
     title: track.title,
-    // Seuls les titres importés de Deezer ont un id numérique Deezer
-    externalId: /^\d+$/.test(track.external_id ?? "")
-      ? track.external_id
-      : null,
+    externalId: deezerIdOf(track),
   };
   const url = validPreviewUrl(track.preview_url) || (await findPreview(query));
   return url ? { pKey, entry: cachePreview(pKey, query, url) } : null;

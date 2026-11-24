@@ -12,6 +12,11 @@ import {
   getVideoSettings,
   clearVideoSettingsCache,
 } from "#lib/server/services/music/trackIssues.js";
+import { getSources, setSources } from "#lib/server/services/music/sources.js";
+import {
+  fillDeezerIds,
+  remaining as deezerIdsLeft,
+} from "#lib/server/services/music/deezerIds.js";
 import { broadcastNotification } from "#lib/server/services/notify/notifications.js";
 import { ADMIN_ALERTS } from "#lib/server/services/admin/alerts.js";
 import {
@@ -97,6 +102,40 @@ export const actions = adminActions({
     return { noticeSaved: true };
   },
 
+  sources: async ({ request, locals }) => {
+    const form = await request.formData();
+    try {
+      const value = await setSources({
+        youtube: form.get("youtube") === "on",
+        deezer: form.get("deezer") === "on",
+      });
+      await logAdminAction(
+        locals.adminId,
+        "media_sources",
+        null,
+        "site",
+        value,
+      );
+    } catch (e) {
+      console.error("[media_sources]", e.message);
+      return fail(500, {
+        sourcesError: "Enregistrement impossible, réessaie.",
+      });
+    }
+    return { sourcesSaved: true };
+  },
+
+  deezerIds: async ({ locals }) => {
+    try {
+      const result = await fillDeezerIds();
+      await logAdminAction(locals.adminId, "deezer_ids", null, "site", result);
+      return { deezerIds: result };
+    } catch (e) {
+      console.error("[deezer_ids]", e.message);
+      return fail(500, { deezerIdsError: "Lot interrompu, réessaie." });
+    }
+  },
+
   video: async ({ request, locals }) => {
     const form = await request.formData();
     const exclude = String(form.get("exclude") || "")
@@ -161,26 +200,31 @@ export const actions = adminActions({
 
 async function chargerPage({ locals }) {
   const sb = getAdminClient();
-  const [maintenance, video, profileRes, devicesRes] = await Promise.all([
-    getMaintenance(),
-    getVideoSettings(),
-    sb
-      .from("profiles")
-      .select("notif_prefs")
-      .eq("id", locals.adminId)
-      .maybeSingle(),
-    sb
-      .schema("social")
-      .from("push_subscriptions")
-      .select("user_agent, last_success_at, created_at")
-      .eq("user_id", locals.adminId)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [maintenance, video, sources, deezerLeft, profileRes, devicesRes] =
+    await Promise.all([
+      getMaintenance(),
+      getVideoSettings(),
+      getSources(),
+      deezerIdsLeft().catch(() => null),
+      sb
+        .from("profiles")
+        .select("notif_prefs")
+        .eq("id", locals.adminId)
+        .maybeSingle(),
+      sb
+        .schema("social")
+        .from("push_subscriptions")
+        .select("user_agent, last_success_at, created_at")
+        .eq("user_id", locals.adminId)
+        .order("created_at", { ascending: false }),
+    ]);
   const prefs = profileRes.data?.notif_prefs ?? {};
   return {
     maintenance,
     notice: getSalonNotice(),
     video,
+    sources,
+    deezerLeft,
     alerts: {
       ready: pushReady(),
       kinds: Object.entries(ADMIN_ALERTS).map(([key, label]) => ({
