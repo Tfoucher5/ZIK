@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="860" height="794" viewBox="0 0 860 794" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Couverture des tests du serveur : 93,6 % des lignes">
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="794" viewBox="0 0 860 794" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Couverture des tests du serveur : 93,7 % des lignes">
 <style>
 .fond{fill:#ffffff}.titre{fill:#1f2328;font-size:20px;font-weight:700}.titre2{fill:#1f2328;font-size:14px;font-weight:600}
 .valeur{fill:#1f2328;font-size:22px;font-weight:700}.unite{font-size:13px;font-weight:600}.nom{fill:#1f2328;font-size:14px;font-weight:600}
@@ -11,29 +11,29 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">develop · f48aa78 · 24/11 09:39</text>
+<text x="836" y="38" class="petit" text-anchor="end">develop · 2fa2157 · 24/11 11:39</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="270.49992393351124 289.02652413026095" transform="rotate(-90 120 140)"/>
+  stroke-dasharray="270.7600478052285 289.02652413026095" transform="rotate(-90 120 140)"/>
 <polyline points="100.17440858577714,108.75986675642544 90.5295262761552,93.56196409738916" class="trait" stroke-width="3"/>
-<text x="120" y="147" class="valeur" text-anchor="middle">93,6<tspan class="unite"> %</tspan></text>
+<text x="120" y="147" class="valeur" text-anchor="middle">93,7<tspan class="unite"> %</tspan></text>
 <text x="120" y="206" class="nom" text-anchor="middle">Lignes</text>
 <text x="120" y="222" class="petit" text-anchor="middle">seuil 91 %</text>
-</g>
+<text x="120" y="238" class="petit" fill="#2ea043" text-anchor="middle">▲ +0,1 pt vs la fusion précédente</text></g>
 <g>
 <circle cx="327" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="327" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="266.0200128094922 289.02652413026095" transform="rotate(-90 327 140)"/>
+  stroke-dasharray="266.2801366812094 289.02652413026095" transform="rotate(-90 327 140)"/>
 <polyline points="303.4153123792985,111.49101001729582 291.94168056382205,97.62177164733161" class="trait" stroke-width="3"/>
-<text x="327" y="147" class="valeur" text-anchor="middle">92,0<tspan class="unite"> %</tspan></text>
+<text x="327" y="147" class="valeur" text-anchor="middle">92,1<tspan class="unite"> %</tspan></text>
 <text x="327" y="206" class="nom" text-anchor="middle">Instructions</text>
 <text x="327" y="222" class="petit" text-anchor="middle">seuil 89 %</text>
-</g>
+<text x="327" y="238" class="petit" fill="#2ea043" text-anchor="middle">▲ +0,1 pt vs la fusion précédente</text></g>
 <g>
 <circle cx="534" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="534" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="265.0951279322754 289.02652413026095" transform="rotate(-90 534 140)"/>
+  stroke-dasharray="265.15293323710137 289.02652413026095" transform="rotate(-90 534 140)"/>
 <polyline points="508.6717570806385,113.02816078540778 496.34990917392213,99.90672549182239" class="trait" stroke-width="3"/>
 <text x="534" y="147" class="valeur" text-anchor="middle">91,7<tspan class="unite"> %</tspan></text>
 <text x="534" y="206" class="nom" text-anchor="middle">Fonctions</text>
@@ -42,9 +42,9 @@
 <g>
 <circle cx="741" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="741" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="246.94426221689497 289.02652413026095" transform="rotate(-90 741 140)"/>
+  stroke-dasharray="247.030970174134 289.02652413026095" transform="rotate(-90 741 140)"/>
 <polyline points="707.5213990587573,124.24616621209233 691.234512114369,116.58213896392103" class="trait" stroke-width="3"/>
-<text x="741" y="147" class="valeur" text-anchor="middle">85,4<tspan class="unite"> %</tspan></text>
+<text x="741" y="147" class="valeur" text-anchor="middle">85,5<tspan class="unite"> %</tspan></text>
 <text x="741" y="206" class="nom" text-anchor="middle">Branches</text>
 <text x="741" y="222" class="petit" text-anchor="middle">seuil 82 %</text>
 </g>
@@ -64,9 +64,9 @@
 <text x="836" y="344" class="petit" text-anchor="end">790 / 955 lignes</text>
 <text x="24" y="369" class="zone">socket/salon</text>
 <rect x="190" y="358" width="470" height="14" rx="7" class="piste-plein"/>
-<rect x="190" y="358" width="445.23136246786635" height="14" rx="7" fill="#2ea043"/>
-<text x="674" y="370" class="chiffre">94,7 %</text>
-<text x="836" y="370" class="petit" text-anchor="end">1474 / 1556 lignes</text>
+<rect x="190" y="358" width="446.5" height="14" rx="7" fill="#2ea043"/>
+<text x="674" y="370" class="chiffre">95,0 %</text>
+<text x="836" y="370" class="petit" text-anchor="end">1482 / 1560 lignes</text>
 <text x="24" y="395" class="zone">services/health</text>
 <rect x="190" y="384" width="470" height="14" rx="7" class="piste-plein"/>
 <rect x="190" y="384" width="451.105527638191" height="14" rx="7" fill="#2ea043"/>
@@ -105,9 +105,9 @@
 <text x="24" y="608" class="titre2">Évolution des lignes couvertes sur develop</text><line x1="60" x2="830" y1="744" y2="744" class="grille"/><text x="52" y="748" class="petit" text-anchor="end">80 %</text><line x1="60" x2="830" y1="684" y2="684" class="grille"/><text x="52" y="688" class="petit" text-anchor="end">90 %</text><line x1="60" x2="830" y1="624" y2="624" class="grille"/><text x="52" y="628" class="petit" text-anchor="end">100 %</text>
 <line x1="60" x2="830" y1="678" y2="678" stroke="#e5534b" stroke-dasharray="6 4" stroke-width="1.5"/>
 <text x="830" y="672" class="petit" fill="#e5534b" text-anchor="end">seuil 91 %</text>
-<polygon points="60,744 60,663.3 79.74358974358975,663.3 99.48717948717949,663.3 119.23076923076923,663.3 138.97435897435898,663.3 158.71794871794873,663.3 178.46153846153845,663.3 198.2051282051282,663.3 217.94871794871796,663.3 237.69230769230768,663.3 257.43589743589746,663.3 277.1794871794872,663.3 296.9230769230769,663.3 316.6666666666667,663.3 336.4102564102564,663.3 356.15384615384613,663.3 375.8974358974359,663.3 395.64102564102564,663.3 415.38461538461536,663.3 435.12820512820514,662.58 454.87179487179486,662.58 474.61538461538464,662.58 494.35897435897436,662.58 514.1025641025641,662.58 533.8461538461538,662.58 553.5897435897436,662.58 573.3333333333334,662.46 593.0769230769231,662.46 612.8205128205128,662.46 632.5641025641025,662.46 652.3076923076923,662.46 672.0512820512821,662.46 691.7948717948718,662.46 711.5384615384615,662.46 731.2820512820513,662.46 751.025641025641,662.46 770.7692307692307,662.46 790.5128205128206,662.46 810.2564102564103,662.46 830,662.46 830,744" fill="url(#degrade)"/>
-<polyline points="60,663.3 79.74358974358975,663.3 99.48717948717949,663.3 119.23076923076923,663.3 138.97435897435898,663.3 158.71794871794873,663.3 178.46153846153845,663.3 198.2051282051282,663.3 217.94871794871796,663.3 237.69230769230768,663.3 257.43589743589746,663.3 277.1794871794872,663.3 296.9230769230769,663.3 316.6666666666667,663.3 336.4102564102564,663.3 356.15384615384613,663.3 375.8974358974359,663.3 395.64102564102564,663.3 415.38461538461536,663.3 435.12820512820514,662.58 454.87179487179486,662.58 474.61538461538464,662.58 494.35897435897436,662.58 514.1025641025641,662.58 533.8461538461538,662.58 553.5897435897436,662.58 573.3333333333334,662.46 593.0769230769231,662.46 612.8205128205128,662.46 632.5641025641025,662.46 652.3076923076923,662.46 672.0512820512821,662.46 691.7948717948718,662.46 711.5384615384615,662.46 731.2820512820513,662.46 751.025641025641,662.46 770.7692307692307,662.46 790.5128205128206,662.46 810.2564102564103,662.46 830,662.46" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
-<circle cx="830" cy="662.46" r="5" fill="#a371f7"/>
+<polygon points="60,744 60,663.3 79.74358974358975,663.3 99.48717948717949,663.3 119.23076923076923,663.3 138.97435897435898,663.3 158.71794871794873,663.3 178.46153846153845,663.3 198.2051282051282,663.3 217.94871794871796,663.3 237.69230769230768,663.3 257.43589743589746,663.3 277.1794871794872,663.3 296.9230769230769,663.3 316.6666666666667,663.3 336.4102564102564,663.3 356.15384615384613,663.3 375.8974358974359,663.3 395.64102564102564,663.3 415.38461538461536,662.58 435.12820512820514,662.58 454.87179487179486,662.58 474.61538461538464,662.58 494.35897435897436,662.58 514.1025641025641,662.58 533.8461538461538,662.58 553.5897435897436,662.46 573.3333333333334,662.46 593.0769230769231,662.46 612.8205128205128,662.46 632.5641025641025,662.46 652.3076923076923,662.46 672.0512820512821,662.46 691.7948717948718,662.46 711.5384615384615,662.46 731.2820512820513,662.46 751.025641025641,662.46 770.7692307692307,662.46 790.5128205128206,662.46 810.2564102564103,662.46 830,661.92 830,744" fill="url(#degrade)"/>
+<polyline points="60,663.3 79.74358974358975,663.3 99.48717948717949,663.3 119.23076923076923,663.3 138.97435897435898,663.3 158.71794871794873,663.3 178.46153846153845,663.3 198.2051282051282,663.3 217.94871794871796,663.3 237.69230769230768,663.3 257.43589743589746,663.3 277.1794871794872,663.3 296.9230769230769,663.3 316.6666666666667,663.3 336.4102564102564,663.3 356.15384615384613,663.3 375.8974358974359,663.3 395.64102564102564,663.3 415.38461538461536,662.58 435.12820512820514,662.58 454.87179487179486,662.58 474.61538461538464,662.58 494.35897435897436,662.58 514.1025641025641,662.58 533.8461538461538,662.58 553.5897435897436,662.46 573.3333333333334,662.46 593.0769230769231,662.46 612.8205128205128,662.46 632.5641025641025,662.46 652.3076923076923,662.46 672.0512820512821,662.46 691.7948717948718,662.46 711.5384615384615,662.46 731.2820512820513,662.46 751.025641025641,662.46 770.7692307692307,662.46 790.5128205128206,662.46 810.2564102564103,662.46 830,661.92" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="830" cy="661.92" r="5" fill="#a371f7"/>
 <text x="60" y="766" class="petit">16 nov.</text>
 <text x="830" y="766" class="petit" text-anchor="end">24 nov.</text>
 </svg>
