@@ -25,9 +25,9 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 ## Imports `#lib` (SvelteKit 3)
 
-- **Statut** : en cours
+- **Statut** : fait
 - **Équipe** : Technique
-- **Prochaine étape** : PR `chore/imports-lib` du 24/11 : `$lib` (option `alias` dépréciée par kit 3) remplacé par `#lib` dans 416 fichiers, aucun changement visible ; après fusion, scénario salon relancé sur le staging
+- **Prochaine étape** : #586 fusionné le 24/11 : `$lib` (option `alias` dépréciée par kit 3) remplacé par `#lib` dans 416 fichiers, aucun changement visible ; staging déployé, scénario salon vert (run 45356191490) ; part à la prochaine release
 
 ## Playlist trop courte pour la partie
 
