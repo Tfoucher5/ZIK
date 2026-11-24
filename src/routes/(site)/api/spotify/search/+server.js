@@ -1,10 +1,15 @@
 import { json } from "@sveltejs/kit";
 import { getSpotifyToken } from "#lib/server/services/music/spotify.js";
-import { checkRateLimit } from "#lib/server/middleware/auth.js";
+import {
+  checkRateLimit,
+  requireAdminToken,
+} from "#lib/server/middleware/auth.js";
 
 export async function GET({ request, url }) {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   checkRateLimit(ip, 30, 60_000);
+  // Recherche avec la clé Spotify du serveur : réservée à l'admin
+  await requireAdminToken(request.headers.get("authorization")?.slice(7));
 
   const q = url.searchParams.get("q")?.trim();
   if (!q) return json({ error: "Param\u00e8tre q requis" }, { status: 400 });

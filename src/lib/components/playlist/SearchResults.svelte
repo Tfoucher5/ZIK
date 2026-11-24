@@ -49,7 +49,9 @@
     const timer = setTimeout(async () => {
       loading = true;
       try {
-        const r = await fetch(`/api/${ck.split(':')[0]}/search?q=${encodeURIComponent(query)}`, { signal: ctrl.signal });
+        const src = ck.split(':')[0];
+        const headers = src === 'spotify' ? { Authorization: `Bearer ${await store.token()}` } : {};
+        const r = await fetch(`/api/${src}/search?q=${encodeURIComponent(query)}`, { headers, signal: ctrl.signal });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`);
         cache[ck] = data;
