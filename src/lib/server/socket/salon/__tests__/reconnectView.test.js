@@ -39,6 +39,7 @@ describe("reprise d'un téléphone : réglages", () => {
     expect(reconnectView(s, s.players.Bob).settings).toEqual({
       answerMode: "multiple",
       maxRounds: 5,
+      rounds: 2,
       title: "Quiz du jeudi",
     });
   });
