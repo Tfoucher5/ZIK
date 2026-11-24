@@ -83,6 +83,22 @@ describe("TV qui revient en pleine manche", () => {
     return msgs.find((m) => m.event === attendu)?.p;
   }
 
+  it("TV et régie rechargées : le vrai total, pas le choix (3 titres restants sur 10)", async () => {
+    salonRooms[CODE].game.sessionPlaylist = [{ id: "t8" }];
+    const tv = await rejoint(
+      "salon_join_host",
+      { code: CODE, key: CLE },
+      "salon_host_joined",
+    );
+    expect(tv.settings).toMatchObject({ maxRounds: 10, rounds: 4 });
+    const regie = await rejoint(
+      "salon_join_control",
+      { code: CODE, key: CLE },
+      "salon_control_joined",
+    );
+    expect(regie.settings.rounds).toBe(4);
+  });
+
   it("la TV reçoit la vidéo en cours, calée sur le temps déjà joué", async () => {
     const tv = await rejoint(
       "salon_join_host",

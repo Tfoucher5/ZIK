@@ -79,7 +79,7 @@
   {:else}
     <RegieTabs actif={r.onglet} joueurs={r.players.length} onChange={(id) => (r.onglet = id)} />
     {#if r.live && r.onglet !== 'direct'}
-      <RegieEtat round={r.round} maxRounds={r.settings.maxRounds ?? 0} paused={r.paused} chrono={r.etat.chrono} p={r.etat.p} repondu={r.answered} joueurs={r.players.length}
+      <RegieEtat round={r.round} maxRounds={r.settings.rounds ?? r.settings.maxRounds ?? 0} paused={r.paused} chrono={r.etat.chrono} p={r.etat.p} repondu={r.answered} joueurs={r.players.length}
         buzzer={r.phase === 'round' ? (r.buzzer?.username ?? null) : null} />
     {/if}
     <ReclaimRequests usernames={r.reclaims} onAnswer={(username, accept) => r.send('salon_reclaim_answer', { username, accept })} />
@@ -96,7 +96,7 @@
           >
             {#snippet haut()}
               {#if prep}
-                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} {attente}>
+                <RegiePrep screens={r.screens} tvSound={r.tvSound} mediaCheck={r.mediaCheck} players={r.players} teams={r.teams} tvUrl={r.tvUrl} settings={r.settings} onPlaylists={r.openPlaylists} {attente}>
                   <RegiePro o={r.offre} pro={r.pro} players={r.players} />
                 </RegiePrep>
               {:else if r.phase === 'gameover'}
@@ -122,7 +122,7 @@
           </TabPlayers>
         {:else}
           <TabSettings
-            settings={r.settings} phase={r.phase} round={r.round} pro={r.pro} mediaCheck={r.mediaCheck} {playlistNames}
+            settings={r.settings} phase={r.phase} round={r.round} pro={r.pro} mediaCheck={r.mediaCheck} {playlistNames} jouables={r.manches}
             onSet={r.setSetting}
             onSound={(patch) => r.send('salon_update_settings', patch)}
             onRenameTeam={(team, name) => r.send('salon_rename_team', { team, name })}
@@ -146,7 +146,7 @@
     {:else}
       <RegieActions
         phase={r.phase} paused={r.paused} pro={r.pro} joueurs={r.players.length} countStart={r.settings.countStart !== false}
-        buzzer={r.buzzer} note={r.etat.note} {attente}
+        buzzer={r.buzzer} note={r.etat.note} {attente} court={r.manches.court ? r.manches.t : null} short={r.short}
         onAction={(ev) => r.send(ev)}
         onJudge={(correct) => r.send('salon_buzz_judge', { correct })}
         onGate={r.gate}
@@ -166,7 +166,7 @@
     getState={() => ({
       connected: r.socket?.connected ?? false,
       error: r.error || null,
-      phase: r.phase, paused: r.paused, round: r.round, maxRounds: r.settings.maxRounds,
+      phase: r.phase, paused: r.paused, round: r.round, maxRounds: r.settings.rounds ?? r.settings.maxRounds,
       players: r.players.length,
       offline: r.players.filter((p) => p.offline).length,
       screens: r.screens,
@@ -182,7 +182,7 @@
       playlists={r.allPlaylists}
       bind:selectedIds={r.pickerIds}
       live={r.live}
-      remaining={Math.max(0, (r.settings.maxRounds ?? 0) - r.round)}
+      remaining={Math.max(0, (r.settings.rounds ?? r.settings.maxRounds ?? 0) - r.round)}
       saving={r.saving}
       onSave={r.savePlaylists}
       onClose={() => (r.pickerOpen = false)}

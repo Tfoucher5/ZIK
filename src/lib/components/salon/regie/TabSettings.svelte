@@ -14,7 +14,7 @@
    *
    * @type {{
    *   settings: any, phase: string, round: number, pro: boolean, mediaCheck: any,
-   *   playlistNames: string[],
+   *   playlistNames: string[], jouables?: { t: number, m: number, court: boolean },
    *   onSet: (patch: any) => void,
    *   onSound: (patch: any) => void,
    *   onRenameTeam: (team: number, name: string) => void,
@@ -24,12 +24,12 @@
    *   children?: import('svelte').Snippet,
    * }}
    */
-  let { settings, phase, round, pro, mediaCheck, playlistNames = [], onSet, onSound, onRenameTeam, onUpsell, onOpenPlaylists, onClose, children } = $props();
+  let { settings, phase, round, pro, mediaCheck, playlistNames = [], jouables = null, onSet, onSound, onRenameTeam, onUpsell, onOpenPlaylists, onClose, children } = $props();
 
   const idle = $derived(phase === 'lobby' || phase === 'gameover');
-  const r = $derived(resumeReglages(settings, playlistNames));
+  const r = $derived(resumeReglages(settings, playlistNames, jouables?.court ? jouables.t : null));
   const nbEquipes = $derived(settings.teams?.length ?? 0);
-  const reste = $derived(Math.max(0, (settings.maxRounds ?? 0) - round));
+  const reste = $derived(Math.max(0, (settings.rounds ?? settings.maxRounds ?? 0) - round));
   const PLUS = SALON_TEAMS.filter((n) => n > FREE_MAX_TEAMS);
 
   // En 1024 px tout est déplié ; au téléphone, la ligne utile du moment
@@ -56,7 +56,7 @@
 
 {#snippet ligne(n, titre, sous, corps)}
   <details class="rg-plus" open={ouvert(n)}>
-    <summary><span class="n">{n}</span><span><b>{titre}</b><small>{sous}</small></span></summary>
+    <summary><span class="n">{n}</span><span><b>{titre}</b><small class:ts-court={n === '02' && jouables?.court}>{sous}</small></span></summary>
     {@render corps()}
   </details>
 {/snippet}
@@ -83,6 +83,12 @@
 
     {#snippet manches()}
       <div class="rg-reg"><span>Manches</span>{@render seg('Manches', SALON_ROUNDS, settings.maxRounds, (n) => onSet({ maxRounds: n }), '', () => false, (n) => !idle && n < round)}</div>
+      {#if idle && jouables?.court}
+        <div class="rg-reg ts-alerte" role="status">
+          <p><b>Ta sélection a {jouables.t} titre{jouables.t > 1 ? 's' : ''} :</b> la partie fera {jouables.t} manche{jouables.t > 1 ? 's' : ''}.</p>
+          <button class="rg-em" type="button" onclick={onOpenPlaylists}>Ajouter une playlist</button>
+        </div>
+      {/if}
       <div class="rg-reg"><span>Temps pour répondre</span>{@render seg('Temps pour répondre', SALON_DURATIONS, settings.roundDuration, (n) => onSet({ roundDuration: n }), ' s')}</div>
       <div class="rg-reg">
         <span>Manche suivante</span>
@@ -165,6 +171,10 @@
 </div>
 
 <style>
+  .ts-court { color: var(--warn); }
+  .ts-alerte { padding: 12px 14px; border-radius: 14px; border: 1px solid rgb(255 179 71 / 0.5); background: rgb(255 179 71 / 0.08); }
+  .ts-alerte p { margin: 0; font-size: 0.94rem; line-height: 1.4; }
+  .ts-alerte b { color: var(--warn); }
   .ts-note { padding-bottom: 12px; font-size: 14px; line-height: 1.4; color: var(--muted); border-bottom: 1px solid var(--line-2); }
   .ts { display: grid; }
   .ts-col { display: grid; align-content: start; min-width: 0; }

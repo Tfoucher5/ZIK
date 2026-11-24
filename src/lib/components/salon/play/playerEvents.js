@@ -53,7 +53,7 @@ export function listenPlayer(p, socket, c, u) {
     if (paused) chrono.stop();
   });
   socket.on("salon_settings", ({ settings }) => {
-    p.total = settings.maxRounds;
+    p.total = settings.rounds ?? settings.maxRounds;
     p.answerMode = settings.answerMode;
   });
   socket.on("salon_kicked", () => {

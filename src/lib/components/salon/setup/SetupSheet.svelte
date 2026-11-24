@@ -12,6 +12,8 @@
     ['free', 'Texte libre', 'Pour les connaisseurs'],
     ['buzzer', 'Buzzer', "L'animateur valide à voix haute"],
   ];
+  // Sous 3 titres, le serveur refuse la soirée : son message suffit
+  const court = $derived(s.manchesJouees < s.maxRounds && s.totalTracks >= 3);
   const MORE_TEAMS = SALON_TEAMS.filter((n) => n > FREE_MAX_TEAMS);
 
   const pickMode = (m) => (m === 'buzzer' ? s.proOnly('buzzer', () => (s.answerMode = m)) : (s.answerMode = m));
@@ -30,8 +32,14 @@
   </div>
 {/snippet}
 
-<SetupBlock n="02" title="Les manches">
+<SetupBlock n="02" title="Les manches" aide={court ? `${s.totalTracks} titres` : ''} warn={court}>
   {@render seg('Nombre de manches', SALON_ROUNDS, s.maxRounds, (v) => (s.maxRounds = v))}
+  {#if court}
+    <div class="court" role="status">
+      <p><b>Ta sélection a {s.totalTracks} titres.</b> La partie fera {s.manchesJouees} manches, pas {s.maxRounds}. Ajoute une playlist pour en jouer plus.</p>
+      <button type="button" class="court-btn" onclick={() => document.getElementById('bloc-musique')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ajouter une playlist</button>
+    </div>
+  {/if}
 </SetupBlock>
 
 <SetupBlock n="03" title="Les réponses">
@@ -90,6 +98,16 @@
 </details>
 
 <style>
+  .court {
+    display: grid; gap: 10px; justify-items: start; padding: 12px 14px; border-radius: 14px;
+    border: 1px solid rgb(255 179 71 / 0.5); background: rgb(255 179 71 / 0.08);
+  }
+  .court p { margin: 0; font-size: 0.94rem; line-height: 1.4; }
+  .court b { color: var(--warn); }
+  .court-btn {
+    min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line-2);
+    background: transparent; color: var(--text); font: inherit; font-weight: 700; cursor: pointer;
+  }
   .seg {
     display: flex;
     gap: 4px;

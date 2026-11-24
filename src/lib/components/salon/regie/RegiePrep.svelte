@@ -1,17 +1,18 @@
 <script>
   import { teamColor } from '#lib/data/salonOptions.js';
-  import { prepChecks, videsTexte } from './prep.js';
+  import { prepChecks, videsTexte, manchesJouables } from './prep.js';
   import { textesFile } from './regiePro.svelte.js';
 
   /**
    * Avant la partie : effectif, quatre contrôles en mots, équipes.
    * `attente` : téléphones à l'entrée d'une soirée complète, `children` : la jauge et l'offre.
    * @type {{ screens: number|null, tvSound: boolean|null, mediaCheck: any, players: any[], teams: any[]|null, tvUrl: string,
-   *   attente?: number, children?: import('svelte').Snippet }}
+   *   settings?: any, onPlaylists?: () => void, attente?: number, children?: import('svelte').Snippet }}
    */
-  let { screens, tvSound, mediaCheck, players, teams, tvUrl, attente = 0, children } = $props();
+  let { screens, tvSound, mediaCheck, players, teams, tvUrl, settings = {}, onPlaylists, attente = 0, children } = $props();
 
-  const p = $derived(prepChecks({ screens, tvSound, mediaCheck, players, teams }));
+  const p = $derived(prepChecks({ screens, tvSound, mediaCheck, players, teams, settings }));
+  const court = $derived(manchesJouables(settings, mediaCheck).court);
   const ICONES = { ok: '✓', non: '!', attente: '…' };
 </script>
 
@@ -31,6 +32,7 @@
         <b>{c.titre}</b>
         {#if c.detail}<small>{c.detail}</small>{/if}
         {#if c.id === 'tv' && screens === 0}<a class="rp-lien" href={tvUrl} target="_blank" rel="noopener">Ouvrir l'écran TV</a>{/if}
+        {#if c.id === 'musique' && c.etat === 'non' && court && onPlaylists}<button type="button" class="rg-em rp-em" onclick={onPlaylists}>Ajouter une playlist</button>{/if}
       </li>
     {/each}
   </ul>
@@ -78,6 +80,7 @@
   }
   .rp-checks b { font-weight: 600; font-size: 1.06rem; line-height: 1.2; }
   .rp-checks small, .rp-lien { grid-column: 2; font-size: 0.88rem; color: var(--mid); line-height: 1.3; }
+  .rp-em { grid-column: 2; justify-self: start; }
   .rp-lien { justify-self: start; min-height: 44px; display: inline-flex; align-items: center; color: var(--text); text-underline-offset: 4px; }
   .rp-checks .ok i { background: var(--success); border-color: var(--success); color: #000; }
   .rp-checks .non i { border-color: var(--warn); color: var(--warn); }

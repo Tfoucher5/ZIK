@@ -46,7 +46,7 @@ export function listenHost(h, socket) {
     } else chrono.stop();
     h.phase = data.phase || "lobby";
     h.round = data.currentRound || 0;
-    h.total = h.settings.maxRounds || 10;
+    h.total = h.settings.rounds ?? (h.settings.maxRounds || 10);
     h.chat.update(data.support);
     // TV rechargée (F5, relance) : la musique ou la révélation en cours. Une
     // simple reconnexion du socket ne recoupe pas ce qui joue déjà.
@@ -103,7 +103,7 @@ export function listenHost(h, socket) {
   });
   socket.on("salon_settings", ({ settings }) => {
     h.settings = settings;
-    h.total = settings.maxRounds;
+    h.total = settings.rounds ?? settings.maxRounds;
   });
   socket.on("salon_volume", ({ volume }) => h.applyVolume(volume, false));
   socket.on("salon_controls", ({ count }) => (h.controls = count));

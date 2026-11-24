@@ -79,3 +79,30 @@ describe("TV de fin de partie", () => {
     expect(h.relaunching).toBe(false);
   });
 });
+
+describe("TV : vrai nombre de manches (3 titres pour 5 manches)", () => {
+  let h;
+  beforeEach(() => {
+    vi.stubGlobal("localStorage", { setItem: () => {}, getItem: () => null });
+    h = new SalonHost(null);
+    h.socket = fauxSocket();
+    listenHost(h, h.socket);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("TV rechargée : « 2 / 3 », pas « 2 / 5 »", () => {
+    h.socket.handlers.salon_host_joined(
+      rejoint({
+        phase: "round",
+        currentRound: 2,
+        settings: { maxRounds: 5, rounds: 3 },
+      }),
+    );
+    expect(h.total).toBe(3);
+  });
+
+  it("le total suit les réglages en direct", () => {
+    h.socket.handlers.salon_settings({ settings: { maxRounds: 5, rounds: 4 } });
+    expect(h.total).toBe(4);
+  });
+});

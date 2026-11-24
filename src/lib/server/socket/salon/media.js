@@ -77,7 +77,17 @@ export async function resolveMedia(salon, track) {
 export async function checkSession(salon, io) {
   const game = salon.game;
   const tracks = [...game.sessionPlaylist].reverse();
-  const check = { total: tracks.length, video: 0, audio: 0, missing: 0 };
+  // spares : titres hors de la pile, de quoi remplacer un introuvable
+  const spares = Math.max(0, (game.fullPlaylist?.length ?? 0) - tracks.length);
+  const check = {
+    total: tracks.length,
+    video: 0,
+    audio: 0,
+    missing: 0,
+    spares,
+    // Titres introuvables (ids) : le vrai total en tient compte dès le lobby
+    dead: [],
+  };
   game.mediaCheck = check;
   const send = () => {
     if (game.mediaCheck === check)
@@ -93,7 +103,10 @@ export async function checkSession(salon, io) {
         check.video++;
       } catch {
         if (await previewUrl(track)) check.audio++;
-        else check.missing++;
+        else {
+          check.missing++;
+          check.dead.push(track.id ?? null);
+        }
       }
       send();
     }

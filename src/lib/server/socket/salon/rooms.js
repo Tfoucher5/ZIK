@@ -6,7 +6,7 @@ import { isPro } from "../../services/pro.js";
 import { FREE_MAX_TEAMS } from "../../../data/proPlans.js";
 import { makeTeams, cleanTitle } from "./teams.js";
 import { loadSalonTracks, buildSessionPlaylist } from "./tracks.js";
-import { prefetchNextVideo, prepareSession } from "./session.js";
+import { prefetchNextVideo, prepareSession, settingsView } from "./session.js";
 import { broadcastRoster, teamLimit } from "./players.js";
 import { saveSnapshot } from "./snapshot.js";
 import { armNext, scheduleCleanup } from "./timers.js";
@@ -161,16 +161,18 @@ export async function changeSalonPlaylists({
   }
 
   saveSnapshot(salon);
-  getIO()
-    ?.to(`salon:${code}`)
-    .emit("salon_playlists_changed", {
-      playlistIds,
-      trackCount: tracks.length,
-      appliedNow: live,
-      remainingRounds: live ? remainingRounds : null,
-    });
+  const left = Math.min(remainingRounds, salon.game.sessionPlaylist.length);
+  const room = getIO()?.to(`salon:${code}`);
+  room?.emit("salon_playlists_changed", {
+    playlistIds,
+    trackCount: tracks.length,
+    appliedNow: live,
+    remainingRounds: live ? left : null,
+  });
+  // Le vrai total suit la nouvelle sélection, partout
+  room?.emit("salon_settings", { settings: settingsView(salon) });
 
-  return { trackCount: tracks.length, appliedNow: live, remainingRounds };
+  return { trackCount: tracks.length, appliedNow: live, remainingRounds: left };
 }
 
 // Réglages de la régie, aussi appliqués par l'admin. allow(fonction) dit si
@@ -188,7 +190,9 @@ export function applySettings(code, patch, io, allow) {
   for (const k of sons) s[k] = patch[k] !== false;
   if (sons.length && sons.length === Object.keys(patch).length) {
     saveSnapshot(salon);
-    return io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+    return io
+      .to(`salon:${code}`)
+      .emit("salon_settings", { settings: settingsView(salon) });
   }
   if (!idle && !allow("liveSettings")) return;
   const clamp = (v, lo, hi, d) =>
@@ -256,5 +260,7 @@ export function applySettings(code, patch, io, allow) {
   )
     armNext(code, io, s.showAnswerDuration);
   saveSnapshot(salon);
-  io.to(`salon:${code}`).emit("salon_settings", { settings: s });
+  io.to(`salon:${code}`).emit("salon_settings", {
+    settings: settingsView(salon),
+  });
 }

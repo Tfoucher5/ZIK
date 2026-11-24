@@ -116,6 +116,8 @@ describe("protections de la musique", () => {
       video: 0,
       audio: 1,
       missing: 4,
+      spares: 7,
+      dead: expect.arrayContaining(["t1", "t2", "t3", "t4"]),
     });
   });
 });
