@@ -99,7 +99,7 @@
     </form>
   {:else if mode === 'delete'}
     <form class="a-form" method="POST" action="?/deleteUser" use:enhance={submit}>
-      <p>Le compte, le profil et les données liées sont supprimés pour de bon. Impossible de revenir en arrière.</p>
+      <p>Le compte, le profil et les données liées sont supprimés pour de bon. Impossible de revenir en arrière. Tout abonnement ZIK Pro encore actif chez Stripe est résilié.</p>
       <label class="a-label">Tape <b class="name">{p.username}</b> pour confirmer
         <input class="a-input" name="confirm_username" bind:value={confirmName} placeholder={p.username} autocomplete="off" />
       </label>

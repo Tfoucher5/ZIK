@@ -1,5 +1,6 @@
 import { getAdminClient } from "../../config.js";
 import { logAdminAction } from "../../middleware/auth.js";
+import { cancelSubscriptions } from "../pro.js";
 
 // Actions de modération de /admin/users/[id]. En cas d'échec, retournent
 // { status, error } ; sinon rien (ou une valeur utile à l'appelant).
@@ -133,6 +134,11 @@ export async function deleteUserAccount(adminId, userId, confirmUsername) {
   // Profil introuvable : jamais de suppression, même sans pseudo saisi
   if (!profile || confirmUsername !== profile.username)
     return { status: 400, error: "Pseudo incorrect, suppression annulée." };
+  try {
+    await cancelSubscriptions(userId);
+  } catch (e) {
+    return failed({ message: `Abonnement Stripe non résilié : ${e.message}` });
+  }
   const { error: err } = await sb.auth.admin.deleteUser(userId);
   if (err) return failed(err);
   await logAdminAction(adminId, "delete_user", userId, "user", {

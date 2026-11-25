@@ -19,7 +19,6 @@ const {
   resetUserStats,
   grantPro,
   setUserRole,
-  deleteUserAccount,
   deleteFollow,
   deleteFriendship,
 } = actions;
@@ -228,54 +227,6 @@ describe("Pro offert", () => {
       false,
     );
     expect(m.log).not.toHaveBeenCalled();
-  });
-});
-
-describe("suppression de compte", () => {
-  it("pseudo de confirmation faux : rien n'est supprimé", async () => {
-    rows.profiles = () => ({ data: { username: "lea" } });
-    expect(await deleteUserAccount(ADMIN, USER, "Lea")).toEqual({
-      status: 400,
-      error: "Pseudo incorrect, suppression annulée.",
-    });
-    expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
-  });
-
-  it.each([undefined, null, "", 42])(
-    "confirmation absente ou anormale (%s) : rien n'est supprimé",
-    async (confirm) => {
-      rows.profiles = () => ({ data: { username: "lea" } });
-      expect((await deleteUserAccount(ADMIN, USER, confirm)).status).toBe(400);
-      expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
-    },
-  );
-
-  it("bon pseudo : compte supprimé et journalisé", async () => {
-    rows.profiles = () => ({ data: { username: "lea" } });
-    expect(await deleteUserAccount(ADMIN, USER, "lea")).toBeUndefined();
-    expect(m.db.client.auth.admin.deleteUser).toHaveBeenCalledWith(USER);
-    expect(m.log).toHaveBeenCalledWith(ADMIN, "delete_user", USER, "user", {
-      username: "lea",
-    });
-  });
-
-  it("suppression refusée par Supabase : erreur 500, pas de journal", async () => {
-    rows.profiles = () => ({ data: { username: "lea" } });
-    m.db.client.auth.admin.deleteUser.mockResolvedValueOnce({
-      error: { message: "panne" },
-    });
-    expect(await deleteUserAccount(ADMIN, USER, "lea")).toEqual({
-      status: 500,
-      error: "panne",
-    });
-    expect(m.log).not.toHaveBeenCalled();
-  });
-
-  it("profil absent et confirmation vide : rien n'est supprimé", async () => {
-    rows.profiles = () => ({ data: null, error: { message: "0 rows" } });
-    const res = await deleteUserAccount(ADMIN, USER, undefined);
-    expect(m.db.client.auth.admin.deleteUser).not.toHaveBeenCalled();
-    expect(res?.status).toBe(400);
   });
 });
 

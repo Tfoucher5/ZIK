@@ -56,6 +56,9 @@
   <p class="delete-modal-desc">
     Cette action est <strong>irr&eacute;versible</strong>. Ton profil, tes playlists, tes scores et toutes tes donn&eacute;es seront supprim&eacute;s d&eacute;finitivement.
   </p>
+  <p class="delete-modal-desc">
+    Si tu as un abonnement <strong>ZIK Pro</strong>, il est r&eacute;sili&eacute; en m&ecirc;me temps.
+  </p>
   <div class="delete-modal-confirm-label">
     Pour confirmer, tape ton pseudo&nbsp;:
     <strong class="delete-modal-username">{user?.profile?.username || user?.email?.split('@')[0] || '…'}</strong>

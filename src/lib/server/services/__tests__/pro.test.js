@@ -5,11 +5,18 @@ vi.mock("../../config.js", async () =>
   (await import("./fakeQuery.js")).fakeClients(h),
 );
 vi.mock("../../stripe.js", () => ({
+  getStripe: () => h.stripe,
   planForPrice: (id) => ({ p_m: "monthly", p_y: "yearly" })[id] ?? null,
 }));
 
-const { isProActive, isPro, getProRow, activateNight, syncSubscription } =
-  await import("../pro.js");
+const {
+  isProActive,
+  isPro,
+  getProRow,
+  activateNight,
+  syncSubscription,
+  cancelSubscriptions,
+} = await import("../pro.js");
 
 const NOW = Date.parse("2026-11-09T20:00:00Z");
 const H = 3600_000;
@@ -212,5 +219,79 @@ describe("syncSubscription : abonnement Stripe recopié", () => {
   it("actif : ne relit pas la ligne courante", async () => {
     await syncSubscription(sub());
     expect(h.all().filter((q) => q.has("select", "*"))).toHaveLength(0);
+  });
+});
+
+describe("cancelSubscriptions (suppression du compte)", () => {
+  const U = "11111111-2222-3333-4444-555555555555";
+  const stripe = ({ found = [], listed = [] } = {}) => {
+    h.stripe = {
+      subscriptions: {
+        search: vi.fn(async () => ({ data: found })),
+        list: vi.fn(async () => ({ data: listed })),
+        cancel: vi.fn(async () => ({})),
+      },
+    };
+  };
+
+  it("résilie les abonnements vivants du client et des métadonnées, une fois chacun", async () => {
+    row({ stripe_customer_id: "cus_1" });
+    stripe({
+      found: [{ id: "sub_a", status: "active" }],
+      listed: [
+        { id: "sub_a", status: "active" },
+        { id: "sub_b", status: "past_due" },
+        { id: "sub_c", status: "canceled" },
+        { id: "sub_d", status: "incomplete_expired" },
+      ],
+    });
+    await cancelSubscriptions(U);
+    expect(h.stripe.subscriptions.search).toHaveBeenCalledWith({
+      query: `metadata['user_id']:'${U}'`,
+      limit: 100,
+    });
+    expect(h.stripe.subscriptions.list).toHaveBeenCalledWith({
+      customer: "cus_1",
+      status: "all",
+      limit: 100,
+    });
+    expect(h.stripe.subscriptions.cancel.mock.calls).toEqual([
+      ["sub_a"],
+      ["sub_b"],
+    ]);
+  });
+
+  it("ligne retirée par l'admin, abonnement vivant : résilié quand même", async () => {
+    row(null);
+    stripe({ found: [{ id: "sub_a", status: "active" }] });
+    await cancelSubscriptions(U);
+    expect(h.stripe.subscriptions.list).not.toHaveBeenCalled();
+    expect(h.stripe.subscriptions.cancel).toHaveBeenCalledWith("sub_a");
+  });
+
+  it("jamais abonné : rien à résilier", async () => {
+    row(null);
+    stripe();
+    await cancelSubscriptions(U);
+    expect(h.stripe.subscriptions.cancel).not.toHaveBeenCalled();
+  });
+
+  it("identifiant qui n'est pas un UUID : lève sans interroger Stripe", async () => {
+    stripe();
+    await expect(cancelSubscriptions("x' OR '1'='1")).rejects.toThrow();
+    expect(h.stripe.subscriptions.search).not.toHaveBeenCalled();
+  });
+
+  it("base illisible : lève, pour ne pas supprimer un compte encore facturé", async () => {
+    h.tables.pro_subscriptions = { data: null, error: { message: "panne" } };
+    stripe();
+    await expect(cancelSubscriptions(U)).rejects.toThrow("panne");
+  });
+
+  it("Stripe en panne : lève", async () => {
+    row(null);
+    stripe({ found: [{ id: "sub_a", status: "active" }] });
+    h.stripe.subscriptions.cancel.mockRejectedValue(new Error("stripe ko"));
+    await expect(cancelSubscriptions(U)).rejects.toThrow("stripe ko");
   });
 });
