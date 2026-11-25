@@ -29,6 +29,12 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 - **Équipe** : Technique
 - **Prochaine étape** : en prod en v3.35.0 (24/11) : les manches suivent les titres, alertes à la création et dans la régie ; état « court » non vu en vrai (aucune playlist de moins de 20 titres sur le staging), couvert par les tests ; réponse à Rom à envoyer par Théo
 
+## Suites de « les manches suivent les titres »
+
+- **Statut** : en cours
+- **Équipe** : Technique
+- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (PR `fix/total-introuvable-retrouve`), protection de `#lib/server` vérifiée ; restent le reste annoncé au changement de playlist en pleine partie, les manches jouées en base (migration) et la playlist de 3 titres du seed
+
 ## Release v3.35.0
 
 - **Statut** : fait

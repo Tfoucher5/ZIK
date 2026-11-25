@@ -15,13 +15,16 @@ vi.mock("../../../config.js", () => ({
   supabase: {},
   getAdminClient: () => ({}),
 }));
-const verif = vi.hoisted(() => ({ dead: [] }));
+const verif = vi.hoisted(() => ({ dead: [], video: true, audio: null }));
 vi.mock("../media.js", () => ({
   checkSession: async (salon) => {
     salon.game.mediaCheck = { dead: verif.dead };
   },
-  findVideo: async () => ({ video: { id: "v" }, safeStart: 0 }),
-  previewUrl: async () => null,
+  findVideo: async () => {
+    if (!verif.video) throw new Error("introuvable");
+    return { video: { id: "v" }, safeStart: 0 };
+  },
+  previewUrl: async () => verif.audio,
   resolveMedia: async () => ({ video: { id: "v" }, safeStart: 0 }),
 }));
 vi.mock("../tracks.js", async (orig) => ({
@@ -31,7 +34,7 @@ vi.mock("../tracks.js", async (orig) => ({
 
 const { salonRooms } = await import("../../../state.js");
 const { registerSalon } = await import("../index.js");
-const { prepareSession } = await import("../session.js");
+const { prefetchNextVideo, prepareSession } = await import("../session.js");
 const { finishGame } = await import("../rounds.js");
 const { CODE, CLE, makeIo, makeSocket, salonDeTest } =
   await import("./salonHarness.js");
@@ -50,6 +53,8 @@ describe("annonce du vrai total", () => {
     salonDeTest();
     h = makeIo();
     verif.dead = [];
+    verif.video = true;
+    verif.audio = null;
   });
 
   it("lobby : total des titres, puis baissé par un introuvable sans réserve", async () => {
@@ -88,5 +93,57 @@ describe("annonce du vrai total", () => {
     clearTimeout(s.game.breakTimer);
     expect(totaux().length).toBeGreaterThan(0);
     expect(totaux().every((n) => n === 3)).toBe(true);
+  });
+
+  const enPartie = () => {
+    const s = salonRooms[CODE];
+    s.settings.maxRounds = 5;
+    const t = titres(5);
+    Object.assign(s.game, {
+      phase: "round",
+      currentRound: 4,
+      fullPlaylist: t,
+      played: t.slice(0, 4),
+      sessionPlaylist: [t[4]],
+      mediaCheck: { dead: ["t4"], missing: 1, video: 4, audio: 0 },
+    });
+    return s;
+  };
+
+  it("introuvable du lobby retrouvé au préchargement : le total remonte avant la dernière manche", async () => {
+    const s = enPartie();
+    prefetchNextVideo(CODE, h.io);
+    await fin();
+    expect(totaux()).toEqual([5]);
+    expect(s.game.mediaCheck).toMatchObject({ dead: [], missing: 0, video: 5 });
+  });
+
+  it("salon fermé pendant le préchargement : rien n'est annoncé", async () => {
+    const s = enPartie();
+    prefetchNextVideo(CODE, h.io);
+    delete salonRooms[CODE];
+    await fin();
+    expect(totaux()).toEqual([]);
+    expect(s.game.mediaCheck.dead).toEqual(["t4"]);
+  });
+
+  it("retrouvé en extrait seulement : le total remonte aussi", async () => {
+    verif.video = false;
+    verif.audio = "https://extrait";
+    enPartie();
+    prefetchNextVideo(CODE, h.io);
+    await fin();
+    await fin();
+    expect(totaux()).toEqual([5]);
+  });
+
+  it("toujours introuvable : rien n'est annoncé", async () => {
+    verif.video = false;
+    const s = enPartie();
+    prefetchNextVideo(CODE, h.io);
+    await fin();
+    await fin();
+    expect(totaux()).toEqual([]);
+    expect(s.game.mediaCheck.dead).toEqual(["t4"]);
   });
 });

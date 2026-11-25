@@ -17,12 +17,31 @@ export function prefetchNextVideo(code, io) {
       // Déjà sorti de la pile : la manche démarre avec, rien à précharger
       if (game.sessionPlaylist.at(-1) === nextTrack)
         announceNextVideo(salon, io);
+      foundAfterCheck(salon, nextTrack, io, "video");
     })
     .catch(() => {
       // Sans vidéo : l'extrait est prêt avant la manche, rien à annoncer à la TV
       game.prefetchedRound = null;
-      return previewUrl(nextTrack).catch(() => {});
+      return previewUrl(nextTrack)
+        .then(
+          (audio) => audio && foundAfterCheck(salon, nextTrack, io, "audio"),
+        )
+        .catch(() => {});
     });
+}
+
+// Introuvable du lobby retrouvé au préchargement : sa manche compte de
+// nouveau, le total remonte pendant la manche en cours
+function foundAfterCheck(salon, track, io, kind) {
+  const check = salon.game.mediaCheck;
+  const i = check?.dead ? check.dead.indexOf(track.id ?? null) : -1;
+  if (i < 0 || salonRooms[salon.code] !== salon) return;
+  check.dead.splice(i, 1);
+  check.missing = Math.max(0, (check.missing ?? 1) - 1);
+  check[kind] = (check[kind] ?? 0) + 1;
+  io?.to(`salon:${salon.code}`).emit("salon_settings", {
+    settings: settingsView(salon),
+  });
 }
 
 export function announceNextVideo(salon, io) {
