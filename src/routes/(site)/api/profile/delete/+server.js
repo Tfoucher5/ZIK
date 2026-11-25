@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import { verifyToken } from "#lib/server/middleware/auth.js";
 import { getAdminClient } from "#lib/server/config.js";
+import { cancelSubscriptions } from "#lib/server/services/pro.js";
 
 // Le profil, ses playlists et leurs titres partent en cascade depuis auth.users.
 export async function DELETE({ request }) {
@@ -10,7 +11,13 @@ export async function DELETE({ request }) {
   const user = await verifyToken(token);
   if (!user) return json({ error: "Session invalide" }, { status: 401 });
 
-  const { error } = await getAdminClient().auth.admin.deleteUser(user.id);
+  let error;
+  try {
+    await cancelSubscriptions(user.id);
+    ({ error } = await getAdminClient().auth.admin.deleteUser(user.id));
+  } catch (e) {
+    error = e;
+  }
   if (error) {
     console.error("[profile/delete]", error.message);
     return json(

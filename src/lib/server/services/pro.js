@@ -1,5 +1,5 @@
 import { getAdminClient } from "../config.js";
-import { planForPrice } from "../stripe.js";
+import { getStripe, planForPrice } from "../stripe.js";
 
 const NIGHT_MS = 24 * 3600_000;
 
@@ -79,4 +79,40 @@ export async function syncSubscription(sub, sessionId) {
   };
   await getAdminClient().schema("salon").from("pro_subscriptions").upsert(row);
   return row;
+}
+
+const ENDED = ["canceled", "incomplete_expired"];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Compte supprimé : plus aucun prélèvement. Clients Stripe connus par la ligne
+// et par les métadonnées (ligne retirée par l'admin, ancien client). Lève si
+// Stripe ou la base ne répondent pas : jamais de compte supprimé encore facturé.
+export async function cancelSubscriptions(userId) {
+  if (!UUID.test(userId)) throw new Error("Identifiant de compte invalide");
+  const { data, error } = await getAdminClient()
+    .schema("salon")
+    .from("pro_subscriptions")
+    .select("stripe_customer_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const stripe = getStripe();
+  const found = await stripe.subscriptions.search({
+    query: `metadata['user_id']:'${userId}'`,
+    limit: 100,
+  });
+  const subs = [...found.data];
+  const customer = data?.stripe_customer_id;
+  if (customer) {
+    const listed = await stripe.subscriptions.list({
+      customer,
+      status: "all",
+      limit: 100,
+    });
+    subs.push(...listed.data);
+  }
+  const ids = new Set(
+    subs.filter((s) => !ENDED.includes(s.status)).map((s) => s.id),
+  );
+  for (const id of ids) await stripe.subscriptions.cancel(id);
 }
