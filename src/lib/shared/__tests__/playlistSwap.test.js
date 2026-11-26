@@ -41,7 +41,7 @@ describe("roundsAfterSwap", () => {
     ).toBe(43);
   });
 
-  it("ne descend jamais sous zéro et ignore les ids inconnus ou sans compte", () => {
+  it("ne descend jamais sous zéro", () => {
     expect(
       roundsAfterSwap({
         maxRounds: 5,
@@ -50,13 +50,24 @@ describe("roundsAfterSwap", () => {
         selectedIds: ["b"],
       }),
     ).toBe(0);
+  });
+
+  it("n'annonce pas 0 quand une playlist cochée n'a pas de compte connu", () => {
     expect(
       roundsAfterSwap({
         maxRounds: 5,
         round: 1,
         playlists,
-        selectedIds: ["c", "z"],
+        selectedIds: ["c"],
       }),
-    ).toBe(0);
+    ).toBe(4);
+    expect(
+      roundsAfterSwap({
+        maxRounds: 5,
+        round: 1,
+        playlists: [],
+        selectedIds: ["z"],
+      }),
+    ).toBe(4);
   });
 });
