@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fuzzy-toolkit": {
+      "command": "node",
+      "args": ["node_modules/fuzzy-toolkit/bin/fuzzy-toolkit.mjs", "mcp"]
+    }
+  }
+}

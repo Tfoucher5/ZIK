@@ -188,3 +188,15 @@ Claude peut créer, sans demander, un agent ou un skill dès qu'un besoin réel 
 - **Claude in Chrome** : réglages de dashboard sans API (Supabase, Railway), vérification des salons avant une mise en prod, contrôles visuels
 - **Stripe** : système de paiement (abonnements, factures), mode test hors prod
 - **Notion** : tâches et doc projet
+- **fuzzy-toolkit** (`.mcp.json`, en mémoire, sans réseau) : score brut du moteur (`compare`) pour explorer un réglage. Il n'applique pas les règles de `socket/scoring.js` : seul `gradeGuess`, par un test, dit si une réponse passe
+
+## Comparaison approximative : fuzzy-toolkit
+
+Toute comparaison tolérante (fautes, accents, casse, ordre des mots, espaces, nombres en lettres) passe par `fuzzy-toolkit` (librairie de Théo, ex `guess-rater`), jamais par une autre librairie ni un Levenshtein maison.
+
+- Un seul point d'entrée : `src/lib/shared/fuzzy.js` (`similarity`, `partialSimilarity`, `levenshtein`, `findParts`, `fuzzyFilter`). On n'importe pas `fuzzy-toolkit` ailleurs ; un besoin nouveau = une fonction de plus dans ce fichier
+- Version figée dans `package.json` : une montée de version se prouve par les tests du score et du filtre (un preset peut changer entre deux mineures)
+- Le score des réponses (`socket/scoring.js`) touche chaque soirée : tout changement de réglage (seuil, `preset`, options) se prouve par des tests sur de vraies réponses
+- Scores de 0 à 100, jamais de 0 à 1 : `similarity(a, b) >= 80`. `threshold` aussi en 0-100
+- Options toujours en objet en dernier argument ; objets = `keys` obligatoire ; presets `music`, `search`, `strict`
+- Référence : `node_modules/fuzzy-toolkit/llms.txt` (court), `llms-full.txt` (tout). Ne pas relancer `npx fuzzy-toolkit ai-setup` : il ajoute un bloc générique qui contredit ces règles

@@ -1,12 +1,14 @@
-import { createMatcher, normalize, search } from "guess-rater";
+import { createMatcher, levenshtein, normalize, search } from "fuzzy-toolkit";
 
-// Couche unique autour de guess-rater, côté serveur comme côté navigateur.
+// Couche unique autour de fuzzy-toolkit, côté serveur comme côté navigateur.
 // Les scores vont de 0 à 100.
 const matcher = createMatcher({});
 const partialMatcher = createMatcher({ partial: true });
 
 export const similarity = (a, b) => matcher.similarity(a, b);
 export const partialSimilarity = (a, b) => partialMatcher.similarity(a, b);
+// Distance brute, sans normalisation
+export { levenshtein };
 
 // Index des réponses présentes dans le texte, en entier ou en passage
 export const findParts = (text, answers) =>
@@ -26,7 +28,8 @@ export function fuzzyFilter(items, query, keys) {
     ),
   );
   const hits = new Set(
-    search(q, texts, { preset: "search" }).map((h) => h.index),
+    // Sigles coupés : « boh » remontait « Bigflo & Oli Dommage »
+    search(q, texts, { preset: "search", acronyms: false }).map((h) => h.index),
   );
   return items.filter((_, i) => hits.has(i) || texts[i].includes(q));
 }

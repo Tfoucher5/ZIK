@@ -21,6 +21,18 @@ describe("fuzzyFilter", () => {
   it("trouve encore un bout de mot", () => {
     expect(artists("kola")).toEqual(["Tiakola"]);
   });
+  it("ne prend pas une recherche courte pour un sigle", () => {
+    const list = [
+      { artist: "Bigflo & Oli", title: "Dommage" },
+      { artist: "Queen", title: "Bohemian Rhapsody" },
+      { artist: "Nekfeu", title: "On verra" },
+      { artist: "Noé Preszow", title: "À nous" },
+    ];
+    const hits = (q) =>
+      fuzzyFilter(list, q, ["artist", "title"]).map((t) => t.artist);
+    expect(hits("boh")).toEqual(["Queen"]);
+    expect(hits("noe")).toEqual(["Noé Preszow"]);
+  });
   it("ne renvoie rien sans correspondance", () => {
     expect(artists("zzz")).toEqual([]);
   });
