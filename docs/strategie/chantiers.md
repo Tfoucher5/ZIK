@@ -33,7 +33,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (PR `fix/total-introuvable-retrouve`), protection de `#lib/server` vérifiée ; restent le reste annoncé au changement de playlist en pleine partie, les manches jouées en base (migration) et la playlist de 3 titres du seed
+- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (#601), protection de `#lib/server` vérifiée ; 26/11 : reste annoncé au changement de playlist en pleine partie suit la nouvelle sélection (PR `fix/reste-changement-playlist`) ; restent les manches jouées en base (migration) et la playlist de 3 titres du seed
 
 ## Release v3.35.0
 

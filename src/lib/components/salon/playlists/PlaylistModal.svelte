@@ -1,16 +1,20 @@
 <script>
   import PlaylistPicker from './PlaylistPicker.svelte';
+  import { roundsAfterSwap } from '#lib/shared/playlist/swap.js';
 
   let {
     playlists = [],
     selectedIds = $bindable([]),
     live = false,
-    remaining = 0,
+    maxRounds = 0,
+    round = 0,
     saving = false,
     error = '',
     onSave,
     onClose,
   } = $props();
+
+  let remaining = $derived(roundsAfterSwap({ maxRounds, round, playlists, selectedIds }));
 </script>
 
 <svelte:window onkeydown={(e) => { if (e.key === 'Escape') onClose(); }} />

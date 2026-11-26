@@ -118,7 +118,8 @@
     playlists={h.allPlaylists}
     bind:selectedIds={h.pickerIds}
     live={h.phase === 'round' || h.phase === 'summary'}
-    remaining={Math.max(0, h.total - h.round)}
+    maxRounds={h.settings.maxRounds}
+    round={h.round}
     saving={h.savingPlaylist}
     error={h.pickerError}
     onSave={h.savePlaylists}
