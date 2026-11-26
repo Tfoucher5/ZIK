@@ -1,5 +1,5 @@
 import { cleanString, parseFeaturing } from "../music/trackText.js";
-import { similarity } from "../../../shared/fuzzy.js";
+import { levenshtein, similarity } from "../../../shared/fuzzy.js";
 
 // « Titre - Remastered 2011 », « Titre - Live », « Titre - Radio Edit » → « Titre »
 export function stripVersion(title) {
@@ -134,21 +134,6 @@ export const CATEGORY =
 export const THEMED =
   /g[ée]n[ée]rique|theme|th[èe]me|\btv\b|t[ée]l[ée]|s[ée]rie|series|film|movie|soundtrack|\bost\b|bande originale|score|cin[ée]ma|orchestr|from "/i;
 
-function editDistance(a, b) {
-  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= a.length; i++) {
-    const cur = [i];
-    for (let j = 1; j <= b.length; j++)
-      cur[j] = Math.min(
-        prev[j] + 1,
-        cur[j - 1] + 1,
-        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
-      );
-    prev = cur;
-  }
-  return prev[b.length];
-}
-
 // sameArtist, plus les fautes de frappe (« Idr », « Quenn ») et les sigles (« OMD »)
 export function closeArtist(deezerName, name) {
   if (sameArtist(deezerName, name)) return true;
@@ -157,7 +142,7 @@ export function closeArtist(deezerName, name) {
   if (!x || !y) return false;
   if (
     y.length >= 3 &&
-    editDistance(x, y) <= Math.max(1, Math.floor(y.length / 5))
+    levenshtein(x, y) <= Math.max(1, Math.floor(y.length / 5))
   )
     return true;
   const initials = cleanString(deezerName)
