@@ -182,7 +182,8 @@
       playlists={r.allPlaylists}
       bind:selectedIds={r.pickerIds}
       live={r.live}
-      remaining={Math.max(0, (r.settings.rounds ?? r.settings.maxRounds ?? 0) - r.round)}
+      maxRounds={r.settings.maxRounds}
+      round={r.round}
       saving={r.saving}
       onSave={r.savePlaylists}
       onClose={() => (r.pickerOpen = false)}
