@@ -168,6 +168,9 @@ describe("sameArtist et closeArtist", () => {
 
   it("closeArtist tolère les fautes de frappe et les sigles", () => {
     expect(closeArtist("Queen", "Quenn")).toBe(true);
+    // sameArtist refuse, seule la distance d'édition accepte
+    expect(sameArtist("Idir", "Idr")).toBe(false);
+    expect(closeArtist("Idir", "Idr")).toBe(true);
     expect(closeArtist("Orchestral Manoeuvres in the Dark", "OMD")).toBe(true);
     expect(closeArtist("Cyndi Lauper", "CINDY LAUPER")).toBe(true);
   });
