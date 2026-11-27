@@ -172,4 +172,31 @@ write(`do $$ declare s record; begin
     execute format('select setval(%L, coalesce((select max(%I) from %I.%I), 0) + 1, false)', s.seq, s.col, s.sch, s.t);
   end loop;
 end $$;`);
+
+// Playlist de 3 titres pour voir en vrai l'état « playlist trop courte »
+write(`do $$ declare pl uuid; src_pl uuid; src record; nt uuid; begin
+  insert into catalog.custom_playlists (owner_id, name, emoji)
+    values ('${admin.id}', 'Test · 3 titres', '🧪') returning id into pl;
+  select c.playlist_id into src_pl from catalog.custom_playlist_tracks c
+    join catalog.custom_playlists p on p.id = c.playlist_id
+    where p.is_official group by c.playlist_id, p.created_at
+    having count(*) >= 3 order by p.created_at limit 1;
+  if src_pl is null then raise exception 'Aucune playlist officielle de 3 titres'; end if;
+  for src in select * from catalog.custom_playlist_tracks
+    where playlist_id = src_pl order by position limit 3
+  loop
+    insert into catalog.custom_playlist_tracks (playlist_id, artist, title, preview_url, cover_url, source, external_id, position, custom_artist, custom_title, custom_feats, preview_expires_at, track_id)
+      values (pl, src.artist, src.title, src.preview_url, src.cover_url, src.source, src.external_id,
+        (select count(*) from catalog.custom_playlist_tracks where playlist_id = pl),
+        src.custom_artist, src.custom_title, src.custom_feats, src.preview_expires_at, src.track_id)
+      returning id into nt;
+    insert into catalog.track_answers (track_id, answer_type_id, value)
+      select nt, answer_type_id, value from catalog.track_answers where track_id = src.id;
+  end loop;
+end $$;`);
+const [court] = read(
+  STAGING,
+  `select track_count n from catalog.custom_playlists where owner_id = '${admin.id}' and name = 'Test · 3 titres'`,
+);
+console.log(`Playlist « Test · 3 titres » : ${court?.n ?? 0} titres`);
 console.log("Seed terminé.");
