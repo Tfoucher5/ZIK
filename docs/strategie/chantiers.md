@@ -33,7 +33,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (#601), protection de `#lib/server` vérifiée ; 26/11 : reste annoncé au changement de playlist en pleine partie suit la nouvelle sélection (PR `fix/reste-changement-playlist`) ; fusionné (#604) ; 27/11 : playlist « Test · 3 titres » ajoutée au seed du staging (PR `chore/seed-playlist-courte`) ; reste les manches jouées en base (migration)
+- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (#601), protection de `#lib/server` vérifiée ; 26/11 : reste annoncé au changement de playlist en pleine partie suit la nouvelle sélection (PR `fix/reste-changement-playlist`) ; fusionné (#604) ; 27/11 : playlist « Test · 3 titres » ajoutée au seed du staging (PR `chore/seed-playlist-courte`, en attente de Théo : pas de test possible, voir « À trancher ») ; reste les manches jouées en base (migration)
 
 ## Release v3.35.0
 

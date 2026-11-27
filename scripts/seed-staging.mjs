@@ -163,13 +163,27 @@ for (const { t, where, set, fix } of TABLES) {
   console.log(`${t.padEnd(24)} ${total}`);
 }
 
+// Les séquences repartent après les ids copiés
+write(`do $$ declare s record; begin
+  for s in select pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) seq, c.table_schema sch, c.table_name t, c.column_name col
+    from information_schema.columns c
+    where c.table_schema in (${SCHEMAS}) and pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) is not null
+  loop
+    execute format('select setval(%L, coalesce((select max(%I) from %I.%I), 0) + 1, false)', s.seq, s.col, s.sch, s.t);
+  end loop;
+end $$;`);
+
 // Playlist de 3 titres pour voir en vrai l'état « playlist trop courte »
-write(`do $$ declare pl uuid; src record; nt uuid; begin
+write(`do $$ declare pl uuid; src_pl uuid; src record; nt uuid; begin
   insert into catalog.custom_playlists (owner_id, name, emoji)
     values ('${admin.id}', 'Test · 3 titres', '🧪') returning id into pl;
-  for src in select c.* from catalog.custom_playlist_tracks c
+  select c.playlist_id into src_pl from catalog.custom_playlist_tracks c
     join catalog.custom_playlists p on p.id = c.playlist_id
-    where p.is_official order by p.created_at, c.position limit 3
+    where p.is_official group by c.playlist_id, p.created_at
+    having count(*) >= 3 order by p.created_at limit 1;
+  if src_pl is null then raise exception 'Aucune playlist officielle de 3 titres'; end if;
+  for src in select * from catalog.custom_playlist_tracks
+    where playlist_id = src_pl order by position limit 3
   loop
     insert into catalog.custom_playlist_tracks (playlist_id, artist, title, preview_url, cover_url, source, external_id, position, custom_artist, custom_title, custom_feats, preview_expires_at, track_id)
       values (pl, src.artist, src.title, src.preview_url, src.cover_url, src.source, src.external_id,
@@ -180,15 +194,9 @@ write(`do $$ declare pl uuid; src record; nt uuid; begin
       select nt, answer_type_id, value from catalog.track_answers where track_id = src.id;
   end loop;
 end $$;`);
-console.log("custom_playlists (test)  3 titres");
-
-// Les séquences repartent après les ids copiés
-write(`do $$ declare s record; begin
-  for s in select pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) seq, c.table_schema sch, c.table_name t, c.column_name col
-    from information_schema.columns c
-    where c.table_schema in (${SCHEMAS}) and pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) is not null
-  loop
-    execute format('select setval(%L, coalesce((select max(%I) from %I.%I), 0) + 1, false)', s.seq, s.col, s.sch, s.t);
-  end loop;
-end $$;`);
+const [court] = read(
+  STAGING,
+  `select track_count n from catalog.custom_playlists where owner_id = '${admin.id}' and name = 'Test · 3 titres'`,
+);
+console.log(`Playlist « Test · 3 titres » : ${court?.n ?? 0} titres`);
 console.log("Seed terminé.");

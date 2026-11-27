@@ -15,6 +15,14 @@ Les questions qui attendent Théo, affichées dans le QG (`/qg`, bouton « À tr
 
 Une décision tranchée est retirée d'ici et notée dans `decisions.md`. La plus urgente en haut.
 
+## Script de seed du staging sans test automatique
+
+- **Chantier** : Suites de « les manches suivent les titres »
+- **Depuis** : 27/11
+- **Question** : la PR `chore/seed-playlist-courte` ajoute au seed du staging une playlist « Test · 3 titres ». C'est du SQL lancé sur la base de staging : aucun test Vitest possible sans vrai Postgres (interdit dans les tests). La définition de terminé (« test pour tout code nouveau ») n'est donc pas tenue et la PR n'est pas fusionnée. Accepter, pour les scripts de seed, une vérification sur le staging en transaction annulée à la place du test ?
+- **Options** : oui (Claude fusionne et lance le seed) ; non (la PR reste ouverte, ou on la ferme et on crée la playlist à la main sur le staging)
+- **Recommandation** : oui, seulement pour `scripts/seed-staging.mjs` (outil de staging, jamais lancé sur la prod) ; bloc vérifié sur le staging le 27/11 : 3 titres, compteur à 3
+
 ## Statut de vente et TVA
 
 - **Chantier** : Argent / légal
