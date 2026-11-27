@@ -163,6 +163,25 @@ for (const { t, where, set, fix } of TABLES) {
   console.log(`${t.padEnd(24)} ${total}`);
 }
 
+// Playlist de 3 titres pour voir en vrai l'état « playlist trop courte »
+write(`do $$ declare pl uuid; src record; nt uuid; begin
+  insert into catalog.custom_playlists (owner_id, name, emoji)
+    values ('${admin.id}', 'Test · 3 titres', '🧪') returning id into pl;
+  for src in select c.* from catalog.custom_playlist_tracks c
+    join catalog.custom_playlists p on p.id = c.playlist_id
+    where p.is_official order by p.created_at, c.position limit 3
+  loop
+    insert into catalog.custom_playlist_tracks (playlist_id, artist, title, preview_url, cover_url, source, external_id, position, custom_artist, custom_title, custom_feats, preview_expires_at, track_id)
+      values (pl, src.artist, src.title, src.preview_url, src.cover_url, src.source, src.external_id,
+        (select count(*) from catalog.custom_playlist_tracks where playlist_id = pl),
+        src.custom_artist, src.custom_title, src.custom_feats, src.preview_expires_at, src.track_id)
+      returning id into nt;
+    insert into catalog.track_answers (track_id, answer_type_id, value)
+      select nt, answer_type_id, value from catalog.track_answers where track_id = src.id;
+  end loop;
+end $$;`);
+console.log("custom_playlists (test)  3 titres");
+
 // Les séquences repartent après les ids copiés
 write(`do $$ declare s record; begin
   for s in select pg_get_serial_sequence(format('%I.%I', c.table_schema, c.table_name), c.column_name) seq, c.table_schema sch, c.table_name t, c.column_name col
