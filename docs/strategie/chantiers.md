@@ -33,7 +33,7 @@ Un chantier fini passe en `fait`, puis est retiré à la release suivante.
 
 - **Statut** : en cours
 - **Équipe** : Technique
-- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (#601), protection de `#lib/server` vérifiée ; 26/11 : reste annoncé au changement de playlist en pleine partie suit la nouvelle sélection (PR `fix/reste-changement-playlist`) ; restent les manches jouées en base (migration) et la playlist de 3 titres du seed
+- **Prochaine étape** : 25/11 : total qui remonte quand un introuvable du lobby est retrouvé (#601), protection de `#lib/server` vérifiée ; 26/11 : reste annoncé au changement de playlist en pleine partie suit la nouvelle sélection (PR `fix/reste-changement-playlist`) ; #604 fusionné ; 27/11 : playlist de 3 titres du seed (#606, en attente de Théo : pas de test possible pour un script de seed) ; 28/11 : manches jouées enregistrées en base (colonne `rounds_played`, PR `chore/manches-jouees`)
 
 ## Release v3.35.0
 

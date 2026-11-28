@@ -85,4 +85,32 @@ describe("fin de partie en base", () => {
     expect(updates.length).toBe(1);
     expect(JSON.stringify([inserts, updates])).not.toContain("Quiz");
   });
+
+  it("écrit les manches jouées jusqu'au bout, à côté du total annoncé", async () => {
+    inserts.length = updates.length = 0;
+    const salon = {
+      code: "PERS3",
+      settings: { teams: null, maxRounds: 5 },
+      players: {},
+      game: { phase: "round", history: [{}, {}, {}] },
+    };
+    addPlayer(salon, "Ana", "s1");
+    await recordSalonGameStart(salon);
+    salon.game.dbGameId = "g3";
+    recordSalonGameEnd(salon);
+    expect(inserts[0]).toMatchObject({ rounds: 5 });
+    expect(updates[0].rounds_played).toBe(3);
+  });
+
+  it("partie coupée avant la fin de la 1re manche : 0 manche jouée", () => {
+    updates.length = 0;
+    const salon = {
+      code: "PERS4",
+      settings: { teams: null },
+      players: {},
+      game: { phase: "round", dbGameId: "g4" },
+    };
+    recordSalonGameEnd(salon);
+    expect(updates[0].rounds_played).toBe(0);
+  });
 });

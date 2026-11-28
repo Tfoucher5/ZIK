@@ -65,6 +65,7 @@ export function recordSalonGameEnd(salon) {
       ended_at: new Date().toISOString(),
       player_count: gamePlayers(salon).length,
       limit_hits: limitHits,
+      rounds_played: salon.game.history?.length ?? 0,
     })
     .eq("id", id)
     .then(({ error }) => {
