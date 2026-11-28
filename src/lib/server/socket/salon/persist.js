@@ -1,5 +1,6 @@
 import { getAdminClient } from "../../config.js";
 import { gamePlayers } from "./departed.js";
+import { roundsTotal } from "./session.js";
 
 // Une partie salon n'a pas de ligne game_players : les invités n'ont pas de
 // compte et le salon ne doit pas compter dans les classements. La partie, son
@@ -13,7 +14,7 @@ export async function recordSalonGameStart(salon) {
       .from("games")
       .insert({
         room_id: salon.code,
-        rounds: salon.settings.maxRounds,
+        rounds: roundsTotal(salon),
         mode: salon.settings.answerMode === "multiple" ? "qcm" : "classic",
         source: "salon",
         origin: salon.origin,
@@ -65,6 +66,7 @@ export function recordSalonGameEnd(salon) {
       ended_at: new Date().toISOString(),
       player_count: gamePlayers(salon).length,
       limit_hits: limitHits,
+      rounds_played: salon.game.history.length,
     })
     .eq("id", id)
     .then(({ error }) => {
