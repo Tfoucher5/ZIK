@@ -21,7 +21,10 @@ vi.mock("../../../config.js", () => ({
     from: () => ({
       insert: (rows) => {
         inserts.push(rows);
-        return { then: (r) => r({ error: null }) };
+        return {
+          then: (r) => r({ error: null }),
+          select: () => ({ single: async () => ({ data: { id: "g-new" } }) }),
+        };
       },
       update: (row) => {
         updates.push(row);
@@ -42,7 +45,7 @@ describe("fin de partie en base", () => {
       code: "PERS1",
       settings: { teams: null },
       players: {},
-      game: { phase: "round", dbGameId: "g1" },
+      game: { phase: "round", dbGameId: "g1", history: [] },
     };
     const ana = addPlayer(salon, "Ana", "s1");
     ana.score = 500;
@@ -75,7 +78,7 @@ describe("fin de partie en base", () => {
       code: "PERS2",
       settings: { teams: null, maxRounds: 10, title: "Quiz du jeudi" },
       players: {},
-      game: { phase: "round" },
+      game: { phase: "lobby", sessionPlaylist: [], history: [] },
     };
     addPlayer(salon, "Ana", "s1").score = 100;
     await recordSalonGameStart(salon);
@@ -86,29 +89,42 @@ describe("fin de partie en base", () => {
     expect(JSON.stringify([inserts, updates])).not.toContain("Quiz");
   });
 
-  it("écrit les manches jouées jusqu'au bout, à côté du total annoncé", async () => {
-    inserts.length = updates.length = 0;
+  it("écrit le total affiché au lancement, pas le choix de l'organisateur", async () => {
+    inserts.length = 0;
     const salon = {
       code: "PERS3",
-      settings: { teams: null, maxRounds: 5 },
+      settings: { teams: null, maxRounds: 10 },
       players: {},
-      game: { phase: "round", history: [{}, {}, {}] },
+      game: {
+        phase: "lobby",
+        sessionPlaylist: Array.from({ length: 7 }, (_, i) => ({ id: i })),
+        history: [],
+      },
     };
-    addPlayer(salon, "Ana", "s1");
     await recordSalonGameStart(salon);
-    salon.game.dbGameId = "g3";
+    expect(inserts[0]).toMatchObject({ rounds: 7 });
+    expect(salon.game.dbGameId).toBe("g-new");
+  });
+
+  it("écrit les manches allées jusqu'au bout", () => {
+    updates.length = 0;
+    const salon = {
+      code: "PERS4",
+      settings: { teams: null },
+      players: {},
+      game: { phase: "gameover", dbGameId: "g4", history: [{}, {}, {}] },
+    };
     recordSalonGameEnd(salon);
-    expect(inserts[0]).toMatchObject({ rounds: 5 });
     expect(updates[0].rounds_played).toBe(3);
   });
 
   it("partie coupée avant la fin de la 1re manche : 0 manche jouée", () => {
     updates.length = 0;
     const salon = {
-      code: "PERS4",
+      code: "PERS5",
       settings: { teams: null },
       players: {},
-      game: { phase: "round", dbGameId: "g4" },
+      game: { phase: "round", dbGameId: "g5", history: [] },
     };
     recordSalonGameEnd(salon);
     expect(updates[0].rounds_played).toBe(0);
