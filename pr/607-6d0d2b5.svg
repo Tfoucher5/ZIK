@@ -11,7 +11,7 @@
 <defs><linearGradient id="degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a371f7" stop-opacity=".35"/><stop offset="1" stop-color="#a371f7" stop-opacity="0"/></linearGradient></defs>
 <rect width="860" height="794" rx="12" class="fond"/><rect x=".5" y=".5" width="859" height="793" rx="12" class="bord"/>
 <text x="24" y="38" class="titre">Couverture des tests <tspan fill="#ff2bd6">·</tspan> serveur de jeu et services</text>
-<text x="836" y="38" class="petit" text-anchor="end">PR #607 · 813b35c · 28/11 09:17</text>
+<text x="836" y="38" class="petit" text-anchor="end">PR #607 · 6d0d2b5 · 28/11 09:22</text>
 <g>
 <circle cx="120" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="120" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
@@ -42,7 +42,7 @@
 <g>
 <circle cx="741" cy="140" r="46" class="piste" stroke-width="12" fill="none"/>
 <circle cx="741" cy="140" r="46" stroke="#2ea043" stroke-width="12" fill="none" stroke-linecap="round"
-  stroke-dasharray="248.5628107520244 289.02652413026095" transform="rotate(-90 741 140)"/>
+  stroke-dasharray="248.53390809961135 289.02652413026095" transform="rotate(-90 741 140)"/>
 <polyline points="707.5213990587573,124.24616621209233 691.234512114369,116.58213896392103" class="trait" stroke-width="3"/>
 <text x="741" y="147" class="valeur" text-anchor="middle">86,0<tspan class="unite"> %</tspan></text>
 <text x="741" y="206" class="nom" text-anchor="middle">Branches</text>
